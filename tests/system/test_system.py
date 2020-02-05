@@ -56,6 +56,7 @@ from tests._fixtures import DDL_STATEMENTS
 
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
+USE_EMULATOR = os.getenv("SPANNER_EMULATOR_HOST") is not None
 USE_RESOURCE_ROUTING = (
     os.getenv("GOOGLE_CLOUD_SPANNER_ENABLE_RESOURCE_BASED_ROUTING") == "true"
 )
@@ -105,10 +106,10 @@ def setUpModule():
     EXISTING_INSTANCES[:] = instances
 
     if CREATE_INSTANCE:
-
-        # Defend against back-end returning configs for regions we aren't
-        # actually allowed to use.
-        configs = [config for config in configs if "-us-" in config.name]
+        if not USE_EMULATOR:
+            # Defend against back-end returning configs for regions we aren't
+            # actually allowed to use.
+            configs = [config for config in configs if "-us-" in config.name]
 
         if not configs:
             raise ValueError("List instance configs failed in module set up.")
