@@ -222,7 +222,7 @@ class Client(ClientWithProject):
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
-                    transport=transport
+                    transport=transport,
                 )
             else:
                 self._instance_admin_api = InstanceAdminClient(
@@ -243,7 +243,7 @@ class Client(ClientWithProject):
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
-                    transport=transport
+                    transport=transport,
                 )
             else:
                 self._database_admin_api = DatabaseAdminClient(
@@ -334,7 +334,14 @@ class Client(ClientWithProject):
         :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
         :returns: an instance owned by this client.
         """
-        return Instance(instance_id, self, configuration_name, node_count, display_name, _get_spanner_emulator_host())
+        return Instance(
+            instance_id,
+            self,
+            configuration_name,
+            node_count,
+            display_name,
+            _get_spanner_emulator_host(),
+        )
 
     def list_instances(self, filter_="", page_size=None, page_token=None):
         """List instances for the client's project.

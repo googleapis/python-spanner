@@ -46,6 +46,7 @@ from google.cloud.spanner_v1.proto.transaction_pb2 import (
     TransactionSelector,
     TransactionOptions,
 )
+
 # pylint: enable=ungrouped-imports
 
 
@@ -200,7 +201,7 @@ class Database(object):
                 self._spanner_api = SpannerClient(
                     client_info=client_info,
                     client_options=client_options,
-                    transport=transport
+                    transport=transport,
                 )
                 return self._spanner_api
             credentials = self._instance._client.credentials
