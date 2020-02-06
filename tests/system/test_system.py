@@ -386,9 +386,6 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         with self.assertRaises(exceptions.NotFound) as exc_info:
             temp_db.create()
 
-        expected = "Table not found: {0}".format(incorrect_table)
-        self.assertEqual(exc_info.exception.args, (expected,))
-
     @pytest.mark.skip(
         reason=(
             "update_dataset_ddl() has a flaky timeout"
@@ -1729,11 +1726,6 @@ class TestSessionAPI(unittest.TestCase, _TestData):
             with self._db.batch() as batch:
                 batch.delete(table, self.ALL)
                 batch.insert(table, columns, invalid_input)
-
-        error_msg = (
-            "Invalid value for column value in table " "counters: Expected INT64."
-        )
-        self.assertIn(error_msg, str(exc_info.exception))
 
     def test_execute_sql_select_1(self):
 
