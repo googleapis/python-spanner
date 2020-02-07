@@ -186,6 +186,7 @@ class TestInstanceAdminAPI(unittest.TestCase):
         self.assertEqual(instance, instance_alt)
         self.assertEqual(instance.display_name, instance_alt.display_name)
 
+    @unittest.skipIf(USE_EMULATOR, "Skipping updating instance")
     def test_update_instance(self):
         OLD_DISPLAY_NAME = Config.INSTANCE.display_name
         NEW_DISPLAY_NAME = "Foo Bar Baz"
@@ -991,6 +992,7 @@ class TestSessionAPI(unittest.TestCase, _TestData):
             with self.assertRaises(InvalidArgument):
                 transaction.batch_update([])
 
+    @unittest.skipIf(USE_EMULATOR, "Skipping partitioned DML")
     def test_execute_partitioned_dml(self):
         # [START spanner_test_dml_partioned_dml_update]
         retry = RetryInstanceState(_has_all_ddl)
@@ -1623,6 +1625,7 @@ class TestSessionAPI(unittest.TestCase, _TestData):
             expected = [data[keyrow]] + data[start + 1 : end]
             self.assertEqual(rows, expected)
 
+    @unittest.skipIf(USE_EMULATOR, "Skipping partitioned reads")
     def test_partition_read_w_index(self):
         row_count = 10
         columns = self.COLUMNS[1], self.COLUMNS[2]
@@ -2104,6 +2107,7 @@ class TestSessionAPI(unittest.TestCase, _TestData):
             # NaNs cannot be searched for by equality.
             self.assertTrue(math.isnan(float_array[2]))
 
+    @unittest.skipIf(USE_EMULATOR, "Skipping partitioned queries")
     def test_partition_query(self):
         row_count = 40
         sql = "SELECT * FROM {}".format(self.TABLE)
