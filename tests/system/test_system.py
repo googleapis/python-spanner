@@ -384,7 +384,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
             temp_db_id, ddl_statements=[create_table, index]
         )
         self.to_delete.append(temp_db)
-        with self.assertRaises(exceptions.NotFound) as exc_info:
+        with self.assertRaises(exceptions.NotFound):
             temp_db.create()
 
     @pytest.mark.skip(
@@ -1725,7 +1725,7 @@ class TestSessionAPI(unittest.TestCase, _TestData):
             batch.insert(table, columns, valid_input)
 
         invalid_input = ((0, ""),)
-        with self.assertRaises(exceptions.FailedPrecondition) as exc_info:
+        with self.assertRaises(exceptions.FailedPrecondition):
             with self._db.batch() as batch:
                 batch.delete(table, self.ALL)
                 batch.insert(table, columns, invalid_input)
