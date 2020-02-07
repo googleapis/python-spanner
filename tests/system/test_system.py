@@ -23,7 +23,6 @@ import time
 import unittest
 import uuid
 
-import pytest
 import grpc
 from google.rpc import code_pb2
 
@@ -388,8 +387,8 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         expected = "Table not found: {0}".format(incorrect_table)
         self.assertEqual(exc_info.exception.args, (expected,))
 
-    @pytest.mark.skip(
-        reason=(
+    @unittest.skip(
+        (
             "update_dataset_ddl() has a flaky timeout"
             "https://github.com/GoogleCloudPlatform/google-cloud-python/issues/"
             "5629"
