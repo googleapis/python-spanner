@@ -173,7 +173,6 @@ class FixedSizePool(AbstractSessionPool):
             resp = api.batch_create_sessions(
                 database.name,
                 self.size - self._sessions.qsize(),
-                timeout=self.default_timeout,
                 metadata=metadata,
             )
             for session_pb in resp.session:
@@ -367,7 +366,6 @@ class PingingPool(AbstractSessionPool):
             resp = api.batch_create_sessions(
                 database.name,
                 self.size - created_session_count,
-                timeout=self.default_timeout,
                 metadata=metadata,
             )
             for session_pb in resp.session:
