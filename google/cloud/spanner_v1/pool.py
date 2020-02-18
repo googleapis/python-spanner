@@ -171,9 +171,7 @@ class FixedSizePool(AbstractSessionPool):
 
         while not self._sessions.full():
             resp = api.batch_create_sessions(
-                database.name,
-                self.size - self._sessions.qsize(),
-                metadata=metadata,
+                database.name, self.size - self._sessions.qsize(), metadata=metadata
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -364,9 +362,7 @@ class PingingPool(AbstractSessionPool):
 
         while created_session_count < self.size:
             resp = api.batch_create_sessions(
-                database.name,
-                self.size - created_session_count,
-                metadata=metadata,
+                database.name, self.size - created_session_count, metadata=metadata
             )
             for session_pb in resp.session:
                 session = self._new_session()
