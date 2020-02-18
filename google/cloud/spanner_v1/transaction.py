@@ -191,6 +191,9 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         api = database.spanner_api
 
+        seqno = self._execute_sql_count
+        self._execute_sql_count += 1
+
         response = api.execute_sql(
             self._session.name,
             dml,
@@ -198,11 +201,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             params=params_pb,
             param_types=param_types,
             query_mode=query_mode,
-            seqno=self._execute_sql_count,
+            seqno=seqno,
             metadata=metadata,
         )
-
-        self._execute_sql_count += 1
         return response.stats.row_count_exact
 
     def batch_update(self, statements):
@@ -243,15 +244,16 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         api = database.spanner_api
 
+        seqno = self._execute_sql_count
+        self._execute_sql_count += 1
+
         response = api.execute_batch_dml(
             session=self._session.name,
             transaction=transaction,
             statements=parsed,
-            seqno=self._execute_sql_count,
+            seqno=seqno,
             metadata=metadata,
         )
-
-        self._execute_sql_count += 1
         row_counts = [
             result_set.stats.row_count_exact for result_set in response.result_sets
         ]
