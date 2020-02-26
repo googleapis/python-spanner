@@ -225,10 +225,11 @@ class _SnapshotBase(_SessionWrapper):
             retry=retry,
             timeout=timeout,
         )
-        self._read_request_count += 1
-        self._execute_sql_count += 1
 
         iterator = _restart_on_unavailable(restart)
+
+        self._read_request_count += 1
+        self._execute_sql_count += 1
 
         if self._multi_use:
             return StreamedResultSet(iterator, source=self)
