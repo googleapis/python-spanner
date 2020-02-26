@@ -191,8 +191,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         api = database.spanner_api
 
-        seqno = self._execute_sql_count
-        self._execute_sql_count += 1
+        seqno, self._execute_sql_count = (
+            self._execute_sql_count,
+            self._execute_sql_count + 1,
+        )
 
         response = api.execute_sql(
             self._session.name,
@@ -244,8 +246,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         api = database.spanner_api
 
-        seqno = self._execute_sql_count
-        self._execute_sql_count += 1
+        seqno, self._execute_sql_count = (
+            self._execute_sql_count,
+            self._execute_sql_count + 1,
+        )
 
         response = api.execute_batch_dml(
             session=self._session.name,
