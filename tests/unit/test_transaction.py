@@ -530,7 +530,6 @@ class TestTransaction(unittest.TestCase):
 
         self.assertEqual(transaction._execute_sql_count, 1)
 
-
     def test_context_mgr_success(self):
         import datetime
         from google.cloud.spanner_v1.proto.spanner_pb2 import CommitResponse
