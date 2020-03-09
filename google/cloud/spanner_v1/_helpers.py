@@ -26,6 +26,7 @@ from google.api_core import datetime_helpers
 from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1.proto import type_pb2
+from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
 
 
 def _try_to_coerce_bytes(bytestring):
@@ -45,6 +46,45 @@ def _try_to_coerce_bytes(bytestring):
             "Ensure that you either send a Unicode string or a "
             "base64-encoded bytes."
         )
+
+
+def _merge_query_options(base, merge):
+    """Merge higher precedence QueryOptions with current QueryOptions.
+
+    :type base:
+        :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+        or :class:`dict` or None
+    :param base: The current QueryOptions that is intended for use.
+
+    :type merge:
+        :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+        or :class:`dict` or None
+    :param merge:
+        The QueryOptions that have a higher priority than base. These options
+        should overwrite the fields in base.
+
+    :rtype:
+        :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+        or None
+    :returns:
+        QueryOptions object formed by merging the two given QueryOptions.
+        If the resultant object only has empty fields, returns None.
+    """
+    combined = base or ExecuteSqlRequest.QueryOptions()
+    if type(combined) == dict:
+        combined = ExecuteSqlRequest.QueryOptions(
+            optimizer_version=combined.get("optimizer_version", "")
+        )
+    if merge:
+        if type(merge) == dict:
+            merge_ver = merge.get("optimizer_version", "")
+        else:
+            merge_ver = merge.optimizer_version
+        if merge_ver:
+            combined.optimizer_version = merge_ver
+    if not combined.optimizer_version:
+        return None
+    return combined
 
 
 # pylint: disable=too-many-return-statements,too-many-branches
