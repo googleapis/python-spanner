@@ -60,6 +60,15 @@ class Test_merge_query_options(unittest.TestCase):
         result = self._callFUT(base, merge)
         self.assertEqual(result, expected)
 
+    def test_base_object_merge_dict(self):
+        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+
+        base = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        merge = {"optimizer_version": "3"}
+        expected = ExecuteSqlRequest.QueryOptions(optimizer_version="3")
+        result = self._callFUT(base, merge)
+        self.assertEqual(result, expected)
+
 
 class Test_make_value_pb(unittest.TestCase):
     def _callFUT(self, *args, **kw):

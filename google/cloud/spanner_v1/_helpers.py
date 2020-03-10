@@ -75,13 +75,12 @@ def _merge_query_options(base, merge):
         combined = ExecuteSqlRequest.QueryOptions(
             optimizer_version=combined.get("optimizer_version", "")
         )
-    if merge:
-        if type(merge) == dict:
-            merge_ver = merge.get("optimizer_version", "")
-        else:
-            merge_ver = merge.optimizer_version
-        if merge_ver:
-            combined.optimizer_version = merge_ver
+    merge = merge or ExecuteSqlRequest.QueryOptions()
+    if type(merge) == dict:
+        merge = ExecuteSqlRequest.QueryOptions(
+            optimizer_version=merge.get("optimizer_version", "")
+        )
+    combined.MergeFrom(merge)
     if not combined.optimizer_version:
         return None
     return combined
