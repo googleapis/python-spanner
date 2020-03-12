@@ -39,7 +39,8 @@ class Test_merge_query_options(unittest.TestCase):
     def test_base_empty_and_merge_empty(self):
         from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
 
-        base = merge = ExecuteSqlRequest.QueryOptions()
+        base = ExecuteSqlRequest.QueryOptions()
+        merge = ExecuteSqlRequest.QueryOptions()
         result = self._callFUT(base, merge)
         self.assertIsNone(result)
 
