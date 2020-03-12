@@ -63,7 +63,7 @@ _EMULATOR_HOST_HTTP_SCHEME = (
     "without a scheme: ex %s=localhost:8080."
 ) % ((EMULATOR_ENV_VAR,) * 3)
 SPANNER_ADMIN_SCOPE = "https://www.googleapis.com/auth/spanner.admin"
-OPTIMIZER_VERSION_VAR = "SPANNER_OPTIMIZER_VERSION"
+OPTIMIZER_VERSION_ENV_VAR = "SPANNER_OPTIMIZER_VERSION"
 _USER_AGENT_DEPRECATED = (
     "The 'user_agent' argument to 'Client' is deprecated / unused. "
     "Please pass an appropriate 'client_info' instead."
@@ -75,7 +75,7 @@ def _get_spanner_emulator_host():
 
 
 def _get_spanner_optimizer_version():
-    return os.getenv(OPTIMIZER_VERSION_VAR, "")
+    return os.getenv(OPTIMIZER_VERSION_ENV_VAR, "")
 
 
 class InstanceConfig(object):

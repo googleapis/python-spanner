@@ -228,6 +228,7 @@ class Session(object):
 
         :type query_options:
             :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`

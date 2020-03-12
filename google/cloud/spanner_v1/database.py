@@ -372,7 +372,7 @@ class Database(object):
 
         :type query_options:
             :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
-                or :class:`dict`
+            or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
@@ -803,7 +803,7 @@ class BatchSnapshot(object):
 
         :type query_options:
             :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
-                or :class:`dict`
+            or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
