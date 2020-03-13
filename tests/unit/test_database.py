@@ -1246,7 +1246,7 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance)
 
         with self.assertRaises(ValueError):
-            database.restore()
+            database.restore(None)
 
     def test_restore_grpc_error(self):
         from google.api_core.exceptions import Unknown
@@ -1260,7 +1260,7 @@ class TestDatabase(_BaseTest):
         backup = _Backup(self.BACKUP_NAME)
 
         with self.assertRaises(Unknown):
-            database.restore(backup=backup)
+            database.restore(backup)
 
         api.restore_database.assert_called_once_with(
             parent=self.INSTANCE_NAME,
@@ -1281,7 +1281,7 @@ class TestDatabase(_BaseTest):
         backup = _Backup(self.BACKUP_NAME)
 
         with self.assertRaises(NotFound):
-            database.restore(backup=backup)
+            database.restore(backup)
 
         api.restore_database.assert_called_once_with(
             parent=self.INSTANCE_NAME,
@@ -1300,7 +1300,7 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
         backup = _Backup(self.BACKUP_NAME)
 
-        future = database.restore(backup=backup)
+        future = database.restore(backup)
 
         self.assertIs(future, op_future)
 

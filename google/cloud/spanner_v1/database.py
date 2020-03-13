@@ -560,7 +560,7 @@ class Database(object):
         finally:
             self._local.transaction_running = False
 
-    def restore(self, backup=None):
+    def restore(self, source):
         """Restore from a backup to this database.
 
         :type backup: :class:`~google.cloud.spanner_v1.backup.Backup`
@@ -574,12 +574,12 @@ class Database(object):
             if the backup being restored from does not exist
         :raises ValueError: if backup is not set
         """
-        if backup is None:
+        if source is None:
             raise ValueError("Restore source not specified")
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
         future = api.restore_database(
-            self._instance.name, self.database_id, backup=backup.name, metadata=metadata
+            self._instance.name, self.database_id, backup=source.name, metadata=metadata
         )
         return future
 
