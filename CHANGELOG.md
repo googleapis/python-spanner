@@ -4,6 +4,35 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [1.15.0](https://www.github.com/googleapis/python-spanner/compare/v1.14.0...v1.15.0) (2020-03-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* remove Python 2.7 from testing (#22)
+
+### Features
+
+* **spanner:** add emulator support ([#14](https://www.github.com/googleapis/python-spanner/issues/14)) ([b315593](https://www.github.com/googleapis/python-spanner/commit/b315593bd3e473d96cc3033f5bbf0da7487e38eb))
+* **spanner:** exporting transaction._rolled_back as transaction.rolled_back ([#16](https://www.github.com/googleapis/python-spanner/issues/16)) ([974ee92](https://www.github.com/googleapis/python-spanner/commit/974ee925df1962f559d6cb43318ee301e330e8f2))
+* add support for backups ([#35](https://www.github.com/googleapis/python-spanner/issues/35)) ([39288e7](https://www.github.com/googleapis/python-spanner/commit/39288e784826c5accca71096be11f99ad7f930f4))
+* implement query options versioning support ([#30](https://www.github.com/googleapis/python-spanner/issues/30)) ([5147921](https://www.github.com/googleapis/python-spanner/commit/514792151c2fe4fc7a6cf4ad0dd141c9090a634b))
+
+
+### Bug Fixes
+
+* remove erroneous timeouts for batch_create_session calls ([#18](https://www.github.com/googleapis/python-spanner/issues/18)) ([997a034](https://www.github.com/googleapis/python-spanner/commit/997a03477b07ec39c718480d9bfe729404bf5748))
+
+
+### Reverts
+
+* Revert "chore!: remove Python 2.7 from testing (#22)" (#24) ([5e7a106](https://www.github.com/googleapis/python-spanner/commit/5e7a106455963067f491754126f575aeb0b2fff9)), closes [#22](https://www.github.com/googleapis/python-spanner/issues/22) [#24](https://www.github.com/googleapis/python-spanner/issues/24)
+
+
+### Miscellaneous Chores
+
+* remove Python 2.7 from testing ([#22](https://www.github.com/googleapis/python-spanner/issues/22)) ([d0f505c](https://www.github.com/googleapis/python-spanner/commit/d0f505c7b476416864f7c84100692b108c7db7fc))
+
 ## [1.14.0](https://www.github.com/googleapis/python-spanner/compare/v1.13.0...v1.14.0) (2020-01-31)
 
 
