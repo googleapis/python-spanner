@@ -17,8 +17,11 @@
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud._helpers import _pb_timestamp_to_datetime
-from google.cloud.spanner_v1._helpers import _make_value_pb
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _make_value_pb,
+    _merge_query_options,
+    _metadata_with_prefix,
+)
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
@@ -162,7 +165,9 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return None
 
-    def execute_update(self, dml, params=None, param_types=None, query_mode=None):
+    def execute_update(
+        self, dml, params=None, param_types=None, query_mode=None, query_options=None
+    ):
         """Perform an ``ExecuteSql`` API request with DML.
 
         :type dml: str
@@ -182,6 +187,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         :param query_mode: Mode governing return of results / query plan. See
             https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode1
 
+        :type query_options:
+            :class:`google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            or :class:`dict`
+        :param query_options: (Optional) Options that are provided for query plan stability.
+
         :rtype: int
         :returns: Count of rows affected by the DML statement.
         """
@@ -196,6 +206,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             self._execute_sql_count + 1,
         )
 
+        # Query-level options have higher precedence than client-level and
+        # environment-level options
+        default_query_options = database._instance._client._query_options
+        query_options = _merge_query_options(default_query_options, query_options)
+
         response = api.execute_sql(
             self._session.name,
             dml,
@@ -203,6 +218,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             params=params_pb,
             param_types=param_types,
             query_mode=query_mode,
+            query_options=query_options,
             seqno=seqno,
             metadata=metadata,
         )

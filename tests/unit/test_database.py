@@ -53,6 +53,8 @@ class _BaseTest(unittest.TestCase):
     SESSION_ID = "session_id"
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     TRANSACTION_ID = b"transaction_id"
+    BACKUP_ID = "backup_id"
+    BACKUP_NAME = INSTANCE_NAME + "/backups/" + BACKUP_ID
 
     def _make_one(self, *args, **kwargs):
         return self._get_target_class()(*args, **kwargs)
@@ -229,6 +231,33 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
         expected_name = self.DATABASE_NAME
         self.assertEqual(database.name, expected_name)
+
+    def test_create_time_property(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        expected_create_time = database._create_time = self._make_timestamp()
+        self.assertEqual(database.create_time, expected_create_time)
+
+    def test_state_property(self):
+        from google.cloud.spanner_admin_database_v1.gapic import enums
+
+        instance = _Instance(self.INSTANCE_NAME)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        expected_state = database._state = enums.Database.State.READY
+        self.assertEqual(database.state, expected_state)
+
+    def test_restore_info(self):
+        from google.cloud.spanner_v1.database import RestoreInfo
+
+        instance = _Instance(self.INSTANCE_NAME)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        restore_info = database._restore_info = mock.create_autospec(
+            RestoreInfo, instance=True
+        )
+        self.assertEqual(database.restore_info, restore_info)
 
     def test_spanner_api_property_w_scopeless_creds(self):
         from google.cloud.spanner_admin_instance_v1.proto import (
@@ -766,21 +795,38 @@ class TestDatabase(_BaseTest):
         from google.cloud.spanner_admin_database_v1.proto import (
             spanner_database_admin_pb2 as admin_v1_pb2,
         )
+        from google.cloud.spanner_admin_database_v1.gapic import enums
+        from google.cloud._helpers import _datetime_to_pb_timestamp
         from tests._fixtures import DDL_STATEMENTS
+
+        timestamp = self._make_timestamp()
+        restore_info = admin_v1_pb2.RestoreInfo()
 
         client = _Client()
         ddl_pb = admin_v1_pb2.GetDatabaseDdlResponse(statements=DDL_STATEMENTS)
         api = client.database_admin_api = self._make_database_admin_api()
         api.get_database_ddl.return_value = ddl_pb
+        db_pb = admin_v1_pb2.Database(
+            state=2,
+            create_time=_datetime_to_pb_timestamp(timestamp),
+            restore_info=restore_info,
+        )
+        api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         database.reload()
-
+        self.assertEqual(database._state, enums.Database.State.READY)
+        self.assertEqual(database._create_time, timestamp)
+        self.assertEqual(database._restore_info, restore_info)
         self.assertEqual(database._ddl_statements, tuple(DDL_STATEMENTS))
 
         api.get_database_ddl.assert_called_once_with(
+            self.DATABASE_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+        api.get_database.assert_called_once_with(
             self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
@@ -924,7 +970,9 @@ class TestDatabase(_BaseTest):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-    def _execute_partitioned_dml_helper(self, dml, params=None, param_types=None):
+    def _execute_partitioned_dml_helper(
+        self, dml, params=None, param_types=None, query_options=None
+    ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1.proto.result_set_pb2 import (
             PartialResultSet,
@@ -935,7 +983,10 @@ class TestDatabase(_BaseTest):
             TransactionSelector,
             TransactionOptions,
         )
-        from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import (
+            _make_value_pb,
+            _merge_query_options,
+        )
 
         transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
 
@@ -953,7 +1004,9 @@ class TestDatabase(_BaseTest):
         api.begin_transaction.return_value = transaction_pb
         api.execute_streaming_sql.return_value = iterator
 
-        row_count = database.execute_partitioned_dml(dml, params, param_types)
+        row_count = database.execute_partitioned_dml(
+            dml, params, param_types, query_options
+        )
 
         self.assertEqual(row_count, 2)
 
@@ -975,6 +1028,11 @@ class TestDatabase(_BaseTest):
             expected_params = None
 
         expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
+        expected_query_options = client._query_options
+        if query_options:
+            expected_query_options = _merge_query_options(
+                expected_query_options, query_options
+            )
 
         api.execute_streaming_sql.assert_called_once_with(
             self.SESSION_NAME,
@@ -982,6 +1040,7 @@ class TestDatabase(_BaseTest):
             transaction=expected_transaction,
             params=expected_params,
             param_types=param_types,
+            query_options=expected_query_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -995,6 +1054,14 @@ class TestDatabase(_BaseTest):
     def test_execute_partitioned_dml_w_params_and_param_types(self):
         self._execute_partitioned_dml_helper(
             dml=DML_W_PARAM, params=PARAMS, param_types=PARAM_TYPES
+        )
+
+    def test_execute_partitioned_dml_w_query_options(self):
+        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+
+        self._execute_partitioned_dml_helper(
+            dml=DML_W_PARAM,
+            query_options=ExecuteSqlRequest.QueryOptions(optimizer_version="3"),
         )
 
     def test_session_factory_defaults(self):
@@ -1173,6 +1240,180 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(RuntimeError):
             database.run_in_transaction(nested_unit_of_work)
         self.assertEqual(inner.call_count, 0)
+
+    def test_restore_backup_unspecified(self):
+        instance = _Instance(self.INSTANCE_NAME, client=_Client())
+        database = self._make_one(self.DATABASE_ID, instance)
+
+        with self.assertRaises(ValueError):
+            database.restore(None)
+
+    def test_restore_grpc_error(self):
+        from google.api_core.exceptions import Unknown
+
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.restore_database.side_effect = Unknown("testing")
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        backup = _Backup(self.BACKUP_NAME)
+
+        with self.assertRaises(Unknown):
+            database.restore(backup)
+
+        api.restore_database.assert_called_once_with(
+            parent=self.INSTANCE_NAME,
+            database_id=self.DATABASE_ID,
+            backup=self.BACKUP_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_restore_not_found(self):
+        from google.api_core.exceptions import NotFound
+
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.restore_database.side_effect = NotFound("testing")
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        backup = _Backup(self.BACKUP_NAME)
+
+        with self.assertRaises(NotFound):
+            database.restore(backup)
+
+        api.restore_database.assert_called_once_with(
+            parent=self.INSTANCE_NAME,
+            database_id=self.DATABASE_ID,
+            backup=self.BACKUP_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_restore_success(self):
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.restore_database.return_value = op_future
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        backup = _Backup(self.BACKUP_NAME)
+
+        future = database.restore(backup)
+
+        self.assertIs(future, op_future)
+
+        api.restore_database.assert_called_once_with(
+            parent=self.INSTANCE_NAME,
+            database_id=self.DATABASE_ID,
+            backup=self.BACKUP_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_is_ready(self):
+        from google.cloud.spanner_admin_database_v1.gapic import enums
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database._state = enums.Database.State.READY
+        self.assertTrue(database.is_ready())
+        database._state = enums.Database.State.READY_OPTIMIZING
+        self.assertTrue(database.is_ready())
+        database._state = enums.Database.State.CREATING
+        self.assertFalse(database.is_ready())
+
+    def test_is_optimized(self):
+        from google.cloud.spanner_admin_database_v1.gapic import enums
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database._state = enums.Database.State.READY
+        self.assertTrue(database.is_optimized())
+        database._state = enums.Database.State.READY_OPTIMIZING
+        self.assertFalse(database.is_optimized())
+        database._state = enums.Database.State.CREATING
+        self.assertFalse(database.is_optimized())
+
+    def test_list_database_operations_grpc_error(self):
+        from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        instance.list_database_operations = mock.MagicMock(
+            side_effect=Unknown("testing")
+        )
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        with self.assertRaises(Unknown):
+            database.list_database_operations()
+
+        instance.list_database_operations.assert_called_once_with(
+            filter_=_DATABASE_METADATA_FILTER.format(database.name), page_size=None
+        )
+
+    def test_list_database_operations_not_found(self):
+        from google.api_core.exceptions import NotFound
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        instance.list_database_operations = mock.MagicMock(
+            side_effect=NotFound("testing")
+        )
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        with self.assertRaises(NotFound):
+            database.list_database_operations()
+
+        instance.list_database_operations.assert_called_once_with(
+            filter_=_DATABASE_METADATA_FILTER.format(database.name), page_size=None
+        )
+
+    def test_list_database_operations_defaults(self):
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        instance.list_database_operations = mock.MagicMock(return_value=[])
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        database.list_database_operations()
+
+        instance.list_database_operations.assert_called_once_with(
+            filter_=_DATABASE_METADATA_FILTER.format(database.name), page_size=None
+        )
+
+    def test_list_database_operations_explicit_filter(self):
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        instance.list_database_operations = mock.MagicMock(return_value=[])
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        expected_filter_ = "({0}) AND ({1})".format(
+            "metadata.@type:type.googleapis.com/google.spanner.admin.database.v1.RestoreDatabaseMetadata",
+            _DATABASE_METADATA_FILTER.format(database.name),
+        )
+        page_size = 10
+        database.list_database_operations(
+            filter_="metadata.@type:type.googleapis.com/google.spanner.admin.database.v1.RestoreDatabaseMetadata",
+            page_size=page_size,
+        )
+
+        instance.list_database_operations.assert_called_once_with(
+            filter_=expected_filter_, page_size=page_size
+        )
 
 
 class TestBatchCheckout(_BaseTest):
@@ -1615,7 +1856,9 @@ class TestBatchSnapshot(_BaseTest):
     def test_generate_query_batches_w_max_partitions(self):
         sql = "SELECT COUNT(*) FROM table_name"
         max_partitions = len(self.TOKENS)
-        database = self._make_database()
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance)
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
@@ -1624,7 +1867,7 @@ class TestBatchSnapshot(_BaseTest):
             batch_txn.generate_query_batches(sql, max_partitions=max_partitions)
         )
 
-        expected_query = {"sql": sql}
+        expected_query = {"sql": sql, "query_options": client._query_options}
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
             self.assertEqual(batch["partition"], token)
@@ -1645,7 +1888,9 @@ class TestBatchSnapshot(_BaseTest):
         params = {"max_age": 30}
         param_types = {"max_age": "INT64"}
         size = 1 << 20
-        database = self._make_database()
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance)
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
@@ -1656,7 +1901,12 @@ class TestBatchSnapshot(_BaseTest):
             )
         )
 
-        expected_query = {"sql": sql, "params": params, "param_types": param_types}
+        expected_query = {
+            "sql": sql,
+            "params": params,
+            "param_types": param_types,
+            "query_options": client._query_options,
+        }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
             self.assertEqual(batch["partition"], token)
@@ -1780,14 +2030,41 @@ def _make_instance_api():
     return mock.create_autospec(InstanceAdminClient)
 
 
+class TestRestoreInfo(_BaseTest):
+    def test_from_pb(self):
+        from google.cloud.spanner_v1.database import RestoreInfo
+        from google.cloud.spanner_admin_database_v1.gapic import enums
+        from google.cloud.spanner_admin_database_v1.proto import (
+            backup_pb2,
+            spanner_database_admin_pb2 as admin_v1_pb2,
+        )
+        from google.cloud._helpers import _datetime_to_pb_timestamp
+
+        timestamp = self._make_timestamp()
+        restore_pb = admin_v1_pb2.RestoreInfo(
+            source_type=1,
+            backup_info=backup_pb2.BackupInfo(
+                backup="backup_path",
+                create_time=_datetime_to_pb_timestamp(timestamp),
+                source_database="database_path",
+            ),
+        )
+        restore_info = RestoreInfo.from_pb(restore_pb)
+        self.assertEqual(restore_info.source_type, enums.RestoreSourceType.BACKUP)
+        self.assertEqual(restore_info.backup_info.create_time, timestamp)
+
+
 class _Client(object):
     def __init__(self, project=TestDatabase.PROJECT_ID):
+        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+
         self.project = project
         self.project_name = "projects/" + self.project
         self._endpoint_cache = {}
         self.instance_admin_api = _make_instance_api()
         self._client_info = mock.Mock()
         self._client_options = mock.Mock()
+        self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
 
 
 class _Instance(object):
@@ -1796,6 +2073,11 @@ class _Instance(object):
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
         self.emulator_host = emulator_host
+
+
+class _Backup(object):
+    def __init__(self, name):
+        self.name = name
 
 
 class _Database(object):
