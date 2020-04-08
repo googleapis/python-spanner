@@ -180,8 +180,8 @@ class _SnapshotBase(_SessionWrapper):
         :type query_mode:
             :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryMode`
         :param query_mode: Mode governing return of results / query plan.
-            See :
-            `QueryMode1 <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode1>`_
+            See:
+            `QueryMode <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode>`_.
 
         :type query_options:
             :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`

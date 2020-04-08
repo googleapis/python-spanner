@@ -24,6 +24,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
+from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
 
@@ -83,7 +84,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             if the transaction is already begun, committed, or rolled back.
         """
         if self._transaction_id is not None:
-            raise ValueError("Transaction already begun")
+            raise ValueError("Transaction google.cloud.spanner_v1.proto.already begun")
 
         if self.committed is not None:
             raise ValueError("Transaction already committed")
@@ -186,7 +187,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryMode`
         :param query_mode: Mode governing return of results / query plan.
             See:
-            `QueryMode1 <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode1>`_
+            `QueryMode <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode>`_.
 
         :type query_options:
             :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
