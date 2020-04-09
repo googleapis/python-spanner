@@ -24,7 +24,6 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
-from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
 
