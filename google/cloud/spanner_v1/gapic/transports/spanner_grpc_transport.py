@@ -23,7 +23,6 @@ import google.api_core.grpc_helpers
 from google.cloud.spanner_v1.proto import spanner_pb2_grpc
 
 
-_GRPC_KEEPALIVE_MS = 2 * 60 * 1000
 _SPANNER_GRPC_CONFIG = "spanner.grpc.config"
 
 
@@ -74,7 +73,6 @@ class SpannerGrpcTransport(object):
                 options={
                     "grpc.max_send_message_length": -1,
                     "grpc.max_receive_message_length": -1,
-                    "grpc.keepalive_time_ms": _GRPC_KEEPALIVE_MS,
                 }.items(),
             )
 
