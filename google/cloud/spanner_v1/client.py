@@ -341,7 +341,8 @@ class Client(ClientWithProject):
         :param configuration_name:
            (Optional) Name of the instance configuration used to set up the
            instance's cluster, in the form:
-           ``projects/<project>/instanceConfigs/<config>``.
+           ``projects/<project>/instanceConfigs/``
+           ``<config>``.
            **Required** for instances which do not yet exist.
 
         :type display_name: str
