@@ -1,5 +1,3 @@
-
-
 # Changelog
 
 [PyPI History][1]
