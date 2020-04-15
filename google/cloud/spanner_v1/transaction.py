@@ -83,7 +83,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             if the transaction is already begun, committed, or rolled back.
         """
         if self._transaction_id is not None:
-            raise ValueError("Transaction google.cloud.spanner_v1.proto.already begun")
+            raise ValueError("Transaction already begun")
 
         if self.committed is not None:
             raise ValueError("Transaction already committed")
