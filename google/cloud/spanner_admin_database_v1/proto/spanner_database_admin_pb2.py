@@ -1369,8 +1369,6 @@ RestoreInfo = _reflection.GeneratedProtocolMessageType(
         DESCRIPTOR=_RESTOREINFO,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
         __doc__="""Information about the database restore.
-  
-  
   Attributes:
       source_type:
           The type of the restore source.
@@ -1392,8 +1390,6 @@ Database = _reflection.GeneratedProtocolMessageType(
         DESCRIPTOR=_DATABASE,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
         __doc__="""A Cloud Spanner database.
-  
-  
   Attributes:
       name:
           Required. The name of the database. Values are of the form ``p
@@ -1421,10 +1417,8 @@ ListDatabasesRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_LISTDATABASESREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
-  
-  
+        __doc__="""The request for [ListDatabases][google.spanner.admin.database.v1.Datab
+  aseAdmin.ListDatabases].
   Attributes:
       parent:
           Required. The instance whose databases should be listed.
@@ -1450,10 +1444,8 @@ ListDatabasesResponse = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_LISTDATABASESRESPONSE,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The response for
-  [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
-  
-  
+        __doc__="""The response for [ListDatabases][google.spanner.admin.database.v1.Data
+  baseAdmin.ListDatabases].
   Attributes:
       databases:
           Databases that matched the request.
@@ -1473,10 +1465,8 @@ CreateDatabaseRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_CREATEDATABASEREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [CreateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.CreateDatabase].
-  
-  
+        __doc__="""The request for [CreateDatabase][google.spanner.admin.database.v1.Data
+  baseAdmin.CreateDatabase].
   Attributes:
       parent:
           Required. The name of the instance that will serve the new
@@ -1507,10 +1497,8 @@ CreateDatabaseMetadata = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_CREATEDATABASEMETADATA,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""Metadata type for the operation returned by
-  [CreateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.CreateDatabase].
-  
-  
+        __doc__="""Metadata type for the operation returned by [CreateDatabase][google.sp
+  anner.admin.database.v1.DatabaseAdmin.CreateDatabase].
   Attributes:
       database:
           The database being created.
@@ -1526,10 +1514,8 @@ GetDatabaseRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_GETDATABASEREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [GetDatabase][google.spanner.admin.database.v1.DatabaseAdmin.GetDatabase].
-  
-  
+        __doc__="""The request for [GetDatabase][google.spanner.admin.database.v1.Databas
+  eAdmin.GetDatabase].
   Attributes:
       name:
           Required. The name of the requested database. Values are of
@@ -1547,24 +1533,20 @@ UpdateDatabaseDdlRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_UPDATEDATABASEDDLREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""Enqueues the given DDL statements to be applied, in order
-  but not necessarily all at once, to the database schema at some point
-  (or points) in the future. The server checks that the statements are
+        __doc__="""Enqueues the given DDL statements to be applied, in order but not
+  necessarily all at once, to the database schema at some point (or
+  points) in the future. The server checks that the statements are
   executable (syntactically valid, name tables that exist, etc.) before
-  enqueueing them, but they may still fail upon later execution (e.g., if
-  a statement from another batch of statements is applied first and it
-  conflicts in some way, or if there is some data-related problem like a
-  ``NULL`` value in a column to which ``NOT NULL`` would be added). If a
-  statement fails, all subsequent statements in the batch are
-  automatically cancelled.
-  
-  Each batch of statements is assigned a name which can be used with the
-  [Operations][google.longrunning.Operations] API to monitor progress. See
-  the
-  [operation\_id][google.spanner.admin.database.v1.UpdateDatabaseDdlRequest.operation\_id]
-  field for more details.
-  
-  
+  enqueueing them, but they may still fail upon later execution (e.g.,
+  if a statement from another batch of statements is applied first and
+  it conflicts in some way, or if there is some data-related problem
+  like a ``NULL`` value in a column to which ``NOT NULL`` would be
+  added). If a statement fails, all subsequent statements in the batch
+  are automatically cancelled.  Each batch of statements is assigned a
+  name which can be used with the
+  [Operations][google.longrunning.Operations] API to monitor progress.
+  See the [operation\_id][google.spanner.admin.database.v1.UpdateDatabas
+  eDdlRequest.operation\_id] field for more details.
   Attributes:
       database:
           Required. The database to update.
@@ -1603,10 +1585,8 @@ UpdateDatabaseDdlMetadata = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_UPDATEDATABASEDDLMETADATA,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""Metadata type for the operation returned by
-  [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl].
-  
-  
+        __doc__="""Metadata type for the operation returned by [UpdateDatabaseDdl][google
+  .spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl].
   Attributes:
       database:
           The database being modified.
@@ -1629,10 +1609,8 @@ DropDatabaseRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_DROPDATABASEREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [DropDatabase][google.spanner.admin.database.v1.DatabaseAdmin.DropDatabase].
-  
-  
+        __doc__="""The request for [DropDatabase][google.spanner.admin.database.v1.Databa
+  seAdmin.DropDatabase].
   Attributes:
       database:
           Required. The database to be dropped.
@@ -1648,10 +1626,8 @@ GetDatabaseDdlRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_GETDATABASEDDLREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [GetDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.GetDatabaseDdl].
-  
-  
+        __doc__="""The request for [GetDatabaseDdl][google.spanner.admin.database.v1.Data
+  baseAdmin.GetDatabaseDdl].
   Attributes:
       database:
           Required. The database whose schema we wish to get.
@@ -1667,10 +1643,8 @@ GetDatabaseDdlResponse = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_GETDATABASEDDLRESPONSE,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The response for
-  [GetDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.GetDatabaseDdl].
-  
-  
+        __doc__="""The response for [GetDatabaseDdl][google.spanner.admin.database.v1.Dat
+  abaseAdmin.GetDatabaseDdl].
   Attributes:
       statements:
           A list of formatted DDL statements defining the schema of the
@@ -1687,10 +1661,8 @@ ListDatabaseOperationsRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_LISTDATABASEOPERATIONSREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [ListDatabaseOperations][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabaseOperations].
-  
-  
+        __doc__="""The request for [ListDatabaseOperations][google.spanner.admin.database
+  .v1.DatabaseAdmin.ListDatabaseOperations].
   Attributes:
       parent:
           Required. The instance of the database operations. Values are
@@ -1755,10 +1727,8 @@ ListDatabaseOperationsResponse = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_LISTDATABASEOPERATIONSRESPONSE,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The response for
-  [ListDatabaseOperations][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabaseOperations].
-  
-  
+        __doc__="""The response for [ListDatabaseOperations][google.spanner.admin.databas
+  e.v1.DatabaseAdmin.ListDatabaseOperations].
   Attributes:
       operations:
           The list of matching database [long-running
@@ -1783,10 +1753,8 @@ RestoreDatabaseRequest = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_RESTOREDATABASEREQUEST,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""The request for
-  [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase].
-  
-  
+        __doc__="""The request for [RestoreDatabase][google.spanner.admin.database.v1.Dat
+  abaseAdmin.RestoreDatabase].
   Attributes:
       parent:
           Required. The name of the instance in which to create the
@@ -1818,10 +1786,8 @@ RestoreDatabaseMetadata = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_RESTOREDATABASEMETADATA,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""Metadata type for the long-running operation returned by
-  [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase].
-  
-  
+        __doc__="""Metadata type for the long-running operation returned by [RestoreDatab
+  ase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase].
   Attributes:
       name:
           Name of the database being created and restored to.
@@ -1876,13 +1842,11 @@ OptimizeRestoredDatabaseMetadata = _reflection.GeneratedProtocolMessageType(
     dict(
         DESCRIPTOR=_OPTIMIZERESTOREDDATABASEMETADATA,
         __module__="google.cloud.spanner.admin.database_v1.proto.spanner_database_admin_pb2",
-        __doc__="""Metadata type for the long-running operation used to track
-  the progress of optimizations performed on a newly restored database.
-  This long-running operation is automatically created by the system after
+        __doc__="""Metadata type for the long-running operation used to track the
+  progress of optimizations performed on a newly restored database. This
+  long-running operation is automatically created by the system after
   the successful completion of a database restore, and cannot be
   cancelled.
-  
-  
   Attributes:
       name:
           Name of the restored database being optimized.
