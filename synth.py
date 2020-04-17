@@ -46,7 +46,14 @@ s.replace(
 s.replace(
     "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
     "from google.cloud.spanner_v1.proto import spanner_pb2_grpc\n",
-    "\g<0>\n\n_SPANNER_GRPC_CONFIG = 'spanner.grpc.config'\n",
+    "\g<0>\n\n_GRPC_KEEPALIVE_MS = 2 * 60 * 1000\n"
+    "_SPANNER_GRPC_CONFIG = 'spanner.grpc.config'\n",
+)
+
+s.replace(
+    "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
+    "(\s+)'grpc.max_receive_message_length': -1,",
+    "\g<0>\g<1>\"grpc.keepalive_time_ms\": _GRPC_KEEPALIVE_MS,",
 )
 
 s.replace(
@@ -55,6 +62,9 @@ s.replace(
     "\g<1>grpc_gcp_config = grpc_gcp.api_config_from_text_pb("
     "\g<1>    pkg_resources.resource_string(__name__, _SPANNER_GRPC_CONFIG))"
     "\g<1>options = [(grpc_gcp.API_CONFIG_CHANNEL_ARG, grpc_gcp_config)]"
+    "\g<1>if 'options' in kwargs:"
+    "\g<1>    options.extend(kwargs['options'])"
+    "\g<1>kwargs['options'] = options"
     "\g<0>",
 )
 s.replace(
