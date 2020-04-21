@@ -554,22 +554,22 @@ class TestPingingPool(unittest.TestCase):
         for session in SESSIONS:
             self.assertTrue(session._deleted)
 
-    def test_ping_empty(self):
+    def test_refresh_session_empty(self):
         pool = self._make_one(size=1)
-        pool.ping()  # Does not raise 'Empty'
+        pool.refresh_session()  # Does not raise 'Empty'
 
-    def test_ping_oldest_fresh(self):
+    def test_refresh_session_oldest_fresh(self):
         pool = self._make_one(size=1)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 1
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        pool.ping()
+        pool.refresh_session()
 
         self.assertFalse(SESSIONS[0]._exists_checked)
 
-    def test_ping_oldest_stale_but_exists(self):
+    def test_refresh_session_oldest_stale_but_exists(self):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -582,11 +582,11 @@ class TestPingingPool(unittest.TestCase):
 
         later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
-            pool.ping()
+            pool.refresh_session()
 
         self.assertTrue(SESSIONS[0]._exists_checked)
 
-    def test_ping_oldest_stale_and_not_exists(self):
+    def test_refresh_session_oldest_stale_and_not_exists(self):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -600,7 +600,7 @@ class TestPingingPool(unittest.TestCase):
 
         later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
-            pool.ping()
+            pool.refresh_session()
 
         self.assertTrue(SESSIONS[0]._exists_checked)
         SESSIONS[1].create.assert_called()

@@ -422,19 +422,23 @@ class PingingPool(AbstractSessionPool):
         or during the "idle" phase of an event loop.
         """
         while True:
-            try:
-                ping_after, session = self._sessions.get(block=False)
-            except queue.Empty:  # all sessions in use
-                break
-            if ping_after > _NOW():  # oldest session is fresh
-                # Re-add to queue with existing expiration
-                self._sessions.put((ping_after, session))
-                break
-            if not session.exists():  # stale
-                session = self._new_session()
-                session.create()
-            # Re-add to queue with new expiration
-            self.put(session)
+            self.refresh_session()
+
+    def refresh_session(self):
+        """Refresh the oldest maybe-expired session from the pool."""
+        try:
+            ping_after, session = self._sessions.get(block=False)
+        except queue.Empty:  # all sessions in use
+            return
+        if ping_after > _NOW():  # oldest session is fresh
+            # Re-add to queue with existing expiration
+            self._sessions.put((ping_after, session))
+            return
+        if not session.exists():  # stale
+            session = self._new_session()
+            session.create()
+        # Re-add to queue with new expiration
+        self.put(session)
 
 
 class TransactionPingingPool(PingingPool):
