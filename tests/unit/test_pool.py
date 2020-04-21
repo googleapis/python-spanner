@@ -433,7 +433,7 @@ class TestPingingPool(unittest.TestCase):
         session = pool.get()
 
         self.assertIs(session, SESSIONS[0])
-        self.assertFalse(session._exists_checked)
+        self.assertFalse(session._pinged)
         self.assertFalse(pool._sessions.full())
 
     def test_get_hit_w_ping(self):
@@ -446,7 +446,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS = [_Session(database)] * 4
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=3000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -454,7 +454,7 @@ class TestPingingPool(unittest.TestCase):
         session = pool.get()
 
         self.assertIs(session, SESSIONS[0])
-        self.assertTrue(session._exists_checked)
+        self.assertTrue(session._pinged)
         self.assertFalse(pool._sessions.full())
 
     def test_get_hit_w_ping_expired(self):
@@ -477,7 +477,7 @@ class TestPingingPool(unittest.TestCase):
 
         self.assertIs(session, SESSIONS[4])
         session.create.assert_called()
-        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertFalse(SESSIONS[0]._pinged)
         self.assertFalse(pool._sessions.full())
 
     def test_get_empty_default_timeout(self):
@@ -532,8 +532,8 @@ class TestPingingPool(unittest.TestCase):
             pool.put(session)
 
         self.assertEqual(len(queue._items), 1)
-        ping_after, queued = queue._items[0]
-        self.assertEqual(ping_after, now + datetime.timedelta(seconds=3000))
+        last_used, queued = queue._items[0]
+        self.assertEqual(last_used, now)
         self.assertIs(queued, session)
 
     def test_clear(self):
@@ -567,7 +567,7 @@ class TestPingingPool(unittest.TestCase):
 
         pool.ping()
 
-        self.assertFalse(SESSIONS[0]._exists_checked)
+        self.assertFalse(SESSIONS[0]._pinged)
 
     def test_ping_oldest_stale_but_exists(self):
         import datetime
@@ -580,11 +580,11 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
+        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=3500)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertTrue(SESSIONS[0]._pinged)
 
     def test_ping_oldest_stale_and_not_exists(self):
         import datetime
@@ -602,7 +602,7 @@ class TestPingingPool(unittest.TestCase):
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertFalse(SESSIONS[0]._pinged)
         SESSIONS[1].create.assert_called()
 
 
@@ -850,6 +850,7 @@ class _Session(object):
         self._database = database
         self._exists = exists
         self._exists_checked = False
+        self._pinged = False
         self.create = mock.Mock()
         self._deleted = False
         self._transaction = transaction
@@ -860,6 +861,13 @@ class _Session(object):
     def exists(self):
         self._exists_checked = True
         return self._exists
+
+    def ping(self):
+        from google.cloud.exceptions import NotFound
+
+        self._pinged = True
+        if not self._exists:
+            raise NotFound("expired session")
 
     def delete(self):
         from google.cloud.exceptions import NotFound
