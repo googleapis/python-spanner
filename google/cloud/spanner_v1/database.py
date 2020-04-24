@@ -21,8 +21,11 @@ import re
 import threading
 
 import google.auth.credentials
+from google.api_core.retry import Retry, if_exception_type
+import google.auth.credentials
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.exceptions import NotFound
+from google.api_core.exceptions import Aborted
 import six
 
 # pylint: disable=ungrouped-imports
@@ -394,29 +397,33 @@ class Database(object):
 
         metadata = _metadata_with_prefix(self.name)
 
-        with SessionCheckout(self._pool) as session:
+        def execute_pdml():
+            with SessionCheckout(self._pool) as session:
 
-            txn = api.begin_transaction(session.name, txn_options, metadata=metadata)
+                txn = api.begin_transaction(session.name, txn_options, metadata=metadata)
 
-            txn_selector = TransactionSelector(id=txn.id)
+                txn_selector = TransactionSelector(id=txn.id)
 
-            restart = functools.partial(
-                api.execute_streaming_sql,
-                session.name,
-                dml,
-                transaction=txn_selector,
-                params=params_pb,
-                param_types=param_types,
-                query_options=query_options,
-                metadata=metadata,
-            )
+                restart = functools.partial(
+                    api.execute_streaming_sql,
+                    session.name,
+                    dml,
+                    transaction=txn_selector,
+                    params=params_pb,
+                    param_types=param_types,
+                    query_options=query_options,
+                    metadata=metadata,
+                )
 
-            iterator = _restart_on_unavailable(restart)
+                iterator = _restart_on_unavailable(restart)
 
-            result_set = StreamedResultSet(iterator)
-            list(result_set)  # consume all partials
+                result_set = StreamedResultSet(iterator)
+                list(result_set)  # consume all partials
 
-            return result_set.stats.row_count_lower_bound
+                return result_set.stats.row_count_lower_bound
+
+        retry = Retry(predicate=if_exception_type(Aborted))
+        return retry(execute_pdml)()
 
     def session(self, labels=None):
         """Factory to create a session for this database.
