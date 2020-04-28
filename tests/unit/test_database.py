@@ -819,7 +819,9 @@ class TestDatabase(_BaseTest):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         if retried:
-            expected_retry_transaction = TransactionSelector(id=self.RETRY_TRANSACTION_ID)
+            expected_retry_transaction = TransactionSelector(
+                id=self.RETRY_TRANSACTION_ID
+            )
             api.execute_streaming_sql.assert_called_with(
                 self.SESSION_NAME,
                 dml,
@@ -854,9 +856,7 @@ class TestDatabase(_BaseTest):
         )
 
     def test_execute_partitioned_dml_wo_params_retry_aborted(self):
-        self._execute_partitioned_dml_helper(
-            dml=DML_WO_PARAM, retried=True
-        )
+        self._execute_partitioned_dml_helper(dml=DML_WO_PARAM, retried=True)
 
     def test_session_factory_defaults(self):
         from google.cloud.spanner_v1.session import Session
