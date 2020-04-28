@@ -506,8 +506,9 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         op2.result(30)  # raises on failure / timeout.
 
         current_config = Config.INSTANCE.configuration_name
+        same_config_instance_id = "same-config" + unique_resource_id("-")
         cls._same_config_instance = Config.CLIENT.instance(
-            "same-config", current_config
+            same_config_instance_id, current_config
         )
         op = cls._same_config_instance.create()
         op.result(30)
@@ -522,8 +523,9 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         ]
         cls._diff_config_instance = None
         if len(diff_configs) > 0:
+            diff_config_instance_id = "diff-config" + unique_resource_id("-")
             cls._diff_config_instance = Config.CLIENT.instance(
-                "diff-config", diff_configs[0]
+                diff_config_instance_id, diff_configs[0]
             )
             op = cls._diff_config_instance.create()
             op.result(30)
