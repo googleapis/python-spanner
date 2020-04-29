@@ -26,7 +26,6 @@ library = gapic.py_library(
     service="spanner",
     version="v1",
     bazel_target="//google/spanner/v1:spanner-v1-py",
-    include_protos=True,
 )
 
 s.move(library / "google/cloud/spanner_v1/proto")
@@ -79,7 +78,6 @@ library = gapic.py_library(
     service="spanner_admin_instance",
     version="v1",
     bazel_target="//google/spanner/admin/instance/v1:admin-instance-v1-py",
-    include_protos=True,
 )
 
 s.move(library / "google/cloud/spanner_admin_instance_v1/gapic")
@@ -112,7 +110,6 @@ library = gapic.py_library(
     service="spanner_admin_database",
     version="v1",
     bazel_target="//google/spanner/admin/database/v1:admin-database-v1-py",
-    include_protos=True,
 )
 
 s.move(library / "google/cloud/spanner_admin_database_v1/gapic")
