@@ -577,6 +577,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         # Create backup.
         backup = instance.backup(backup_id, database=self._db, expire_time=expire_time)
         operation = backup.create()
+        self.to_delete.append(backup)
 
         # Check metadata.
         metadata = operation.metadata
@@ -605,13 +606,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         operation = database.restore(source=backup)
         operation.result()
 
-        # Delete after optimization has completed.
-        filter = "(name:{0})".format(
-            operation.metadata.optimize_database_operation_name
-        )
-        for op in database.list_database_operations(filter_=filter):
-            op.result()
-            backup.delete()
+        database.drop()
+        backup.delete()
         self.assertFalse(backup.exists())
 
     def test_restore_to_diff_instance(self):
@@ -628,6 +624,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             backup_id, database=self._db, expire_time=expire_time
         )
         op = backup.create()
+        self.to_delete.append(backup)
         op.result()
 
         # Restore database to different instance with same config.
@@ -637,13 +634,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         operation = database.restore(source=backup)
         operation.result()
 
-        # Delete after optimization has completed.
-        filter = "(name:{0})".format(
-            operation.metadata.optimize_database_operation_name
-        )
-        for op in database.list_database_operations(filter_=filter):
-            op.result()
-            backup.delete()
+        database.drop()
+        backup.delete()
         self.assertFalse(backup.exists())
 
     def test_multi_create_cancel_update_error_restore_errors(self):
