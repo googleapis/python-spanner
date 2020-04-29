@@ -39,8 +39,9 @@ class Backup(object):
 
         Attributes:
           STATE_UNSPECIFIED (int): Not specified.
-          CREATING (int): The pending backup is still being created. Operations on the backup may
-          fail with ``FAILED_PRECONDITION`` in this state.
+          CREATING (int): One delta entry for AuditConfig. Each individual change (only one
+          exempted_member in each entry) to a AuditConfig will be a separate
+          entry.
           READY (int): The backup is complete and ready for use.
         """
 
@@ -56,16 +57,9 @@ class Database(object):
 
         Attributes:
           STATE_UNSPECIFIED (int): Not specified.
-          CREATING (int): The database is still being created. Operations on the database may fail
-          with ``FAILED_PRECONDITION`` in this state.
+          CREATING (int): javalite_serializable
           READY (int): The database is fully created and ready for use.
-          READY_OPTIMIZING (int): The database is fully created and ready for use, but is still being
-          optimized for performance and cannot handle full load.
-
-          In this state, the database still references the backup it was restore
-          from, preventing the backup from being deleted. When optimizations are
-          complete, the full performance of the database will be restored, and the
-          database will transition to ``READY`` state.
+          READY_OPTIMIZING (int): Request message for ``GetIamPolicy`` method.
         """
 
         STATE_UNSPECIFIED = 0

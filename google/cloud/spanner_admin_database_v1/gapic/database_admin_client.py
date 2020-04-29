@@ -242,12 +242,9 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Creates a new Cloud Spanner database and starts to prepare it for
-        serving. The returned ``long-running operation`` will have a name of the
-        format ``<database_name>/operations/<operation_id>`` and can be used to
-        track preparation of the database. The ``metadata`` field type is
-        ``CreateDatabaseMetadata``. The ``response`` field type is ``Database``,
-        if successful.
+        Denotes a field as required. This indicates that the field **must**
+        be provided as part of the request, and failure to do so will cause an
+        error (usually ``INVALID_ARGUMENT``).
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -271,13 +268,39 @@ class DatabaseAdminClient(object):
             >>> metadata = response.metadata()
 
         Args:
-            parent (str): Required. The name of the instance that will serve the new database.
-                Values are of the form ``projects/<project>/instances/<instance>``.
-            create_statement (str): Required. A ``CREATE DATABASE`` statement, which specifies the ID of the
-                new database. The database ID must conform to the regular expression
-                ``[a-z][a-z0-9_\-]*[a-z0-9]`` and be between 2 and 30 characters in
-                length. If the database ID is a reserved word or if it contains a
-                hyphen, the database ID must be enclosed in backticks (`````).
+            parent (str): Protocol Buffers - Google's data interchange format Copyright 2008
+                Google Inc. All rights reserved.
+                https://developers.google.com/protocol-buffers/
+
+                Redistribution and use in source and binary forms, with or without
+                modification, are permitted provided that the following conditions are
+                met:
+
+                ::
+
+                    * Redistributions of source code must retain the above copyright
+
+                notice, this list of conditions and the following disclaimer. \*
+                Redistributions in binary form must reproduce the above copyright
+                notice, this list of conditions and the following disclaimer in the
+                documentation and/or other materials provided with the distribution. \*
+                Neither the name of Google Inc. nor the names of its contributors may be
+                used to endorse or promote products derived from this software without
+                specific prior written permission.
+
+                THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+                IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+                TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+                PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+                OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+                EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+                PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+                PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+                LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+                NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+                SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+            create_statement (str): The backup contains an externally consistent copy of
+                ``source_database`` at the timestamp specified by ``create_time``.
             extra_statements (list[str]): Optional. A list of DDL statements to run inside the newly created
                 database. Statements can create tables, indexes, etc. These
                 statements execute atomically with the creation of the database:
@@ -360,8 +383,8 @@ class DatabaseAdminClient(object):
             >>> response = client.get_database(name)
 
         Args:
-            name (str): Required. The name of the requested database. Values are of the form
-                ``projects/<project>/instances/<instance>/databases/<database>``.
+            name (str): Required. The instance whose databases should be listed. Values are
+                of the form ``projects/<project>/instances/<instance>``.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -420,12 +443,44 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Updates the schema of a Cloud Spanner database by
-        creating/altering/dropping tables, columns, indexes, etc. The returned
-        ``long-running operation`` will have a name of the format
-        ``<database_name>/operations/<operation_id>`` and can be used to track
-        execution of the schema change(s). The ``metadata`` field type is
-        ``UpdateDatabaseDdlMetadata``. The operation has no response.
+        An expression that filters the list of returned backup operations.
+
+        A filter expression consists of a field name, a comparison operator, and
+        a value for filtering. The value must be a string, a number, or a
+        boolean. The comparison operator must be one of: ``<``, ``>``, ``<=``,
+        ``>=``, ``!=``, ``=``, or ``:``. Colon ``:`` is the contains operator.
+        Filter rules are not case sensitive.
+
+        The following fields in the ``operation`` are eligible for filtering:
+
+        -  ``name`` - The name of the long-running operation
+        -  ``done`` - False if the operation is in progress, else true.
+        -  ``metadata.@type`` - the type of metadata. For example, the type
+           string for ``CreateBackupMetadata`` is
+           ``type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata``.
+        -  ``metadata.<field_name>`` - any field in metadata.value.
+        -  ``error`` - Error associated with the long-running operation.
+        -  ``response.@type`` - the type of response.
+        -  ``response.<field_name>`` - any field in response.value.
+
+        You can combine multiple expressions by enclosing each expression in
+        parentheses. By default, expressions are combined with AND logic, but
+        you can specify AND, OR, and NOT logic explicitly.
+
+        Here are a few examples:
+
+        -  ``done:true`` - The operation is complete.
+        -  ``metadata.database:prod`` - The database the backup was taken from
+           has a name containing the string "prod".
+        -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata) AND``
+           ``(metadata.name:howl) AND``
+           ``(metadata.progress.start_time < \"2018-03-28T14:50:00Z\") AND``
+           ``(error:*)`` - Returns operations where:
+
+           -  The operation's metadata type is ``CreateBackupMetadata``.
+           -  The backup name contains the string "howl".
+           -  The operation started before 2018-03-28T14:50:00Z.
+           -  The operation resulted in an error.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -451,21 +506,8 @@ class DatabaseAdminClient(object):
         Args:
             database (str): Required. The database to update.
             statements (list[str]): Required. DDL statements to be applied to the database.
-            operation_id (str): If empty, the new update request is assigned an automatically-generated
-                operation ID. Otherwise, ``operation_id`` is used to construct the name
-                of the resulting ``Operation``.
-
-                Specifying an explicit operation ID simplifies determining whether the
-                statements were executed in the event that the ``UpdateDatabaseDdl``
-                call is replayed, or the return value is otherwise lost: the
-                ``database`` and ``operation_id`` fields can be combined to form the
-                ``name`` of the resulting ``longrunning.Operation``:
-                ``<database>/operations/<operation_id>``.
-
-                ``operation_id`` should be unique within the database, and must be a
-                valid identifier: ``[a-z][a-z0-9_]*``. Note that automatically-generated
-                operation IDs always begin with an underscore. If the named operation
-                already exists, ``UpdateDatabaseDdl`` returns ``ALREADY_EXISTS``.
+            operation_id (str): OPTIONAL: A ``GetPolicyOptions`` object for specifying options to
+                ``GetIamPolicy``. This field is only used by Cloud IAM.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -530,8 +572,226 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Drops (aka deletes) a Cloud Spanner database. Completed backups for the
-        database will be retained according to their ``expire_time``.
+        ``FieldMask`` represents a set of symbolic field paths, for example:
+
+        ::
+
+            paths: "f.a"
+            paths: "f.b.d"
+
+        Here ``f`` represents a field in some root message, ``a`` and ``b``
+        fields in the message found in ``f``, and ``d`` a field found in the
+        message in ``f.b``.
+
+        Field masks are used to specify a subset of fields that should be
+        returned by a get operation or modified by an update operation. Field
+        masks also have a custom JSON encoding (see below).
+
+        # Field Masks in Projections
+
+        When used in the context of a projection, a response message or
+        sub-message is filtered by the API to only contain those fields as
+        specified in the mask. For example, if the mask in the previous example
+        is applied to a response message as follows:
+
+        ::
+
+            f {
+              a : 22
+              b {
+                d : 1
+                x : 2
+              }
+              y : 13
+            }
+            z: 8
+
+        The result will not contain specific values for fields x,y and z (their
+        value will be set to the default, and omitted in proto text output):
+
+        ::
+
+            f {
+              a : 22
+              b {
+                d : 1
+              }
+            }
+
+        A repeated field is not allowed except at the last position of a paths
+        string.
+
+        If a FieldMask object is not present in a get operation, the operation
+        applies to all fields (as if a FieldMask of all fields had been
+        specified).
+
+        Note that a field mask does not necessarily apply to the top-level
+        response message. In case of a REST get operation, the field mask
+        applies directly to the response, but in case of a REST list operation,
+        the mask instead applies to each individual message in the returned
+        resource list. In case of a REST custom method, other definitions may be
+        used. Where the mask applies will be clearly documented together with
+        its declaration in the API. In any case, the effect on the returned
+        resource/resources is required behavior for APIs.
+
+        # Field Masks in Update Operations
+
+        A field mask in update operations specifies which fields of the targeted
+        resource are going to be updated. The API is required to only change the
+        values of the fields as specified in the mask and leave the others
+        untouched. If a resource is passed in to describe the updated values,
+        the API ignores the values of all fields not covered by the mask.
+
+        If a repeated field is specified for an update operation, new values
+        will be appended to the existing repeated field in the target resource.
+        Note that a repeated field is only allowed in the last position of a
+        ``paths`` string.
+
+        If a sub-message is specified in the last position of the field mask for
+        an update operation, then new value will be merged into the existing
+        sub-message in the target resource.
+
+        For example, given the target message:
+
+        ::
+
+            f {
+              b {
+                d: 1
+                x: 2
+              }
+              c: [1]
+            }
+
+        And an update message:
+
+        ::
+
+            f {
+              b {
+                d: 10
+              }
+              c: [2]
+            }
+
+        then if the field mask is:
+
+        paths: ["f.b", "f.c"]
+
+        then the result will be:
+
+        ::
+
+            f {
+              b {
+                d: 10
+                x: 2
+              }
+              c: [1, 2]
+            }
+
+        An implementation may provide options to override this default behavior
+        for repeated and message fields.
+
+        In order to reset a field's value to the default, the field must be in
+        the mask and set to the default value in the provided resource. Hence,
+        in order to reset all fields of a resource, provide a default instance
+        of the resource and set all fields in the mask, or do not provide a mask
+        as described below.
+
+        If a field mask is not present on update, the operation applies to all
+        fields (as if a field mask of all fields has been specified). Note that
+        in the presence of schema evolution, this may mean that fields the
+        client does not know and has therefore not filled into the request will
+        be reset to their default. If this is unwanted behavior, a specific
+        service may require a client to always specify a field mask, producing
+        an error if not.
+
+        As with get operations, the location of the resource which describes the
+        updated values in the request message depends on the operation kind. In
+        any case, the effect of the field mask is required to be honored by the
+        API.
+
+        ## Considerations for HTTP REST
+
+        The HTTP kind of an update operation which uses a field mask must be set
+        to PATCH instead of PUT in order to satisfy HTTP semantics (PUT must
+        only be used for full updates).
+
+        # JSON Encoding of Field Masks
+
+        In JSON, a field mask is encoded as a single string where paths are
+        separated by a comma. Fields name in each path are converted to/from
+        lower-camel naming conventions.
+
+        As an example, consider the following message declarations:
+
+        ::
+
+            message Profile {
+              User user = 1;
+              Photo photo = 2;
+            }
+            message User {
+              string display_name = 1;
+              string address = 2;
+            }
+
+        In proto a field mask for ``Profile`` may look as such:
+
+        ::
+
+            mask {
+              paths: "user.display_name"
+              paths: "photo"
+            }
+
+        In JSON, the same mask is represented as below:
+
+        ::
+
+            {
+              mask: "user.displayName,photo"
+            }
+
+        # Field Masks and Oneof Fields
+
+        Field masks treat fields in oneofs just as regular fields. Consider the
+        following message:
+
+        ::
+
+            message SampleMessage {
+              oneof test_oneof {
+                string name = 4;
+                SubMessage sub_message = 9;
+              }
+            }
+
+        The field mask can be:
+
+        ::
+
+            mask {
+              paths: "name"
+            }
+
+        Or:
+
+        ::
+
+            mask {
+              paths: "sub_message"
+            }
+
+        Note that oneof type names ("test_oneof" in this case) cannot be used in
+        paths.
+
+        ## Field Mask Verification
+
+        The implementation of any API method which has a FieldMask type field in
+        the request should verify the included field paths, and return an
+        ``INVALID_ARGUMENT`` error if any path is unmappable.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -597,9 +857,37 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Returns the schema of a Cloud Spanner database as a list of formatted
-        DDL statements. This method does not show pending schema updates, those
-        may be queried using the ``Operations`` API.
+        Protocol Buffers - Google's data interchange format Copyright 2008
+        Google Inc. All rights reserved.
+        https://developers.google.com/protocol-buffers/
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are
+        met:
+
+        ::
+
+            * Redistributions of source code must retain the above copyright
+
+        notice, this list of conditions and the following disclaimer. \*
+        Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution. \*
+        Neither the name of Google Inc. nor the names of its contributors may be
+        used to endorse or promote products derived from this software without
+        specific prior written permission.
+
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+        IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+        TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+        PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+        OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+        EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+        PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+        PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+        LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+        NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -669,12 +957,10 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Sets the access control policy on a database or backup resource.
-        Replaces any existing policy.
-
-        Authorization requires ``spanner.databases.setIamPolicy`` permission on
-        ``resource``. For backups, authorization requires
-        ``spanner.backups.setIamPolicy`` permission on ``resource``.
+        Denotes a field as output only. This indicates that the field is
+        provided in responses, but including the field in a request does nothing
+        (the server *must* ignore it and *must not* throw an error as a result
+        of the field's presence).
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -692,10 +978,95 @@ class DatabaseAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy is being specified.
                 See the operation documentation for the appropriate value for this field.
-            policy (Union[dict, ~google.cloud.spanner_admin_database_v1.types.Policy]): REQUIRED: The complete policy to be applied to the ``resource``. The
-                size of the policy is limited to a few 10s of KB. An empty policy is a
-                valid policy but certain Cloud Platform services (such as Projects)
-                might reject them.
+            policy (Union[dict, ~google.cloud.spanner_admin_database_v1.types.Policy]): ``Any`` contains an arbitrary serialized protocol buffer message
+                along with a URL that describes the type of the serialized message.
+
+                Protobuf library provides support to pack/unpack Any values in the form
+                of utility functions or additional generated methods of the Any type.
+
+                Example 1: Pack and unpack a message in C++.
+
+                ::
+
+                    Foo foo = ...;
+                    Any any;
+                    any.PackFrom(foo);
+                    ...
+                    if (any.UnpackTo(&foo)) {
+                      ...
+                    }
+
+                Example 2: Pack and unpack a message in Java.
+
+                ::
+
+                    Foo foo = ...;
+                    Any any = Any.pack(foo);
+                    ...
+                    if (any.is(Foo.class)) {
+                      foo = any.unpack(Foo.class);
+                    }
+
+                Example 3: Pack and unpack a message in Python.
+
+                ::
+
+                    foo = Foo(...)
+                    any = Any()
+                    any.Pack(foo)
+                    ...
+                    if any.Is(Foo.DESCRIPTOR):
+                      any.Unpack(foo)
+                      ...
+
+                Example 4: Pack and unpack a message in Go
+
+                ::
+
+                     foo := &pb.Foo{...}
+                     any, err := ptypes.MarshalAny(foo)
+                     ...
+                     foo := &pb.Foo{}
+                     if err := ptypes.UnmarshalAny(any, foo); err != nil {
+                       ...
+                     }
+
+                The pack methods provided by protobuf library will by default use
+                'type.googleapis.com/full.type.name' as the type URL and the unpack
+                methods only use the fully qualified type name after the last '/' in the
+                type URL, for example "foo.bar.com/x/y.z" will yield type name "y.z".
+
+                # JSON
+
+                The JSON representation of an ``Any`` value uses the regular
+                representation of the deserialized, embedded message, with an additional
+                field ``@type`` which contains the type URL. Example:
+
+                ::
+
+                    package google.profile;
+                    message Person {
+                      string first_name = 1;
+                      string last_name = 2;
+                    }
+
+                    {
+                      "@type": "type.googleapis.com/google.profile.Person",
+                      "firstName": <string>,
+                      "lastName": <string>
+                    }
+
+                If the embedded message type is well-known and has a custom JSON
+                representation, that representation will be embedded adding a field
+                ``value`` which holds the custom JSON in addition to the ``@type``
+                field. Example (for message ``google.protobuf.Duration``):
+
+                ::
+
+                    {
+                      "@type": "type.googleapis.com/google.protobuf.Duration",
+                      "value": "1.212s"
+                    }
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_database_v1.types.Policy`
@@ -756,13 +1127,7 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Gets the access control policy for a database or backup resource.
-        Returns an empty policy if a database or backup exists but does not have
-        a policy set.
-
-        Authorization requires ``spanner.databases.getIamPolicy`` permission on
-        ``resource``. For backups, authorization requires
-        ``spanner.backups.getIamPolicy`` permission on ``resource``.
+        Request message for ``SetIamPolicy`` method.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -777,8 +1142,7 @@ class DatabaseAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy is being requested.
                 See the operation documentation for the appropriate value for this field.
-            options_ (Union[dict, ~google.cloud.spanner_admin_database_v1.types.GetPolicyOptions]): OPTIONAL: A ``GetPolicyOptions`` object for specifying options to
-                ``GetIamPolicy``. This field is only used by Cloud IAM.
+            options_ (Union[dict, ~google.cloud.spanner_admin_database_v1.types.GetPolicyOptions]): The request for ``ListBackupOperations``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_database_v1.types.GetPolicyOptions`
@@ -841,15 +1205,13 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Returns permissions that the caller has on the specified database or
-        backup resource.
+        The database is fully created and ready for use, but is still being
+        optimized for performance and cannot handle full load.
 
-        Attempting this RPC on a non-existent Cloud Spanner database will result
-        in a NOT\_FOUND error if the user has ``spanner.databases.list``
-        permission on the containing Cloud Spanner instance. Otherwise returns
-        an empty set of permissions. Calling this method on a backup that does
-        not exist will result in a NOT\_FOUND error if the user has
-        ``spanner.backups.list`` permission on the containing instance.
+        In this state, the database still references the backup it was restore
+        from, preventing the backup from being deleted. When optimizations are
+        complete, the full performance of the database will be restored, and the
+        database will transition to ``READY`` state.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -867,10 +1229,12 @@ class DatabaseAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy detail is being requested.
                 See the operation documentation for the appropriate value for this field.
-            permissions (list[str]): The set of permissions to check for the ``resource``. Permissions with
-                wildcards (such as '*' or 'storage.*') are not allowed. For more
-                information see `IAM
-                Overview <https://cloud.google.com/iam/docs/overview#permissions>`__.
+            permissions (list[str]): If set true, then the Java code generator will generate a separate
+                .java file for each top-level message, enum, and service defined in the
+                .proto file. Thus, these types will *not* be nested inside the outer
+                class named by java_outer_classname. However, the outer class will still
+                be generated to contain the file's getDescriptor() method as well as any
+                top-level extensions defined in the file.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -931,15 +1295,10 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Starts creating a new Cloud Spanner Backup. The returned backup
-        ``long-running operation`` will have a name of the format
-        ``projects/<project>/instances/<instance>/backups/<backup>/operations/<operation_id>``
-        and can be used to track creation of the backup. The ``metadata`` field
-        type is ``CreateBackupMetadata``. The ``response`` field type is
-        ``Backup``, if successful. Cancelling the returned operation will stop
-        the creation and delete the backup. There can be only one pending backup
-        creation per database. Backup creation of different databases can run
-        concurrently.
+        Required. The name of the database. Values are of the form
+        ``projects/<project>/instances/<instance>/databases/<database>``, where
+        ``<database>`` is as specified in the ``CREATE DATABASE`` statement.
+        This name can be passed to other API methods to identify the database.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -966,14 +1325,11 @@ class DatabaseAdminClient(object):
             >>> metadata = response.metadata()
 
         Args:
-            parent (str): Required. The name of the instance in which the backup will be created.
-                This must be the same instance that contains the database the backup
-                will be created from. The backup will be stored in the location(s)
-                specified in the instance configuration of this instance. Values are of
-                the form ``projects/<project>/instances/<instance>``.
-            backup_id (str): Required. The id of the backup to be created. The ``backup_id`` appended
-                to ``parent`` forms the full backup name of the form
-                ``projects/<project>/instances/<instance>/backups/<backup_id>``.
+            parent (str): Required. The name of the instance in which to create the restored
+                database. This instance must be in the same project and have the same
+                instance configuration as the instance containing the source backup.
+                Values are of the form ``projects/<project>/instances/<instance>``.
+            backup_id (str): The response message for ``Operations.ListOperations``.
             backup (Union[dict, ~google.cloud.spanner_admin_database_v1.types.Backup]): Required. The backup to create.
 
                 If a dict is provided, it must be of the same form as the protobuf
@@ -1042,7 +1398,9 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Gets metadata on a pending or completed ``Backup``.
+        If non-empty, ``page_token`` should contain a ``next_page_token``
+        from a previous ``ListBackupOperationsResponse`` to the same ``parent``
+        and with the same ``filter``.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1054,8 +1412,19 @@ class DatabaseAdminClient(object):
             >>> response = client.get_backup(name)
 
         Args:
-            name (str): Required. Name of the backup. Values are of the form
-                ``projects/<project>/instances/<instance>/backups/<backup>``.
+            name (str): Create a new database by restoring from a completed backup. The new
+                database must be in the same project and in an instance with the same
+                instance configuration as the instance containing the backup. The
+                returned database ``long-running operation`` has a name of the format
+                ``projects/<project>/instances/<instance>/databases/<database>/operations/<operation_id>``,
+                and can be used to track the progress of the operation, and to cancel
+                it. The ``metadata`` field type is ``RestoreDatabaseMetadata``. The
+                ``response`` type is ``Database``, if successful. Cancelling the
+                returned operation will stop the restore and delete the database. There
+                can be only one database being restored into an instance at a time. Once
+                the restore operation completes, a new restore operation can be
+                initiated, without waiting for the optimize operation associated with
+                the first restore to complete.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -1113,7 +1482,8 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Updates a pending or completed ``Backup``.
+        Not ZigZag encoded. Negative numbers take 10 bytes. Use TYPE_SINT64
+        if negative values are likely.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1129,19 +1499,14 @@ class DatabaseAdminClient(object):
             >>> response = client.update_backup(backup, update_mask)
 
         Args:
-            backup (Union[dict, ~google.cloud.spanner_admin_database_v1.types.Backup]): Required. The backup to update. ``backup.name``, and the fields to be
-                updated as specified by ``update_mask`` are required. Other fields are
-                ignored. Update is only supported for the following fields:
-
-                -  ``backup.expire_time``.
+            backup (Union[dict, ~google.cloud.spanner_admin_database_v1.types.Backup]): Specifies a service that was configured for Cloud Audit Logging. For
+                example, ``storage.googleapis.com``, ``cloudsql.googleapis.com``.
+                ``allServices`` is a special value that covers all services. Required
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_database_v1.types.Backup`
-            update_mask (Union[dict, ~google.cloud.spanner_admin_database_v1.types.FieldMask]): Required. A mask specifying which fields (e.g. ``expire_time``) in the
-                Backup resource should be updated. This mask is relative to the Backup
-                resource, not to the request message. The field mask must always be
-                specified; this prevents any future fields from being erased
-                accidentally by clients that do not know about them.
+            update_mask (Union[dict, ~google.cloud.spanner_admin_database_v1.types.FieldMask]): Information about the source used to restore the database, as
+                specified by ``source`` in ``RestoreDatabaseRequest``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_database_v1.types.FieldMask`
@@ -1201,7 +1566,37 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Deletes a pending or completed ``Backup``.
+        Protocol Buffers - Google's data interchange format Copyright 2008
+        Google Inc. All rights reserved.
+        https://developers.google.com/protocol-buffers/
+
+        Redistribution and use in source and binary forms, with or without
+        modification, are permitted provided that the following conditions are
+        met:
+
+        ::
+
+            * Redistributions of source code must retain the above copyright
+
+        notice, this list of conditions and the following disclaimer. \*
+        Redistributions in binary form must reproduce the above copyright
+        notice, this list of conditions and the following disclaimer in the
+        documentation and/or other materials provided with the distribution. \*
+        Neither the name of Google Inc. nor the names of its contributors may be
+        used to endorse or promote products derived from this software without
+        specific prior written permission.
+
+        THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+        IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+        TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+        PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+        OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+        EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+        PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+        PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+        LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+        NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+        SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1213,8 +1608,7 @@ class DatabaseAdminClient(object):
             >>> client.delete_backup(name)
 
         Args:
-            name (str): Required. Name of the backup to delete. Values are of the form
-                ``projects/<project>/instances/<instance>/backups/<backup>``.
+            name (str): The request message for ``Operations.CancelOperation``.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -1270,9 +1664,10 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Lists completed and pending backups. Backups returned are ordered by
-        ``create_time`` in descending order, starting from the most recent
-        ``create_time``.
+        REQUIRED: The complete policy to be applied to the ``resource``. The
+        size of the policy is limited to a few 10s of KB. An empty policy is a
+        valid policy but certain Cloud Platform services (such as Projects)
+        might reject them.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1296,41 +1691,10 @@ class DatabaseAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The instance to list backups from. Values are of the form
-                ``projects/<project>/instances/<instance>``.
-            filter_ (str): An expression that filters the list of returned backups.
-
-                A filter expression consists of a field name, a comparison operator, and
-                a value for filtering. The value must be a string, a number, or a
-                boolean. The comparison operator must be one of: ``<``, ``>``, ``<=``,
-                ``>=``, ``!=``, ``=``, or ``:``. Colon ``:`` is the contains operator.
-                Filter rules are not case sensitive.
-
-                The following fields in the ``Backup`` are eligible for filtering:
-
-                -  ``name``
-                -  ``database``
-                -  ``state``
-                -  ``create_time`` (and values are of the format YYYY-MM-DDTHH:MM:SSZ)
-                -  ``expire_time`` (and values are of the format YYYY-MM-DDTHH:MM:SSZ)
-                -  ``size_bytes``
-
-                You can combine multiple expressions by enclosing each expression in
-                parentheses. By default, expressions are combined with AND logic, but
-                you can specify AND, OR, and NOT logic explicitly.
-
-                Here are a few examples:
-
-                -  ``name:Howl`` - The backup's name contains the string "howl".
-                -  ``database:prod`` - The database's name contains the string "prod".
-                -  ``state:CREATING`` - The backup is pending creation.
-                -  ``state:READY`` - The backup is fully created and ready for use.
-                -  ``(name:howl) AND (create_time < \"2018-03-28T14:50:00Z\")`` - The
-                   backup name contains the string "howl" and ``create_time`` of the
-                   backup is before 2018-03-28T14:50:00Z.
-                -  ``expire_time < \"2018-03-28T14:50:00Z\"`` - The backup
-                   ``expire_time`` is before 2018-03-28T14:50:00Z.
-                -  ``size_bytes > 10000000000`` - The backup's size is greater than 10GB
+            parent (str): Specifies the log_type that was be enabled. ADMIN_ACTIVITY is always
+                enabled, and cannot be configured. Required
+            filter_ (str): Input and output type names. These are resolved in the same way as
+                FieldDescriptorProto.type_name, but must refer to a message type.
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page
@@ -1410,19 +1774,7 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Create a new database by restoring from a completed backup. The new
-        database must be in the same project and in an instance with the same
-        instance configuration as the instance containing the backup. The
-        returned database ``long-running operation`` has a name of the format
-        ``projects/<project>/instances/<instance>/databases/<database>/operations/<operation_id>``,
-        and can be used to track the progress of the operation, and to cancel
-        it. The ``metadata`` field type is ``RestoreDatabaseMetadata``. The
-        ``response`` type is ``Database``, if successful. Cancelling the
-        returned operation will stop the restore and delete the database. There
-        can be only one database being restored into an instance at a time. Once
-        the restore operation completes, a new restore operation can be
-        initiated, without waiting for the optimize operation associated with
-        the first restore to complete.
+        The response for ``ListBackupOperations``.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1446,16 +1798,26 @@ class DatabaseAdminClient(object):
             >>> metadata = response.metadata()
 
         Args:
-            parent (str): Required. The name of the instance in which to create the restored
-                database. This instance must be in the same project and have the same
-                instance configuration as the instance containing the source backup.
+            parent (str): The resource type. It must be in the format of
+                {service_name}/{resource_type_kind}. The ``resource_type_kind`` must be
+                singular and must not include version numbers.
+
+                Example: ``storage.googleapis.com/Bucket``
+
+                The value of the resource_type_kind must follow the regular expression
+                /[A-Za-z][a-zA-Z0-9]+/. It should start with an upper case character and
+                should use PascalCase (UpperCamelCase). The maximum number of characters
+                allowed for the ``resource_type_kind`` is 100.
+            database_id (str): Required. The name of the instance that will serve the new database.
                 Values are of the form ``projects/<project>/instances/<instance>``.
-            database_id (str): Required. The id of the database to create and restore to. This database
-                must not already exist. The ``database_id`` appended to ``parent`` forms
-                the full database name of the form
-                ``projects/<project>/instances/<instance>/databases/<database_id>``.
-            backup (str): Name of the backup from which to restore. Values are of the form
-                ``projects/<project>/instances/<instance>/backups/<backup>``.
+            backup (str): The ``Status`` type defines a logical error model that is suitable
+                for different programming environments, including REST APIs and RPC
+                APIs. It is used by `gRPC <https://github.com/grpc>`__. Each ``Status``
+                message contains three pieces of data: error code, error message, and
+                error details.
+
+                You can find out more about this error model and how to work with it in
+                the `API Design Guide <https://cloud.google.com/apis/design/errors>`__.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -1526,13 +1888,13 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Lists database ``longrunning-operations``. A database operation has a
-        name of the form
-        ``projects/<project>/instances/<instance>/databases/<database>/operations/<operation>``.
-        The long-running operation ``metadata`` field type ``metadata.type_url``
-        describes the type of the metadata. Operations returned include those
-        that have completed/failed/canceled within the last 7 days, and pending
-        operations.
+        The list of matching backup ``long-running operations``. Each
+        operation's name will be prefixed by the backup's name and the
+        operation's ``metadata`` will be of type ``CreateBackupMetadata``.
+        Operations returned include those that are pending or have
+        completed/failed/canceled within the last 7 days. Operations returned
+        are ordered by ``operation.metadata.value.progress.start_time`` in
+        descending order starting from the most recently started operation.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1556,48 +1918,8 @@ class DatabaseAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The instance of the database operations. Values are of the
-                form ``projects/<project>/instances/<instance>``.
-            filter_ (str): An expression that filters the list of returned operations.
-
-                A filter expression consists of a field name, a comparison operator, and
-                a value for filtering. The value must be a string, a number, or a
-                boolean. The comparison operator must be one of: ``<``, ``>``, ``<=``,
-                ``>=``, ``!=``, ``=``, or ``:``. Colon ``:`` is the contains operator.
-                Filter rules are not case sensitive.
-
-                The following fields in the ``Operation`` are eligible for filtering:
-
-                -  ``name`` - The name of the long-running operation
-                -  ``done`` - False if the operation is in progress, else true.
-                -  ``metadata.@type`` - the type of metadata. For example, the type
-                   string for ``RestoreDatabaseMetadata`` is
-                   ``type.googleapis.com/google.spanner.admin.database.v1.RestoreDatabaseMetadata``.
-                -  ``metadata.<field_name>`` - any field in metadata.value.
-                -  ``error`` - Error associated with the long-running operation.
-                -  ``response.@type`` - the type of response.
-                -  ``response.<field_name>`` - any field in response.value.
-
-                You can combine multiple expressions by enclosing each expression in
-                parentheses. By default, expressions are combined with AND logic.
-                However, you can specify AND, OR, and NOT logic explicitly.
-
-                Here are a few examples:
-
-                -  ``done:true`` - The operation is complete.
-                -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.RestoreDatabaseMetadata) AND``
-                   ``(metadata.source_type:BACKUP) AND``
-                   ``(metadata.backup_info.backup:backup_howl) AND``
-                   ``(metadata.name:restored_howl) AND``
-                   ``(metadata.progress.start_time < \"2018-03-28T14:50:00Z\") AND``
-                   ``(error:*)`` - Return operations where:
-
-                   -  The operation's metadata type is ``RestoreDatabaseMetadata``.
-                   -  The database is restored from a backup.
-                   -  The backup name contains "backup\_howl".
-                   -  The restored database's name contains "restored\_howl".
-                   -  The operation started before 2018-03-28T14:50:00Z.
-                   -  The operation resulted in an error.
+            parent (str): Response message for ``TestIamPermissions`` method.
+            filter_ (str): The response for ``ListDatabases``.
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page
@@ -1677,15 +1999,8 @@ class DatabaseAdminClient(object):
         metadata=None,
     ):
         """
-        Lists the backup ``long-running operations`` in the given instance. A
-        backup operation has a name of the form
-        ``projects/<project>/instances/<instance>/backups/<backup>/operations/<operation>``.
-        The long-running operation ``metadata`` field type ``metadata.type_url``
-        describes the type of the metadata. Operations returned include those
-        that have completed/failed/canceled within the last 7 days, and pending
-        operations. Operations returned are ordered by
-        ``operation.metadata.value.progress.start_time`` in descending order
-        starting from the most recently started operation.
+        Not ZigZag encoded. Negative numbers take 10 bytes. Use TYPE_SINT32
+        if negative values are likely.
 
         Example:
             >>> from google.cloud import spanner_admin_database_v1
@@ -1709,46 +2024,36 @@ class DatabaseAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The instance of the backup operations. Values are of the form
+            parent (str): Required. The instance to list backups from. Values are of the form
                 ``projects/<project>/instances/<instance>``.
-            filter_ (str): An expression that filters the list of returned backup operations.
+            filter_ (str): Should this field be parsed lazily? Lazy applies only to
+                message-type fields. It means that when the outer message is initially
+                parsed, the inner message's contents will not be parsed but instead
+                stored in encoded form. The inner message will actually be parsed when
+                it is first accessed.
 
-                A filter expression consists of a field name, a comparison operator, and
-                a value for filtering. The value must be a string, a number, or a
-                boolean. The comparison operator must be one of: ``<``, ``>``, ``<=``,
-                ``>=``, ``!=``, ``=``, or ``:``. Colon ``:`` is the contains operator.
-                Filter rules are not case sensitive.
+                This is only a hint. Implementations are free to choose whether to use
+                eager or lazy parsing regardless of the value of this option. However,
+                setting this option true suggests that the protocol author believes that
+                using lazy parsing on this field is worth the additional bookkeeping
+                overhead typically needed to implement it.
 
-                The following fields in the ``operation`` are eligible for filtering:
+                This option does not affect the public interface of any generated code;
+                all method signatures remain the same. Furthermore, thread-safety of the
+                interface is not affected by this option; const methods remain safe to
+                call from multiple threads concurrently, while non-const methods
+                continue to require exclusive access.
 
-                -  ``name`` - The name of the long-running operation
-                -  ``done`` - False if the operation is in progress, else true.
-                -  ``metadata.@type`` - the type of metadata. For example, the type
-                   string for ``CreateBackupMetadata`` is
-                   ``type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata``.
-                -  ``metadata.<field_name>`` - any field in metadata.value.
-                -  ``error`` - Error associated with the long-running operation.
-                -  ``response.@type`` - the type of response.
-                -  ``response.<field_name>`` - any field in response.value.
-
-                You can combine multiple expressions by enclosing each expression in
-                parentheses. By default, expressions are combined with AND logic, but
-                you can specify AND, OR, and NOT logic explicitly.
-
-                Here are a few examples:
-
-                -  ``done:true`` - The operation is complete.
-                -  ``metadata.database:prod`` - The database the backup was taken from
-                   has a name containing the string "prod".
-                -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata) AND``
-                   ``(metadata.name:howl) AND``
-                   ``(metadata.progress.start_time < \"2018-03-28T14:50:00Z\") AND``
-                   ``(error:*)`` - Returns operations where:
-
-                   -  The operation's metadata type is ``CreateBackupMetadata``.
-                   -  The backup name contains the string "howl".
-                   -  The operation started before 2018-03-28T14:50:00Z.
-                   -  The operation resulted in an error.
+                Note that implementations may choose not to check required fields within
+                a lazy sub-message. That is, calling IsInitialized() on the outer
+                message may return true even if the inner message has missing required
+                fields. This is necessary because otherwise the inner message would have
+                to be parsed in order to perform the check, defeating the purpose of
+                lazy parsing. An implementation which chooses not to check required
+                fields must be consistent about it. That is, for any particular
+                sub-message, the implementation must either *always* check its required
+                fields, or *never* check its required fields, regardless of whether or
+                not the message has been parsed.
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page
@@ -1851,8 +2156,7 @@ class DatabaseAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The instance whose databases should be listed. Values are of
-                the form ``projects/<project>/instances/<instance>``.
+            parent (str): javanano_as_lite
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page

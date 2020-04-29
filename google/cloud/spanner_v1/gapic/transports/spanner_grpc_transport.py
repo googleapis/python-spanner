@@ -127,23 +127,14 @@ class SpannerGrpcTransport(object):
     def create_session(self):
         """Return the gRPC stub for :meth:`SpannerClient.create_session`.
 
-        Creates a new session. A session can be used to perform transactions
-        that read and/or modify data in a Cloud Spanner database. Sessions are
-        meant to be reused for many consecutive transactions.
+        **Note:** This hint is currently ignored by PartitionQuery and
+        PartitionRead requests.
 
-        Sessions can only execute one transaction at a time. To execute multiple
-        concurrent read-write/write-only transactions, create multiple sessions.
-        Note that standalone reads and queries use a transaction internally, and
-        count toward the one transaction limit.
-
-        Active sessions use additional server resources, so it is a good idea to
-        delete idle and unneeded sessions. Aside from explicit deletes, Cloud
-        Spanner may delete sessions for which no operations are sent for more
-        than an hour. If a session is deleted, requests to it return
-        ``NOT_FOUND``.
-
-        Idle sessions can be kept alive by sending a trivial SQL query
-        periodically, e.g., ``"SELECT 1"``.
+        The desired maximum number of partitions to return. For example, this
+        may be set to the number of workers available. The default for this
+        option is currently 10,000. The maximum value is currently 200,000. This
+        is only a hint. The actual number of partitions returned may be smaller
+        or larger than this maximum count request.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -172,8 +163,13 @@ class SpannerGrpcTransport(object):
     def get_session(self):
         """Return the gRPC stub for :meth:`SpannerClient.get_session`.
 
-        Gets a session. Returns ``NOT_FOUND`` if the session does not exist.
-        This is mainly useful for determining whether a session is still alive.
+        ``TypeCode`` is used as part of ``Type`` to indicate the type of a
+        Cloud Spanner value.
+
+        Each legal value of a type can be encoded to or decoded from a JSON
+        value, using the encodings described below. All Cloud Spanner values can
+        be ``null``, regardless of type; ``null``\ s are always encoded as a
+        JSON ``null``.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -214,17 +210,7 @@ class SpannerGrpcTransport(object):
     def execute_sql(self):
         """Return the gRPC stub for :meth:`SpannerClient.execute_sql`.
 
-        Executes an SQL statement, returning all results in a single reply. This
-        method cannot be used to return a result set larger than 10 MiB; if the
-        query yields more data than that, the query fails with a
-        ``FAILED_PRECONDITION`` error.
-
-        Operations inside read-write transactions might return ``ABORTED``. If
-        this occurs, the application should restart the transaction from the
-        beginning. See ``Transaction`` for more details.
-
-        Larger result sets can be fetched in streaming fashion by calling
-        ``ExecuteStreamingSql`` instead.
+        The request for ``PartitionRead``
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -237,10 +223,8 @@ class SpannerGrpcTransport(object):
     def execute_streaming_sql(self):
         """Return the gRPC stub for :meth:`SpannerClient.execute_streaming_sql`.
 
-        Like ``ExecuteSql``, except returns the result set as a stream. Unlike
-        ``ExecuteSql``, there is no limit on the size of the returned result
-        set. However, no individual row in the result set can exceed 100 MiB,
-        and no column value can exceed 10 MiB.
+        An annotation that describes a resource definition, see
+        ``ResourceDescriptor``.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -253,17 +237,7 @@ class SpannerGrpcTransport(object):
     def execute_batch_dml(self):
         """Return the gRPC stub for :meth:`SpannerClient.execute_batch_dml`.
 
-        Executes a batch of SQL DML statements. This method allows many
-        statements to be run with lower latency than submitting them
-        sequentially with ``ExecuteSql``.
-
-        Statements are executed in sequential order. A request can succeed even
-        if a statement fails. The ``ExecuteBatchDmlResponse.status`` field in
-        the response provides information about the statement that failed.
-        Clients must inspect this field to determine whether an error occurred.
-
-        Execution stops after the first failed statement; the remaining
-        statements are not executed.
+        Encoded as JSON ``true`` or ``false``.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -276,17 +250,127 @@ class SpannerGrpcTransport(object):
     def read(self):
         """Return the gRPC stub for :meth:`SpannerClient.read`.
 
-        Reads rows from the database using key lookups and scans, as a simple
-        key/value style alternative to ``ExecuteSql``. This method cannot be
-        used to return a result set larger than 10 MiB; if the read matches more
-        data than that, the read fails with a ``FAILED_PRECONDITION`` error.
+        A simple descriptor of a resource type.
 
-        Reads inside read-write transactions might return ``ABORTED``. If this
-        occurs, the application should restart the transaction from the
-        beginning. See ``Transaction`` for more details.
+        ResourceDescriptor annotates a resource message (either by means of a
+        protobuf annotation or use in the service config), and associates the
+        resource's schema, the resource type, and the pattern of the resource
+        name.
 
-        Larger result sets can be yielded in streaming fashion by calling
-        ``StreamingRead`` instead.
+        Example:
+
+        ::
+
+            message Topic {
+              // Indicates this message defines a resource schema.
+              // Declares the resource type in the format of {service}/{kind}.
+              // For Kubernetes resources, the format is {api group}/{kind}.
+              option (google.api.resource) = {
+                type: "pubsub.googleapis.com/Topic"
+                name_descriptor: {
+                  pattern: "projects/{project}/topics/{topic}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: "pubsub.googleapis.com/Topic"
+              name_descriptor:
+                - pattern: "projects/{project}/topics/{topic}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+
+        Sometimes, resources have multiple patterns, typically because they can
+        live under multiple parents.
+
+        Example:
+
+        ::
+
+            message LogEntry {
+              option (google.api.resource) = {
+                type: "logging.googleapis.com/LogEntry"
+                name_descriptor: {
+                  pattern: "projects/{project}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                }
+                name_descriptor: {
+                  pattern: "folders/{folder}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                  parent_name_extractor: "folders/{folder}"
+                }
+                name_descriptor: {
+                  pattern: "organizations/{organization}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Organization"
+                  parent_name_extractor: "organizations/{organization}"
+                }
+                name_descriptor: {
+                  pattern: "billingAccounts/{billing_account}/logs/{log}"
+                  parent_type: "billing.googleapis.com/BillingAccount"
+                  parent_name_extractor: "billingAccounts/{billing_account}"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: 'logging.googleapis.com/LogEntry'
+              name_descriptor:
+                - pattern: "projects/{project}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                - pattern: "folders/{folder}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                  parent_name_extractor: "folders/{folder}"
+                - pattern: "organizations/{organization}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Organization"
+                  parent_name_extractor: "organizations/{organization}"
+                - pattern: "billingAccounts/{billing_account}/logs/{log}"
+                  parent_type: "billing.googleapis.com/BillingAccount"
+                  parent_name_extractor: "billingAccounts/{billing_account}"
+
+        For flexible resources, the resource name doesn't contain parent names,
+        but the resource itself has parents for policy evaluation.
+
+        Example:
+
+        ::
+
+            message Shelf {
+              option (google.api.resource) = {
+                type: "library.googleapis.com/Shelf"
+                name_descriptor: {
+                  pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                }
+                name_descriptor: {
+                  pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: 'library.googleapis.com/Shelf'
+              name_descriptor:
+                - pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                - pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -299,10 +383,7 @@ class SpannerGrpcTransport(object):
     def streaming_read(self):
         """Return the gRPC stub for :meth:`SpannerClient.streaming_read`.
 
-        Like ``Read``, except returns the result set as a stream. Unlike
-        ``Read``, there is no limit on the size of the returned result set.
-        However, no individual row in the result set can exceed 100 MiB, and no
-        column value can exceed 10 MiB.
+        Encoded as ``string``, in decimal format.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -315,9 +396,16 @@ class SpannerGrpcTransport(object):
     def begin_transaction(self):
         """Return the gRPC stub for :meth:`SpannerClient.begin_transaction`.
 
-        Begins a new transaction. This step can often be skipped: ``Read``,
-        ``ExecuteSql`` and ``Commit`` can begin a new transaction as a
-        side-effect.
+        The resource type. It must be in the format of
+        {service_name}/{resource_type_kind}. The ``resource_type_kind`` must be
+        singular and must not include version numbers.
+
+        Example: ``storage.googleapis.com/Bucket``
+
+        The value of the resource_type_kind must follow the regular expression
+        /[A-Za-z][a-zA-Z0-9]+/. It should start with an upper case character and
+        should use PascalCase (UpperCamelCase). The maximum number of characters
+        allowed for the ``resource_type_kind`` is 100.
 
         Returns:
             Callable: A callable which accepts the appropriate
@@ -330,50 +418,11 @@ class SpannerGrpcTransport(object):
     def commit(self):
         """Return the gRPC stub for :meth:`SpannerClient.commit`.
 
-        Commits a transaction. The request includes the mutations to be applied
-        to rows in the database.
-
-        ``Commit`` might return an ``ABORTED`` error. This can occur at any
-        time; commonly, the cause is conflicts with concurrent transactions.
-        However, it can also happen for a variety of other reasons. If
-        ``Commit`` returns ``ABORTED``, the caller should re-attempt the
-        transaction from the beginning, re-using the same session.
-
-        Returns:
-            Callable: A callable which accepts the appropriate
-                deserialized request object and returns a
-                deserialized response object.
-        """
-        return self._stubs["spanner_stub"].Commit
-
-    @property
-    def rollback(self):
-        """Return the gRPC stub for :meth:`SpannerClient.rollback`.
-
-        Rolls back a transaction, releasing any locks it holds. It is a good
-        idea to call this for any transaction that includes one or more ``Read``
-        or ``ExecuteSql`` requests and ultimately decides not to commit.
-
-        ``Rollback`` returns ``OK`` if it successfully aborts the transaction,
-        the transaction was already aborted, or the transaction is not found.
-        ``Rollback`` never returns ``ABORTED``.
-
-        Returns:
-            Callable: A callable which accepts the appropriate
-                deserialized request object and returns a
-                deserialized response object.
-        """
-        return self._stubs["spanner_stub"].Rollback
-
-    @property
-    def partition_query(self):
-        """Return the gRPC stub for :meth:`SpannerClient.partition_query`.
-
-        Creates a set of partition tokens that can be used to execute a query
-        operation in parallel. Each of the returned partition tokens can be used
-        by ``ExecuteStreamingSql`` to specify a subset of the query result to
-        read. The same session and read-only transaction must be used by the
-        PartitionQueryRequest used to create the partition tokens and the
+        Creates a set of partition tokens that can be used to execute a
+        query operation in parallel. Each of the returned partition tokens can
+        be used by ``ExecuteStreamingSql`` to specify a subset of the query
+        result to read. The same session and read-only transaction must be used
+        by the PartitionQueryRequest used to create the partition tokens and the
         ExecuteSqlRequests that use the partition tokens.
 
         Partition tokens become invalid when the session used to create them is
@@ -386,26 +435,55 @@ class SpannerGrpcTransport(object):
                 deserialized request object and returns a
                 deserialized response object.
         """
+        return self._stubs["spanner_stub"].Commit
+
+    @property
+    def rollback(self):
+        """Return the gRPC stub for :meth:`SpannerClient.rollback`.
+
+        Encoded as ``number``, or the strings ``"NaN"``, ``"Infinity"``, or
+        ``"-Infinity"``.
+
+        Returns:
+            Callable: A callable which accepts the appropriate
+                deserialized request object and returns a
+                deserialized response object.
+        """
+        return self._stubs["spanner_stub"].Rollback
+
+    @property
+    def partition_query(self):
+        """Return the gRPC stub for :meth:`SpannerClient.partition_query`.
+
+        Encoded as ``string`` in RFC 3339 timestamp format. The time zone
+        must be present, and must be ``"Z"``.
+
+        If the schema has the column option ``allow_commit_timestamp=true``, the
+        placeholder string ``"spanner.commit_timestamp()"`` can be used to
+        instruct the system to insert the commit timestamp associated with the
+        transaction commit.
+
+        Returns:
+            Callable: A callable which accepts the appropriate
+                deserialized request object and returns a
+                deserialized response object.
+        """
         return self._stubs["spanner_stub"].PartitionQuery
 
     @property
     def partition_read(self):
         """Return the gRPC stub for :meth:`SpannerClient.partition_read`.
 
-        Creates a set of partition tokens that can be used to execute a read
-        operation in parallel. Each of the returned partition tokens can be used
-        by ``StreamingRead`` to specify a subset of the read result to read. The
-        same session and read-only transaction must be used by the
-        PartitionReadRequest used to create the partition tokens and the
-        ReadRequests that use the partition tokens. There are no ordering
-        guarantees on rows returned among the returned partition tokens, or even
-        within each individual StreamingRead call issued with a
-        partition\_token.
+        Required. The query request to generate partitions for. The request
+        will fail if the query is not root partitionable. The query plan of a
+        root partitionable query has a single distributed union operator. A
+        distributed union operator conceptually divides one or more tables into
+        multiple splits, remotely evaluates a subquery independently on each
+        split, and then unions all results.
 
-        Partition tokens become invalid when the session used to create them is
-        deleted, is idle for too long, begins a new transaction, or becomes too
-        old. When any of these happen, it is not possible to resume the read,
-        and the whole operation must be restarted from the beginning.
+        This must not contain DML commands, such as INSERT, UPDATE, or DELETE.
+        Use ``ExecuteStreamingSql`` with a PartitionedDml transaction for large,
+        partition-friendly DML operations.
 
         Returns:
             Callable: A callable which accepts the appropriate

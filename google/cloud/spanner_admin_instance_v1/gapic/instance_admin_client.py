@@ -274,9 +274,66 @@ class InstanceAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The name of the project for which a list of supported instance
-                configurations is requested. Values are of the form
-                ``projects/<project>``.
+            parent (str): Defines an Identity and Access Management (IAM) policy. It is used
+                to specify access control policies for Cloud Platform resources.
+
+                A ``Policy`` is a collection of ``bindings``. A ``binding`` binds one or
+                more ``members`` to a single ``role``. Members can be user accounts,
+                service accounts, Google groups, and domains (such as G Suite). A
+                ``role`` is a named list of permissions (defined by IAM or configured by
+                users). A ``binding`` can optionally specify a ``condition``, which is a
+                logic expression that further constrains the role binding based on
+                attributes about the request and/or target resource.
+
+                **JSON Example**
+
+                ::
+
+                    {
+                      "bindings": [
+                        {
+                          "role": "roles/resourcemanager.organizationAdmin",
+                          "members": [
+                            "user:mike@example.com",
+                            "group:admins@example.com",
+                            "domain:google.com",
+                            "serviceAccount:my-project-id@appspot.gserviceaccount.com"
+                          ]
+                        },
+                        {
+                          "role": "roles/resourcemanager.organizationViewer",
+                          "members": ["user:eve@example.com"],
+                          "condition": {
+                            "title": "expirable access",
+                            "description": "Does not grant access after Sep 2020",
+                            "expression": "request.time <
+                            timestamp('2020-10-01T00:00:00.000Z')",
+                          }
+                        }
+                      ]
+                    }
+
+                **YAML Example**
+
+                ::
+
+                    bindings:
+                    - members:
+                      - user:mike@example.com
+                      - group:admins@example.com
+                      - domain:google.com
+                      - serviceAccount:my-project-id@appspot.gserviceaccount.com
+                      role: roles/resourcemanager.organizationAdmin
+                    - members:
+                      - user:eve@example.com
+                      role: roles/resourcemanager.organizationViewer
+                      condition:
+                        title: expirable access
+                        description: Does not grant access after Sep 2020
+                        expression: request.time < timestamp('2020-10-01T00:00:00.000Z')
+
+                For a description of IAM and its features, see the `IAM developer's
+                guide <https://cloud.google.com/iam/docs>`__.
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page
@@ -366,8 +423,9 @@ class InstanceAdminClient(object):
             >>> response = client.get_instance_config(name)
 
         Args:
-            name (str): Required. The name of the requested instance configuration. Values are
-                of the form ``projects/<project>/instanceConfigs/<config>``.
+            name (str): Associates a list of ``members`` to a ``role``. Optionally may
+                specify a ``condition`` that determines when binding is in effect.
+                ``bindings`` with no members will result in an error.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -450,31 +508,16 @@ class InstanceAdminClient(object):
             ...         pass
 
         Args:
-            parent (str): Required. The name of the project for which a list of instances is
-                requested. Values are of the form ``projects/<project>``.
+            parent (str): If true, this location is designated as the default leader location
+                where leader replicas are placed. See the `region types
+                documentation <https://cloud.google.com/spanner/docs/instances#region_types>`__
+                for more details.
             page_size (int): The maximum number of resources contained in the
                 underlying API response. If page streaming is performed per-
                 resource, this parameter does not affect the return value. If page
                 streaming is performed per-page, this determines the maximum number
                 of resources in a page.
-            filter_ (str): An expression for filtering the results of the request. Filter rules are
-                case insensitive. The fields eligible for filtering are:
-
-                -  ``name``
-                -  ``display_name``
-                -  ``labels.key`` where key is the name of a label
-
-                Some examples of using filters are:
-
-                -  ``name:*`` --> The instance has a name.
-                -  ``name:Howl`` --> The instance's name contains the string "howl".
-                -  ``name:HOWL`` --> Equivalent to above.
-                -  ``NAME:howl`` --> Equivalent to above.
-                -  ``labels.env:*`` --> The instance has the label "env".
-                -  ``labels.env:dev`` --> The instance has the label "env" and the value
-                   of the label contains the string "dev".
-                -  ``name:howl labels.env:dev`` --> The instance's name contains "howl"
-                   and it has the label "env" with its value containing "dev".
+            filter_ (str): Associates ``members`` with a ``role``.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -560,11 +603,21 @@ class InstanceAdminClient(object):
             >>> response = client.get_instance(name)
 
         Args:
-            name (str): Required. The name of the requested instance. Values are of the form
-                ``projects/<project>/instances/<instance>``.
-            field_mask (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.FieldMask]): If field\_mask is present, specifies the subset of ``Instance`` fields
-                that should be returned. If absent, all ``Instance`` fields are
-                returned.
+            name (str): The normal response of the operation in case of success. If the
+                original method returns no data on success, such as ``Delete``, the
+                response is ``google.protobuf.Empty``. If the original method is
+                standard ``Get``/``Create``/``Update``, the response should be the
+                resource. For other methods, the response should have the type
+                ``XxxResponse``, where ``Xxx`` is the original method name. For example,
+                if the original method name is ``TakeSnapshot()``, the inferred response
+                type is ``TakeSnapshotResponse``.
+            field_mask (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.FieldMask]): Required. The number of nodes allocated to this instance. This may
+                be zero in API responses for instances that are not yet in state
+                ``READY``.
+
+                See `the
+                documentation <https://cloud.google.com/spanner/docs/instances#node_count>`__
+                for more information about nodes.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.FieldMask`
@@ -628,37 +681,9 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Creates an instance and begins preparing it to begin serving. The
-        returned ``long-running operation`` can be used to track the progress of
-        preparing the new instance. The instance name is assigned by the caller.
-        If the named instance already exists, ``CreateInstance`` returns
-        ``ALREADY_EXISTS``.
-
-        Immediately upon completion of this request:
-
-        -  The instance is readable via the API, with all requested attributes
-           but no allocated resources. Its state is ``CREATING``.
-
-        Until completion of the returned operation:
-
-        -  Cancelling the operation renders the instance immediately unreadable
-           via the API.
-        -  The instance can be deleted.
-        -  All other attempts to modify the instance are rejected.
-
-        Upon completion of the returned operation:
-
-        -  Billing for all successfully-allocated resources begins (some types
-           may have lower than the requested levels).
-        -  Databases can be created in the instance.
-        -  The instance's allocated resource levels are readable via the API.
-        -  The instance's state becomes ``READY``.
-
-        The returned ``long-running operation`` will have a name of the format
-        ``<instance_name>/operations/<operation_id>`` and can be used to track
-        creation of the instance. The ``metadata`` field type is
-        ``CreateInstanceMetadata``. The ``response`` field type is ``Instance``,
-        if successful.
+        Signed seconds of the span of time. Must be from -315,576,000,000 to
+        +315,576,000,000 inclusive. Note: these bounds are computed from: 60
+        sec/min \* 60 min/hr \* 24 hr/day \* 365.25 days/year \* 10000 years
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -685,13 +710,18 @@ class InstanceAdminClient(object):
             >>> metadata = response.metadata()
 
         Args:
-            parent (str): Required. The name of the project in which to create the instance.
-                Values are of the form ``projects/<project>``.
-            instance_id (str): Required. The ID of the instance to create. Valid identifiers are of the
-                form ``[a-z][-a-z0-9]*[a-z0-9]`` and must be between 2 and 64 characters
-                in length.
-            instance (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Instance]): Required. The instance to create. The name may be omitted, but if
-                specified must be ``<parent>/instances/<instance_id>``.
+            parent (str): Returns permissions that a caller has on the specified resource. If
+                the resource does not exist, this will return an empty set of
+                permissions, not a NOT_FOUND error.
+
+                Note: This operation is designed to be used for building
+                permission-aware UIs and command-line tools, not for authorization
+                checking. This operation may "fail open" without warning.
+            instance_id (str): JSON name of this field. The value is set by protocol compiler. If
+                the user has set a "json_name" option on this field, that option's value
+                will be used. Otherwise, it's deduced from the field's name by
+                converting it to camelCase.
+            instance (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Instance]): The request for ``CreateInstance``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.Instance`
@@ -760,42 +790,8 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Updates an instance, and begins allocating or releasing resources as
-        requested. The returned ``long-running operation`` can be used to track
-        the progress of updating the instance. If the named instance does not
-        exist, returns ``NOT_FOUND``.
-
-        Immediately upon completion of this request:
-
-        -  For resource types for which a decrease in the instance's allocation
-           has been requested, billing is based on the newly-requested level.
-
-        Until completion of the returned operation:
-
-        -  Cancelling the operation sets its metadata's ``cancel_time``, and
-           begins restoring resources to their pre-request values. The operation
-           is guaranteed to succeed at undoing all resource changes, after which
-           point it terminates with a ``CANCELLED`` status.
-        -  All other attempts to modify the instance are rejected.
-        -  Reading the instance via the API continues to give the pre-request
-           resource levels.
-
-        Upon completion of the returned operation:
-
-        -  Billing begins for all successfully-allocated resources (some types
-           may have lower than the requested levels).
-        -  All newly-reserved resources are available for serving the instance's
-           tables.
-        -  The instance's new resource levels are readable via the API.
-
-        The returned ``long-running operation`` will have a name of the format
-        ``<instance_name>/operations/<operation_id>`` and can be used to track
-        the instance modification. The ``metadata`` field type is
-        ``UpdateInstanceMetadata``. The ``response`` field type is ``Instance``,
-        if successful.
-
-        Authorization requires ``spanner.instances.update`` permission on
-        resource ``name``.
+        Input and output type names. These are resolved in the same way as
+        FieldDescriptorProto.type_name, but must refer to a message type.
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -820,16 +816,33 @@ class InstanceAdminClient(object):
             >>> metadata = response.metadata()
 
         Args:
-            instance (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Instance]): Required. The instance to update, which must always include the instance
-                name. Otherwise, only fields mentioned in ``field_mask`` need be
-                included.
+            instance (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Instance]): See ``HttpRule``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.Instance`
-            field_mask (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.FieldMask]): Required. A mask specifying which fields in ``Instance`` should be
-                updated. The field mask must always be specified; this prevents any
-                future fields in ``Instance`` from being erased accidentally by clients
-                that do not know about them.
+            field_mask (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.FieldMask]): Specifies the identities requesting access for a Cloud Platform
+                resource. ``members`` can have the following values:
+
+                -  ``allUsers``: A special identifier that represents anyone who is on
+                   the internet; with or without a Google account.
+
+                -  ``allAuthenticatedUsers``: A special identifier that represents
+                   anyone who is authenticated with a Google account or a service
+                   account.
+
+                -  ``user:{emailid}``: An email address that represents a specific
+                   Google account. For example, ``alice@example.com`` .
+
+                -  ``serviceAccount:{emailid}``: An email address that represents a
+                   service account. For example,
+                   ``my-other-app@appspot.gserviceaccount.com``.
+
+                -  ``group:{emailid}``: An email address that represents a Google group.
+                   For example, ``admins@example.com``.
+
+                -  ``domain:{domain}``: The G Suite domain (primary) that represents all
+                   the users of that domain. For example, ``google.com`` or
+                   ``example.com``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.FieldMask`
@@ -897,17 +910,8 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Deletes an instance.
-
-        Immediately upon completion of the request:
-
-        -  Billing ceases for all of the instance's reserved resources.
-
-        Soon afterward:
-
-        -  The instance and *all of its databases* immediately and irrevocably
-           disappear from the API. All data in the databases is permanently
-           deleted.
+        An annotation that describes a resource reference, see
+        ``ResourceReference``.
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -919,8 +923,11 @@ class InstanceAdminClient(object):
             >>> client.delete_instance(name)
 
         Args:
-            name (str): Required. The name of the instance to be deleted. Values are of the form
-                ``projects/<project>/instances/<instance>``
+            name (str): If set, all the classes from the .proto file are wrapped in a single
+                outer class with the given name. This applies to both Proto1 (equivalent
+                to the old "--one_java_file" option) and Proto2 (where a .proto always
+                translates to a single class, but you may want to explicitly choose the
+                class name).
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -975,11 +982,9 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Sets the access control policy on an instance resource. Replaces any
-        existing policy.
-
-        Authorization requires ``spanner.instances.setIamPolicy`` on
-        ``resource``.
+        If type_name is set, this need not be set. If both this and
+        type_name are set, this must be one of TYPE_ENUM, TYPE_MESSAGE or
+        TYPE_GROUP.
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -997,10 +1002,11 @@ class InstanceAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy is being specified.
                 See the operation documentation for the appropriate value for this field.
-            policy (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Policy]): REQUIRED: The complete policy to be applied to the ``resource``. The
-                size of the policy is limited to a few 10s of KB. An empty policy is a
-                valid policy but certain Cloud Platform services (such as Projects)
-                might reject them.
+            policy (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.Policy]): The name of the uninterpreted option. Each string represents a
+                segment in a dot-separated name. is_extension is true iff a segment
+                represents an extension (denoted with parentheses in options specs in
+                .proto files). E.g.,{ ["foo", false], ["bar.baz", true], ["qux", false]
+                } represents "foo.(bar.baz).qux".
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.Policy`
@@ -1061,11 +1067,10 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Gets the access control policy for an instance resource. Returns an
-        empty policy if an instance exists but does not have a policy set.
-
-        Authorization requires ``spanner.instances.getIamPolicy`` on
-        ``resource``.
+        Denotes a field as output only. This indicates that the field is
+        provided in responses, but including the field in a request does nothing
+        (the server *must* ignore it and *must not* throw an error as a result
+        of the field's presence).
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -1080,8 +1085,42 @@ class InstanceAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy is being requested.
                 See the operation documentation for the appropriate value for this field.
-            options_ (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.GetPolicyOptions]): OPTIONAL: A ``GetPolicyOptions`` object for specifying options to
-                ``GetIamPolicy``. This field is only used by Cloud IAM.
+            options_ (Union[dict, ~google.cloud.spanner_admin_instance_v1.types.GetPolicyOptions]): Updates an instance, and begins allocating or releasing resources as
+                requested. The returned ``long-running operation`` can be used to track
+                the progress of updating the instance. If the named instance does not
+                exist, returns ``NOT_FOUND``.
+
+                Immediately upon completion of this request:
+
+                -  For resource types for which a decrease in the instance's allocation
+                   has been requested, billing is based on the newly-requested level.
+
+                Until completion of the returned operation:
+
+                -  Cancelling the operation sets its metadata's ``cancel_time``, and
+                   begins restoring resources to their pre-request values. The operation
+                   is guaranteed to succeed at undoing all resource changes, after which
+                   point it terminates with a ``CANCELLED`` status.
+                -  All other attempts to modify the instance are rejected.
+                -  Reading the instance via the API continues to give the pre-request
+                   resource levels.
+
+                Upon completion of the returned operation:
+
+                -  Billing begins for all successfully-allocated resources (some types
+                   may have lower than the requested levels).
+                -  All newly-reserved resources are available for serving the instance's
+                   tables.
+                -  The instance's new resource levels are readable via the API.
+
+                The returned ``long-running operation`` will have a name of the format
+                ``<instance_name>/operations/<operation_id>`` and can be used to track
+                the instance modification. The ``metadata`` field type is
+                ``UpdateInstanceMetadata``. The ``response`` field type is ``Instance``,
+                if successful.
+
+                Authorization requires ``spanner.instances.update`` permission on
+                resource ``name``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_instance_v1.types.GetPolicyOptions`
@@ -1144,13 +1183,10 @@ class InstanceAdminClient(object):
         metadata=None,
     ):
         """
-        Returns permissions that the caller has on the specified instance
-        resource.
-
-        Attempting this RPC on a non-existent Cloud Spanner instance resource
-        will result in a NOT\_FOUND error if the user has
-        ``spanner.instances.list`` permission on the containing Google Cloud
-        Project. Otherwise returns an empty set of permissions.
+        The server-assigned name, which is only unique within the same
+        service that originally returns it. If you use the default HTTP mapping,
+        the ``name`` should be a resource name ending with
+        ``operations/{unique_id}``.
 
         Example:
             >>> from google.cloud import spanner_admin_instance_v1
@@ -1168,10 +1204,7 @@ class InstanceAdminClient(object):
         Args:
             resource (str): REQUIRED: The resource for which the policy detail is being requested.
                 See the operation documentation for the appropriate value for this field.
-            permissions (list[str]): The set of permissions to check for the ``resource``. Permissions with
-                wildcards (such as '*' or 'storage.*') are not allowed. For more
-                information see `IAM
-                Overview <https://cloud.google.com/iam/docs/overview#permissions>`__.
+            permissions (list[str]): Metadata type for the operation returned by ``CreateInstance``.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.

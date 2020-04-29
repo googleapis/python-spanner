@@ -226,23 +226,14 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Creates a new session. A session can be used to perform transactions
-        that read and/or modify data in a Cloud Spanner database. Sessions are
-        meant to be reused for many consecutive transactions.
+        **Note:** This hint is currently ignored by PartitionQuery and
+        PartitionRead requests.
 
-        Sessions can only execute one transaction at a time. To execute multiple
-        concurrent read-write/write-only transactions, create multiple sessions.
-        Note that standalone reads and queries use a transaction internally, and
-        count toward the one transaction limit.
-
-        Active sessions use additional server resources, so it is a good idea to
-        delete idle and unneeded sessions. Aside from explicit deletes, Cloud
-        Spanner may delete sessions for which no operations are sent for more
-        than an hour. If a session is deleted, requests to it return
-        ``NOT_FOUND``.
-
-        Idle sessions can be kept alive by sending a trivial SQL query
-        periodically, e.g., ``"SELECT 1"``.
+        The desired maximum number of partitions to return. For example, this
+        may be set to the number of workers available. The default for this
+        option is currently 10,000. The maximum value is currently 200,000. This
+        is only a hint. The actual number of partitions returned may be smaller
+        or larger than this maximum count request.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -336,10 +327,21 @@ class SpannerClient(object):
 
         Args:
             database (str): Required. The database in which the new sessions are created.
-            session_count (int): Required. The number of sessions to be created in this batch call. The
-                API may return fewer than the requested number of sessions. If a
-                specific number of sessions are desired, the client can make additional
-                calls to BatchCreateSessions (adjusting ``session_count`` as necessary).
+            session_count (int): Set true to use the old proto1 MessageSet wire format for
+                extensions. This is provided for backwards-compatibility with the
+                MessageSet wire format. You should not use this for any other reason:
+                It's less efficient, has fewer features, and is more complicated.
+
+                The message must be defined exactly as follows: message Foo { option
+                message_set_wire_format = true; extensions 4 to max; } Note that the
+                message cannot have any defined fields; MessageSets only have
+                extensions.
+
+                All extensions of your type must be singular messages; e.g. they cannot
+                be int32s, enums, or repeated messages.
+
+                Because this is an option, the above two restrictions are not enforced
+                by the protocol compiler.
             session_template (Union[dict, ~google.cloud.spanner_v1.types.Session]): Parameters to be applied to each created session.
 
                 If a dict is provided, it must be of the same form as the protobuf
@@ -404,8 +406,13 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Gets a session. Returns ``NOT_FOUND`` if the session does not exist.
-        This is mainly useful for determining whether a session is still alive.
+        ``TypeCode`` is used as part of ``Type`` to indicate the type of a
+        Cloud Spanner value.
+
+        Each legal value of a type can be encoded to or decoded from a JSON
+        value, using the encodings described below. All Cloud Spanner values can
+        be ``null``, regardless of type; ``null``\ s are always encoded as a
+        JSON ``null``.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -506,16 +513,8 @@ class SpannerClient(object):
                 resource, this parameter does not affect the return value. If page
                 streaming is performed per-page, this determines the maximum number
                 of resources in a page.
-            filter_ (str): An expression for filtering the results of the request. Filter rules are
-                case insensitive. The fields eligible for filtering are:
-
-                -  ``labels.key`` where key is the name of a label
-
-                Some examples of using filters are:
-
-                -  ``labels.env:*`` --> The session has the label "env".
-                -  ``labels.env:dev`` --> The session has the label "env" and the value
-                   of the label contains the string "dev".
+            filter_ (str): Encoded as a base64-encoded ``string``, as described in RFC 4648,
+                section 4.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -665,17 +664,7 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Executes an SQL statement, returning all results in a single reply. This
-        method cannot be used to return a result set larger than 10 MiB; if the
-        query yields more data than that, the query fails with a
-        ``FAILED_PRECONDITION`` error.
-
-        Operations inside read-write transactions might return ``ABORTED``. If
-        this occurs, the application should restart the transaction from the
-        beginning. See ``Transaction`` for more details.
-
-        Larger result sets can be fetched in streaming fashion by calling
-        ``ExecuteStreamingSql`` instead.
+        The request for ``PartitionRead``
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -705,44 +694,43 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Parameter names and values that bind to placeholders in the SQL string.
-
-                A parameter placeholder consists of the ``@`` character followed by the
-                parameter name (for example, ``@firstName``). Parameter names can
-                contain letters, numbers, and underscores.
-
-                Parameters can appear anywhere that a literal value is expected. The
-                same parameter name can be used more than once, for example:
-
-                ``"WHERE id > @msg_id AND id < @msg_id + 100"``
-
-                It is an error to execute a SQL statement with unbound parameters.
+            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Encoded as ``list``, where list element ``i`` is represented
+                according to
+                [struct_type.fields[i]][google.spanner.v1.StructType.fields].
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Struct`
-            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): It is not always possible for Cloud Spanner to infer the right SQL type
-                from a JSON value. For example, values of type ``BYTES`` and values of
-                type ``STRING`` both appear in ``params`` as JSON strings.
-
-                In these cases, ``param_types`` can be used to specify the exact SQL
-                type for some or all of the SQL statement parameters. See the definition
-                of ``Type`` for more information about SQL types.
+            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): Only present if the child node is ``SCALAR`` and corresponds to an
+                output variable of the parent node. The field carries the name of the
+                output variable. For example, a ``TableScan`` operator that reads rows
+                from a table will have child links to the ``SCALAR`` nodes representing
+                the output variables created for each column that is read by the
+                operator. The corresponding ``variable`` fields will be set to the
+                variable names assigned to the columns.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Type`
-            resume_token (bytes): If this request is resuming a previously interrupted SQL statement
-                execution, ``resume_token`` should be copied from the last
-                ``PartialResultSet`` yielded before the interruption. Doing this enables
-                the new SQL statement execution to resume where the last one left off.
-                The rest of the request parameters must exactly match the request that
-                yielded this token.
-            query_mode (~google.cloud.spanner_v1.types.QueryMode): Used to control the amount of debugging information returned in
-                ``ResultSetStats``. If ``partition_token`` is set, ``query_mode`` can
-                only be set to ``QueryMode.NORMAL``.
-            partition_token (bytes): If present, results will be restricted to the specified partition
-                previously created using PartitionQuery(). There must be an exact match
-                for the values of fields common to this message and the
-                PartitionQueryRequest message used to create this partition\_token.
+            resume_token (bytes): ``Type`` indicates the type of a Cloud Spanner value, as might be
+                stored in a table cell or returned from an SQL query.
+            query_mode (~google.cloud.spanner_v1.types.QueryMode): Optional. The historical or future-looking state of the resource
+                pattern.
+
+                Example:
+
+                ::
+
+                    // The InspectTemplate message originally only supported resource
+                    // names with organization, and project was added later.
+                    message InspectTemplate {
+                      option (google.api.resource) = {
+                        type: "dlp.googleapis.com/InspectTemplate"
+                        pattern:
+                        "organizations/{organization}/inspectTemplates/{inspect_template}"
+                        pattern: "projects/{project}/inspectTemplates/{inspect_template}"
+                        history: ORIGINALLY_SINGLE_PATTERN
+                      };
+                    }
+            partition_token (bytes): Required. The ``TypeCode`` for this type.
             seqno (long): A per-transaction sequence number used to identify this request. This field
                 makes each request idempotent such that if the request is received multiple
                 times, at most one will succeed.
@@ -833,10 +821,8 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Like ``ExecuteSql``, except returns the result set as a stream. Unlike
-        ``ExecuteSql``, there is no limit on the size of the returned result
-        set. However, no individual row in the result set can exceed 100 MiB,
-        and no column value can exceed 10 MiB.
+        An annotation that describes a resource definition, see
+        ``ResourceDescriptor``.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -868,44 +854,43 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Parameter names and values that bind to placeholders in the SQL string.
-
-                A parameter placeholder consists of the ``@`` character followed by the
-                parameter name (for example, ``@firstName``). Parameter names can
-                contain letters, numbers, and underscores.
-
-                Parameters can appear anywhere that a literal value is expected. The
-                same parameter name can be used more than once, for example:
-
-                ``"WHERE id > @msg_id AND id < @msg_id + 100"``
-
-                It is an error to execute a SQL statement with unbound parameters.
+            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Encoded as ``list``, where list element ``i`` is represented
+                according to
+                [struct_type.fields[i]][google.spanner.v1.StructType.fields].
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Struct`
-            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): It is not always possible for Cloud Spanner to infer the right SQL type
-                from a JSON value. For example, values of type ``BYTES`` and values of
-                type ``STRING`` both appear in ``params`` as JSON strings.
-
-                In these cases, ``param_types`` can be used to specify the exact SQL
-                type for some or all of the SQL statement parameters. See the definition
-                of ``Type`` for more information about SQL types.
+            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): Only present if the child node is ``SCALAR`` and corresponds to an
+                output variable of the parent node. The field carries the name of the
+                output variable. For example, a ``TableScan`` operator that reads rows
+                from a table will have child links to the ``SCALAR`` nodes representing
+                the output variables created for each column that is read by the
+                operator. The corresponding ``variable`` fields will be set to the
+                variable names assigned to the columns.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Type`
-            resume_token (bytes): If this request is resuming a previously interrupted SQL statement
-                execution, ``resume_token`` should be copied from the last
-                ``PartialResultSet`` yielded before the interruption. Doing this enables
-                the new SQL statement execution to resume where the last one left off.
-                The rest of the request parameters must exactly match the request that
-                yielded this token.
-            query_mode (~google.cloud.spanner_v1.types.QueryMode): Used to control the amount of debugging information returned in
-                ``ResultSetStats``. If ``partition_token`` is set, ``query_mode`` can
-                only be set to ``QueryMode.NORMAL``.
-            partition_token (bytes): If present, results will be restricted to the specified partition
-                previously created using PartitionQuery(). There must be an exact match
-                for the values of fields common to this message and the
-                PartitionQueryRequest message used to create this partition\_token.
+            resume_token (bytes): ``Type`` indicates the type of a Cloud Spanner value, as might be
+                stored in a table cell or returned from an SQL query.
+            query_mode (~google.cloud.spanner_v1.types.QueryMode): Optional. The historical or future-looking state of the resource
+                pattern.
+
+                Example:
+
+                ::
+
+                    // The InspectTemplate message originally only supported resource
+                    // names with organization, and project was added later.
+                    message InspectTemplate {
+                      option (google.api.resource) = {
+                        type: "dlp.googleapis.com/InspectTemplate"
+                        pattern:
+                        "organizations/{organization}/inspectTemplates/{inspect_template}"
+                        pattern: "projects/{project}/inspectTemplates/{inspect_template}"
+                        history: ORIGINALLY_SINGLE_PATTERN
+                      };
+                    }
+            partition_token (bytes): Required. The ``TypeCode`` for this type.
             seqno (long): A per-transaction sequence number used to identify this request. This field
                 makes each request idempotent such that if the request is received multiple
                 times, at most one will succeed.
@@ -990,17 +975,7 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Executes a batch of SQL DML statements. This method allows many
-        statements to be run with lower latency than submitting them
-        sequentially with ``ExecuteSql``.
-
-        Statements are executed in sequential order. A request can succeed even
-        if a statement fails. The ``ExecuteBatchDmlResponse.status`` field in
-        the response provides information about the statement that failed.
-        Clients must inspect this field to determine whether an error occurred.
-
-        Execution stops after the first failed statement; the remaining
-        statements are not executed.
+        Encoded as JSON ``true`` or ``false``.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1030,13 +1005,8 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            statements (list[Union[dict, ~google.cloud.spanner_v1.types.Statement]]): Required. The list of statements to execute in this batch. Statements
-                are executed serially, such that the effects of statement ``i`` are
-                visible to statement ``i+1``. Each statement must be a DML statement.
-                Execution stops at the first failed statement; the remaining statements
-                are not executed.
-
-                Callers must provide at least one statement.
+            statements (list[Union[dict, ~google.cloud.spanner_v1.types.Statement]]): If ``code`` == ``ARRAY``, then ``array_element_type`` is the type of
+                the array elements.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Statement`
@@ -1114,17 +1084,127 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Reads rows from the database using key lookups and scans, as a simple
-        key/value style alternative to ``ExecuteSql``. This method cannot be
-        used to return a result set larger than 10 MiB; if the read matches more
-        data than that, the read fails with a ``FAILED_PRECONDITION`` error.
+        A simple descriptor of a resource type.
 
-        Reads inside read-write transactions might return ``ABORTED``. If this
-        occurs, the application should restart the transaction from the
-        beginning. See ``Transaction`` for more details.
+        ResourceDescriptor annotates a resource message (either by means of a
+        protobuf annotation or use in the service config), and associates the
+        resource's schema, the resource type, and the pattern of the resource
+        name.
 
-        Larger result sets can be yielded in streaming fashion by calling
-        ``StreamingRead`` instead.
+        Example:
+
+        ::
+
+            message Topic {
+              // Indicates this message defines a resource schema.
+              // Declares the resource type in the format of {service}/{kind}.
+              // For Kubernetes resources, the format is {api group}/{kind}.
+              option (google.api.resource) = {
+                type: "pubsub.googleapis.com/Topic"
+                name_descriptor: {
+                  pattern: "projects/{project}/topics/{topic}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: "pubsub.googleapis.com/Topic"
+              name_descriptor:
+                - pattern: "projects/{project}/topics/{topic}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+
+        Sometimes, resources have multiple patterns, typically because they can
+        live under multiple parents.
+
+        Example:
+
+        ::
+
+            message LogEntry {
+              option (google.api.resource) = {
+                type: "logging.googleapis.com/LogEntry"
+                name_descriptor: {
+                  pattern: "projects/{project}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                }
+                name_descriptor: {
+                  pattern: "folders/{folder}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                  parent_name_extractor: "folders/{folder}"
+                }
+                name_descriptor: {
+                  pattern: "organizations/{organization}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Organization"
+                  parent_name_extractor: "organizations/{organization}"
+                }
+                name_descriptor: {
+                  pattern: "billingAccounts/{billing_account}/logs/{log}"
+                  parent_type: "billing.googleapis.com/BillingAccount"
+                  parent_name_extractor: "billingAccounts/{billing_account}"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: 'logging.googleapis.com/LogEntry'
+              name_descriptor:
+                - pattern: "projects/{project}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                  parent_name_extractor: "projects/{project}"
+                - pattern: "folders/{folder}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                  parent_name_extractor: "folders/{folder}"
+                - pattern: "organizations/{organization}/logs/{log}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Organization"
+                  parent_name_extractor: "organizations/{organization}"
+                - pattern: "billingAccounts/{billing_account}/logs/{log}"
+                  parent_type: "billing.googleapis.com/BillingAccount"
+                  parent_name_extractor: "billingAccounts/{billing_account}"
+
+        For flexible resources, the resource name doesn't contain parent names,
+        but the resource itself has parents for policy evaluation.
+
+        Example:
+
+        ::
+
+            message Shelf {
+              option (google.api.resource) = {
+                type: "library.googleapis.com/Shelf"
+                name_descriptor: {
+                  pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                }
+                name_descriptor: {
+                  pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
+                }
+              };
+            }
+
+        The ResourceDescriptor Yaml config will look like:
+
+        ::
+
+            resources:
+            - type: 'library.googleapis.com/Shelf'
+              name_descriptor:
+                - pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Project"
+                - pattern: "shelves/{shelf}"
+                  parent_type: "cloudresourcemanager.googleapis.com/Folder"
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1147,20 +1227,15 @@ class SpannerClient(object):
         Args:
             session (str): Required. The session in which the read should be performed.
             table (str): Required. The name of the table in the database to be read.
-            columns (list[str]): Required. The columns of ``table`` to be returned for each row matching
-                this request.
-            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Required. ``key_set`` identifies the rows to be yielded. ``key_set``
-                names the primary keys of the rows in ``table`` to be yielded, unless
-                ``index`` is present. If ``index`` is present, then ``key_set`` instead
-                names index keys in ``index``.
-
-                If the ``partition_token`` field is empty, rows are yielded in table
-                primary key order (if ``index`` is empty) or index key order (if
-                ``index`` is non-empty). If the ``partition_token`` field is not empty,
-                rows will be yielded in an unspecified order.
-
-                It is not an error for the ``key_set`` to name rows that do not exist in
-                the database. Read yields nothing for nonexistent rows.
+            columns (list[str]): The list of fields that make up this struct. Order is significant,
+                because values of this struct type are represented as lists, where the
+                order of field values matches the order of fields in the ``StructType``.
+                In turn, the order of fields matches the order of columns in a read
+                request, or the order of fields in the ``SELECT`` clause of a query.
+            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Used to determine the type of node. May be needed for visualizing
+                different kinds of nodes differently. For example, If the node is a
+                ``SCALAR`` node, it will have a condensed representation which can be
+                used to directly embed a description of the node in its parent.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.KeySet`
@@ -1169,21 +1244,84 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            index (str): If non-empty, the name of an index on ``table``. This index is used
-                instead of the table primary key when interpreting ``key_set`` and
-                sorting result rows. See ``key_set`` for further information.
-            limit (long): If greater than zero, only the first ``limit`` rows are yielded. If
-                ``limit`` is zero, the default is no limit. A limit cannot be specified
-                if ``partition_token`` is set.
-            resume_token (bytes): If this request is resuming a previously interrupted read,
-                ``resume_token`` should be copied from the last ``PartialResultSet``
-                yielded before the interruption. Doing this enables the new read to
-                resume where the last read left off. The rest of the request parameters
-                must exactly match the request that yielded this token.
-            partition_token (bytes): If present, results will be restricted to the specified partition
-                previously created using PartitionRead(). There must be an exact match
-                for the values of fields common to this message and the
-                PartitionReadRequest message used to create this partition\_token.
+            index (str): Protocol Buffers - Google's data interchange format Copyright 2008
+                Google Inc. All rights reserved.
+                https://developers.google.com/protocol-buffers/
+
+                Redistribution and use in source and binary forms, with or without
+                modification, are permitted provided that the following conditions are
+                met:
+
+                ::
+
+                    * Redistributions of source code must retain the above copyright
+
+                notice, this list of conditions and the following disclaimer. \*
+                Redistributions in binary form must reproduce the above copyright
+                notice, this list of conditions and the following disclaimer in the
+                documentation and/or other materials provided with the distribution. \*
+                Neither the name of Google Inc. nor the names of its contributors may be
+                used to endorse or promote products derived from this software without
+                specific prior written permission.
+
+                THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+                IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+                TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+                PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+                OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+                EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+                PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+                PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+                LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+                NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+                SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+            limit (long): Required. ``key_set`` identifies the rows to be yielded. ``key_set``
+                names the primary keys of the rows in ``table`` to be yielded, unless
+                ``index`` is present. If ``index`` is present, then ``key_set`` instead
+                names index keys in ``index``.
+
+                It is not an error for the ``key_set`` to name rows that do not exist in
+                the database. Read yields nothing for nonexistent rows.
+            resume_token (bytes): If this SourceCodeInfo represents a complete declaration, these are
+                any comments appearing before and after the declaration which appear to
+                be attached to the declaration.
+
+                A series of line comments appearing on consecutive lines, with no other
+                tokens appearing on those lines, will be treated as a single comment.
+
+                leading_detached_comments will keep paragraphs of comments that appear
+                before (but not connected to) the current element. Each paragraph,
+                separated by empty lines, will be one comment element in the repeated
+                field.
+
+                Only the comment content is provided; comment markers (e.g. //) are
+                stripped out. For block comments, leading whitespace and an asterisk
+                will be stripped from the beginning of each line other than the first.
+                Newlines are included in the output.
+
+                Examples:
+
+                optional int32 foo = 1; // Comment attached to foo. // Comment attached
+                to bar. optional int32 bar = 2;
+
+                optional string baz = 3; // Comment attached to baz. // Another line
+                attached to baz.
+
+                // Comment attached to qux. // // Another line attached to qux. optional
+                double qux = 4;
+
+                // Detached comment for corge. This is not leading or trailing comments
+                // to qux or corge because there are blank lines separating it from //
+                both.
+
+                // Detached comment for corge paragraph 2.
+
+                optional string corge = 5; /\* Block comment attached \* to corge.
+                Leading asterisks \* will be removed. */ /* Block comment attached to \*
+                grault. \*/ optional int32 grault = 6;
+
+                // ignored detached comments.
+            partition_token (bytes): ``StructType`` defines the fields of a ``STRUCT`` type.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -1256,10 +1394,7 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Like ``Read``, except returns the result set as a stream. Unlike
-        ``Read``, there is no limit on the size of the returned result set.
-        However, no individual row in the result set can exceed 100 MiB, and no
-        column value can exceed 10 MiB.
+        Encoded as ``string``, in decimal format.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1284,20 +1419,15 @@ class SpannerClient(object):
         Args:
             session (str): Required. The session in which the read should be performed.
             table (str): Required. The name of the table in the database to be read.
-            columns (list[str]): Required. The columns of ``table`` to be returned for each row matching
-                this request.
-            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Required. ``key_set`` identifies the rows to be yielded. ``key_set``
-                names the primary keys of the rows in ``table`` to be yielded, unless
-                ``index`` is present. If ``index`` is present, then ``key_set`` instead
-                names index keys in ``index``.
-
-                If the ``partition_token`` field is empty, rows are yielded in table
-                primary key order (if ``index`` is empty) or index key order (if
-                ``index`` is non-empty). If the ``partition_token`` field is not empty,
-                rows will be yielded in an unspecified order.
-
-                It is not an error for the ``key_set`` to name rows that do not exist in
-                the database. Read yields nothing for nonexistent rows.
+            columns (list[str]): The list of fields that make up this struct. Order is significant,
+                because values of this struct type are represented as lists, where the
+                order of field values matches the order of fields in the ``StructType``.
+                In turn, the order of fields matches the order of columns in a read
+                request, or the order of fields in the ``SELECT`` clause of a query.
+            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Used to determine the type of node. May be needed for visualizing
+                different kinds of nodes differently. For example, If the node is a
+                ``SCALAR`` node, it will have a condensed representation which can be
+                used to directly embed a description of the node in its parent.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.KeySet`
@@ -1306,21 +1436,84 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            index (str): If non-empty, the name of an index on ``table``. This index is used
-                instead of the table primary key when interpreting ``key_set`` and
-                sorting result rows. See ``key_set`` for further information.
-            limit (long): If greater than zero, only the first ``limit`` rows are yielded. If
-                ``limit`` is zero, the default is no limit. A limit cannot be specified
-                if ``partition_token`` is set.
-            resume_token (bytes): If this request is resuming a previously interrupted read,
-                ``resume_token`` should be copied from the last ``PartialResultSet``
-                yielded before the interruption. Doing this enables the new read to
-                resume where the last read left off. The rest of the request parameters
-                must exactly match the request that yielded this token.
-            partition_token (bytes): If present, results will be restricted to the specified partition
-                previously created using PartitionRead(). There must be an exact match
-                for the values of fields common to this message and the
-                PartitionReadRequest message used to create this partition\_token.
+            index (str): Protocol Buffers - Google's data interchange format Copyright 2008
+                Google Inc. All rights reserved.
+                https://developers.google.com/protocol-buffers/
+
+                Redistribution and use in source and binary forms, with or without
+                modification, are permitted provided that the following conditions are
+                met:
+
+                ::
+
+                    * Redistributions of source code must retain the above copyright
+
+                notice, this list of conditions and the following disclaimer. \*
+                Redistributions in binary form must reproduce the above copyright
+                notice, this list of conditions and the following disclaimer in the
+                documentation and/or other materials provided with the distribution. \*
+                Neither the name of Google Inc. nor the names of its contributors may be
+                used to endorse or promote products derived from this software without
+                specific prior written permission.
+
+                THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS
+                IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED
+                TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+                PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER
+                OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+                EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+                PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+                PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+                LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+                NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+                SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+            limit (long): Required. ``key_set`` identifies the rows to be yielded. ``key_set``
+                names the primary keys of the rows in ``table`` to be yielded, unless
+                ``index`` is present. If ``index`` is present, then ``key_set`` instead
+                names index keys in ``index``.
+
+                It is not an error for the ``key_set`` to name rows that do not exist in
+                the database. Read yields nothing for nonexistent rows.
+            resume_token (bytes): If this SourceCodeInfo represents a complete declaration, these are
+                any comments appearing before and after the declaration which appear to
+                be attached to the declaration.
+
+                A series of line comments appearing on consecutive lines, with no other
+                tokens appearing on those lines, will be treated as a single comment.
+
+                leading_detached_comments will keep paragraphs of comments that appear
+                before (but not connected to) the current element. Each paragraph,
+                separated by empty lines, will be one comment element in the repeated
+                field.
+
+                Only the comment content is provided; comment markers (e.g. //) are
+                stripped out. For block comments, leading whitespace and an asterisk
+                will be stripped from the beginning of each line other than the first.
+                Newlines are included in the output.
+
+                Examples:
+
+                optional int32 foo = 1; // Comment attached to foo. // Comment attached
+                to bar. optional int32 bar = 2;
+
+                optional string baz = 3; // Comment attached to baz. // Another line
+                attached to baz.
+
+                // Comment attached to qux. // // Another line attached to qux. optional
+                double qux = 4;
+
+                // Detached comment for corge. This is not leading or trailing comments
+                // to qux or corge because there are blank lines separating it from //
+                both.
+
+                // Detached comment for corge paragraph 2.
+
+                optional string corge = 5; /\* Block comment attached \* to corge.
+                Leading asterisks \* will be removed. */ /* Block comment attached to \*
+                grault. \*/ optional int32 grault = 6;
+
+                // ignored detached comments.
+            partition_token (bytes): ``StructType`` defines the fields of a ``STRUCT`` type.
             retry (Optional[google.api_core.retry.Retry]):  A retry object used
                 to retry requests. If ``None`` is specified, requests will
                 be retried using a default configuration.
@@ -1388,9 +1581,16 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Begins a new transaction. This step can often be skipped: ``Read``,
-        ``ExecuteSql`` and ``Commit`` can begin a new transaction as a
-        side-effect.
+        The resource type. It must be in the format of
+        {service_name}/{resource_type_kind}. The ``resource_type_kind`` must be
+        singular and must not include version numbers.
+
+        Example: ``storage.googleapis.com/Bucket``
+
+        The value of the resource_type_kind must follow the regular expression
+        /[A-Za-z][a-zA-Z0-9]+/. It should start with an upper case character and
+        should use PascalCase (UpperCamelCase). The maximum number of characters
+        allowed for the ``resource_type_kind`` is 100.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1469,14 +1669,17 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Commits a transaction. The request includes the mutations to be applied
-        to rows in the database.
+        Creates a set of partition tokens that can be used to execute a
+        query operation in parallel. Each of the returned partition tokens can
+        be used by ``ExecuteStreamingSql`` to specify a subset of the query
+        result to read. The same session and read-only transaction must be used
+        by the PartitionQueryRequest used to create the partition tokens and the
+        ExecuteSqlRequests that use the partition tokens.
 
-        ``Commit`` might return an ``ABORTED`` error. This can occur at any
-        time; commonly, the cause is conflicts with concurrent transactions.
-        However, it can also happen for a variety of other reasons. If
-        ``Commit`` returns ``ABORTED``, the caller should re-attempt the
-        transaction from the beginning, re-using the same session.
+        Partition tokens become invalid when the session used to create them is
+        deleted, is idle for too long, begins a new transaction, or becomes too
+        old. When any of these happen, it is not possible to resume the query,
+        and the whole operation must be restarted from the beginning.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1490,13 +1693,11 @@ class SpannerClient(object):
         Args:
             session (str): Required. The session in which the transaction to be committed is running.
             transaction_id (bytes): Commit a previously-started transaction.
-            single_use_transaction (Union[dict, ~google.cloud.spanner_v1.types.TransactionOptions]): Execute mutations in a temporary transaction. Note that unlike commit of
-                a previously-started transaction, commit with a temporary transaction is
-                non-idempotent. That is, if the ``CommitRequest`` is sent to Cloud
-                Spanner more than once (for instance, due to retries in the application,
-                or in the transport library), it is possible that the mutations are
-                executed more than once. If this is undesirable, use
-                ``BeginTransaction`` and ``Commit`` instead.
+            single_use_transaction (Union[dict, ~google.cloud.spanner_v1.types.TransactionOptions]): Streaming calls might be interrupted for a variety of reasons, such
+                as TCP connection loss. If this occurs, the stream of results can be
+                resumed by re-sending the original request and including
+                ``resume_token``. Note that executing any other transaction in the same
+                session invalidates the token.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionOptions`
@@ -1574,13 +1775,8 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Rolls back a transaction, releasing any locks it holds. It is a good
-        idea to call this for any transaction that includes one or more ``Read``
-        or ``ExecuteSql`` requests and ultimately decides not to commit.
-
-        ``Rollback`` returns ``OK`` if it successfully aborts the transaction,
-        the transaction was already aborted, or the transaction is not found.
-        ``Rollback`` never returns ``ABORTED``.
+        Encoded as ``number``, or the strings ``"NaN"``, ``"Infinity"``, or
+        ``"-Infinity"``.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1657,17 +1853,13 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Creates a set of partition tokens that can be used to execute a query
-        operation in parallel. Each of the returned partition tokens can be used
-        by ``ExecuteStreamingSql`` to specify a subset of the query result to
-        read. The same session and read-only transaction must be used by the
-        PartitionQueryRequest used to create the partition tokens and the
-        ExecuteSqlRequests that use the partition tokens.
+        Encoded as ``string`` in RFC 3339 timestamp format. The time zone
+        must be present, and must be ``"Z"``.
 
-        Partition tokens become invalid when the session used to create them is
-        deleted, is idle for too long, begins a new transaction, or becomes too
-        old. When any of these happen, it is not possible to resume the query,
-        and the whole operation must be restarted from the beginning.
+        If the schema has the column option ``allow_commit_timestamp=true``, the
+        placeholder string ``"spanner.commit_timestamp()"`` can be used to
+        instruct the system to insert the commit timestamp associated with the
+        transaction commit.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1683,43 +1875,30 @@ class SpannerClient(object):
 
         Args:
             session (str): Required. The session used to create the partitions.
-            sql (str): Required. The query request to generate partitions for. The request will
-                fail if the query is not root partitionable. The query plan of a root
-                partitionable query has a single distributed union operator. A
-                distributed union operator conceptually divides one or more tables into
-                multiple splits, remotely evaluates a subquery independently on each
-                split, and then unions all results.
+            sql (str): The resource type that the annotated field references.
 
-                This must not contain DML commands, such as INSERT, UPDATE, or DELETE.
-                Use ``ExecuteStreamingSql`` with a PartitionedDml transaction for large,
-                partition-friendly DML operations.
+                Example:
+
+                ::
+
+                    message Subscription {
+                      string topic = 2 [(google.api.resource_reference) = {
+                        type: "pubsub.googleapis.com/Topic"
+                      }];
+                    }
             transaction (Union[dict, ~google.cloud.spanner_v1.types.TransactionSelector]): Read only snapshot transactions are supported, read/write and single use
                 transactions are not.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Parameter names and values that bind to placeholders in the SQL string.
-
-                A parameter placeholder consists of the ``@`` character followed by the
-                parameter name (for example, ``@firstName``). Parameter names can
-                contain letters, numbers, and underscores.
-
-                Parameters can appear anywhere that a literal value is expected. The
-                same parameter name can be used more than once, for example:
-
-                ``"WHERE id > @msg_id AND id < @msg_id + 100"``
-
-                It is an error to execute a SQL statement with unbound parameters.
+            params (Union[dict, ~google.cloud.spanner_v1.types.Struct]): Required. The number of sessions to be created in this batch call.
+                The API may return fewer than the requested number of sessions. If a
+                specific number of sessions are desired, the client can make additional
+                calls to BatchCreateSessions (adjusting ``session_count`` as necessary).
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Struct`
-            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): It is not always possible for Cloud Spanner to infer the right SQL type
-                from a JSON value. For example, values of type ``BYTES`` and values of
-                type ``STRING`` both appear in ``params`` as JSON strings.
-
-                In these cases, ``param_types`` can be used to specify the exact SQL
-                type for some or all of the SQL query parameters. See the definition of
-                ``Type`` for more information about SQL types.
+            param_types (dict[str -> Union[dict, ~google.cloud.spanner_v1.types.Type]]): The request for ``Rollback``.
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.Type`
@@ -1796,20 +1975,16 @@ class SpannerClient(object):
         metadata=None,
     ):
         """
-        Creates a set of partition tokens that can be used to execute a read
-        operation in parallel. Each of the returned partition tokens can be used
-        by ``StreamingRead`` to specify a subset of the read result to read. The
-        same session and read-only transaction must be used by the
-        PartitionReadRequest used to create the partition tokens and the
-        ReadRequests that use the partition tokens. There are no ordering
-        guarantees on rows returned among the returned partition tokens, or even
-        within each individual StreamingRead call issued with a
-        partition\_token.
+        Required. The query request to generate partitions for. The request
+        will fail if the query is not root partitionable. The query plan of a
+        root partitionable query has a single distributed union operator. A
+        distributed union operator conceptually divides one or more tables into
+        multiple splits, remotely evaluates a subquery independently on each
+        split, and then unions all results.
 
-        Partition tokens become invalid when the session used to create them is
-        deleted, is idle for too long, begins a new transaction, or becomes too
-        old. When any of these happen, it is not possible to resume the read,
-        and the whole operation must be restarted from the beginning.
+        This must not contain DML commands, such as INSERT, UPDATE, or DELETE.
+        Use ``ExecuteStreamingSql`` with a PartitionedDml transaction for large,
+        partition-friendly DML operations.
 
         Example:
             >>> from google.cloud import spanner_v1
@@ -1829,13 +2004,22 @@ class SpannerClient(object):
         Args:
             session (str): Required. The session used to create the partitions.
             table (str): Required. The name of the table in the database to be read.
-            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Required. ``key_set`` identifies the rows to be yielded. ``key_set``
-                names the primary keys of the rows in ``table`` to be yielded, unless
-                ``index`` is present. If ``index`` is present, then ``key_set`` instead
-                names index keys in ``index``.
+            key_set (Union[dict, ~google.cloud.spanner_v1.types.KeySet]): Identifies which part of the FileDescriptorProto was defined at this
+                location.
 
-                It is not an error for the ``key_set`` to name rows that do not exist in
-                the database. Read yields nothing for nonexistent rows.
+                Each element is a field number or an index. They form a path from the
+                root FileDescriptorProto to the place where the definition. For example,
+                this path: [ 4, 3, 2, 7, 1 ] refers to: file.message_type(3) // 4, 3
+                .field(7) // 2, 7 .name() // 1 This is because
+                FileDescriptorProto.message_type has field number 4: repeated
+                DescriptorProto message_type = 4; and DescriptorProto.field has field
+                number 2: repeated FieldDescriptorProto field = 2; and
+                FieldDescriptorProto.name has field number 1: optional string name = 1;
+
+                Thus, the above path gives the location of a field name. If we removed
+                the last element: [ 4, 3, 2, 7 ] this path refers to the whole field
+                declaration (from the beginning of the label to the terminating
+                semicolon).
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.KeySet`
@@ -1844,11 +2028,23 @@ class SpannerClient(object):
 
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.TransactionSelector`
-            index (str): If non-empty, the name of an index on ``table``. This index is used
-                instead of the table primary key when interpreting ``key_set`` and
-                sorting result rows. See ``key_set`` for further information.
-            columns (list[str]): The columns of ``table`` to be returned for each row matching this
-                request.
+            index (str): Denotes a Relational operator node in the expression tree.
+                Relational operators represent iterative processing of rows during query
+                execution. For example, a ``TableScan`` operation that reads rows from a
+                table.
+            columns (list[str]): The resource type of a child collection that the annotated field
+                references. This is useful for annotating the ``parent`` field that
+                doesn't have a fixed resource type.
+
+                Example:
+
+                ::
+
+                    message ListLogEntriesRequest {
+                      string parent = 1 [(google.api.resource_reference) = {
+                        child_type: "logging.googleapis.com/LogEntry"
+                      };
+                    }
             partition_options (Union[dict, ~google.cloud.spanner_v1.types.PartitionOptions]): Additional options that affect how many partitions are created.
 
                 If a dict is provided, it must be of the same form as the protobuf
