@@ -129,6 +129,8 @@ OperationProgress = _reflection.GeneratedProtocolMessageType(
         __module__="google.cloud.spanner.admin.database_v1.proto.common_pb2",
         __doc__="""Encapsulates progress related information for a Cloud Spanner long
   running operation.
+  
+  
   Attributes:
       progress_percent:
           Percent completion of the operation. Values are between 0 and
