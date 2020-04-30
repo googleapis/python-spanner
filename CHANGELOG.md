@@ -4,6 +4,14 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [1.15.2](https://www.github.com/googleapis/python-spanner/compare/v1.15.1...v1.15.2) (2020-04-30)
+
+
+### Bug Fixes
+
+* add keepalive changes to synth.py ([#55](https://www.github.com/googleapis/python-spanner/issues/55)) ([805bbb7](https://www.github.com/googleapis/python-spanner/commit/805bbb766fd9c019f528e2f8ed1379d997622d03))
+* pass gRPC config options to gRPC channel creation ([#26](https://www.github.com/googleapis/python-spanner/issues/26)) ([6c9a1ba](https://www.github.com/googleapis/python-spanner/commit/6c9a1badfed610a18454137e1b45156872914e7e))
+
 ### [1.15.1](https://www.github.com/googleapis/python-spanner/compare/v1.15.0...v1.15.1) (2020-04-08)
 
 
