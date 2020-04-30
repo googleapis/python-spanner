@@ -21,7 +21,8 @@ import re
 import threading
 
 import google.auth.credentials
-from google.api_core.retry import Retry, if_exception_type
+from google.api_core.retry import Retry
+from google.api_core.retry import if_exception_type
 import google.auth.credentials
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.exceptions import NotFound
@@ -424,8 +425,9 @@ class Database(object):
 
                 return result_set.stats.row_count_lower_bound
 
-        retry = Retry(predicate=if_exception_type(Aborted))
-        return retry(execute_pdml)()
+        retry_config = api._method_configs["ExecuteStreamingSql"].retry
+
+        return _retry_on_aborted(execute_pdml, retry_config)()
 
     def session(self, labels=None):
         """Factory to create a session for this database.
@@ -985,3 +987,19 @@ class RestoreInfo(object):
     @classmethod
     def from_pb(cls, pb):
         return cls(pb.source_type, pb.backup_info)
+
+
+def _retry_on_aborted(func, retry_config):
+    """Helper for :meth:`Database.execute_partitioned_dml`.
+
+    Wrap function in a Retry that will retry on Aborted exceptions
+    with the retry config specified.
+
+    :type func: callable
+    :param func: the function to be retried on Aborted exceptions
+
+    :type retry_config: Retry
+    :param retry_config: retry object with the settings to be used
+    """
+    retry = retry_config.with_predicate(if_exception_type(Aborted))
+    return retry(func)

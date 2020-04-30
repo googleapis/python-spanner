@@ -739,6 +739,7 @@ class TestDatabase(_BaseTest):
         self, dml, params=None, param_types=None, query_options=None, retried=False
     ):
         from google.api_core.exceptions import Aborted
+        from google.api_core.retry import Retry
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1.proto.result_set_pb2 import (
             PartialResultSet,
@@ -754,6 +755,10 @@ class TestDatabase(_BaseTest):
             _merge_query_options,
         )
 
+        import collections
+
+        MethodConfig = collections.namedtuple("MethodConfig", ["retry"])
+
         transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
 
         stats_pb = ResultSetStats(row_count_lower_bound=2)
@@ -767,6 +772,7 @@ class TestDatabase(_BaseTest):
         pool.put(session)
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
         api = database._spanner_api = self._make_spanner_api()
+        api._method_configs = {"ExecuteStreamingSql": MethodConfig(retry=Retry())}
         if retried:
             retry_transaction_pb = TransactionPB(id=self.RETRY_TRANSACTION_ID)
             api.begin_transaction.side_effect = [transaction_pb, retry_transaction_pb]
