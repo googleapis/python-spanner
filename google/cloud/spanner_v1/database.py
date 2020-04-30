@@ -21,9 +21,7 @@ import re
 import threading
 
 import google.auth.credentials
-from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
-import google.auth.credentials
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
