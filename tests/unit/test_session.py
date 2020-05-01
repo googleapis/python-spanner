@@ -232,17 +232,17 @@ class TestSession(unittest.TestCase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-    def test_ping_miss(self):
-        from google.api_core.exceptions import NotFound
+    def test_ping_error(self):
+        from google.api_core.exceptions import Unknown
 
         gax_api = self._make_spanner_api()
-        gax_api.execute_sql.side_effect = NotFound("testing")
+        gax_api.execute_sql.side_effect = Unknown("testing")
         database = self._make_database()
         database.spanner_api = gax_api
         session = self._make_one(database)
         session._session_id = self.SESSION_ID
 
-        with self.assertRaises(NotFound):
+        with self.assertRaises(Unknown):
             session.ping()
 
         gax_api.execute_sql.assert_called_once_with(
