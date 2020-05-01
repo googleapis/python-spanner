@@ -446,7 +446,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS = [_Session(database)] * 4
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=3000)
+        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -477,7 +477,7 @@ class TestPingingPool(unittest.TestCase):
 
         self.assertIs(session, SESSIONS[4])
         session.create.assert_called()
-        self.assertFalse(SESSIONS[0]._pinged)
+        self.assertTrue(SESSIONS[0]._pinged)
         self.assertFalse(pool._sessions.full())
 
     def test_get_empty_default_timeout(self):
@@ -532,8 +532,8 @@ class TestPingingPool(unittest.TestCase):
             pool.put(session)
 
         self.assertEqual(len(queue._items), 1)
-        last_used, queued = queue._items[0]
-        self.assertEqual(last_used, now)
+        ping_after, queued = queue._items[0]
+        self.assertEqual(ping_after, now + datetime.timedelta(seconds=3000))
         self.assertIs(queued, session)
 
     def test_clear(self):
@@ -580,7 +580,7 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=3500)
+        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -602,7 +602,7 @@ class TestPingingPool(unittest.TestCase):
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertFalse(SESSIONS[0]._pinged)
+        self.assertTrue(SESSIONS[0]._pinged)
         SESSIONS[1].create.assert_called()
 
 

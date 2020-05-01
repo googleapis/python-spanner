@@ -23,7 +23,6 @@ from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
-_SESSION_EXPIRY_DURATION = datetime.timedelta(hours=1)
 
 
 class AbstractSessionPool(object):
@@ -385,13 +384,14 @@ class PingingPool(AbstractSessionPool):
         if timeout is None:
             timeout = self.default_timeout
 
-        last_used, session = self._sessions.get(block=True, timeout=timeout)
+        ping_after, session = self._sessions.get(block=True, timeout=timeout)
 
-        if _NOW() > last_used + _SESSION_EXPIRY_DURATION:
-            session = self._new_session()
-            session.create()
-        elif _NOW() > last_used + self._delta:
-            session.ping()
+        if _NOW() > ping_after:
+            try:
+                session.ping()
+            except NotFound:
+                session = self._new_session()
+                session.create()
 
         return session
 
@@ -405,7 +405,7 @@ class PingingPool(AbstractSessionPool):
 
         :raises: :exc:`six.moves.queue.Full` if the queue is full.
         """
-        self._sessions.put_nowait((_NOW(), session))
+        self._sessions.put_nowait((_NOW() + self._delta, session))
 
     def clear(self):
         """Delete all sessions in the pool."""
@@ -425,18 +425,18 @@ class PingingPool(AbstractSessionPool):
         """
         while True:
             try:
-                last_used, session = self._sessions.get(block=False)
+                ping_after, session = self._sessions.get(block=False)
             except queue.Empty:  # all sessions in use
                 break
-            if last_used + self._delta > _NOW():  # oldest session is fresh
+            if ping_after > _NOW():  # oldest session is fresh
                 # Re-add to queue with existing expiration
-                self._sessions.put((last_used, session))
+                self._sessions.put((ping_after, session))
                 break
-            if _NOW() > last_used + _SESSION_EXPIRY_DURATION:  # stale
+            try:
+                session.ping()
+            except NotFound:
                 session = self._new_session()
                 session.create()
-            else:
-                session.ping()
             # Re-add to queue with new expiration
             self.put(session)
 
