@@ -387,9 +387,7 @@ class PingingPool(AbstractSessionPool):
         ping_after, session = self._sessions.get(block=True, timeout=timeout)
 
         if _NOW() > ping_after:
-            try:
-                session.ping()
-            except NotFound:
+            if not session.exists():
                 session = self._new_session()
                 session.create()
 

@@ -433,7 +433,7 @@ class TestPingingPool(unittest.TestCase):
         session = pool.get()
 
         self.assertIs(session, SESSIONS[0])
-        self.assertFalse(session._pinged)
+        self.assertFalse(session._exists_checked)
         self.assertFalse(pool._sessions.full())
 
     def test_get_hit_w_ping(self):
@@ -454,7 +454,7 @@ class TestPingingPool(unittest.TestCase):
         session = pool.get()
 
         self.assertIs(session, SESSIONS[0])
-        self.assertTrue(session._pinged)
+        self.assertTrue(session._exists_checked)
         self.assertFalse(pool._sessions.full())
 
     def test_get_hit_w_ping_expired(self):
@@ -477,7 +477,7 @@ class TestPingingPool(unittest.TestCase):
 
         self.assertIs(session, SESSIONS[4])
         session.create.assert_called()
-        self.assertTrue(SESSIONS[0]._pinged)
+        self.assertTrue(SESSIONS[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
 
     def test_get_empty_default_timeout(self):
