@@ -208,7 +208,7 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, datetime_helpers.to_rfc3339(now))
 
-    def test_w_datetime(self):
+    def test_w_numeric(self):
         import decimal
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
