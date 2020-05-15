@@ -211,7 +211,6 @@ class Test_make_value_pb(unittest.TestCase):
     def test_w_numeric(self):
         import decimal
         from google.protobuf.struct_pb2 import Value
-        from google.api_core import datetime_helpers
 
         value = decimal.Decimal("9999999999999999999999999999.999999999")
         value_pb = self._callFUT(value)
