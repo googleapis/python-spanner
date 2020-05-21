@@ -219,6 +219,8 @@ class TestClient(unittest.TestCase):
     def test_instance_admin_api(self, mock_em):
         from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
 
+        mock_em.return_value = None
+
         credentials = _make_credentials()
         client_info = mock.Mock()
         client_options = mock.Mock()
@@ -230,7 +232,6 @@ class TestClient(unittest.TestCase):
         )
         expected_scopes = (SPANNER_ADMIN_SCOPE,)
 
-        mock_em.return_value = None
         inst_module = "google.cloud.spanner_v1.client.InstanceAdminClient"
         with mock.patch(inst_module) as instance_admin_client:
             api = client.instance_admin_api
@@ -250,18 +251,14 @@ class TestClient(unittest.TestCase):
         credentials.with_scopes.assert_called_once_with(expected_scopes)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
-    def test_instance_admin_api_emulator(self, mock_em):
+    def test_instance_admin_api_emulator_env(self, mock_em):
+        mock_em.return_value = "emulator.host"
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = mock.Mock()
         client = self._make_one(
-            project=self.PROJECT,
-            credentials=credentials,
-            client_info=client_info,
-            client_options=client_options,
+            project=self.PROJECT, credentials=credentials, client_info=client_info
         )
 
-        mock_em.return_value = "true"
         inst_module = "google.cloud.spanner_v1.client.InstanceAdminClient"
         with mock.patch(inst_module) as instance_admin_client:
             api = client.instance_admin_api
@@ -276,7 +273,36 @@ class TestClient(unittest.TestCase):
         called_args, called_kw = instance_admin_client.call_args
         self.assertEqual(called_args, ())
         self.assertEqual(called_kw["client_info"], client_info)
-        self.assertEqual(called_kw["client_options"], client_options)
+        self.assertIn("transport", called_kw)
+        self.assertNotIn("credentials", called_kw)
+
+    def test_instance_admin_api_emulator_code(self):
+        from google.auth.credentials import AnonymousCredentials
+
+        credentials = AnonymousCredentials()
+        client_info = mock.Mock()
+        client_options = {"api_endpoint": "emulator.host"}
+        client = self._make_one(
+            project=self.PROJECT,
+            credentials=credentials,
+            client_info=client_info,
+            client_options=client_options,
+        )
+
+        inst_module = "google.cloud.spanner_v1.client.InstanceAdminClient"
+        with mock.patch(inst_module) as instance_admin_client:
+            api = client.instance_admin_api
+
+        self.assertIs(api, instance_admin_client.return_value)
+
+        # API instance is cached
+        again = client.instance_admin_api
+        self.assertIs(again, api)
+
+        self.assertEqual(len(instance_admin_client.call_args_list), 1)
+        called_args, called_kw = instance_admin_client.call_args
+        self.assertEqual(called_args, ())
+        self.assertEqual(called_kw["client_info"], client_info)
         self.assertIn("transport", called_kw)
         self.assertNotIn("credentials", called_kw)
 
@@ -284,6 +310,7 @@ class TestClient(unittest.TestCase):
     def test_database_admin_api(self, mock_em):
         from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
 
+        mock_em.return_value = None
         credentials = _make_credentials()
         client_info = mock.Mock()
         client_options = mock.Mock()
@@ -295,7 +322,6 @@ class TestClient(unittest.TestCase):
         )
         expected_scopes = (SPANNER_ADMIN_SCOPE,)
 
-        mock_em.return_value = None
         db_module = "google.cloud.spanner_v1.client.DatabaseAdminClient"
         with mock.patch(db_module) as database_admin_client:
             api = client.database_admin_api
@@ -315,7 +341,8 @@ class TestClient(unittest.TestCase):
         credentials.with_scopes.assert_called_once_with(expected_scopes)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
-    def test_database_admin_api_emulator(self, mock_em):
+    def test_database_admin_api_emulator_env(self, mock_em):
+        mock_em.return_value = "host:port"
         credentials = _make_credentials()
         client_info = mock.Mock()
         client_options = mock.Mock()
@@ -326,7 +353,6 @@ class TestClient(unittest.TestCase):
             client_options=client_options,
         )
 
-        mock_em.return_value = "host:port"
         db_module = "google.cloud.spanner_v1.client.DatabaseAdminClient"
         with mock.patch(db_module) as database_admin_client:
             api = client.database_admin_api
@@ -341,8 +367,39 @@ class TestClient(unittest.TestCase):
         called_args, called_kw = database_admin_client.call_args
         self.assertEqual(called_args, ())
         self.assertEqual(called_kw["client_info"], client_info)
-        self.assertEqual(called_kw["client_options"], client_options)
         self.assertIn("transport", called_kw)
+        self.assertNotIn("client_options", called_kw)
+        self.assertNotIn("credentials", called_kw)
+
+    def test_database_admin_api_emulator_code(self):
+        from google.auth.credentials import AnonymousCredentials
+
+        credentials = AnonymousCredentials()
+        client_info = mock.Mock()
+        client_options = {"api_endpoint": "emulator.host"}
+        client = self._make_one(
+            project=self.PROJECT,
+            credentials=credentials,
+            client_info=client_info,
+            client_options=client_options,
+        )
+
+        db_module = "google.cloud.spanner_v1.client.DatabaseAdminClient"
+        with mock.patch(db_module) as database_admin_client:
+            api = client.database_admin_api
+
+        self.assertIs(api, database_admin_client.return_value)
+
+        # API instance is cached
+        again = client.database_admin_api
+        self.assertIs(again, api)
+
+        self.assertEqual(len(database_admin_client.call_args_list), 1)
+        called_args, called_kw = database_admin_client.call_args
+        self.assertEqual(called_args, ())
+        self.assertEqual(called_kw["client_info"], client_info)
+        self.assertIn("transport", called_kw)
+        self.assertNotIn("client_options", called_kw)
         self.assertNotIn("credentials", called_kw)
 
     def test_copy(self):
