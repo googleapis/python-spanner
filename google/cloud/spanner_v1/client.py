@@ -250,7 +250,9 @@ class Client(ClientWithProject):
                     channel=grpc.insecure_channel(target=self._emulator_host)
                 )
                 self._instance_admin_api = InstanceAdminClient(
-                    client_info=self._client_info, transport=transport
+                    client_info=self._client_info,
+                    client_options=self._client_options,
+                    transport=transport,
                 )
             else:
                 self._instance_admin_api = InstanceAdminClient(
@@ -269,7 +271,9 @@ class Client(ClientWithProject):
                     channel=grpc.insecure_channel(target=self._emulator_host)
                 )
                 self._database_admin_api = DatabaseAdminClient(
-                    client_info=self._client_info, transport=transport
+                    client_info=self._client_info,
+                    client_options=self._client_options,
+                    transport=transport,
                 )
             else:
                 self._database_admin_api = DatabaseAdminClient(
