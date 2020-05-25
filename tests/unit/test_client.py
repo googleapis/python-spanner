@@ -110,11 +110,14 @@ class TestClient(unittest.TestCase):
     @mock.patch("warnings.warn")
     def test_constructor_emulator_host_warning(self, mock_warn, mock_em):
         from google.cloud.spanner_v1 import client as MUT
+        from google.auth.credentials import AnonymousCredentials
 
-        expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
+        expected_scopes = None
         creds = _make_credentials()
         mock_em.return_value = "http://emulator.host.com"
-        self._constructor_test_helper(expected_scopes, creds)
+        with mock.patch("google.cloud.spanner_v1.client.AnonymousCredentials") as patch:
+            expected_creds = patch.return_value = AnonymousCredentials()
+            self._constructor_test_helper(expected_scopes, creds, expected_creds)
         mock_warn.assert_called_once_with(MUT._EMULATOR_HOST_HTTP_SCHEME)
 
     def test_constructor_default_scopes(self):

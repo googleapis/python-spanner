@@ -183,11 +183,10 @@ class Client(ClientWithProject):
         else:
             self._client_options = client_options
 
-        if isinstance(credentials, AnonymousCredentials):
-            self._emulator_host = self._client_options.api_endpoint
-
-        if not credentials and _get_spanner_emulator_host():
+        if self._emulator_host:
             credentials = AnonymousCredentials()
+        elif isinstance(credentials, AnonymousCredentials):
+            self._emulator_host = self._client_options.api_endpoint
 
         # NOTE: This API has no use for the _http argument, but sending it
         #       will have no impact since the _http() @property only lazily
