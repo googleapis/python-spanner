@@ -1281,9 +1281,8 @@ InstanceConfig = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _INSTANCECONFIG,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """A possible configuration for a Cloud Spanner instance.
-  Configurations define the geographic placement of nodes and their
-  replication.
+        "__doc__": """A possible configuration for a Cloud Spanner instance. Configurations
+  define the geographic placement of nodes and their replication.
   
   
   Attributes:
