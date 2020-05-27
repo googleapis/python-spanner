@@ -1281,11 +1281,8 @@ InstanceConfig = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _INSTANCECONFIG,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """A possible configuration for a Cloud Spanner instance.
-  Configurations define the geographic placement of nodes and their
-  replication.
-  
-  
+        "__doc__": """A possible configuration for a Cloud Spanner instance. Configurations
+  define the geographic placement of nodes and their replication.
   Attributes:
       name:
           A unique identifier for the instance configuration. Values are
@@ -1317,10 +1314,8 @@ Instance = _reflection.GeneratedProtocolMessageType(
         ),
         "DESCRIPTOR": _INSTANCE,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """An isolated set of Cloud Spanner resources on which
-  databases can be hosted.
-  
-  
+        "__doc__": """An isolated set of Cloud Spanner resources on which databases can be
+  hosted.
   Attributes:
       name:
           Required. A unique identifier for the instance, which cannot
@@ -1389,10 +1384,8 @@ ListInstanceConfigsRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _LISTINSTANCECONFIGSREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [ListInstanceConfigs][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigs].
-  
-  
+        "__doc__": """The request for [ListInstanceConfigs][google.spanner.admin.instance.v1
+  .InstanceAdmin.ListInstanceConfigs].
   Attributes:
       parent:
           Required. The name of the project for which a list of
@@ -1420,10 +1413,8 @@ ListInstanceConfigsResponse = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _LISTINSTANCECONFIGSRESPONSE,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The response for
-  [ListInstanceConfigs][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigs].
-  
-  
+        "__doc__": """The response for [ListInstanceConfigs][google.spanner.admin.instance.v
+  1.InstanceAdmin.ListInstanceConfigs].
   Attributes:
       instance_configs:
           The list of requested instance configurations.
@@ -1444,10 +1435,8 @@ GetInstanceConfigRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _GETINSTANCECONFIGREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [GetInstanceConfigRequest][google.spanner.admin.instance.v1.InstanceAdmin.GetInstanceConfig].
-  
-  
+        "__doc__": """The request for [GetInstanceConfigRequest][google.spanner.admin.instan
+  ce.v1.InstanceAdmin.GetInstanceConfig].
   Attributes:
       name:
           Required. The name of the requested instance configuration.
@@ -1465,10 +1454,8 @@ GetInstanceRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _GETINSTANCEREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [GetInstance][google.spanner.admin.instance.v1.InstanceAdmin.GetInstance].
-  
-  
+        "__doc__": """The request for [GetInstance][google.spanner.admin.instance.v1.Instanc
+  eAdmin.GetInstance].
   Attributes:
       name:
           Required. The name of the requested instance. Values are of
@@ -1491,10 +1478,8 @@ CreateInstanceRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _CREATEINSTANCEREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [CreateInstance][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstance].
-  
-  
+        "__doc__": """The request for [CreateInstance][google.spanner.admin.instance.v1.Inst
+  anceAdmin.CreateInstance].
   Attributes:
       parent:
           Required. The name of the project in which to create the
@@ -1518,10 +1503,8 @@ ListInstancesRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _LISTINSTANCESREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [ListInstances][google.spanner.admin.instance.v1.InstanceAdmin.ListInstances].
-  
-  
+        "__doc__": """The request for [ListInstances][google.spanner.admin.instance.v1.Insta
+  nceAdmin.ListInstances].
   Attributes:
       parent:
           Required. The name of the project for which a list of
@@ -1561,10 +1544,8 @@ ListInstancesResponse = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _LISTINSTANCESRESPONSE,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The response for
-  [ListInstances][google.spanner.admin.instance.v1.InstanceAdmin.ListInstances].
-  
-  
+        "__doc__": """The response for [ListInstances][google.spanner.admin.instance.v1.Inst
+  anceAdmin.ListInstances].
   Attributes:
       instances:
           The list of requested instances.
@@ -1584,10 +1565,8 @@ UpdateInstanceRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _UPDATEINSTANCEREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [UpdateInstance][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstance].
-  
-  
+        "__doc__": """The request for [UpdateInstance][google.spanner.admin.instance.v1.Inst
+  anceAdmin.UpdateInstance].
   Attributes:
       instance:
           Required. The instance to update, which must always include
@@ -1614,10 +1593,8 @@ DeleteInstanceRequest = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _DELETEINSTANCEREQUEST,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """The request for
-  [DeleteInstance][google.spanner.admin.instance.v1.InstanceAdmin.DeleteInstance].
-  
-  
+        "__doc__": """The request for [DeleteInstance][google.spanner.admin.instance.v1.Inst
+  anceAdmin.DeleteInstance].
   Attributes:
       name:
           Required. The name of the instance to be deleted. Values are
@@ -1634,10 +1611,8 @@ CreateInstanceMetadata = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _CREATEINSTANCEMETADATA,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """Metadata type for the operation returned by
-  [CreateInstance][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstance].
-  
-  
+        "__doc__": """Metadata type for the operation returned by [CreateInstance][google.sp
+  anner.admin.instance.v1.InstanceAdmin.CreateInstance].
   Attributes:
       instance:
           The instance being created.
@@ -1663,10 +1638,8 @@ UpdateInstanceMetadata = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _UPDATEINSTANCEMETADATA,
         "__module__": "google.cloud.spanner_admin_instance_v1.proto.spanner_instance_admin_pb2",
-        "__doc__": """Metadata type for the operation returned by
-  [UpdateInstance][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstance].
-  
-  
+        "__doc__": """Metadata type for the operation returned by [UpdateInstance][google.sp
+  anner.admin.instance.v1.InstanceAdmin.UpdateInstance].
   Attributes:
       instance:
           The desired end state of the update.

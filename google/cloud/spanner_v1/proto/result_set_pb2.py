@@ -436,8 +436,6 @@ ResultSet = _reflection.GeneratedProtocolMessageType(
         "__module__": "google.cloud.spanner_v1.proto.result_set_pb2",
         "__doc__": """Results from [Read][google.spanner.v1.Spanner.Read] or
   [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql].
-  
-  
   Attributes:
       metadata:
           Metadata about the result set, such as row type information.
@@ -471,11 +469,9 @@ PartialResultSet = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _PARTIALRESULTSET,
         "__module__": "google.cloud.spanner_v1.proto.result_set_pb2",
-        "__doc__": """Partial results from a streaming read or SQL query.
-  Streaming reads and SQL queries better tolerate large result sets, large
-  rows, and large values, but are a little trickier to consume.
-  
-  
+        "__doc__": """Partial results from a streaming read or SQL query. Streaming reads
+  and SQL queries better tolerate large result sets, large rows, and
+  large values, but are a little trickier to consume.
   Attributes:
       metadata:
           Metadata about the result set, such as row type information.
@@ -557,10 +553,8 @@ ResultSetMetadata = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _RESULTSETMETADATA,
         "__module__": "google.cloud.spanner_v1.proto.result_set_pb2",
-        "__doc__": """Metadata about a [ResultSet][google.spanner.v1.ResultSet]
-  or [PartialResultSet][google.spanner.v1.PartialResultSet].
-  
-  
+        "__doc__": """Metadata about a [ResultSet][google.spanner.v1.ResultSet] or
+  [PartialResultSet][google.spanner.v1.PartialResultSet].
   Attributes:
       row_type:
           Indicates the field names and types for the rows in the result
@@ -584,11 +578,8 @@ ResultSetStats = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _RESULTSETSTATS,
         "__module__": "google.cloud.spanner_v1.proto.result_set_pb2",
-        "__doc__": """Additional statistics about a
-  [ResultSet][google.spanner.v1.ResultSet] or
-  [PartialResultSet][google.spanner.v1.PartialResultSet].
-  
-  
+        "__doc__": """Additional statistics about a [ResultSet][google.spanner.v1.ResultSet]
+  or [PartialResultSet][google.spanner.v1.PartialResultSet].
   Attributes:
       query_plan:
           [QueryPlan][google.spanner.v1.QueryPlan] for the query

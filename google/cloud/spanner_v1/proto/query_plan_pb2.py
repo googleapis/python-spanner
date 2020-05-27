@@ -463,10 +463,8 @@ PlanNode = _reflection.GeneratedProtocolMessageType(
             {
                 "DESCRIPTOR": _PLANNODE_CHILDLINK,
                 "__module__": "google.cloud.spanner_v1.proto.query_plan_pb2",
-                "__doc__": """Metadata associated with a parent-child relationship
-    appearing in a [PlanNode][google.spanner.v1.PlanNode].
-    
-    
+                "__doc__": """Metadata associated with a parent-child relationship appearing in a
+    [PlanNode][google.spanner.v1.PlanNode].
     Attributes:
         child_index:
             The node to which the link points.
@@ -504,10 +502,8 @@ PlanNode = _reflection.GeneratedProtocolMessageType(
                 ),
                 "DESCRIPTOR": _PLANNODE_SHORTREPRESENTATION,
                 "__module__": "google.cloud.spanner_v1.proto.query_plan_pb2",
-                "__doc__": """Condensed representation of a node and its subtree. Only
-    present for ``SCALAR`` [PlanNode(s)][google.spanner.v1.PlanNode].
-    
-    
+                "__doc__": """Condensed representation of a node and its subtree. Only present for
+    ``SCALAR`` [PlanNode(s)][google.spanner.v1.PlanNode].
     Attributes:
         description:
             A string representation of the expression subtree rooted at
@@ -526,8 +522,6 @@ PlanNode = _reflection.GeneratedProtocolMessageType(
         "__module__": "google.cloud.spanner_v1.proto.query_plan_pb2",
         "__doc__": """Node information for nodes appearing in a
   [QueryPlan.plan_nodes][google.spanner.v1.QueryPlan.plan_nodes].
-  
-  
   Attributes:
       index:
           The ``PlanNode``\ ’s index in [node
@@ -573,10 +567,7 @@ QueryPlan = _reflection.GeneratedProtocolMessageType(
     {
         "DESCRIPTOR": _QUERYPLAN,
         "__module__": "google.cloud.spanner_v1.proto.query_plan_pb2",
-        "__doc__": """Contains an ordered list of nodes appearing in the query
-  plan.
-  
-  
+        "__doc__": """Contains an ordered list of nodes appearing in the query plan.
   Attributes:
       plan_nodes:
           The nodes in the query plan. Plan nodes are returned in pre-
