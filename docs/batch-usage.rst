@@ -176,7 +176,7 @@ After describing the modifications to be made to table data via the
 the back-end by calling :meth:`Batch.commit`, which makes the ``Commit``
 API call.
 
-Yu do not need to call this yourself as :class:`BatchCheckout` will call
+You do not need to call this yourself as :class:`BatchCheckout` will call
 this method automatically upon exiting the ``with`` block.
 
 .. code:: python
