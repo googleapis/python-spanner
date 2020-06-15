@@ -95,8 +95,11 @@ def _list_instances():
 def setUpModule():
     if USE_EMULATOR:
         from google.auth.credentials import AnonymousCredentials
-        emulator_project = os.getenv("GCLOUD_PROJECT") or 'emulator-test-project'
-        Config.CLIENT = Client(project=emulator_project, credentials=AnonymousCredentials())
+
+        emulator_project = os.getenv("GCLOUD_PROJECT") or "emulator-test-project"
+        Config.CLIENT = Client(
+            project=emulator_project, credentials=AnonymousCredentials()
+        )
     else:
         Config.CLIENT = Client()
     retry = RetryErrors(exceptions.ServiceUnavailable)
