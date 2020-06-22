@@ -29,7 +29,7 @@ export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-account.json
 # Setup project id.
 export PROJECT_ID=$(cat "${KOKORO_GFILE_DIR}/project-id.json")
 
-# Set up system tests to run on different instances.
+# Set up creating a new instance for each system tests run
 export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
 
 # Remove old nox
