@@ -66,6 +66,12 @@ def lint_setup_py(session):
 def default(session):
     # Install all test dependencies, then install this package in-place.
     session.install("mock", "pytest", "pytest-cov")
+
+    # Install opentelemetry dependencies
+    session.install(
+        "opentelemetry-api", "opentelemetry-sdk", "opentelemetry-instrumentation"
+    )
+
     session.install("-e", ".")
 
     # Run py.test against the unit tests.
@@ -83,13 +89,13 @@ def default(session):
     )
 
 
-@nox.session(python=["2.7", "3.5", "3.6", "3.7", "3.8"])
+@nox.session(python=["3.5", "3.6", "3.7", "3.8"])
 def unit(session):
     """Run the unit test suite."""
     default(session)
 
 
-@nox.session(python=["2.7", "3.7"])
+@nox.session(python="3.7")
 def system(session):
     """Run the system test suite."""
     system_test_path = os.path.join("tests", "system.py")
@@ -114,6 +120,11 @@ def system(session):
     # Install all test dependencies, then install this package into the
     # virtualenv's dist-packages.
     session.install("mock", "pytest")
+
+    # Install opentelemetry dependencies
+    session.install(
+        "opentelemetry-api", "opentelemetry-sdk", "opentelemetry-instrumentation"
+    )
 
     session.install("-e", ".")
     session.install("-e", "test_utils/")
