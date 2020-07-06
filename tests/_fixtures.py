@@ -43,7 +43,9 @@ CREATE TABLE all_types (
     string_value STRING(16),
     string_array ARRAY<STRING(16)>,
     timestamp_value TIMESTAMP,
-    timestamp_array ARRAY<TIMESTAMP>)
+    timestamp_array ARRAY<TIMESTAMP>,
+    numeric_value NUMERIC,
+    numeric_array ARRAY<NUMERIC>)
     PRIMARY KEY (pkey);
 CREATE TABLE counters (
     name STRING(1024),

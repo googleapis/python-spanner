@@ -14,6 +14,7 @@
 
 import collections
 import datetime
+import decimal
 import math
 import operator
 import os
@@ -38,6 +39,7 @@ from google.cloud.spanner_v1.proto.type_pb2 import FLOAT64
 from google.cloud.spanner_v1.proto.type_pb2 import INT64
 from google.cloud.spanner_v1.proto.type_pb2 import STRING
 from google.cloud.spanner_v1.proto.type_pb2 import TIMESTAMP
+from google.cloud.spanner_v1.proto.type_pb2 import NUMERIC
 from google.cloud.spanner_v1.proto.type_pb2 import Type
 
 from google.cloud._helpers import UTC
@@ -729,6 +731,8 @@ NEG_INF = float("-inf")
 OTHER_NAN, = struct.unpack("<d", b"\x01\x00\x01\x00\x00\x00\xf8\xff")
 BYTES_1 = b"Ymlu"
 BYTES_2 = b"Ym9vdHM="
+NUMERIC_1 = decimal.Decimal("0.123456789")
+NUMERIC_2 = decimal.Decimal("1234567890")
 ALL_TYPES_TABLE = "all_types"
 ALL_TYPES_COLUMNS = (
     "pkey",
@@ -746,6 +750,8 @@ ALL_TYPES_COLUMNS = (
     "string_array",
     "timestamp_value",
     "timestamp_array",
+    "numeric_value",
+    "numeric_array",
 )
 AllTypesRowData = collections.namedtuple("AllTypesRowData", ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in ALL_TYPES_COLUMNS])
@@ -762,6 +768,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=106, string_value=u"VALUE"),
     AllTypesRowData(pkey=107, timestamp_value=SOME_TIME),
     AllTypesRowData(pkey=108, timestamp_value=NANO_TIME),
+    AllTypesRowData(pkey=109, numeric_value=NUMERIC_1),
     # empty array values
     AllTypesRowData(pkey=201, int_array=[]),
     AllTypesRowData(pkey=202, bool_array=[]),
@@ -770,6 +777,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=205, float_array=[]),
     AllTypesRowData(pkey=206, string_array=[]),
     AllTypesRowData(pkey=207, timestamp_array=[]),
+    AllTypesRowData(pkey=208, numeric_array=[]),
     # non-empty array values, including nulls
     AllTypesRowData(pkey=301, int_array=[123, 456, None]),
     AllTypesRowData(pkey=302, bool_array=[True, False, None]),
@@ -778,6 +786,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=305, float_array=[3.1415926, 2.71828, None]),
     AllTypesRowData(pkey=306, string_array=[u"One", u"Two", None]),
     AllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
+    AllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
 )
 
 
@@ -2101,6 +2110,9 @@ class TestSessionAPI(unittest.TestCase, _TestData):
 
         dates = [SOME_DATE, SOME_DATE + datetime.timedelta(days=1)]
         self._bind_test_helper(DATE, SOME_DATE, dates)
+
+    def test_execute_sql_w_numeric_bindings(self):
+        self._bind_test_helper(NUMERIC, NUMERIC_1, [NUMERIC_1, NUMERIC_2])
 
     def test_execute_sql_w_query_param_struct(self):
         NAME = "Phred"
