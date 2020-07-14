@@ -1,0 +1,28 @@
+ on:
+  push:
+    branches:
+    - master
+  pull_request:
+name: integration-tests-against-emulator
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    services:
+      emulator:
+        image: gcr.io/cloud-spanner-emulator/emulator:latest
+        ports:
+          - 9010:9010
+          - 9020:9020
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+    - run: python -m pip install nox
+    - run: nox -s system-3.7
+      env:
+        SPANNER_EMULATOR_HOST: localhost:9010
+        GOOGLE_CLOUD_PROJECT: emulator-test-project
+        GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE: true
