@@ -2994,10 +2994,10 @@ PartitionReadRequest = _reflection.GeneratedProtocolMessageType(
           [table][google.spanner.v1.PartitionReadRequest.table]. This
           index is used instead of the table primary key when
           interpreting
-          [key\_set][google.spanner.v1.PartitionReadRequest.key\_set]
-          and sorting result rows. See
-          [key\_set][google.spanner.v1.PartitionReadRequest.key\_set]
-          for further information.
+          [key_set][google.spanner.v1.PartitionReadRequest.key_set] and
+          sorting result rows. See
+          [key_set][google.spanner.v1.PartitionReadRequest.key_set] for
+          further information.
       columns:
           The columns of
           [table][google.spanner.v1.PartitionReadRequest.table] to be
@@ -3011,7 +3011,7 @@ PartitionReadRequest = _reflection.GeneratedProtocolMessageType(
           present. If
           [index][google.spanner.v1.PartitionReadRequest.index] is
           present, then
-          [key\_set][google.spanner.v1.PartitionReadRequest.key\_set]
+          [key_set][google.spanner.v1.PartitionReadRequest.key_set]
           instead names index keys in
           [index][google.spanner.v1.PartitionReadRequest.index].  It is
           not an error for the ``key_set`` to name rows that do not
@@ -3088,9 +3088,9 @@ ReadRequest = _reflection.GeneratedProtocolMessageType(
           If non-empty, the name of an index on
           [table][google.spanner.v1.ReadRequest.table]. This index is
           used instead of the table primary key when interpreting
-          [key\_set][google.spanner.v1.ReadRequest.key\_set] and sorting
+          [key_set][google.spanner.v1.ReadRequest.key_set] and sorting
           result rows. See
-          [key\_set][google.spanner.v1.ReadRequest.key\_set] for further
+          [key_set][google.spanner.v1.ReadRequest.key_set] for further
           information.
       columns:
           Required. The columns of
@@ -3102,17 +3102,16 @@ ReadRequest = _reflection.GeneratedProtocolMessageType(
           [table][google.spanner.v1.ReadRequest.table] to be yielded,
           unless [index][google.spanner.v1.ReadRequest.index] is
           present. If [index][google.spanner.v1.ReadRequest.index] is
-          present, then
-          [key\_set][google.spanner.v1.ReadRequest.key\_set] instead
-          names index keys in
+          present, then [key_set][google.spanner.v1.ReadRequest.key_set]
+          instead names index keys in
           [index][google.spanner.v1.ReadRequest.index].  If the [partiti
-          on\_token][google.spanner.v1.ReadRequest.partition\_token]
-          field is empty, rows are yielded in table primary key order
-          (if [index][google.spanner.v1.ReadRequest.index] is empty) or
+          on_token][google.spanner.v1.ReadRequest.partition_token] field
+          is empty, rows are yielded in table primary key order (if
+          [index][google.spanner.v1.ReadRequest.index] is empty) or
           index key order (if
           [index][google.spanner.v1.ReadRequest.index] is non-empty). If
-          the [partition\_token][google.spanner.v1.ReadRequest.partition
-          \_token] field is not empty, rows will be yielded in an
+          the [partition_token][google.spanner.v1.ReadRequest.partition_
+          token] field is not empty, rows will be yielded in an
           unspecified order.  It is not an error for the ``key_set`` to
           name rows that do not exist in the database. Read yields
           nothing for nonexistent rows.
@@ -3133,7 +3132,7 @@ ReadRequest = _reflection.GeneratedProtocolMessageType(
           partition previously created using PartitionRead(). There must
           be an exact match for the values of fields common to this
           message and the PartitionReadRequest message used to create
-          this partition\_token.
+          this partition_token.
   """,
         # @@protoc_insertion_point(class_scope:google.spanner.v1.ReadRequest)
     },
