@@ -5,7 +5,7 @@
   pull_request:
 name: integration-tests-against-emulator
 jobs:
-  build:
+  system-tests:
     runs-on: ubuntu-latest
 
     services:
