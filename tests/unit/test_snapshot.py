@@ -15,8 +15,7 @@
 
 import google.api_core.gapic_v1.method
 import mock
-from opentelemetry.trace.status import StatusCanonicalCode
-from tests._helpers import OpenTelemetryBase
+from tests._helpers import OpenTelemetryBase, StatusCanonicalCode, HAS_OPENTELEMETRY_INSTALLED
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -133,32 +132,33 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertSpanAttributes(name, attributes=dict(BASE_ATTRIBUTES, test_att=1))
 
     def test_iteration_w_multiple_span_creation(self):
-        FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
-        SECOND = (self._make_item(2),)  # discarded after 503
-        LAST = (self._make_item(3),)
-        before = _MockIterator(*(FIRST + SECOND), fail_after=True)
-        after = _MockIterator(*LAST)
-        restart = mock.Mock(spec=[], side_effect=[before, after])
-        name = "TestSpan"
-        resumable = self._call_fut(restart, name, _Session(_Database()))
-        self.assertEqual(list(resumable), list(FIRST + LAST))
-        self.assertEqual(
-            restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-        )
-
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 2)
-        for span in span_list:
-            self.assertEqual(span.name, name)
+        if HAS_OPENTELEMETRY_INSTALLED:
+            FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
+            SECOND = (self._make_item(2),)  # discarded after 503
+            LAST = (self._make_item(3),)
+            before = _MockIterator(*(FIRST + SECOND), fail_after=True)
+            after = _MockIterator(*LAST)
+            restart = mock.Mock(spec=[], side_effect=[before, after])
+            name = "TestSpan"
+            resumable = self._call_fut(restart, name, _Session(_Database()))
+            self.assertEqual(list(resumable), list(FIRST + LAST))
             self.assertEqual(
-                span.attributes,
-                {
-                    "db.type": "spanner",
-                    "db.url": "spanner.googleapis.com:443",
-                    "db.instance": "testing",
-                    "net.host.name": "spanner.googleapis.com:443",
-                },
+                restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
             )
+
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 2)
+            for span in span_list:
+                self.assertEqual(span.name, name)
+                self.assertEqual(
+                    span.attributes,
+                    {
+                        "db.type": "spanner",
+                        "db.url": "spanner.googleapis.com:443",
+                        "db.instance": "testing",
+                        "net.host.name": "spanner.googleapis.com:443",
+                    },
+                )
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
@@ -215,8 +215,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertIs(base._session, session)
         self.assertEqual(base._execute_sql_count, 0)
 
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 0)
+        self.assertNoSpans()
 
     def test__make_txn_selector_virtual(self):
         session = _Session()

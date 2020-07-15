@@ -1332,8 +1332,10 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 transaction.batch_update([])
 
     def test_transaction_batch_update_w_parent_span(self):
-        import sys
-        from opentelemetry import trace
+        try:
+            from opentelemetry import trace
+        except ImportError:
+            return
 
         tracer = trace.get_tracer(__name__)
 

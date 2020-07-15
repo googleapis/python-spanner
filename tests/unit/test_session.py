@@ -15,8 +15,7 @@
 
 import google.api_core.gapic_v1.method
 import mock
-from tests._helpers import OpenTelemetryBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from tests._helpers import OpenTelemetryBase, StatusCanonicalCode, HAS_OPENTELEMETRY_INSTALLED
 
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
@@ -1109,7 +1108,12 @@ class TestSession(OpenTelemetryBase):
             return _results.pop(0)
 
         with mock.patch("time.time", _time):
-            with mock.patch("opentelemetry.util.time", _ConstantTime()):
+            if HAS_OPENTELEMETRY_INSTALLED:
+                with mock.patch("opentelemetry.util.time", _ConstantTime()):
+                    with mock.patch("time.sleep") as sleep_mock:
+                        with self.assertRaises(Aborted):
+                            session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
+            else:
                 with mock.patch("time.sleep") as sleep_mock:
                     with self.assertRaises(Aborted):
                         session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
@@ -1172,7 +1176,12 @@ class TestSession(OpenTelemetryBase):
             return _results.pop(0)
 
         with mock.patch("time.time", _time):
-            with mock.patch("opentelemetry.util.time", _ConstantTime()):
+            if HAS_OPENTELEMETRY_INSTALLED:
+                with mock.patch("opentelemetry.util.time", _ConstantTime()):
+                    with mock.patch("time.sleep") as sleep_mock:
+                        with self.assertRaises(Aborted):
+                            session.run_in_transaction(unit_of_work, timeout_secs=8)
+            else:
                 with mock.patch("time.sleep") as sleep_mock:
                     with self.assertRaises(Aborted):
                         session.run_in_transaction(unit_of_work, timeout_secs=8)

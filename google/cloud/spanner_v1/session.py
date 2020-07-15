@@ -139,9 +139,11 @@ class Session(object):
         with trace_call("CloudSpanner.GetSession", self) as span:
             try:
                 api.get_session(self.name, metadata=metadata)
-                span.set_attribute("session_found", True)
+                if span:
+                    span.set_attribute("session_found", True)
             except NotFound:
-                span.set_attribute("session_found", False)
+                if span:
+                    span.set_attribute("session_found", False)
                 return False
 
         return True

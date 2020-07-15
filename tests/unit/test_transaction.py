@@ -14,8 +14,7 @@
 
 
 import mock
-from tests._helpers import OpenTelemetryBase
-from opentelemetry.trace.status import StatusCanonicalCode
+from tests._helpers import OpenTelemetryBase, StatusCanonicalCode
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
