@@ -6,8 +6,6 @@ import sys
 try:
     from opentelemetry import trace as trace_api
     from opentelemetry.trace.status import StatusCanonicalCode
-    from opentelemetry.sdk.trace import TracerProvider, export
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 except ImportError:
     pass
 
@@ -15,6 +13,7 @@ from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import _opentelemetry_tracing
 
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
+
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
     import grpc
@@ -29,8 +28,10 @@ def _make_session():
 
     return mock.Mock(autospec=Session, instance=True)
 
+
 # Skip all of these tests if we don't have OpenTelemetry
 if HAS_OPENTELEMETRY_INSTALLED:
+
     class TestNoTracing(unittest.TestCase):
         def setUp(self):
             self._temp_opentelemetry = sys.modules["opentelemetry"]
@@ -45,7 +46,6 @@ if HAS_OPENTELEMETRY_INSTALLED:
         def test_no_trace_call(self):
             with _opentelemetry_tracing.trace_call("Test", _make_session()) as no_span:
                 self.assertIsNone(no_span)
-
 
     class TestTracing(OpenTelemetryBase):
         def test_trace_call(self):
@@ -75,9 +75,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
             self.assertEqual(span.attributes, expected_attributes)
             self.assertEqual(span.name, "CloudSpanner.Test")
-            self.assertEqual(
-                span.status.canonical_code, trace_api.status.StatusCanonicalCode.OK
-            )
+            self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
 
         def test_trace_error(self):
             extra_attributes = {"db.instance": "database_name"}

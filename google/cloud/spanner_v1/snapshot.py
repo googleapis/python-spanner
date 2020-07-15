@@ -41,10 +41,7 @@ def _restart_on_unavailable(restart, trace_name=None, session=None, attributes=N
     """
     resume_token = b""
     item_buffer = []
-    if trace_name and session:
-        with trace_call(trace_name, session, attributes):
-            iterator = restart()
-    else:
+    with trace_call(trace_name, session, attributes):
         iterator = restart()
     while True:
         try:
@@ -55,10 +52,7 @@ def _restart_on_unavailable(restart, trace_name=None, session=None, attributes=N
                     break
         except ServiceUnavailable:
             del item_buffer[:]
-            if trace_name and session:
-                with trace_call(trace_name, session, attributes):
-                    iterator = restart(resume_token=resume_token)
-            else:
+            with trace_call(trace_name, session, attributes):
                 iterator = restart(resume_token=resume_token)
             continue
 

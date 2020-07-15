@@ -15,7 +15,11 @@
 
 import google.api_core.gapic_v1.method
 import mock
-from tests._helpers import OpenTelemetryBase, StatusCanonicalCode, HAS_OPENTELEMETRY_INSTALLED
+from tests._helpers import (
+    OpenTelemetryBase,
+    StatusCanonicalCode,
+    HAS_OPENTELEMETRY_INSTALLED,
+)
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]

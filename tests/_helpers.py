@@ -6,13 +6,16 @@ try:
     from opentelemetry.trace.status import StatusCanonicalCode
 
     from opentelemetry.sdk.trace import TracerProvider, export
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
 
     StatusCanonicalCode = mock.Mock()
+
 
 class OpenTelemetryBase(unittest.TestCase):
     def setUp(self):

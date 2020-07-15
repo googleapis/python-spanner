@@ -31,7 +31,7 @@ except ImportError:
 
 @contextmanager
 def trace_call(name, session, extra_attributes=None):
-    if not HAS_OPENTELEMETRY_INSTALLED:
+    if not HAS_OPENTELEMETRY_INSTALLED or not session:
         # empty context manager. users will have to check if the generated value is None or a span
         yield None
         return

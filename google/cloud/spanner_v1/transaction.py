@@ -279,7 +279,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
-            "db.statement": [statement[0] for statement in statements]
+            "db.statement": [statement["sql"] for statement in parsed]
         }
         with trace_call("CloudSpanner.DMLTransaction", self._session, trace_attributes):
             response = api.execute_batch_dml(

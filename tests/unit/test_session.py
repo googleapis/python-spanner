@@ -15,7 +15,11 @@
 
 import google.api_core.gapic_v1.method
 import mock
-from tests._helpers import OpenTelemetryBase, StatusCanonicalCode, HAS_OPENTELEMETRY_INSTALLED
+from tests._helpers import (
+    OpenTelemetryBase,
+    StatusCanonicalCode,
+    HAS_OPENTELEMETRY_INSTALLED,
+)
 
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
@@ -43,7 +47,7 @@ class TestSession(OpenTelemetryBase):
     BASE_ATTRIBUTES = {
         "db.type": "spanner",
         "db.url": "spanner.googleapis.com:443",
-        "db.instance": "projects/project-id/instances/instance-id/databases/database-id",
+        "db.instance": DATABASE_NAME,
         "net.host.name": "spanner.googleapis.com:443",
     }
 
@@ -1112,7 +1116,9 @@ class TestSession(OpenTelemetryBase):
                 with mock.patch("opentelemetry.util.time", _ConstantTime()):
                     with mock.patch("time.sleep") as sleep_mock:
                         with self.assertRaises(Aborted):
-                            session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
+                            session.run_in_transaction(
+                                unit_of_work, "abc", timeout_secs=1
+                            )
             else:
                 with mock.patch("time.sleep") as sleep_mock:
                     with self.assertRaises(Aborted):
