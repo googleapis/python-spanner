@@ -52,7 +52,7 @@ from test_utils.retry import RetryInstanceState
 from test_utils.retry import RetryResult
 from test_utils.system import unique_resource_id
 from tests._fixtures import DDL_STATEMENTS
-from tests._helpers import OpenTelemetryBase
+from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
 
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
@@ -805,11 +805,11 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         cls._db.drop()
 
     def setUp(self):
-        super().setUp()
+        super(TestSessionAPI, self).setUp()
         self.to_delete = []
 
     def tearDown(self):
-        super().tearDown()
+        super(TestSessionAPI, self).tearDown()
         for doomed in self.to_delete:
             doomed.delete()
 
@@ -835,39 +835,45 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             rows = list(snapshot.read(self.TABLE, self.COLUMNS, self.ALL))
         self._check_rows_data(rows)
 
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 4)
-        self.assertSpanAttributes(
-            "CloudSpanner.GetSession",
-            attributes=dict(
-                BASE_ATTRIBUTES, **{"db.instance": self._db.name}, session_found=True
-            ),
-            span=span_list[0],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.Commit",
-            attributes=dict(
-                BASE_ATTRIBUTES, **{"db.instance": self._db.name}, num_mutations=2
-            ),
-            span=span_list[1],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.GetSession",
-            attributes=dict(
-                BASE_ATTRIBUTES, **{"db.instance": self._db.name}, session_found=True
-            ),
-            span=span_list[2],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=dict(
-                BASE_ATTRIBUTES,
-                **{"db.instance": self._db.name},
-                columns=self.COLUMNS,
-                table_id=self.TABLE
-            ),
-            span=span_list[3],
-        )
+        if HAS_OPENTELEMETRY_INSTALLED:
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 4)
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[0],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Commit",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "num_mutations": 2}
+                ),
+                span=span_list[1],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[2],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "columns": self.COLUMNS,
+                        "table_id": self.TABLE,
+                    }
+                ),
+                span=span_list[3],
+            )
 
     def test_batch_insert_then_read_string_array_of_string(self):
         TABLE = "string_plus_array_of_string"
@@ -967,67 +973,76 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         rows = list(session.read(self.TABLE, self.COLUMNS, self.ALL))
         self.assertEqual(rows, [])
 
-        span_list = self.memory_exporter.get_finished_spans()
-        self.assertEqual(len(span_list), 8)
-        self.assertSpanAttributes(
-            "CloudSpanner.CreateSession",
-            attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-            span=span_list[0],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.GetSession",
-            attributes=dict(
-                BASE_ATTRIBUTES, **{"db.instance": self._db.name}, session_found=True
-            ),
-            span=span_list[1],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.Commit",
-            attributes=dict(
-                BASE_ATTRIBUTES, **{"db.instance": self._db.name}, num_mutations=1
-            ),
-            span=span_list[2],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
-            attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-            span=span_list[3],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=dict(
-                BASE_ATTRIBUTES,
-                **{"db.instance": self._db.name},
-                table_id=self.TABLE,
-                columns=self.COLUMNS
-            ),
-            span=span_list[4],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=dict(
-                BASE_ATTRIBUTES,
-                **{"db.instance": self._db.name},
-                table_id=self.TABLE,
-                columns=self.COLUMNS
-            ),
-            span=span_list[5],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.Rollback",
-            attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-            span=span_list[6],
-        )
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=dict(
-                BASE_ATTRIBUTES,
-                **{"db.instance": self._db.name},
-                table_id=self.TABLE,
-                columns=self.COLUMNS
-            ),
-            span=span_list[7],
-        )
+        if HAS_OPENTELEMETRY_INSTALLED:
+            span_list = self.memory_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 8)
+            self.assertSpanAttributes(
+                "CloudSpanner.CreateSession",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[0],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[1],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Commit",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "num_mutations": 1}
+                ),
+                span=span_list[2],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.BeginTransaction",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[3],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[4],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[5],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Rollback",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[6],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[7],
+            )
 
     def _transaction_read_then_raise(self, transaction):
         rows = list(transaction.read(self.TABLE, self.COLUMNS, self.ALL))

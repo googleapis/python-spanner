@@ -1,5 +1,5 @@
 import unittest
-from unittest import mock
+import mock
 
 try:
     from opentelemetry import trace as trace_api
