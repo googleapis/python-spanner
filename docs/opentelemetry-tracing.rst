@@ -21,12 +21,12 @@ We also need to tell OpenTelemetry which exporter to use. For example, to export
     # in a seperate thread to not block on the main thread
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-    # create and export one trace every 1000 requests
+    # Create and export one trace every 1000 requests
     sampler = ProbabilitySampler(1/1000)
-    # Uses the default tracer provider
+    # Use the default tracer provider
     trace.set_tracer_provider(TracerProvider(sampler=sampler))
     trace.get_tracer_provider().add_span_processor(
-        # initialize the cloud tracing exporter
+        # Initialize the cloud tracing exporter
         BatchExportSpanProcessor(CloudTraceSpanExporter())
     )
 
