@@ -2513,7 +2513,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             )
             self.assertEqual(len(rows), 1)
-            (float_array,) = rows[0]
+            float_array = rows[0][0]
             self.assertEqual(float_array[0], float("-inf"))
             self.assertEqual(float_array[1], float("+inf"))
             # NaNs cannot be searched for by equality.
