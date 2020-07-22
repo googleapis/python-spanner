@@ -1489,10 +1489,10 @@ ListDatabasesRequest = _reflection.GeneratedProtocolMessageType(
           Number of databases to be returned in the response. If 0 or
           less, defaults to the server’s maximum allowed page size.
       page_token:
-          If non-empty, ``page_token`` should contain a [next\_page\_tok
-          en][google.spanner.admin.database.v1.ListDatabasesResponse.nex
-          t\_page\_token] from a previous [ListDatabasesResponse][google
-          .spanner.admin.database.v1.ListDatabasesResponse].
+          If non-empty, ``page_token`` should contain a [next_page_token
+          ][google.spanner.admin.database.v1.ListDatabasesResponse.next_
+          page_token] from a previous [ListDatabasesResponse][google.spa
+          nner.admin.database.v1.ListDatabasesResponse].
   """,
         # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListDatabasesRequest)
     },
@@ -1780,11 +1780,11 @@ ListDatabaseOperationsRequest = _reflection.GeneratedProtocolMessageType(
           Number of operations to be returned in the response. If 0 or
           less, defaults to the server’s maximum allowed page size.
       page_token:
-          If non-empty, ``page_token`` should contain a [next\_page\_tok
-          en][google.spanner.admin.database.v1.ListDatabaseOperationsRes
-          ponse.next\_page\_token] from a previous [ListDatabaseOperatio
-          nsResponse][google.spanner.admin.database.v1.ListDatabaseOpera
-          tionsResponse] to the same ``parent`` and with the same
+          If non-empty, ``page_token`` should contain a [next_page_token
+          ][google.spanner.admin.database.v1.ListDatabaseOperationsRespo
+          nse.next_page_token] from a previous [ListDatabaseOperationsRe
+          sponse][google.spanner.admin.database.v1.ListDatabaseOperation
+          sResponse] to the same ``parent`` and with the same
           ``filter``.
   """,
         # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListDatabaseOperationsRequest)
