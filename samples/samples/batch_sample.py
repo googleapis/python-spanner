@@ -71,6 +71,8 @@ def process(snapshot, partition):
         print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
         row_ct += 1
     return time.time(), row_ct
+
+
 # [END spanner_batch_client]
 
 
