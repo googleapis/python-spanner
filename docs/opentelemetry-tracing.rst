@@ -1,6 +1,6 @@
 Tracing with OpenTelemetry
 ==================================
-Python-spanner uses `OpenTelemetry <https://opentelemetry.io/>`_ to automatically generates traces providing insight on calls to Cloud Spanner. 
+This library uses `OpenTelemetry <https://opentelemetry.io/>`_ to automatically generate traces providing insight on calls to Cloud Spanner. 
 For information on the benefits and utility of tracing, see the `Cloud Trace docs <https://cloud.google.com/trace/docs/overview>`_.
 
 To take advantage of these traces, we first need to install opentelemetry:
