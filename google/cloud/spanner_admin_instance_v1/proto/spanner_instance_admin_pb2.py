@@ -1487,11 +1487,11 @@ ListInstanceConfigsRequest = _reflection.GeneratedProtocolMessageType(
           response. If 0 or less, defaults to the server’s maximum
           allowed page size.
       page_token:
-          If non-empty, ``page_token`` should contain a [next\_page\_tok
-          en][google.spanner.admin.instance.v1.ListInstanceConfigsRespon
-          se.next\_page\_token] from a previous [ListInstanceConfigsResp
-          onse][google.spanner.admin.instance.v1.ListInstanceConfigsResp
-          onse].
+          If non-empty, ``page_token`` should contain a [next_page_token
+          ][google.spanner.admin.instance.v1.ListInstanceConfigsResponse
+          .next_page_token] from a previous [ListInstanceConfigsResponse
+          ][google.spanner.admin.instance.v1.ListInstanceConfigsResponse
+          ].
   """,
         # @@protoc_insertion_point(class_scope:google.spanner.admin.instance.v1.ListInstanceConfigsRequest)
     },
@@ -1610,10 +1610,10 @@ ListInstancesRequest = _reflection.GeneratedProtocolMessageType(
           Number of instances to be returned in the response. If 0 or
           less, defaults to the server’s maximum allowed page size.
       page_token:
-          If non-empty, ``page_token`` should contain a [next\_page\_tok
-          en][google.spanner.admin.instance.v1.ListInstancesResponse.nex
-          t\_page\_token] from a previous [ListInstancesResponse][google
-          .spanner.admin.instance.v1.ListInstancesResponse].
+          If non-empty, ``page_token`` should contain a [next_page_token
+          ][google.spanner.admin.instance.v1.ListInstancesResponse.next_
+          page_token] from a previous [ListInstancesResponse][google.spa
+          nner.admin.instance.v1.ListInstancesResponse].
       filter:
           An expression for filtering the results of the request. Filter
           rules are case insensitive. The fields eligible for filtering
@@ -1668,9 +1668,9 @@ UpdateInstanceRequest = _reflection.GeneratedProtocolMessageType(
   Attributes:
       instance:
           Required. The instance to update, which must always include
-          the instance name. Otherwise, only fields mentioned in [field\
-          _mask][google.spanner.admin.instance.v1.UpdateInstanceRequest.
-          field\_mask] need be included.
+          the instance name. Otherwise, only fields mentioned in [field_
+          mask][google.spanner.admin.instance.v1.UpdateInstanceRequest.f
+          ield_mask] need be included.
       field_mask:
           Required. A mask specifying which fields in
           [Instance][google.spanner.admin.instance.v1.Instance] should
