@@ -6,6 +6,7 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -16,153 +17,263 @@ from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='google/cloud/spanner_v1/proto/keys.proto',
-  package='google.spanner.v1',
-  syntax='proto3',
-  serialized_options=b'\n\025com.google.spanner.v1B\tKeysProtoP\001Z8google.golang.org/genproto/googleapis/spanner/v1;spanner\252\002\027Google.Cloud.Spanner.V1\312\002\027Google\\Cloud\\Spanner\\V1\352\002\032Google::Cloud::Spanner::V1',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n(google/cloud/spanner_v1/proto/keys.proto\x12\x11google.spanner.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1cgoogle/api/annotations.proto\"\xf4\x01\n\x08KeyRange\x12\x32\n\x0cstart_closed\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x00\x12\x30\n\nstart_open\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x00\x12\x30\n\nend_closed\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x01\x12.\n\x08\x65nd_open\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x01\x42\x10\n\x0estart_key_typeB\x0e\n\x0c\x65nd_key_type\"l\n\x06KeySet\x12(\n\x04keys\x18\x01 \x03(\x0b\x32\x1a.google.protobuf.ListValue\x12+\n\x06ranges\x18\x02 \x03(\x0b\x32\x1b.google.spanner.v1.KeyRange\x12\x0b\n\x03\x61ll\x18\x03 \x01(\x08\x42\xaf\x01\n\x15\x63om.google.spanner.v1B\tKeysProtoP\x01Z8google.golang.org/genproto/googleapis/spanner/v1;spanner\xaa\x02\x17Google.Cloud.Spanner.V1\xca\x02\x17Google\\Cloud\\Spanner\\V1\xea\x02\x1aGoogle::Cloud::Spanner::V1b\x06proto3'
-  ,
-  dependencies=[google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,google_dot_api_dot_annotations__pb2.DESCRIPTOR,])
-
-
+    name="google/cloud/spanner_v1/proto/keys.proto",
+    package="google.spanner.v1",
+    syntax="proto3",
+    serialized_options=b"\n\025com.google.spanner.v1B\tKeysProtoP\001Z8google.golang.org/genproto/googleapis/spanner/v1;spanner\252\002\027Google.Cloud.Spanner.V1\312\002\027Google\\Cloud\\Spanner\\V1\352\002\032Google::Cloud::Spanner::V1",
+    create_key=_descriptor._internal_create_key,
+    serialized_pb=b'\n(google/cloud/spanner_v1/proto/keys.proto\x12\x11google.spanner.v1\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1cgoogle/api/annotations.proto"\xf4\x01\n\x08KeyRange\x12\x32\n\x0cstart_closed\x18\x01 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x00\x12\x30\n\nstart_open\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x00\x12\x30\n\nend_closed\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x01\x12.\n\x08\x65nd_open\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.ListValueH\x01\x42\x10\n\x0estart_key_typeB\x0e\n\x0c\x65nd_key_type"l\n\x06KeySet\x12(\n\x04keys\x18\x01 \x03(\x0b\x32\x1a.google.protobuf.ListValue\x12+\n\x06ranges\x18\x02 \x03(\x0b\x32\x1b.google.spanner.v1.KeyRange\x12\x0b\n\x03\x61ll\x18\x03 \x01(\x08\x42\xaf\x01\n\x15\x63om.google.spanner.v1B\tKeysProtoP\x01Z8google.golang.org/genproto/googleapis/spanner/v1;spanner\xaa\x02\x17Google.Cloud.Spanner.V1\xca\x02\x17Google\\Cloud\\Spanner\\V1\xea\x02\x1aGoogle::Cloud::Spanner::V1b\x06proto3',
+    dependencies=[
+        google_dot_protobuf_dot_struct__pb2.DESCRIPTOR,
+        google_dot_api_dot_annotations__pb2.DESCRIPTOR,
+    ],
+)
 
 
 _KEYRANGE = _descriptor.Descriptor(
-  name='KeyRange',
-  full_name='google.spanner.v1.KeyRange',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='start_closed', full_name='google.spanner.v1.KeyRange.start_closed', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='start_open', full_name='google.spanner.v1.KeyRange.start_open', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='end_closed', full_name='google.spanner.v1.KeyRange.end_closed', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='end_open', full_name='google.spanner.v1.KeyRange.end_open', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-    _descriptor.OneofDescriptor(
-      name='start_key_type', full_name='google.spanner.v1.KeyRange.start_key_type',
-      index=0, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
-    _descriptor.OneofDescriptor(
-      name='end_key_type', full_name='google.spanner.v1.KeyRange.end_key_type',
-      index=1, containing_type=None,
-      create_key=_descriptor._internal_create_key,
-    fields=[]),
-  ],
-  serialized_start=124,
-  serialized_end=368,
+    name="KeyRange",
+    full_name="google.spanner.v1.KeyRange",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="start_closed",
+            full_name="google.spanner.v1.KeyRange.start_closed",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="start_open",
+            full_name="google.spanner.v1.KeyRange.start_open",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="end_closed",
+            full_name="google.spanner.v1.KeyRange.end_closed",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="end_open",
+            full_name="google.spanner.v1.KeyRange.end_open",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[
+        _descriptor.OneofDescriptor(
+            name="start_key_type",
+            full_name="google.spanner.v1.KeyRange.start_key_type",
+            index=0,
+            containing_type=None,
+            create_key=_descriptor._internal_create_key,
+            fields=[],
+        ),
+        _descriptor.OneofDescriptor(
+            name="end_key_type",
+            full_name="google.spanner.v1.KeyRange.end_key_type",
+            index=1,
+            containing_type=None,
+            create_key=_descriptor._internal_create_key,
+            fields=[],
+        ),
+    ],
+    serialized_start=124,
+    serialized_end=368,
 )
 
 
 _KEYSET = _descriptor.Descriptor(
-  name='KeySet',
-  full_name='google.spanner.v1.KeySet',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='keys', full_name='google.spanner.v1.KeySet.keys', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='ranges', full_name='google.spanner.v1.KeySet.ranges', index=1,
-      number=2, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='all', full_name='google.spanner.v1.KeySet.all', index=2,
-      number=3, type=8, cpp_type=7, label=1,
-      has_default_value=False, default_value=False,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=370,
-  serialized_end=478,
+    name="KeySet",
+    full_name="google.spanner.v1.KeySet",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="keys",
+            full_name="google.spanner.v1.KeySet.keys",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="ranges",
+            full_name="google.spanner.v1.KeySet.ranges",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="all",
+            full_name="google.spanner.v1.KeySet.all",
+            index=2,
+            number=3,
+            type=8,
+            cpp_type=7,
+            label=1,
+            has_default_value=False,
+            default_value=False,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=370,
+    serialized_end=478,
 )
 
-_KEYRANGE.fields_by_name['start_closed'].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
-_KEYRANGE.fields_by_name['start_open'].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
-_KEYRANGE.fields_by_name['end_closed'].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
-_KEYRANGE.fields_by_name['end_open'].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
-_KEYRANGE.oneofs_by_name['start_key_type'].fields.append(
-  _KEYRANGE.fields_by_name['start_closed'])
-_KEYRANGE.fields_by_name['start_closed'].containing_oneof = _KEYRANGE.oneofs_by_name['start_key_type']
-_KEYRANGE.oneofs_by_name['start_key_type'].fields.append(
-  _KEYRANGE.fields_by_name['start_open'])
-_KEYRANGE.fields_by_name['start_open'].containing_oneof = _KEYRANGE.oneofs_by_name['start_key_type']
-_KEYRANGE.oneofs_by_name['end_key_type'].fields.append(
-  _KEYRANGE.fields_by_name['end_closed'])
-_KEYRANGE.fields_by_name['end_closed'].containing_oneof = _KEYRANGE.oneofs_by_name['end_key_type']
-_KEYRANGE.oneofs_by_name['end_key_type'].fields.append(
-  _KEYRANGE.fields_by_name['end_open'])
-_KEYRANGE.fields_by_name['end_open'].containing_oneof = _KEYRANGE.oneofs_by_name['end_key_type']
-_KEYSET.fields_by_name['keys'].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
-_KEYSET.fields_by_name['ranges'].message_type = _KEYRANGE
-DESCRIPTOR.message_types_by_name['KeyRange'] = _KEYRANGE
-DESCRIPTOR.message_types_by_name['KeySet'] = _KEYSET
+_KEYRANGE.fields_by_name[
+    "start_closed"
+].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
+_KEYRANGE.fields_by_name[
+    "start_open"
+].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
+_KEYRANGE.fields_by_name[
+    "end_closed"
+].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
+_KEYRANGE.fields_by_name[
+    "end_open"
+].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
+_KEYRANGE.oneofs_by_name["start_key_type"].fields.append(
+    _KEYRANGE.fields_by_name["start_closed"]
+)
+_KEYRANGE.fields_by_name["start_closed"].containing_oneof = _KEYRANGE.oneofs_by_name[
+    "start_key_type"
+]
+_KEYRANGE.oneofs_by_name["start_key_type"].fields.append(
+    _KEYRANGE.fields_by_name["start_open"]
+)
+_KEYRANGE.fields_by_name["start_open"].containing_oneof = _KEYRANGE.oneofs_by_name[
+    "start_key_type"
+]
+_KEYRANGE.oneofs_by_name["end_key_type"].fields.append(
+    _KEYRANGE.fields_by_name["end_closed"]
+)
+_KEYRANGE.fields_by_name["end_closed"].containing_oneof = _KEYRANGE.oneofs_by_name[
+    "end_key_type"
+]
+_KEYRANGE.oneofs_by_name["end_key_type"].fields.append(
+    _KEYRANGE.fields_by_name["end_open"]
+)
+_KEYRANGE.fields_by_name["end_open"].containing_oneof = _KEYRANGE.oneofs_by_name[
+    "end_key_type"
+]
+_KEYSET.fields_by_name[
+    "keys"
+].message_type = google_dot_protobuf_dot_struct__pb2._LISTVALUE
+_KEYSET.fields_by_name["ranges"].message_type = _KEYRANGE
+DESCRIPTOR.message_types_by_name["KeyRange"] = _KEYRANGE
+DESCRIPTOR.message_types_by_name["KeySet"] = _KEYSET
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-KeyRange = _reflection.GeneratedProtocolMessageType('KeyRange', (_message.Message,), {
-  'DESCRIPTOR' : _KEYRANGE,
-  '__module__' : 'google.cloud.spanner_v1.proto.keys_pb2'
-  ,
-  '__doc__': """KeyRange represents a range of rows in a table or index.  A range has
+KeyRange = _reflection.GeneratedProtocolMessageType(
+    "KeyRange",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _KEYRANGE,
+        "__module__": "google.cloud.spanner_v1.proto.keys_pb2",
+        "__doc__": """KeyRange represents a range of rows in a table or index.  A range has
   a start key and an end key. These keys can be open or closed,
   indicating if the range includes rows with that key.  Keys are
   represented by lists, where the ith value in the list corresponds to
@@ -225,15 +336,18 @@ KeyRange = _reflection.GeneratedProtocolMessageType('KeyRange', (_message.Messag
           If the end is open, then the range excludes rows whose first
           ``len(end_open)`` key columns exactly match ``end_open``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.v1.KeyRange)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.v1.KeyRange)
+    },
+)
 _sym_db.RegisterMessage(KeyRange)
 
-KeySet = _reflection.GeneratedProtocolMessageType('KeySet', (_message.Message,), {
-  'DESCRIPTOR' : _KEYSET,
-  '__module__' : 'google.cloud.spanner_v1.proto.keys_pb2'
-  ,
-  '__doc__': """\ ``KeySet`` defines a collection of Cloud Spanner keys and/or key
+KeySet = _reflection.GeneratedProtocolMessageType(
+    "KeySet",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _KEYSET,
+        "__module__": "google.cloud.spanner_v1.proto.keys_pb2",
+        "__doc__": """\ ``KeySet`` defines a collection of Cloud Spanner keys and/or key
   ranges. All the keys are expected to be in the same table or index.
   The keys need not be sorted in any particular way.  If the same key is
   specified multiple times in the set (for example if two ranges, two
@@ -257,8 +371,9 @@ KeySet = _reflection.GeneratedProtocolMessageType('KeySet', (_message.Message,),
           Note that any keys specified in ``keys`` or ``ranges`` are
           only yielded once.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.v1.KeySet)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.v1.KeySet)
+    },
+)
 _sym_db.RegisterMessage(KeySet)
 
 

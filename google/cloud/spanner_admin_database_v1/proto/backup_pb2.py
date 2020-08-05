@@ -6,6 +6,7 @@ from google.protobuf import descriptor as _descriptor
 from google.protobuf import message as _message
 from google.protobuf import reflection as _reflection
 from google.protobuf import symbol_database as _symbol_database
+
 # @@protoc_insertion_point(imports)
 
 _sym_db = _symbol_database.Default()
@@ -13,592 +14,996 @@ _sym_db = _symbol_database.Default()
 
 from google.api import field_behavior_pb2 as google_dot_api_dot_field__behavior__pb2
 from google.api import resource_pb2 as google_dot_api_dot_resource__pb2
-from google.longrunning import operations_pb2 as google_dot_longrunning_dot_operations__pb2
+from google.longrunning import (
+    operations_pb2 as google_dot_longrunning_dot_operations__pb2,
+)
 from google.protobuf import field_mask_pb2 as google_dot_protobuf_dot_field__mask__pb2
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
-from google.cloud.spanner_admin_database_v1.proto import common_pb2 as google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2
+from google.cloud.spanner_admin_database_v1.proto import (
+    common_pb2 as google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2,
+)
 from google.api import annotations_pb2 as google_dot_api_dot_annotations__pb2
 
 
 DESCRIPTOR = _descriptor.FileDescriptor(
-  name='google/cloud/spanner_admin_database_v1/proto/backup.proto',
-  package='google.spanner.admin.database.v1',
-  syntax='proto3',
-  serialized_options=b'\n$com.google.spanner.admin.database.v1B\013BackupProtoP\001ZHgoogle.golang.org/genproto/googleapis/spanner/admin/database/v1;database\252\002&Google.Cloud.Spanner.Admin.Database.V1\312\002&Google\\Cloud\\Spanner\\Admin\\Database\\V1\352\002+Google::Cloud::Spanner::Admin::Database::V1',
-  create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n9google/cloud/spanner_admin_database_v1/proto/backup.proto\x12 google.spanner.admin.database.v1\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a#google/longrunning/operations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x39google/cloud/spanner_admin_database_v1/proto/common.proto\x1a\x1cgoogle/api/annotations.proto\"\xcd\x03\n\x06\x42\x61\x63kup\x12\x36\n\x08\x64\x61tabase\x18\x02 \x01(\tB$\xfa\x41!\n\x1fspanner.googleapis.com/Database\x12/\n\x0b\x65xpire_time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x34\n\x0b\x63reate_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03\x12\x17\n\nsize_bytes\x18\x05 \x01(\x03\x42\x03\xe0\x41\x03\x12\x42\n\x05state\x18\x06 \x01(\x0e\x32..google.spanner.admin.database.v1.Backup.StateB\x03\xe0\x41\x03\x12\"\n\x15referencing_databases\x18\x07 \x03(\tB\x03\xe0\x41\x03\"7\n\x05State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\x0c\n\x08\x43REATING\x10\x01\x12\t\n\x05READY\x10\x02:\\\xea\x41Y\n\x1dspanner.googleapis.com/Backup\x12\x38projects/{project}/instances/{instance}/backups/{backup}\"\xa5\x01\n\x13\x43reateBackupRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x16\n\tbackup_id\x18\x02 \x01(\tB\x03\xe0\x41\x02\x12=\n\x06\x62\x61\x63kup\x18\x03 \x01(\x0b\x32(.google.spanner.admin.database.v1.BackupB\x03\xe0\x41\x02\"\xae\x01\n\x14\x43reateBackupMetadata\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08\x64\x61tabase\x18\x02 \x01(\t\x12\x45\n\x08progress\x18\x03 \x01(\x0b\x32\x33.google.spanner.admin.database.v1.OperationProgress\x12/\n\x0b\x63\x61ncel_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\"\x8a\x01\n\x13UpdateBackupRequest\x12=\n\x06\x62\x61\x63kup\x18\x01 \x01(\x0b\x32(.google.spanner.admin.database.v1.BackupB\x03\xe0\x41\x02\x12\x34\n\x0bupdate_mask\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.FieldMaskB\x03\xe0\x41\x02\"G\n\x10GetBackupRequest\x12\x33\n\x04name\x18\x01 \x01(\tB%\xe0\x41\x02\xfa\x41\x1f\n\x1dspanner.googleapis.com/Backup\"J\n\x13\x44\x65leteBackupRequest\x12\x33\n\x04name\x18\x01 \x01(\tB%\xe0\x41\x02\xfa\x41\x1f\n\x1dspanner.googleapis.com/Backup\"\x84\x01\n\x12ListBackupsRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\x05\x12\x12\n\npage_token\x18\x04 \x01(\t\"i\n\x13ListBackupsResponse\x12\x39\n\x07\x62\x61\x63kups\x18\x01 \x03(\x0b\x32(.google.spanner.admin.database.v1.Backup\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"\x8d\x01\n\x1bListBackupOperationsRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\x05\x12\x12\n\npage_token\x18\x04 \x01(\t\"j\n\x1cListBackupOperationsResponse\x12\x31\n\noperations\x18\x01 \x03(\x0b\x32\x1d.google.longrunning.Operation\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t\"f\n\nBackupInfo\x12\x0e\n\x06\x62\x61\x63kup\x18\x01 \x01(\t\x12/\n\x0b\x63reate_time\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x17\n\x0fsource_database\x18\x03 \x01(\tB\xff\x01\n$com.google.spanner.admin.database.v1B\x0b\x42\x61\x63kupProtoP\x01ZHgoogle.golang.org/genproto/googleapis/spanner/admin/database/v1;database\xaa\x02&Google.Cloud.Spanner.Admin.Database.V1\xca\x02&Google\\Cloud\\Spanner\\Admin\\Database\\V1\xea\x02+Google::Cloud::Spanner::Admin::Database::V1b\x06proto3'
-  ,
-  dependencies=[google_dot_api_dot_field__behavior__pb2.DESCRIPTOR,google_dot_api_dot_resource__pb2.DESCRIPTOR,google_dot_longrunning_dot_operations__pb2.DESCRIPTOR,google_dot_protobuf_dot_field__mask__pb2.DESCRIPTOR,google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2.DESCRIPTOR,google_dot_api_dot_annotations__pb2.DESCRIPTOR,])
-
+    name="google/cloud/spanner_admin_database_v1/proto/backup.proto",
+    package="google.spanner.admin.database.v1",
+    syntax="proto3",
+    serialized_options=b"\n$com.google.spanner.admin.database.v1B\013BackupProtoP\001ZHgoogle.golang.org/genproto/googleapis/spanner/admin/database/v1;database\252\002&Google.Cloud.Spanner.Admin.Database.V1\312\002&Google\\Cloud\\Spanner\\Admin\\Database\\V1\352\002+Google::Cloud::Spanner::Admin::Database::V1",
+    create_key=_descriptor._internal_create_key,
+    serialized_pb=b'\n9google/cloud/spanner_admin_database_v1/proto/backup.proto\x12 google.spanner.admin.database.v1\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a#google/longrunning/operations.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x39google/cloud/spanner_admin_database_v1/proto/common.proto\x1a\x1cgoogle/api/annotations.proto"\xcd\x03\n\x06\x42\x61\x63kup\x12\x36\n\x08\x64\x61tabase\x18\x02 \x01(\tB$\xfa\x41!\n\x1fspanner.googleapis.com/Database\x12/\n\x0b\x65xpire_time\x18\x03 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x34\n\x0b\x63reate_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03\x12\x17\n\nsize_bytes\x18\x05 \x01(\x03\x42\x03\xe0\x41\x03\x12\x42\n\x05state\x18\x06 \x01(\x0e\x32..google.spanner.admin.database.v1.Backup.StateB\x03\xe0\x41\x03\x12"\n\x15referencing_databases\x18\x07 \x03(\tB\x03\xe0\x41\x03"7\n\x05State\x12\x15\n\x11STATE_UNSPECIFIED\x10\x00\x12\x0c\n\x08\x43REATING\x10\x01\x12\t\n\x05READY\x10\x02:\\\xea\x41Y\n\x1dspanner.googleapis.com/Backup\x12\x38projects/{project}/instances/{instance}/backups/{backup}"\xa5\x01\n\x13\x43reateBackupRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x16\n\tbackup_id\x18\x02 \x01(\tB\x03\xe0\x41\x02\x12=\n\x06\x62\x61\x63kup\x18\x03 \x01(\x0b\x32(.google.spanner.admin.database.v1.BackupB\x03\xe0\x41\x02"\xae\x01\n\x14\x43reateBackupMetadata\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x10\n\x08\x64\x61tabase\x18\x02 \x01(\t\x12\x45\n\x08progress\x18\x03 \x01(\x0b\x32\x33.google.spanner.admin.database.v1.OperationProgress\x12/\n\x0b\x63\x61ncel_time\x18\x04 \x01(\x0b\x32\x1a.google.protobuf.Timestamp"\x8a\x01\n\x13UpdateBackupRequest\x12=\n\x06\x62\x61\x63kup\x18\x01 \x01(\x0b\x32(.google.spanner.admin.database.v1.BackupB\x03\xe0\x41\x02\x12\x34\n\x0bupdate_mask\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.FieldMaskB\x03\xe0\x41\x02"G\n\x10GetBackupRequest\x12\x33\n\x04name\x18\x01 \x01(\tB%\xe0\x41\x02\xfa\x41\x1f\n\x1dspanner.googleapis.com/Backup"J\n\x13\x44\x65leteBackupRequest\x12\x33\n\x04name\x18\x01 \x01(\tB%\xe0\x41\x02\xfa\x41\x1f\n\x1dspanner.googleapis.com/Backup"\x84\x01\n\x12ListBackupsRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\x05\x12\x12\n\npage_token\x18\x04 \x01(\t"i\n\x13ListBackupsResponse\x12\x39\n\x07\x62\x61\x63kups\x18\x01 \x03(\x0b\x32(.google.spanner.admin.database.v1.Backup\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t"\x8d\x01\n\x1bListBackupOperationsRequest\x12\x37\n\x06parent\x18\x01 \x01(\tB\'\xe0\x41\x02\xfa\x41!\n\x1fspanner.googleapis.com/Instance\x12\x0e\n\x06\x66ilter\x18\x02 \x01(\t\x12\x11\n\tpage_size\x18\x03 \x01(\x05\x12\x12\n\npage_token\x18\x04 \x01(\t"j\n\x1cListBackupOperationsResponse\x12\x31\n\noperations\x18\x01 \x03(\x0b\x32\x1d.google.longrunning.Operation\x12\x17\n\x0fnext_page_token\x18\x02 \x01(\t"f\n\nBackupInfo\x12\x0e\n\x06\x62\x61\x63kup\x18\x01 \x01(\t\x12/\n\x0b\x63reate_time\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.Timestamp\x12\x17\n\x0fsource_database\x18\x03 \x01(\tB\xff\x01\n$com.google.spanner.admin.database.v1B\x0b\x42\x61\x63kupProtoP\x01ZHgoogle.golang.org/genproto/googleapis/spanner/admin/database/v1;database\xaa\x02&Google.Cloud.Spanner.Admin.Database.V1\xca\x02&Google\\Cloud\\Spanner\\Admin\\Database\\V1\xea\x02+Google::Cloud::Spanner::Admin::Database::V1b\x06proto3',
+    dependencies=[
+        google_dot_api_dot_field__behavior__pb2.DESCRIPTOR,
+        google_dot_api_dot_resource__pb2.DESCRIPTOR,
+        google_dot_longrunning_dot_operations__pb2.DESCRIPTOR,
+        google_dot_protobuf_dot_field__mask__pb2.DESCRIPTOR,
+        google_dot_protobuf_dot_timestamp__pb2.DESCRIPTOR,
+        google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2.DESCRIPTOR,
+        google_dot_api_dot_annotations__pb2.DESCRIPTOR,
+    ],
+)
 
 
 _BACKUP_STATE = _descriptor.EnumDescriptor(
-  name='State',
-  full_name='google.spanner.admin.database.v1.Backup.State',
-  filename=None,
-  file=DESCRIPTOR,
-  create_key=_descriptor._internal_create_key,
-  values=[
-    _descriptor.EnumValueDescriptor(
-      name='STATE_UNSPECIFIED', index=0, number=0,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='CREATING', index=1, number=1,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-    _descriptor.EnumValueDescriptor(
-      name='READY', index=2, number=2,
-      serialized_options=None,
-      type=None,
-      create_key=_descriptor._internal_create_key),
-  ],
-  containing_type=None,
-  serialized_options=None,
-  serialized_start=661,
-  serialized_end=716,
+    name="State",
+    full_name="google.spanner.admin.database.v1.Backup.State",
+    filename=None,
+    file=DESCRIPTOR,
+    create_key=_descriptor._internal_create_key,
+    values=[
+        _descriptor.EnumValueDescriptor(
+            name="STATE_UNSPECIFIED",
+            index=0,
+            number=0,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="CREATING",
+            index=1,
+            number=1,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.EnumValueDescriptor(
+            name="READY",
+            index=2,
+            number=2,
+            serialized_options=None,
+            type=None,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    containing_type=None,
+    serialized_options=None,
+    serialized_start=661,
+    serialized_end=716,
 )
 _sym_db.RegisterEnumDescriptor(_BACKUP_STATE)
 
 
 _BACKUP = _descriptor.Descriptor(
-  name='Backup',
-  full_name='google.spanner.admin.database.v1.Backup',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='database', full_name='google.spanner.admin.database.v1.Backup.database', index=0,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\372A!\n\037spanner.googleapis.com/Database', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='expire_time', full_name='google.spanner.admin.database.v1.Backup.expire_time', index=1,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='name', full_name='google.spanner.admin.database.v1.Backup.name', index=2,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='create_time', full_name='google.spanner.admin.database.v1.Backup.create_time', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\003', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='size_bytes', full_name='google.spanner.admin.database.v1.Backup.size_bytes', index=4,
-      number=5, type=3, cpp_type=2, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\003', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='state', full_name='google.spanner.admin.database.v1.Backup.state', index=5,
-      number=6, type=14, cpp_type=8, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\003', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='referencing_databases', full_name='google.spanner.admin.database.v1.Backup.referencing_databases', index=6,
-      number=7, type=9, cpp_type=9, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\003', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-    _BACKUP_STATE,
-  ],
-  serialized_options=b'\352AY\n\035spanner.googleapis.com/Backup\0228projects/{project}/instances/{instance}/backups/{backup}',
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=349,
-  serialized_end=810,
+    name="Backup",
+    full_name="google.spanner.admin.database.v1.Backup",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="database",
+            full_name="google.spanner.admin.database.v1.Backup.database",
+            index=0,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\372A!\n\037spanner.googleapis.com/Database",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="expire_time",
+            full_name="google.spanner.admin.database.v1.Backup.expire_time",
+            index=1,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="name",
+            full_name="google.spanner.admin.database.v1.Backup.name",
+            index=2,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="create_time",
+            full_name="google.spanner.admin.database.v1.Backup.create_time",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\003",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="size_bytes",
+            full_name="google.spanner.admin.database.v1.Backup.size_bytes",
+            index=4,
+            number=5,
+            type=3,
+            cpp_type=2,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\003",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="state",
+            full_name="google.spanner.admin.database.v1.Backup.state",
+            index=5,
+            number=6,
+            type=14,
+            cpp_type=8,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\003",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="referencing_databases",
+            full_name="google.spanner.admin.database.v1.Backup.referencing_databases",
+            index=6,
+            number=7,
+            type=9,
+            cpp_type=9,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\003",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[_BACKUP_STATE],
+    serialized_options=b"\352AY\n\035spanner.googleapis.com/Backup\0228projects/{project}/instances/{instance}/backups/{backup}",
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=349,
+    serialized_end=810,
 )
 
 
 _CREATEBACKUPREQUEST = _descriptor.Descriptor(
-  name='CreateBackupRequest',
-  full_name='google.spanner.admin.database.v1.CreateBackupRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='parent', full_name='google.spanner.admin.database.v1.CreateBackupRequest.parent', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002\372A!\n\037spanner.googleapis.com/Instance', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='backup_id', full_name='google.spanner.admin.database.v1.CreateBackupRequest.backup_id', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='backup', full_name='google.spanner.admin.database.v1.CreateBackupRequest.backup', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=813,
-  serialized_end=978,
+    name="CreateBackupRequest",
+    full_name="google.spanner.admin.database.v1.CreateBackupRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="parent",
+            full_name="google.spanner.admin.database.v1.CreateBackupRequest.parent",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002\372A!\n\037spanner.googleapis.com/Instance",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="backup_id",
+            full_name="google.spanner.admin.database.v1.CreateBackupRequest.backup_id",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="backup",
+            full_name="google.spanner.admin.database.v1.CreateBackupRequest.backup",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=813,
+    serialized_end=978,
 )
 
 
 _CREATEBACKUPMETADATA = _descriptor.Descriptor(
-  name='CreateBackupMetadata',
-  full_name='google.spanner.admin.database.v1.CreateBackupMetadata',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='google.spanner.admin.database.v1.CreateBackupMetadata.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='database', full_name='google.spanner.admin.database.v1.CreateBackupMetadata.database', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='progress', full_name='google.spanner.admin.database.v1.CreateBackupMetadata.progress', index=2,
-      number=3, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='cancel_time', full_name='google.spanner.admin.database.v1.CreateBackupMetadata.cancel_time', index=3,
-      number=4, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=981,
-  serialized_end=1155,
+    name="CreateBackupMetadata",
+    full_name="google.spanner.admin.database.v1.CreateBackupMetadata",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="name",
+            full_name="google.spanner.admin.database.v1.CreateBackupMetadata.name",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="database",
+            full_name="google.spanner.admin.database.v1.CreateBackupMetadata.database",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="progress",
+            full_name="google.spanner.admin.database.v1.CreateBackupMetadata.progress",
+            index=2,
+            number=3,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="cancel_time",
+            full_name="google.spanner.admin.database.v1.CreateBackupMetadata.cancel_time",
+            index=3,
+            number=4,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=981,
+    serialized_end=1155,
 )
 
 
 _UPDATEBACKUPREQUEST = _descriptor.Descriptor(
-  name='UpdateBackupRequest',
-  full_name='google.spanner.admin.database.v1.UpdateBackupRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='backup', full_name='google.spanner.admin.database.v1.UpdateBackupRequest.backup', index=0,
-      number=1, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='update_mask', full_name='google.spanner.admin.database.v1.UpdateBackupRequest.update_mask', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1158,
-  serialized_end=1296,
+    name="UpdateBackupRequest",
+    full_name="google.spanner.admin.database.v1.UpdateBackupRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="backup",
+            full_name="google.spanner.admin.database.v1.UpdateBackupRequest.backup",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="update_mask",
+            full_name="google.spanner.admin.database.v1.UpdateBackupRequest.update_mask",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1158,
+    serialized_end=1296,
 )
 
 
 _GETBACKUPREQUEST = _descriptor.Descriptor(
-  name='GetBackupRequest',
-  full_name='google.spanner.admin.database.v1.GetBackupRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='google.spanner.admin.database.v1.GetBackupRequest.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002\372A\037\n\035spanner.googleapis.com/Backup', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1298,
-  serialized_end=1369,
+    name="GetBackupRequest",
+    full_name="google.spanner.admin.database.v1.GetBackupRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="name",
+            full_name="google.spanner.admin.database.v1.GetBackupRequest.name",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002\372A\037\n\035spanner.googleapis.com/Backup",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1298,
+    serialized_end=1369,
 )
 
 
 _DELETEBACKUPREQUEST = _descriptor.Descriptor(
-  name='DeleteBackupRequest',
-  full_name='google.spanner.admin.database.v1.DeleteBackupRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='name', full_name='google.spanner.admin.database.v1.DeleteBackupRequest.name', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002\372A\037\n\035spanner.googleapis.com/Backup', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1371,
-  serialized_end=1445,
+    name="DeleteBackupRequest",
+    full_name="google.spanner.admin.database.v1.DeleteBackupRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="name",
+            full_name="google.spanner.admin.database.v1.DeleteBackupRequest.name",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002\372A\037\n\035spanner.googleapis.com/Backup",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        )
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1371,
+    serialized_end=1445,
 )
 
 
 _LISTBACKUPSREQUEST = _descriptor.Descriptor(
-  name='ListBackupsRequest',
-  full_name='google.spanner.admin.database.v1.ListBackupsRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='parent', full_name='google.spanner.admin.database.v1.ListBackupsRequest.parent', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002\372A!\n\037spanner.googleapis.com/Instance', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='filter', full_name='google.spanner.admin.database.v1.ListBackupsRequest.filter', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='page_size', full_name='google.spanner.admin.database.v1.ListBackupsRequest.page_size', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='page_token', full_name='google.spanner.admin.database.v1.ListBackupsRequest.page_token', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1448,
-  serialized_end=1580,
+    name="ListBackupsRequest",
+    full_name="google.spanner.admin.database.v1.ListBackupsRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="parent",
+            full_name="google.spanner.admin.database.v1.ListBackupsRequest.parent",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002\372A!\n\037spanner.googleapis.com/Instance",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="filter",
+            full_name="google.spanner.admin.database.v1.ListBackupsRequest.filter",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="page_size",
+            full_name="google.spanner.admin.database.v1.ListBackupsRequest.page_size",
+            index=2,
+            number=3,
+            type=5,
+            cpp_type=1,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="page_token",
+            full_name="google.spanner.admin.database.v1.ListBackupsRequest.page_token",
+            index=3,
+            number=4,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1448,
+    serialized_end=1580,
 )
 
 
 _LISTBACKUPSRESPONSE = _descriptor.Descriptor(
-  name='ListBackupsResponse',
-  full_name='google.spanner.admin.database.v1.ListBackupsResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='backups', full_name='google.spanner.admin.database.v1.ListBackupsResponse.backups', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='next_page_token', full_name='google.spanner.admin.database.v1.ListBackupsResponse.next_page_token', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1582,
-  serialized_end=1687,
+    name="ListBackupsResponse",
+    full_name="google.spanner.admin.database.v1.ListBackupsResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="backups",
+            full_name="google.spanner.admin.database.v1.ListBackupsResponse.backups",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="next_page_token",
+            full_name="google.spanner.admin.database.v1.ListBackupsResponse.next_page_token",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1582,
+    serialized_end=1687,
 )
 
 
 _LISTBACKUPOPERATIONSREQUEST = _descriptor.Descriptor(
-  name='ListBackupOperationsRequest',
-  full_name='google.spanner.admin.database.v1.ListBackupOperationsRequest',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='parent', full_name='google.spanner.admin.database.v1.ListBackupOperationsRequest.parent', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=b'\340A\002\372A!\n\037spanner.googleapis.com/Instance', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='filter', full_name='google.spanner.admin.database.v1.ListBackupOperationsRequest.filter', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='page_size', full_name='google.spanner.admin.database.v1.ListBackupOperationsRequest.page_size', index=2,
-      number=3, type=5, cpp_type=1, label=1,
-      has_default_value=False, default_value=0,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='page_token', full_name='google.spanner.admin.database.v1.ListBackupOperationsRequest.page_token', index=3,
-      number=4, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1690,
-  serialized_end=1831,
+    name="ListBackupOperationsRequest",
+    full_name="google.spanner.admin.database.v1.ListBackupOperationsRequest",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="parent",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsRequest.parent",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=b"\340A\002\372A!\n\037spanner.googleapis.com/Instance",
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="filter",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsRequest.filter",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="page_size",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsRequest.page_size",
+            index=2,
+            number=3,
+            type=5,
+            cpp_type=1,
+            label=1,
+            has_default_value=False,
+            default_value=0,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="page_token",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsRequest.page_token",
+            index=3,
+            number=4,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1690,
+    serialized_end=1831,
 )
 
 
 _LISTBACKUPOPERATIONSRESPONSE = _descriptor.Descriptor(
-  name='ListBackupOperationsResponse',
-  full_name='google.spanner.admin.database.v1.ListBackupOperationsResponse',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='operations', full_name='google.spanner.admin.database.v1.ListBackupOperationsResponse.operations', index=0,
-      number=1, type=11, cpp_type=10, label=3,
-      has_default_value=False, default_value=[],
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='next_page_token', full_name='google.spanner.admin.database.v1.ListBackupOperationsResponse.next_page_token', index=1,
-      number=2, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1833,
-  serialized_end=1939,
+    name="ListBackupOperationsResponse",
+    full_name="google.spanner.admin.database.v1.ListBackupOperationsResponse",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="operations",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsResponse.operations",
+            index=0,
+            number=1,
+            type=11,
+            cpp_type=10,
+            label=3,
+            has_default_value=False,
+            default_value=[],
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="next_page_token",
+            full_name="google.spanner.admin.database.v1.ListBackupOperationsResponse.next_page_token",
+            index=1,
+            number=2,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1833,
+    serialized_end=1939,
 )
 
 
 _BACKUPINFO = _descriptor.Descriptor(
-  name='BackupInfo',
-  full_name='google.spanner.admin.database.v1.BackupInfo',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  create_key=_descriptor._internal_create_key,
-  fields=[
-    _descriptor.FieldDescriptor(
-      name='backup', full_name='google.spanner.admin.database.v1.BackupInfo.backup', index=0,
-      number=1, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='create_time', full_name='google.spanner.admin.database.v1.BackupInfo.create_time', index=1,
-      number=2, type=11, cpp_type=10, label=1,
-      has_default_value=False, default_value=None,
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-    _descriptor.FieldDescriptor(
-      name='source_database', full_name='google.spanner.admin.database.v1.BackupInfo.source_database', index=2,
-      number=3, type=9, cpp_type=9, label=1,
-      has_default_value=False, default_value=b"".decode('utf-8'),
-      message_type=None, enum_type=None, containing_type=None,
-      is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  serialized_options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=1941,
-  serialized_end=2043,
+    name="BackupInfo",
+    full_name="google.spanner.admin.database.v1.BackupInfo",
+    filename=None,
+    file=DESCRIPTOR,
+    containing_type=None,
+    create_key=_descriptor._internal_create_key,
+    fields=[
+        _descriptor.FieldDescriptor(
+            name="backup",
+            full_name="google.spanner.admin.database.v1.BackupInfo.backup",
+            index=0,
+            number=1,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="create_time",
+            full_name="google.spanner.admin.database.v1.BackupInfo.create_time",
+            index=1,
+            number=2,
+            type=11,
+            cpp_type=10,
+            label=1,
+            has_default_value=False,
+            default_value=None,
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+        _descriptor.FieldDescriptor(
+            name="source_database",
+            full_name="google.spanner.admin.database.v1.BackupInfo.source_database",
+            index=2,
+            number=3,
+            type=9,
+            cpp_type=9,
+            label=1,
+            has_default_value=False,
+            default_value=b"".decode("utf-8"),
+            message_type=None,
+            enum_type=None,
+            containing_type=None,
+            is_extension=False,
+            extension_scope=None,
+            serialized_options=None,
+            file=DESCRIPTOR,
+            create_key=_descriptor._internal_create_key,
+        ),
+    ],
+    extensions=[],
+    nested_types=[],
+    enum_types=[],
+    serialized_options=None,
+    is_extendable=False,
+    syntax="proto3",
+    extension_ranges=[],
+    oneofs=[],
+    serialized_start=1941,
+    serialized_end=2043,
 )
 
-_BACKUP.fields_by_name['expire_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_BACKUP.fields_by_name['create_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_BACKUP.fields_by_name['state'].enum_type = _BACKUP_STATE
+_BACKUP.fields_by_name[
+    "expire_time"
+].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_BACKUP.fields_by_name[
+    "create_time"
+].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_BACKUP.fields_by_name["state"].enum_type = _BACKUP_STATE
 _BACKUP_STATE.containing_type = _BACKUP
-_CREATEBACKUPREQUEST.fields_by_name['backup'].message_type = _BACKUP
-_CREATEBACKUPMETADATA.fields_by_name['progress'].message_type = google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2._OPERATIONPROGRESS
-_CREATEBACKUPMETADATA.fields_by_name['cancel_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-_UPDATEBACKUPREQUEST.fields_by_name['backup'].message_type = _BACKUP
-_UPDATEBACKUPREQUEST.fields_by_name['update_mask'].message_type = google_dot_protobuf_dot_field__mask__pb2._FIELDMASK
-_LISTBACKUPSRESPONSE.fields_by_name['backups'].message_type = _BACKUP
-_LISTBACKUPOPERATIONSRESPONSE.fields_by_name['operations'].message_type = google_dot_longrunning_dot_operations__pb2._OPERATION
-_BACKUPINFO.fields_by_name['create_time'].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
-DESCRIPTOR.message_types_by_name['Backup'] = _BACKUP
-DESCRIPTOR.message_types_by_name['CreateBackupRequest'] = _CREATEBACKUPREQUEST
-DESCRIPTOR.message_types_by_name['CreateBackupMetadata'] = _CREATEBACKUPMETADATA
-DESCRIPTOR.message_types_by_name['UpdateBackupRequest'] = _UPDATEBACKUPREQUEST
-DESCRIPTOR.message_types_by_name['GetBackupRequest'] = _GETBACKUPREQUEST
-DESCRIPTOR.message_types_by_name['DeleteBackupRequest'] = _DELETEBACKUPREQUEST
-DESCRIPTOR.message_types_by_name['ListBackupsRequest'] = _LISTBACKUPSREQUEST
-DESCRIPTOR.message_types_by_name['ListBackupsResponse'] = _LISTBACKUPSRESPONSE
-DESCRIPTOR.message_types_by_name['ListBackupOperationsRequest'] = _LISTBACKUPOPERATIONSREQUEST
-DESCRIPTOR.message_types_by_name['ListBackupOperationsResponse'] = _LISTBACKUPOPERATIONSRESPONSE
-DESCRIPTOR.message_types_by_name['BackupInfo'] = _BACKUPINFO
+_CREATEBACKUPREQUEST.fields_by_name["backup"].message_type = _BACKUP
+_CREATEBACKUPMETADATA.fields_by_name[
+    "progress"
+].message_type = (
+    google_dot_cloud_dot_spanner__admin__database__v1_dot_proto_dot_common__pb2._OPERATIONPROGRESS
+)
+_CREATEBACKUPMETADATA.fields_by_name[
+    "cancel_time"
+].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+_UPDATEBACKUPREQUEST.fields_by_name["backup"].message_type = _BACKUP
+_UPDATEBACKUPREQUEST.fields_by_name[
+    "update_mask"
+].message_type = google_dot_protobuf_dot_field__mask__pb2._FIELDMASK
+_LISTBACKUPSRESPONSE.fields_by_name["backups"].message_type = _BACKUP
+_LISTBACKUPOPERATIONSRESPONSE.fields_by_name[
+    "operations"
+].message_type = google_dot_longrunning_dot_operations__pb2._OPERATION
+_BACKUPINFO.fields_by_name[
+    "create_time"
+].message_type = google_dot_protobuf_dot_timestamp__pb2._TIMESTAMP
+DESCRIPTOR.message_types_by_name["Backup"] = _BACKUP
+DESCRIPTOR.message_types_by_name["CreateBackupRequest"] = _CREATEBACKUPREQUEST
+DESCRIPTOR.message_types_by_name["CreateBackupMetadata"] = _CREATEBACKUPMETADATA
+DESCRIPTOR.message_types_by_name["UpdateBackupRequest"] = _UPDATEBACKUPREQUEST
+DESCRIPTOR.message_types_by_name["GetBackupRequest"] = _GETBACKUPREQUEST
+DESCRIPTOR.message_types_by_name["DeleteBackupRequest"] = _DELETEBACKUPREQUEST
+DESCRIPTOR.message_types_by_name["ListBackupsRequest"] = _LISTBACKUPSREQUEST
+DESCRIPTOR.message_types_by_name["ListBackupsResponse"] = _LISTBACKUPSRESPONSE
+DESCRIPTOR.message_types_by_name[
+    "ListBackupOperationsRequest"
+] = _LISTBACKUPOPERATIONSREQUEST
+DESCRIPTOR.message_types_by_name[
+    "ListBackupOperationsResponse"
+] = _LISTBACKUPOPERATIONSRESPONSE
+DESCRIPTOR.message_types_by_name["BackupInfo"] = _BACKUPINFO
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
-Backup = _reflection.GeneratedProtocolMessageType('Backup', (_message.Message,), {
-  'DESCRIPTOR' : _BACKUP,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """A backup of a Cloud Spanner database.
+Backup = _reflection.GeneratedProtocolMessageType(
+    "Backup",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _BACKUP,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """A backup of a Cloud Spanner database.
   
   Attributes:
       database:
@@ -647,15 +1052,18 @@ Backup = _reflection.GeneratedProtocolMessageType('Backup', (_message.Message,),
           being deleted. When a restored database from the backup enters
           the ``READY`` state, the reference to the backup is removed.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.Backup)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.Backup)
+    },
+)
 _sym_db.RegisterMessage(Backup)
 
-CreateBackupRequest = _reflection.GeneratedProtocolMessageType('CreateBackupRequest', (_message.Message,), {
-  'DESCRIPTOR' : _CREATEBACKUPREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for [CreateBackup][google.spanner.admin.database.v1.Databa
+CreateBackupRequest = _reflection.GeneratedProtocolMessageType(
+    "CreateBackupRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _CREATEBACKUPREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for [CreateBackup][google.spanner.admin.database.v1.Databa
   seAdmin.CreateBackup].
   
   Attributes:
@@ -674,15 +1082,18 @@ CreateBackupRequest = _reflection.GeneratedProtocolMessageType('CreateBackupRequ
       backup:
           Required. The backup to create.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.CreateBackupRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.CreateBackupRequest)
+    },
+)
 _sym_db.RegisterMessage(CreateBackupRequest)
 
-CreateBackupMetadata = _reflection.GeneratedProtocolMessageType('CreateBackupMetadata', (_message.Message,), {
-  'DESCRIPTOR' : _CREATEBACKUPMETADATA,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """Metadata type for the operation returned by [CreateBackup][google.span
+CreateBackupMetadata = _reflection.GeneratedProtocolMessageType(
+    "CreateBackupMetadata",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _CREATEBACKUPMETADATA,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """Metadata type for the operation returned by [CreateBackup][google.span
   ner.admin.database.v1.DatabaseAdmin.CreateBackup].
   
   Attributes:
@@ -708,15 +1119,18 @@ CreateBackupMetadata = _reflection.GeneratedProtocolMessageType('CreateBackupMet
           [google.rpc.Status.code][google.rpc.Status.code] of 1,
           corresponding to ``Code.CANCELLED``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.CreateBackupMetadata)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.CreateBackupMetadata)
+    },
+)
 _sym_db.RegisterMessage(CreateBackupMetadata)
 
-UpdateBackupRequest = _reflection.GeneratedProtocolMessageType('UpdateBackupRequest', (_message.Message,), {
-  'DESCRIPTOR' : _UPDATEBACKUPREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for [UpdateBackup][google.spanner.admin.database.v1.Databa
+UpdateBackupRequest = _reflection.GeneratedProtocolMessageType(
+    "UpdateBackupRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _UPDATEBACKUPREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for [UpdateBackup][google.spanner.admin.database.v1.Databa
   seAdmin.UpdateBackup].
   
   Attributes:
@@ -733,15 +1147,18 @@ UpdateBackupRequest = _reflection.GeneratedProtocolMessageType('UpdateBackupRequ
           prevents any future fields from being erased accidentally by
           clients that do not know about them.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.UpdateBackupRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.UpdateBackupRequest)
+    },
+)
 _sym_db.RegisterMessage(UpdateBackupRequest)
 
-GetBackupRequest = _reflection.GeneratedProtocolMessageType('GetBackupRequest', (_message.Message,), {
-  'DESCRIPTOR' : _GETBACKUPREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for
+GetBackupRequest = _reflection.GeneratedProtocolMessageType(
+    "GetBackupRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _GETBACKUPREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for
   [GetBackup][google.spanner.admin.database.v1.DatabaseAdmin.GetBackup].
   
   Attributes:
@@ -749,15 +1166,18 @@ GetBackupRequest = _reflection.GeneratedProtocolMessageType('GetBackupRequest', 
           Required. Name of the backup. Values are of the form
           ``projects/<project>/instances/<instance>/backups/<backup>``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.GetBackupRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.GetBackupRequest)
+    },
+)
 _sym_db.RegisterMessage(GetBackupRequest)
 
-DeleteBackupRequest = _reflection.GeneratedProtocolMessageType('DeleteBackupRequest', (_message.Message,), {
-  'DESCRIPTOR' : _DELETEBACKUPREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for [DeleteBackup][google.spanner.admin.database.v1.Databa
+DeleteBackupRequest = _reflection.GeneratedProtocolMessageType(
+    "DeleteBackupRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _DELETEBACKUPREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for [DeleteBackup][google.spanner.admin.database.v1.Databa
   seAdmin.DeleteBackup].
   
   Attributes:
@@ -765,15 +1185,18 @@ DeleteBackupRequest = _reflection.GeneratedProtocolMessageType('DeleteBackupRequ
           Required. Name of the backup to delete. Values are of the form
           ``projects/<project>/instances/<instance>/backups/<backup>``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.DeleteBackupRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.DeleteBackupRequest)
+    },
+)
 _sym_db.RegisterMessage(DeleteBackupRequest)
 
-ListBackupsRequest = _reflection.GeneratedProtocolMessageType('ListBackupsRequest', (_message.Message,), {
-  'DESCRIPTOR' : _LISTBACKUPSREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for [ListBackups][google.spanner.admin.database.v1.Databas
+ListBackupsRequest = _reflection.GeneratedProtocolMessageType(
+    "ListBackupsRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _LISTBACKUPSREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for [ListBackups][google.spanner.admin.database.v1.Databas
   eAdmin.ListBackups].
   
   Attributes:
@@ -818,15 +1241,18 @@ ListBackupsRequest = _reflection.GeneratedProtocolMessageType('ListBackupsReques
           .admin.database.v1.ListBackupsResponse] to the same ``parent``
           and with the same ``filter``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupsRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupsRequest)
+    },
+)
 _sym_db.RegisterMessage(ListBackupsRequest)
 
-ListBackupsResponse = _reflection.GeneratedProtocolMessageType('ListBackupsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _LISTBACKUPSRESPONSE,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The response for [ListBackups][google.spanner.admin.database.v1.Databa
+ListBackupsResponse = _reflection.GeneratedProtocolMessageType(
+    "ListBackupsResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _LISTBACKUPSRESPONSE,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The response for [ListBackups][google.spanner.admin.database.v1.Databa
   seAdmin.ListBackups].
   
   Attributes:
@@ -839,15 +1265,18 @@ ListBackupsResponse = _reflection.GeneratedProtocolMessageType('ListBackupsRespo
           ][google.spanner.admin.database.v1.DatabaseAdmin.ListBackups]
           call to fetch more of the matching backups.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupsResponse)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupsResponse)
+    },
+)
 _sym_db.RegisterMessage(ListBackupsResponse)
 
-ListBackupOperationsRequest = _reflection.GeneratedProtocolMessageType('ListBackupOperationsRequest', (_message.Message,), {
-  'DESCRIPTOR' : _LISTBACKUPOPERATIONSREQUEST,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The request for [ListBackupOperations][google.spanner.admin.database.v
+ListBackupOperationsRequest = _reflection.GeneratedProtocolMessageType(
+    "ListBackupOperationsRequest",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _LISTBACKUPOPERATIONSREQUEST,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The request for [ListBackupOperations][google.spanner.admin.database.v
   1.DatabaseAdmin.ListBackupOperations].
   
   Attributes:
@@ -899,15 +1328,18 @@ ListBackupOperationsRequest = _reflection.GeneratedProtocolMessageType('ListBack
           se][google.spanner.admin.database.v1.ListBackupOperationsRespo
           nse] to the same ``parent`` and with the same ``filter``.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupOperationsRequest)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupOperationsRequest)
+    },
+)
 _sym_db.RegisterMessage(ListBackupOperationsRequest)
 
-ListBackupOperationsResponse = _reflection.GeneratedProtocolMessageType('ListBackupOperationsResponse', (_message.Message,), {
-  'DESCRIPTOR' : _LISTBACKUPOPERATIONSRESPONSE,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """The response for [ListBackupOperations][google.spanner.admin.database.
+ListBackupOperationsResponse = _reflection.GeneratedProtocolMessageType(
+    "ListBackupOperationsResponse",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _LISTBACKUPOPERATIONSRESPONSE,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """The response for [ListBackupOperations][google.spanner.admin.database.
   v1.DatabaseAdmin.ListBackupOperations].
   
   Attributes:
@@ -927,15 +1359,18 @@ ListBackupOperationsResponse = _reflection.GeneratedProtocolMessageType('ListBac
           perations][google.spanner.admin.database.v1.DatabaseAdmin.List
           BackupOperations] call to fetch more of the matching metadata.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupOperationsResponse)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.ListBackupOperationsResponse)
+    },
+)
 _sym_db.RegisterMessage(ListBackupOperationsResponse)
 
-BackupInfo = _reflection.GeneratedProtocolMessageType('BackupInfo', (_message.Message,), {
-  'DESCRIPTOR' : _BACKUPINFO,
-  '__module__' : 'google.cloud.spanner_admin_database_v1.proto.backup_pb2'
-  ,
-  '__doc__': """Information about a backup.
+BackupInfo = _reflection.GeneratedProtocolMessageType(
+    "BackupInfo",
+    (_message.Message,),
+    {
+        "DESCRIPTOR": _BACKUPINFO,
+        "__module__": "google.cloud.spanner_admin_database_v1.proto.backup_pb2",
+        "__doc__": """Information about a backup.
   
   Attributes:
       backup:
@@ -947,25 +1382,26 @@ BackupInfo = _reflection.GeneratedProtocolMessageType('BackupInfo', (_message.Me
       source_database:
           Name of the database the backup was created from.
   """,
-  # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.BackupInfo)
-  })
+        # @@protoc_insertion_point(class_scope:google.spanner.admin.database.v1.BackupInfo)
+    },
+)
 _sym_db.RegisterMessage(BackupInfo)
 
 
 DESCRIPTOR._options = None
-_BACKUP.fields_by_name['database']._options = None
-_BACKUP.fields_by_name['create_time']._options = None
-_BACKUP.fields_by_name['size_bytes']._options = None
-_BACKUP.fields_by_name['state']._options = None
-_BACKUP.fields_by_name['referencing_databases']._options = None
+_BACKUP.fields_by_name["database"]._options = None
+_BACKUP.fields_by_name["create_time"]._options = None
+_BACKUP.fields_by_name["size_bytes"]._options = None
+_BACKUP.fields_by_name["state"]._options = None
+_BACKUP.fields_by_name["referencing_databases"]._options = None
 _BACKUP._options = None
-_CREATEBACKUPREQUEST.fields_by_name['parent']._options = None
-_CREATEBACKUPREQUEST.fields_by_name['backup_id']._options = None
-_CREATEBACKUPREQUEST.fields_by_name['backup']._options = None
-_UPDATEBACKUPREQUEST.fields_by_name['backup']._options = None
-_UPDATEBACKUPREQUEST.fields_by_name['update_mask']._options = None
-_GETBACKUPREQUEST.fields_by_name['name']._options = None
-_DELETEBACKUPREQUEST.fields_by_name['name']._options = None
-_LISTBACKUPSREQUEST.fields_by_name['parent']._options = None
-_LISTBACKUPOPERATIONSREQUEST.fields_by_name['parent']._options = None
+_CREATEBACKUPREQUEST.fields_by_name["parent"]._options = None
+_CREATEBACKUPREQUEST.fields_by_name["backup_id"]._options = None
+_CREATEBACKUPREQUEST.fields_by_name["backup"]._options = None
+_UPDATEBACKUPREQUEST.fields_by_name["backup"]._options = None
+_UPDATEBACKUPREQUEST.fields_by_name["update_mask"]._options = None
+_GETBACKUPREQUEST.fields_by_name["name"]._options = None
+_DELETEBACKUPREQUEST.fields_by_name["name"]._options = None
+_LISTBACKUPSREQUEST.fields_by_name["parent"]._options = None
+_LISTBACKUPOPERATIONSREQUEST.fields_by_name["parent"]._options = None
 # @@protoc_insertion_point(module_scope)
