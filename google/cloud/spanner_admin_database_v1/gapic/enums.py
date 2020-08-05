@@ -27,7 +27,6 @@ class RestoreSourceType(enum.IntEnum):
       TYPE_UNSPECIFIED (int): No restore associated.
       BACKUP (int): A backup was used as the source of the restore.
     """
-
     TYPE_UNSPECIFIED = 0
     BACKUP = 1
 
@@ -43,7 +42,6 @@ class Backup(object):
           may fail with ``FAILED_PRECONDITION`` in this state.
           READY (int): The backup is complete and ready for use.
         """
-
         STATE_UNSPECIFIED = 0
         CREATING = 1
         READY = 2
@@ -67,8 +65,8 @@ class Database(object):
           complete, the full performance of the database will be restored, and the
           database will transition to ``READY`` state.
         """
-
         STATE_UNSPECIFIED = 0
         CREATING = 1
         READY = 2
         READY_OPTIMIZING = 3
+    

@@ -2,15 +2,9 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from google.cloud.spanner_v1.proto import (
-    result_set_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2,
-)
-from google.cloud.spanner_v1.proto import (
-    spanner_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2,
-)
-from google.cloud.spanner_v1.proto import (
-    transaction_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2,
-)
+from google.cloud.spanner_v1.proto import result_set_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2
+from google.cloud.spanner_v1.proto import spanner_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2
+from google.cloud.spanner_v1.proto import transaction_pb2 as google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
@@ -28,80 +22,80 @@ class SpannerStub(object):
             channel: A grpc.Channel.
         """
         self.CreateSession = channel.unary_unary(
-            "/google.spanner.v1.Spanner/CreateSession",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CreateSessionRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
-        )
+                '/google.spanner.v1.Spanner/CreateSession',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CreateSessionRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
+                )
         self.BatchCreateSessions = channel.unary_unary(
-            "/google.spanner.v1.Spanner/BatchCreateSessions",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/BatchCreateSessions',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsResponse.FromString,
+                )
         self.GetSession = channel.unary_unary(
-            "/google.spanner.v1.Spanner/GetSession",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.GetSessionRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
-        )
+                '/google.spanner.v1.Spanner/GetSession',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.GetSessionRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
+                )
         self.ListSessions = channel.unary_unary(
-            "/google.spanner.v1.Spanner/ListSessions",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/ListSessions',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsResponse.FromString,
+                )
         self.DeleteSession = channel.unary_unary(
-            "/google.spanner.v1.Spanner/DeleteSession",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.DeleteSessionRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-        )
+                '/google.spanner.v1.Spanner/DeleteSession',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.DeleteSessionRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.ExecuteSql = channel.unary_unary(
-            "/google.spanner.v1.Spanner/ExecuteSql",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
-        )
+                '/google.spanner.v1.Spanner/ExecuteSql',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
+                )
         self.ExecuteStreamingSql = channel.unary_stream(
-            "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
-        )
+                '/google.spanner.v1.Spanner/ExecuteStreamingSql',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
+                )
         self.ExecuteBatchDml = channel.unary_unary(
-            "/google.spanner.v1.Spanner/ExecuteBatchDml",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/ExecuteBatchDml',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlResponse.FromString,
+                )
         self.Read = channel.unary_unary(
-            "/google.spanner.v1.Spanner/Read",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
-        )
+                '/google.spanner.v1.Spanner/Read',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
+                )
         self.StreamingRead = channel.unary_stream(
-            "/google.spanner.v1.Spanner/StreamingRead",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
-        )
+                '/google.spanner.v1.Spanner/StreamingRead',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
+                )
         self.BeginTransaction = channel.unary_unary(
-            "/google.spanner.v1.Spanner/BeginTransaction",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BeginTransactionRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2.Transaction.FromString,
-        )
+                '/google.spanner.v1.Spanner/BeginTransaction',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BeginTransactionRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2.Transaction.FromString,
+                )
         self.Commit = channel.unary_unary(
-            "/google.spanner.v1.Spanner/Commit",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/Commit',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitResponse.FromString,
+                )
         self.Rollback = channel.unary_unary(
-            "/google.spanner.v1.Spanner/Rollback",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.RollbackRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-        )
+                '/google.spanner.v1.Spanner/Rollback',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.RollbackRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.PartitionQuery = channel.unary_unary(
-            "/google.spanner.v1.Spanner/PartitionQuery",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionQueryRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/PartitionQuery',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionQueryRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
+                )
         self.PartitionRead = channel.unary_unary(
-            "/google.spanner.v1.Spanner/PartitionRead",
-            request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionReadRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
-        )
+                '/google.spanner.v1.Spanner/PartitionRead',
+                request_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionReadRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
+                )
 
 
 class SpannerServicer(object):
@@ -133,8 +127,8 @@ class SpannerServicer(object):
         periodically, e.g., `"SELECT 1"`.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def BatchCreateSessions(self, request, context):
         """Creates multiple new sessions.
@@ -143,8 +137,8 @@ class SpannerServicer(object):
         See https://goo.gl/TgSFN2 for best practices on session cache management.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetSession(self, request, context):
         """Gets a session. Returns `NOT_FOUND` if the session does not exist.
@@ -152,15 +146,15 @@ class SpannerServicer(object):
         alive.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ListSessions(self, request, context):
         """Lists all sessions in a given database.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def DeleteSession(self, request, context):
         """Ends a session, releasing server resources associated with it. This will
@@ -168,8 +162,8 @@ class SpannerServicer(object):
         this session.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ExecuteSql(self, request, context):
         """Executes an SQL statement, returning all results in a single reply. This
@@ -185,8 +179,8 @@ class SpannerServicer(object):
         [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql] instead.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ExecuteStreamingSql(self, request, context):
         """Like [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], except returns the result
@@ -196,8 +190,8 @@ class SpannerServicer(object):
         column value can exceed 10 MiB.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ExecuteBatchDml(self, request, context):
         """Executes a batch of SQL DML statements. This method allows many statements
@@ -213,8 +207,8 @@ class SpannerServicer(object):
         are not executed.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def Read(self, request, context):
         """Reads rows from the database using key lookups and scans, as a
@@ -232,8 +226,8 @@ class SpannerServicer(object):
         [StreamingRead][google.spanner.v1.Spanner.StreamingRead] instead.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def StreamingRead(self, request, context):
         """Like [Read][google.spanner.v1.Spanner.Read], except returns the result set as a
@@ -243,8 +237,8 @@ class SpannerServicer(object):
         10 MiB.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def BeginTransaction(self, request, context):
         """Begins a new transaction. This step can often be skipped:
@@ -253,8 +247,8 @@ class SpannerServicer(object):
         side-effect.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def Commit(self, request, context):
         """Commits a transaction. The request includes the mutations to be
@@ -267,8 +261,8 @@ class SpannerServicer(object):
         the transaction from the beginning, re-using the same session.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def Rollback(self, request, context):
         """Rolls back a transaction, releasing any locks it holds. It is a good
@@ -281,8 +275,8 @@ class SpannerServicer(object):
         found. `Rollback` never returns `ABORTED`.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def PartitionQuery(self, request, context):
         """Creates a set of partition tokens that can be used to execute a query
@@ -298,8 +292,8 @@ class SpannerServicer(object):
         the whole operation must be restarted from the beginning.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def PartitionRead(self, request, context):
         """Creates a set of partition tokens that can be used to execute a read
@@ -317,95 +311,94 @@ class SpannerServicer(object):
         the whole operation must be restarted from the beginning.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_SpannerServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        "CreateSession": grpc.unary_unary_rpc_method_handler(
-            servicer.CreateSession,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CreateSessionRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.SerializeToString,
-        ),
-        "BatchCreateSessions": grpc.unary_unary_rpc_method_handler(
-            servicer.BatchCreateSessions,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsResponse.SerializeToString,
-        ),
-        "GetSession": grpc.unary_unary_rpc_method_handler(
-            servicer.GetSession,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.GetSessionRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.SerializeToString,
-        ),
-        "ListSessions": grpc.unary_unary_rpc_method_handler(
-            servicer.ListSessions,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsResponse.SerializeToString,
-        ),
-        "DeleteSession": grpc.unary_unary_rpc_method_handler(
-            servicer.DeleteSession,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.DeleteSessionRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-        ),
-        "ExecuteSql": grpc.unary_unary_rpc_method_handler(
-            servicer.ExecuteSql,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.SerializeToString,
-        ),
-        "ExecuteStreamingSql": grpc.unary_stream_rpc_method_handler(
-            servicer.ExecuteStreamingSql,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.SerializeToString,
-        ),
-        "ExecuteBatchDml": grpc.unary_unary_rpc_method_handler(
-            servicer.ExecuteBatchDml,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlResponse.SerializeToString,
-        ),
-        "Read": grpc.unary_unary_rpc_method_handler(
-            servicer.Read,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.SerializeToString,
-        ),
-        "StreamingRead": grpc.unary_stream_rpc_method_handler(
-            servicer.StreamingRead,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.SerializeToString,
-        ),
-        "BeginTransaction": grpc.unary_unary_rpc_method_handler(
-            servicer.BeginTransaction,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BeginTransactionRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2.Transaction.SerializeToString,
-        ),
-        "Commit": grpc.unary_unary_rpc_method_handler(
-            servicer.Commit,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitResponse.SerializeToString,
-        ),
-        "Rollback": grpc.unary_unary_rpc_method_handler(
-            servicer.Rollback,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.RollbackRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-        ),
-        "PartitionQuery": grpc.unary_unary_rpc_method_handler(
-            servicer.PartitionQuery,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionQueryRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.SerializeToString,
-        ),
-        "PartitionRead": grpc.unary_unary_rpc_method_handler(
-            servicer.PartitionRead,
-            request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionReadRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.SerializeToString,
-        ),
+            'CreateSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateSession,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CreateSessionRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.SerializeToString,
+            ),
+            'BatchCreateSessions': grpc.unary_unary_rpc_method_handler(
+                    servicer.BatchCreateSessions,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsResponse.SerializeToString,
+            ),
+            'GetSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetSession,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.GetSessionRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.SerializeToString,
+            ),
+            'ListSessions': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSessions,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsResponse.SerializeToString,
+            ),
+            'DeleteSession': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteSession,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.DeleteSessionRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'ExecuteSql': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecuteSql,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.SerializeToString,
+            ),
+            'ExecuteStreamingSql': grpc.unary_stream_rpc_method_handler(
+                    servicer.ExecuteStreamingSql,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.SerializeToString,
+            ),
+            'ExecuteBatchDml': grpc.unary_unary_rpc_method_handler(
+                    servicer.ExecuteBatchDml,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlResponse.SerializeToString,
+            ),
+            'Read': grpc.unary_unary_rpc_method_handler(
+                    servicer.Read,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.SerializeToString,
+            ),
+            'StreamingRead': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamingRead,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.SerializeToString,
+            ),
+            'BeginTransaction': grpc.unary_unary_rpc_method_handler(
+                    servicer.BeginTransaction,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BeginTransactionRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2.Transaction.SerializeToString,
+            ),
+            'Commit': grpc.unary_unary_rpc_method_handler(
+                    servicer.Commit,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitResponse.SerializeToString,
+            ),
+            'Rollback': grpc.unary_unary_rpc_method_handler(
+                    servicer.Rollback,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.RollbackRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'PartitionQuery': grpc.unary_unary_rpc_method_handler(
+                    servicer.PartitionQuery,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionQueryRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.SerializeToString,
+            ),
+            'PartitionRead': grpc.unary_unary_rpc_method_handler(
+                    servicer.PartitionRead,
+                    request_deserializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionReadRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        "google.spanner.v1.Spanner", rpc_method_handlers
-    )
+            'google.spanner.v1.Spanner', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
-# This class is part of an EXPERIMENTAL API.
+ # This class is part of an EXPERIMENTAL API.
 class Spanner(object):
     """Cloud Spanner API
 
@@ -414,406 +407,241 @@ class Spanner(object):
     """
 
     @staticmethod
-    def CreateSession(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def CreateSession(request,
             target,
-            "/google.spanner.v1.Spanner/CreateSession",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/CreateSession',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CreateSessionRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def BatchCreateSessions(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def BatchCreateSessions(request,
             target,
-            "/google.spanner.v1.Spanner/BatchCreateSessions",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/BatchCreateSessions',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BatchCreateSessionsResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetSession(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def GetSession(request,
             target,
-            "/google.spanner.v1.Spanner/GetSession",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/GetSession',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.GetSessionRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.Session.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ListSessions(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def ListSessions(request,
             target,
-            "/google.spanner.v1.Spanner/ListSessions",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/ListSessions',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ListSessionsResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def DeleteSession(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def DeleteSession(request,
             target,
-            "/google.spanner.v1.Spanner/DeleteSession",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/DeleteSession',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.DeleteSessionRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ExecuteSql(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def ExecuteSql(request,
             target,
-            "/google.spanner.v1.Spanner/ExecuteSql",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/ExecuteSql',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ExecuteStreamingSql(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_stream(
-            request,
+    def ExecuteStreamingSql(request,
             target,
-            "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/google.spanner.v1.Spanner/ExecuteStreamingSql',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteSqlRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ExecuteBatchDml(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def ExecuteBatchDml(request,
             target,
-            "/google.spanner.v1.Spanner/ExecuteBatchDml",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/ExecuteBatchDml',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ExecuteBatchDmlResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Read(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def Read(request,
             target,
-            "/google.spanner.v1.Spanner/Read",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/Read',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.ResultSet.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def StreamingRead(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_stream(
-            request,
+    def StreamingRead(request,
             target,
-            "/google.spanner.v1.Spanner/StreamingRead",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_stream(request, target, '/google.spanner.v1.Spanner/StreamingRead',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.ReadRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_result__set__pb2.PartialResultSet.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def BeginTransaction(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def BeginTransaction(request,
             target,
-            "/google.spanner.v1.Spanner/BeginTransaction",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/BeginTransaction',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.BeginTransactionRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_transaction__pb2.Transaction.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Commit(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def Commit(request,
             target,
-            "/google.spanner.v1.Spanner/Commit",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/Commit',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.CommitResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def Rollback(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def Rollback(request,
             target,
-            "/google.spanner.v1.Spanner/Rollback",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/Rollback',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.RollbackRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def PartitionQuery(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def PartitionQuery(request,
             target,
-            "/google.spanner.v1.Spanner/PartitionQuery",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/PartitionQuery',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionQueryRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def PartitionRead(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def PartitionRead(request,
             target,
-            "/google.spanner.v1.Spanner/PartitionRead",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.v1.Spanner/PartitionRead',
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionReadRequest.SerializeToString,
             google_dot_cloud_dot_spanner__v1_dot_proto_dot_spanner__pb2.PartitionResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)

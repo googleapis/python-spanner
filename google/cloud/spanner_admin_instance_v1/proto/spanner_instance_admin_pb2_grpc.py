@@ -2,14 +2,10 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-from google.cloud.spanner_admin_instance_v1.proto import (
-    spanner_instance_admin_pb2 as google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2,
-)
+from google.cloud.spanner_admin_instance_v1.proto import spanner_instance_admin_pb2 as google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2
 from google.iam.v1 import iam_policy_pb2 as google_dot_iam_dot_v1_dot_iam__policy__pb2
 from google.iam.v1 import policy_pb2 as google_dot_iam_dot_v1_dot_policy__pb2
-from google.longrunning import (
-    operations_pb2 as google_dot_longrunning_dot_operations__pb2,
-)
+from google.longrunning import operations_pb2 as google_dot_longrunning_dot_operations__pb2
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
@@ -44,55 +40,55 @@ class InstanceAdminStub(object):
             channel: A grpc.Channel.
         """
         self.ListInstanceConfigs = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstanceConfigs",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsResponse.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/ListInstanceConfigs',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsResponse.FromString,
+                )
         self.GetInstanceConfig = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetInstanceConfig",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceConfigRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.InstanceConfig.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/GetInstanceConfig',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceConfigRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.InstanceConfig.FromString,
+                )
         self.ListInstances = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstances",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesResponse.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/ListInstances',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesResponse.FromString,
+                )
         self.GetInstance = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetInstance",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceRequest.SerializeToString,
-            response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.Instance.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/GetInstance',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceRequest.SerializeToString,
+                response_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.Instance.FromString,
+                )
         self.CreateInstance = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstance",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.CreateInstanceRequest.SerializeToString,
-            response_deserializer=google_dot_longrunning_dot_operations__pb2.Operation.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstance',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.CreateInstanceRequest.SerializeToString,
+                response_deserializer=google_dot_longrunning_dot_operations__pb2.Operation.FromString,
+                )
         self.UpdateInstance = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstance",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.UpdateInstanceRequest.SerializeToString,
-            response_deserializer=google_dot_longrunning_dot_operations__pb2.Operation.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstance',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.UpdateInstanceRequest.SerializeToString,
+                response_deserializer=google_dot_longrunning_dot_operations__pb2.Operation.FromString,
+                )
         self.DeleteInstance = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstance",
-            request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.DeleteInstanceRequest.SerializeToString,
-            response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstance',
+                request_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.DeleteInstanceRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
         self.SetIamPolicy = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy",
-            request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.SerializeToString,
-            response_deserializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy',
+                request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.SerializeToString,
+                response_deserializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
+                )
         self.GetIamPolicy = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy",
-            request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.SerializeToString,
-            response_deserializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy',
+                request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.SerializeToString,
+                response_deserializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
+                )
         self.TestIamPermissions = channel.unary_unary(
-            "/google.spanner.admin.instance.v1.InstanceAdmin/TestIamPermissions",
-            request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.SerializeToString,
-            response_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.FromString,
-        )
+                '/google.spanner.admin.instance.v1.InstanceAdmin/TestIamPermissions',
+                request_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.SerializeToString,
+                response_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.FromString,
+                )
 
 
 class InstanceAdminServicer(object):
@@ -123,29 +119,29 @@ class InstanceAdminServicer(object):
         """Lists the supported instance configurations for a given project.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetInstanceConfig(self, request, context):
         """Gets information about a particular instance configuration.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def ListInstances(self, request, context):
         """Lists all instances in the given project.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetInstance(self, request, context):
         """Gets information about a particular instance.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def CreateInstance(self, request, context):
         """Creates an instance and begins preparing it to begin serving. The
@@ -184,8 +180,8 @@ class InstanceAdminServicer(object):
         [Instance][google.spanner.admin.instance.v1.Instance], if successful.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def UpdateInstance(self, request, context):
         """Updates an instance, and begins allocating or releasing resources
@@ -230,8 +226,8 @@ class InstanceAdminServicer(object):
         resource [name][google.spanner.admin.instance.v1.Instance.name].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def DeleteInstance(self, request, context):
         """Deletes an instance.
@@ -247,8 +243,8 @@ class InstanceAdminServicer(object):
         is permanently deleted.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def SetIamPolicy(self, request, context):
         """Sets the access control policy on an instance resource. Replaces any
@@ -258,8 +254,8 @@ class InstanceAdminServicer(object):
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def GetIamPolicy(self, request, context):
         """Gets the access control policy for an instance resource. Returns an empty
@@ -269,8 +265,8 @@ class InstanceAdminServicer(object):
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def TestIamPermissions(self, request, context):
         """Returns permissions that the caller has on the specified instance resource.
@@ -281,70 +277,69 @@ class InstanceAdminServicer(object):
         empty set of permissions.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details("Method not implemented!")
-        raise NotImplementedError("Method not implemented!")
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_InstanceAdminServicer_to_server(servicer, server):
     rpc_method_handlers = {
-        "ListInstanceConfigs": grpc.unary_unary_rpc_method_handler(
-            servicer.ListInstanceConfigs,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsResponse.SerializeToString,
-        ),
-        "GetInstanceConfig": grpc.unary_unary_rpc_method_handler(
-            servicer.GetInstanceConfig,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceConfigRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.InstanceConfig.SerializeToString,
-        ),
-        "ListInstances": grpc.unary_unary_rpc_method_handler(
-            servicer.ListInstances,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesResponse.SerializeToString,
-        ),
-        "GetInstance": grpc.unary_unary_rpc_method_handler(
-            servicer.GetInstance,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceRequest.FromString,
-            response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.Instance.SerializeToString,
-        ),
-        "CreateInstance": grpc.unary_unary_rpc_method_handler(
-            servicer.CreateInstance,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.CreateInstanceRequest.FromString,
-            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-        ),
-        "UpdateInstance": grpc.unary_unary_rpc_method_handler(
-            servicer.UpdateInstance,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.UpdateInstanceRequest.FromString,
-            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-        ),
-        "DeleteInstance": grpc.unary_unary_rpc_method_handler(
-            servicer.DeleteInstance,
-            request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.DeleteInstanceRequest.FromString,
-            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-        ),
-        "SetIamPolicy": grpc.unary_unary_rpc_method_handler(
-            servicer.SetIamPolicy,
-            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.FromString,
-            response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
-        ),
-        "GetIamPolicy": grpc.unary_unary_rpc_method_handler(
-            servicer.GetIamPolicy,
-            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.FromString,
-            response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
-        ),
-        "TestIamPermissions": grpc.unary_unary_rpc_method_handler(
-            servicer.TestIamPermissions,
-            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.FromString,
-            response_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.SerializeToString,
-        ),
+            'ListInstanceConfigs': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListInstanceConfigs,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsResponse.SerializeToString,
+            ),
+            'GetInstanceConfig': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetInstanceConfig,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceConfigRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.InstanceConfig.SerializeToString,
+            ),
+            'ListInstances': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListInstances,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesResponse.SerializeToString,
+            ),
+            'GetInstance': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetInstance,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceRequest.FromString,
+                    response_serializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.Instance.SerializeToString,
+            ),
+            'CreateInstance': grpc.unary_unary_rpc_method_handler(
+                    servicer.CreateInstance,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.CreateInstanceRequest.FromString,
+                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+            ),
+            'UpdateInstance': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdateInstance,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.UpdateInstanceRequest.FromString,
+                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+            ),
+            'DeleteInstance': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteInstance,
+                    request_deserializer=google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.DeleteInstanceRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'SetIamPolicy': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetIamPolicy,
+                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.FromString,
+                    response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
+            ),
+            'GetIamPolicy': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetIamPolicy,
+                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.FromString,
+                    response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
+            ),
+            'TestIamPermissions': grpc.unary_unary_rpc_method_handler(
+                    servicer.TestIamPermissions,
+                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.FromString,
+                    response_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-        "google.spanner.admin.instance.v1.InstanceAdmin", rpc_method_handlers
-    )
+            'google.spanner.admin.instance.v1.InstanceAdmin', rpc_method_handlers)
     server.add_generic_rpc_handlers((generic_handler,))
 
 
-# This class is part of an EXPERIMENTAL API.
+ # This class is part of an EXPERIMENTAL API.
 class InstanceAdmin(object):
     """Cloud Spanner Instance Admin API
 
@@ -370,271 +365,161 @@ class InstanceAdmin(object):
     """
 
     @staticmethod
-    def ListInstanceConfigs(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def ListInstanceConfigs(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstanceConfigs",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/ListInstanceConfigs',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsRequest.SerializeToString,
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstanceConfigsResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetInstanceConfig(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def GetInstanceConfig(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetInstanceConfig",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/GetInstanceConfig',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceConfigRequest.SerializeToString,
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.InstanceConfig.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def ListInstances(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def ListInstances(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstances",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/ListInstances',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesRequest.SerializeToString,
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.ListInstancesResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetInstance(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def GetInstance(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetInstance",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/GetInstance',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.GetInstanceRequest.SerializeToString,
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.Instance.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def CreateInstance(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def CreateInstance(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstance",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstance',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.CreateInstanceRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def UpdateInstance(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def UpdateInstance(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstance",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstance',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.UpdateInstanceRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def DeleteInstance(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def DeleteInstance(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstance",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstance',
             google_dot_cloud_dot_spanner__admin__instance__v1_dot_proto_dot_spanner__instance__admin__pb2.DeleteInstanceRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def SetIamPolicy(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def SetIamPolicy(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy',
             google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def GetIamPolicy(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def GetIamPolicy(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy',
             google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
-    def TestIamPermissions(
-        request,
-        target,
-        options=(),
-        channel_credentials=None,
-        call_credentials=None,
-        compression=None,
-        wait_for_ready=None,
-        timeout=None,
-        metadata=None,
-    ):
-        return grpc.experimental.unary_unary(
-            request,
+    def TestIamPermissions(request,
             target,
-            "/google.spanner.admin.instance.v1.InstanceAdmin/TestIamPermissions",
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/google.spanner.admin.instance.v1.InstanceAdmin/TestIamPermissions',
             google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.FromString,
-            options,
-            channel_credentials,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-        )
+            options, channel_credentials,
+            call_credentials, compression, wait_for_ready, timeout, metadata)
