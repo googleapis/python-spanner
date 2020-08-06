@@ -34,7 +34,9 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
+    "Received unexpected EOS on DATA frame from server",
 )
+
 
 def _restart_on_unavailable(restart, trace_name=None, session=None, attributes=None):
     """Restart iteration after :exc:`.ServiceUnavailable`.
