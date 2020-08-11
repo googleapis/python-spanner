@@ -261,7 +261,7 @@ class TestClient(unittest.TestCase):
         mock_em.return_value = "emulator.host"
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = ClientOptions("endpoint")
+        client_options = ClientOptions(api_endpoint="endpoint")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
@@ -359,7 +359,7 @@ class TestClient(unittest.TestCase):
         mock_em.return_value = "host:port"
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = ClientOptions("endpoint")
+        client_options = ClientOptions(api_endpoint="endpoint")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
