@@ -67,12 +67,6 @@ def default(session):
     # Install all test dependencies, then install this package in-place.
     session.install("mock", "pytest", "pytest-cov")
 
-    # Install opentelemetry dependencies if python3+
-    if session.python != "2.7":
-        session.install(
-            "opentelemetry-api", "opentelemetry-sdk", "opentelemetry-instrumentation"
-        )
-
     session.install("-e", ".")
 
     # Run py.test against the unit tests.
