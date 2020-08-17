@@ -116,12 +116,6 @@ def system(session):
     # virtualenv's dist-packages.
     session.install("mock", "pytest")
 
-    # Install opentelemetry dependencies if not 2.7
-    if session.python != "2.7":
-        session.install(
-            "opentelemetry-api", "opentelemetry-sdk", "opentelemetry-instrumentation"
-        )
-
     session.install("-e", ".")
     session.install("-e", "test_utils/")
 
