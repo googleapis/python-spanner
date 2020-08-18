@@ -67,7 +67,7 @@ def default(session):
     # Install all test dependencies, then install this package in-place.
     session.install("mock", "pytest", "pytest-cov")
 
-    session.install("-e", ".")
+    session.install("-e", ".[tracing]")
 
     # Run py.test against the unit tests.
     session.run(
@@ -116,7 +116,7 @@ def system(session):
     # virtualenv's dist-packages.
     session.install("mock", "pytest")
 
-    session.install("-e", ".")
+    session.install("-e", ".[tracing]")
     session.install("-e", "test_utils/")
 
     # Run py.test against the system tests.
