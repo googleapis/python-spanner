@@ -68,7 +68,7 @@ To programmatically use an emulator, you must specify the project, the endpoint 
       credentials=AnonymousCredentials()
   )
 
-To use an emulator via an environmental variable, set the `SPANNER_EMULATOR_HOST` environmental variable to the emulator endpoint:
+To use an emulator via an environment variable, set the `SPANNER_EMULATOR_HOST` environment variable to the emulator endpoint:
 
 .. code::
 
