@@ -20,7 +20,8 @@ from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
 
-from google.api_core.exceptions import ServiceUnavailable, InternalServerError
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import ServiceUnavailable
 import google.api_core.gapic_v1.method
 from google.cloud._helpers import _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _merge_query_options
