@@ -46,7 +46,7 @@ BASE_ATTRIBUTES = {
 
 class Test_restart_on_unavailable(OpenTelemetryBase):
     def _call_fut(self, restart, span_name=None, session=None, attributes=None):
-        from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
+        from google.cloud.spanner.snapshot import _restart_on_unavailable
 
         return _restart_on_unavailable(restart, span_name, session, attributes)
 
@@ -304,7 +304,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.snapshot import _SnapshotBase
+        from google.cloud.spanner.snapshot import _SnapshotBase
 
         return _SnapshotBase
 
@@ -919,7 +919,7 @@ class TestSnapshot(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         return Snapshot
 

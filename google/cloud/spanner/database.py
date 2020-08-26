@@ -29,22 +29,22 @@ import six
 
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_admin_database_v1.gapic import enums
-from google.cloud.spanner_v1._helpers import (
+from google.cloud.spanner._helpers import (
     _make_value_pb,
     _merge_query_options,
     _metadata_with_prefix,
 )
-from google.cloud.spanner_v1.backup import BackupInfo
-from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner.backup import BackupInfo
+from google.cloud.spanner.batch import Batch
 from google.cloud.spanner_v1.gapic.spanner_client import SpannerClient
 from google.cloud.spanner_v1.gapic.transports import spanner_grpc_transport
-from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.pool import SessionCheckout
-from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner.keyset import KeySet
+from google.cloud.spanner.pool import BurstyPool
+from google.cloud.spanner.pool import SessionCheckout
+from google.cloud.spanner.session import Session
+from google.cloud.spanner.snapshot import _restart_on_unavailable
+from google.cloud.spanner.snapshot import Snapshot
+from google.cloud.spanner.streamed import StreamedResultSet
 from google.cloud.spanner_v1.proto.transaction_pb2 import (
     TransactionSelector,
     TransactionOptions,

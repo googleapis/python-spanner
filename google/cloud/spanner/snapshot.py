@@ -24,14 +24,14 @@ from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 import google.api_core.gapic_v1.method
 from google.cloud._helpers import _datetime_to_pb_timestamp
-from google.cloud.spanner_v1._helpers import _merge_query_options
+from google.cloud.spanner._helpers import _merge_query_options
 from google.cloud._helpers import _timedelta_to_duration_pb
-from google.cloud.spanner_v1._helpers import _make_value_pb
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1._helpers import _SessionWrapper
-from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner._helpers import _make_value_pb
+from google.cloud.spanner._helpers import _metadata_with_prefix
+from google.cloud.spanner._helpers import _SessionWrapper
+from google.cloud.spanner.streamed import StreamedResultSet
 from google.cloud.spanner_v1.types import PartitionOptions
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner._opentelemetry_tracing import trace_call
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",

@@ -53,7 +53,7 @@ class TestTransaction(OpenTelemetryBase):
     }
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         return Transaction
 

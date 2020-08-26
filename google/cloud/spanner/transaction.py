@@ -17,16 +17,16 @@
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud._helpers import _pb_timestamp_to_datetime
-from google.cloud.spanner_v1._helpers import (
+from google.cloud.spanner._helpers import (
     _make_value_pb,
     _merge_query_options,
     _metadata_with_prefix,
 )
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
 from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
-from google.cloud.spanner_v1.snapshot import _SnapshotBase
-from google.cloud.spanner_v1.batch import _BatchBase
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner.snapshot import _SnapshotBase
+from google.cloud.spanner.batch import _BatchBase
+from google.cloud.spanner._opentelemetry_tracing import trace_call
 
 
 class Transaction(_SnapshotBase, _BatchBase):

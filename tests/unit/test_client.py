@@ -60,7 +60,7 @@ class TestClient(unittest.TestCase):
         expected_query_options=None,
     ):
         import google.api_core.client_options
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         kwargs = {}
 
@@ -109,7 +109,7 @@ class TestClient(unittest.TestCase):
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     @mock.patch("warnings.warn")
     def test_constructor_emulator_host_warning(self, mock_warn, mock_em):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
         from google.auth.credentials import AnonymousCredentials
 
         expected_scopes = None
@@ -121,7 +121,7 @@ class TestClient(unittest.TestCase):
         mock_warn.assert_called_once_with(MUT._EMULATOR_HOST_HTTP_SCHEME)
 
     def test_constructor_default_scopes(self):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
@@ -129,7 +129,7 @@ class TestClient(unittest.TestCase):
 
     @mock.patch("warnings.warn")
     def test_constructor_custom_user_agent_and_timeout(self, mock_warn):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         CUSTOM_USER_AGENT = "custom-application"
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
@@ -142,7 +142,7 @@ class TestClient(unittest.TestCase):
         )
 
     def test_constructor_custom_client_info(self):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         client_info = mock.Mock()
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
@@ -150,7 +150,7 @@ class TestClient(unittest.TestCase):
         self._constructor_test_helper(expected_scopes, creds, client_info=client_info)
 
     def test_constructor_implicit_credentials(self):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         creds = _make_credentials()
 
@@ -169,7 +169,7 @@ class TestClient(unittest.TestCase):
 
     def test_constructor_custom_client_options_obj(self):
         from google.api_core.client_options import ClientOptions
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
@@ -180,7 +180,7 @@ class TestClient(unittest.TestCase):
         )
 
     def test_constructor_custom_client_options_dict(self):
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
@@ -190,7 +190,7 @@ class TestClient(unittest.TestCase):
 
     def test_constructor_custom_query_options_client_config(self):
         from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
@@ -206,7 +206,7 @@ class TestClient(unittest.TestCase):
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_optimizer_version")
     def test_constructor_custom_query_options_env_config(self, mock_ver):
         from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
-        from google.cloud.spanner_v1 import client as MUT
+        from google.cloud.spanner import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
@@ -222,7 +222,7 @@ class TestClient(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_instance_admin_api(self, mock_em):
-        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
+        from google.cloud.spanner.client import SPANNER_ADMIN_SCOPE
         from google.api_core.client_options import ClientOptions
 
         mock_em.return_value = None
@@ -321,7 +321,7 @@ class TestClient(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_database_admin_api(self, mock_em):
-        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
+        from google.cloud.spanner.client import SPANNER_ADMIN_SCOPE
         from google.api_core.client_options import ClientOptions
 
         mock_em.return_value = None
@@ -444,7 +444,7 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1.proto import (
             spanner_instance_admin_pb2,
         )
-        from google.cloud.spanner_v1.client import InstanceConfig
+        from google.cloud.spanner.client import InstanceConfig
 
         api = instance_admin_client.InstanceAdminClient(mock.Mock())
         credentials = _make_credentials()
@@ -523,8 +523,8 @@ class TestClient(unittest.TestCase):
         )
 
     def test_instance_factory_defaults(self):
-        from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
-        from google.cloud.spanner_v1.instance import Instance
+        from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
+        from google.cloud.spanner.instance import Instance
 
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
@@ -539,7 +539,7 @@ class TestClient(unittest.TestCase):
         self.assertIs(instance._client, client)
 
     def test_instance_factory_explicit(self):
-        from google.cloud.spanner_v1.instance import Instance
+        from google.cloud.spanner.instance import Instance
 
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
@@ -563,7 +563,7 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1.proto import (
             spanner_instance_admin_pb2,
         )
-        from google.cloud.spanner_v1.client import Instance
+        from google.cloud.spanner.client import Instance
 
         api = instance_admin_client.InstanceAdminClient(mock.Mock())
         credentials = _make_credentials()

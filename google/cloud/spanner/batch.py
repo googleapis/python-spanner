@@ -19,10 +19,10 @@ from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
 
 # pylint: disable=ungrouped-imports
 from google.cloud._helpers import _pb_timestamp_to_datetime
-from google.cloud.spanner_v1._helpers import _SessionWrapper
-from google.cloud.spanner_v1._helpers import _make_list_value_pbs
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner._helpers import _SessionWrapper
+from google.cloud.spanner._helpers import _make_list_value_pbs
+from google.cloud.spanner._helpers import _metadata_with_prefix
+from google.cloud.spanner._opentelemetry_tracing import trace_call
 
 # pylint: enable=ungrouped-imports
 

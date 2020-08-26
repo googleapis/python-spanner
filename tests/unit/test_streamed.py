@@ -20,7 +20,7 @@ import mock
 
 class TestStreamedResultSet(unittest.TestCase):
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.streamed import StreamedResultSet
+        from google.cloud.spanner.streamed import StreamedResultSet
 
         return StreamedResultSet
 
@@ -143,7 +143,7 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertIs(streamed.stats, stats)
 
     def test__merge_chunk_bool(self):
-        from google.cloud.spanner_v1.streamed import Unmergeable
+        from google.cloud.spanner.streamed import Unmergeable
 
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -190,7 +190,7 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertEqual(merged.number_value, 3.14159)
 
     def test__merge_chunk_float64_w_float64(self):
-        from google.cloud.spanner_v1.streamed import Unmergeable
+        from google.cloud.spanner.streamed import Unmergeable
 
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -878,7 +878,7 @@ class TestStreamedResultSet_JSON_acceptance_tests(unittest.TestCase):
     _json_tests = None
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.streamed import StreamedResultSet
+        from google.cloud.spanner.streamed import StreamedResultSet
 
         return StreamedResultSet
 

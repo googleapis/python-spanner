@@ -865,7 +865,7 @@ class TestDatabase(_BaseTest):
         self._execute_partitioned_dml_helper(dml=DML_WO_PARAM, retried=True)
 
     def test_session_factory_defaults(self):
-        from google.cloud.spanner_v1.session import Session
+        from google.cloud.spanner.session import Session
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -880,7 +880,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, {})
 
     def test_session_factory_w_labels(self):
-        from google.cloud.spanner_v1.session import Session
+        from google.cloud.spanner.session import Session
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1299,7 +1299,7 @@ class TestSnapshotCheckout(_BaseTest):
         return SnapshotCheckout
 
     def test_ctor_defaults(self):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
@@ -1322,7 +1322,7 @@ class TestSnapshotCheckout(_BaseTest):
     def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
         from google.cloud._helpers import UTC
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         database = _Database(self.DATABASE_NAME)
@@ -1344,7 +1344,7 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     def test_context_mgr_failure(self):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
         pool = database._pool = _Pool()
@@ -1384,13 +1384,13 @@ class TestBatchSnapshot(_BaseTest):
 
     @staticmethod
     def _make_session(**kwargs):
-        from google.cloud.spanner_v1.session import Session
+        from google.cloud.spanner.session import Session
 
         return mock.create_autospec(Session, instance=True, **kwargs)
 
     @staticmethod
     def _make_snapshot(transaction_id=None, **kwargs):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         snapshot = mock.create_autospec(Snapshot, instance=True, **kwargs)
         if transaction_id is not None:

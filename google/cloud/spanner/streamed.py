@@ -21,7 +21,7 @@ from google.cloud.spanner_v1.proto import type_pb2
 import six
 
 # pylint: disable=ungrouped-imports
-from google.cloud.spanner_v1._helpers import _parse_value_pb
+from google.cloud.spanner._helpers import _parse_value_pb
 
 # pylint: enable=ungrouped-imports
 

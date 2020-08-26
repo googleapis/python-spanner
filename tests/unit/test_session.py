@@ -52,7 +52,7 @@ class TestSession(OpenTelemetryBase):
     }
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.session import Session
+        from google.cloud.spanner.session import Session
 
         return Session
 
@@ -404,7 +404,7 @@ class TestSession(OpenTelemetryBase):
             session.snapshot()
 
     def test_snapshot_created(self):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         database = self._make_database()
         session = self._make_one(database)
@@ -418,7 +418,7 @@ class TestSession(OpenTelemetryBase):
         self.assertFalse(snapshot._multi_use)
 
     def test_snapshot_created_w_multi_use(self):
-        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner.snapshot import Snapshot
 
         database = self._make_database()
         session = self._make_one(database)
@@ -578,7 +578,7 @@ class TestSession(OpenTelemetryBase):
             session.transaction()
 
     def test_transaction_created(self):
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         database = self._make_database()
         session = self._make_one(database)
@@ -606,7 +606,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -664,7 +664,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -718,7 +718,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -771,7 +771,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_commit_error(self):
         from google.api_core.exceptions import Unknown
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -826,7 +826,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -901,7 +901,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -989,7 +989,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1069,7 +1069,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
@@ -1152,7 +1152,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1231,7 +1231,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_delay_helper_w_no_delay(self):
-        from google.cloud.spanner_v1.session import _delay_until_retry
+        from google.cloud.spanner.session import _delay_until_retry
 
         metadata_mock = mock.Mock()
         metadata_mock.trailing_metadata.return_value = {}

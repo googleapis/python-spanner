@@ -20,7 +20,7 @@ from google.cloud._helpers import _datetime_to_pb_timestamp, _pb_timestamp_to_da
 from google.cloud.exceptions import NotFound
 
 from google.cloud.spanner_admin_database_v1.gapic import enums
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner._helpers import _metadata_with_prefix
 
 _BACKUP_NAME_RE = re.compile(
     r"^projects/(?P<project>[^/]+)/"

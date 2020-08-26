@@ -41,13 +41,13 @@ class _BaseTest(unittest.TestCase):
 
 class TestBackup(_BaseTest):
     def _get_target_class(self):
-        from google.cloud.spanner_v1.backup import Backup
+        from google.cloud.spanner.backup import Backup
 
         return Backup
 
     @staticmethod
     def _make_database_admin_api():
-        from google.cloud.spanner_v1.client import DatabaseAdminClient
+        from google.cloud.spanner.client import DatabaseAdminClient
 
         return mock.create_autospec(DatabaseAdminClient, instance=True)
 
@@ -558,7 +558,7 @@ class TestBackup(_BaseTest):
 class TestBackupInfo(_BaseTest):
     def test_from_pb(self):
         from google.cloud.spanner_admin_database_v1.proto import backup_pb2
-        from google.cloud.spanner_v1.backup import BackupInfo
+        from google.cloud.spanner.backup import BackupInfo
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
         backup_name = "backup_name"

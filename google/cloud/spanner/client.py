@@ -50,10 +50,10 @@ from google.cloud.spanner_admin_instance_v1.gapic.instance_admin_client import (
 # pylint: enable=line-too-long
 
 from google.cloud.client import ClientWithProject
-from google.cloud.spanner_v1 import __version__
-from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
-from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
-from google.cloud.spanner_v1.instance import Instance
+from google.cloud.spanner import __version__
+from google.cloud.spanner._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
+from google.cloud.spanner.instance import Instance
 from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)

@@ -19,7 +19,7 @@ import datetime
 from six.moves import queue
 
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner._helpers import _metadata_with_prefix
 
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace

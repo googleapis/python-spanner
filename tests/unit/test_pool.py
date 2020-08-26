@@ -833,7 +833,7 @@ class TestSessionCheckout(unittest.TestCase):
 
 
 def _make_transaction(*args, **kw):
-    from google.cloud.spanner_v1.transaction import Transaction
+    from google.cloud.spanner.transaction import Transaction
 
     txn = mock.create_autospec(Transaction)(*args, **kw)
     txn.committed = None
