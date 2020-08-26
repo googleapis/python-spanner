@@ -18,10 +18,10 @@ This is the base from which all interactions with the API occur.
 
 In the hierarchy of API concepts
 
-* a :class:`~google.cloud.spanner_v1.client.Client` owns an
-  :class:`~google.cloud.spanner_v1.instance.Instance`
-* a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
-  :class:`~google.cloud.spanner_v1.database.Database`
+* a :class:`~google.cloud.spanner.client.Client` owns an
+  :class:`~google.cloud.spanner.instance.Instance`
+* a :class:`~google.cloud.spanner.instance.Instance` owns a
+  :class:`~google.cloud.spanner.database.Database`
 """
 import grpc
 import os
@@ -31,21 +31,18 @@ from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
 import google.api_core.client_options
 
-from google.cloud.spanner_admin_instance_v1.gapic.transports import (
-    instance_admin_grpc_transport,
-)
-
-from google.cloud.spanner_admin_database_v1.gapic.transports import (
-    database_admin_grpc_transport,
-)
-
 # pylint: disable=line-too-long
-from google.cloud.spanner_admin_database_v1.gapic.database_admin_client import (  # noqa
-    DatabaseAdminClient,
+
+from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
+    InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1.gapic.instance_admin_client import (  # noqa
-    InstanceAdminClient,
+
+from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
+    DatabaseAdminGrpcTransport,
 )
+
+from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
+from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 
 # pylint: enable=line-too-long
 
@@ -54,7 +51,7 @@ from google.cloud.spanner import __version__
 from google.cloud.spanner._helpers import _merge_query_options, _metadata_with_prefix
 from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
 from google.cloud.spanner.instance import Instance
-from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
@@ -146,12 +143,12 @@ class Client(ClientWithProject):
         on the client. API Endpoint should be set through client_options.
 
     :type query_options:
-        :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+        :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
         or :class:`dict`
     :param query_options:
         (Optional) Query optimizer configuration to use for the given query.
         If a dict is provided, it must be of the same form as the protobuf
-        message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+        message :class:`~google.cloud.spanner_v1.QueryOptions`
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
@@ -249,7 +246,7 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._instance_admin_api is None:
             if self._emulator_host is not None:
-                transport = instance_admin_grpc_transport.InstanceAdminGrpcTransport(
+                transport = InstanceAdminGrpcTransport(
                     channel=grpc.insecure_channel(target=self._emulator_host)
                 )
                 self._instance_admin_api = InstanceAdminClient(
@@ -270,7 +267,7 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._database_admin_api is None:
             if self._emulator_host is not None:
-                transport = database_admin_grpc_transport.DatabaseAdminGrpcTransport(
+                transport = DatabaseAdminGrpcTransport(
                     channel=grpc.insecure_channel(target=self._emulator_host)
                 )
                 self._database_admin_api = DatabaseAdminClient(
@@ -323,7 +320,7 @@ class Client(ClientWithProject):
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
             Iterator of
-            :class:`~google.cloud.spanner_v1.instance.InstanceConfig`
+            :class:`~google.cloud.spanner.instance.InstanceConfig`
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)
@@ -365,7 +362,7 @@ class Client(ClientWithProject):
         :param node_count: (Optional) The number of nodes in the instance's
                             cluster; used to set up the instance's cluster.
 
-        :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
+        :rtype: :class:`~google.cloud.spanner.instance.Instance`
         :returns: an instance owned by this client.
         """
         return Instance(
@@ -403,7 +400,7 @@ class Client(ClientWithProject):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.instance.Instance`
+            Iterator of :class:`~google.cloud.spanner.instance.Instance`
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)
@@ -424,7 +421,7 @@ class Client(ClientWithProject):
         :type instance_pb: :class:`~google.spanner.admin.instance.v1.Instance`
         :param instance_pb: An instance returned from the API.
 
-        :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
+        :rtype: :class:`~google.cloud.spanner.instance.Instance`
         :returns: The next instance in the page.
         """
         return Instance.from_pb(instance_pb, self)
@@ -440,7 +437,7 @@ def _item_to_instance_config(iterator, config_pb):  # pylint: disable=unused-arg
         :class:`~google.spanner.admin.instance.v1.InstanceConfig`
     :param config_pb: An instance config returned from the API.
 
-    :rtype: :class:`~google.cloud.spanner_v1.instance.InstanceConfig`
+    :rtype: :class:`~google.cloud.spanner.instance.InstanceConfig`
     :returns: The next instance config in the page.
     """
     return InstanceConfig.from_pb(config_pb)

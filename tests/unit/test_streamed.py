@@ -54,15 +54,15 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_scalar_field(name, type_):
-        from google.cloud.spanner_v1.proto.type_pb2 import StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import Type
 
         return StructType.Field(name=name, type=Type(code=type_))
 
     @staticmethod
     def _make_array_field(name, element_type_code=None, element_type=None):
-        from google.cloud.spanner_v1.proto.type_pb2 import StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import Type
 
         if element_type is None:
             element_type = Type(code=element_type_code)
@@ -71,8 +71,8 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_struct_type(struct_type_fields):
-        from google.cloud.spanner_v1.proto.type_pb2 import StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import Type
 
         fields = [
             StructType.Field(name=key, type=Type(code=value))
@@ -83,7 +83,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_value(value):
-        from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner._helpers import _make_value_pb
 
         return _make_value_pb(value)
 
@@ -91,7 +91,7 @@ class TestStreamedResultSet(unittest.TestCase):
     def _make_list_value(values=(), value_pbs=None):
         from google.protobuf.struct_pb2 import ListValue
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1._helpers import _make_list_value_pb
+        from google.cloud.spanner._helpers import _make_list_value_pb
 
         if value_pbs is not None:
             return Value(list_value=ListValue(values=value_pbs))
@@ -99,7 +99,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_result_set_metadata(fields=(), transaction_id=None):
-        from google.cloud.spanner_v1.proto.result_set_pb2 import ResultSetMetadata
+        from google.cloud.spanner_v1 import ResultSetMetadata
 
         metadata = ResultSetMetadata()
         for field in fields:
@@ -110,9 +110,9 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_result_set_stats(query_plan=None, **kw):
-        from google.cloud.spanner_v1.proto.result_set_pb2 import ResultSetStats
+        from google.cloud.spanner_v1 import ResultSetStats
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner._helpers import _make_value_pb
 
         query_stats = Struct(
             fields={key: _make_value_pb(value) for key, value in kw.items()}
@@ -123,7 +123,7 @@ class TestStreamedResultSet(unittest.TestCase):
     def _make_partial_result_set(
         values, metadata=None, stats=None, chunked_value=False
     ):
-        from google.cloud.spanner_v1.proto.result_set_pb2 import PartialResultSet
+        from google.cloud.spanner_v1 import PartialResultSet
 
         return PartialResultSet(
             values=values, metadata=metadata, stats=stats, chunked_value=chunked_value
@@ -330,8 +330,8 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     def test__merge_chunk_array_of_array_of_int(self):
-        from google.cloud.spanner_v1.proto.type_pb2 import StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import Type
 
         subarray_type = Type(code="ARRAY", array_element_type=Type(code="INT64"))
         array_type = Type(code="ARRAY", array_element_type=subarray_type)
@@ -359,8 +359,8 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     def test__merge_chunk_array_of_array_of_string(self):
-        from google.cloud.spanner_v1.proto.type_pb2 import StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import Type
 
         subarray_type = Type(code="ARRAY", array_element_type=Type(code="STRING"))
         array_type = Type(code="ARRAY", array_element_type=subarray_type)
@@ -980,7 +980,7 @@ class TestStreamedResultSet_JSON_acceptance_tests(unittest.TestCase):
 
 def _generate_partial_result_sets(prs_text_pbs):
     from google.protobuf.json_format import Parse
-    from google.cloud.spanner_v1.proto.result_set_pb2 import PartialResultSet
+    from google.cloud.spanner_v1 import PartialResultSet
 
     partial_result_sets = []
 
@@ -1013,23 +1013,23 @@ def _normalize_float(cell):
 
 def _normalize_results(rows_data, fields):
     """Helper for _parse_streaming_read_acceptance_tests"""
-    from google.cloud.spanner_v1.proto import type_pb2
+    from google.cloud.spanner_v1 import TypeCode
 
     normalized = []
     for row_data in rows_data:
         row = []
         assert len(row_data) == len(fields)
         for cell, field in zip(row_data, fields):
-            if field.type.code == type_pb2.INT64:
+            if field.type.code == TypeCode.INT64:
                 cell = int(cell)
-            if field.type.code == type_pb2.FLOAT64:
+            if field.type.code == TypeCode.FLOAT64:
                 cell = _normalize_float(cell)
-            elif field.type.code == type_pb2.BYTES:
+            elif field.type.code == TypeCode.BYTES:
                 cell = cell.encode("utf8")
-            elif field.type.code == type_pb2.ARRAY:
-                if field.type.array_element_type.code == type_pb2.INT64:
+            elif field.type.code == TypeCode.ARRAY:
+                if field.type.array_element_type.code == TypeCode.INT64:
                     cell = _normalize_int_array(cell)
-                elif field.type.array_element_type.code == type_pb2.FLOAT64:
+                elif field.type.array_element_type.code == TypeCode.FLOAT64:
                     cell = [_normalize_float(subcell) for subcell in cell]
             row.append(cell)
         normalized.append(row)

@@ -15,20 +15,21 @@
 """Wrapper for Cloud Spanner Session objects."""
 
 from functools import total_ordering
+import random
 import time
 
 from google.rpc.error_details_pb2 import RetryInfo
 
 # pylint: disable=ungrouped-imports
-from google.api_core.exceptions import Aborted, GoogleAPICallError, NotFound
+from google.api_core.exceptions import Aborted
+from google.api_core.exceptions import GoogleAPICallError
+from google.api_core.exceptions import NotFound
 import google.api_core.gapic_v1.method
 from google.cloud.spanner._helpers import _metadata_with_prefix
+from google.cloud.spanner._opentelemetry_tracing import trace_call
 from google.cloud.spanner.batch import Batch
 from google.cloud.spanner.snapshot import Snapshot
 from google.cloud.spanner.transaction import Transaction
-from google.cloud.spanner._opentelemetry_tracing import trace_call
-import random
-
 # pylint: enable=ungrouped-imports
 
 
@@ -46,7 +47,7 @@ class Session(object):
     * Use :meth:`exists` to check for the existence of the session
     * :meth:`drop` the session
 
-    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :type database: :class:`~google.cloud.spanner.database.Database`
     :param database: The database to which the session is bound.
 
     :type labels: dict (str -> str)
@@ -183,9 +184,9 @@ class Session(object):
 
         :type kw: dict
         :param kw: Passed through to
-                   :class:`~google.cloud.spanner_v1.snapshot.Snapshot` ctor.
+                   :class:`~google.cloud.spanner.snapshot.Snapshot` ctor.
 
-        :rtype: :class:`~google.cloud.spanner_v1.snapshot.Snapshot`
+        :rtype: :class:`~google.cloud.spanner.snapshot.Snapshot`
         :returns: a snapshot bound to this session
         :raises ValueError: if the session has not yet been created.
         """
@@ -203,7 +204,7 @@ class Session(object):
         :type columns: list of str
         :param columns: names of columns to be retrieved
 
-        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
+        :type keyset: :class:`~google.cloud.spanner.keyset.KeySet`
         :param keyset: keys / ranges identifying rows to be retrieved
 
         :type index: str
@@ -213,7 +214,7 @@ class Session(object):
         :type limit: int
         :param limit: (Optional) maximum number of rows to return
 
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         return self.snapshot().read(table, columns, keyset, index, limit)
@@ -249,11 +250,11 @@ class Session(object):
             `QueryMode <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode>`_.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
 
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         return self.snapshot().execute_sql(
@@ -269,7 +270,7 @@ class Session(object):
     def batch(self):
         """Factory to create a batch for this session.
 
-        :rtype: :class:`~google.cloud.spanner_v1.batch.Batch`
+        :rtype: :class:`~google.cloud.spanner.batch.Batch`
         :returns: a batch bound to this session
         :raises ValueError: if the session has not yet been created.
         """
@@ -281,7 +282,7 @@ class Session(object):
     def transaction(self):
         """Create a transaction to perform a set of reads with shared staleness.
 
-        :rtype: :class:`~google.cloud.spanner_v1.transaction.Transaction`
+        :rtype: :class:`~google.cloud.spanner.transaction.Transaction`
         :returns: a transaction bound to this session
         :raises ValueError: if the session has not yet been created.
         """

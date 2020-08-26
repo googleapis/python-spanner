@@ -14,8 +14,8 @@
 
 """Context manager for Cloud Spanner batched writes."""
 
-from google.cloud.spanner_v1.proto.mutation_pb2 import Mutation
-from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
+from google.cloud.spanner_v1 import Mutation
+from google.cloud.spanner_v1 import TransactionOptions
 
 # pylint: disable=ungrouped-imports
 from google.cloud._helpers import _pb_timestamp_to_datetime
@@ -30,7 +30,7 @@ from google.cloud.spanner._opentelemetry_tracing import trace_call
 class _BatchBase(_SessionWrapper):
     """Accumulate mutations for transmission during :meth:`commit`.
 
-    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :type session: :class:`~google.cloud.spanner.session.Session`
     :param session: the session used to perform the commit
     """
 
@@ -112,7 +112,7 @@ class _BatchBase(_SessionWrapper):
         :type table: str
         :param table: Name of the table to be modified.
 
-        :type keyset: :class:`~google.cloud.spanner_v1.keyset.Keyset`
+        :type keyset: :class:`~google.cloud.spanner.keyset.Keyset`
         :param keyset: Keys/ranges identifying rows to delete.
         """
         delete = Mutation.Delete(table=table, key_set=keyset._to_pb())
@@ -183,7 +183,7 @@ def _make_write_pb(table, columns, values):
     :type values: list of lists
     :param values: Values to be modified.
 
-    :rtype: :class:`google.cloud.spanner_v1.proto.mutation_pb2.Mutation.Write`
+    :rtype: :class:`google.cloud.spanner_v1.Mutation.Write`
     :returns: Write protobuf
     """
     return Mutation.Write(

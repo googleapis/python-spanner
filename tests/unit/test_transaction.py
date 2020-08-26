@@ -63,11 +63,9 @@ class TestTransaction(OpenTelemetryBase):
         return transaction
 
     def _make_spanner_api(self):
-        import google.cloud.spanner_v1.gapic.spanner_client
+        from google.cloud.spanner_v1 import SpannerClient
 
-        return mock.create_autospec(
-            google.cloud.spanner_v1.gapic.spanner_client.SpannerClient, instance=True
-        )
+        return mock.create_autospec(SpannerClient, instance=True)
 
     def test_ctor_session_w_existing_txn(self):
         session = _Session()
@@ -164,7 +162,7 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_begin_ok(self):
-        from google.cloud.spanner_v1.proto.transaction_pb2 import (
+        from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
         )
 
@@ -313,8 +311,8 @@ class TestTransaction(OpenTelemetryBase):
 
     def _commit_helper(self, mutate=True):
         import datetime
-        from google.cloud.spanner_v1.proto.spanner_pb2 import CommitResponse
-        from google.cloud.spanner_v1.keyset import KeySet
+        from google.cloud.spanner_v1 import CommitResponse
+        from google.cloud.spanner.keyset import KeySet
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
@@ -373,7 +371,7 @@ class TestTransaction(OpenTelemetryBase):
 
     def test__make_params_pb_w_params_w_param_types(self):
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner._helpers import _make_value_pb
 
         session = _Session()
         transaction = self._make_one(session)
@@ -409,12 +407,12 @@ class TestTransaction(OpenTelemetryBase):
 
     def _execute_update_helper(self, count=0, query_options=None):
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1.proto.result_set_pb2 import (
+        from google.cloud.spanner_v1 import (
             ResultSet,
             ResultSetStats,
         )
-        from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
-        from google.cloud.spanner_v1._helpers import (
+        from google.cloud.spanner_v1 import TransactionSelector
+        from google.cloud.spanner._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
@@ -484,7 +482,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._execute_sql_count, 1)
 
     def test_execute_update_w_query_options(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._execute_update_helper(
             query_options=ExecuteSqlRequest.QueryOptions(optimizer_version="3")
@@ -504,11 +502,11 @@ class TestTransaction(OpenTelemetryBase):
     def _batch_update_helper(self, error_after=None, count=0):
         from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1.proto.result_set_pb2 import ResultSet
-        from google.cloud.spanner_v1.proto.result_set_pb2 import ResultSetStats
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteBatchDmlResponse
-        from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
-        from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner_v1 import ResultSet
+        from google.cloud.spanner_v1 import ResultSetStats
+        from google.cloud.spanner_v1 import ExecuteBatchDmlResponse
+        from google.cloud.spanner_v1 import TransactionSelector
+        from google.cloud.spanner._helpers import _make_value_pb
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
@@ -610,8 +608,8 @@ class TestTransaction(OpenTelemetryBase):
 
     def test_context_mgr_success(self):
         import datetime
-        from google.cloud.spanner_v1.proto.spanner_pb2 import CommitResponse
-        from google.cloud.spanner_v1.proto.transaction_pb2 import (
+        from google.cloud.spanner_v1 import CommitResponse
+        from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
         )
         from google.cloud._helpers import UTC
@@ -644,7 +642,7 @@ class TestTransaction(OpenTelemetryBase):
         from google.protobuf.empty_pb2 import Empty
 
         empty_pb = Empty()
-        from google.cloud.spanner_v1.proto.transaction_pb2 import (
+        from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
         )
 
@@ -675,7 +673,7 @@ class TestTransaction(OpenTelemetryBase):
 
 class _Client(object):
     def __init__(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
 

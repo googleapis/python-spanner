@@ -17,7 +17,7 @@
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
 from google.cloud import exceptions
-from google.cloud.spanner_v1.proto import type_pb2
+from google.cloud.spanner_v1 import TypeCode
 import six
 
 # pylint: disable=ungrouped-imports
@@ -32,10 +32,10 @@ class StreamedResultSet(object):
     :type response_iterator:
     :param response_iterator:
         Iterator yielding
-        :class:`~google.cloud.spanner_v1.proto.result_set_pb2.PartialResultSet`
+        :class:`~google.cloud.spanner_v1.PartialResultSet`
         instances.
 
-    :type source: :class:`~google.cloud.spanner_v1.snapshot.Snapshot`
+    :type source: :class:`~google.cloud.spanner.snapshot.Snapshot`
     :param source: Snapshot from which the result set was fetched.
     """
 
@@ -52,7 +52,7 @@ class StreamedResultSet(object):
     def fields(self):
         """Field descriptors for result set columns.
 
-        :rtype: list of :class:`~google.cloud.spanner_v1.proto.type_pb2.Field`
+        :rtype: list of :class:`~google.cloud.spanner_v1.StructType.Field`
         :returns: list of fields describing column names / types.
         """
         return self._metadata.row_type.fields
@@ -61,7 +61,7 @@ class StreamedResultSet(object):
     def metadata(self):
         """Result set metadata
 
-        :rtype: :class:`~.result_set_pb2.ResultSetMetadata`
+        :rtype: :class:`~google.cloud.spanner_v1.ResultSetMetadata`
         :returns: structure describing the results
         """
         return self._metadata
@@ -71,7 +71,7 @@ class StreamedResultSet(object):
         """Result set statistics
 
         :rtype:
-           :class:`~google.cloud.spanner_v1.proto.result_set_pb2.ResultSetStats`
+           :class:`~google.cloud.spanner_v1.ResultSetStats`
         :returns: structure describing status about the response
         """
         return self._stats
@@ -199,13 +199,13 @@ class Unmergeable(ValueError):
     :type rhs: :class:`~google.protobuf.struct_pb2.Value`
     :param rhs: remaining value to be merged
 
-    :type type_: :class:`~google.cloud.spanner_v1.proto.type_pb2.Type`
+    :type type_: :class:`~google.cloud.spanner_v1.Type`
     :param type_: field type of values being merged
     """
 
     def __init__(self, lhs, rhs, type_):
         message = "Cannot merge %s values: %s %s" % (
-            type_pb2.TypeCode.Name(type_.code),
+            TypeCode.Name(type_.code),
             lhs,
             rhs,
         )
@@ -238,7 +238,7 @@ def _merge_string(lhs, rhs, type_):  # pylint: disable=unused-argument
     return Value(string_value=lhs.string_value + rhs.string_value)
 
 
-_UNMERGEABLE_TYPES = (type_pb2.BOOL,)
+_UNMERGEABLE_TYPES = (TypeCode.BOOL,)
 
 
 def _merge_array(lhs, rhs, type_):
@@ -297,15 +297,15 @@ def _merge_struct(lhs, rhs, type_):
 
 
 _MERGE_BY_TYPE = {
-    type_pb2.ARRAY: _merge_array,
-    type_pb2.BOOL: _unmergeable,
-    type_pb2.BYTES: _merge_string,
-    type_pb2.DATE: _merge_string,
-    type_pb2.FLOAT64: _merge_float64,
-    type_pb2.INT64: _merge_string,
-    type_pb2.STRING: _merge_string,
-    type_pb2.STRUCT: _merge_struct,
-    type_pb2.TIMESTAMP: _merge_string,
+    TypeCode.ARRAY: _merge_array,
+    TypeCode.BOOL: _unmergeable,
+    TypeCode.BYTES: _merge_string,
+    TypeCode.DATE: _merge_string,
+    TypeCode.FLOAT64: _merge_float64,
+    TypeCode.INT64: _merge_string,
+    TypeCode.STRING: _merge_string,
+    TypeCode.STRUCT: _merge_struct,
+    TypeCode.TIMESTAMP: _merge_string,
 }
 
 

@@ -22,8 +22,8 @@ from google.cloud.spanner._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
 )
-from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionSelector
-from google.cloud.spanner_v1.proto.transaction_pb2 import TransactionOptions
+from google.cloud.spanner_v1 import TransactionSelector
+from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner.snapshot import _SnapshotBase
 from google.cloud.spanner.batch import _BatchBase
 from google.cloud.spanner._opentelemetry_tracing import trace_call
@@ -32,7 +32,7 @@ from google.cloud.spanner._opentelemetry_tracing import trace_call
 class Transaction(_SnapshotBase, _BatchBase):
     """Implement read-write transaction semantics for a session.
 
-    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :type session: :class:`~google.cloud.spanner.session.Session`
     :param session: the session used to perform the commit
 
     :raises ValueError: if session has an existing transaction
@@ -188,13 +188,13 @@ class Transaction(_SnapshotBase, _BatchBase):
             required if parameters are passed.
 
         :type query_mode:
-            :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryMode`
+            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryMode`
         :param query_mode: Mode governing return of results / query plan.
             See:
             `QueryMode <https://cloud.google.com/spanner/reference/rpc/google.spanner.v1#google.spanner.v1.ExecuteSqlRequest.QueryMode>`_.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
 

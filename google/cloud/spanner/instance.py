@@ -17,22 +17,18 @@
 import google.api_core.operation
 import re
 
-from google.cloud.spanner_admin_instance_v1.proto import (
-    spanner_instance_admin_pb2 as admin_v1_pb2,
-)
-from google.cloud.spanner_admin_database_v1.proto import (
-    backup_pb2,
-    spanner_database_admin_pb2,
-)
+from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
+from google.cloud.spanner_admin_database_v1.types import backup
+from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.field_mask_pb2 import FieldMask
 
 # pylint: disable=ungrouped-imports
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1.backup import Backup
-from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner._helpers import _metadata_with_prefix
+from google.cloud.spanner.backup import Backup
+from google.cloud.spanner.database import Database
+from google.cloud.spanner.pool import BurstyPool
 
 # pylint: enable=ungrouped-imports
 
@@ -44,26 +40,26 @@ _INSTANCE_NAME_RE = re.compile(
 DEFAULT_NODE_COUNT = 1
 
 _OPERATION_METADATA_MESSAGES = (
-    backup_pb2.Backup,
-    backup_pb2.CreateBackupMetadata,
-    spanner_database_admin_pb2.CreateDatabaseMetadata,
-    spanner_database_admin_pb2.Database,
-    spanner_database_admin_pb2.OptimizeRestoredDatabaseMetadata,
-    spanner_database_admin_pb2.RestoreDatabaseMetadata,
-    spanner_database_admin_pb2.UpdateDatabaseDdlMetadata,
+    backup.Backup,
+    backup.CreateBackupMetadata,
+    spanner_database_admin.CreateDatabaseMetadata,
+    spanner_database_admin.Database,
+    spanner_database_admin.OptimizeRestoredDatabaseMetadata,
+    spanner_database_admin.RestoreDatabaseMetadata,
+    spanner_database_admin.UpdateDatabaseDdlMetadata,
 )
 
 _OPERATION_METADATA_TYPES = {
-    "type.googleapis.com/{}".format(message.DESCRIPTOR.full_name): message
+    "type.googleapis.com/{}".format(message._meta.full_name): message
     for message in _OPERATION_METADATA_MESSAGES
 }
 
 _OPERATION_RESPONSE_TYPES = {
-    backup_pb2.CreateBackupMetadata: backup_pb2.Backup,
-    spanner_database_admin_pb2.CreateDatabaseMetadata: spanner_database_admin_pb2.Database,
-    spanner_database_admin_pb2.OptimizeRestoredDatabaseMetadata: spanner_database_admin_pb2.Database,
-    spanner_database_admin_pb2.RestoreDatabaseMetadata: spanner_database_admin_pb2.Database,
-    spanner_database_admin_pb2.UpdateDatabaseDdlMetadata: Empty,
+    backup.CreateBackupMetadata: backup.Backup,
+    spanner_database_admin.CreateDatabaseMetadata: spanner_database_admin.Database,
+    spanner_database_admin.OptimizeRestoredDatabaseMetadata: spanner_database_admin.Database,
+    spanner_database_admin.RestoreDatabaseMetadata: spanner_database_admin.Database,
+    spanner_database_admin.UpdateDatabaseDdlMetadata: Empty,
 }
 
 
@@ -84,7 +80,7 @@ class Instance(object):
     :type instance_id: str
     :param instance_id: The ID of the instance.
 
-    :type client: :class:`~google.cloud.spanner_v1.client.Client`
+    :type client: :class:`~google.cloud.spanner.client.Client`
     :param client: The client that owns the instance. Provides
                    authorization and a project ID.
 
@@ -138,7 +134,7 @@ class Instance(object):
             :class:`~google.spanner.v2.spanner_instance_admin_pb2.Instance`
         :param instance_pb: A instance protobuf object.
 
-        :type client: :class:`~google.cloud.spanner_v1.client.Client`
+        :type client: :class:`~google.cloud.spanner.client.Client`
         :param client: The client that owns the instance.
 
         :rtype: :class:`Instance`
@@ -203,7 +199,7 @@ class Instance(object):
         Copies the local data stored as simple types and copies the client
         attached to this instance.
 
-        :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
+        :rtype: :class:`~google.cloud.spanner.instance.Instance`
         :returns: A copy of the current instance.
         """
         new_client = self._client.copy()
@@ -239,7 +235,7 @@ class Instance(object):
         :raises Conflict: if the instance already exists
         """
         api = self._client.instance_admin_api
-        instance_pb = admin_v1_pb2.Instance(
+        instance_pb = InstancePB(
             name=self.name,
             config=self.configuration_name,
             display_name=self.display_name,
@@ -313,7 +309,7 @@ class Instance(object):
         :raises NotFound: if the instance does not exist
         """
         api = self._client.instance_admin_api
-        instance_pb = admin_v1_pb2.Instance(
+        instance_pb = InstancePB(
             name=self.name,
             config=self.configuration_name,
             display_name=self.display_name,
@@ -359,10 +355,10 @@ class Instance(object):
                                'CREATE DATABSE' statement.
 
         :type pool: concrete subclass of
-                    :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
+                    :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.Database`
+        :rtype: :class:`~google.cloud.spanner.database.Database`
         :returns: a database owned by this instance.
         """
         return Database(database_id, self, ddl_statements=ddl_statements, pool=pool)
@@ -389,7 +385,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api._ore.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.database.Database`
+            Iterator of :class:`~google.cloud.spanner.database.Database`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
@@ -406,10 +402,10 @@ class Instance(object):
         :type iterator: :class:`~google.api_core.page_iterator.Iterator`
         :param iterator: The iterator that is currently in use.
 
-        :type database_pb: :class:`~google.spanner.admin.database.v1.Database`
+        :type database_pb: :class:`~google.cloud.spanner_admin_database_v1.Database`
         :param database_pb: A database returned from the API.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.Database`
+        :rtype: :class:`~google.cloud.spanner.database.Database`
         :returns: The next database in the page.
         """
         return Database.from_pb(database_pb, self, pool=BurstyPool())
@@ -420,7 +416,7 @@ class Instance(object):
         :type backup_id: str
         :param backup_id: The ID of the backup.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database:
             Optional. The database that will be used when creating the backup.
             Required if the create method needs to be called.
@@ -452,7 +448,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.backup.Backup`
+            Iterator of :class:`~google.cloud.spanner.backup.Backup`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
@@ -471,7 +467,7 @@ class Instance(object):
         :type backup_pb: :class:`~google.spanner.admin.database.v1.Backup`
         :param backup_pb: A backup returned from the API.
 
-        :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :rtype: :class:`~google.cloud.spanner.backup.Backup`
         :returns: The next backup in the page.
         """
         return Backup.from_pb(backup_pb, self)

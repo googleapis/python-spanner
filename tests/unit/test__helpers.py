@@ -28,7 +28,7 @@ class Test_merge_query_options(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_base_dict_and_merge_none(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = {"optimizer_version": "2"}
         merge = None
@@ -37,7 +37,7 @@ class Test_merge_query_options(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_base_empty_and_merge_empty(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = ExecuteSqlRequest.QueryOptions()
         merge = ExecuteSqlRequest.QueryOptions()
@@ -45,7 +45,7 @@ class Test_merge_query_options(unittest.TestCase):
         self.assertIsNone(result)
 
     def test_base_none_merge_object(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = None
         merge = ExecuteSqlRequest.QueryOptions(optimizer_version="3")
@@ -53,7 +53,7 @@ class Test_merge_query_options(unittest.TestCase):
         self.assertEqual(result, merge)
 
     def test_base_none_merge_dict(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = None
         merge = {"optimizer_version": "3"}
@@ -62,7 +62,7 @@ class Test_merge_query_options(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_base_object_merge_dict(self):
-        from google.cloud.spanner_v1.proto.spanner_pb2 import ExecuteSqlRequest
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         merge = {"optimizer_version": "3"}
@@ -298,59 +298,65 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_null(self):
         from google.protobuf.struct_pb2 import Value, NULL_VALUE
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, STRING
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=STRING)
+        field_type = Type(code=TypeCode.STRING)
         value_pb = Value(null_value=NULL_VALUE)
 
         self.assertEqual(self._callFUT(value_pb, field_type), None)
 
     def test_w_string(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, STRING
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = u"Value"
-        field_type = Type(code=STRING)
+        field_type = Type(code=TypeCode.STRING)
         value_pb = Value(string_value=VALUE)
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
 
     def test_w_bytes(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, BYTES
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = b"Value"
-        field_type = Type(code=BYTES)
+        field_type = Type(code=TypeCode.BYTES)
         value_pb = Value(string_value=VALUE)
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
 
     def test_w_bool(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, BOOL
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = True
-        field_type = Type(code=BOOL)
+        field_type = Type(code=TypeCode.BOOL)
         value_pb = Value(bool_value=VALUE)
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
 
     def test_w_int(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = 12345
-        field_type = Type(code=INT64)
+        field_type = Type(code=TypeCode.INT64)
         value_pb = Value(string_value=str(VALUE))
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
 
     def test_w_float(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, FLOAT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = 3.14159
-        field_type = Type(code=FLOAT64)
+        field_type = Type(code=TypeCode.FLOAT64)
         value_pb = Value(number_value=VALUE)
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
@@ -358,10 +364,11 @@ class Test_parse_value_pb(unittest.TestCase):
     def test_w_date(self):
         import datetime
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, DATE
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = datetime.date.today()
-        field_type = Type(code=DATE)
+        field_type = Type(code=TypeCode.DATE)
         value_pb = Value(string_value=VALUE.isoformat())
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
@@ -370,13 +377,13 @@ class Test_parse_value_pb(unittest.TestCase):
         import pytz
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
-        from google.cloud.spanner_v1.proto.type_pb2 import TIMESTAMP
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=pytz.UTC
         )
-        field_type = Type(code=TIMESTAMP)
+        field_type = Type(code=TypeCode.TIMESTAMP)
         value_pb = Value(string_value=datetime_helpers.to_rfc3339(value))
 
         parsed = self._callFUT(value_pb, field_type)
@@ -387,13 +394,13 @@ class Test_parse_value_pb(unittest.TestCase):
         import pytz
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
-        from google.cloud.spanner_v1.proto.type_pb2 import TIMESTAMP
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=pytz.UTC
         )
-        field_type = Type(code=TIMESTAMP)
+        field_type = Type(code=TypeCode.TIMESTAMP)
         value_pb = Value(string_value=datetime_helpers.to_rfc3339(value))
 
         parsed = self._callFUT(value_pb, field_type)
@@ -402,18 +409,20 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_array_empty(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, ARRAY, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=ARRAY, array_element_type=Type(code=INT64))
+        field_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64))
         value_pb = Value()
 
         self.assertEqual(self._callFUT(value_pb, field_type), [])
 
     def test_w_array_non_empty(self):
         from google.protobuf.struct_pb2 import Value, ListValue
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, ARRAY, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=ARRAY, array_element_type=Type(code=INT64))
+        field_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64))
         VALUES = [32, 19, 5]
         values_pb = ListValue(
             values=[Value(string_value=str(value)) for value in VALUES]
@@ -424,18 +433,19 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_struct(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import STRUCT, STRING, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner._helpers import _make_list_value_pb
 
         VALUES = [u"phred", 32]
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=STRING)),
-                StructType.Field(name="age", type=Type(code=INT64)),
+                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
             ]
         )
-        field_type = Type(code=STRUCT, struct_type=struct_type_pb)
+        field_type = Type(code=TypeCode.STRUCT, struct_type=struct_type_pb)
         value_pb = Value(list_value=_make_list_value_pb(VALUES))
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUES)
@@ -453,10 +463,10 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_unknown_type(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type
-        from google.cloud.spanner_v1.proto.type_pb2 import TYPE_CODE_UNSPECIFIED
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=TYPE_CODE_UNSPECIFIED)
+        field_type = Type(code=TypeCode.TYPE_CODE_UNSPECIFIED)
         value_pb = Value(string_value="Borked")
 
         with self.assertRaises(ValueError):
@@ -470,28 +480,30 @@ class Test_parse_list_value_pbs(unittest.TestCase):
         return _parse_list_value_pbs(*args, **kw)
 
     def test_empty(self):
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import STRING, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import TypeCode
 
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=STRING)),
-                StructType.Field(name="age", type=Type(code=INT64)),
+                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
             ]
         )
 
         self.assertEqual(self._callFUT(rows=[], row_type=struct_type_pb), [])
 
     def test_non_empty(self):
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, StructType
-        from google.cloud.spanner_v1.proto.type_pb2 import STRING, INT64
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner._helpers import _make_list_value_pbs
 
         VALUES = [[u"phred", 32], [u"bharney", 31]]
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=STRING)),
-                StructType.Field(name="age", type=Type(code=INT64)),
+                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
             ]
         )
         values_pbs = _make_list_value_pbs(VALUES)

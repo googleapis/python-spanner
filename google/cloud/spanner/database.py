@@ -28,7 +28,7 @@ from google.api_core.exceptions import Aborted
 import six
 
 # pylint: disable=ungrouped-imports
-from google.cloud.spanner_admin_database_v1.gapic import enums
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner._helpers import (
     _make_value_pb,
     _merge_query_options,
@@ -36,8 +36,6 @@ from google.cloud.spanner._helpers import (
 )
 from google.cloud.spanner.backup import BackupInfo
 from google.cloud.spanner.batch import Batch
-from google.cloud.spanner_v1.gapic.spanner_client import SpannerClient
-from google.cloud.spanner_v1.gapic.transports import spanner_grpc_transport
 from google.cloud.spanner.keyset import KeySet
 from google.cloud.spanner.pool import BurstyPool
 from google.cloud.spanner.pool import SessionCheckout
@@ -45,7 +43,10 @@ from google.cloud.spanner.session import Session
 from google.cloud.spanner.snapshot import _restart_on_unavailable
 from google.cloud.spanner.snapshot import Snapshot
 from google.cloud.spanner.streamed import StreamedResultSet
-from google.cloud.spanner_v1.proto.transaction_pb2 import (
+from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1.services.spanner.transports.grpc import SpannerGrpcTransport
+from google.cloud.spanner_admin_database_v1 import RestoreSourceType
+from google.cloud.spanner_v1 import (
     TransactionSelector,
     TransactionOptions,
 )
@@ -79,7 +80,7 @@ class Database(object):
     :type database_id: str
     :param database_id: The ID of the database.
 
-    :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
+    :type instance: :class:`~google.cloud.spanner.instance.Instance`
     :param instance: The instance that owns the database.
 
     :type ddl_statements: list of string
@@ -87,10 +88,10 @@ class Database(object):
                            CREATE DATABASE statement.
 
     :type pool: concrete subclass of
-                :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
+                :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
     :param pool: (Optional) session pool to be used by database.  If not
                  passed, the database will construct an instance of
-                 :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
+                 :class:`~google.cloud.spanner.pool.BurstyPool`.
     """
 
     _spanner_api = None
@@ -115,14 +116,14 @@ class Database(object):
         """Creates an instance of this class from a protobuf.
 
         :type database_pb:
-            :class:`~google.spanner.v2.spanner_instance_admin_pb2.Instance`
+            :class:`~google.cloud.spanner_admin_instance_v1.Instance`
         :param database_pb: A instance protobuf object.
 
-        :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
+        :type instance: :class:`~google.cloud.spanner.instance.Instance`
         :param instance: The instance that owns the database.
 
         :type pool: concrete subclass of
-                    :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
+                    :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
         :rtype: :class:`Database`
@@ -176,7 +177,7 @@ class Database(object):
     def state(self):
         """State of this database.
 
-        :rtype: :class:`~google.cloud.spanner_admin_database_v1.gapic.enums.Database.State`
+        :rtype: :class:`~google.cloud.spanner_admin_database_v1.Database.State`
         :returns: an enum describing the state of the database
         """
         return self._state
@@ -195,7 +196,7 @@ class Database(object):
     def restore_info(self):
         """Restore info for this database.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.RestoreInfo`
+        :rtype: :class:`~google.cloud.spanner.database.RestoreInfo`
         :returns: an object representing the restore info for this database
         """
         return self._restore_info
@@ -219,7 +220,7 @@ class Database(object):
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
             if self._instance.emulator_host is not None:
-                transport = spanner_grpc_transport.SpannerGrpcTransport(
+                transport = SpannerGrpcTransport(
                     channel=grpc.insecure_channel(self._instance.emulator_host)
                 )
                 self._spanner_api = SpannerClient(
@@ -306,7 +307,7 @@ class Database(object):
         response = api.get_database_ddl(self.name, metadata=metadata)
         self._ddl_statements = tuple(response.statements)
         response = api.get_database(self.name, metadata=metadata)
-        self._state = enums.Database.State(response.state)
+        self._state = DatabasePB.State(response.state)
         self._create_time = _pb_timestamp_to_datetime(response.create_time)
         self._restore_info = response.restore_info
 
@@ -364,12 +365,12 @@ class Database(object):
             required if parameters are passed.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.QueryOptions`
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -431,7 +432,7 @@ class Database(object):
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :rtype: :class:`~google.cloud.spanner.session.Session`
         :returns: a session bound to this database.
         """
         return Session(self, labels=labels)
@@ -448,9 +449,9 @@ class Database(object):
         :type kw: dict
         :param kw:
             Passed through to
-            :class:`~google.cloud.spanner_v1.snapshot.Snapshot` constructor.
+            :class:`~google.cloud.spanner.snapshot.Snapshot` constructor.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.SnapshotCheckout`
+        :rtype: :class:`~google.cloud.spanner.database.SnapshotCheckout`
         :returns: new wrapper
         """
         return SnapshotCheckout(self, **kw)
@@ -461,7 +462,7 @@ class Database(object):
         The wrapper *must* be used as a context manager, with the batch
         as the value returned by the wrapper.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
+        :rtype: :class:`~google.cloud.spanner.database.BatchCheckout`
         :returns: new wrapper
         """
         return BatchCheckout(self)
@@ -476,7 +477,7 @@ class Database(object):
         :param exact_staleness: Execute all reads at a timestamp that is
                                 ``exact_staleness`` old.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.BatchSnapshot`
+        :rtype: :class:`~google.cloud.spanner.database.BatchSnapshot`
         :returns: new wrapper
         """
         return BatchSnapshot(
@@ -524,7 +525,7 @@ class Database(object):
     def restore(self, source):
         """Restore from a backup to this database.
 
-        :type backup: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :type backup: :class:`~google.cloud.spanner.backup.Backup`
         :param backup: the path of the backup being restored from.
 
         :rtype: :class:`~google.api_core.operation.Operation`
@@ -551,8 +552,8 @@ class Database(object):
         :returns: True if the database state is READY_OPTIMIZING or READY, else False.
         """
         return (
-            self.state == enums.Database.State.READY_OPTIMIZING
-            or self.state == enums.Database.State.READY
+            self.state == DatabasePB.State.READY_OPTIMIZING
+            or self.state == DatabasePB.State.READY
         )
 
     def is_optimized(self):
@@ -561,7 +562,7 @@ class Database(object):
         :rtype: bool
         :returns: True if the database state is READY, else False.
         """
-        return self.state == enums.Database.State.READY
+        return self.state == DatabasePB.State.READY
 
     def list_database_operations(self, filter_="", page_size=None):
         """List database operations for the database.
@@ -636,7 +637,7 @@ class SnapshotCheckout(object):
     :type kw: dict
     :param kw:
         Passed through to
-        :class:`~google.cloud.spanner_v1.snapshot.Snapshot` constructor.
+        :class:`~google.cloud.spanner.snapshot.Snapshot` constructor.
     """
 
     def __init__(self, database, **kw):
@@ -736,14 +737,14 @@ class BatchSnapshot(object):
     def read(self, *args, **kw):
         """Convenience method:  perform read operation via snapshot.
 
-        See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.read`.
+        See :meth:`~google.cloud.spanner.snapshot.Snapshot.read`.
         """
         return self._get_snapshot().read(*args, **kw)
 
     def execute_sql(self, *args, **kw):
         """Convenience method:  perform query operation via snapshot.
 
-        See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.execute_sql`.
+        See :meth:`~google.cloud.spanner.snapshot.Snapshot.execute_sql`.
         """
         return self._get_snapshot().execute_sql(*args, **kw)
 
@@ -768,7 +769,7 @@ class BatchSnapshot(object):
         :type columns: list of str
         :param columns: names of columns to be retrieved
 
-        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
+        :type keyset: :class:`~google.cloud.spanner.keyset.KeySet`
         :param keyset: keys / ranges identifying rows to be retrieved
 
         :type index: str
@@ -817,7 +818,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_read_batches`.
 
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         kwargs = copy.deepcopy(batch["read"])
@@ -869,12 +870,12 @@ class BatchSnapshot(object):
             differ.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.proto.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.QueryOptions`
 
         :rtype: iterable of dict
         :returns:
@@ -912,7 +913,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_query_batches`.
 
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         return self._get_snapshot().execute_sql(
@@ -927,7 +928,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_query_batches`.
 
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         :raises ValueError: if batch does not contain either 'read' or 'query'
         """
@@ -977,7 +978,7 @@ def _check_ddl_statements(value):
 
 class RestoreInfo(object):
     def __init__(self, source_type, backup_info):
-        self.source_type = enums.RestoreSourceType(source_type)
+        self.source_type = RestoreSourceType(source_type)
         self.backup_info = BackupInfo.from_pb(backup_info)
 
     @classmethod

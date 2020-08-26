@@ -52,7 +52,7 @@ class AbstractSessionPool(object):
     def bind(self, database):
         """Associate the pool with a database.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database: database used by the pool:  used to create sessions
                          when needed.
 
@@ -77,7 +77,7 @@ class AbstractSessionPool(object):
     def put(self, session):
         """Return a session to the pool.
 
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :type session: :class:`~google.cloud.spanner.session.Session`
         :param session: the session being returned.
 
         Concrete implementations of this method are allowed to raise an
@@ -102,7 +102,7 @@ class AbstractSessionPool(object):
     def _new_session(self):
         """Helper for concrete methods creating session instances.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :rtype: :class:`~google.cloud.spanner.session.Session`
         :returns: new session instance.
         """
         if self.labels:
@@ -115,7 +115,7 @@ class AbstractSessionPool(object):
         :param kwargs: (optional) keyword arguments, passed through to
                        the returned checkout.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.SessionCheckout`
+        :rtype: :class:`~google.cloud.spanner.session.SessionCheckout`
         :returns: a checkout instance, to be used as a context manager for
                   accessing the session and returning it to the pool.
         """
@@ -161,7 +161,7 @@ class FixedSizePool(AbstractSessionPool):
     def bind(self, database):
         """Associate the pool with a database.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database: database used by the pool:  used to create sessions
                          when needed.
         """
@@ -184,7 +184,7 @@ class FixedSizePool(AbstractSessionPool):
         :type timeout: int
         :param timeout: seconds to block waiting for an available session
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :rtype: :class:`~google.cloud.spanner.session.Session`
         :returns: an existing session from the pool, or a newly-created
                   session.
         :raises: :exc:`six.moves.queue.Empty` if the queue is empty.
@@ -205,7 +205,7 @@ class FixedSizePool(AbstractSessionPool):
 
         Never blocks:  if the pool is full, raises.
 
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :type session: :class:`~google.cloud.spanner.session.Session`
         :param session: the session being returned.
 
         :raises: :exc:`six.moves.queue.Full` if the queue is full.
@@ -253,7 +253,7 @@ class BurstyPool(AbstractSessionPool):
     def bind(self, database):
         """Associate the pool with a database.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database: database used by the pool:  used to create sessions
                          when needed.
         """
@@ -262,7 +262,7 @@ class BurstyPool(AbstractSessionPool):
     def get(self):
         """Check a session out from the pool.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :rtype: :class:`~google.cloud.spanner.session.Session`
         :returns: an existing session from the pool, or a newly-created
                   session.
         """
@@ -283,7 +283,7 @@ class BurstyPool(AbstractSessionPool):
         Never blocks:  if the pool is full, the returned session is
         discarded.
 
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :type session: :class:`~google.cloud.spanner.session.Session`
         :param session: the session being returned.
         """
         try:
@@ -351,7 +351,7 @@ class PingingPool(AbstractSessionPool):
     def bind(self, database):
         """Associate the pool with a database.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database: database used by the pool:  used to create sessions
                          when needed.
         """
@@ -376,7 +376,7 @@ class PingingPool(AbstractSessionPool):
         :type timeout: int
         :param timeout: seconds to block waiting for an available session
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :rtype: :class:`~google.cloud.spanner.session.Session`
         :returns: an existing session from the pool, or a newly-created
                   session.
         :raises: :exc:`six.moves.queue.Empty` if the queue is empty.
@@ -401,7 +401,7 @@ class PingingPool(AbstractSessionPool):
 
         Never blocks:  if the pool is full, raises.
 
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :type session: :class:`~google.cloud.spanner.session.Session`
         :param session: the session being returned.
 
         :raises: :exc:`six.moves.queue.Full` if the queue is full.
@@ -481,7 +481,7 @@ class TransactionPingingPool(PingingPool):
     def bind(self, database):
         """Associate the pool with a database.
 
-        :type database: :class:`~google.cloud.spanner_v1.database.Database`
+        :type database: :class:`~google.cloud.spanner.database.Database`
         :param database: database used by the pool:  used to create sessions
                          when needed.
         """
@@ -493,7 +493,7 @@ class TransactionPingingPool(PingingPool):
 
         Never blocks:  if the pool is full, raises.
 
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :type session: :class:`~google.cloud.spanner.session.Session`
         :param session: the session being returned.
 
         :raises: :exc:`six.moves.queue.Full` if the queue is full.
@@ -520,7 +520,7 @@ class SessionCheckout(object):
     """Context manager: hold session checked out from a pool.
 
     :type pool: concrete subclass of
-        :class:`~google.cloud.spanner_v1.session.AbstractSessionPool`
+        :class:`~google.cloud.spanner.pool.AbstractSessionPool`
     :param pool: Pool from which to check out a session.
 
     :param kwargs: extra keyword arguments to be passed to :meth:`pool.get`.
