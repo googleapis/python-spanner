@@ -30,47 +30,21 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library / "google/cloud/spanner_v1/proto")
-s.move(library / "google/cloud/spanner_v1/gapic")
-s.move(library / "tests")
+s.move(library, excludes=["google/spanner/**", "google/spanner_v1/**", "*.*", "docs/index.rst"])
+s.move(library / "google/spanner_v1", "google/cloud/spanner_v1")
 
-# Add grpcio-gcp options
+# Fix up generated imports
 s.replace(
-    "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
-    "import google.api_core.grpc_helpers\n",
-    "import pkg_resources\n"
-    "import grpc_gcp\n"
-    "\n"
-    "import google.api_core.grpc_helpers\n",
-)
-s.replace(
-    "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
-    "from google.cloud.spanner_v1.proto import spanner_pb2_grpc\n",
-    "\g<0>\n\n_GRPC_KEEPALIVE_MS = 2 * 60 * 1000\n"
-    "_SPANNER_GRPC_CONFIG = 'spanner.grpc.config'\n",
+    ["google/**/*.py", "tests/**/*.py"],
+    "google\.spanner_v1",
+    "google.cloud.spanner_v1",
 )
 
+# Fix invalid imports
 s.replace(
-    "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
-    "(\s+)'grpc.max_receive_message_length': -1,",
-    "\g<0>\g<1>\"grpc.keepalive_time_ms\": _GRPC_KEEPALIVE_MS,",
-)
-
-s.replace(
-    "google/cloud/spanner_v1/gapic/transports/spanner_grpc_transport.py",
-    "(\s+)return google.api_core.grpc_helpers.create_channel\(\n",
-    "\g<1>grpc_gcp_config = grpc_gcp.api_config_from_text_pb("
-    "\g<1>    pkg_resources.resource_string(__name__, _SPANNER_GRPC_CONFIG))"
-    "\g<1>options = [(grpc_gcp.API_CONFIG_CHANNEL_ARG, grpc_gcp_config)]"
-    "\g<1>if 'options' in kwargs:"
-    "\g<1>    options.extend(kwargs['options'])"
-    "\g<1>kwargs['options'] = options"
-    "\g<0>",
-)
-s.replace(
-    "tests/unit/gapic/v1/test_spanner_client_v1.py",
-    "from google.cloud import spanner_v1",
-    "from google.cloud.spanner_v1.gapic import spanner_client as spanner_v1",
+    "google/**/*.py",
+    "gs_type",
+    "type"
 )
 
 # ----------------------------------------------------------------------------
@@ -83,28 +57,16 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library / "google/cloud/spanner_admin_instance_v1/gapic")
-s.move(library / "google/cloud/spanner_admin_instance_v1/proto")
-s.move(library / "tests")
-
-# Fix up the _GAPIC_LIBRARY_VERSION targets
-s.replace(
-    "google/cloud/spanner_admin_instance_v1/gapic/instance_admin_client.py",
-    "'google-cloud-spanner-admin-instance'",
-    "'google-cloud-spanner'",
-)
+s.move(library, excludes=["google/spanner/**", "*.*", "docs/index.rst"])
+s.move(library / "google/spanner/admin/instance_v1", "google/cloud/spanner_admin_instance_v1")
+s.move(library / "google/spanner/admin/instance", "google/cloud/spanner_admin_instance_v1")
 
 # Fix up generated imports
 s.replace(
-    "google/**/*.py",
-    "from google\.cloud\.spanner\.admin\.instance_v1.proto",
-    "from google.cloud.spanner_admin_instance_v1.proto",
+    ["google/**/*.py", "tests/**/*.py"],
+    "google\.spanner\.admin\.instance_v1",
+    "google.cloud.spanner_admin_instance_v1",
 )
-
-# Fix docstrings
-s.replace("google/cloud/spanner_v1/proto/transaction_pb2.py", r"""====*""", r"")
-s.replace("google/cloud/spanner_v1/proto/transaction_pb2.py", r"""----*""", r"")
-s.replace("google/cloud/spanner_v1/proto/transaction_pb2.py", r"""~~~~*""", r"")
 
 # ----------------------------------------------------------------------------
 # Generate database admin client
@@ -116,44 +78,22 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library / "google/cloud/spanner_admin_database_v1/gapic")
-s.move(library / "google/cloud/spanner_admin_database_v1/proto")
-s.move(library / "tests")
+s.move(library, excludes=["google/spanner/**", "*.*", "docs/index.rst"])
+s.move(library / "google/spanner/admin/database_v1", "google/cloud/spanner_admin_database_v1")
+s.move(library / "google/spanner/admin/database", "google/cloud/spanner_admin_database_v1")
 
-# Fix up the _GAPIC_LIBRARY_VERSION targets
+# Fix up generated imports
 s.replace(
-    "google/cloud/spanner_admin_database_v1/gapic/database_admin_client.py",
-    "'google-cloud-spanner-admin-database'",
-    "'google-cloud-spanner'",
+    ["google/**/*.py", "tests/**/*.py"],
+    "google\.spanner\.admin\.database_v1",
+    "google.cloud.spanner_admin_database_v1",
 )
-
-# Fix up the _GAPIC_LIBRARY_VERSION targets
-s.replace(
-    "google/**/*.py",
-    "from google\.cloud\.spanner\.admin\.database_v1.proto",
-    "from google.cloud.spanner_admin_database_v1.proto",
-)
-
-# Fix up proto docs that are missing summary line.
-s.replace(
-    "google/cloud/spanner_admin_instance_v1/proto/spanner_instance_admin_pb2.py",
-    '"""Attributes:',
-    '"""Protocol buffer.\n\n  Attributes:',
-)
-
-# Fix LRO return types
-s.replace("google/cloud/spanner_admin_instance_v1/gapic/instance_admin_client.py",
-          "cloud.spanner_admin_instance_v1.types._OperationFuture",
-          "api_core.operation.Operation")
-s.replace("google/cloud/spanner_admin_database_v1/gapic/database_admin_client.py",
-          "cloud.spanner_admin_database_v1.types._OperationFuture",
-          "api_core.operation.Operation")
 
 # ----------------------------------------------------------------------------
 # Add templated files
 # ----------------------------------------------------------------------------
-templated_files = common.py_library(unit_cov_level=97, cov_level=99, samples=True)
-s.move(templated_files, excludes=["noxfile.py"])
+templated_files = common.py_library(microgenerator=True, samples=True)
+s.move(templated_files, excludes=[".coveragerc"])
 
 # Template's MANIFEST.in does not include the needed GAPIC config file.
 # See PR #6928.
@@ -164,12 +104,35 @@ s.replace(
     "include google/cloud/spanner_v1/gapic/transports/spanner.grpc.config\n",
 )
 
+# Ensure CI runs on a new instance each time
 s.replace(
     ".kokoro/build.sh",
     "# Remove old nox",
     "# Set up creating a new instance for each system test run\n"
     "export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true\n"
     "\n\g<0>",
+)
+
+# Ensure tracing dependencies are installed
+s.replace(
+    "noxfile.py",
+    f"session.install\(.-e., .\..\)",
+    "session.install(\"-e\", \".[tracing]\")",
+)
+
+# Update check to allow for emulator use
+s.replace(
+    "noxfile.py",
+    "if not os.environ.get\(.GOOGLE_APPLICATION_CREDENTIALS., ..\):",
+    "if not os.environ.get(\"GOOGLE_APPLICATION_CREDENTIALS\", \"\") and "
+    "\tnot os.environ.get(\"SPANNER_EMULATOR_HOST\", \"\"):",
+)
+
+# Update error message to indicate emulator usage
+s.replace(
+    "noxfile.py",
+    "Credentials must be set via environment variable",
+    "Credentials or emulator host must be set via environment variable"
 )
 
 # ----------------------------------------------------------------------------
