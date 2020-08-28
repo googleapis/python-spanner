@@ -24,9 +24,9 @@ VALUES = [
 ]
 BASE_ATTRIBUTES = {
     "db.type": "spanner",
-    "db.url": "spanner.googleapis.com:443",
+    "db.url": "spanner.googleapis.com",
     "db.instance": "testing",
-    "net.host.name": "spanner.googleapis.com:443",
+    "net.host.name": "spanner.googleapis.com",
 }
 
 
@@ -51,18 +51,13 @@ class Test_BatchBase(_BaseTest):
         return _BatchBase
 
     def _compare_values(self, result, source):
-        from google.protobuf.struct_pb2 import ListValue
-        from google.protobuf.struct_pb2 import Value
-
         for found, expected in zip(result, source):
-            self.assertIsInstance(found, ListValue)
-            self.assertEqual(len(found.values), len(expected))
-            for found_cell, expected_cell in zip(found.values, expected):
-                self.assertIsInstance(found_cell, Value)
+            self.assertEqual(len(found), len(expected))
+            for found_cell, expected_cell in zip(found, expected):
                 if isinstance(expected_cell, int):
-                    self.assertEqual(int(found_cell.string_value), expected_cell)
+                    self.assertEqual(int(found_cell), expected_cell)
                 else:
-                    self.assertEqual(found_cell.string_value, expected_cell)
+                    self.assertEqual(found_cell, expected_cell)
 
     def test_ctor(self):
         session = _Session()
@@ -166,7 +161,7 @@ class Test_BatchBase(_BaseTest):
         self.assertEqual(len(key_set_pb.keys), len(keys))
         for found, expected in zip(key_set_pb.keys, keys):
             self.assertEqual(
-                [int(value.string_value) for value in found.values], expected
+                [int(value) for value in found], expected
             )
 
 
@@ -243,7 +238,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(session, self.SESSION_NAME)
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
-        self.assertTrue(single_use_txn.HasField("read_write"))
+        self.assertTrue(type(single_use_txn).pb(single_use_txn).HasField("read_write"))
         self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
 
         self.assertSpanAttributes(
@@ -291,7 +286,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(session, self.SESSION_NAME)
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
-        self.assertTrue(single_use_txn.HasField("read_write"))
+        self.assertTrue(type(single_use_txn).pb(single_use_txn).HasField("read_write"))
         self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
 
         self.assertSpanAttributes(
