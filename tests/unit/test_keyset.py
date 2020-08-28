@@ -313,7 +313,7 @@ class TestKeySet(unittest.TestCase):
 
         for found, expected in zip(result.keys, KEYS):
             self.assertEqual(len(found), len(expected))
-            self.assertEqual(found.values[0].string_value, expected[0])
+            self.assertEqual(found[0], expected[0])
 
         self.assertEqual(len(result.ranges), 0)
 
