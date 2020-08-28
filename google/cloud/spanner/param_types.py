@@ -66,6 +66,4 @@ def Struct(fields):  # pylint: disable=invalid-name
     :rtype: :class:`type_pb2.Type`
     :returns: the appropriate struct-type protobuf
     """
-    return Type(
-        code=TypeCode.STRUCT, struct_type=StructType(fields=fields)
-    )
+    return Type(code=TypeCode.STRUCT, struct_type=StructType(fields=fields))
