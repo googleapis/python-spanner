@@ -412,7 +412,9 @@ class Test_parse_value_pb(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64))
+        field_type = Type(
+            code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
+        )
         value_pb = Value()
 
         self.assertEqual(self._callFUT(value_pb, field_type), [])
@@ -422,7 +424,9 @@ class Test_parse_value_pb(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        field_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64))
+        field_type = Type(
+            code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
+        )
         VALUES = [32, 19, 5]
         values_pb = ListValue(
             values=[Value(string_value=str(value)) for value in VALUES]

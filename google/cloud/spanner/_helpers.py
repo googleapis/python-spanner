@@ -81,7 +81,7 @@ def _merge_query_options(base, merge):
         merge = ExecuteSqlRequest.QueryOptions(
             optimizer_version=merge.get("optimizer_version", "")
         )
-    combined.MergeFrom(merge)
+    type(combined).pb(combined).MergeFrom(type(merge).pb(merge))
     if not combined.optimizer_version:
         return None
     return combined
