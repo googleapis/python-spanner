@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [1.18.1](https://www.github.com/googleapis/python-spanner/compare/v1.18.0...v1.18.1) (2020-09-03)
+
+
+### Bug Fixes
+
+* Remove stray bigquery lines ([#138](https://www.github.com/googleapis/python-spanner/issues/138)) ([cbfcc8b](https://www.github.com/googleapis/python-spanner/commit/cbfcc8b06e1a5803a9b9a943a3bbf29467d9f2ed))
+
 ## [1.18.0](https://www.github.com/googleapis/python-spanner/compare/v1.17.1...v1.18.0) (2020-08-25)
 
 
