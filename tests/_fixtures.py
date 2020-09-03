@@ -118,4 +118,6 @@ CREATE TABLE users_history (
 """
 
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
-EMULATOR_DDL_STATEMENTS = [stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()]
+EMULATOR_DDL_STATEMENTS = [
+    stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
+]

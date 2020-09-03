@@ -770,8 +770,12 @@ ALL_TYPES_COLUMNS = (
 EMULATOR_ALL_TYPES_COLUMNS = ALL_TYPES_COLUMNS[:-2]
 AllTypesRowData = collections.namedtuple("AllTypesRowData", ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in ALL_TYPES_COLUMNS])
-EmulatorAllTypesRowData = collections.namedtuple("EmulatorAllTypesRowData", EMULATOR_ALL_TYPES_COLUMNS)
-EmulatorAllTypesRowData.__new__.__defaults__ = tuple([None for colum in EMULATOR_ALL_TYPES_COLUMNS])
+EmulatorAllTypesRowData = collections.namedtuple(
+    "EmulatorAllTypesRowData", EMULATOR_ALL_TYPES_COLUMNS
+)
+EmulatorAllTypesRowData.__new__.__defaults__ = tuple(
+    [None for colum in EMULATOR_ALL_TYPES_COLUMNS]
+)
 
 ALL_TYPES_ROWDATA = (
     # all nulls
