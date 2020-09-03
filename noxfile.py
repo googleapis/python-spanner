@@ -66,7 +66,11 @@ def lint_setup_py(session):
 def default(session):
     # Install all test dependencies, then install this package in-place.
     session.install("mock", "pytest", "pytest-cov")
-    session.install("-e", ".")
+
+    if session.python != "2.7":
+        session.install("-e", ".[tracing]")
+    else:
+        session.install("-e", ".")
 
     # Run py.test against the unit tests.
     session.run(
@@ -115,7 +119,10 @@ def system(session):
     # virtualenv's dist-packages.
     session.install("mock", "pytest")
 
-    session.install("-e", ".")
+    if session.python != "2.7":
+        session.install("-e", ".[tracing]")
+    else:
+        session.install("-e", ".")
     session.install("-e", "test_utils/")
 
     # Run py.test against the system tests.
@@ -151,6 +158,39 @@ def docs(session):
         "-W",  # warnings as errors
         "-T",  # show full traceback on exception
         "-N",  # no colors
+        "-b",
+        "html",
+        "-d",
+        os.path.join("docs", "_build", "doctrees", ""),
+        os.path.join("docs", ""),
+        os.path.join("docs", "_build", "html", ""),
+    )
+
+
+@nox.session(python="3.7")
+def docfx(session):
+    """Build the docfx yaml files for this library."""
+
+    session.install("-e", ".")
+    session.install("sphinx", "alabaster", "recommonmark", "sphinx-docfx-yaml")
+
+    shutil.rmtree(os.path.join("docs", "_build"), ignore_errors=True)
+    session.run(
+        "sphinx-build",
+        "-T",  # show full traceback on exception
+        "-N",  # no colors
+        "-D",
+        (
+            "extensions=sphinx.ext.autodoc,"
+            "sphinx.ext.autosummary,"
+            "docfx_yaml.extension,"
+            "sphinx.ext.intersphinx,"
+            "sphinx.ext.coverage,"
+            "sphinx.ext.napoleon,"
+            "sphinx.ext.todo,"
+            "sphinx.ext.viewcode,"
+            "recommonmark"
+        ),
         "-b",
         "html",
         "-d",

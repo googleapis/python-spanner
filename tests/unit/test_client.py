@@ -150,6 +150,8 @@ class TestClient(unittest.TestCase):
         self._constructor_test_helper(expected_scopes, creds, client_info=client_info)
 
     def test_constructor_implicit_credentials(self):
+        from google.cloud.spanner_v1 import client as MUT
+
         creds = _make_credentials()
 
         patch = mock.patch("google.auth.default", return_value=(creds, None))
@@ -158,7 +160,7 @@ class TestClient(unittest.TestCase):
                 None, None, expected_creds=creds.with_scopes.return_value
             )
 
-        default.assert_called_once_with()
+        default.assert_called_once_with(scopes=(MUT.SPANNER_ADMIN_SCOPE,))
 
     def test_constructor_credentials_wo_create_scoped(self):
         creds = _make_credentials()
@@ -221,12 +223,13 @@ class TestClient(unittest.TestCase):
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_instance_admin_api(self, mock_em):
         from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
+        from google.api_core.client_options import ClientOptions
 
         mock_em.return_value = None
 
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = mock.Mock()
+        client_options = ClientOptions(quota_project_id="QUOTA-PROJECT")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
@@ -246,19 +249,19 @@ class TestClient(unittest.TestCase):
         self.assertIs(again, api)
 
         instance_admin_client.assert_called_once_with(
-            credentials=credentials.with_scopes.return_value,
-            client_info=client_info,
-            client_options=client_options,
+            credentials=mock.ANY, client_info=client_info, client_options=client_options
         )
 
         credentials.with_scopes.assert_called_once_with(expected_scopes)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_instance_admin_api_emulator_env(self, mock_em):
+        from google.api_core.client_options import ClientOptions
+
         mock_em.return_value = "emulator.host"
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = mock.Mock()
+        client_options = ClientOptions(api_endpoint="endpoint")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
@@ -319,11 +322,12 @@ class TestClient(unittest.TestCase):
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_database_admin_api(self, mock_em):
         from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
+        from google.api_core.client_options import ClientOptions
 
         mock_em.return_value = None
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = mock.Mock()
+        client_options = ClientOptions(quota_project_id="QUOTA-PROJECT")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
@@ -343,19 +347,19 @@ class TestClient(unittest.TestCase):
         self.assertIs(again, api)
 
         database_admin_client.assert_called_once_with(
-            credentials=credentials.with_scopes.return_value,
-            client_info=client_info,
-            client_options=client_options,
+            credentials=mock.ANY, client_info=client_info, client_options=client_options
         )
 
         credentials.with_scopes.assert_called_once_with(expected_scopes)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_database_admin_api_emulator_env(self, mock_em):
+        from google.api_core.client_options import ClientOptions
+
         mock_em.return_value = "host:port"
         credentials = _make_credentials()
         client_info = mock.Mock()
-        client_options = mock.Mock()
+        client_options = ClientOptions(api_endpoint="endpoint")
         client = self._make_one(
             project=self.PROJECT,
             credentials=credentials,
