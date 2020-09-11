@@ -44,13 +44,17 @@ from google.cloud.spanner.snapshot import _restart_on_unavailable
 from google.cloud.spanner.snapshot import Snapshot
 from google.cloud.spanner.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import SpannerClient
-from google.cloud.spanner_v1.services.spanner.transports.grpc import SpannerGrpcTransport
+from google.cloud.spanner_v1.services.spanner.transports.grpc import (
+    SpannerGrpcTransport,
+)
 from google.cloud.spanner_admin_database_v1 import RestoreSourceType
+from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import (
     TransactionSelector,
     TransactionOptions,
 )
-from google.cloud._helpers import _pb_timestamp_to_datetime
 
 # pylint: enable=ungrouped-imports
 
@@ -266,12 +270,12 @@ class Database(object):
         if "-" in db_name:
             db_name = "`%s`" % (db_name,)
 
-        future = api.create_database(
+        request = CreateDatabaseRequest(
             parent=self._instance.name,
             create_statement="CREATE DATABASE %s" % (db_name,),
             extra_statements=list(self._ddl_statements),
-            metadata=metadata,
         )
+        future = api.create_database(request=request, metadata=metadata)
         return future
 
     def exists(self):
@@ -287,7 +291,7 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         try:
-            api.get_database_ddl(self.name, metadata=metadata)
+            api.get_database_ddl(database=self.name, metadata=metadata)
         except NotFound:
             return False
         return True
@@ -304,11 +308,11 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        response = api.get_database_ddl(self.name, metadata=metadata)
+        response = api.get_database_ddl(database=self.name, metadata=metadata)
         self._ddl_statements = tuple(response.statements)
-        response = api.get_database(self.name, metadata=metadata)
+        response = api.get_database(name=self.name, metadata=metadata)
         self._state = DatabasePB.State(response.state)
-        self._create_time = _pb_timestamp_to_datetime(response.create_time)
+        self._create_time = response.create_time
         self._restore_info = response.restore_info
 
     def update_ddl(self, ddl_statements, operation_id=""):
@@ -332,9 +336,11 @@ class Database(object):
         api = client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
 
-        future = api.update_database_ddl(
-            self.name, ddl_statements, operation_id=operation_id, metadata=metadata
+        request = UpdateDatabaseDdlRequest(
+            database=self.name, statements=ddl_statements, operation_id=operation_id,
         )
+
+        future = api.update_database_ddl(request=request, metadata=metadata)
         return future
 
     def drop(self):
@@ -345,7 +351,7 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        api.drop_database(self.name, metadata=metadata)
+        api.drop_database(database=self.name, metadata=metadata)
 
     def execute_partitioned_dml(
         self, dml, params=None, param_types=None, query_options=None
@@ -381,11 +387,8 @@ class Database(object):
         if params is not None:
             if param_types is None:
                 raise ValueError("Specify 'param_types' when passing 'params'.")
-            params_pb = Struct(
-                fields={key: _make_value_pb(value) for key, value in params.items()}
-            )
         else:
-            params_pb = None
+            params = {}
 
         api = self.spanner_api
 
@@ -399,20 +402,21 @@ class Database(object):
             with SessionCheckout(self._pool) as session:
 
                 txn = api.begin_transaction(
-                    session.name, txn_options, metadata=metadata
+                    session=session.name, options=txn_options, metadata=metadata
                 )
 
                 txn_selector = TransactionSelector(id=txn.id)
 
-                restart = functools.partial(
-                    api.execute_streaming_sql,
-                    session.name,
-                    dml,
+                request = ExecuteSqlRequest(
+                    session=session.name,
+                    sql=dml,
                     transaction=txn_selector,
-                    params=params_pb,
+                    params=params,
                     param_types=param_types,
                     query_options=query_options,
-                    metadata=metadata,
+                )
+                restart = functools.partial(
+                    api.execute_streaming_sql, request=request, metadata=metadata,
                 )
 
                 iterator = _restart_on_unavailable(restart)
@@ -541,7 +545,10 @@ class Database(object):
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
         future = api.restore_database(
-            self._instance.name, self.database_id, backup=source.name, metadata=metadata
+            parent=self._instance.name,
+            database_id=self.database_id,
+            backup=source.name,
+            metadata=metadata,
         )
         return future
 
