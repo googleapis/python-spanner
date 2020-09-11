@@ -46,9 +46,9 @@ class TestSession(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     BASE_ATTRIBUTES = {
         "db.type": "spanner",
-        "db.url": "spanner.googleapis.com:443",
+        "db.url": "spanner.googleapis.com",
         "db.instance": DATABASE_NAME,
-        "net.host.name": "spanner.googleapis.com:443",
+        "net.host.name": "spanner.googleapis.com",
     }
 
     def _getTargetClass(self):
@@ -648,13 +648,13 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            self.SESSION_NAME,
-            expected_options,
+            session=self.SESSION_NAME,
+            options=expected_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         gax_api.rollback.assert_called_once_with(
-            self.SESSION_NAME,
-            TRANSACTION_ID,
+            session=self.SESSION_NAME,
+            transaction_id=TRANSACTION_ID,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -703,8 +703,8 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            self.SESSION_NAME,
-            expected_options,
+            session=self.SESSION_NAME,
+            options=expected_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         gax_api.rollback.assert_not_called()
@@ -758,12 +758,12 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            self.SESSION_NAME,
-            expected_options,
+            session=self.SESSION_NAME,
+            options=expected_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         gax_api.commit.assert_called_once_with(
-            self.SESSION_NAME,
+            session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             metadata=[("google-cloud-resource-prefix", database.name)],
@@ -810,7 +810,7 @@ class TestSession(OpenTelemetryBase):
 
         gax_api.begin_transaction.assert_not_called()
         gax_api.commit.assert_called_once_with(
-            self.SESSION_NAME,
+            session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             metadata=[("google-cloud-resource-prefix", database.name)],
@@ -869,8 +869,8 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
-                    expected_options,
+                    session=self.SESSION_NAME,
+                    options=expected_options,
                     metadata=[("google-cloud-resource-prefix", database.name)],
                 )
             ]
@@ -880,7 +880,7 @@ class TestSession(OpenTelemetryBase):
             gax_api.commit.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
+                    session=self.SESSION_NAME,
                     mutations=txn._mutations,
                     transaction_id=TRANSACTION_ID,
                     metadata=[("google-cloud-resource-prefix", database.name)],
@@ -957,8 +957,8 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
-                    expected_options,
+                    session=self.SESSION_NAME,
+                    options=expected_options,
                     metadata=[("google-cloud-resource-prefix", database.name)],
                 )
             ]
@@ -968,7 +968,7 @@ class TestSession(OpenTelemetryBase):
             gax_api.commit.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
+                    session=self.SESSION_NAME,
                     mutations=txn._mutations,
                     transaction_id=TRANSACTION_ID,
                     metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1045,15 +1045,15 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
-                    expected_options,
+                    session=self.SESSION_NAME,
+                    options=expected_options,
                     metadata=[("google-cloud-resource-prefix", database.name)],
                 )
             ]
             * 2,
         )
         gax_api.commit.assert_called_once_with(
-            self.SESSION_NAME,
+            session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1135,12 +1135,12 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            self.SESSION_NAME,
-            expected_options,
+            session=self.SESSION_NAME,
+            options=expected_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         gax_api.commit.assert_called_once_with(
-            self.SESSION_NAME,
+            session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1210,8 +1210,8 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
-                    expected_options,
+                    session=self.SESSION_NAME,
+                    options=expected_options,
                     metadata=[("google-cloud-resource-prefix", database.name)],
                 )
             ]
@@ -1221,7 +1221,7 @@ class TestSession(OpenTelemetryBase):
             gax_api.commit.call_args_list,
             [
                 mock.call(
-                    self.SESSION_NAME,
+                    session=self.SESSION_NAME,
                     mutations=txn._mutations,
                     transaction_id=TRANSACTION_ID,
                     metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1248,7 +1248,7 @@ class TestSession(OpenTelemetryBase):
 
         with mock.patch("time.time", _time_func):
             with mock.patch(
-                "google.cloud.spanner_v1.session._get_retry_delay"
+                "google.cloud.spanner.session._get_retry_delay"
             ) as get_retry_delay_mock:
                 with mock.patch("time.sleep") as sleep_mock:
                     get_retry_delay_mock.return_value = None
