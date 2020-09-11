@@ -150,7 +150,7 @@ class Batch(_BatchBase):
         trace_attributes = {"num_mutations": len(self._mutations)}
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             response = api.commit(
-                self._session.name,
+                session=self._session.name,
                 mutations=self._mutations,
                 single_use_transaction=txn_options,
                 metadata=metadata,
