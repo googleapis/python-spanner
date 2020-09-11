@@ -441,12 +441,13 @@ class TestClient(unittest.TestCase):
 
     def test_list_instance_configs(self):
         from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
-        from google.cloud.spanner_admin_instance_v1 import InstanceConfig as InstanceConfigPB
+        from google.cloud.spanner_admin_instance_v1 import (
+            InstanceConfig as InstanceConfigPB,
+        )
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
-        from google.cloud.spanner.client import InstanceConfig
 
-        api = InstanceAdminClient(mock.Mock())
+        api = InstanceAdminClient(credentials=mock.Mock())
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         client._instance_admin_api = api
@@ -459,7 +460,7 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        lic_api = api._inner_api_calls["list_instance_configs"] = mock.Mock(
+        lic_api = api._transport._wrapped_methods[api._transport.list_instance_configs] = mock.Mock(
             return_value=instance_config_pbs
         )
 
@@ -467,14 +468,14 @@ class TestClient(unittest.TestCase):
         instance_configs = list(response)
 
         instance_config = instance_configs[0]
-        self.assertIsInstance(instance_config, InstanceConfig)
+        self.assertIsInstance(instance_config, InstanceConfigPB)
         self.assertEqual(instance_config.name, self.CONFIGURATION_NAME)
         self.assertEqual(instance_config.display_name, self.DISPLAY_NAME)
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
             ("x-goog-request-params", "parent={}".format(client.project_name)),
-        ]
+        )
         lic_api.assert_called_once_with(
             ListInstanceConfigsRequest(parent=self.PATH),
             metadata=expected_metadata,
@@ -484,11 +485,13 @@ class TestClient(unittest.TestCase):
 
     def test_list_instance_configs_w_options(self):
         from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
-        from google.cloud.spanner_admin_instance_v1 import InstanceConfig as InstanceConfigPB
+        from google.cloud.spanner_admin_instance_v1 import (
+            InstanceConfig as InstanceConfigPB,
+        )
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
 
-        api = InstanceAdminClient(mock.Mock())
+        api = InstanceAdminClient(credentials=mock.Mock())
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         client._instance_admin_api = api
@@ -501,21 +504,21 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        lic_api = api._inner_api_calls["list_instance_configs"] = mock.Mock(
+        lic_api = api._transport._wrapped_methods[api._transport.list_instance_configs] = mock.Mock(
             return_value=instance_config_pbs
         )
 
         token = "token"
         page_size = 42
-        list(client.list_instance_configs(page_token=token, page_size=42))
+        list(client.list_instance_configs(page_size=42))
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
             ("x-goog-request-params", "parent={}".format(client.project_name)),
-        ]
+        )
         lic_api.assert_called_once_with(
             ListInstanceConfigsRequest(
-                parent=self.PATH, page_size=page_size, page_token=token
+                parent=self.PATH, page_size=page_size
             ),
             metadata=expected_metadata,
             retry=mock.ANY,
@@ -563,9 +566,8 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
         from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
-        from google.cloud.spanner.client import Instance
 
-        api = InstanceAdminClient(mock.Mock())
+        api = InstanceAdminClient(credentials=mock.Mock())
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         client._instance_admin_api = api
@@ -581,7 +583,7 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        li_api = api._inner_api_calls["list_instances"] = mock.Mock(
+        li_api = api._transport._wrapped_methods[api._transport.list_instances] = mock.Mock(
             return_value=instance_pbs
         )
 
@@ -589,16 +591,16 @@ class TestClient(unittest.TestCase):
         instances = list(response)
 
         instance = instances[0]
-        self.assertIsInstance(instance, Instance)
+        self.assertIsInstance(instance, InstancePB)
         self.assertEqual(instance.name, self.INSTANCE_NAME)
-        self.assertEqual(instance.configuration_name, self.CONFIGURATION_NAME)
+        self.assertEqual(instance.config, self.CONFIGURATION_NAME)
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)
         self.assertEqual(instance.node_count, self.NODE_COUNT)
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
             ("x-goog-request-params", "parent={}".format(client.project_name)),
-        ]
+        )
         li_api.assert_called_once_with(
             ListInstancesRequest(parent=self.PATH),
             metadata=expected_metadata,
@@ -611,29 +613,28 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
 
-        api = InstanceAdminClient(mock.Mock())
+        api = InstanceAdminClient(credentials=mock.Mock())
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         client._instance_admin_api = api
 
         instance_pbs = ListInstancesResponse(instances=[])
 
-        li_api = api._inner_api_calls["list_instances"] = mock.Mock(
+        li_api = api._transport._wrapped_methods[api._transport.list_instances] = mock.Mock(
             return_value=instance_pbs
         )
 
-        token = "token"
-        filter = "name:instance"
         page_size = 42
-        list(client.list_instances(filter_=filter, page_token=token, page_size=42))
+        filter = "name:instance"
+        list(client.list_instances(filter_=filter, page_size=42))
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
             ("x-goog-request-params", "parent={}".format(client.project_name)),
-        ]
+        )
         li_api.assert_called_once_with(
             ListInstancesRequest(
-                parent=self.PATH, page_size=page_size, page_token=token
+                parent=self.PATH, page_size=page_size
             ),
             metadata=expected_metadata,
             retry=mock.ANY,
