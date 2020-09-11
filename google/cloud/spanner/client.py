@@ -52,6 +52,8 @@ from google.cloud.spanner._helpers import _merge_query_options, _metadata_with_p
 from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
 from google.cloud.spanner.instance import Instance
 from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
+from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
@@ -324,12 +326,12 @@ class Client(ClientWithProject):
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)
-        path = "projects/%s" % (self.project,)
-        page_iter = self.instance_admin_api.list_instance_configs(
-            path, page_size=page_size, metadata=metadata
+        request = ListInstanceConfigsRequest(
+            parent=self.project_name, page_size=page_size
         )
-        page_iter.next_page_token = page_token
-        page_iter.item_to_value = _item_to_instance_config
+        page_iter = self.instance_admin_api.list_instance_configs(
+            request=request, page_size=page_size, metadata=metadata
+        )
         return page_iter
 
     def instance(
@@ -404,40 +406,10 @@ class Client(ClientWithProject):
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)
-        path = "projects/%s" % (self.project,)
-        page_iter = self.instance_admin_api.list_instances(
-            path, filter_=filter_, page_size=page_size, metadata=metadata
+        request = ListInstancesRequest(
+            parent=self.project_name, filter=filter_, page_size=page_size
         )
-        page_iter.item_to_value = self._item_to_instance
-        page_iter.next_page_token = page_token
+        page_iter = self.instance_admin_api.list_instances(
+            request=request, page_size=page_size, metadata=metadata
+        )
         return page_iter
-
-    def _item_to_instance(self, iterator, instance_pb):
-        """Convert an instance protobuf to the native object.
-
-        :type iterator: :class:`~google.api_core.page_iterator.Iterator`
-        :param iterator: The iterator that is currently in use.
-
-        :type instance_pb: :class:`~google.spanner.admin.instance.v1.Instance`
-        :param instance_pb: An instance returned from the API.
-
-        :rtype: :class:`~google.cloud.spanner.instance.Instance`
-        :returns: The next instance in the page.
-        """
-        return Instance.from_pb(instance_pb, self)
-
-
-def _item_to_instance_config(iterator, config_pb):  # pylint: disable=unused-argument
-    """Convert an instance config protobuf to the native object.
-
-    :type iterator: :class:`~google.api_core.page_iterator.Iterator`
-    :param iterator: The iterator that is currently in use.
-
-    :type config_pb:
-        :class:`~google.spanner.admin.instance.v1.InstanceConfig`
-    :param config_pb: An instance config returned from the API.
-
-    :rtype: :class:`~google.cloud.spanner.instance.InstanceConfig`
-    :returns: The next instance config in the page.
-    """
-    return InstanceConfig.from_pb(config_pb)
