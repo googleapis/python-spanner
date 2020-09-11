@@ -17,6 +17,7 @@ import unittest
 
 import mock
 
+from google.cloud.spanner.param_types import INT64
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -27,7 +28,7 @@ INSERT INTO citizens(first_name, last_name, age)
 VALUES ("Phred", "Phlyntstone", @age)
 """
 PARAMS = {"age": 30}
-PARAM_TYPES = {"age": "INT64"}
+PARAM_TYPES = {"age": INT64}
 MODE = 2  # PROFILE
 
 
@@ -368,6 +369,7 @@ class TestDatabase(_BaseTest):
     def test_create_grpc_error(self):
         from google.api_core.exceptions import GoogleAPICallError
         from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -380,15 +382,20 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(GoogleAPICallError):
             database.create()
 
-        api.create_database.assert_called_once_with(
+        expected_request = CreateDatabaseRequest(
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=[],
+        )
+
+        api.create_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_create_already_exists(self):
         from google.cloud.exceptions import Conflict
+        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         DATABASE_ID_HYPHEN = "database-id"
         client = _Client()
@@ -401,15 +408,20 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(Conflict):
             database.create()
 
-        api.create_database.assert_called_once_with(
+        expected_request = CreateDatabaseRequest(
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE `{}`".format(DATABASE_ID_HYPHEN),
             extra_statements=[],
+        )
+
+        api.create_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_create_instance_not_found(self):
         from google.cloud.exceptions import NotFound
+        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -421,15 +433,20 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(NotFound):
             database.create()
 
-        api.create_database.assert_called_once_with(
+        expected_request = CreateDatabaseRequest(
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=[],
+        )
+
+        api.create_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_create_success(self):
         from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         op_future = object()
         client = _Client()
@@ -445,10 +462,14 @@ class TestDatabase(_BaseTest):
 
         self.assertIs(future, op_future)
 
-        api.create_database.assert_called_once_with(
+        expected_request = CreateDatabaseRequest(
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=DDL_STATEMENTS,
+        )
+
+        api.create_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -466,7 +487,7 @@ class TestDatabase(_BaseTest):
             database.exists()
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -483,7 +504,7 @@ class TestDatabase(_BaseTest):
         self.assertFalse(database.exists())
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -502,7 +523,7 @@ class TestDatabase(_BaseTest):
         self.assertTrue(database.exists())
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -520,7 +541,7 @@ class TestDatabase(_BaseTest):
             database.reload()
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -538,7 +559,7 @@ class TestDatabase(_BaseTest):
             database.reload()
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -573,17 +594,18 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._ddl_statements, tuple(DDL_STATEMENTS))
 
         api.get_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         api.get_database.assert_called_once_with(
-            self.DATABASE_NAME,
+            name=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_update_ddl_grpc_error(self):
         from google.api_core.exceptions import Unknown
         from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -595,16 +617,19 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(Unknown):
             database.update_ddl(DDL_STATEMENTS)
 
+        expected_request = UpdateDatabaseDdlRequest(
+            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+        )
+
         api.update_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
-            DDL_STATEMENTS,
-            "",
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_update_ddl_not_found(self):
         from google.cloud.exceptions import NotFound
         from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -616,15 +641,18 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(NotFound):
             database.update_ddl(DDL_STATEMENTS)
 
+        expected_request = UpdateDatabaseDdlRequest(
+            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+        )
+
         api.update_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
-            DDL_STATEMENTS,
-            "",
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_update_ddl(self):
         from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 
         op_future = object()
         client = _Client()
@@ -638,15 +666,18 @@ class TestDatabase(_BaseTest):
 
         self.assertIs(future, op_future)
 
+        expected_request = UpdateDatabaseDdlRequest(
+            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+        )
+
         api.update_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
-            DDL_STATEMENTS,
-            "",
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_update_ddl_w_operation_id(self):
         from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 
         op_future = object()
         client = _Client()
@@ -660,10 +691,14 @@ class TestDatabase(_BaseTest):
 
         self.assertIs(future, op_future)
 
+        expected_request = UpdateDatabaseDdlRequest(
+            database=self.DATABASE_NAME,
+            statements=DDL_STATEMENTS,
+            operation_id="someOperationId",
+        )
+
         api.update_database_ddl.assert_called_once_with(
-            self.DATABASE_NAME,
-            DDL_STATEMENTS,
-            "someOperationId",
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -681,7 +716,7 @@ class TestDatabase(_BaseTest):
             database.drop()
 
         api.drop_database.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -699,7 +734,7 @@ class TestDatabase(_BaseTest):
             database.drop()
 
         api.drop_database.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -716,7 +751,7 @@ class TestDatabase(_BaseTest):
         database.drop()
 
         api.drop_database.assert_called_once_with(
-            self.DATABASE_NAME,
+            database=self.DATABASE_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -739,6 +774,7 @@ class TestDatabase(_BaseTest):
             _make_value_pb,
             _merge_query_options,
         )
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         import collections
 
@@ -777,8 +813,8 @@ class TestDatabase(_BaseTest):
         )
 
         api.begin_transaction.assert_called_with(
-            session.name,
-            txn_options,
+            session=session.name,
+            options=txn_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         if retried:
@@ -786,12 +822,7 @@ class TestDatabase(_BaseTest):
         else:
             self.assertEqual(api.begin_transaction.call_count, 1)
 
-        if params:
-            expected_params = Struct(
-                fields={key: _make_value_pb(value) for (key, value) in params.items()}
-            )
-        else:
-            expected_params = None
+        expected_params = params or {}
 
         expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
         expected_query_options = client._query_options
@@ -800,26 +831,33 @@ class TestDatabase(_BaseTest):
                 expected_query_options, query_options
             )
 
-        api.execute_streaming_sql.assert_any_call(
-            self.SESSION_NAME,
-            dml,
+        expected_request = ExecuteSqlRequest(
+            session=self.SESSION_NAME,
+            sql=dml,
             transaction=expected_transaction,
             params=expected_params,
             param_types=param_types,
             query_options=expected_query_options,
+        )
+
+        api.execute_streaming_sql.assert_any_call(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
         if retried:
             expected_retry_transaction = TransactionSelector(
                 id=self.RETRY_TRANSACTION_ID
             )
-            api.execute_streaming_sql.assert_called_with(
-                self.SESSION_NAME,
-                dml,
+            expected_request = ExecuteSqlRequest(
+                session=self.SESSION_NAME,
+                sql=dml,
                 transaction=expected_retry_transaction,
                 params=expected_params,
                 param_types=param_types,
                 query_options=expected_query_options,
+            )
+            api.execute_streaming_sql.assert_called_with(
+                request=expected_request,
                 metadata=[("google-cloud-resource-prefix", database.name)],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 2)
@@ -1248,7 +1286,7 @@ class TestBatchCheckout(_BaseTest):
         expected_txn_options = TransactionOptions(read_write={})
 
         api.commit.assert_called_once_with(
-            self.SESSION_NAME,
+            session=self.SESSION_NAME,
             mutations=[],
             single_use_transaction=expected_txn_options,
             metadata=[("google-cloud-resource-prefix", database.name)],
