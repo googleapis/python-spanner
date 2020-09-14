@@ -488,39 +488,36 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
         from google.cloud.spanner_admin_database_v1 import ListDatabasesResponse
-        from google.cloud.spanner.database import Database
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         databases_pb = ListDatabasesResponse(
             databases=[
-                DatabasePB(
-                    name="{}/databases/aa".format(self.INSTANCE_NAME)
-                ),
-                DatabasePB(
-                    name="{}/databases/bb".format(self.INSTANCE_NAME)
-                ),
+                DatabasePB(name="{}/databases/aa".format(self.INSTANCE_NAME)),
+                DatabasePB(name="{}/databases/bb".format(self.INSTANCE_NAME)),
             ]
         )
 
-        ld_api = api._inner_api_calls["list_databases"] = mock.Mock(
+        ld_api = api._transport._wrapped_methods[
+            api._transport.list_databases
+        ] = mock.Mock(
             return_value=databases_pb
         )
 
         response = instance.list_databases()
         databases = list(response)
 
-        self.assertIsInstance(databases[0], Database)
+        self.assertIsInstance(databases[0], DatabasePB)
         self.assertTrue(databases[0].name.endswith("/aa"))
         self.assertTrue(databases[1].name.endswith("/bb"))
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ld_api.assert_called_once_with(
             ListDatabasesRequest(parent=self.INSTANCE_NAME),
             metadata=expected_metadata,
@@ -533,14 +530,16 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
         from google.cloud.spanner_admin_database_v1 import ListDatabasesResponse
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         databases_pb = ListDatabasesResponse(databases=[])
 
-        ld_api = api._inner_api_calls["list_databases"] = mock.Mock(
+        ld_api = api._transport._wrapped_methods[
+            api._transport.list_databases
+        ] = mock.Mock(
             return_value=databases_pb
         )
 
@@ -551,10 +550,10 @@ class TestInstance(unittest.TestCase):
 
         self.assertEqual(databases, [])
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ld_api.assert_called_once_with(
             ListDatabasesRequest(
                 parent=self.INSTANCE_NAME, page_size=page_size, page_token=page_token
@@ -605,9 +604,8 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
         from google.cloud.spanner_admin_database_v1 import ListBackupsResponse
-        from google.cloud.spanner.backup import Backup
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -620,20 +618,20 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_backups"] = mock.Mock(
-            return_value=backups_pb
-        )
+        lbo_api = api._transport._wrapped_methods[
+            api._transport.list_backups
+        ] = mock.Mock(return_value=backups_pb)
 
         backups = instance.list_backups()
 
         for backup in backups:
-            self.assertIsInstance(backup, Backup)
+            self.assertIsInstance(backup, BackupPB)
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
-        ldo_api.assert_called_once_with(
+        )
+        lbo_api.assert_called_once_with(
             ListBackupsRequest(parent=self.INSTANCE_NAME),
             metadata=expected_metadata,
             retry=mock.ANY,
@@ -645,9 +643,8 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
         from google.cloud.spanner_admin_database_v1 import ListBackupsResponse
-        from google.cloud.spanner.backup import Backup
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -660,19 +657,19 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_backups"] = mock.Mock(
-            return_value=backups_pb
-        )
+        ldo_api = api._transport._wrapped_methods[
+            api._transport.list_backups
+        ] = mock.Mock(return_value=backups_pb)
 
         backups = instance.list_backups(filter_="filter", page_size=10)
 
         for backup in backups:
-            self.assertIsInstance(backup, Backup)
+            self.assertIsInstance(backup, BackupPB)
 
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ldo_api.assert_called_once_with(
             ListBackupsRequest(
                 parent=self.INSTANCE_NAME, filter="filter", page_size=10
@@ -683,7 +680,6 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_list_backup_operations_defaults(self):
-        from google.api_core.operation import Operation
         from google.cloud.spanner_admin_database_v1 import CreateBackupMetadata
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListBackupOperationsRequest
@@ -691,13 +687,17 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         create_backup_metadata = Any()
-        create_backup_metadata.Pack(CreateBackupMetadata())
+        create_backup_metadata.Pack(
+            CreateBackupMetadata.pb(
+                CreateBackupMetadata(name="backup", database="database")
+            )
+        )
 
         operations_pb = ListBackupOperationsResponse(
             operations=[
@@ -705,19 +705,16 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_backup_operations"] = mock.Mock(
-            return_value=operations_pb
-        )
+        ldo_api = api._transport._wrapped_methods[
+            api._transport.list_backup_operations
+        ] = mock.Mock(return_value=operations_pb)
 
-        operations = instance.list_backup_operations()
+        instance.list_backup_operations()
 
-        for op in operations:
-            self.assertIsInstance(op, Operation)
-
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ldo_api.assert_called_once_with(
             ListBackupOperationsRequest(parent=self.INSTANCE_NAME),
             metadata=expected_metadata,
@@ -726,7 +723,6 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_list_backup_operations_w_options(self):
-        from google.api_core.operation import Operation
         from google.cloud.spanner_admin_database_v1 import CreateBackupMetadata
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListBackupOperationsRequest
@@ -734,13 +730,17 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         create_backup_metadata = Any()
-        create_backup_metadata.Pack(CreateBackupMetadata())
+        create_backup_metadata.Pack(
+            CreateBackupMetadata.pb(
+                CreateBackupMetadata(name="backup", database="database")
+            )
+        )
 
         operations_pb = ListBackupOperationsResponse(
             operations=[
@@ -748,19 +748,16 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_backup_operations"] = mock.Mock(
-            return_value=operations_pb
-        )
+        ldo_api = api._transport._wrapped_methods[
+            api._transport.list_backup_operations
+        ] = mock.Mock(return_value=operations_pb)
 
-        operations = instance.list_backup_operations(filter_="filter", page_size=10)
+        instance.list_backup_operations(filter_="filter", page_size=10)
 
-        for op in operations:
-            self.assertIsInstance(op, Operation)
-
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ldo_api.assert_called_once_with(
             ListBackupOperationsRequest(
                 parent=self.INSTANCE_NAME, filter="filter", page_size=10
@@ -771,28 +768,35 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_list_database_operations_defaults(self):
-        from google.api_core.operation import Operation
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseMetadata
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsRequest
-        from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsResponse
-        from google.cloud.spanner_admin_database_v1 import OptimizeRestoredDatabaseMetadata
+        from google.cloud.spanner_admin_database_v1 import (
+            ListDatabaseOperationsResponse,
+        )
+        from google.cloud.spanner_admin_database_v1 import (
+            OptimizeRestoredDatabaseMetadata,
+        )
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         create_database_metadata = Any()
         create_database_metadata.Pack(
-            CreateDatabaseMetadata()
+            CreateDatabaseMetadata.pb(
+                CreateDatabaseMetadata(database="database")
+            )
         )
 
         optimize_database_metadata = Any()
         optimize_database_metadata.Pack(
-            OptimizeRestoredDatabaseMetadata()
+            OptimizeRestoredDatabaseMetadata.pb(
+                OptimizeRestoredDatabaseMetadata(name="database")
+            )
         )
 
         databases_pb = ListDatabaseOperationsResponse(
@@ -804,51 +808,54 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_database_operations"] = mock.Mock(
-            return_value=databases_pb
-        )
+        ldo_api = api._transport._wrapped_methods[
+            api._transport.list_database_operations
+        ] = mock.Mock(return_value=databases_pb)
 
-        operations = instance.list_database_operations()
+        instance.list_database_operations()
 
-        for op in operations:
-            self.assertIsInstance(op, Operation)
-
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ldo_api.assert_called_once_with(
-            ListDatabaseOperationsRequest(
-                parent=self.INSTANCE_NAME
-            ),
+            ListDatabaseOperationsRequest(parent=self.INSTANCE_NAME),
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,
         )
 
     def test_list_database_operations_w_options(self):
-        from google.api_core.operation import Operation
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
         from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsRequest
-        from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsResponse
+        from google.cloud.spanner_admin_database_v1 import (
+            ListDatabaseOperationsResponse,
+        )
         from google.cloud.spanner_admin_database_v1 import RestoreDatabaseMetadata
+        from google.cloud.spanner_admin_database_v1 import RestoreSourceType
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlMetadata
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(mock.Mock())
+        api = DatabaseAdminClient(credentials=mock.Mock())
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
 
         restore_database_metadata = Any()
         restore_database_metadata.Pack(
-            RestoreDatabaseMetadata()
+            RestoreDatabaseMetadata.pb(
+                RestoreDatabaseMetadata(name="database", source_type=RestoreSourceType.BACKUP)
+            )
         )
 
         update_database_metadata = Any()
         update_database_metadata.Pack(
-            UpdateDatabaseDdlMetadata()
+            UpdateDatabaseDdlMetadata.pb(
+                UpdateDatabaseDdlMetadata(
+                    database="database", statements=["statements"]
+                )
+            )
         )
 
         databases_pb = ListDatabaseOperationsResponse(
@@ -860,19 +867,16 @@ class TestInstance(unittest.TestCase):
             ]
         )
 
-        ldo_api = api._inner_api_calls["list_database_operations"] = mock.Mock(
-            return_value=databases_pb
-        )
+        ldo_api = api._transport._wrapped_methods[
+            api._transport.list_database_operations
+        ] = mock.Mock(return_value=databases_pb)
 
-        operations = instance.list_database_operations(filter_="filter", page_size=10)
+        instance.list_database_operations(filter_="filter", page_size=10)
 
-        for op in operations:
-            self.assertIsInstance(op, Operation)
-
-        expected_metadata = [
+        expected_metadata = (
             ("google-cloud-resource-prefix", instance.name),
             ("x-goog-request-params", "parent={}".format(instance.name)),
-        ]
+        )
         ldo_api.assert_called_once_with(
             ListDatabaseOperationsRequest(
                 parent=self.INSTANCE_NAME, filter="filter", page_size=10
@@ -883,7 +887,9 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_type_string_to_type_pb_hit(self):
-        from google.cloud.spanner_admin_database_v1 import OptimizeRestoredDatabaseMetadata
+        from google.cloud.spanner_admin_database_v1 import (
+            OptimizeRestoredDatabaseMetadata,
+        )
         from google.cloud.spanner import instance
 
         type_string = "type.googleapis.com/google.spanner.admin.database.v1.OptimizeRestoredDatabaseMetadata"
