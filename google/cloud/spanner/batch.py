@@ -186,5 +186,5 @@ def _make_write_pb(table, columns, values):
     :returns: Write protobuf
     """
     return Mutation.Write(
-        table=table, columns=columns, values=_make_list_value_pbs(values)
+        table=table, columns=columns, values=values
     )
