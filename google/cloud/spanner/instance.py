@@ -20,6 +20,10 @@ import re
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
 from google.cloud.spanner_admin_database_v1.types import backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
+from google.cloud.spanner_admin_database_v1 import ListBackupOperationsRequest
+from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
+from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsRequest
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.field_mask_pb2 import FieldMask
 
@@ -389,10 +393,12 @@ class Instance(object):
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
-        page_iter = self._client.database_admin_api.list_databases(
-            self.name, page_size=page_size, metadata=metadata
+        request = ListDatabasesRequest(
+            parent=self.name, page_size=page_size, page_token=page_token
         )
-        page_iter.next_page_token = page_token
+        page_iter = self._client.database_admin_api.list_databases(
+            request=request, metadata=metadata
+        )
         page_iter.item_to_value = self._item_to_database
         return page_iter
 
@@ -452,25 +458,13 @@ class Instance(object):
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
-        page_iter = self._client.database_admin_api.list_backups(
-            self.name, filter_, page_size=page_size, metadata=metadata
+        request = ListBackupsRequest(
+            parent=self.name, filter=filter_, page_size=page_size,
         )
-        page_iter.item_to_value = self._item_to_backup
+        page_iter = self._client.database_admin_api.list_backups(
+            request=request, metadata=metadata
+        )
         return page_iter
-
-    def _item_to_backup(self, iterator, backup_pb):
-        """Convert a backup protobuf to the native object.
-
-        :type iterator: :class:`~google.api_core.page_iterator.Iterator`
-        :param iterator: The iterator that is currently in use.
-
-        :type backup_pb: :class:`~google.spanner.admin.database.v1.Backup`
-        :param backup_pb: A backup returned from the API.
-
-        :rtype: :class:`~google.cloud.spanner.backup.Backup`
-        :returns: The next backup in the page.
-        """
-        return Backup.from_pb(backup_pb, self)
 
     def list_backup_operations(self, filter_="", page_size=None):
         """List backup operations for the instance.
@@ -492,10 +486,12 @@ class Instance(object):
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
-        page_iter = self._client.database_admin_api.list_backup_operations(
-            self.name, filter_, page_size=page_size, metadata=metadata
+        request = ListBackupOperationsRequest(
+            parent=self.name, filter=filter_, page_size=page_size,
         )
-        page_iter.item_to_value = self._item_to_operation
+        page_iter = self._client.database_admin_api.list_backup_operations(
+            request=request, metadata=metadata
+        )
         return page_iter
 
     def list_database_operations(self, filter_="", page_size=None):
@@ -518,27 +514,10 @@ class Instance(object):
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
+        request = ListDatabaseOperationsRequest(
+            parent=self.name, filter=filter_, page_size=page_size,
+        )
         page_iter = self._client.database_admin_api.list_database_operations(
-            self.name, filter_, page_size=page_size, metadata=metadata
+            request=request, metadata=metadata
         )
-        page_iter.item_to_value = self._item_to_operation
         return page_iter
-
-    def _item_to_operation(self, iterator, operation_pb):
-        """Convert an operation protobuf to the native object.
-
-        :type iterator: :class:`~google.api_core.page_iterator.Iterator`
-        :param iterator: The iterator that is currently in use.
-
-        :type operation_pb: :class:`~google.longrunning.operations.Operation`
-        :param operation_pb: An operation returned from the API.
-
-        :rtype: :class:`~google.api_core.operation.Operation`
-        :returns: The next operation in the page.
-        """
-        operations_client = self._client.database_admin_api.transport._operations_client
-        metadata_type = _type_string_to_type_pb(operation_pb.metadata.type_url)
-        response_type = _OPERATION_RESPONSE_TYPES[metadata_type]
-        return google.api_core.operation.from_gapic(
-            operation_pb, operations_client, response_type, metadata_type=metadata_type
-        )
