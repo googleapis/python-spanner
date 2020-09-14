@@ -17,15 +17,18 @@
 import functools
 
 from google.protobuf.struct_pb2 import Struct
+from google.cloud.spanner_v1 import BeginTransactionRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import PartitionOptions
+from google.cloud.spanner_v1 import PartitionQueryRequest
+from google.cloud.spanner_v1 import PartitionReadRequest
 
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 import google.api_core.gapic_v1.method
-from google.cloud._helpers import _datetime_to_pb_timestamp
-from google.cloud._helpers import _timedelta_to_duration_pb
 from google.cloud.spanner._helpers import _make_value_pb
 from google.cloud.spanner._helpers import _merge_query_options
 from google.cloud.spanner._helpers import _metadata_with_prefix
@@ -150,17 +153,18 @@ class _SnapshotBase(_SessionWrapper):
         metadata = _metadata_with_prefix(database.name)
         transaction = self._make_txn_selector()
 
-        restart = functools.partial(
-            api.streaming_read,
-            self._session.name,
-            table,
-            columns,
-            keyset._to_pb(),
+        request = ReadRequest(
+            session=self._session.name,
+            table=table,
+            columns=columns,
+            key_set=keyset._to_pb(),
             transaction=transaction,
             index=index,
             limit=limit,
             partition_token=partition,
-            metadata=metadata,
+        )
+        restart = functools.partial(
+            api.streaming_read, request=request, metadata=metadata,
         )
 
         trace_attributes = {"table_id": table, "columns": columns}
@@ -238,7 +242,7 @@ class _SnapshotBase(_SessionWrapper):
                 fields={key: _make_value_pb(value) for key, value in params.items()}
             )
         else:
-            params_pb = None
+            params_pb = {}
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
@@ -250,10 +254,9 @@ class _SnapshotBase(_SessionWrapper):
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
 
-        restart = functools.partial(
-            api.execute_streaming_sql,
-            self._session.name,
-            sql,
+        request = ExecuteSqlRequest(
+            session=self._session.name,
+            sql=sql,
             transaction=transaction,
             params=params_pb,
             param_types=param_types,
@@ -261,6 +264,10 @@ class _SnapshotBase(_SessionWrapper):
             partition_token=partition,
             seqno=self._execute_sql_count,
             query_options=query_options,
+        )
+        restart = functools.partial(
+            api.execute_streaming_sql,
+            request=request,
             metadata=metadata,
             retry=retry,
             timeout=timeout,
@@ -337,21 +344,21 @@ class _SnapshotBase(_SessionWrapper):
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
         )
+        request = PartitionReadRequest(
+            session=self._session.name,
+            table=table,
+            columns=columns,
+            key_set=keyset._to_pb(),
+            transaction=transaction,
+            index=index,
+            partition_options=partition_options,
+        )
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
             "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
         ):
-            response = api.partition_read(
-                session=self._session.name,
-                table=table,
-                columns=columns,
-                key_set=keyset._to_pb(),
-                transaction=transaction,
-                index=index,
-                partition_options=partition_options,
-                metadata=metadata,
-            )
+            response = api.partition_read(request=request, metadata=metadata,)
 
         return [partition.partition_token for partition in response.partitions]
 
@@ -404,11 +411,8 @@ class _SnapshotBase(_SessionWrapper):
         if params is not None:
             if param_types is None:
                 raise ValueError("Specify 'param_types' when passing 'params'.")
-            params_pb = Struct(
-                fields={key: _make_value_pb(value) for key, value in params.items()}
-            )
         else:
-            params_pb = None
+            params = {}
 
         database = self._session._database
         api = database.spanner_api
@@ -417,6 +421,14 @@ class _SnapshotBase(_SessionWrapper):
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
         )
+        request = PartitionQueryRequest(
+            session=self._session.name,
+            sql=sql,
+            transaction=transaction,
+            params=params,
+            param_types=param_types,
+            partition_options=partition_options,
+        )
 
         trace_attributes = {"db.statement": sql}
         with trace_call(
@@ -424,15 +436,7 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
         ):
-            response = api.partition_query(
-                session=self._session.name,
-                sql=sql,
-                transaction=transaction,
-                params=params_pb,
-                param_types=param_types,
-                partition_options=partition_options,
-                metadata=metadata,
-            )
+            response = api.partition_query(request=request, metadata=metadata,)
 
         return [partition.partition_token for partition in response.partitions]
 
@@ -509,16 +513,16 @@ class Snapshot(_SnapshotBase):
 
         if self._read_timestamp:
             key = "read_timestamp"
-            value = _datetime_to_pb_timestamp(self._read_timestamp)
+            value = self._read_timestamp
         elif self._min_read_timestamp:
             key = "min_read_timestamp"
-            value = _datetime_to_pb_timestamp(self._min_read_timestamp)
+            value = self._min_read_timestamp
         elif self._max_staleness:
             key = "max_staleness"
-            value = _timedelta_to_duration_pb(self._max_staleness)
+            value = self._max_staleness
         elif self._exact_staleness:
             key = "exact_staleness"
-            value = _timedelta_to_duration_pb(self._exact_staleness)
+            value = self._exact_staleness
         else:
             key = "strong"
             value = True
@@ -556,7 +560,9 @@ class Snapshot(_SnapshotBase):
         txn_selector = self._make_txn_selector()
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             response = api.begin_transaction(
-                self._session.name, txn_selector.begin, metadata=metadata
+                session=self._session.name,
+                options=txn_selector.begin,
+                metadata=metadata,
             )
         self._transaction_id = response.id
         return self._transaction_id
