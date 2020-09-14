@@ -16,12 +16,13 @@
 
 from google.protobuf.struct_pb2 import Struct
 
-from google.cloud._helpers import _pb_timestamp_to_datetime
 from google.cloud.spanner._helpers import (
     _make_value_pb,
     _merge_query_options,
     _metadata_with_prefix,
 )
+from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner.snapshot import _SnapshotBase
@@ -98,7 +99,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             response = api.begin_transaction(
-                self._session.name, txn_options, metadata=metadata
+                session=self._session.name, options=txn_options, metadata=metadata
             )
         self._transaction_id = response.id
         return self._transaction_id
@@ -110,7 +111,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         with trace_call("CloudSpanner.Rollback", self._session):
-            api.rollback(self._session.name, self._transaction_id, metadata=metadata)
+            api.rollback(
+                session=self._session.name,
+                transaction_id=self._transaction_id,
+                metadata=metadata,
+            )
         self.rolled_back = True
         del self._session._transaction
 
@@ -129,12 +134,12 @@ class Transaction(_SnapshotBase, _BatchBase):
         trace_attributes = {"num_mutations": len(self._mutations)}
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             response = api.commit(
-                self._session.name,
+                session=self._session.name,
                 mutations=self._mutations,
                 transaction_id=self._transaction_id,
                 metadata=metadata,
             )
-        self.committed = _pb_timestamp_to_datetime(response.commit_timestamp)
+        self.committed = response.commit_timestamp
         del self._session._transaction
         return self.committed
 
@@ -168,7 +173,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             if param_types is not None:
                 raise ValueError("Specify 'params' when passing 'param_types'.")
 
-        return None
+        return {}
 
     def execute_update(
         self, dml, params=None, param_types=None, query_mode=None, query_options=None
@@ -218,20 +223,20 @@ class Transaction(_SnapshotBase, _BatchBase):
         query_options = _merge_query_options(default_query_options, query_options)
 
         trace_attributes = {"db.statement": dml}
+        request = ExecuteSqlRequest(
+            session=self._session.name,
+            sql=dml,
+            transaction=transaction,
+            params=params_pb,
+            param_types=param_types,
+            query_mode=query_mode,
+            query_options=query_options,
+            seqno=seqno,
+        )
         with trace_call(
             "CloudSpanner.ReadWriteTransaction", self._session, trace_attributes
         ):
-            response = api.execute_sql(
-                self._session.name,
-                dml,
-                transaction=transaction,
-                params=params_pb,
-                param_types=param_types,
-                query_mode=query_mode,
-                query_options=query_options,
-                seqno=seqno,
-                metadata=metadata,
-            )
+            response = api.execute_sql(request=request, metadata=metadata)
         return response.stats.row_count_exact
 
     def batch_update(self, statements):
@@ -281,14 +286,14 @@ class Transaction(_SnapshotBase, _BatchBase):
             # Get just the queries from the DML statement batch
             "db.statement": ";".join([statement["sql"] for statement in parsed])
         }
+        request = ExecuteBatchDmlRequest(
+            session=self._session.name,
+            transaction=transaction,
+            statements=parsed,
+            seqno=seqno,
+        )
         with trace_call("CloudSpanner.DMLTransaction", self._session, trace_attributes):
-            response = api.execute_batch_dml(
-                session=self._session.name,
-                transaction=transaction,
-                statements=parsed,
-                seqno=seqno,
-                metadata=metadata,
-            )
+            response = api.execute_batch_dml(request=request, metadata=metadata)
         row_counts = [
             result_set.stats.row_count_exact for result_set in response.result_sets
         ]
