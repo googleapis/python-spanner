@@ -15,6 +15,7 @@
 """Helper functions for Cloud Spanner."""
 
 import datetime
+import json
 import decimal
 import math
 
@@ -161,6 +162,41 @@ def _make_list_value_pbs(values):
 
 
 # pylint: disable=too-many-branches
+def _parse_value(value, field_type):
+    if value is None:
+        return None
+    if field_type.code == TypeCode.STRING:
+        result = value
+    elif field_type.code == TypeCode.BYTES:
+        result = value.encode("utf8")
+    elif field_type.code == TypeCode.BOOL:
+        result = value
+    elif field_type.code == TypeCode.INT64:
+        result = int(value)
+    elif field_type.code == TypeCode.FLOAT64:
+        if isinstance(value, str):
+            result = float(value)
+        else:
+            result = value
+    elif field_type.code == TypeCode.DATE:
+        result = value
+    elif field_type.code == TypeCode.TIMESTAMP:
+        result = value
+    elif field_type.code == TypeCode.ARRAY:
+        result = [
+            _parse_value(item, field_type.array_element_type)
+            for item in value
+        ]
+    elif field_type.code == TypeCode.STRUCT:
+        result = [
+            _parse_value(item, field_type.struct_type.fields[i].type)
+            for (i, item) in enumerate(value)
+        ]
+    else:
+        raise ValueError("Unknown type: %s" % (field_type,))
+    return result
+
+
 def _parse_value_pb(value_pb, field_type):
     """Convert a Value protobuf to cell data.
 
@@ -204,7 +240,7 @@ def _parse_value_pb(value_pb, field_type):
             _parse_value_pb(item_pb, field_type.struct_type.fields[i].type)
             for (i, item_pb) in enumerate(value_pb.list_value.values)
         ]
-    elif field_type.code == type_pb2.NUMERIC:
+    elif field_type.code == TypeCode.NUMERIC:
         result = decimal.Decimal(value_pb.string_value)
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
