@@ -411,8 +411,11 @@ class _SnapshotBase(_SessionWrapper):
         if params is not None:
             if param_types is None:
                 raise ValueError("Specify 'param_types' when passing 'params'.")
+            params_pb = Struct(
+                fields={key: _make_value_pb(value) for (key, value) in params.items()}
+            )
         else:
-            params = {}
+            params_pb = Struct()
 
         database = self._session._database
         api = database.spanner_api
@@ -425,7 +428,7 @@ class _SnapshotBase(_SessionWrapper):
             session=self._session.name,
             sql=sql,
             transaction=transaction,
-            params=params,
+            params=params_pb,
             param_types=param_types,
             partition_options=partition_options,
         )
