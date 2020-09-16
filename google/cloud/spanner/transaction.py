@@ -264,12 +264,16 @@ class Transaction(_SnapshotBase, _BatchBase):
         parsed = []
         for statement in statements:
             if isinstance(statement, str):
-                parsed.append({"sql": statement})
+                parsed.append(ExecuteBatchDmlRequest.Statement(sql=statement))
             else:
                 dml, params, param_types = statement
                 params_pb = self._make_params_pb(params, param_types)
                 parsed.append(
-                    {"sql": dml, "params": params_pb, "param_types": param_types}
+                    ExecuteBatchDmlRequest.Statement(
+                        sql=dml,
+                        params=params_pb,
+                        param_types=param_types
+                    )
                 )
 
         database = self._session._database
@@ -284,7 +288,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
-            "db.statement": ";".join([statement["sql"] for statement in parsed])
+            "db.statement": ";".join([statement.sql for statement in parsed])
         }
         request = ExecuteBatchDmlRequest(
             session=self._session.name,
