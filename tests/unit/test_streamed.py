@@ -245,7 +245,7 @@ class TestStreamedResultSet(unittest.TestCase):
             u"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA"
             u"6fptVAAAACXBIWXMAAAsTAAALEwEAmpwYAAAA\n"
         )
-        chunk =  (
+        chunk = (
             u"B3RJTUUH4QQGFwsBTL3HMwAAABJpVFh0Q29tbWVudAAAAAAAU0FNUExF"
             u"MG3E+AAAAApJREFUCNdj\nYAAAAAIAAeIhvDMAAAAASUVORK5CYII=\n"
         )
@@ -366,7 +366,9 @@ class TestStreamedResultSet(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        subarray_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64))
+        subarray_type = Type(
+            code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
+        )
         array_type = Type(code=TypeCode.ARRAY, array_element_type=subarray_type)
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -410,7 +412,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
         merged = streamed._merge_chunk(chunk)
 
-        expected =[
+        expected = [
             [u"A", u"B"],
             [u"CD"],
             [u"E", u"F"],

@@ -600,7 +600,10 @@ class TestTransaction(OpenTelemetryBase):
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
-        insert_param_types = {"pkey": Type(code=TypeCode.INT64), "desc": Type(code=TypeCode.STRING)}
+        insert_param_types = {
+            "pkey": Type(code=TypeCode.INT64),
+            "desc": Type(code=TypeCode.STRING),
+        }
         update_dml = 'UPDATE table SET desc = desc + "-amended"'
         delete_dml = "DELETE FROM table WHERE desc IS NULL"
 

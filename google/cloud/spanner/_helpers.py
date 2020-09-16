@@ -183,10 +183,7 @@ def _parse_value(value, field_type):
     elif field_type.code == TypeCode.TIMESTAMP:
         result = value
     elif field_type.code == TypeCode.ARRAY:
-        result = [
-            _parse_value(item, field_type.array_element_type)
-            for item in value
-        ]
+        result = [_parse_value(item, field_type.array_element_type) for item in value]
     elif field_type.code == TypeCode.STRUCT:
         result = [
             _parse_value(item, field_type.struct_type.fields[i].type)

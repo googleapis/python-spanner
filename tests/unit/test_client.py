@@ -460,9 +460,9 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        lic_api = api._transport._wrapped_methods[api._transport.list_instance_configs] = mock.Mock(
-            return_value=instance_config_pbs
-        )
+        lic_api = api._transport._wrapped_methods[
+            api._transport.list_instance_configs
+        ] = mock.Mock(return_value=instance_config_pbs)
 
         response = client.list_instance_configs()
         instance_configs = list(response)
@@ -504,9 +504,9 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        lic_api = api._transport._wrapped_methods[api._transport.list_instance_configs] = mock.Mock(
-            return_value=instance_config_pbs
-        )
+        lic_api = api._transport._wrapped_methods[
+            api._transport.list_instance_configs
+        ] = mock.Mock(return_value=instance_config_pbs)
 
         token = "token"
         page_size = 42
@@ -517,9 +517,7 @@ class TestClient(unittest.TestCase):
             ("x-goog-request-params", "parent={}".format(client.project_name)),
         )
         lic_api.assert_called_once_with(
-            ListInstanceConfigsRequest(
-                parent=self.PATH, page_size=page_size
-            ),
+            ListInstanceConfigsRequest(parent=self.PATH, page_size=page_size),
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,
@@ -583,9 +581,9 @@ class TestClient(unittest.TestCase):
             ]
         )
 
-        li_api = api._transport._wrapped_methods[api._transport.list_instances] = mock.Mock(
-            return_value=instance_pbs
-        )
+        li_api = api._transport._wrapped_methods[
+            api._transport.list_instances
+        ] = mock.Mock(return_value=instance_pbs)
 
         response = client.list_instances()
         instances = list(response)
@@ -620,9 +618,9 @@ class TestClient(unittest.TestCase):
 
         instance_pbs = ListInstancesResponse(instances=[])
 
-        li_api = api._transport._wrapped_methods[api._transport.list_instances] = mock.Mock(
-            return_value=instance_pbs
-        )
+        li_api = api._transport._wrapped_methods[
+            api._transport.list_instances
+        ] = mock.Mock(return_value=instance_pbs)
 
         page_size = 42
         filter = "name:instance"
@@ -633,9 +631,7 @@ class TestClient(unittest.TestCase):
             ("x-goog-request-params", "parent={}".format(client.project_name)),
         )
         li_api.assert_called_once_with(
-            ListInstancesRequest(
-                parent=self.PATH, page_size=page_size
-            ),
+            ListInstancesRequest(parent=self.PATH, page_size=page_size),
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,

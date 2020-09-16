@@ -30,6 +30,7 @@ from google.cloud.spanner._opentelemetry_tracing import trace_call
 from google.cloud.spanner.batch import Batch
 from google.cloud.spanner.snapshot import Snapshot
 from google.cloud.spanner.transaction import Transaction
+
 # pylint: enable=ungrouped-imports
 
 

@@ -270,9 +270,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 params_pb = self._make_params_pb(params, param_types)
                 parsed.append(
                     ExecuteBatchDmlRequest.Statement(
-                        sql=dml,
-                        params=params_pb,
-                        param_types=param_types
+                        sql=dml, params=params_pb, param_types=param_types
                     )
                 )
 

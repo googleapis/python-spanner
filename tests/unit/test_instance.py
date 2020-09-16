@@ -503,9 +503,7 @@ class TestInstance(unittest.TestCase):
 
         ld_api = api._transport._wrapped_methods[
             api._transport.list_databases
-        ] = mock.Mock(
-            return_value=databases_pb
-        )
+        ] = mock.Mock(return_value=databases_pb)
 
         response = instance.list_databases()
         databases = list(response)
@@ -539,9 +537,7 @@ class TestInstance(unittest.TestCase):
 
         ld_api = api._transport._wrapped_methods[
             api._transport.list_databases
-        ] = mock.Mock(
-            return_value=databases_pb
-        )
+        ] = mock.Mock(return_value=databases_pb)
 
         page_size = 42
         page_token = "token"
@@ -787,9 +783,7 @@ class TestInstance(unittest.TestCase):
 
         create_database_metadata = Any()
         create_database_metadata.Pack(
-            CreateDatabaseMetadata.pb(
-                CreateDatabaseMetadata(database="database")
-            )
+            CreateDatabaseMetadata.pb(CreateDatabaseMetadata(database="database"))
         )
 
         optimize_database_metadata = Any()
@@ -845,7 +839,9 @@ class TestInstance(unittest.TestCase):
         restore_database_metadata = Any()
         restore_database_metadata.Pack(
             RestoreDatabaseMetadata.pb(
-                RestoreDatabaseMetadata(name="database", source_type=RestoreSourceType.BACKUP)
+                RestoreDatabaseMetadata(
+                    name="database", source_type=RestoreSourceType.BACKUP
+                )
             )
         )
 

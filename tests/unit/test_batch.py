@@ -160,9 +160,7 @@ class Test_BatchBase(_BaseTest):
         self.assertEqual(len(key_set_pb.ranges), 0)
         self.assertEqual(len(key_set_pb.keys), len(keys))
         for found, expected in zip(key_set_pb.keys, keys):
-            self.assertEqual(
-                [int(value) for value in found], expected
-            )
+            self.assertEqual([int(value) for value in found], expected)
 
 
 class TestBatch(_BaseTest, OpenTelemetryBase):

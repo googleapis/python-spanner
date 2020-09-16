@@ -1098,7 +1098,10 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.single_use
         self.assertEqual(
-            _pb_timestamp_to_datetime(type(options).pb(options).read_only.read_timestamp), timestamp
+            _pb_timestamp_to_datetime(
+                type(options).pb(options).read_only.read_timestamp
+            ),
+            timestamp,
         )
 
     def test__make_txn_selector_w_min_read_timestamp(self):
@@ -1110,7 +1113,10 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.single_use
         self.assertEqual(
-            _pb_timestamp_to_datetime(type(options).pb(options).read_only.min_read_timestamp), timestamp
+            _pb_timestamp_to_datetime(
+                type(options).pb(options).read_only.min_read_timestamp
+            ),
+            timestamp,
         )
 
     def test__make_txn_selector_w_max_staleness(self):
@@ -1120,7 +1126,9 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.single_use
         self.assertEqual(type(options).pb(options).read_only.max_staleness.seconds, 3)
-        self.assertEqual(type(options).pb(options).read_only.max_staleness.nanos, 123456000)
+        self.assertEqual(
+            type(options).pb(options).read_only.max_staleness.nanos, 123456000
+        )
 
     def test__make_txn_selector_w_exact_staleness(self):
         duration = self._makeDuration(seconds=3, microseconds=123456)
@@ -1129,7 +1137,9 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.single_use
         self.assertEqual(type(options).pb(options).read_only.exact_staleness.seconds, 3)
-        self.assertEqual(type(options).pb(options).read_only.exact_staleness.nanos, 123456000)
+        self.assertEqual(
+            type(options).pb(options).read_only.exact_staleness.nanos, 123456000
+        )
 
     def test__make_txn_selector_strong_w_multi_use(self):
         session = _Session()
@@ -1147,7 +1157,10 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.begin
         self.assertEqual(
-            _pb_timestamp_to_datetime(type(options).pb(options).read_only.read_timestamp), timestamp
+            _pb_timestamp_to_datetime(
+                type(options).pb(options).read_only.read_timestamp
+            ),
+            timestamp,
         )
 
     def test__make_txn_selector_w_exact_staleness_w_multi_use(self):
@@ -1157,7 +1170,9 @@ class TestSnapshot(OpenTelemetryBase):
         selector = snapshot._make_txn_selector()
         options = selector.begin
         self.assertEqual(type(options).pb(options).read_only.exact_staleness.seconds, 3)
-        self.assertEqual(type(options).pb(options).read_only.exact_staleness.nanos, 123456000)
+        self.assertEqual(
+            type(options).pb(options).read_only.exact_staleness.nanos, 123456000
+        )
 
     def test_begin_wo_multi_use(self):
         session = _Session()
