@@ -559,13 +559,13 @@ class TestTransaction(OpenTelemetryBase):
             }
         )
         expected_statements = [
-            {
-                "sql": insert_dml,
-                "params": expected_insert_params,
-                "param_types": insert_param_types,
-            },
-            {"sql": update_dml},
-            {"sql": delete_dml},
+            ExecuteBatchDmlRequest.Statement(
+                sql=insert_dml,
+                params=expected_insert_params,
+                param_types=insert_param_types,
+            ),
+            ExecuteBatchDmlRequest.Statement(sql=update_dml),
+            ExecuteBatchDmlRequest.Statement(sql=delete_dml),
         ]
 
         expected_request = ExecuteBatchDmlRequest(
