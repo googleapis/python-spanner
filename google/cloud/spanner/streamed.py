@@ -204,11 +204,7 @@ class Unmergeable(ValueError):
     """
 
     def __init__(self, lhs, rhs, type_):
-        message = "Cannot merge %s values: %s %s" % (
-            TypeCode(type_.code),
-            lhs,
-            rhs,
-        )
+        message = "Cannot merge %s values: %s %s" % (TypeCode(type_.code), lhs, rhs,)
         super(Unmergeable, self).__init__(message)
 
 
@@ -221,11 +217,7 @@ def _merge_float64(lhs, rhs, type_):  # pylint: disable=unused-argument
     """Helper for '_merge_by_type'."""
     if type(lhs) == str:
         return float(lhs + rhs)
-    array_continuation = (
-        type(lhs) == float
-        and type(rhs) == str
-        and rhs == ""
-    )
+    array_continuation = type(lhs) == float and type(rhs) == str and rhs == ""
     if array_continuation:
         return lhs
     raise Unmergeable(lhs, rhs, type_)
@@ -244,12 +236,14 @@ def _merge_array(lhs, rhs, type_):
     element_type = type_.array_element_type
     if element_type.code in _UNMERGEABLE_TYPES:
         # Individual values cannot be merged, just concatenate
-        return lhs + rhs
+        lhs.extend(rhs)
+        return lhs
 
     # Sanity check: If either list is empty, short-circuit.
     # This is effectively a no-op.
     if not len(lhs) or not len(rhs):
-        return lhs + rhs
+        lhs.extend(rhs)
+        return lhs
 
     first = rhs.pop(0)
     if first is None:  # can't merge
@@ -263,7 +257,8 @@ def _merge_array(lhs, rhs, type_):
             lhs.append(first)
         else:
             lhs.append(merged)
-    return lhs + rhs
+    lhs.extend(rhs)
+    return lhs
 
 
 def _merge_struct(lhs, rhs, type_):
@@ -273,7 +268,8 @@ def _merge_struct(lhs, rhs, type_):
     # Sanity check: If either list is empty, short-circuit.
     # This is effectively a no-op.
     if not len(lhs) or not len(rhs):
-        return lhs + rhs
+        lhs.extend(rhs)
+        return lhs
 
     candidate_type = fields[len(lhs) - 1].type
     first = rhs.pop(0)
@@ -288,7 +284,8 @@ def _merge_struct(lhs, rhs, type_):
             lhs.append(first)
         else:
             lhs.append(merged)
-    return lhs + rhs
+    lhs.extend(rhs)
+    return lhs
 
 
 _MERGE_BY_TYPE = {
