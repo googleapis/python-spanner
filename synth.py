@@ -30,21 +30,22 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library, excludes=["google/spanner/**", "google/spanner_v1/**", "*.*", "docs/index.rst"])
-s.move(library / "google/spanner_v1", "google/cloud/spanner_v1")
-
-# Fix up generated imports
-s.replace(
-    ["google/**/*.py", "tests/**/*.py"],
-    "google\.spanner_v1",
-    "google.cloud.spanner_v1",
-)
+s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst"])
 
 # Fix invalid imports
+# See https://github.com/googleapis/gapic-generator-python/issues/601
 s.replace(
     "google/**/*.py",
     "gs_type",
     "type"
+)
+
+# Remove unsed import which is clashing with type builtin
+# See https://github.com/googleapis/gapic-generator-python/issues/324
+s.replace(
+    "tests/unit/gapic/spanner_v1/test_spanner.py",
+    "\s+from google.cloud.spanner_v1.types import type\n",
+    "\n"
 )
 
 # ----------------------------------------------------------------------------
@@ -57,16 +58,7 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library, excludes=["google/spanner/**", "*.*", "docs/index.rst"])
-s.move(library / "google/spanner/admin/instance_v1", "google/cloud/spanner_admin_instance_v1")
-s.move(library / "google/spanner/admin/instance", "google/cloud/spanner_admin_instance_v1")
-
-# Fix up generated imports
-s.replace(
-    ["google/**/*.py", "tests/**/*.py"],
-    "google\.spanner\.admin\.instance_v1",
-    "google.cloud.spanner_admin_instance_v1",
-)
+s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
 
 # ----------------------------------------------------------------------------
 # Generate database admin client
@@ -78,16 +70,7 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library, excludes=["google/spanner/**", "*.*", "docs/index.rst"])
-s.move(library / "google/spanner/admin/database_v1", "google/cloud/spanner_admin_database_v1")
-s.move(library / "google/spanner/admin/database", "google/cloud/spanner_admin_database_v1")
-
-# Fix up generated imports
-s.replace(
-    ["google/**/*.py", "tests/**/*.py"],
-    "google\.spanner\.admin\.database_v1",
-    "google.cloud.spanner_admin_database_v1",
-)
+s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
 
 # ----------------------------------------------------------------------------
 # Add templated files
