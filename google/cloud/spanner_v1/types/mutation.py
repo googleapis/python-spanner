@@ -18,8 +18,8 @@
 import proto  # type: ignore
 
 
-from google.protobuf import struct_pb2 as struct  # type: ignore
 from google.cloud.spanner_v1.types import keys
+from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
 __protobuf__ = proto.module(package="google.spanner.v1", manifest={"Mutation",},)

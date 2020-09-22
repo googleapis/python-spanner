@@ -30,14 +30,14 @@ from google.auth.transport import mtls  # type: ignore
 from google.auth.exceptions import MutualTLSChannelError  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 
-from google.protobuf import struct_pb2 as struct  # type: ignore
-from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
-from google.rpc import status_pb2 as status  # type: ignore
 from google.cloud.spanner_v1.services.spanner import pagers
 from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
+from google.protobuf import struct_pb2 as struct  # type: ignore
+from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
+from google.rpc import status_pb2 as status  # type: ignore
 
 from .transports.base import SpannerTransport
 from .transports.grpc import SpannerGrpcTransport
@@ -1197,6 +1197,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
             gapic_v1.routing_header.to_grpc_metadata((("session", request.session),)),
         )
 
+        print(request)
+
         # Send the request.
         response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
 
@@ -1427,7 +1429,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
 try:
     _client_info = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution("google-spanner",).version,
+        gapic_version=pkg_resources.get_distribution("google-cloud-spanner",).version,
     )
 except pkg_resources.DistributionNotFound:
     _client_info = gapic_v1.client_info.ClientInfo()

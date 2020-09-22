@@ -32,11 +32,11 @@ from google.oauth2 import service_account  # type: ignore
 
 from google.api_core import operation
 from google.api_core import operation_async
+from google.cloud.spanner_admin_instance_v1.services.instance_admin import pagers
+from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
 from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.protobuf import field_mask_pb2 as gp_field_mask  # type: ignore
-from google.cloud.spanner_admin_instance_v1.services.instance_admin import pagers
-from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
 from .transports.base import InstanceAdminTransport
 from .transports.grpc import InstanceAdminGrpcTransport
@@ -1323,7 +1323,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 try:
     _client_info = gapic_v1.client_info.ClientInfo(
         gapic_version=pkg_resources.get_distribution(
-            "google-spanner-admin-instance",
+            "google-cloud-spanner-admin-instance",
         ).version,
     )
 except pkg_resources.DistributionNotFound:

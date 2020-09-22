@@ -1,6 +1,6 @@
-Services for Google Spanner v1 API
-==================================
+Services for Google Cloud Spanner v1 API
+========================================
 
-.. automodule:: google.spanner_v1.services.spanner
+.. automodule:: google.cloud.spanner_v1.services.spanner
     :members:
     :inherited-members:

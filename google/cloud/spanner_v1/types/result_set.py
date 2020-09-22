@@ -18,10 +18,10 @@
 import proto  # type: ignore
 
 
-from google.protobuf import struct_pb2 as struct  # type: ignore
 from google.cloud.spanner_v1.types import query_plan as gs_query_plan
 from google.cloud.spanner_v1.types import transaction as gs_transaction
 from google.cloud.spanner_v1.types import type
+from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
 __protobuf__ = proto.module(

@@ -25,10 +25,10 @@ from google.auth.transport.grpc import SslCredentials  # type: ignore
 
 import grpc  # type: ignore
 
-from google.protobuf import empty_pb2 as empty  # type: ignore
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
+from google.protobuf import empty_pb2 as empty  # type: ignore
 
 from .base import SpannerTransport
 

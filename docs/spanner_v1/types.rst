@@ -1,5 +1,5 @@
-Types for Google Spanner v1 API
-===============================
+Types for Google Cloud Spanner v1 API
+=====================================
 
-.. automodule:: google.spanner_v1.types
+.. automodule:: google.cloud.spanner_v1.types
     :members:

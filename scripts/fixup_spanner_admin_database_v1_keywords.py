@@ -37,7 +37,7 @@ def partition(
     return results[1], results[0]
 
 
-class databaseCallTransformer(cst.CSTTransformer):
+class spanner_admin_databaseCallTransformer(cst.CSTTransformer):
     CTRL_PARAMS: Tuple[str] = ('retry', 'timeout', 'metadata')
     METHOD_TO_PARAMS: Dict[str, Tuple[str]] = {
     'create_backup': ('parent', 'backup_id', 'backup', ),
@@ -106,7 +106,7 @@ def fix_files(
     in_dir: pathlib.Path,
     out_dir: pathlib.Path,
     *,
-    transformer=databaseCallTransformer(),
+    transformer=spanner_admin_databaseCallTransformer(),
 ):
     """Duplicate the input dir to the output dir, fixing file method calls.
 
@@ -139,7 +139,7 @@ def fix_files(
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description="""Fix up source that uses the database client library.
+        description="""Fix up source that uses the spanner_admin_database client library.
 
 The existing sources are NOT overwritten but are copied to output_dir with changes made.
 

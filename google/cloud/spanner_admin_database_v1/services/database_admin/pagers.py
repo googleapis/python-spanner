@@ -17,9 +17,9 @@
 
 from typing import Any, AsyncIterable, Awaitable, Callable, Iterable, Sequence, Tuple
 
-from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.cloud.spanner_admin_database_v1.types import backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+from google.longrunning import operations_pb2 as operations  # type: ignore
 
 
 class ListDatabasesPager:

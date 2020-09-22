@@ -32,11 +32,6 @@ from google.api_core import grpc_helpers
 from google.api_core import grpc_helpers_async
 from google.auth import credentials
 from google.auth.exceptions import MutualTLSChannelError
-from google.oauth2 import service_account
-from google.protobuf import duration_pb2 as duration  # type: ignore
-from google.protobuf import struct_pb2 as struct  # type: ignore
-from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
-from google.rpc import status_pb2 as status  # type: ignore
 from google.cloud.spanner_v1.services.spanner import SpannerAsyncClient
 from google.cloud.spanner_v1.services.spanner import SpannerClient
 from google.cloud.spanner_v1.services.spanner import pagers
@@ -47,8 +42,12 @@ from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
-from google.cloud.spanner_v1.types import type
 from google.cloud.spanner_v1.types import type as gs_type
+from google.oauth2 import service_account
+from google.protobuf import duration_pb2 as duration  # type: ignore
+from google.protobuf import struct_pb2 as struct  # type: ignore
+from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
+from google.rpc import status_pb2 as status  # type: ignore
 
 
 def client_cert_source_callback():

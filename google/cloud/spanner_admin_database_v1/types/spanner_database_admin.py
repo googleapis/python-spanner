@@ -18,10 +18,10 @@
 import proto  # type: ignore
 
 
-from google.longrunning import operations_pb2 as gl_operations  # type: ignore
-from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
 from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import common
+from google.longrunning import operations_pb2 as gl_operations  # type: ignore
+from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
 
 
 __protobuf__ = proto.module(

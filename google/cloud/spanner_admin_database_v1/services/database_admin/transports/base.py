@@ -26,19 +26,19 @@ from google.api_core import retry as retries  # type: ignore
 from google.api_core import operations_v1  # type: ignore
 from google.auth import credentials  # type: ignore
 
+from google.cloud.spanner_admin_database_v1.types import backup
+from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
+from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
 from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.protobuf import empty_pb2 as empty  # type: ignore
-from google.cloud.spanner_admin_database_v1.types import backup
-from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
-from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
 
 try:
     _client_info = gapic_v1.client_info.ClientInfo(
         gapic_version=pkg_resources.get_distribution(
-            "google-spanner-admin-database",
+            "google-cloud-spanner-admin-database",
         ).version,
     )
 except pkg_resources.DistributionNotFound:
@@ -117,7 +117,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -133,7 +133,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -146,7 +146,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -159,7 +159,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -172,7 +172,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -188,7 +188,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=30.0,
@@ -209,7 +209,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -222,7 +222,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -235,7 +235,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -248,7 +248,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -264,7 +264,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -277,7 +277,7 @@ class DatabaseAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
