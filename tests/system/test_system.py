@@ -30,17 +30,9 @@ from google.rpc import code_pb2
 from google.api_core import exceptions
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
-from google.cloud.spanner_v1 import param_types
-from google.cloud.spanner_v1.proto.type_pb2 import ARRAY
-from google.cloud.spanner_v1.proto.type_pb2 import BOOL
-from google.cloud.spanner_v1.proto.type_pb2 import BYTES
-from google.cloud.spanner_v1.proto.type_pb2 import DATE
-from google.cloud.spanner_v1.proto.type_pb2 import FLOAT64
-from google.cloud.spanner_v1.proto.type_pb2 import INT64
-from google.cloud.spanner_v1.proto.type_pb2 import STRING
-from google.cloud.spanner_v1.proto.type_pb2 import TIMESTAMP
-from google.cloud.spanner_v1.proto.type_pb2 import NUMERIC
-from google.cloud.spanner_v1.proto.type_pb2 import Type
+from google.cloud.spanner import param_types
+from google.cloud.spanner_v1 import TypeCode
+from google.cloud.spanner_v1 import Type
 
 from google.cloud._helpers import UTC
 from google.cloud.spanner import Client
@@ -74,8 +66,8 @@ COUNTERS_COLUMNS = ("name", "value")
 
 BASE_ATTRIBUTES = {
     "db.type": "spanner",
-    "db.url": "spanner.googleapis.com:443",
-    "net.host.name": "spanner.googleapis.com:443",
+    "db.url": "spanner.googleapis.com",
+    "net.host.name": "spanner.googleapis.com",
 }
 
 _STATUS_CODE_TO_GRPC_STATUS_CODE = {
@@ -325,10 +317,8 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         # We want to make sure the operation completes.
         operation.result(30)  # raises on failure / timeout.
 
-        database_ids = [
-            database.database_id for database in Config.INSTANCE.list_databases()
-        ]
-        self.assertIn(temp_db_id, database_ids)
+        database_ids = [database.name for database in Config.INSTANCE.list_databases()]
+        self.assertIn(temp_db.name, database_ids)
 
     def test_table_not_found(self):
         temp_db_id = "temp_db" + unique_resource_id("_")
@@ -730,11 +720,10 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             self.assertEqual(backup.name, backup2.name)
 
         # List backups using pagination.
-        for page in instance.list_backups(page_size=1).pages:
-            count = 0
-            for backup in page:
-                count += 1
-                self.assertEqual(count, 1)
+        count = 0
+        for page in instance.list_backups(page_size=1):
+            count += 1
+        self.assertEqual(count, 2)
 
 
 SOME_DATE = datetime.date(2011, 1, 17)
@@ -2243,7 +2232,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         )
 
         # Bind an array of <type_name>
-        array_type = Type(code=ARRAY, array_element_type=Type(code=type_name))
+        array_type = Type(code=TypeCode.ARRAY, array_element_type=Type(code=type_name))
 
         if expected_array_value is None:
             expected_array_value = array_value
@@ -2278,16 +2267,16 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         )
 
     def test_execute_sql_w_string_bindings(self):
-        self._bind_test_helper(STRING, "Phred", ["Phred", "Bharney"])
+        self._bind_test_helper(TypeCode.STRING, "Phred", ["Phred", "Bharney"])
 
     def test_execute_sql_w_bool_bindings(self):
-        self._bind_test_helper(BOOL, True, [True, False, True])
+        self._bind_test_helper(TypeCode.BOOL, True, [True, False, True])
 
     def test_execute_sql_w_int64_bindings(self):
-        self._bind_test_helper(INT64, 42, [123, 456, 789])
+        self._bind_test_helper(TypeCode.INT64, 42, [123, 456, 789])
 
     def test_execute_sql_w_float64_bindings(self):
-        self._bind_test_helper(FLOAT64, 42.3, [12.3, 456.0, 7.89])
+        self._bind_test_helper(TypeCode.FLOAT64, 42.3, [12.3, 456.0, 7.89])
 
     def test_execute_sql_w_float_bindings_transfinite(self):
 
@@ -2296,7 +2285,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             self._db,
             sql="SELECT @neg_inf",
             params={"neg_inf": NEG_INF},
-            param_types={"neg_inf": Type(code=FLOAT64)},
+            param_types={"neg_inf": Type(code=TypeCode.FLOAT64)},
             expected=[(NEG_INF,)],
             order=False,
         )
@@ -2306,13 +2295,13 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             self._db,
             sql="SELECT @pos_inf",
             params={"pos_inf": POS_INF},
-            param_types={"pos_inf": Type(code=FLOAT64)},
+            param_types={"pos_inf": Type(code=TypeCode.FLOAT64)},
             expected=[(POS_INF,)],
             order=False,
         )
 
     def test_execute_sql_w_bytes_bindings(self):
-        self._bind_test_helper(BYTES, b"DEADBEEF", [b"FACEDACE", b"DEADBEEF"])
+        self._bind_test_helper(TypeCode.BYTES, b"DEADBEEF", [b"FACEDACE", b"DEADBEEF"])
 
     def test_execute_sql_w_timestamp_bindings(self):
         import pytz
@@ -2334,17 +2323,19 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         ]
 
         self._recurse_into_lists = False
-        self._bind_test_helper(TIMESTAMP, timestamp_1, timestamps, expected_timestamps)
+        self._bind_test_helper(
+            TypeCode.TIMESTAMP, timestamp_1, timestamps, expected_timestamps
+        )
 
     def test_execute_sql_w_date_bindings(self):
         import datetime
 
         dates = [SOME_DATE, SOME_DATE + datetime.timedelta(days=1)]
-        self._bind_test_helper(DATE, SOME_DATE, dates)
+        self._bind_test_helper(TypeCode.DATE, SOME_DATE, dates)
 
     @unittest.skipIf(USE_EMULATOR, "Skipping NUMERIC")
     def test_execute_sql_w_numeric_bindings(self):
-        self._bind_test_helper(NUMERIC, NUMERIC_1, [NUMERIC_1, NUMERIC_2])
+        self._bind_test_helper(TypeCode.NUMERIC, NUMERIC_1, [NUMERIC_1, NUMERIC_2])
 
     def test_execute_sql_w_query_param_struct(self):
         NAME = "Phred"
