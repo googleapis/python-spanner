@@ -125,6 +125,8 @@ class TestSession(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_create_ok(self):
+        from google.cloud.spanner_v1 import CreateSessionRequest
+
         session_pb = self._make_session_pb(self.SESSION_NAME)
         gax_api = self._make_spanner_api()
         gax_api.create_session.return_value = session_pb
@@ -136,8 +138,10 @@ class TestSession(OpenTelemetryBase):
 
         self.assertEqual(session.session_id, self.SESSION_ID)
 
+        request = CreateSessionRequest(database=database.name,)
+
         gax_api.create_session.assert_called_once_with(
-            database.name, metadata=[("google-cloud-resource-prefix", database.name)]
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)]
         )
 
         self.assertSpanAttributes(
@@ -145,6 +149,9 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_create_w_labels(self):
+        from google.cloud.spanner_v1 import CreateSessionRequest
+        from google.cloud.spanner_v1 import Session as SessionPB
+
         labels = {"foo": "bar"}
         session_pb = self._make_session_pb(self.SESSION_NAME, labels=labels)
         gax_api = self._make_spanner_api()
@@ -157,10 +164,12 @@ class TestSession(OpenTelemetryBase):
 
         self.assertEqual(session.session_id, self.SESSION_ID)
 
+        request = CreateSessionRequest(
+            database=database.name, session=SessionPB(labels=labels),
+        )
+
         gax_api.create_session.assert_called_once_with(
-            database.name,
-            session={"labels": labels},
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
         self.assertSpanAttributes(
@@ -205,7 +214,7 @@ class TestSession(OpenTelemetryBase):
         self.assertTrue(session.exists())
 
         gax_api.get_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -227,7 +236,7 @@ class TestSession(OpenTelemetryBase):
         self.assertFalse(session.exists())
 
         gax_api.get_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -250,7 +259,7 @@ class TestSession(OpenTelemetryBase):
             session.exists()
 
         gax_api.get_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -267,6 +276,8 @@ class TestSession(OpenTelemetryBase):
             session.ping()
 
     def test_ping_hit(self):
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
+
         gax_api = self._make_spanner_api()
         gax_api.execute_sql.return_value = "1"
         database = self._make_database()
@@ -276,14 +287,15 @@ class TestSession(OpenTelemetryBase):
 
         session.ping()
 
+        request = ExecuteSqlRequest(session=self.SESSION_NAME, sql="SELECT 1",)
+
         gax_api.execute_sql.assert_called_once_with(
-            self.SESSION_NAME,
-            "SELECT 1",
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_ping_miss(self):
         from google.api_core.exceptions import NotFound
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         gax_api = self._make_spanner_api()
         gax_api.execute_sql.side_effect = NotFound("testing")
@@ -295,14 +307,15 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(NotFound):
             session.ping()
 
+        request = ExecuteSqlRequest(session=self.SESSION_NAME, sql="SELECT 1",)
+
         gax_api.execute_sql.assert_called_once_with(
-            self.SESSION_NAME,
-            "SELECT 1",
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_ping_error(self):
         from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         gax_api = self._make_spanner_api()
         gax_api.execute_sql.side_effect = Unknown("testing")
@@ -314,10 +327,10 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.ping()
 
+        request = ExecuteSqlRequest(session=self.SESSION_NAME, sql="SELECT 1",)
+
         gax_api.execute_sql.assert_called_once_with(
-            self.SESSION_NAME,
-            "SELECT 1",
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_delete_wo_session_id(self):
@@ -340,7 +353,7 @@ class TestSession(OpenTelemetryBase):
         session.delete()
 
         gax_api.delete_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -362,7 +375,7 @@ class TestSession(OpenTelemetryBase):
             session.delete()
 
         gax_api.delete_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -386,7 +399,7 @@ class TestSession(OpenTelemetryBase):
             session.delete()
 
         gax_api.delete_session.assert_called_once_with(
-            self.SESSION_NAME,
+            name=self.SESSION_NAME,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
