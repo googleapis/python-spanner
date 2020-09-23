@@ -173,6 +173,7 @@ class TestBackup(_BaseTest):
     def test_create_grpc_error(self):
         from google.api_core.exceptions import GoogleAPICallError
         from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_admin_database_v1 import Backup
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -184,10 +185,7 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = {
-            "database": self.DATABASE_NAME,
-            "expire_time": timestamp,
-        }
+        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
 
         with self.assertRaises(GoogleAPICallError):
             backup.create()
@@ -201,6 +199,7 @@ class TestBackup(_BaseTest):
 
     def test_create_already_exists(self):
         from google.cloud.exceptions import Conflict
+        from google.cloud.spanner_admin_database_v1 import Backup
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -212,10 +211,7 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = {
-            "database": self.DATABASE_NAME,
-            "expire_time": timestamp,
-        }
+        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
 
         with self.assertRaises(Conflict):
             backup.create()
@@ -229,6 +225,7 @@ class TestBackup(_BaseTest):
 
     def test_create_instance_not_found(self):
         from google.cloud.exceptions import NotFound
+        from google.cloud.spanner_admin_database_v1 import Backup
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -240,10 +237,7 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = {
-            "database": self.DATABASE_NAME,
-            "expire_time": timestamp,
-        }
+        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
 
         with self.assertRaises(NotFound):
             backup.create()
@@ -271,6 +265,8 @@ class TestBackup(_BaseTest):
             backup.create()
 
     def test_create_success(self):
+        from google.cloud.spanner_admin_database_v1 import Backup
+
         op_future = object()
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -282,10 +278,7 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = {
-            "database": self.DATABASE_NAME,
-            "expire_time": timestamp,
-        }
+        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
 
         future = backup.create()
         self.assertIs(future, op_future)
@@ -470,6 +463,7 @@ class TestBackup(_BaseTest):
 
     def test_update_expire_time_grpc_error(self):
         from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_admin_database_v1 import Backup
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -481,10 +475,7 @@ class TestBackup(_BaseTest):
         with self.assertRaises(Unknown):
             backup.update_expire_time(expire_time)
 
-        backup_update = {
-            "name": self.BACKUP_NAME,
-            "expire_time": expire_time,
-        }
+        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,
@@ -494,6 +485,7 @@ class TestBackup(_BaseTest):
 
     def test_update_expire_time_not_found(self):
         from google.api_core.exceptions import NotFound
+        from google.cloud.spanner_admin_database_v1 import Backup
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -505,10 +497,7 @@ class TestBackup(_BaseTest):
         with self.assertRaises(NotFound):
             backup.update_expire_time(expire_time)
 
-        backup_update = {
-            "name": self.BACKUP_NAME,
-            "expire_time": expire_time,
-        }
+        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,
@@ -528,10 +517,7 @@ class TestBackup(_BaseTest):
 
         backup.update_expire_time(expire_time)
 
-        backup_update = {
-            "name": self.BACKUP_NAME,
-            "expire_time": expire_time,
-        }
+        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,
