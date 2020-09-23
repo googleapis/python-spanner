@@ -20,6 +20,7 @@ import re
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
 from google.cloud.spanner_admin_database_v1.types import backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+from google.cloud.spanner_admin_instance_v1 import DeleteInstanceRequest
 from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
 from google.cloud.spanner_admin_database_v1 import ListBackupOperationsRequest
 from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
@@ -269,7 +270,7 @@ class Instance(object):
         metadata = _metadata_with_prefix(self.name)
 
         try:
-            api.get_instance(self.name, metadata=metadata)
+            api.get_instance(name=self.name, metadata=metadata)
         except NotFound:
             return False
 
@@ -286,7 +287,7 @@ class Instance(object):
         api = self._client.instance_admin_api
         metadata = _metadata_with_prefix(self.name)
 
-        instance_pb = api.get_instance(self.name, metadata=metadata)
+        instance_pb = api.get_instance(name=self.name, metadata=metadata)
 
         self._update_from_pb(instance_pb)
 
@@ -346,7 +347,7 @@ class Instance(object):
         api = self._client.instance_admin_api
         metadata = _metadata_with_prefix(self.name)
 
-        api.delete_instance(self.name, metadata=metadata)
+        api.delete_instance(name=self.name, metadata=metadata)
 
     def database(self, database_id, ddl_statements=(), pool=None):
         """Factory to create a database within this instance.
@@ -399,22 +400,7 @@ class Instance(object):
         page_iter = self._client.database_admin_api.list_databases(
             request=request, metadata=metadata
         )
-        page_iter.item_to_value = self._item_to_database
         return page_iter
-
-    def _item_to_database(self, iterator, database_pb):
-        """Convert a database protobuf to the native object.
-
-        :type iterator: :class:`~google.api_core.page_iterator.Iterator`
-        :param iterator: The iterator that is currently in use.
-
-        :type database_pb: :class:`~google.cloud.spanner_admin_database_v1.Database`
-        :param database_pb: A database returned from the API.
-
-        :rtype: :class:`~google.cloud.spanner.database.Database`
-        :returns: The next database in the page.
-        """
-        return Database.from_pb(database_pb, self, pool=BurstyPool())
 
     def backup(self, backup_id, database="", expire_time=None):
         """Factory to create a backup within this instance.
