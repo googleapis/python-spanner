@@ -40,8 +40,8 @@ class Test_Struct(unittest.TestCase):
 
         struct_type = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="count", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="count", type_=Type(code=TypeCode.INT64)),
             ]
         )
         expected = Type(code=TypeCode.STRUCT, struct_type=struct_type)
