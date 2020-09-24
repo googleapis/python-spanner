@@ -13,25 +13,27 @@
 # limitations under the License.
 import uuid
 
+from google.api_core.exceptions import DeadlineExceeded
 from google.cloud import spanner
 import pytest
+from test_utils.retry import RetryErrors
 
 import backup_sample
 
 
 def unique_instance_id():
     """ Creates a unique id for the database. """
-    return f"test-instance-{uuid.uuid4().hex[:10]}"
+    return f'test-instance-{uuid.uuid4().hex[:10]}'
 
 
 def unique_database_id():
     """ Creates a unique id for the database. """
-    return f"test-db-{uuid.uuid4().hex[:10]}"
+    return f'test-db-{uuid.uuid4().hex[:10]}'
 
 
 def unique_backup_id():
     """ Creates a unique id for the backup. """
-    return f"test-backup-{uuid.uuid4().hex[:10]}"
+    return f'test-backup-{uuid.uuid4().hex[:10]}'
 
 
 INSTANCE_ID = unique_instance_id()
@@ -40,12 +42,11 @@ RESTORE_DB_ID = unique_database_id()
 BACKUP_ID = unique_backup_id()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def spanner_instance():
     spanner_client = spanner.Client()
-    instance_config = "{}/instanceConfigs/{}".format(
-        spanner_client.project_name, "regional-us-central1"
-    )
+    instance_config = '{}/instanceConfigs/{}'.format(
+        spanner_client.project_name, 'regional-us-central1')
     instance = spanner_client.instance(INSTANCE_ID, instance_config)
     op = instance.create()
     op.result(120)  # block until completion
@@ -53,7 +54,7 @@ def spanner_instance():
     instance.delete()
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture(scope='module')
 def database(spanner_instance):
     """ Creates a temporary database that is removed after testing. """
     db = spanner_instance.database(DATABASE_ID)
@@ -68,6 +69,7 @@ def test_create_backup(capsys, database):
     assert BACKUP_ID in out
 
 
+@RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database(capsys):
     backup_sample.restore_database(INSTANCE_ID, RESTORE_DB_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
@@ -106,7 +108,8 @@ def test_cancel_backup(capsys):
     backup_sample.cancel_backup(INSTANCE_ID, DATABASE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     cancel_success = "Backup creation was successfully cancelled." in out
-    cancel_failure = ("Backup was created before the cancel completed." in out) and (
-        "Backup deleted." in out
+    cancel_failure = (
+        ("Backup was created before the cancel completed." in out) and
+        ("Backup deleted." in out)
     )
     assert cancel_success or cancel_failure
