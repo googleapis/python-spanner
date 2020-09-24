@@ -140,7 +140,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
 
             with self.assertRaises(GoogleAPICallError):
                 with _opentelemetry_tracing.trace_call(
-                        "CloudSpanner.Test", _make_session(), extra_attributes
+                    "CloudSpanner.Test", _make_session(), extra_attributes
                 ) as span:
                     raise GoogleAPICallError("error")
 
