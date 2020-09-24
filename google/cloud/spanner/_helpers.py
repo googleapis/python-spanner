@@ -15,7 +15,6 @@
 """Helper functions for Cloud Spanner."""
 
 import datetime
-import json
 import decimal
 import math
 
@@ -179,9 +178,10 @@ def _parse_value(value, field_type):
         else:
             result = value
     elif field_type.code == TypeCode.DATE:
-        result = value
+        result = _date_from_iso8601_date(value)
     elif field_type.code == TypeCode.TIMESTAMP:
-        result = value
+        DatetimeWithNanoseconds = datetime_helpers.DatetimeWithNanoseconds
+        result = DatetimeWithNanoseconds.from_rfc3339(value)
     elif field_type.code == TypeCode.ARRAY:
         result = [_parse_value(item, field_type.array_element_type) for item in value]
     elif field_type.code == TypeCode.STRUCT:
@@ -189,6 +189,8 @@ def _parse_value(value, field_type):
             _parse_value(item, field_type.struct_type.fields[i].type)
             for (i, item) in enumerate(value)
         ]
+    elif field_type.code == TypeCode.NUMERIC:
+        result = decimal.Decimal(value)
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
     return result
@@ -209,39 +211,14 @@ def _parse_value_pb(value_pb, field_type):
     """
     if value_pb.HasField("null_value"):
         return None
-    if field_type.code == TypeCode.STRING:
-        result = value_pb.string_value
-    elif field_type.code == TypeCode.BYTES:
-        result = value_pb.string_value.encode("utf8")
-    elif field_type.code == TypeCode.BOOL:
-        result = value_pb.bool_value
-    elif field_type.code == TypeCode.INT64:
-        result = int(value_pb.string_value)
-    elif field_type.code == TypeCode.FLOAT64:
-        if value_pb.HasField("string_value"):
-            result = float(value_pb.string_value)
-        else:
-            result = value_pb.number_value
-    elif field_type.code == TypeCode.DATE:
-        result = _date_from_iso8601_date(value_pb.string_value)
-    elif field_type.code == TypeCode.TIMESTAMP:
-        DatetimeWithNanoseconds = datetime_helpers.DatetimeWithNanoseconds
-        result = DatetimeWithNanoseconds.from_rfc3339(value_pb.string_value)
-    elif field_type.code == TypeCode.ARRAY:
-        result = [
-            _parse_value_pb(item_pb, field_type.array_element_type)
-            for item_pb in value_pb.list_value.values
-        ]
-    elif field_type.code == TypeCode.STRUCT:
-        result = [
-            _parse_value_pb(item_pb, field_type.struct_type.fields[i].type)
-            for (i, item_pb) in enumerate(value_pb.list_value.values)
-        ]
-    elif field_type.code == TypeCode.NUMERIC:
-        result = decimal.Decimal(value_pb.string_value)
-    else:
-        raise ValueError("Unknown type: %s" % (field_type,))
-    return result
+    if value_pb.HasField("string_value"):
+        return _parse_value(value_pb.string_value, field_type)
+    if value_pb.HasField("bool_value"):
+        return _parse_value(value_pb.bool_value, field_type)
+    if value_pb.HasField("number_value"):
+        return _parse_value(value_pb.number_value, field_type)
+    if value_pb.HasField("list_value"):
+        return _parse_value(value_pb.list_value, field_type)
 
 
 # pylint: enable=too-many-branches
