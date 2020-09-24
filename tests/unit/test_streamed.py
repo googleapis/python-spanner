@@ -730,7 +730,6 @@ class TestStreamedResultSet(unittest.TestCase):
         ]
         metadata = self._make_result_set_metadata(FIELDS, transaction_id=TXN_ID)
         BARE = [u"Phred Phlyntstone", 42]
-        VALUES = [self._make_value(bare) for bare in BARE]
         result_set = self._make_partial_result_set(BARE, metadata=metadata)
         iterator = _MockCancellableIterator(result_set)
         source = mock.Mock(_transaction_id=None, spec=["_transaction_id"])
