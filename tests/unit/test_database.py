@@ -239,7 +239,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.state, expected_state)
 
     def test_restore_info(self):
-        from google.cloud.spanner.database import RestoreInfo
+        from google.cloud.spanner_admin_database_v1 import RestoreInfo
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -1849,28 +1849,6 @@ def _make_instance_api():
     from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 
     return mock.create_autospec(InstanceAdminClient)
-
-
-class TestRestoreInfo(_BaseTest):
-    def test_from_pb(self):
-        from google.cloud.spanner.database import RestoreInfo
-        from google.cloud.spanner_admin_database_v1 import BackupInfo
-        from google.cloud.spanner_admin_database_v1 import RestoreInfo as RestoreInfoPB
-        from google.cloud.spanner_admin_database_v1 import RestoreSourceType
-        from google.cloud._helpers import _datetime_to_pb_timestamp
-
-        timestamp = self._make_timestamp()
-        restore_pb = RestoreInfoPB(
-            source_type=1,
-            backup_info=BackupInfo(
-                backup="backup_path",
-                create_time=_datetime_to_pb_timestamp(timestamp),
-                source_database="database_path",
-            ),
-        )
-        restore_info = RestoreInfo.from_pb(restore_pb)
-        self.assertEqual(restore_info.source_type, RestoreSourceType.BACKUP)
-        self.assertEqual(restore_info.backup_info.create_time, timestamp)
 
 
 class _Client(object):

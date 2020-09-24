@@ -984,16 +984,6 @@ def _check_ddl_statements(value):
     return tuple(value)
 
 
-class RestoreInfo(object):
-    def __init__(self, source_type, backup_info):
-        self.source_type = RestoreSourceType(source_type)
-        self.backup_info = BackupInfo.from_pb(backup_info)
-
-    @classmethod
-    def from_pb(cls, pb):
-        return cls(pb.source_type, pb.backup_info)
-
-
 def _retry_on_aborted(func, retry_config):
     """Helper for :meth:`Database.execute_partitioned_dml`.
 
