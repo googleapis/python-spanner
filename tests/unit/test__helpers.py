@@ -584,14 +584,14 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(parsed, value)
 
     def test_w_array_empty(self):
-        from google.protobuf.struct_pb2 import Value
+        from google.protobuf.struct_pb2 import Value, ListValue
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
         field_type = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
         )
-        value_pb = Value()
+        value_pb = Value(list_value=ListValue(values=[]))
 
         self.assertEqual(self._callFUT(value_pb, field_type), [])
 
