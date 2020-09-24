@@ -20,7 +20,6 @@ import re
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
 from google.cloud.spanner_admin_database_v1.types import backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
-from google.cloud.spanner_admin_instance_v1 import DeleteInstanceRequest
 from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
 from google.cloud.spanner_admin_database_v1 import ListBackupOperationsRequest
 from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
@@ -33,7 +32,6 @@ from google.cloud.exceptions import NotFound
 from google.cloud.spanner._helpers import _metadata_with_prefix
 from google.cloud.spanner.backup import Backup
 from google.cloud.spanner.database import Database
-from google.cloud.spanner.pool import BurstyPool
 
 # pylint: enable=ungrouped-imports
 
