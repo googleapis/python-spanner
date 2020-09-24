@@ -822,7 +822,12 @@ class TestDatabase(_BaseTest):
         else:
             self.assertEqual(api.begin_transaction.call_count, 1)
 
-        expected_params = params or {}
+        if params:
+            expected_params = Struct(
+                fields={key: _make_value_pb(value) for (key, value) in params.items()}
+            )
+        else:
+            expected_params = {}
 
         expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
         expected_query_options = client._query_options

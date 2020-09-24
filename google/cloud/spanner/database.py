@@ -388,10 +388,13 @@ class Database(object):
             self._instance._client._query_options, query_options
         )
         if params is not None:
+            from google.cloud.spanner.transaction import Transaction
+
             if param_types is None:
                 raise ValueError("Specify 'param_types' when passing 'params'.")
+            params_pb = Transaction._make_params_pb(params, param_types)
         else:
-            params = {}
+            params_pb = {}
 
         api = self.spanner_api
 
@@ -414,7 +417,7 @@ class Database(object):
                     session=session.name,
                     sql=dml,
                     transaction=txn_selector,
-                    params=params,
+                    params=params_pb,
                     param_types=param_types,
                     query_options=query_options,
                 )
