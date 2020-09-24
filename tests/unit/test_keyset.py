@@ -295,7 +295,7 @@ class TestKeySet(unittest.TestCase):
         result = keyset._to_pb()
 
         self.assertIsInstance(result, KeySet)
-        self.assertTrue(result.all)
+        self.assertTrue(result.all_)
         self.assertEqual(len(result.keys), 0)
         self.assertEqual(len(result.ranges), 0)
 
@@ -308,7 +308,7 @@ class TestKeySet(unittest.TestCase):
         result = keyset._to_pb()
 
         self.assertIsInstance(result, KeySet)
-        self.assertFalse(result.all)
+        self.assertFalse(result.all_)
         self.assertEqual(len(result.keys), len(KEYS))
 
         for found, expected in zip(result.keys, KEYS):
@@ -334,7 +334,7 @@ class TestKeySet(unittest.TestCase):
         result = keyset._to_pb()
 
         self.assertIsInstance(result, KeySet)
-        self.assertFalse(result.all)
+        self.assertFalse(result.all_)
         self.assertEqual(len(result.keys), 0)
         self.assertEqual(len(result.ranges), len(RANGES))
 

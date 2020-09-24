@@ -143,7 +143,7 @@ class KeySet(object):
         :returns: protobuf corresponding to this instance.
         """
         if self.all_:
-            return KeySetPB(all=True)
+            return KeySetPB(all_=True)
         kwargs = {}
 
         if self.keys:
