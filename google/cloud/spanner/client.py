@@ -78,34 +78,6 @@ def _get_spanner_optimizer_version():
     return os.getenv(OPTIMIZER_VERSION_ENV_VAR, "")
 
 
-class InstanceConfig(object):
-    """Named configurations for Spanner instances.
-
-    :type name: str
-    :param name: ID of the instance configuration
-
-    :type display_name: str
-    :param display_name: Name of the instance configuration
-    """
-
-    def __init__(self, name, display_name):
-        self.name = name
-        self.display_name = display_name
-
-    @classmethod
-    def from_pb(cls, config_pb):
-        """Construct an instance from the equvalent protobuf.
-
-        :type config_pb:
-          :class:`~google.spanner.v1.spanner_instance_admin_pb2.InstanceConfig`
-        :param config_pb: the protobuf to parse
-
-        :rtype: :class:`InstanceConfig`
-        :returns: an instance of this class
-        """
-        return cls(config_pb.name, config_pb.display_name)
-
-
 class Client(ClientWithProject):
     """Client for interacting with Cloud Spanner API.
 
@@ -322,7 +294,7 @@ class Client(ClientWithProject):
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
             Iterator of
-            :class:`~google.cloud.spanner.instance.InstanceConfig`
+            :class:`~google.cloud.spanner_admin_instance_v1.types.InstanceConfig`
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)

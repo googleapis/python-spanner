@@ -537,25 +537,6 @@ class TestBackup(_BaseTest):
         self.assertFalse(backup.is_ready())
 
 
-class TestBackupInfo(_BaseTest):
-    def test_from_pb(self):
-        from google.cloud.spanner_admin_database_v1 import BackupInfo as BackupInfoPB
-        from google.cloud.spanner.backup import BackupInfo
-
-        backup_name = "backup_name"
-        timestamp = self._make_timestamp()
-        database_name = "database_name"
-
-        pb = BackupInfoPB(
-            backup=backup_name, create_time=timestamp, source_database=database_name,
-        )
-        backup_info = BackupInfo.from_pb(pb)
-
-        self.assertEqual(backup_info.backup, backup_name)
-        self.assertEqual(backup_info.create_time, timestamp)
-        self.assertEqual(backup_info.source_database, database_name)
-
-
 class _Client(object):
     def __init__(self, project=TestBackup.PROJECT_ID):
         self.project = project

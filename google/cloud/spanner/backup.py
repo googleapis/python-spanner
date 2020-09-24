@@ -260,14 +260,3 @@ class Backup(object):
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
         api.delete_backup(name=self.name, metadata=metadata)
-
-
-class BackupInfo(object):
-    def __init__(self, backup, create_time, source_database):
-        self.backup = backup
-        self.create_time = create_time
-        self.source_database = source_database
-
-    @classmethod
-    def from_pb(cls, pb):
-        return cls(pb.backup, pb.create_time, pb.source_database)
