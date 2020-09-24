@@ -23,7 +23,6 @@ import threading
 import google.auth.credentials
 from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
-from google.protobuf.struct_pb2 import Struct
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
 import six
@@ -31,11 +30,9 @@ import six
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner._helpers import (
-    _make_value_pb,
     _merge_query_options,
     _metadata_with_prefix,
 )
-from google.cloud.spanner.backup import BackupInfo
 from google.cloud.spanner.batch import Batch
 from google.cloud.spanner.keyset import KeySet
 from google.cloud.spanner.pool import BurstyPool
@@ -48,7 +45,6 @@ from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
-from google.cloud.spanner_admin_database_v1 import RestoreSourceType
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
