@@ -54,7 +54,7 @@ def StructField(name, field_type):  # pylint: disable=invalid-name
     :rtype: :class:`google.cloud.spanner_v1.StructType.Field`
     :returns: the appropriate struct-field-type protobuf
     """
-    return StructType.Field(name=name, type=field_type)
+    return StructType.Field(name=name, type_=field_type)
 
 
 def Struct(fields):  # pylint: disable=invalid-name
