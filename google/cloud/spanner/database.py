@@ -21,6 +21,7 @@ import re
 import threading
 
 import google.auth.credentials
+from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.exceptions import NotFound
@@ -69,6 +70,8 @@ _DATABASE_NAME_RE = re.compile(
 )
 
 _DATABASE_METADATA_FILTER = "name:{0}/operations/"
+
+DEFAULT_RETRY_BACKOFF = Retry(initial=0.02, maximum=32, multiplier=1.3)
 
 
 class Database(object):
@@ -426,9 +429,7 @@ class Database(object):
 
                 return result_set.stats.row_count_lower_bound
 
-        retry_config = api._method_configs["ExecuteStreamingSql"].retry
-
-        return _retry_on_aborted(execute_pdml, retry_config)()
+        return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
     def session(self, labels=None):
         """Factory to create a session for this database.
