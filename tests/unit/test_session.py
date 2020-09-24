@@ -223,6 +223,25 @@ class TestSession(OpenTelemetryBase):
             attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=True),
         )
 
+    @mock.patch("google.cloud.spanner._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False)
+    def test_exists_hit_wo_span(self):
+        session_pb = self._make_session_pb(self.SESSION_NAME)
+        gax_api = self._make_spanner_api()
+        gax_api.get_session.return_value = session_pb
+        database = self._make_database()
+        database.spanner_api = gax_api
+        session = self._make_one(database)
+        session._session_id = self.SESSION_ID
+
+        self.assertTrue(session.exists())
+
+        gax_api.get_session.assert_called_once_with(
+            name=self.SESSION_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+        self.assertNoSpans()
+
     def test_exists_miss(self):
         from google.api_core.exceptions import NotFound
 
@@ -244,6 +263,26 @@ class TestSession(OpenTelemetryBase):
             "CloudSpanner.GetSession",
             attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=False),
         )
+
+    @mock.patch("google.cloud.spanner._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False)
+    def test_exists_miss(self):
+        from google.api_core.exceptions import NotFound
+
+        gax_api = self._make_spanner_api()
+        gax_api.get_session.side_effect = NotFound("testing")
+        database = self._make_database()
+        database.spanner_api = gax_api
+        session = self._make_one(database)
+        session._session_id = self.SESSION_ID
+
+        self.assertFalse(session.exists())
+
+        gax_api.get_session.assert_called_once_with(
+            name=self.SESSION_NAME,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+        self.assertNoSpans()
 
     def test_exists_error(self):
         from google.api_core.exceptions import Unknown
