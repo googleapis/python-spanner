@@ -14,7 +14,6 @@
 
 """User friendly container for Cloud Spanner Instance."""
 
-import google.api_core.operation
 import re
 
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
