@@ -443,6 +443,17 @@ class Test_parse_value(unittest.TestCase):
 
         self.assertEqual(self._callFUT(values, field_type), expected_values)
 
+    def test_w_numeric(self):
+        import decimal
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
+
+        field_type = Type(code=TypeCode.NUMERIC)
+        expected_value = decimal.Decimal("99999999999999999999999999999.999999999")
+        value = "99999999999999999999999999999.999999999"
+
+        self.assertEqual(self._callFUT(value, field_type), expected_value)
+
     def test_w_unknown_type(self):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
@@ -633,10 +644,11 @@ class Test_parse_value_pb(unittest.TestCase):
     def test_w_numeric(self):
         import decimal
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1.proto.type_pb2 import Type, NUMERIC
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
 
         VALUE = decimal.Decimal("99999999999999999999999999999.999999999")
-        field_type = Type(code=NUMERIC)
+        field_type = Type(code=TypeCode.NUMERIC)
         value_pb = Value(string_value=str(VALUE))
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
