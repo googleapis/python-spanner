@@ -508,7 +508,6 @@ class TestClient(unittest.TestCase):
             api._transport.list_instance_configs
         ] = mock.Mock(return_value=instance_config_pbs)
 
-        token = "token"
         page_size = 42
         list(client.list_instance_configs(page_size=42))
 
@@ -623,15 +622,15 @@ class TestClient(unittest.TestCase):
         ] = mock.Mock(return_value=instance_pbs)
 
         page_size = 42
-        filter = "name:instance"
-        list(client.list_instances(filter_=filter, page_size=42))
+        filter_ = "name:instance"
+        list(client.list_instances(filter_=filter_, page_size=42))
 
         expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
             ("x-goog-request-params", "parent={}".format(client.project_name)),
         )
         li_api.assert_called_once_with(
-            ListInstancesRequest(parent=self.PATH, page_size=page_size),
+            ListInstancesRequest(parent=self.PATH, filter=filter_, page_size=page_size),
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,

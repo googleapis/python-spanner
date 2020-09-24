@@ -302,7 +302,7 @@ class Client(ClientWithProject):
             parent=self.project_name, page_size=page_size
         )
         page_iter = self.instance_admin_api.list_instance_configs(
-            request=request, page_size=page_size, metadata=metadata
+            request=request, metadata=metadata
         )
         return page_iter
 
@@ -382,6 +382,6 @@ class Client(ClientWithProject):
             parent=self.project_name, filter=filter_, page_size=page_size
         )
         page_iter = self.instance_admin_api.list_instances(
-            request=request, page_size=page_size, metadata=metadata
+            request=request, metadata=metadata
         )
         return page_iter
