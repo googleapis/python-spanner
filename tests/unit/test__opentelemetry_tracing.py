@@ -147,4 +147,4 @@ if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.memory_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
-            self.assertIsNone(span.status.canonical_code)
+            self.assertEqual(span.status.canonical_code, StatusCanonicalCode.UNKNOWN)
