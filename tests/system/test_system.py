@@ -1274,12 +1274,12 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         update_statement = (
             "UPDATE contacts SET email = @email " "WHERE contact_id = @contact_id;",
             {"contact_id": 1, "email": "phreddy@example.com"},
-            {"contact_id": Type(code=INT64), "email": Type(code=STRING)},
+            {"contact_id": param_types.INT64, "email": param_types.STRING},
         )
         delete_statement = (
             "DELETE contacts WHERE contact_id = @contact_id;",
             {"contact_id": 1},
-            {"contact_id": Type(code=INT64)},
+            {"contact_id": param_types.INT64},
         )
 
         def unit_of_work(transaction, self):
@@ -1317,7 +1317,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             (
                 "UPDATE contacts SET email = @email " "WHERE contact_id = @contact_id;",
                 {"contact_id": 1, "email": "phreddy@example.com"},
-                {"contact_id": Type(code=INT64), "email": Type(code=STRING)},
+                {"contact_id": param_types.INT64, "email": param_types.STRING},
             )
         ]
 
@@ -1359,12 +1359,12 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         update_statement = (
             "UPDTAE contacts SET email = @email " "WHERE contact_id = @contact_id;",
             {"contact_id": 1, "email": "phreddy@example.com"},
-            {"contact_id": Type(code=INT64), "email": Type(code=STRING)},
+            {"contact_id": param_types.INT64, "email": param_types.STRING},
         )
         delete_statement = (
             "DELETE contacts WHERE contact_id = @contact_id;",
             {"contact_id": 1},
-            {"contact_id": Type(code=INT64)},
+            {"contact_id": param_types.INT64},
         )
 
         def unit_of_work(transaction):
@@ -1416,12 +1416,12 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         update_statement = (
             "UPDATE contacts SET email = @email " "WHERE contact_id = @contact_id;",
             {"contact_id": 1, "email": "phreddy@example.com"},
-            {"contact_id": Type(code=INT64), "email": Type(code=STRING)},
+            {"contact_id": param_types.INT64, "email": param_types.STRING},
         )
         delete_statement = (
             "DELETE contacts WHERE contact_id = @contact_id;",
             {"contact_id": 1},
-            {"contact_id": Type(code=INT64)},
+            {"contact_id": param_types.INT64},
         )
 
         def unit_of_work(transaction, self):
@@ -1482,7 +1482,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         row_count = self._db.execute_partitioned_dml(
             update_statement,
             params={"email": nonesuch, "target": target},
-            param_types={"email": Type(code=STRING), "target": Type(code=STRING)},
+            param_types={"email": param_types.STRING, "target": param_types.STRING},
         )
         self.assertEqual(row_count, 1)
 
@@ -1556,7 +1556,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         SQL = "SELECT * FROM counters WHERE name = @name"
         rows = list(
             transaction.execute_sql(
-                SQL, params={"name": pkey}, param_types={"name": Type(code=STRING)}
+                SQL, params={"name": pkey}, param_types={"name": param_types.STRING}
             )
         )
         self.assertEqual(len(rows), 1)
@@ -2285,7 +2285,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             self._db,
             sql="SELECT @neg_inf",
             params={"neg_inf": NEG_INF},
-            param_types={"neg_inf": Type(code=TypeCode.FLOAT64)},
+            param_types={"neg_inf": param_types.FLOAT64},
             expected=[(NEG_INF,)],
             order=False,
         )
@@ -2295,7 +2295,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             self._db,
             sql="SELECT @pos_inf",
             params={"pos_inf": POS_INF},
-            param_types={"pos_inf": Type(code=TypeCode.FLOAT64)},
+            param_types={"pos_inf": param_types.FLOAT64},
             expected=[(POS_INF,)],
             order=False,
         )
