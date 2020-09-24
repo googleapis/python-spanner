@@ -378,7 +378,7 @@ class Test_parse_value(unittest.TestCase):
         from google.cloud.spanner_v1 import TypeCode
 
         field_type = Type(code=TypeCode.TIMESTAMP)
-        value = '2016-12-20T21:13:47.123456Z'
+        value = "2016-12-20T21:13:47.123456Z"
         expected_value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=pytz.UTC
         )
@@ -394,7 +394,7 @@ class Test_parse_value(unittest.TestCase):
         from google.cloud.spanner_v1 import TypeCode
 
         field_type = Type(code=TypeCode.TIMESTAMP)
-        value = '2016-12-20T21:13:47.123456789Z'
+        value = "2016-12-20T21:13:47.123456789Z"
         expected_value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=pytz.UTC
         )
@@ -433,8 +433,8 @@ class Test_parse_value(unittest.TestCase):
 
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
         field_type = Type(code=TypeCode.STRUCT, struct_type=struct_type_pb)
@@ -621,8 +621,8 @@ class Test_parse_value_pb(unittest.TestCase):
         VALUES = [u"phred", 32]
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
         field_type = Type(code=TypeCode.STRUCT, struct_type=struct_type_pb)
@@ -666,8 +666,8 @@ class Test_parse_list_value_pbs(unittest.TestCase):
 
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
 
@@ -682,8 +682,8 @@ class Test_parse_list_value_pbs(unittest.TestCase):
         VALUES = [[u"phred", 32], [u"bharney", 31]]
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
         values_pbs = _make_list_value_pbs(VALUES)

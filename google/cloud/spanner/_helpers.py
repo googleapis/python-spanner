@@ -186,7 +186,7 @@ def _parse_value(value, field_type):
         result = [_parse_value(item, field_type.array_element_type) for item in value]
     elif field_type.code == TypeCode.STRUCT:
         result = [
-            _parse_value(item, field_type.struct_type.fields[i].type)
+            _parse_value(item, field_type.struct_type.fields[i].type_)
             for (i, item) in enumerate(value)
         ]
     elif field_type.code == TypeCode.NUMERIC:
@@ -240,7 +240,7 @@ def _parse_list_value_pbs(rows, row_type):
     for row in rows:
         row_data = []
         for value_pb, field in zip(row.values, row_type.fields):
-            row_data.append(_parse_value_pb(value_pb, field.type))
+            row_data.append(_parse_value_pb(value_pb, field.type_))
         result.append(row_data)
     return result
 
