@@ -17,7 +17,6 @@
 import functools
 
 from google.protobuf.struct_pb2 import Struct
-from google.cloud.spanner_v1 import BeginTransactionRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions

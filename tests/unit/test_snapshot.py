@@ -395,8 +395,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         VALUES = [[u"bharney", 31], [u"phred", 32]]
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
         metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
@@ -564,9 +564,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         MODE = 2  # PROFILE
         struct_type_pb = StructType(
             fields=[
-                StructType.Field(name="first_name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="last_name", type=Type(code=TypeCode.STRING)),
-                StructType.Field(name="age", type=Type(code=TypeCode.INT64)),
+                StructType.Field(name="first_name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="last_name", type_=Type(code=TypeCode.STRING)),
+                StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
         metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
