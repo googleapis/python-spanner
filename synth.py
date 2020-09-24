@@ -32,22 +32,6 @@ library = gapic.py_library(
 
 s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst"])
 
-# Fix invalid imports
-# See https://github.com/googleapis/gapic-generator-python/issues/601
-s.replace(
-    "google/**/*.py",
-    "gs_type",
-    "type"
-)
-
-# Remove unsed import which is clashing with type builtin
-# See https://github.com/googleapis/gapic-generator-python/issues/324
-s.replace(
-    "tests/unit/gapic/spanner_v1/test_spanner.py",
-    "\s+from google.cloud.spanner_v1.types import type\n",
-    "\n"
-)
-
 # ----------------------------------------------------------------------------
 # Generate instance admin client
 # ----------------------------------------------------------------------------
@@ -77,15 +61,6 @@ s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs
 # ----------------------------------------------------------------------------
 templated_files = common.py_library(microgenerator=True, samples=True)
 s.move(templated_files, excludes=[".coveragerc"])
-
-# Template's MANIFEST.in does not include the needed GAPIC config file.
-# See PR #6928.
-s.replace(
-    "MANIFEST.in",
-    "include README.rst LICENSE\n",
-    "include README.rst LICENSE\n"
-    "include google/cloud/spanner_v1/gapic/transports/spanner.grpc.config\n",
-)
 
 # Ensure CI runs on a new instance each time
 s.replace(

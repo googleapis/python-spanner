@@ -4,21 +4,21 @@
       "git": {
         "name": ".",
         "remote": "git@github.com:larkee/python-spanner.git",
-        "sha": "16198709a8c5d468d9104feab48f2eb8ba5f6e86"
+        "sha": "df8e0aa81793b1266401228276974898636c8d6a"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "538a68019eb4a36a0cdfa4021f324dd01b784395"
+        "sha": "916c10e8581804df2b48a0f0457d848f3faa582e"
       }
     },
     {
       "git": {
         "name": "synthtool",
         "remote": "https://github.com/googleapis/synthtool.git",
-        "sha": "538a68019eb4a36a0cdfa4021f324dd01b784395"
+        "sha": "916c10e8581804df2b48a0f0457d848f3faa582e"
       }
     }
   ],

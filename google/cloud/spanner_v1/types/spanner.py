@@ -22,7 +22,7 @@ from google.cloud.spanner_v1.types import keys
 from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import transaction as gs_transaction
-from google.cloud.spanner_v1.types import type
+from google.cloud.spanner_v1.types import type as gs_type
 from google.protobuf import struct_pb2 as struct  # type: ignore
 from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
 from google.rpc import status_pb2 as gr_status  # type: ignore
@@ -381,7 +381,7 @@ class ExecuteSqlRequest(proto.Message):
     params = proto.Field(proto.MESSAGE, number=4, message=struct.Struct,)
 
     param_types = proto.MapField(
-        proto.STRING, proto.MESSAGE, number=5, message=type.Type,
+        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
     )
 
     resume_token = proto.Field(proto.BYTES, number=6)
@@ -476,7 +476,7 @@ class ExecuteBatchDmlRequest(proto.Message):
         params = proto.Field(proto.MESSAGE, number=2, message=struct.Struct,)
 
         param_types = proto.MapField(
-            proto.STRING, proto.MESSAGE, number=3, message=type.Type,
+            proto.STRING, proto.MESSAGE, number=3, message=gs_type.Type,
         )
 
     session = proto.Field(proto.STRING, number=1)
@@ -652,7 +652,7 @@ class PartitionQueryRequest(proto.Message):
     params = proto.Field(proto.MESSAGE, number=4, message=struct.Struct,)
 
     param_types = proto.MapField(
-        proto.STRING, proto.MESSAGE, number=5, message=type.Type,
+        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
     )
 
     partition_options = proto.Field(proto.MESSAGE, number=6, message=PartitionOptions,)

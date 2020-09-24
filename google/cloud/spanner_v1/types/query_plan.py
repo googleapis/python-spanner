@@ -85,7 +85,7 @@ class PlanNode(proto.Message):
         Attributes:
             child_index (int):
                 The node to which the link points.
-            type (str):
+            type_ (str):
                 The type of the link. For example, in Hash
                 Joins this could be used to distinguish between
                 the build child and the probe child, or in the
@@ -106,7 +106,7 @@ class PlanNode(proto.Message):
 
         child_index = proto.Field(proto.INT32, number=1)
 
-        type = proto.Field(proto.STRING, number=2)
+        type_ = proto.Field(proto.STRING, number=2)
 
         variable = proto.Field(proto.STRING, number=3)
 

@@ -50,14 +50,14 @@ class Type(proto.Message):
     stored in a table cell or returned from an SQL query.
 
     Attributes:
-        code (~.type.TypeCode):
+        code (~.gs_type.TypeCode):
             Required. The [TypeCode][google.spanner.v1.TypeCode] for
             this type.
-        array_element_type (~.type.Type):
+        array_element_type (~.gs_type.Type):
             If [code][google.spanner.v1.Type.code] ==
             [ARRAY][google.spanner.v1.TypeCode.ARRAY], then
             ``array_element_type`` is the type of the array elements.
-        struct_type (~.type.StructType):
+        struct_type (~.gs_type.StructType):
             If [code][google.spanner.v1.Type.code] ==
             [STRUCT][google.spanner.v1.TypeCode.STRUCT], then
             ``struct_type`` provides type information for the struct's
@@ -76,7 +76,7 @@ class StructType(proto.Message):
     [STRUCT][google.spanner.v1.TypeCode.STRUCT] type.
 
     Attributes:
-        fields (Sequence[~.type.StructType.Field]):
+        fields (Sequence[~.gs_type.StructType.Field]):
             The list of fields that make up this struct. Order is
             significant, because values of this struct type are
             represented as lists, where the order of field values
@@ -99,13 +99,13 @@ class StructType(proto.Message):
                 ``"SELECT ColName FROM Table"``). Some columns might have an
                 empty name (e.g., !"SELECT UPPER(ColName)"`). Note that a
                 query result can contain multiple fields with the same name.
-            type (~.type.Type):
+            type_ (~.gs_type.Type):
                 The type of the field.
         """
 
         name = proto.Field(proto.STRING, number=1)
 
-        type = proto.Field(proto.MESSAGE, number=2, message=Type,)
+        type_ = proto.Field(proto.MESSAGE, number=2, message=Type,)
 
     fields = proto.RepeatedField(proto.MESSAGE, number=1, message=Field,)
 

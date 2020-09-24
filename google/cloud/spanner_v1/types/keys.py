@@ -193,7 +193,7 @@ class KeySet(proto.Message):
             A list of key ranges. See
             [KeyRange][google.spanner.v1.KeyRange] for more information
             about key range specifications.
-        all (bool):
+        all_ (bool):
             For convenience ``all`` can be set to ``true`` to indicate
             that this ``KeySet`` matches all keys in the table or index.
             Note that any keys specified in ``keys`` or ``ranges`` are
@@ -204,7 +204,7 @@ class KeySet(proto.Message):
 
     ranges = proto.RepeatedField(proto.MESSAGE, number=2, message=KeyRange,)
 
-    all = proto.Field(proto.BOOL, number=3)
+    all_ = proto.Field(proto.BOOL, number=3)
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

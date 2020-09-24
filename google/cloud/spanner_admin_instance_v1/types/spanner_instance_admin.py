@@ -50,7 +50,7 @@ class ReplicaInfo(proto.Message):
         location (str):
             The location of the serving resources, e.g.
             "us-central1".
-        type (~.spanner_instance_admin.ReplicaInfo.ReplicaType):
+        type_ (~.spanner_instance_admin.ReplicaInfo.ReplicaType):
             The type of replica.
         default_leader_location (bool):
             If true, this location is designated as the default leader
@@ -72,7 +72,7 @@ class ReplicaInfo(proto.Message):
 
     location = proto.Field(proto.STRING, number=1)
 
-    type = proto.Field(proto.ENUM, number=2, enum=ReplicaType,)
+    type_ = proto.Field(proto.ENUM, number=2, enum=ReplicaType,)
 
     default_leader_location = proto.Field(proto.BOOL, number=3)
 

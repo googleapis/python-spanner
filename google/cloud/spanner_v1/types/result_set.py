@@ -20,7 +20,7 @@ import proto  # type: ignore
 
 from google.cloud.spanner_v1.types import query_plan as gs_query_plan
 from google.cloud.spanner_v1.types import transaction as gs_transaction
-from google.cloud.spanner_v1.types import type
+from google.cloud.spanner_v1.types import type as gs_type
 from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
@@ -196,7 +196,7 @@ class ResultSetMetadata(proto.Message):
     [PartialResultSet][google.spanner.v1.PartialResultSet].
 
     Attributes:
-        row_type (~.type.StructType):
+        row_type (~.gs_type.StructType):
             Indicates the field names and types for the rows in the
             result set. For example, a SQL query like
             ``"SELECT UserId, UserName FROM Users"`` could return a
@@ -214,7 +214,7 @@ class ResultSetMetadata(proto.Message):
             transaction is yielded here.
     """
 
-    row_type = proto.Field(proto.MESSAGE, number=1, message=type.StructType,)
+    row_type = proto.Field(proto.MESSAGE, number=1, message=gs_type.StructType,)
 
     transaction = proto.Field(
         proto.MESSAGE, number=2, message=gs_transaction.Transaction,

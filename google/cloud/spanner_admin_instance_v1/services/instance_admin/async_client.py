@@ -28,15 +28,15 @@ from google.api_core import retry as retries  # type: ignore
 from google.auth import credentials  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 
-from google.api_core import operation
-from google.api_core import operation_async
+from google.api_core import operation  # type: ignore
+from google.api_core import operation_async  # type: ignore
 from google.cloud.spanner_admin_instance_v1.services.instance_admin import pagers
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
 from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.protobuf import field_mask_pb2 as gp_field_mask  # type: ignore
 
-from .transports.base import InstanceAdminTransport
+from .transports.base import InstanceAdminTransport, DEFAULT_CLIENT_INFO
 from .transports.grpc_asyncio import InstanceAdminGrpcAsyncIOTransport
 from .client import InstanceAdminClient
 
@@ -71,6 +71,7 @@ class InstanceAdminAsyncClient:
     DEFAULT_MTLS_ENDPOINT = InstanceAdminClient.DEFAULT_MTLS_ENDPOINT
 
     instance_path = staticmethod(InstanceAdminClient.instance_path)
+    parse_instance_path = staticmethod(InstanceAdminClient.parse_instance_path)
 
     from_service_account_file = InstanceAdminClient.from_service_account_file
     from_service_account_json = from_service_account_file
@@ -85,6 +86,7 @@ class InstanceAdminAsyncClient:
         credentials: credentials.Credentials = None,
         transport: Union[str, InstanceAdminTransport] = "grpc_asyncio",
         client_options: ClientOptions = None,
+        client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
     ) -> None:
         """Instantiate the instance admin client.
 
@@ -100,16 +102,19 @@ class InstanceAdminAsyncClient:
             client_options (ClientOptions): Custom options for the client. It
                 won't take effect if a ``transport`` instance is provided.
                 (1) The ``api_endpoint`` property can be used to override the
-                default endpoint provided by the client. GOOGLE_API_USE_MTLS
+                default endpoint provided by the client. GOOGLE_API_USE_MTLS_ENDPOINT
                 environment variable can also be used to override the endpoint:
                 "always" (always use the default mTLS endpoint), "never" (always
-                use the default regular endpoint, this is the default value for
-                the environment variable) and "auto" (auto switch to the default
-                mTLS endpoint if client SSL credentials is present). However,
-                the ``api_endpoint`` property takes precedence if provided.
-                (2) The ``client_cert_source`` property is used to provide client
-                SSL credentials for mutual TLS transport. If not provided, the
-                default SSL credentials will be used if present.
+                use the default regular endpoint) and "auto" (auto switch to the
+                default mTLS endpoint if client certificate is present, this is
+                the default value). However, the ``api_endpoint`` property takes
+                precedence if provided.
+                (2) If GOOGLE_API_USE_CLIENT_CERTIFICATE environment variable
+                is "true", then the ``client_cert_source`` property can be used
+                to provide client certificate for mutual TLS transport. If
+                not provided, the default SSL client certificate will be used if
+                present. If GOOGLE_API_USE_CLIENT_CERTIFICATE is "false" or not
+                set, no client certificate will be used.
 
         Raises:
             google.auth.exceptions.MutualTlsChannelError: If mutual TLS transport
@@ -117,7 +122,10 @@ class InstanceAdminAsyncClient:
         """
 
         self._client = InstanceAdminClient(
-            credentials=credentials, transport=transport, client_options=client_options,
+            credentials=credentials,
+            transport=transport,
+            client_options=client_options,
+            client_info=client_info,
         )
 
     async def list_instance_configs(
@@ -185,11 +193,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -274,11 +282,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -357,11 +365,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -443,11 +451,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -579,7 +587,7 @@ class InstanceAdminAsyncClient:
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.create_instance,
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -723,7 +731,7 @@ class InstanceAdminAsyncClient:
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.update_instance,
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -813,11 +821,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=3600.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -962,7 +970,7 @@ class InstanceAdminAsyncClient:
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.set_iam_policy,
             default_timeout=30.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -1113,11 +1121,11 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
                 ),
             ),
             default_timeout=30.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -1212,7 +1220,7 @@ class InstanceAdminAsyncClient:
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.test_iam_permissions,
             default_timeout=30.0,
-            client_info=_client_info,
+            client_info=DEFAULT_CLIENT_INFO,
         )
 
         # Certain fields should be provided within the metadata header;
@@ -1229,13 +1237,13 @@ class InstanceAdminAsyncClient:
 
 
 try:
-    _client_info = gapic_v1.client_info.ClientInfo(
+    DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
         gapic_version=pkg_resources.get_distribution(
             "google-cloud-spanner-admin-instance",
         ).version,
     )
 except pkg_resources.DistributionNotFound:
-    _client_info = gapic_v1.client_info.ClientInfo()
+    DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()
 
 
 __all__ = ("InstanceAdminAsyncClient",)
