@@ -14,8 +14,6 @@
 
 """Wrapper for streaming results."""
 
-from google.protobuf.struct_pb2 import ListValue
-from google.protobuf.struct_pb2 import Value
 from google.cloud import exceptions
 from google.cloud.spanner_v1 import TypeCode
 import six
@@ -88,9 +86,9 @@ class StreamedResultSet(object):
         """
         current_column = len(self._current_row)
         field = self.fields[current_column]
-        merged = _merge_by_type(self._pending_chunk, value, field.type)
+        merged = _merge_by_type(self._pending_chunk, value, field.type_)
         self._pending_chunk = None
-        return _parse_value(merged, field.type)
+        return _parse_value(merged, field.type_)
 
     def _merge_values(self, values):
         """Merge values into rows.
@@ -102,7 +100,7 @@ class StreamedResultSet(object):
         for value in values:
             index = len(self._current_row)
             field = self.fields[index]
-            self._current_row.append(_parse_value(value, field.type))
+            self._current_row.append(_parse_value(value, field.type_))
             if len(self._current_row) == width:
                 self._rows.append(self._current_row)
                 self._current_row = []
@@ -271,7 +269,7 @@ def _merge_struct(lhs, rhs, type_):
         lhs.extend(rhs)
         return lhs
 
-    candidate_type = fields[len(lhs) - 1].type
+    candidate_type = fields[len(lhs) - 1].type_
     first = rhs.pop(0)
     if first is None or candidate_type.code in _UNMERGEABLE_TYPES:
         lhs.append(first)

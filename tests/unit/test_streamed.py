@@ -57,7 +57,7 @@ class TestStreamedResultSet(unittest.TestCase):
         from google.cloud.spanner_v1 import StructType
         from google.cloud.spanner_v1 import Type
 
-        return StructType.Field(name=name, type=Type(code=type_))
+        return StructType.Field(name=name, type_=Type(code=type_))
 
     @staticmethod
     def _make_array_field(name, element_type_code=None, element_type=None):
@@ -68,7 +68,7 @@ class TestStreamedResultSet(unittest.TestCase):
         if element_type is None:
             element_type = Type(code=element_type_code)
         array_type = Type(code=TypeCode.ARRAY, array_element_type=element_type)
-        return StructType.Field(name=name, type=array_type)
+        return StructType.Field(name=name, type_=array_type)
 
     @staticmethod
     def _make_struct_type(struct_type_fields):
@@ -77,7 +77,7 @@ class TestStreamedResultSet(unittest.TestCase):
         from google.cloud.spanner_v1 import TypeCode
 
         fields = [
-            StructType.Field(name=key, type=Type(code=value))
+            StructType.Field(name=key, type_=Type(code=value))
             for key, value in struct_type_fields
         ]
         struct_type = StructType(fields=fields)
@@ -372,7 +372,7 @@ class TestStreamedResultSet(unittest.TestCase):
         array_type = Type(code=TypeCode.ARRAY, array_element_type=subarray_type)
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
-        FIELDS = [StructType.Field(name="loloi", type=array_type)]
+        FIELDS = [StructType.Field(name="loloi", type_=array_type)]
         streamed._metadata = self._make_result_set_metadata(FIELDS)
         streamed._pending_chunk = [[0, 1], [2]]
         chunk = [[3], [4, 5]]
@@ -399,7 +399,7 @@ class TestStreamedResultSet(unittest.TestCase):
         array_type = Type(code=TypeCode.ARRAY, array_element_type=subarray_type)
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
-        FIELDS = [StructType.Field(name="lolos", type=array_type)]
+        FIELDS = [StructType.Field(name="lolos", type_=array_type)]
         streamed._metadata = self._make_result_set_metadata(FIELDS)
         streamed._pending_chunk = [
             [u"A", u"B"],
@@ -1104,16 +1104,16 @@ def _normalize_results(rows_data, fields):
         row = []
         assert len(row_data) == len(fields)
         for cell, field in zip(row_data, fields):
-            if field.type.code == TypeCode.INT64:
+            if field.type_.code == TypeCode.INT64:
                 cell = int(cell)
-            if field.type.code == TypeCode.FLOAT64:
+            if field.type_.code == TypeCode.FLOAT64:
                 cell = _normalize_float(cell)
-            elif field.type.code == TypeCode.BYTES:
+            elif field.type_.code == TypeCode.BYTES:
                 cell = cell.encode("utf8")
-            elif field.type.code == TypeCode.ARRAY:
-                if field.type.array_element_type.code == TypeCode.INT64:
+            elif field.type_.code == TypeCode.ARRAY:
+                if field.type_.array_element_type.code == TypeCode.INT64:
                     cell = _normalize_int_array(cell)
-                elif field.type.array_element_type.code == TypeCode.FLOAT64:
+                elif field.type_.array_element_type.code == TypeCode.FLOAT64:
                     cell = [_normalize_float(subcell) for subcell in cell]
             row.append(cell)
         normalized.append(row)
