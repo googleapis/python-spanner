@@ -35,7 +35,6 @@ def create_backup(instance_id, database_id, backup_id):
     # Create a backup
     expire_time = datetime.utcnow() + timedelta(days=14)
     backup = instance.backup(backup_id, database=database, expire_time=expire_time)
-    backup = instance.backup(backup_id, database=database, expire_time=expire_time)
     operation = backup.create()
 
     # Wait for backup operation to complete.
@@ -47,12 +46,6 @@ def create_backup(instance_id, database_id, backup_id):
 
     # Get the name, create time and backup size.
     backup.reload()
-    print(
-        "Backup {} of size {} bytes was created at {}".format(
-            backup.name, backup.size_bytes, backup.create_time
-        )
-    )
-
     print(
         "Backup {} of size {} bytes was created at {}".format(
             backup.name, backup.size_bytes, backup.create_time
