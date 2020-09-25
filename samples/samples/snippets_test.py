@@ -364,7 +364,7 @@ def test_query_data_with_string(capsys):
 def test_add_numeric_column(capsys):
     snippets.add_numeric_column(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
-    assert 'Altered table "Venue" on database ' in out
+    assert 'Altered table "Venues" on database ' in out
 
 
 def test_update_data_with_numeric(capsys):

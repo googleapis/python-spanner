@@ -739,7 +739,7 @@ def add_numeric_column(instance_id, database_id):
     operation.result(120)
 
     print(
-        'Altered table "Venue" on database {} on instance {}.'.format(
+        'Altered table "Venues" on database {} on instance {}.'.format(
             database_id, instance_id
         )
     )
