@@ -1,7 +1,7 @@
 Snapshot API
 ============
 
-.. automodule:: google.cloud.spanner_v1.snapshot
+.. automodule:: google.cloud.spanner.snapshot
   :members:
   :inherited-members:
 

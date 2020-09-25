@@ -1,7 +1,7 @@
 Database API
 ============
 
-.. automodule:: google.cloud.spanner_v1.database
+.. automodule:: google.cloud.spanner.database
   :members:
   :show-inheritance:
 

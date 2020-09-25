@@ -1,7 +1,7 @@
 Keyset API
 ==========
 
-.. automodule:: google.cloud.spanner_v1.keyset
+.. automodule:: google.cloud.spanner.keyset
   :members:
   :show-inheritance:
 

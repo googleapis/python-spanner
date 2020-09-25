@@ -1,12 +1,12 @@
 Batching Modifications
 ######################
 
-A :class:`~google.cloud.spanner_v1.batch.Batch` represents a set of data
+A :class:`~google.cloud.spanner.batch.Batch` represents a set of data
 modification operations to be performed on tables in a database.  Use of a
 ``Batch`` does not require creating an explicit
 :class:`~google.cloud.spanner_v1.snapshot.Snapshot` or
 :class:`~google.cloud.spanner_v1.transaction.Transaction`.  Until
-:meth:`~google.cloud.spanner_v1.batch.Batch.commit` is called on a ``Batch``,
+:meth:`~google.cloud.spanner.batch.Batch.commit` is called on a ``Batch``,
 no changes are propagated to the back-end.
 
 
@@ -15,9 +15,9 @@ Use Batch via BatchCheckout
 
 :meth:`Database.batch` creates a :class:`~google.cloud.spanner_v1.database.BatchCheckout`
 instance to use as a context manager to handle creating and committing a
-:class:`~google.cloud.spanner_v1.batch.Batch`. The
+:class:`~google.cloud.spanner.batch.Batch`. The
 :class:`BatchCheckout` will automatically call
-:meth:`~google.cloud.spanner_v1.batch.Batch.commit` if the ``with`` block exits
+:meth:`~google.cloud.spanner.batch.Batch.commit` if the ``with`` block exits
 without raising an exception.
 
 .. code:: python

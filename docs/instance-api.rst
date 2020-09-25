@@ -1,7 +1,7 @@
 Instance API
 ============
 
-.. automodule:: google.cloud.spanner_v1.instance
+.. automodule:: google.cloud.spanner.instance
   :members:
   :show-inheritance:
 

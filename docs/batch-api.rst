@@ -1,6 +1,6 @@
 Batch API
 =========
 
-.. automodule:: google.cloud.spanner_v1.batch
+.. automodule:: google.cloud.spanner.batch
   :members:
   :show-inheritance:
