@@ -73,9 +73,26 @@ def default(session):
     session.install("asyncmock", "pytest-asyncio")
 
     session.install("mock", "pytest", "pytest-cov")
-    session.install("-e", ".[tracing]")
+    session.install("-e", ".")
 
     # Run py.test against the unit tests.
+    session.run(
+        "py.test",
+        "--quiet",
+        "--cov=google.cloud.spanner",
+        "--cov=google.cloud",
+        "--cov=tests.unit",
+        "--cov-append",
+        "--cov-config=.coveragerc",
+        "--cov-report=",
+        "--cov-fail-under=0",
+        os.path.join("tests", "unit"),
+        *session.posargs,
+    )
+
+    session.install("-e", ".[tracing]")
+
+    # Run py.test against the unit tests with OpenTelemetry.
     session.run(
         "py.test",
         "--quiet",
