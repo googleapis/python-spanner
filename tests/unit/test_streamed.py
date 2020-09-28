@@ -90,16 +90,6 @@ class TestStreamedResultSet(unittest.TestCase):
         return _make_value_pb(value)
 
     @staticmethod
-    def _make_list_value(values=(), value_pbs=None):
-        from google.protobuf.struct_pb2 import ListValue
-        from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner._helpers import _make_list_value_pb
-
-        if value_pbs is not None:
-            return Value(list_value=ListValue(values=value_pbs))
-        return Value(list_value=_make_list_value_pb(values))
-
-    @staticmethod
     def _make_result_set_metadata(fields=(), transaction_id=None):
         from google.cloud.spanner_v1 import ResultSetMetadata
         from google.cloud.spanner_v1 import StructType

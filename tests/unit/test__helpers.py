@@ -664,6 +664,17 @@ class Test_parse_value_pb(unittest.TestCase):
         with self.assertRaises(ValueError):
             self._callFUT(value_pb, field_type)
 
+    def test_w_empty_value(self):
+        from google.protobuf.struct_pb2 import Value
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
+
+        field_type = Type(code=TypeCode.STRING)
+        value_pb = Value()
+
+        with self.assertRaises(ValueError):
+            self._callFUT(value_pb, field_type)
+
 
 class Test_parse_list_value_pbs(unittest.TestCase):
     def _callFUT(self, *args, **kw):

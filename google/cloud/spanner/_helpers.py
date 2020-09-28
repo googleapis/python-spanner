@@ -219,6 +219,7 @@ def _parse_value_pb(value_pb, field_type):
         return _parse_value(value_pb.number_value, field_type)
     if value_pb.HasField("list_value"):
         return _parse_value(value_pb.list_value, field_type)
+    raise ValueError("No value set in Value: %s" % (value_pb,))
 
 
 # pylint: enable=too-many-branches
