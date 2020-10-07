@@ -355,6 +355,64 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         database_ids = [database.name for database in Config.INSTANCE.list_databases()]
         self.assertIn(temp_db.name, database_ids)
 
+    @unittest.skipIf(
+        USE_EMULATOR, "PITR-lite features are not supported by the emulator"
+    )
+    def test_create_database_pitr_invalid_retention_period(self):
+        pool = BurstyPool(labels={"testcase": "create_database_pitr"})
+        temp_db_id = "temp_db" + unique_resource_id("_")
+        retention_period = "0d"
+        ddl_statements = [
+            "ALTER DATABASE {}"
+            " SET OPTIONS (version_retention_period = '{}')".format(
+                temp_db_id, retention_period
+            )
+        ]
+        temp_db = Config.INSTANCE.database(
+            temp_db_id, pool=pool, ddl_statements=ddl_statements
+        )
+        with self.assertRaises(exceptions.InvalidArgument):
+            temp_db.create()
+
+    @unittest.skipIf(
+        USE_EMULATOR, "PITR-lite features are not supported by the emulator"
+    )
+    def test_create_database_pitr_success(self):
+        pool = BurstyPool(labels={"testcase": "create_database_pitr"})
+        temp_db_id = "temp_db" + unique_resource_id("_")
+        retention_period = "7d"
+        ddl_statements = [
+            "ALTER DATABASE {}"
+            " SET OPTIONS (version_retention_period = '{}')".format(
+                temp_db_id, retention_period
+            )
+        ]
+        temp_db = Config.INSTANCE.database(
+            temp_db_id, pool=pool, ddl_statements=ddl_statements
+        )
+        operation = temp_db.create()
+        self.to_delete.append(temp_db)
+
+        # We want to make sure the operation completes.
+        operation.result(30)  # raises on failure / timeout.
+
+        database_ids = [
+            database.database_id for database in Config.INSTANCE.list_databases()
+        ]
+        self.assertIn(temp_db_id, database_ids)
+
+        temp_db.reload()
+        self.assertEqual(temp_db.version_retention_period, retention_period)
+
+        with temp_db.snapshot() as snapshot:
+            results = snapshot.execute_sql(
+                "SELECT OPTION_VALUE AS version_retention_period "
+                "FROM INFORMATION_SCHEMA.DATABASE_OPTIONS "
+                "WHERE SCHEMA_NAME = '' AND OPTION_NAME = 'version_retention_period'"
+            )
+            for result in results:
+                self.assertEqual(result[0], retention_period)
+
     def test_table_not_found(self):
         temp_db_id = "temp_db" + unique_resource_id("_")
 
@@ -405,6 +463,62 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
 
         temp_db.reload()
 
+        self.assertEqual(len(temp_db.ddl_statements), len(ddl_statements))
+
+    @unittest.skipIf(
+        USE_EMULATOR, "PITR-lite features are not supported by the emulator"
+    )
+    def test_update_database_ddl_pitr_invalid(self):
+        pool = BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
+        temp_db_id = "temp_db" + unique_resource_id("_")
+        retention_period = "0d"
+        temp_db = Config.INSTANCE.database(temp_db_id, pool=pool)
+        create_op = temp_db.create()
+        self.to_delete.append(temp_db)
+
+        # We want to make sure the operation completes.
+        create_op.result(240)  # raises on failure / timeout.
+
+        self.assertIsNone(temp_db.version_retention_period)
+
+        ddl_statements = DDL_STATEMENTS + [
+            "ALTER DATABASE {}"
+            " SET OPTIONS (version_retention_period = '{}')".format(
+                temp_db_id, retention_period
+            )
+        ]
+        with self.assertRaises(exceptions.InvalidArgument):
+            temp_db.update_ddl(ddl_statements)
+
+    @unittest.skipIf(
+        USE_EMULATOR, "PITR-lite features are not supported by the emulator"
+    )
+    def test_update_database_ddl_pitr_success(self):
+        pool = BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
+        temp_db_id = "temp_db" + unique_resource_id("_")
+        retention_period = "7d"
+        temp_db = Config.INSTANCE.database(temp_db_id, pool=pool)
+        create_op = temp_db.create()
+        self.to_delete.append(temp_db)
+
+        # We want to make sure the operation completes.
+        create_op.result(240)  # raises on failure / timeout.
+
+        self.assertIsNone(temp_db.version_retention_period)
+
+        ddl_statements = DDL_STATEMENTS + [
+            "ALTER DATABASE {}"
+            " SET OPTIONS (version_retention_period = '{}')".format(
+                temp_db_id, retention_period
+            )
+        ]
+        operation = temp_db.update_ddl(ddl_statements)
+
+        # We want to make sure the operation completes.
+        operation.result(240)  # raises on failure / timeout.
+
+        temp_db.reload()
+        self.assertEqual(temp_db.version_retention_period, retention_period)
         self.assertEqual(len(temp_db.ddl_statements), len(ddl_statements))
 
     def test_db_batch_insert_then_db_snapshot_read(self):
