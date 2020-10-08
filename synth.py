@@ -68,7 +68,7 @@ s.replace(
 # Add templated files
 # ----------------------------------------------------------------------------
 templated_files = common.py_library(microgenerator=True, samples=True)
-s.move(templated_files, excludes=[".coveragerc"])
+s.move(templated_files, excludes=[".coveragerc", "noxfile.py"])
 
 # Ensure CI runs on a new instance each time
 s.replace(
@@ -77,28 +77,6 @@ s.replace(
     "# Set up creating a new instance for each system test run\n"
     "export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true\n"
     "\n\g<0>",
-)
-
-# Ensure tracing dependencies are installed
-s.replace(
-    "noxfile.py",
-    f"session.install\(.-e., .\..\)",
-    "session.install(\"-e\", \".[tracing]\")",
-)
-
-# Update check to allow for emulator use
-s.replace(
-    "noxfile.py",
-    "if not os.environ.get\(.GOOGLE_APPLICATION_CREDENTIALS., ..\):",
-    "if not os.environ.get(\"GOOGLE_APPLICATION_CREDENTIALS\", \"\") and "
-    "\tnot os.environ.get(\"SPANNER_EMULATOR_HOST\", \"\"):",
-)
-
-# Update error message to indicate emulator usage
-s.replace(
-    "noxfile.py",
-    "Credentials must be set via environment variable",
-    "Credentials or emulator host must be set via environment variable"
 )
 
 # ----------------------------------------------------------------------------
