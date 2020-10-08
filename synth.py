@@ -56,6 +56,14 @@ library = gapic.py_library(
 
 s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
 
+# Fix formatting for bullet lists.
+# See: https://github.com/googleapis/gapic-generator-python/issues/604
+s.replace(
+    "google/cloud/spanner_admin_database_v1/services/database_admin/*.py",
+    "``backup.expire_time``.",
+    "``backup.expire_time``.\n"
+)
+
 # ----------------------------------------------------------------------------
 # Add templated files
 # ----------------------------------------------------------------------------
