@@ -1418,6 +1418,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 supported for the following fields:
 
                 -  ``backup.expire_time``.
+
                 This corresponds to the ``backup`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
