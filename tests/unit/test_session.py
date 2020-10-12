@@ -224,7 +224,8 @@ class TestSession(OpenTelemetryBase):
         )
 
     @mock.patch(
-        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
+        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED",
+        False,
     )
     def test_exists_hit_wo_span(self):
         session_pb = self._make_session_pb(self.SESSION_NAME)
@@ -267,7 +268,8 @@ class TestSession(OpenTelemetryBase):
         )
 
     @mock.patch(
-        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
+        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED",
+        False,
     )
     def test_exists_miss_wo_span(self):
         from google.api_core.exceptions import NotFound

@@ -121,10 +121,7 @@ class TestKeyRange(unittest.TestCase):
         key2 = u"key_2"
         key_range = self._make_one(start_closed=[key1], end_open=[key2])
         key_range_pb = key_range._to_pb()
-        expected = KeyRangePB(
-            start_closed=[key1],
-            end_open=[key2],
-        )
+        expected = KeyRangePB(start_closed=[key1], end_open=[key2],)
         self.assertEqual(key_range_pb, expected)
 
     def test_to_pb_w_start_open_and_end_closed(self):
