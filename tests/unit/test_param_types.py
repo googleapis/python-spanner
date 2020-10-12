@@ -20,7 +20,7 @@ class Test_ArrayParamType(unittest.TestCase):
     def test_it(self):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner import param_types
+        from google.cloud.spanner_v1 import param_types
 
         expected = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
@@ -36,7 +36,7 @@ class Test_Struct(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner import param_types
+        from google.cloud.spanner_v1 import param_types
 
         struct_type = StructType(
             fields=[

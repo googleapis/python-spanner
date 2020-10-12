@@ -19,7 +19,7 @@ import re
 from google.cloud.exceptions import NotFound
 
 from google.cloud.spanner_admin_database_v1 import Backup as BackupPB
-from google.cloud.spanner._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
 _BACKUP_NAME_RE = re.compile(
     r"^projects/(?P<project>[^/]+)/"
@@ -40,7 +40,7 @@ class Backup(object):
     :type backup_id: str
     :param backup_id: The ID of the backup.
 
-    :type instance: :class:`~google.cloud.spanner.instance.Instance`
+    :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
     :param instance: The instance that owns the backup.
 
     :type database: str
@@ -144,7 +144,7 @@ class Backup(object):
         :type backup_pb: :class:`~google.spanner.admin.database.v1.Backup`
         :param backup_pb: A backup protobuf object.
 
-        :type instance: :class:`~google.cloud.spanner.instance.Instance`
+        :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
         :param instance: The instance that owns the backup.
 
         :rtype: :class:`Backup`

@@ -20,7 +20,7 @@ import mock
 
 class TestStreamedResultSet(unittest.TestCase):
     def _getTargetClass(self):
-        from google.cloud.spanner.streamed import StreamedResultSet
+        from google.cloud.spanner_v1.streamed import StreamedResultSet
 
         return StreamedResultSet
 
@@ -85,7 +85,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
     @staticmethod
     def _make_value(value):
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         return _make_value_pb(value)
 
@@ -105,7 +105,7 @@ class TestStreamedResultSet(unittest.TestCase):
     def _make_result_set_stats(query_plan=None, **kw):
         from google.cloud.spanner_v1 import ResultSetStats
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         query_stats = Struct(
             fields={key: _make_value_pb(value) for key, value in kw.items()}
@@ -141,7 +141,7 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertIs(streamed.stats, stats)
 
     def test__merge_chunk_bool(self):
-        from google.cloud.spanner.streamed import Unmergeable
+        from google.cloud.spanner_v1.streamed import Unmergeable
         from google.cloud.spanner_v1 import TypeCode
 
         iterator = _MockCancellableIterator()
@@ -196,7 +196,7 @@ class TestStreamedResultSet(unittest.TestCase):
         self.assertEqual(merged, 3.14159)
 
     def test__merge_chunk_float64_w_float64(self):
-        from google.cloud.spanner.streamed import Unmergeable
+        from google.cloud.spanner_v1.streamed import Unmergeable
         from google.cloud.spanner_v1 import TypeCode
 
         iterator = _MockCancellableIterator()
@@ -952,7 +952,7 @@ class TestStreamedResultSet_JSON_acceptance_tests(unittest.TestCase):
     _json_tests = None
 
     def _getTargetClass(self):
-        from google.cloud.spanner.streamed import StreamedResultSet
+        from google.cloud.spanner_v1.streamed import StreamedResultSet
 
         return StreamedResultSet
 

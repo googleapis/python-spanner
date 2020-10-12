@@ -40,7 +40,7 @@ class TestInstance(unittest.TestCase):
     DATABASE_NAME = "%s/databases/%s" % (INSTANCE_NAME, DATABASE_ID)
 
     def _getTargetClass(self):
-        from google.cloud.spanner.instance import Instance
+        from google.cloud.spanner_v1.instance import Instance
 
         return Instance
 
@@ -48,7 +48,7 @@ class TestInstance(unittest.TestCase):
         return self._getTargetClass()(*args, **kwargs)
 
     def test_constructor_defaults(self):
-        from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
+        from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
 
         client = object()
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -357,7 +357,7 @@ class TestInstance(unittest.TestCase):
 
     def test_update_not_found(self):
         from google.cloud.exceptions import NotFound
-        from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
+        from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
 
         client = _Client(self.PROJECT)
         api = client.instance_admin_api = _FauxInstanceAdminAPI(
@@ -446,8 +446,8 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
 
     def test_database_factory_defaults(self):
-        from google.cloud.spanner.database import Database
-        from google.cloud.spanner.pool import BurstyPool
+        from google.cloud.spanner_v1.database import Database
+        from google.cloud.spanner_v1.pool import BurstyPool
 
         client = _Client(self.PROJECT)
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
@@ -464,7 +464,7 @@ class TestInstance(unittest.TestCase):
         self.assertIs(pool._database, database)
 
     def test_database_factory_explicit(self):
-        from google.cloud.spanner.database import Database
+        from google.cloud.spanner_v1.database import Database
         from tests._fixtures import DDL_STATEMENTS
 
         client = _Client(self.PROJECT)
@@ -560,7 +560,7 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_backup_factory_defaults(self):
-        from google.cloud.spanner.backup import Backup
+        from google.cloud.spanner_v1.backup import Backup
 
         client = _Client(self.PROJECT)
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
@@ -577,7 +577,7 @@ class TestInstance(unittest.TestCase):
     def test_backup_factory_explicit(self):
         import datetime
         from google.cloud._helpers import UTC
-        from google.cloud.spanner.backup import Backup
+        from google.cloud.spanner_v1.backup import Backup
 
         client = _Client(self.PROJECT)
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
@@ -886,7 +886,7 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import (
             OptimizeRestoredDatabaseMetadata,
         )
-        from google.cloud.spanner import instance
+        from google.cloud.spanner_v1 import instance
 
         type_string = "type.googleapis.com/google.spanner.admin.database.v1.OptimizeRestoredDatabaseMetadata"
         self.assertIn(type_string, instance._OPERATION_METADATA_TYPES)
@@ -896,7 +896,7 @@ class TestInstance(unittest.TestCase):
         )
 
     def test_type_string_to_type_pb_miss(self):
-        from google.cloud.spanner import instance
+        from google.cloud.spanner_v1 import instance
         from google.protobuf.empty_pb2 import Empty
 
         self.assertEqual(instance._type_string_to_type_pb("invalid_string"), Empty)

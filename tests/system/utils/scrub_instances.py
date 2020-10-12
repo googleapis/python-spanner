@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud.spanner import Client
+from google.cloud.spanner_v1 import Client
 from .streaming_utils import INSTANCE_NAME as STREAMING_INSTANCE
 
 STANDARD_INSTANCE = "google-cloud-python-systest"

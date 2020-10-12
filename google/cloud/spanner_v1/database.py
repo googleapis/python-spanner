@@ -29,18 +29,18 @@ import six
 
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
-from google.cloud.spanner._helpers import (
+from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
 )
-from google.cloud.spanner.batch import Batch
-from google.cloud.spanner.keyset import KeySet
-from google.cloud.spanner.pool import BurstyPool
-from google.cloud.spanner.pool import SessionCheckout
-from google.cloud.spanner.session import Session
-from google.cloud.spanner.snapshot import _restart_on_unavailable
-from google.cloud.spanner.snapshot import Snapshot
-from google.cloud.spanner.streamed import StreamedResultSet
+from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner_v1.pool import SessionCheckout
+from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
@@ -83,7 +83,7 @@ class Database(object):
     :type database_id: str
     :param database_id: The ID of the database.
 
-    :type instance: :class:`~google.cloud.spanner.instance.Instance`
+    :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
     :param instance: The instance that owns the database.
 
     :type ddl_statements: list of string
@@ -91,10 +91,10 @@ class Database(object):
                            CREATE DATABASE statement.
 
     :type pool: concrete subclass of
-                :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
+                :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
     :param pool: (Optional) session pool to be used by database.  If not
                  passed, the database will construct an instance of
-                 :class:`~google.cloud.spanner.pool.BurstyPool`.
+                 :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
     """
 
     _spanner_api = None
@@ -122,11 +122,11 @@ class Database(object):
             :class:`~google.cloud.spanner_admin_instance_v1.Instance`
         :param database_pb: A instance protobuf object.
 
-        :type instance: :class:`~google.cloud.spanner.instance.Instance`
+        :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
         :param instance: The instance that owns the database.
 
         :type pool: concrete subclass of
-                    :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
+                    :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
         :rtype: :class:`Database`
@@ -199,7 +199,7 @@ class Database(object):
     def restore_info(self):
         """Restore info for this database.
 
-        :rtype: :class:`~google.cloud.spanner.database.RestoreInfo`
+        :rtype: :class:`~google.cloud.spanner_v1.database.RestoreInfo`
         :returns: an object representing the restore info for this database
         """
         return self._restore_info
@@ -384,7 +384,7 @@ class Database(object):
             self._instance._client._query_options, query_options
         )
         if params is not None:
-            from google.cloud.spanner.transaction import Transaction
+            from google.cloud.spanner_v1.transaction import Transaction
 
             if param_types is None:
                 raise ValueError("Specify 'param_types' when passing 'params'.")
@@ -436,7 +436,7 @@ class Database(object):
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
-        :rtype: :class:`~google.cloud.spanner.session.Session`
+        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: a session bound to this database.
         """
         return Session(self, labels=labels)
@@ -453,9 +453,9 @@ class Database(object):
         :type kw: dict
         :param kw:
             Passed through to
-            :class:`~google.cloud.spanner.snapshot.Snapshot` constructor.
+            :class:`~google.cloud.spanner_v1.snapshot.Snapshot` constructor.
 
-        :rtype: :class:`~google.cloud.spanner.database.SnapshotCheckout`
+        :rtype: :class:`~google.cloud.spanner_v1.database.SnapshotCheckout`
         :returns: new wrapper
         """
         return SnapshotCheckout(self, **kw)
@@ -466,7 +466,7 @@ class Database(object):
         The wrapper *must* be used as a context manager, with the batch
         as the value returned by the wrapper.
 
-        :rtype: :class:`~google.cloud.spanner.database.BatchCheckout`
+        :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
         return BatchCheckout(self)
@@ -481,7 +481,7 @@ class Database(object):
         :param exact_staleness: Execute all reads at a timestamp that is
                                 ``exact_staleness`` old.
 
-        :rtype: :class:`~google.cloud.spanner.database.BatchSnapshot`
+        :rtype: :class:`~google.cloud.spanner_v1.database.BatchSnapshot`
         :returns: new wrapper
         """
         return BatchSnapshot(
@@ -529,7 +529,7 @@ class Database(object):
     def restore(self, source):
         """Restore from a backup to this database.
 
-        :type backup: :class:`~google.cloud.spanner.backup.Backup`
+        :type backup: :class:`~google.cloud.spanner_v1.backup.Backup`
         :param backup: the path of the backup being restored from.
 
         :rtype: :class:`~google.api_core.operation.Operation`
@@ -606,7 +606,7 @@ class BatchCheckout(object):
     Caller must *not* use the batch to perform API requests outside the scope
     of the context manager.
 
-    :type database: :class:`~google.cloud.spanner.database.Database`
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
     """
 
@@ -638,13 +638,13 @@ class SnapshotCheckout(object):
     Caller must *not* use the snapshot to perform API requests outside the
     scope of the context manager.
 
-    :type database: :class:`~google.cloud.spanner.database.Database`
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
 
     :type kw: dict
     :param kw:
         Passed through to
-        :class:`~google.cloud.spanner.snapshot.Snapshot` constructor.
+        :class:`~google.cloud.spanner_v1.snapshot.Snapshot` constructor.
     """
 
     def __init__(self, database, **kw):
@@ -665,7 +665,7 @@ class SnapshotCheckout(object):
 class BatchSnapshot(object):
     """Wrapper for generating and processing read / query batches.
 
-    :type database: :class:`~google.cloud.spanner.database.Database`
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
 
     :type read_timestamp: :class:`datetime.datetime`
@@ -687,7 +687,7 @@ class BatchSnapshot(object):
     def from_dict(cls, database, mapping):
         """Reconstruct an instance from a mapping.
 
-        :type database: :class:`~google.cloud.spanner.database.Database`
+        :type database: :class:`~google.cloud.spanner_v1.database.Database`
         :param database: database to use
 
         :type mapping: mapping
@@ -744,14 +744,14 @@ class BatchSnapshot(object):
     def read(self, *args, **kw):
         """Convenience method:  perform read operation via snapshot.
 
-        See :meth:`~google.cloud.spanner.snapshot.Snapshot.read`.
+        See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.read`.
         """
         return self._get_snapshot().read(*args, **kw)
 
     def execute_sql(self, *args, **kw):
         """Convenience method:  perform query operation via snapshot.
 
-        See :meth:`~google.cloud.spanner.snapshot.Snapshot.execute_sql`.
+        See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.execute_sql`.
         """
         return self._get_snapshot().execute_sql(*args, **kw)
 
@@ -776,7 +776,7 @@ class BatchSnapshot(object):
         :type columns: list of str
         :param columns: names of columns to be retrieved
 
-        :type keyset: :class:`~google.cloud.spanner.keyset.KeySet`
+        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
         :param keyset: keys / ranges identifying rows to be retrieved
 
         :type index: str
@@ -825,7 +825,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_read_batches`.
 
-        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         kwargs = copy.deepcopy(batch["read"])
@@ -920,7 +920,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_query_batches`.
 
-        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         return self._get_snapshot().execute_sql(
@@ -935,7 +935,7 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_query_batches`.
 
-        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         :raises ValueError: if batch does not contain either 'read' or 'query'
         """

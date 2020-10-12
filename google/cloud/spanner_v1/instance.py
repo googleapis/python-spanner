@@ -28,9 +28,9 @@ from google.protobuf.field_mask_pb2 import FieldMask
 
 # pylint: disable=ungrouped-imports
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner._helpers import _metadata_with_prefix
-from google.cloud.spanner.backup import Backup
-from google.cloud.spanner.database import Database
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1.backup import Backup
+from google.cloud.spanner_v1.database import Database
 
 # pylint: enable=ungrouped-imports
 
@@ -82,7 +82,7 @@ class Instance(object):
     :type instance_id: str
     :param instance_id: The ID of the instance.
 
-    :type client: :class:`~google.cloud.spanner.client.Client`
+    :type client: :class:`~google.cloud.spanner_v1.client.Client`
     :param client: The client that owns the instance. Provides
                    authorization and a project ID.
 
@@ -136,7 +136,7 @@ class Instance(object):
             :class:`~google.spanner.v2.spanner_instance_admin_pb2.Instance`
         :param instance_pb: A instance protobuf object.
 
-        :type client: :class:`~google.cloud.spanner.client.Client`
+        :type client: :class:`~google.cloud.spanner_v1.client.Client`
         :param client: The client that owns the instance.
 
         :rtype: :class:`Instance`
@@ -201,7 +201,7 @@ class Instance(object):
         Copies the local data stored as simple types and copies the client
         attached to this instance.
 
-        :rtype: :class:`~google.cloud.spanner.instance.Instance`
+        :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
         :returns: A copy of the current instance.
         """
         new_client = self._client.copy()
@@ -357,10 +357,10 @@ class Instance(object):
                                'CREATE DATABSE' statement.
 
         :type pool: concrete subclass of
-                    :class:`~google.cloud.spanner.pool.AbstractSessionPool`.
+                    :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
-        :rtype: :class:`~google.cloud.spanner.database.Database`
+        :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
         return Database(database_id, self, ddl_statements=ddl_statements, pool=pool)
@@ -387,7 +387,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api._ore.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner.database.Database`
+            Iterator of :class:`~google.cloud.spanner_v1.database.Database`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
@@ -405,7 +405,7 @@ class Instance(object):
         :type backup_id: str
         :param backup_id: The ID of the backup.
 
-        :type database: :class:`~google.cloud.spanner.database.Database`
+        :type database: :class:`~google.cloud.spanner_v1.database.Database`
         :param database:
             Optional. The database that will be used when creating the backup.
             Required if the create method needs to be called.
@@ -437,7 +437,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner.backup.Backup`
+            Iterator of :class:`~google.cloud.spanner_v1.backup.Backup`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)

@@ -17,7 +17,7 @@ import unittest
 
 import mock
 
-from google.cloud.spanner.param_types import INT64
+from google.cloud.spanner_v1.param_types import INT64
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -77,13 +77,13 @@ class _BaseTest(unittest.TestCase):
 
 class TestDatabase(_BaseTest):
     def _get_target_class(self):
-        from google.cloud.spanner.database import Database
+        from google.cloud.spanner_v1.database import Database
 
         return Database
 
     @staticmethod
     def _make_database_admin_api():
-        from google.cloud.spanner.client import DatabaseAdminClient
+        from google.cloud.spanner_v1.client import DatabaseAdminClient
 
         return mock.create_autospec(DatabaseAdminClient, instance=True)
 
@@ -94,7 +94,7 @@ class TestDatabase(_BaseTest):
         return mock.create_autospec(SpannerClient, instance=True)
 
     def test_ctor_defaults(self):
-        from google.cloud.spanner.pool import BurstyPool
+        from google.cloud.spanner_v1.pool import BurstyPool
 
         instance = _Instance(self.INSTANCE_NAME)
 
@@ -197,7 +197,7 @@ class TestDatabase(_BaseTest):
 
     def test_from_pb_success_w_hyphen_w_default_pool(self):
         from google.cloud.spanner_admin_database_v1 import Database
-        from google.cloud.spanner.pool import BurstyPool
+        from google.cloud.spanner_v1.pool import BurstyPool
 
         DATABASE_ID_HYPHEN = "database-id"
         DATABASE_NAME_HYPHEN = self.INSTANCE_NAME + "/databases/" + DATABASE_ID_HYPHEN
@@ -259,7 +259,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
-        patch = mock.patch("google.cloud.spanner.database.SpannerClient")
+        patch = mock.patch("google.cloud.spanner_v1.database.SpannerClient")
 
         with patch as spanner_client:
             api = database.spanner_api
@@ -278,7 +278,7 @@ class TestDatabase(_BaseTest):
 
     def test_spanner_api_w_scoped_creds(self):
         import google.auth.credentials
-        from google.cloud.spanner.database import SPANNER_DATA_SCOPE
+        from google.cloud.spanner_v1.database import SPANNER_DATA_SCOPE
 
         class _CredentialsWithScopes(google.auth.credentials.Scoped):
             def __init__(self, scopes=(), source=None):
@@ -300,7 +300,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
-        patch = mock.patch("google.cloud.spanner.database.SpannerClient")
+        patch = mock.patch("google.cloud.spanner_v1.database.SpannerClient")
 
         with patch as spanner_client:
             api = database.spanner_api
@@ -324,7 +324,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
-        patch = mock.patch("google.cloud.spanner.database.SpannerClient")
+        patch = mock.patch("google.cloud.spanner_v1.database.SpannerClient")
         with patch as spanner_client:
             api = database.spanner_api
 
@@ -770,7 +770,7 @@ class TestDatabase(_BaseTest):
             TransactionSelector,
             TransactionOptions,
         )
-        from google.cloud.spanner._helpers import (
+        from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
@@ -893,7 +893,7 @@ class TestDatabase(_BaseTest):
         self._execute_partitioned_dml_helper(dml=DML_WO_PARAM, retried=True)
 
     def test_session_factory_defaults(self):
-        from google.cloud.spanner.session import Session
+        from google.cloud.spanner_v1.session import Session
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -908,7 +908,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, {})
 
     def test_session_factory_w_labels(self):
-        from google.cloud.spanner.session import Session
+        from google.cloud.spanner_v1.session import Session
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -924,7 +924,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, labels)
 
     def test_snapshot_defaults(self):
-        from google.cloud.spanner.database import SnapshotCheckout
+        from google.cloud.spanner_v1.database import SnapshotCheckout
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -941,7 +941,7 @@ class TestDatabase(_BaseTest):
     def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
         from google.cloud._helpers import UTC
-        from google.cloud.spanner.database import SnapshotCheckout
+        from google.cloud.spanner_v1.database import SnapshotCheckout
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         client = _Client()
@@ -958,7 +958,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(checkout._kw, {"read_timestamp": now, "multi_use": True})
 
     def test_batch(self):
-        from google.cloud.spanner.database import BatchCheckout
+        from google.cloud.spanner_v1.database import BatchCheckout
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -972,7 +972,7 @@ class TestDatabase(_BaseTest):
         self.assertIs(checkout._database, database)
 
     def test_batch_snapshot(self):
-        from google.cloud.spanner.database import BatchSnapshot
+        from google.cloud.spanner_v1.database import BatchSnapshot
 
         database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
 
@@ -983,7 +983,7 @@ class TestDatabase(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     def test_batch_snapshot_w_read_timestamp(self):
-        from google.cloud.spanner.database import BatchSnapshot
+        from google.cloud.spanner_v1.database import BatchSnapshot
 
         database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
         timestamp = self._make_timestamp()
@@ -995,7 +995,7 @@ class TestDatabase(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     def test_batch_snapshot_w_exact_staleness(self):
-        from google.cloud.spanner.database import BatchSnapshot
+        from google.cloud.spanner_v1.database import BatchSnapshot
 
         database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
         duration = self._make_duration()
@@ -1169,7 +1169,7 @@ class TestDatabase(_BaseTest):
 
     def test_list_database_operations_grpc_error(self):
         from google.api_core.exceptions import Unknown
-        from google.cloud.spanner.database import _DATABASE_METADATA_FILTER
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1188,7 +1188,7 @@ class TestDatabase(_BaseTest):
 
     def test_list_database_operations_not_found(self):
         from google.api_core.exceptions import NotFound
-        from google.cloud.spanner.database import _DATABASE_METADATA_FILTER
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1206,7 +1206,7 @@ class TestDatabase(_BaseTest):
         )
 
     def test_list_database_operations_defaults(self):
-        from google.cloud.spanner.database import _DATABASE_METADATA_FILTER
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1221,7 +1221,7 @@ class TestDatabase(_BaseTest):
         )
 
     def test_list_database_operations_explicit_filter(self):
-        from google.cloud.spanner.database import _DATABASE_METADATA_FILTER
+        from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1246,7 +1246,7 @@ class TestDatabase(_BaseTest):
 
 class TestBatchCheckout(_BaseTest):
     def _get_target_class(self):
-        from google.cloud.spanner.database import BatchCheckout
+        from google.cloud.spanner_v1.database import BatchCheckout
 
         return BatchCheckout
 
@@ -1267,7 +1267,7 @@ class TestBatchCheckout(_BaseTest):
         from google.cloud.spanner_v1 import TransactionOptions
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner.batch import Batch
+        from google.cloud.spanner_v1.batch import Batch
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -1298,7 +1298,7 @@ class TestBatchCheckout(_BaseTest):
         )
 
     def test_context_mgr_failure(self):
-        from google.cloud.spanner.batch import Batch
+        from google.cloud.spanner_v1.batch import Batch
 
         database = _Database(self.DATABASE_NAME)
         pool = database._pool = _Pool()
@@ -1322,12 +1322,12 @@ class TestBatchCheckout(_BaseTest):
 
 class TestSnapshotCheckout(_BaseTest):
     def _get_target_class(self):
-        from google.cloud.spanner.database import SnapshotCheckout
+        from google.cloud.spanner_v1.database import SnapshotCheckout
 
         return SnapshotCheckout
 
     def test_ctor_defaults(self):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
@@ -1350,7 +1350,7 @@ class TestSnapshotCheckout(_BaseTest):
     def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
         from google.cloud._helpers import UTC
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         database = _Database(self.DATABASE_NAME)
@@ -1372,7 +1372,7 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     def test_context_mgr_failure(self):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
         pool = database._pool = _Pool()
@@ -1400,25 +1400,25 @@ class TestBatchSnapshot(_BaseTest):
     INDEX = "index"
 
     def _get_target_class(self):
-        from google.cloud.spanner.database import BatchSnapshot
+        from google.cloud.spanner_v1.database import BatchSnapshot
 
         return BatchSnapshot
 
     @staticmethod
     def _make_database(**kwargs):
-        from google.cloud.spanner.database import Database
+        from google.cloud.spanner_v1.database import Database
 
         return mock.create_autospec(Database, instance=True, **kwargs)
 
     @staticmethod
     def _make_session(**kwargs):
-        from google.cloud.spanner.session import Session
+        from google.cloud.spanner_v1.session import Session
 
         return mock.create_autospec(Session, instance=True, **kwargs)
 
     @staticmethod
     def _make_snapshot(transaction_id=None, **kwargs):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         snapshot = mock.create_autospec(Snapshot, instance=True, **kwargs)
         if transaction_id is not None:
@@ -1428,7 +1428,7 @@ class TestBatchSnapshot(_BaseTest):
 
     @staticmethod
     def _make_keyset():
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
 
         return KeySet(all_=True)
 

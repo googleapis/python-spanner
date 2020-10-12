@@ -29,10 +29,10 @@ Configuration
   Engine or Google Compute Engine the project will be detected automatically.
   (Setting this environment variable is not required, you may instead pass the
   ``project`` explicitly when constructing a
-  :class:`~google.cloud.spanner.client.Client`).
+  :class:`~google.cloud.spanner_v1.client.Client`).
 
 - After configuring your environment, create a
-  :class:`~google.cloud.spanner.client.Client`
+  :class:`~google.cloud.spanner_v1.client.Client`
 
   .. code::
 
@@ -77,7 +77,7 @@ To use an emulator via an environment variable, set the `SPANNER_EMULATOR_HOST` 
 Next Step
 ---------
 
-After a :class:`~google.cloud.spanner.client.Client`, the next
+After a :class:`~google.cloud.spanner_v1.client.Client`, the next
 highest-level object is an :class:`~google.cloud.spanner_v1.instance.Instance`.
 You'll need one before you can interact with databases.
 

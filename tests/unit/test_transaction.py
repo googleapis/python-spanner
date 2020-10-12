@@ -55,7 +55,7 @@ class TestTransaction(OpenTelemetryBase):
     }
 
     def _getTargetClass(self):
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         return Transaction
 
@@ -312,7 +312,7 @@ class TestTransaction(OpenTelemetryBase):
     def _commit_helper(self, mutate=True):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -369,7 +369,7 @@ class TestTransaction(OpenTelemetryBase):
 
     def test__make_params_pb_w_params_w_param_types(self):
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         session = _Session()
         transaction = self._make_one(session)
@@ -409,7 +409,7 @@ class TestTransaction(OpenTelemetryBase):
             ResultSetStats,
         )
         from google.cloud.spanner_v1 import TransactionSelector
-        from google.cloud.spanner._helpers import (
+        from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
@@ -503,13 +503,13 @@ class TestTransaction(OpenTelemetryBase):
     def _batch_update_helper(self, error_after=None, count=0):
         from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner import param_types
+        from google.cloud.spanner_v1 import param_types
         from google.cloud.spanner_v1 import ResultSet
         from google.cloud.spanner_v1 import ResultSetStats
         from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
         from google.cloud.spanner_v1 import ExecuteBatchDmlResponse
         from google.cloud.spanner_v1 import TransactionSelector
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}

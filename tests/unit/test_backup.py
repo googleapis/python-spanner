@@ -41,7 +41,7 @@ class _BaseTest(unittest.TestCase):
 
 class TestBackup(_BaseTest):
     def _get_target_class(self):
-        from google.cloud.spanner.backup import Backup
+        from google.cloud.spanner_v1.backup import Backup
 
         return Backup
 

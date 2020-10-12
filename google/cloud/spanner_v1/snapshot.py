@@ -28,12 +28,12 @@ from google.cloud.spanner_v1 import PartitionReadRequest
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 import google.api_core.gapic_v1.method
-from google.cloud.spanner._helpers import _make_value_pb
-from google.cloud.spanner._helpers import _merge_query_options
-from google.cloud.spanner._helpers import _metadata_with_prefix
-from google.cloud.spanner._helpers import _SessionWrapper
-from google.cloud.spanner._opentelemetry_tracing import trace_call
-from google.cloud.spanner.streamed import StreamedResultSet
+from google.cloud.spanner_v1._helpers import _make_value_pb
+from google.cloud.spanner_v1._helpers import _merge_query_options
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import _SessionWrapper
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.streamed import StreamedResultSet
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
@@ -89,7 +89,7 @@ class _SnapshotBase(_SessionWrapper):
 
     Allows reuse of API request methods with different transaction selector.
 
-    :type session: :class:`~google.cloud.spanner.session.Session`
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
     """
 
@@ -118,7 +118,7 @@ class _SnapshotBase(_SessionWrapper):
         :type columns: list of str
         :param columns: names of columns to be retrieved
 
-        :type keyset: :class:`~google.cloud.spanner.keyset.KeySet`
+        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
         :param keyset: keys / ranges identifying rows to be retrieved
 
         :type index: str
@@ -134,7 +134,7 @@ class _SnapshotBase(_SessionWrapper):
                           from :meth:`partition_read`.  Incompatible with
                           ``limit``.
 
-        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
         :raises ValueError:
@@ -221,7 +221,7 @@ class _SnapshotBase(_SessionWrapper):
         :param partition: (Optional) one of the partition tokens returned
                           from :meth:`partition_query`.
 
-        :rtype: :class:`~google.cloud.spanner.streamed.StreamedResultSet`
+        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
         :raises ValueError:
@@ -305,7 +305,7 @@ class _SnapshotBase(_SessionWrapper):
         :type columns: list of str
         :param columns: names of columns to be retrieved
 
-        :type keyset: :class:`~google.cloud.spanner.keyset.KeySet`
+        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
         :param keyset: keys / ranges identifying rows to be retrieved
 
         :type index: str
@@ -452,7 +452,7 @@ class Snapshot(_SnapshotBase):
     If no options are passed, reads will use the ``strong`` model, reading
     at a timestamp where all previously committed transactions are visible.
 
-    :type session: :class:`~google.cloud.spanner.session.Session`
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: The session used to perform the commit.
 
     :type read_timestamp: :class:`datetime.datetime`

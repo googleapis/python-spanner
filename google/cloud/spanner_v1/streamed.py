@@ -19,7 +19,7 @@ from google.cloud.spanner_v1 import TypeCode
 import six
 
 # pylint: disable=ungrouped-imports
-from google.cloud.spanner._helpers import _parse_value
+from google.cloud.spanner_v1._helpers import _parse_value
 
 # pylint: enable=ungrouped-imports
 
@@ -33,7 +33,7 @@ class StreamedResultSet(object):
         :class:`~google.cloud.spanner_v1.PartialResultSet`
         instances.
 
-    :type source: :class:`~google.cloud.spanner.snapshot.Snapshot`
+    :type source: :class:`~google.cloud.spanner_v1.snapshot.Snapshot`
     :param source: Snapshot from which the result set was fetched.
     """
 

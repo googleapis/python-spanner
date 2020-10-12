@@ -30,16 +30,16 @@ from google.rpc import code_pb2
 from google.api_core import exceptions
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
-from google.cloud.spanner import param_types
+from google.cloud.spanner_v1 import param_types
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import Type
 
 from google.cloud._helpers import UTC
-from google.cloud.spanner import Client
-from google.cloud.spanner import KeyRange
-from google.cloud.spanner import KeySet
-from google.cloud.spanner import BurstyPool
-from google.cloud.spanner import COMMIT_TIMESTAMP
+from google.cloud.spanner_v1 import Client
+from google.cloud.spanner_v1 import KeyRange
+from google.cloud.spanner_v1 import KeySet
+from google.cloud.spanner_v1 import BurstyPool
+from google.cloud.spanner_v1 import COMMIT_TIMESTAMP
 
 from test_utils.retry import RetryErrors
 from test_utils.retry import RetryInstanceState

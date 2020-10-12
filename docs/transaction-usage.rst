@@ -1,7 +1,7 @@
 Read-write Transactions
 #######################
 
-A :class:`~google.cloud.spanner.transaction.Transaction` represents a
+A :class:`~google.cloud.spanner_v1.transaction.Transaction` represents a
 transaction:  when the transaction commits, it will send any accumulated
 mutations to the server.
 

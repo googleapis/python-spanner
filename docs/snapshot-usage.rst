@@ -1,7 +1,7 @@
 Read-only Transactions via Snapshots
 ####################################
 
-A :class:`~google.cloud.spanner.snapshot.Snapshot` represents a read-only
+A :class:`~google.cloud.spanner_v1.snapshot.Snapshot` represents a read-only
 transaction:  when multiple read operations are performed via a Snapshot,
 the results are consistent as of a particular point in time.
 
@@ -56,7 +56,7 @@ reused.
     with database.snapshot(multi_use=True) as snapshot:
         ...
 
-:meth:`~google.cloud.spanner.snapshot.Snapshot.begin` can only be used on a
+:meth:`~google.cloud.spanner_v1.snapshot.Snapshot.begin` can only be used on a
 snapshot with ``multi_use=True``.  In which case it is also necessary
 to call if you need to have multiple pending operations.
 
@@ -64,7 +64,7 @@ Read Table Data
 ---------------
 
 To read data for selected rows from a table in the database, call
-:meth:`~google.cloud.spanner.snapshot.Snapshot.read` which will return
+:meth:`~google.cloud.spanner_v1.snapshot.Snapshot.read` which will return
 all rows specified in ``key_set``, or fail if the result set is too large,
 
 .. code:: python
@@ -87,7 +87,7 @@ Execute a SQL Select Statement
 ------------------------------
 
 To read data from tables in the database using a query, call
-:meth:`~google.cloud.spanner.snapshot.Snapshot.execute_sql`
+:meth:`~google.cloud.spanner_v1.snapshot.Snapshot.execute_sql`
 which will return all rows matching the query, or fail if the
 result set is too large,
 

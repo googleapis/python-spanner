@@ -18,10 +18,10 @@ This is the base from which all interactions with the API occur.
 
 In the hierarchy of API concepts
 
-* a :class:`~google.cloud.spanner.client.Client` owns an
-  :class:`~google.cloud.spanner.instance.Instance`
-* a :class:`~google.cloud.spanner.instance.Instance` owns a
-  :class:`~google.cloud.spanner.database.Database`
+* a :class:`~google.cloud.spanner_v1.client.Client` owns an
+  :class:`~google.cloud.spanner_v1.instance.Instance`
+* a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
+  :class:`~google.cloud.spanner_v1.database.Database`
 """
 import grpc
 import os
@@ -47,10 +47,10 @@ from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 # pylint: enable=line-too-long
 
 from google.cloud.client import ClientWithProject
-from google.cloud.spanner import __version__
-from google.cloud.spanner._helpers import _merge_query_options, _metadata_with_prefix
-from google.cloud.spanner.instance import DEFAULT_NODE_COUNT
-from google.cloud.spanner.instance import Instance
+from google.cloud.spanner_v1 import __version__
+from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
+from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
@@ -336,7 +336,7 @@ class Client(ClientWithProject):
         :param node_count: (Optional) The number of nodes in the instance's
                             cluster; used to set up the instance's cluster.
 
-        :rtype: :class:`~google.cloud.spanner.instance.Instance`
+        :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
         :returns: an instance owned by this client.
         """
         return Instance(
@@ -374,7 +374,7 @@ class Client(ClientWithProject):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner.instance.Instance`
+            Iterator of :class:`~google.cloud.spanner_v1.instance.Instance`
             resources within the client's project.
         """
         metadata = _metadata_with_prefix(self.project_name)

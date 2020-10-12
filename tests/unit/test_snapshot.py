@@ -20,7 +20,7 @@ from tests._helpers import (
     StatusCanonicalCode,
     HAS_OPENTELEMETRY_INSTALLED,
 )
-from google.cloud.spanner.param_types import INT64
+from google.cloud.spanner_v1.param_types import INT64
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -47,7 +47,7 @@ BASE_ATTRIBUTES = {
 
 class Test_restart_on_unavailable(OpenTelemetryBase):
     def _call_fut(self, restart, span_name=None, session=None, attributes=None):
-        from google.cloud.spanner.snapshot import _restart_on_unavailable
+        from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 
         return _restart_on_unavailable(restart, span_name, session, attributes)
 
@@ -305,7 +305,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
-        from google.cloud.spanner.snapshot import _SnapshotBase
+        from google.cloud.spanner_v1.snapshot import _SnapshotBase
 
         return _SnapshotBase
 
@@ -355,7 +355,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             base._make_txn_selector()
 
     def test_read_other_error(self):
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
 
         keyset = KeySet(all_=True)
         database = _Database()
@@ -389,8 +389,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import ReadRequest
         from google.cloud.spanner_v1 import Type, StructType
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner.keyset import KeySet
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1.keyset import KeySet
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         VALUES = [[u"bharney", 31], [u"phred", 32]]
         struct_type_pb = StructType(
@@ -555,7 +555,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
         from google.cloud.spanner_v1 import Type, StructType
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner._helpers import (
+        from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
@@ -698,7 +698,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
     def _partition_read_helper(
         self, multi_use, w_txn, size=None, max_partitions=None, index=None
     ):
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud.spanner_v1 import Partition
         from google.cloud.spanner_v1 import PartitionOptions
         from google.cloud.spanner_v1 import PartitionReadRequest
@@ -776,7 +776,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             self._partition_read_helper(multi_use=True, w_txn=False)
 
     def test_partition_read_other_error(self):
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
 
         keyset = KeySet(all_=True)
         database = _Database()
@@ -815,7 +815,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import PartitionResponse
         from google.cloud.spanner_v1 import Transaction
         from google.cloud.spanner_v1 import TransactionSelector
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         new_txn_id = b"ABECAB91"
         token_1 = b"FACE0FFF"
@@ -936,7 +936,7 @@ class TestSnapshot(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         return Snapshot
 

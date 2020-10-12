@@ -16,7 +16,7 @@
 
 from google.protobuf.struct_pb2 import Struct
 
-from google.cloud.spanner._helpers import (
+from google.cloud.spanner_v1._helpers import (
     _make_value_pb,
     _merge_query_options,
     _metadata_with_prefix,
@@ -25,15 +25,15 @@ from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner.snapshot import _SnapshotBase
-from google.cloud.spanner.batch import _BatchBase
-from google.cloud.spanner._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.snapshot import _SnapshotBase
+from google.cloud.spanner_v1.batch import _BatchBase
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 
 
 class Transaction(_SnapshotBase, _BatchBase):
     """Implement read-write transaction semantics for a session.
 
-    :type session: :class:`~google.cloud.spanner.session.Session`
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
 
     :raises ValueError: if session has an existing transaction

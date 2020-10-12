@@ -52,7 +52,7 @@ class TestSession(OpenTelemetryBase):
     }
 
     def _getTargetClass(self):
-        from google.cloud.spanner.session import Session
+        from google.cloud.spanner_v1.session import Session
 
         return Session
 
@@ -61,7 +61,7 @@ class TestSession(OpenTelemetryBase):
 
     @staticmethod
     def _make_database(name=DATABASE_NAME):
-        from google.cloud.spanner.database import Database
+        from google.cloud.spanner_v1.database import Database
 
         database = mock.create_autospec(Database, instance=True)
         database.name = name
@@ -224,7 +224,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     @mock.patch(
-        "google.cloud.spanner._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
+        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
     )
     def test_exists_hit_wo_span(self):
         session_pb = self._make_session_pb(self.SESSION_NAME)
@@ -267,7 +267,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     @mock.patch(
-        "google.cloud.spanner._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
+        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED", False
     )
     def test_exists_miss_wo_span(self):
         from google.api_core.exceptions import NotFound
@@ -460,7 +460,7 @@ class TestSession(OpenTelemetryBase):
             session.snapshot()
 
     def test_snapshot_created(self):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = self._make_database()
         session = self._make_one(database)
@@ -474,7 +474,7 @@ class TestSession(OpenTelemetryBase):
         self.assertFalse(snapshot._multi_use)
 
     def test_snapshot_created_w_multi_use(self):
-        from google.cloud.spanner.snapshot import Snapshot
+        from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = self._make_database()
         session = self._make_one(database)
@@ -488,7 +488,7 @@ class TestSession(OpenTelemetryBase):
         self.assertTrue(snapshot._multi_use)
 
     def test_read_not_created(self):
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -501,7 +501,7 @@ class TestSession(OpenTelemetryBase):
             session.read(TABLE_NAME, COLUMNS, KEYSET)
 
     def test_read(self):
-        from google.cloud.spanner.keyset import KeySet
+        from google.cloud.spanner_v1.keyset import KeySet
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -513,7 +513,7 @@ class TestSession(OpenTelemetryBase):
         session = self._make_one(database)
         session._session_id = "DEADBEEF"
 
-        with mock.patch("google.cloud.spanner.session.Snapshot") as snapshot:
+        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
             found = session.read(TABLE_NAME, COLUMNS, KEYSET, index=INDEX, limit=LIMIT)
 
         self.assertIs(found, snapshot().read.return_value)
@@ -536,7 +536,7 @@ class TestSession(OpenTelemetryBase):
         session = self._make_one(database)
         session._session_id = "DEADBEEF"
 
-        with mock.patch("google.cloud.spanner.session.Snapshot") as snapshot:
+        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
             found = session.execute_sql(SQL)
 
         self.assertIs(found, snapshot().execute_sql.return_value)
@@ -563,7 +563,7 @@ class TestSession(OpenTelemetryBase):
         params = Struct(fields={"foo": Value(string_value="bar")})
         param_types = {"foo": TypeCode.STRING}
 
-        with mock.patch("google.cloud.spanner.session.Snapshot") as snapshot:
+        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
             found = session.execute_sql(
                 SQL, params, param_types, "PLAN", retry=None, timeout=None
             )
@@ -592,7 +592,7 @@ class TestSession(OpenTelemetryBase):
         params = Struct(fields={"foo": Value(string_value="bar")})
         param_types = {"foo": TypeCode.STRING}
 
-        with mock.patch("google.cloud.spanner.session.Snapshot") as snapshot:
+        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
             found = session.execute_sql(SQL, params, param_types, "PLAN")
 
         self.assertIs(found, snapshot().execute_sql.return_value)
@@ -615,7 +615,7 @@ class TestSession(OpenTelemetryBase):
             session.batch()
 
     def test_batch_created(self):
-        from google.cloud.spanner.batch import Batch
+        from google.cloud.spanner_v1.batch import Batch
 
         database = self._make_database()
         session = self._make_one(database)
@@ -634,7 +634,7 @@ class TestSession(OpenTelemetryBase):
             session.transaction()
 
     def test_transaction_created(self):
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         database = self._make_database()
         session = self._make_one(database)
@@ -662,7 +662,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -720,7 +720,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -774,7 +774,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -827,7 +827,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_commit_error(self):
         from google.api_core.exceptions import Unknown
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -882,7 +882,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -957,7 +957,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1045,7 +1045,7 @@ class TestSession(OpenTelemetryBase):
         )
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1125,7 +1125,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
@@ -1208,7 +1208,7 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud.spanner.transaction import Transaction
+        from google.cloud.spanner_v1.transaction import Transaction
 
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1287,7 +1287,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_delay_helper_w_no_delay(self):
-        from google.cloud.spanner.session import _delay_until_retry
+        from google.cloud.spanner_v1.session import _delay_until_retry
 
         metadata_mock = mock.Mock()
         metadata_mock.trailing_metadata.return_value = {}
@@ -1304,7 +1304,7 @@ class TestSession(OpenTelemetryBase):
 
         with mock.patch("time.time", _time_func):
             with mock.patch(
-                "google.cloud.spanner.session._get_retry_delay"
+                "google.cloud.spanner_v1.session._get_retry_delay"
             ) as get_retry_delay_mock:
                 with mock.patch("time.sleep") as sleep_mock:
                     get_retry_delay_mock.return_value = None

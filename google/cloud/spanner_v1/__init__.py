@@ -14,6 +14,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import absolute_import
+
+import pkg_resources
+
+__version__ = pkg_resources.get_distribution("google-cloud-spanner").version
 
 from .services.spanner import SpannerClient
 from .types.keys import KeyRange
@@ -53,8 +58,42 @@ from .types.type import StructType
 from .types.type import Type
 from .types.type import TypeCode
 
+from google.cloud.spanner_v1 import param_types
+from google.cloud.spanner_v1.client import Client
+from google.cloud.spanner_v1.keyset import KeyRange
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.pool import AbstractSessionPool
+from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner_v1.pool import FixedSizePool
+from google.cloud.spanner_v1.pool import PingingPool
+from google.cloud.spanner_v1.pool import TransactionPingingPool
+
+
+COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
+"""Placeholder be used to store commit timestamp of a transaction in a column.
+This value can only be used for timestamp columns that have set the option
+``(allow_commit_timestamp=true)`` in the schema.
+"""
+
 
 __all__ = (
+    # google.cloud.spanner_v1
+    "__version__",
+    "param_types",
+    # google.cloud.spanner_v1.client
+    "Client",
+    # google.cloud.spanner_v1.keyset
+    "KeyRange",
+    "KeySet",
+    # google.cloud.spanner_v1.pool
+    "AbstractSessionPool",
+    "BurstyPool",
+    "FixedSizePool",
+    "PingingPool",
+    "TransactionPingingPool",
+    # local
+    "COMMIT_TIMESTAMP",
+    # google.cloud.spanner_v1.types
     "BatchCreateSessionsRequest",
     "BatchCreateSessionsResponse",
     "BeginTransactionRequest",
@@ -91,5 +130,6 @@ __all__ = (
     "TransactionSelector",
     "Type",
     "TypeCode",
+    # google.cloud.spanner_v1.services
     "SpannerClient",
 )

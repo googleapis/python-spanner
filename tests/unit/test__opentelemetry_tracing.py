@@ -10,7 +10,7 @@ except ImportError:
     pass
 
 from google.api_core.exceptions import GoogleAPICallError
-from google.cloud.spanner import _opentelemetry_tracing
+from google.cloud.spanner_v1 import _opentelemetry_tracing
 
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
 
@@ -24,7 +24,7 @@ def _make_rpc_error(error_cls, trailing_metadata=None):
 
 
 def _make_session():
-    from google.cloud.spanner.session import Session
+    from google.cloud.spanner_v1.session import Session
 
     return mock.Mock(autospec=Session, instance=True)
 

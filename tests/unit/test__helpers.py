@@ -18,7 +18,7 @@ import unittest
 
 class Test_merge_query_options(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _merge_query_options
+        from google.cloud.spanner_v1._helpers import _merge_query_options
 
         return _merge_query_options(*args, **kw)
 
@@ -73,7 +73,7 @@ class Test_merge_query_options(unittest.TestCase):
 
 class Test_make_value_pb(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _make_value_pb
+        from google.cloud.spanner_v1._helpers import _make_value_pb
 
         return _make_value_pb(*args, **kw)
 
@@ -197,7 +197,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_listvalue(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner._helpers import _make_list_value_pb
+        from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         list_value = _make_list_value_pb([1, 2, 3])
         value_pb = self._callFUT(list_value)
@@ -231,7 +231,7 @@ class Test_make_value_pb(unittest.TestCase):
 
 class Test_make_list_value_pb(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _make_list_value_pb
+        from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         return _make_list_value_pb(*args, **kw)
 
@@ -265,7 +265,7 @@ class Test_make_list_value_pb(unittest.TestCase):
 
 class Test_make_list_value_pbs(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _make_list_value_pbs
+        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 
         return _make_list_value_pbs(*args, **kw)
 
@@ -299,7 +299,7 @@ class Test_make_list_value_pbs(unittest.TestCase):
 
 class Test_parse_value(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _parse_value
+        from google.cloud.spanner_v1._helpers import _parse_value
 
         return _parse_value(*args, **kw)
 
@@ -467,7 +467,7 @@ class Test_parse_value(unittest.TestCase):
 
 class Test_parse_value_pb(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _parse_value_pb
+        from google.cloud.spanner_v1._helpers import _parse_value_pb
 
         return _parse_value_pb(*args, **kw)
 
@@ -627,7 +627,7 @@ class Test_parse_value_pb(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import StructType
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner._helpers import _make_list_value_pb
+        from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         VALUES = [u"phred", 32]
         struct_type_pb = StructType(
@@ -678,7 +678,7 @@ class Test_parse_value_pb(unittest.TestCase):
 
 class Test_parse_list_value_pbs(unittest.TestCase):
     def _callFUT(self, *args, **kw):
-        from google.cloud.spanner._helpers import _parse_list_value_pbs
+        from google.cloud.spanner_v1._helpers import _parse_list_value_pbs
 
         return _parse_list_value_pbs(*args, **kw)
 
@@ -700,7 +700,7 @@ class Test_parse_list_value_pbs(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import StructType
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner._helpers import _make_list_value_pbs
+        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 
         VALUES = [[u"phred", 32], [u"bharney", 31]]
         struct_type_pb = StructType(
@@ -718,7 +718,7 @@ class Test_parse_list_value_pbs(unittest.TestCase):
 
 class Test_SessionWrapper(unittest.TestCase):
     def _getTargetClass(self):
-        from google.cloud.spanner._helpers import _SessionWrapper
+        from google.cloud.spanner_v1._helpers import _SessionWrapper
 
         return _SessionWrapper
 
@@ -733,7 +733,7 @@ class Test_SessionWrapper(unittest.TestCase):
 
 class Test_metadata_with_prefix(unittest.TestCase):
     def _call_fut(self, *args, **kw):
-        from google.cloud.spanner._helpers import _metadata_with_prefix
+        from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
         return _metadata_with_prefix(*args, **kw)
 

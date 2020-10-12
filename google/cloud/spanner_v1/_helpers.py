@@ -249,7 +249,7 @@ def _parse_list_value_pbs(rows, row_type):
 class _SessionWrapper(object):
     """Base class for objects wrapping a session.
 
-    :type session: :class:`~google.cloud.spanner.session.Session`
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
     """
 

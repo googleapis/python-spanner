@@ -18,10 +18,10 @@ from google.cloud.spanner_v1 import Mutation
 from google.cloud.spanner_v1 import TransactionOptions
 
 # pylint: disable=ungrouped-imports
-from google.cloud.spanner._helpers import _SessionWrapper
-from google.cloud.spanner._helpers import _make_list_value_pbs
-from google.cloud.spanner._helpers import _metadata_with_prefix
-from google.cloud.spanner._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._helpers import _SessionWrapper
+from google.cloud.spanner_v1._helpers import _make_list_value_pbs
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 
 # pylint: enable=ungrouped-imports
 
@@ -29,7 +29,7 @@ from google.cloud.spanner._opentelemetry_tracing import trace_call
 class _BatchBase(_SessionWrapper):
     """Accumulate mutations for transmission during :meth:`commit`.
 
-    :type session: :class:`~google.cloud.spanner.session.Session`
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
     """
 
@@ -111,7 +111,7 @@ class _BatchBase(_SessionWrapper):
         :type table: str
         :param table: Name of the table to be modified.
 
-        :type keyset: :class:`~google.cloud.spanner.keyset.Keyset`
+        :type keyset: :class:`~google.cloud.spanner_v1.keyset.Keyset`
         :param keyset: Keys/ranges identifying rows to delete.
         """
         delete = Mutation.Delete(table=table, key_set=keyset._to_pb())
