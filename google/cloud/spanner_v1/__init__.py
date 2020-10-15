@@ -21,8 +21,8 @@ import pkg_resources
 __version__ = pkg_resources.get_distribution("google-cloud-spanner").version
 
 from .services.spanner import SpannerClient
-from .types.keys import KeyRange
-from .types.keys import KeySet
+from .types.keys import KeyRange as KeyRangePB
+from .types.keys import KeySet as KeySetPB
 from .types.mutation import Mutation
 from .types.query_plan import PlanNode
 from .types.query_plan import QueryPlan
@@ -105,8 +105,8 @@ __all__ = (
     "ExecuteBatchDmlResponse",
     "ExecuteSqlRequest",
     "GetSessionRequest",
-    "KeyRange",
-    "KeySet",
+    "KeyRangePB",
+    "KeySetPB",
     "ListSessionsRequest",
     "ListSessionsResponse",
     "Mutation",
