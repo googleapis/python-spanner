@@ -488,15 +488,15 @@ class TestStreamedResultSet(unittest.TestCase):
         )
         FIELDS = [self._make_array_field("test", element_type=struct_type)]
         streamed._metadata = self._make_result_set_metadata(FIELDS)
-        partial = self._make_list_value([u"Phred Phlyntstone", 1.65])
-        streamed._pending_chunk = self._make_list_value(value_pbs=[partial])
-        rest = self._make_list_value(["brown"])
-        chunk = self._make_list_value(value_pbs=[rest])
+        partial = [u"Phred Phlyntstone", 1.65]
+        streamed._pending_chunk = [partial]
+        rest = ["brown"]
+        chunk = [rest]
 
         merged = streamed._merge_chunk(chunk)
 
-        struct = self._make_list_value([u"Phred Phlyntstone", 1.65, "brown"])
-        expected = self._make_list_value(value_pbs=[struct])
+        struct = [u"Phred Phlyntstone", 1.65, "brown"]
+        expected = [struct]
         self.assertEqual(merged, expected)
         self.assertIsNone(streamed._pending_chunk)
 
