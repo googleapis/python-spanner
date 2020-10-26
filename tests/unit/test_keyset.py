@@ -303,6 +303,7 @@ class TestKeySet(unittest.TestCase):
         self.assertEqual(len(result.ranges), 0)
 
     def test_to_pb_w_only_ranges(self):
+        from google.cloud.spanner_v1 import KeyRangePB
         from google.cloud.spanner_v1 import KeySetPB
         from google.cloud.spanner_v1.keyset import KeyRange
 
@@ -323,7 +324,11 @@ class TestKeySet(unittest.TestCase):
         self.assertEqual(len(result.keys), 0)
         self.assertEqual(len(result.ranges), len(RANGES))
 
-        for found, expected in zip(result.ranges, RANGES):
+        expected_ranges = [
+            KeyRangePB(start_open=KEY_1, end_closed=KEY_2),
+            KeyRangePB(start_closed=KEY_3, end_open=KEY_4),
+        ]
+        for found, expected in zip(result.ranges, expected_ranges):
             self.assertEqual(found, expected)
 
     def test_to_dict_w_all(self):
