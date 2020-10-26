@@ -137,6 +137,31 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     from_service_account_json = from_service_account_file
 
+    @property
+    def transport(self) -> SpannerTransport:
+        """Return the transport used by the client instance.
+
+        Returns:
+            SpannerTransport: The transport used by the client instance.
+        """
+        return self._transport
+
+    @staticmethod
+    def database_path(project: str, instance: str, database: str,) -> str:
+        """Return a fully-qualified database string."""
+        return "projects/{project}/instances/{instance}/databases/{database}".format(
+            project=project, instance=instance, database=database,
+        )
+
+    @staticmethod
+    def parse_database_path(path: str) -> Dict[str, str]:
+        """Parse a database path into its component segments."""
+        m = re.match(
+            r"^projects/(?P<project>.+?)/instances/(?P<instance>.+?)/databases/(?P<database>.+?)$",
+            path,
+        )
+        return m.groupdict() if m else {}
+
     @staticmethod
     def session_path(project: str, instance: str, database: str, session: str,) -> str:
         """Return a fully-qualified session string."""
@@ -151,6 +176,65 @@ class SpannerClient(metaclass=SpannerClientMeta):
             r"^projects/(?P<project>.+?)/instances/(?P<instance>.+?)/databases/(?P<database>.+?)/sessions/(?P<session>.+?)$",
             path,
         )
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_billing_account_path(billing_account: str,) -> str:
+        """Return a fully-qualified billing_account string."""
+        return "billingAccounts/{billing_account}".format(
+            billing_account=billing_account,
+        )
+
+    @staticmethod
+    def parse_common_billing_account_path(path: str) -> Dict[str, str]:
+        """Parse a billing_account path into its component segments."""
+        m = re.match(r"^billingAccounts/(?P<billing_account>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_folder_path(folder: str,) -> str:
+        """Return a fully-qualified folder string."""
+        return "folders/{folder}".format(folder=folder,)
+
+    @staticmethod
+    def parse_common_folder_path(path: str) -> Dict[str, str]:
+        """Parse a folder path into its component segments."""
+        m = re.match(r"^folders/(?P<folder>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_organization_path(organization: str,) -> str:
+        """Return a fully-qualified organization string."""
+        return "organizations/{organization}".format(organization=organization,)
+
+    @staticmethod
+    def parse_common_organization_path(path: str) -> Dict[str, str]:
+        """Parse a organization path into its component segments."""
+        m = re.match(r"^organizations/(?P<organization>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_project_path(project: str,) -> str:
+        """Return a fully-qualified project string."""
+        return "projects/{project}".format(project=project,)
+
+    @staticmethod
+    def parse_common_project_path(path: str) -> Dict[str, str]:
+        """Parse a project path into its component segments."""
+        m = re.match(r"^projects/(?P<project>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_location_path(project: str, location: str,) -> str:
+        """Return a fully-qualified location string."""
+        return "projects/{project}/locations/{location}".format(
+            project=project, location=location,
+        )
+
+    @staticmethod
+    def parse_common_location_path(path: str) -> Dict[str, str]:
+        """Parse a location path into its component segments."""
+        m = re.match(r"^projects/(?P<project>.+?)/locations/(?P<location>.+?)$", path)
         return m.groupdict() if m else {}
 
     def __init__(
@@ -188,10 +272,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 not provided, the default SSL client certificate will be used if
                 present. If GOOGLE_API_USE_CLIENT_CERTIFICATE is "false" or not
                 set, no client certificate will be used.
-            client_info (google.api_core.gapic_v1.client_info.ClientInfo):	
-                The client info used to send a user-agent string along with	
-                API requests. If ``None``, then default info will be used.	
-                Generally, you only need to set this if you're developing	
+            client_info (google.api_core.gapic_v1.client_info.ClientInfo):
+                The client info used to send a user-agent string along with
+                API requests. If ``None``, then default info will be used.
+                Generally, you only need to set this if you're developing
                 your own client library.
 
         Raises:
@@ -1211,10 +1295,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 request.session = session
             if transaction_id is not None:
                 request.transaction_id = transaction_id
-            if mutations is not None:
-                request.mutations = mutations
             if single_use_transaction is not None:
                 request.single_use_transaction = single_use_transaction
+
+            if mutations:
+                request.mutations.extend(mutations)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.

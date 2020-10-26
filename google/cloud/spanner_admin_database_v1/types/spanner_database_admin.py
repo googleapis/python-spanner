@@ -107,7 +107,7 @@ class Database(proto.Message):
 
     create_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
 
-    restore_info = proto.Field(proto.MESSAGE, number=4, message=RestoreInfo,)
+    restore_info = proto.Field(proto.MESSAGE, number=4, message="RestoreInfo",)
 
 
 class ListDatabasesRequest(proto.Message):
@@ -154,7 +154,7 @@ class ListDatabasesResponse(proto.Message):
     def raw_page(self):
         return self
 
-    databases = proto.RepeatedField(proto.MESSAGE, number=1, message=Database,)
+    databases = proto.RepeatedField(proto.MESSAGE, number=1, message="Database",)
 
     next_page_token = proto.Field(proto.STRING, number=2)
 

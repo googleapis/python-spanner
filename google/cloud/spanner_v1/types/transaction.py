@@ -218,13 +218,13 @@ class TransactionSelector(proto.Message):
     """
 
     single_use = proto.Field(
-        proto.MESSAGE, number=1, oneof="selector", message=TransactionOptions,
+        proto.MESSAGE, number=1, oneof="selector", message="TransactionOptions",
     )
 
     id = proto.Field(proto.BYTES, number=2, oneof="selector")
 
     begin = proto.Field(
-        proto.MESSAGE, number=3, oneof="selector", message=TransactionOptions,
+        proto.MESSAGE, number=3, oneof="selector", message="TransactionOptions",
     )
 
 

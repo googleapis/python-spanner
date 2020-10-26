@@ -72,9 +72,51 @@ class InstanceAdminAsyncClient:
 
     instance_path = staticmethod(InstanceAdminClient.instance_path)
     parse_instance_path = staticmethod(InstanceAdminClient.parse_instance_path)
+    instance_config_path = staticmethod(InstanceAdminClient.instance_config_path)
+    parse_instance_config_path = staticmethod(
+        InstanceAdminClient.parse_instance_config_path
+    )
+
+    common_billing_account_path = staticmethod(
+        InstanceAdminClient.common_billing_account_path
+    )
+    parse_common_billing_account_path = staticmethod(
+        InstanceAdminClient.parse_common_billing_account_path
+    )
+
+    common_folder_path = staticmethod(InstanceAdminClient.common_folder_path)
+    parse_common_folder_path = staticmethod(
+        InstanceAdminClient.parse_common_folder_path
+    )
+
+    common_organization_path = staticmethod(
+        InstanceAdminClient.common_organization_path
+    )
+    parse_common_organization_path = staticmethod(
+        InstanceAdminClient.parse_common_organization_path
+    )
+
+    common_project_path = staticmethod(InstanceAdminClient.common_project_path)
+    parse_common_project_path = staticmethod(
+        InstanceAdminClient.parse_common_project_path
+    )
+
+    common_location_path = staticmethod(InstanceAdminClient.common_location_path)
+    parse_common_location_path = staticmethod(
+        InstanceAdminClient.parse_common_location_path
+    )
 
     from_service_account_file = InstanceAdminClient.from_service_account_file
     from_service_account_json = from_service_account_file
+
+    @property
+    def transport(self) -> InstanceAdminTransport:
+        """Return the transport used by the client instance.
+
+        Returns:
+            InstanceAdminTransport: The transport used by the client instance.
+        """
+        return self._client.transport
 
     get_transport_class = functools.partial(
         type(InstanceAdminClient).get_transport_class, type(InstanceAdminClient)
@@ -170,7 +212,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -259,7 +302,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -342,7 +386,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -428,7 +473,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -564,7 +610,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent, instance_id, instance]):
+        has_flattened_params = any([parent, instance_id, instance])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -710,7 +757,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([instance, field_mask]):
+        has_flattened_params = any([instance, field_mask])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -798,7 +846,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -945,7 +994,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource]):
+        has_flattened_params = any([resource])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -957,13 +1007,7 @@ class InstanceAdminAsyncClient:
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.SetIamPolicyRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
+            request = iam_policy.SetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1092,7 +1136,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource]):
+        has_flattened_params = any([resource])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1104,13 +1149,7 @@ class InstanceAdminAsyncClient:
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.GetIamPolicyRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
+            request = iam_policy.GetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1192,7 +1231,8 @@ class InstanceAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource, permissions]):
+        has_flattened_params = any([resource, permissions])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1204,16 +1244,9 @@ class InstanceAdminAsyncClient:
             request = iam_policy.TestIamPermissionsRequest(**request)
 
         elif not request:
-            request = iam_policy.TestIamPermissionsRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
-
-        if permissions:
-            request.permissions.extend(permissions)
+            request = iam_policy.TestIamPermissionsRequest(
+                resource=resource, permissions=permissions,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.

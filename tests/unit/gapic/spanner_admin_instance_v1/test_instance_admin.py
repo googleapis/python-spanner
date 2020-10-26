@@ -108,12 +108,12 @@ def test_instance_admin_client_from_service_account_file(client_class):
     ) as factory:
         factory.return_value = creds
         client = client_class.from_service_account_file("dummy/file/path.json")
-        assert client._transport._credentials == creds
+        assert client.transport._credentials == creds
 
         client = client_class.from_service_account_json("dummy/file/path.json")
-        assert client._transport._credentials == creds
+        assert client.transport._credentials == creds
 
-        assert client._transport._host == "spanner.googleapis.com:443"
+        assert client.transport._host == "spanner.googleapis.com:443"
 
 
 def test_instance_admin_client_get_transport_class():
@@ -465,7 +465,7 @@ def test_list_instance_configs(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstanceConfigsResponse(
@@ -481,6 +481,7 @@ def test_list_instance_configs(
         assert args[0] == spanner_instance_admin.ListInstanceConfigsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListInstanceConfigsPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -491,18 +492,21 @@ def test_list_instance_configs_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_instance_configs_async(transport: str = "grpc_asyncio"):
+async def test_list_instance_configs_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.ListInstanceConfigsRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.ListInstanceConfigsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -517,12 +521,17 @@ async def test_list_instance_configs_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.ListInstanceConfigsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListInstanceConfigsAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_instance_configs_async_from_dict():
+    await test_list_instance_configs_async(request_type=dict)
 
 
 def test_list_instance_configs_field_headers():
@@ -535,7 +544,7 @@ def test_list_instance_configs_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         call.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
 
@@ -562,7 +571,7 @@ async def test_list_instance_configs_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.ListInstanceConfigsResponse()
@@ -585,7 +594,7 @@ def test_list_instance_configs_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
@@ -619,7 +628,7 @@ async def test_list_instance_configs_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
@@ -656,7 +665,7 @@ def test_list_instance_configs_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -704,7 +713,7 @@ def test_list_instance_configs_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_instance_configs), "__call__"
+        type(client.transport.list_instance_configs), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -742,7 +751,7 @@ async def test_list_instance_configs_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instance_configs),
+        type(client.transport.list_instance_configs),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -789,7 +798,7 @@ async def test_list_instance_configs_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instance_configs),
+        type(client.transport.list_instance_configs),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -839,7 +848,7 @@ def test_get_instance_config(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.InstanceConfig(
@@ -855,6 +864,7 @@ def test_get_instance_config(
         assert args[0] == spanner_instance_admin.GetInstanceConfigRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, spanner_instance_admin.InstanceConfig)
 
     assert response.name == "name_value"
@@ -867,18 +877,21 @@ def test_get_instance_config_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_instance_config_async(transport: str = "grpc_asyncio"):
+async def test_get_instance_config_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.GetInstanceConfigRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.GetInstanceConfigRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -893,7 +906,7 @@ async def test_get_instance_config_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.GetInstanceConfigRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner_instance_admin.InstanceConfig)
@@ -901,6 +914,11 @@ async def test_get_instance_config_async(transport: str = "grpc_asyncio"):
     assert response.name == "name_value"
 
     assert response.display_name == "display_name_value"
+
+
+@pytest.mark.asyncio
+async def test_get_instance_config_async_from_dict():
+    await test_get_instance_config_async(request_type=dict)
 
 
 def test_get_instance_config_field_headers():
@@ -913,7 +931,7 @@ def test_get_instance_config_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         call.return_value = spanner_instance_admin.InstanceConfig()
 
@@ -940,7 +958,7 @@ async def test_get_instance_config_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.InstanceConfig()
@@ -963,7 +981,7 @@ def test_get_instance_config_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.InstanceConfig()
@@ -997,7 +1015,7 @@ async def test_get_instance_config_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.get_instance_config), "__call__"
+        type(client.transport.get_instance_config), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.InstanceConfig()
@@ -1041,7 +1059,7 @@ def test_list_instances(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_instances), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstancesResponse(
             next_page_token="next_page_token_value",
@@ -1056,6 +1074,7 @@ def test_list_instances(
         assert args[0] == spanner_instance_admin.ListInstancesRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListInstancesPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -1066,19 +1085,20 @@ def test_list_instances_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_instances_async(transport: str = "grpc_asyncio"):
+async def test_list_instances_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.ListInstancesRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.ListInstancesRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_instances), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.ListInstancesResponse(
@@ -1092,12 +1112,17 @@ async def test_list_instances_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.ListInstancesRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListInstancesAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_instances_async_from_dict():
+    await test_list_instances_async(request_type=dict)
 
 
 def test_list_instances_field_headers():
@@ -1109,7 +1134,7 @@ def test_list_instances_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_instances), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         call.return_value = spanner_instance_admin.ListInstancesResponse()
 
         client.list_instances(request)
@@ -1134,9 +1159,7 @@ async def test_list_instances_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_instances), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.ListInstancesResponse()
         )
@@ -1157,7 +1180,7 @@ def test_list_instances_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_instances), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstancesResponse()
 
@@ -1189,9 +1212,7 @@ async def test_list_instances_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_instances), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.ListInstancesResponse()
 
@@ -1226,7 +1247,7 @@ def test_list_instances_pager():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_instances), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             spanner_instance_admin.ListInstancesResponse(
@@ -1269,7 +1290,7 @@ def test_list_instances_pages():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_instances), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             spanner_instance_admin.ListInstancesResponse(
@@ -1305,9 +1326,7 @@ async def test_list_instances_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instances),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_instances), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -1349,9 +1368,7 @@ async def test_list_instances_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_instances),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_instances), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -1396,7 +1413,7 @@ def test_get_instance(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.Instance(
             name="name_value",
@@ -1416,6 +1433,7 @@ def test_get_instance(
         assert args[0] == spanner_instance_admin.GetInstanceRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, spanner_instance_admin.Instance)
 
     assert response.name == "name_value"
@@ -1436,19 +1454,20 @@ def test_get_instance_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_instance_async(transport: str = "grpc_asyncio"):
+async def test_get_instance_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.GetInstanceRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.GetInstanceRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.Instance(
@@ -1467,7 +1486,7 @@ async def test_get_instance_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.GetInstanceRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner_instance_admin.Instance)
@@ -1485,6 +1504,11 @@ async def test_get_instance_async(transport: str = "grpc_asyncio"):
     assert response.endpoint_uris == ["endpoint_uris_value"]
 
 
+@pytest.mark.asyncio
+async def test_get_instance_async_from_dict():
+    await test_get_instance_async(request_type=dict)
+
+
 def test_get_instance_field_headers():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
@@ -1494,7 +1518,7 @@ def test_get_instance_field_headers():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         call.return_value = spanner_instance_admin.Instance()
 
         client.get_instance(request)
@@ -1519,9 +1543,7 @@ async def test_get_instance_field_headers_async():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.Instance()
         )
@@ -1542,7 +1564,7 @@ def test_get_instance_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.Instance()
 
@@ -1574,9 +1596,7 @@ async def test_get_instance_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.Instance()
 
@@ -1619,7 +1639,7 @@ def test_create_instance(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
 
@@ -1640,19 +1660,20 @@ def test_create_instance_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_create_instance_async(transport: str = "grpc_asyncio"):
+async def test_create_instance_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.CreateInstanceRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.CreateInstanceRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/spam")
@@ -1664,10 +1685,15 @@ async def test_create_instance_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.CreateInstanceRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_create_instance_async_from_dict():
+    await test_create_instance_async(request_type=dict)
 
 
 def test_create_instance_field_headers():
@@ -1679,7 +1705,7 @@ def test_create_instance_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
         client.create_instance(request)
@@ -1704,9 +1730,7 @@ async def test_create_instance_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
         )
@@ -1727,7 +1751,7 @@ def test_create_instance_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -1770,9 +1794,7 @@ async def test_create_instance_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -1826,7 +1848,7 @@ def test_update_instance(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
 
@@ -1847,19 +1869,20 @@ def test_update_instance_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_update_instance_async(transport: str = "grpc_asyncio"):
+async def test_update_instance_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.UpdateInstanceRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.UpdateInstanceRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/spam")
@@ -1871,10 +1894,15 @@ async def test_update_instance_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.UpdateInstanceRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_update_instance_async_from_dict():
+    await test_update_instance_async(request_type=dict)
 
 
 def test_update_instance_field_headers():
@@ -1886,7 +1914,7 @@ def test_update_instance_field_headers():
     request.instance.name = "instance.name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
         client.update_instance(request)
@@ -1913,9 +1941,7 @@ async def test_update_instance_field_headers_async():
     request.instance.name = "instance.name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
         )
@@ -1938,7 +1964,7 @@ def test_update_instance_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -1977,9 +2003,7 @@ async def test_update_instance_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -2029,7 +2053,7 @@ def test_delete_instance(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -2050,19 +2074,20 @@ def test_delete_instance_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_delete_instance_async(transport: str = "grpc_asyncio"):
+async def test_delete_instance_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_instance_admin.DeleteInstanceRequest,
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_instance_admin.DeleteInstanceRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
@@ -2072,10 +2097,15 @@ async def test_delete_instance_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_instance_admin.DeleteInstanceRequest()
 
     # Establish that the response is the type that we expect.
     assert response is None
+
+
+@pytest.mark.asyncio
+async def test_delete_instance_async_from_dict():
+    await test_delete_instance_async(request_type=dict)
 
 
 def test_delete_instance_field_headers():
@@ -2087,7 +2117,7 @@ def test_delete_instance_field_headers():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         call.return_value = None
 
         client.delete_instance(request)
@@ -2112,9 +2142,7 @@ async def test_delete_instance_field_headers_async():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
         await client.delete_instance(request)
@@ -2133,7 +2161,7 @@ def test_delete_instance_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_instance), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -2165,9 +2193,7 @@ async def test_delete_instance_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_instance), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -2208,7 +2234,7 @@ def test_set_iam_policy(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
 
@@ -2221,6 +2247,7 @@ def test_set_iam_policy(
         assert args[0] == iam_policy.SetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, policy.Policy)
 
     assert response.version == 774
@@ -2233,19 +2260,19 @@ def test_set_iam_policy_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
+async def test_set_iam_policy_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.SetIamPolicyRequest
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.SetIamPolicyRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             policy.Policy(version=774, etag=b"etag_blob",)
@@ -2257,7 +2284,7 @@ async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.SetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, policy.Policy)
@@ -2265,6 +2292,11 @@ async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
     assert response.version == 774
 
     assert response.etag == b"etag_blob"
+
+
+@pytest.mark.asyncio
+async def test_set_iam_policy_async_from_dict():
+    await test_set_iam_policy_async(request_type=dict)
 
 
 def test_set_iam_policy_field_headers():
@@ -2276,7 +2308,7 @@ def test_set_iam_policy_field_headers():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         call.return_value = policy.Policy()
 
         client.set_iam_policy(request)
@@ -2301,9 +2333,7 @@ async def test_set_iam_policy_field_headers_async():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
 
         await client.set_iam_policy(request)
@@ -2318,10 +2348,10 @@ async def test_set_iam_policy_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_set_iam_policy_from_dict():
+def test_set_iam_policy_from_dict_foreign():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2338,7 +2368,7 @@ def test_set_iam_policy_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2370,9 +2400,7 @@ async def test_set_iam_policy_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2413,7 +2441,7 @@ def test_get_iam_policy(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
 
@@ -2426,6 +2454,7 @@ def test_get_iam_policy(
         assert args[0] == iam_policy.GetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, policy.Policy)
 
     assert response.version == 774
@@ -2438,19 +2467,19 @@ def test_get_iam_policy_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
+async def test_get_iam_policy_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.GetIamPolicyRequest
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.GetIamPolicyRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             policy.Policy(version=774, etag=b"etag_blob",)
@@ -2462,7 +2491,7 @@ async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.GetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, policy.Policy)
@@ -2470,6 +2499,11 @@ async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
     assert response.version == 774
 
     assert response.etag == b"etag_blob"
+
+
+@pytest.mark.asyncio
+async def test_get_iam_policy_async_from_dict():
+    await test_get_iam_policy_async(request_type=dict)
 
 
 def test_get_iam_policy_field_headers():
@@ -2481,7 +2515,7 @@ def test_get_iam_policy_field_headers():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         call.return_value = policy.Policy()
 
         client.get_iam_policy(request)
@@ -2506,9 +2540,7 @@ async def test_get_iam_policy_field_headers_async():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
 
         await client.get_iam_policy(request)
@@ -2523,10 +2555,10 @@ async def test_get_iam_policy_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_get_iam_policy_from_dict():
+def test_get_iam_policy_from_dict_foreign():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2543,7 +2575,7 @@ def test_get_iam_policy_flattened():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2575,9 +2607,7 @@ async def test_get_iam_policy_flattened_async():
     client = InstanceAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2619,7 +2649,7 @@ def test_test_iam_permissions(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse(
@@ -2635,6 +2665,7 @@ def test_test_iam_permissions(
         assert args[0] == iam_policy.TestIamPermissionsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, iam_policy.TestIamPermissionsResponse)
 
     assert response.permissions == ["permissions_value"]
@@ -2645,18 +2676,20 @@ def test_test_iam_permissions_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_test_iam_permissions_async(transport: str = "grpc_asyncio"):
+async def test_test_iam_permissions_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.TestIamPermissionsRequest
+):
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.TestIamPermissionsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -2669,12 +2702,17 @@ async def test_test_iam_permissions_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.TestIamPermissionsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, iam_policy.TestIamPermissionsResponse)
 
     assert response.permissions == ["permissions_value"]
+
+
+@pytest.mark.asyncio
+async def test_test_iam_permissions_async_from_dict():
+    await test_test_iam_permissions_async(request_type=dict)
 
 
 def test_test_iam_permissions_field_headers():
@@ -2687,7 +2725,7 @@ def test_test_iam_permissions_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         call.return_value = iam_policy.TestIamPermissionsResponse()
 
@@ -2714,7 +2752,7 @@ async def test_test_iam_permissions_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             iam_policy.TestIamPermissionsResponse()
@@ -2732,11 +2770,11 @@ async def test_test_iam_permissions_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_test_iam_permissions_from_dict():
+def test_test_iam_permissions_from_dict_foreign():
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2755,7 +2793,7 @@ def test_test_iam_permissions_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2795,7 +2833,7 @@ async def test_test_iam_permissions_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2869,7 +2907,7 @@ def test_transport_instance():
         credentials=credentials.AnonymousCredentials(),
     )
     client = InstanceAdminClient(transport=transport)
-    assert client._transport is transport
+    assert client.transport is transport
 
 
 def test_transport_get_channel():
@@ -2905,7 +2943,7 @@ def test_transport_adc(transport_class):
 def test_transport_grpc_default():
     # A client should use the gRPC transport by default.
     client = InstanceAdminClient(credentials=credentials.AnonymousCredentials(),)
-    assert isinstance(client._transport, transports.InstanceAdminGrpcTransport,)
+    assert isinstance(client.transport, transports.InstanceAdminGrpcTransport,)
 
 
 def test_instance_admin_base_transport_error():
@@ -3022,7 +3060,7 @@ def test_instance_admin_host_no_port():
             api_endpoint="spanner.googleapis.com"
         ),
     )
-    assert client._transport._host == "spanner.googleapis.com:443"
+    assert client.transport._host == "spanner.googleapis.com:443"
 
 
 def test_instance_admin_host_with_port():
@@ -3032,7 +3070,7 @@ def test_instance_admin_host_with_port():
             api_endpoint="spanner.googleapis.com:8000"
         ),
     )
-    assert client._transport._host == "spanner.googleapis.com:8000"
+    assert client.transport._host == "spanner.googleapis.com:8000"
 
 
 def test_instance_admin_grpc_transport_channel():
@@ -3152,7 +3190,7 @@ def test_instance_admin_grpc_lro_client():
     client = InstanceAdminClient(
         credentials=credentials.AnonymousCredentials(), transport="grpc",
     )
-    transport = client._transport
+    transport = client.transport
 
     # Ensure that we have a api-core operations client.
     assert isinstance(transport.operations_client, operations_v1.OperationsClient,)
@@ -3165,7 +3203,7 @@ def test_instance_admin_grpc_lro_async_client():
     client = InstanceAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport="grpc_asyncio",
     )
-    transport = client._client._transport
+    transport = client.transport
 
     # Ensure that we have a api-core operations client.
     assert isinstance(transport.operations_client, operations_v1.OperationsAsyncClient,)
@@ -3194,6 +3232,130 @@ def test_parse_instance_path():
 
     # Check that the path construction is reversible.
     actual = InstanceAdminClient.parse_instance_path(path)
+    assert expected == actual
+
+
+def test_instance_config_path():
+    project = "oyster"
+    instance_config = "nudibranch"
+
+    expected = "projects/{project}/instanceConfigs/{instance_config}".format(
+        project=project, instance_config=instance_config,
+    )
+    actual = InstanceAdminClient.instance_config_path(project, instance_config)
+    assert expected == actual
+
+
+def test_parse_instance_config_path():
+    expected = {
+        "project": "cuttlefish",
+        "instance_config": "mussel",
+    }
+    path = InstanceAdminClient.instance_config_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_instance_config_path(path)
+    assert expected == actual
+
+
+def test_common_billing_account_path():
+    billing_account = "winkle"
+
+    expected = "billingAccounts/{billing_account}".format(
+        billing_account=billing_account,
+    )
+    actual = InstanceAdminClient.common_billing_account_path(billing_account)
+    assert expected == actual
+
+
+def test_parse_common_billing_account_path():
+    expected = {
+        "billing_account": "nautilus",
+    }
+    path = InstanceAdminClient.common_billing_account_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_common_billing_account_path(path)
+    assert expected == actual
+
+
+def test_common_folder_path():
+    folder = "scallop"
+
+    expected = "folders/{folder}".format(folder=folder,)
+    actual = InstanceAdminClient.common_folder_path(folder)
+    assert expected == actual
+
+
+def test_parse_common_folder_path():
+    expected = {
+        "folder": "abalone",
+    }
+    path = InstanceAdminClient.common_folder_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_common_folder_path(path)
+    assert expected == actual
+
+
+def test_common_organization_path():
+    organization = "squid"
+
+    expected = "organizations/{organization}".format(organization=organization,)
+    actual = InstanceAdminClient.common_organization_path(organization)
+    assert expected == actual
+
+
+def test_parse_common_organization_path():
+    expected = {
+        "organization": "clam",
+    }
+    path = InstanceAdminClient.common_organization_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_common_organization_path(path)
+    assert expected == actual
+
+
+def test_common_project_path():
+    project = "whelk"
+
+    expected = "projects/{project}".format(project=project,)
+    actual = InstanceAdminClient.common_project_path(project)
+    assert expected == actual
+
+
+def test_parse_common_project_path():
+    expected = {
+        "project": "octopus",
+    }
+    path = InstanceAdminClient.common_project_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_common_project_path(path)
+    assert expected == actual
+
+
+def test_common_location_path():
+    project = "oyster"
+    location = "nudibranch"
+
+    expected = "projects/{project}/locations/{location}".format(
+        project=project, location=location,
+    )
+    actual = InstanceAdminClient.common_location_path(project, location)
+    assert expected == actual
+
+
+def test_parse_common_location_path():
+    expected = {
+        "project": "cuttlefish",
+        "location": "mussel",
+    }
+    path = InstanceAdminClient.common_location_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = InstanceAdminClient.parse_common_location_path(path)
     assert expected == actual
 
 

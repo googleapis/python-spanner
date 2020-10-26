@@ -147,7 +147,7 @@ class CreateBackupRequest(proto.Message):
 
     backup_id = proto.Field(proto.STRING, number=2)
 
-    backup = proto.Field(proto.MESSAGE, number=3, message=Backup,)
+    backup = proto.Field(proto.MESSAGE, number=3, message="Backup",)
 
 
 class CreateBackupMetadata(proto.Message):
@@ -211,7 +211,7 @@ class UpdateBackupRequest(proto.Message):
             accidentally by clients that do not know about them.
     """
 
-    backup = proto.Field(proto.MESSAGE, number=1, message=Backup,)
+    backup = proto.Field(proto.MESSAGE, number=1, message="Backup",)
 
     update_mask = proto.Field(proto.MESSAGE, number=2, message=field_mask.FieldMask,)
 
@@ -336,7 +336,7 @@ class ListBackupsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    backups = proto.RepeatedField(proto.MESSAGE, number=1, message=Backup,)
+    backups = proto.RepeatedField(proto.MESSAGE, number=1, message="Backup",)
 
     next_page_token = proto.Field(proto.STRING, number=2)
 

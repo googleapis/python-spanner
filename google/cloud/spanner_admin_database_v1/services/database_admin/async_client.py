@@ -62,9 +62,51 @@ class DatabaseAdminAsyncClient:
 
     backup_path = staticmethod(DatabaseAdminClient.backup_path)
     parse_backup_path = staticmethod(DatabaseAdminClient.parse_backup_path)
+    database_path = staticmethod(DatabaseAdminClient.database_path)
+    parse_database_path = staticmethod(DatabaseAdminClient.parse_database_path)
+    instance_path = staticmethod(DatabaseAdminClient.instance_path)
+    parse_instance_path = staticmethod(DatabaseAdminClient.parse_instance_path)
+
+    common_billing_account_path = staticmethod(
+        DatabaseAdminClient.common_billing_account_path
+    )
+    parse_common_billing_account_path = staticmethod(
+        DatabaseAdminClient.parse_common_billing_account_path
+    )
+
+    common_folder_path = staticmethod(DatabaseAdminClient.common_folder_path)
+    parse_common_folder_path = staticmethod(
+        DatabaseAdminClient.parse_common_folder_path
+    )
+
+    common_organization_path = staticmethod(
+        DatabaseAdminClient.common_organization_path
+    )
+    parse_common_organization_path = staticmethod(
+        DatabaseAdminClient.parse_common_organization_path
+    )
+
+    common_project_path = staticmethod(DatabaseAdminClient.common_project_path)
+    parse_common_project_path = staticmethod(
+        DatabaseAdminClient.parse_common_project_path
+    )
+
+    common_location_path = staticmethod(DatabaseAdminClient.common_location_path)
+    parse_common_location_path = staticmethod(
+        DatabaseAdminClient.parse_common_location_path
+    )
 
     from_service_account_file = DatabaseAdminClient.from_service_account_file
     from_service_account_json = from_service_account_file
+
+    @property
+    def transport(self) -> DatabaseAdminTransport:
+        """Return the transport used by the client instance.
+
+        Returns:
+            DatabaseAdminTransport: The transport used by the client instance.
+        """
+        return self._client.transport
 
     get_transport_class = functools.partial(
         type(DatabaseAdminClient).get_transport_class, type(DatabaseAdminClient)
@@ -159,7 +201,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -182,7 +225,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -269,7 +312,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent, create_statement]):
+        has_flattened_params = any([parent, create_statement])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -349,7 +393,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -372,7 +417,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -474,7 +519,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database, statements]):
+        has_flattened_params = any([database, statements])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -487,8 +533,9 @@ class DatabaseAdminAsyncClient:
 
         if database is not None:
             request.database = database
-        if statements is not None:
-            request.statements = statements
+
+        if statements:
+            request.statements.extend(statements)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -499,7 +546,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -558,7 +605,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database]):
+        has_flattened_params = any([database])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -581,7 +629,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -639,7 +687,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database]):
+        has_flattened_params = any([database])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -662,7 +711,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -791,7 +840,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource]):
+        has_flattened_params = any([resource])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -803,13 +853,7 @@ class DatabaseAdminAsyncClient:
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.SetIamPolicyRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
+            request = iam_policy.SetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -942,7 +986,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource]):
+        has_flattened_params = any([resource])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -954,13 +999,7 @@ class DatabaseAdminAsyncClient:
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.GetIamPolicyRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
+            request = iam_policy.GetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -971,7 +1010,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=30.0,
@@ -1045,7 +1084,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([resource, permissions]):
+        has_flattened_params = any([resource, permissions])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1057,16 +1097,9 @@ class DatabaseAdminAsyncClient:
             request = iam_policy.TestIamPermissionsRequest(**request)
 
         elif not request:
-            request = iam_policy.TestIamPermissionsRequest()
-
-        # If we have keyword arguments corresponding to fields on the
-        # request, apply these.
-
-        if resource is not None:
-            request.resource = resource
-
-        if permissions:
-            request.permissions.extend(permissions)
+            request = iam_policy.TestIamPermissionsRequest(
+                resource=resource, permissions=permissions,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1160,7 +1193,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent, backup, backup_id]):
+        has_flattened_params = any([parent, backup, backup_id])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1242,7 +1276,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1265,7 +1300,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -1337,7 +1372,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([backup, update_mask]):
+        has_flattened_params = any([backup, update_mask])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1362,7 +1398,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -1416,7 +1452,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1439,7 +1476,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -1499,7 +1536,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1522,7 +1560,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -1626,7 +1664,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent, database_id, backup]):
+        has_flattened_params = any([parent, database_id, backup])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1722,7 +1761,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1745,7 +1785,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -1822,7 +1862,8 @@ class DatabaseAdminAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([parent]):
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1845,7 +1886,7 @@ class DatabaseAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.ServiceUnavailable, exceptions.DeadlineExceeded,
+                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,

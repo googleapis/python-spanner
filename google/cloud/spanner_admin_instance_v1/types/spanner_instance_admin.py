@@ -100,7 +100,7 @@ class InstanceConfig(proto.Message):
 
     display_name = proto.Field(proto.STRING, number=2)
 
-    replicas = proto.RepeatedField(proto.MESSAGE, number=3, message=ReplicaInfo,)
+    replicas = proto.RepeatedField(proto.MESSAGE, number=3, message="ReplicaInfo",)
 
 
 class Instance(proto.Message):
@@ -242,7 +242,7 @@ class ListInstanceConfigsResponse(proto.Message):
         return self
 
     instance_configs = proto.RepeatedField(
-        proto.MESSAGE, number=1, message=InstanceConfig,
+        proto.MESSAGE, number=1, message="InstanceConfig",
     )
 
     next_page_token = proto.Field(proto.STRING, number=2)
@@ -305,7 +305,7 @@ class CreateInstanceRequest(proto.Message):
 
     instance_id = proto.Field(proto.STRING, number=2)
 
-    instance = proto.Field(proto.MESSAGE, number=3, message=Instance,)
+    instance = proto.Field(proto.MESSAGE, number=3, message="Instance",)
 
 
 class ListInstancesRequest(proto.Message):
@@ -376,7 +376,7 @@ class ListInstancesResponse(proto.Message):
     def raw_page(self):
         return self
 
-    instances = proto.RepeatedField(proto.MESSAGE, number=1, message=Instance,)
+    instances = proto.RepeatedField(proto.MESSAGE, number=1, message="Instance",)
 
     next_page_token = proto.Field(proto.STRING, number=2)
 
@@ -401,7 +401,7 @@ class UpdateInstanceRequest(proto.Message):
             them.
     """
 
-    instance = proto.Field(proto.MESSAGE, number=1, message=Instance,)
+    instance = proto.Field(proto.MESSAGE, number=1, message="Instance",)
 
     field_mask = proto.Field(proto.MESSAGE, number=2, message=gp_field_mask.FieldMask,)
 
@@ -440,7 +440,7 @@ class CreateInstanceMetadata(proto.Message):
             was completed successfully.
     """
 
-    instance = proto.Field(proto.MESSAGE, number=1, message=Instance,)
+    instance = proto.Field(proto.MESSAGE, number=1, message="Instance",)
 
     start_time = proto.Field(proto.MESSAGE, number=2, message=timestamp.Timestamp,)
 
@@ -470,7 +470,7 @@ class UpdateInstanceMetadata(proto.Message):
             was completed successfully.
     """
 
-    instance = proto.Field(proto.MESSAGE, number=1, message=Instance,)
+    instance = proto.Field(proto.MESSAGE, number=1, message="Instance",)
 
     start_time = proto.Field(proto.MESSAGE, number=2, message=timestamp.Timestamp,)
 

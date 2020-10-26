@@ -18,7 +18,7 @@
 from collections import OrderedDict
 import functools
 import re
-from typing import Dict, AsyncIterable, Sequence, Tuple, Type, Union
+from typing import Dict, AsyncIterable, Awaitable, Sequence, Tuple, Type, Union
 import pkg_resources
 
 import google.api_core.client_options as ClientOptions  # type: ignore
@@ -53,11 +53,43 @@ class SpannerAsyncClient:
     DEFAULT_ENDPOINT = SpannerClient.DEFAULT_ENDPOINT
     DEFAULT_MTLS_ENDPOINT = SpannerClient.DEFAULT_MTLS_ENDPOINT
 
+    database_path = staticmethod(SpannerClient.database_path)
+    parse_database_path = staticmethod(SpannerClient.parse_database_path)
     session_path = staticmethod(SpannerClient.session_path)
     parse_session_path = staticmethod(SpannerClient.parse_session_path)
 
+    common_billing_account_path = staticmethod(
+        SpannerClient.common_billing_account_path
+    )
+    parse_common_billing_account_path = staticmethod(
+        SpannerClient.parse_common_billing_account_path
+    )
+
+    common_folder_path = staticmethod(SpannerClient.common_folder_path)
+    parse_common_folder_path = staticmethod(SpannerClient.parse_common_folder_path)
+
+    common_organization_path = staticmethod(SpannerClient.common_organization_path)
+    parse_common_organization_path = staticmethod(
+        SpannerClient.parse_common_organization_path
+    )
+
+    common_project_path = staticmethod(SpannerClient.common_project_path)
+    parse_common_project_path = staticmethod(SpannerClient.parse_common_project_path)
+
+    common_location_path = staticmethod(SpannerClient.common_location_path)
+    parse_common_location_path = staticmethod(SpannerClient.parse_common_location_path)
+
     from_service_account_file = SpannerClient.from_service_account_file
     from_service_account_json = from_service_account_file
+
+    @property
+    def transport(self) -> SpannerTransport:
+        """Return the transport used by the client instance.
+
+        Returns:
+            SpannerTransport: The transport used by the client instance.
+        """
+        return self._client.transport
 
     get_transport_class = functools.partial(
         type(SpannerClient).get_transport_class, type(SpannerClient)
@@ -164,7 +196,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database]):
+        has_flattened_params = any([database])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -256,7 +289,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database, session_count]):
+        has_flattened_params = any([database, session_count])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -335,7 +369,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -415,7 +450,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([database]):
+        has_flattened_params = any([database])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -494,7 +530,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([name]):
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -611,7 +648,7 @@ class SpannerAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> AsyncIterable[result_set.PartialResultSet]:
+    ) -> Awaitable[AsyncIterable[result_set.PartialResultSet]]:
         r"""Like [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], except
         returns the result set as a stream. Unlike
         [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], there is no
@@ -849,7 +886,7 @@ class SpannerAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> AsyncIterable[result_set.PartialResultSet]:
+    ) -> Awaitable[AsyncIterable[result_set.PartialResultSet]]:
         r"""Like [Read][google.spanner.v1.Spanner.Read], except returns the
         result set as a stream. Unlike
         [Read][google.spanner.v1.Spanner.Read], there is no limit on the
@@ -948,7 +985,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([session, options]):
+        has_flattened_params = any([session, options])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1066,9 +1104,10 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any(
+        has_flattened_params = any(
             [session, transaction_id, mutations, single_use_transaction]
-        ):
+        )
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."
@@ -1083,10 +1122,11 @@ class SpannerAsyncClient:
             request.session = session
         if transaction_id is not None:
             request.transaction_id = transaction_id
-        if mutations is not None:
-            request.mutations = mutations
         if single_use_transaction is not None:
             request.single_use_transaction = single_use_transaction
+
+        if mutations:
+            request.mutations.extend(mutations)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1161,7 +1201,8 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        if request is not None and any([session, transaction_id]):
+        has_flattened_params = any([session, transaction_id])
+        if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
                 "the individual field arguments should be set."

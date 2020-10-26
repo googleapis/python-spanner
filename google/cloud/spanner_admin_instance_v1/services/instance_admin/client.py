@@ -154,6 +154,15 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     from_service_account_json = from_service_account_file
 
+    @property
+    def transport(self) -> InstanceAdminTransport:
+        """Return the transport used by the client instance.
+
+        Returns:
+            InstanceAdminTransport: The transport used by the client instance.
+        """
+        return self._transport
+
     @staticmethod
     def instance_path(project: str, instance: str,) -> str:
         """Return a fully-qualified instance string."""
@@ -165,6 +174,81 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     def parse_instance_path(path: str) -> Dict[str, str]:
         """Parse a instance path into its component segments."""
         m = re.match(r"^projects/(?P<project>.+?)/instances/(?P<instance>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def instance_config_path(project: str, instance_config: str,) -> str:
+        """Return a fully-qualified instance_config string."""
+        return "projects/{project}/instanceConfigs/{instance_config}".format(
+            project=project, instance_config=instance_config,
+        )
+
+    @staticmethod
+    def parse_instance_config_path(path: str) -> Dict[str, str]:
+        """Parse a instance_config path into its component segments."""
+        m = re.match(
+            r"^projects/(?P<project>.+?)/instanceConfigs/(?P<instance_config>.+?)$",
+            path,
+        )
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_billing_account_path(billing_account: str,) -> str:
+        """Return a fully-qualified billing_account string."""
+        return "billingAccounts/{billing_account}".format(
+            billing_account=billing_account,
+        )
+
+    @staticmethod
+    def parse_common_billing_account_path(path: str) -> Dict[str, str]:
+        """Parse a billing_account path into its component segments."""
+        m = re.match(r"^billingAccounts/(?P<billing_account>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_folder_path(folder: str,) -> str:
+        """Return a fully-qualified folder string."""
+        return "folders/{folder}".format(folder=folder,)
+
+    @staticmethod
+    def parse_common_folder_path(path: str) -> Dict[str, str]:
+        """Parse a folder path into its component segments."""
+        m = re.match(r"^folders/(?P<folder>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_organization_path(organization: str,) -> str:
+        """Return a fully-qualified organization string."""
+        return "organizations/{organization}".format(organization=organization,)
+
+    @staticmethod
+    def parse_common_organization_path(path: str) -> Dict[str, str]:
+        """Parse a organization path into its component segments."""
+        m = re.match(r"^organizations/(?P<organization>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_project_path(project: str,) -> str:
+        """Return a fully-qualified project string."""
+        return "projects/{project}".format(project=project,)
+
+    @staticmethod
+    def parse_common_project_path(path: str) -> Dict[str, str]:
+        """Parse a project path into its component segments."""
+        m = re.match(r"^projects/(?P<project>.+?)$", path)
+        return m.groupdict() if m else {}
+
+    @staticmethod
+    def common_location_path(project: str, location: str,) -> str:
+        """Return a fully-qualified location string."""
+        return "projects/{project}/locations/{location}".format(
+            project=project, location=location,
+        )
+
+    @staticmethod
+    def parse_common_location_path(path: str) -> Dict[str, str]:
+        """Parse a location path into its component segments."""
+        m = re.match(r"^projects/(?P<project>.+?)/locations/(?P<location>.+?)$", path)
         return m.groupdict() if m else {}
 
     def __init__(
@@ -202,10 +286,10 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 not provided, the default SSL client certificate will be used if
                 present. If GOOGLE_API_USE_CLIENT_CERTIFICATE is "false" or not
                 set, no client certificate will be used.
-            client_info (google.api_core.gapic_v1.client_info.ClientInfo):	
-                The client info used to send a user-agent string along with	
-                API requests. If ``None``, then default info will be used.	
-                Generally, you only need to set this if you're developing	
+            client_info (google.api_core.gapic_v1.client_info.ClientInfo):
+                The client info used to send a user-agent string along with
+                API requests. If ``None``, then default info will be used.
+                Generally, you only need to set this if you're developing
                 your own client library.
 
         Raises:
@@ -1088,13 +1172,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.SetIamPolicyRequest()
-
-            # If we have keyword arguments corresponding to fields on the
-            # request, apply these.
-
-            if resource is not None:
-                request.resource = resource
+            request = iam_policy.SetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1232,13 +1310,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.GetIamPolicyRequest()
-
-            # If we have keyword arguments corresponding to fields on the
-            # request, apply these.
-
-            if resource is not None:
-                request.resource = resource
+            request = iam_policy.GetIamPolicyRequest(resource=resource,)
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1321,16 +1393,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.TestIamPermissionsRequest(**request)
 
         elif not request:
-            request = iam_policy.TestIamPermissionsRequest()
-
-            # If we have keyword arguments corresponding to fields on the
-            # request, apply these.
-
-            if resource is not None:
-                request.resource = resource
-
-            if permissions:
-                request.permissions.extend(permissions)
+            request = iam_policy.TestIamPermissionsRequest(
+                resource=resource, permissions=permissions,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.

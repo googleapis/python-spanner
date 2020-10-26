@@ -224,7 +224,7 @@ class ListSessionsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    sessions = proto.RepeatedField(proto.MESSAGE, number=1, message=Session,)
+    sessions = proto.RepeatedField(proto.MESSAGE, number=1, message="Session",)
 
     next_page_token = proto.Field(proto.STRING, number=2)
 
@@ -655,7 +655,9 @@ class PartitionQueryRequest(proto.Message):
         proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
     )
 
-    partition_options = proto.Field(proto.MESSAGE, number=6, message=PartitionOptions,)
+    partition_options = proto.Field(
+        proto.MESSAGE, number=6, message="PartitionOptions",
+    )
 
 
 class PartitionReadRequest(proto.Message):
@@ -721,7 +723,9 @@ class PartitionReadRequest(proto.Message):
 
     key_set = proto.Field(proto.MESSAGE, number=6, message=keys.KeySet,)
 
-    partition_options = proto.Field(proto.MESSAGE, number=9, message=PartitionOptions,)
+    partition_options = proto.Field(
+        proto.MESSAGE, number=9, message="PartitionOptions",
+    )
 
 
 class Partition(proto.Message):
@@ -752,7 +756,7 @@ class PartitionResponse(proto.Message):
             Transaction created by this request.
     """
 
-    partitions = proto.RepeatedField(proto.MESSAGE, number=1, message=Partition,)
+    partitions = proto.RepeatedField(proto.MESSAGE, number=1, message="Partition",)
 
     transaction = proto.Field(
         proto.MESSAGE, number=2, message=gs_transaction.Transaction,

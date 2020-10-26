@@ -202,7 +202,7 @@ class KeySet(proto.Message):
 
     keys = proto.RepeatedField(proto.MESSAGE, number=1, message=struct.ListValue,)
 
-    ranges = proto.RepeatedField(proto.MESSAGE, number=2, message=KeyRange,)
+    ranges = proto.RepeatedField(proto.MESSAGE, number=2, message="KeyRange",)
 
     all_ = proto.Field(proto.BOOL, number=3)
 

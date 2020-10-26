@@ -111,12 +111,12 @@ def test_database_admin_client_from_service_account_file(client_class):
     ) as factory:
         factory.return_value = creds
         client = client_class.from_service_account_file("dummy/file/path.json")
-        assert client._transport._credentials == creds
+        assert client.transport._credentials == creds
 
         client = client_class.from_service_account_json("dummy/file/path.json")
-        assert client._transport._credentials == creds
+        assert client.transport._credentials == creds
 
-        assert client._transport._host == "spanner.googleapis.com:443"
+        assert client.transport._host == "spanner.googleapis.com:443"
 
 
 def test_database_admin_client_get_transport_class():
@@ -466,7 +466,7 @@ def test_list_databases(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_databases), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabasesResponse(
             next_page_token="next_page_token_value",
@@ -481,6 +481,7 @@ def test_list_databases(
         assert args[0] == spanner_database_admin.ListDatabasesRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListDatabasesPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -491,19 +492,20 @@ def test_list_databases_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_databases_async(transport: str = "grpc_asyncio"):
+async def test_list_databases_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.ListDatabasesRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.ListDatabasesRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_databases), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.ListDatabasesResponse(
@@ -517,12 +519,17 @@ async def test_list_databases_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.ListDatabasesRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListDatabasesAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_databases_async_from_dict():
+    await test_list_databases_async(request_type=dict)
 
 
 def test_list_databases_field_headers():
@@ -534,7 +541,7 @@ def test_list_databases_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_databases), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         call.return_value = spanner_database_admin.ListDatabasesResponse()
 
         client.list_databases(request)
@@ -559,9 +566,7 @@ async def test_list_databases_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_databases), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.ListDatabasesResponse()
         )
@@ -582,7 +587,7 @@ def test_list_databases_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_databases), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabasesResponse()
 
@@ -614,9 +619,7 @@ async def test_list_databases_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_databases), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabasesResponse()
 
@@ -651,7 +654,7 @@ def test_list_databases_pager():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_databases), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             spanner_database_admin.ListDatabasesResponse(
@@ -694,7 +697,7 @@ def test_list_databases_pages():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_databases), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             spanner_database_admin.ListDatabasesResponse(
@@ -730,9 +733,7 @@ async def test_list_databases_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_databases),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_databases), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -774,9 +775,7 @@ async def test_list_databases_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_databases),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_databases), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -821,7 +820,7 @@ def test_create_database(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
 
@@ -842,19 +841,20 @@ def test_create_database_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_create_database_async(transport: str = "grpc_asyncio"):
+async def test_create_database_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.CreateDatabaseRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.CreateDatabaseRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/spam")
@@ -866,10 +866,15 @@ async def test_create_database_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.CreateDatabaseRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_create_database_async_from_dict():
+    await test_create_database_async(request_type=dict)
 
 
 def test_create_database_field_headers():
@@ -881,7 +886,7 @@ def test_create_database_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
         client.create_database(request)
@@ -906,9 +911,7 @@ async def test_create_database_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
         )
@@ -929,7 +932,7 @@ def test_create_database_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -967,9 +970,7 @@ async def test_create_database_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -1018,7 +1019,7 @@ def test_get_database(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.Database(
             name="name_value", state=spanner_database_admin.Database.State.CREATING,
@@ -1033,6 +1034,7 @@ def test_get_database(
         assert args[0] == spanner_database_admin.GetDatabaseRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, spanner_database_admin.Database)
 
     assert response.name == "name_value"
@@ -1045,19 +1047,20 @@ def test_get_database_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_database_async(transport: str = "grpc_asyncio"):
+async def test_get_database_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.GetDatabaseRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.GetDatabaseRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.Database(
@@ -1071,7 +1074,7 @@ async def test_get_database_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.GetDatabaseRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner_database_admin.Database)
@@ -1079,6 +1082,11 @@ async def test_get_database_async(transport: str = "grpc_asyncio"):
     assert response.name == "name_value"
 
     assert response.state == spanner_database_admin.Database.State.CREATING
+
+
+@pytest.mark.asyncio
+async def test_get_database_async_from_dict():
+    await test_get_database_async(request_type=dict)
 
 
 def test_get_database_field_headers():
@@ -1090,7 +1098,7 @@ def test_get_database_field_headers():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         call.return_value = spanner_database_admin.Database()
 
         client.get_database(request)
@@ -1115,9 +1123,7 @@ async def test_get_database_field_headers_async():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.Database()
         )
@@ -1138,7 +1144,7 @@ def test_get_database_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.Database()
 
@@ -1170,9 +1176,7 @@ async def test_get_database_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.Database()
 
@@ -1217,7 +1221,7 @@ def test_update_database_ddl(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
@@ -1239,18 +1243,21 @@ def test_update_database_ddl_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_update_database_ddl_async(transport: str = "grpc_asyncio"):
+async def test_update_database_ddl_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.UpdateDatabaseDdlRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.UpdateDatabaseDdlRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -1263,10 +1270,15 @@ async def test_update_database_ddl_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.UpdateDatabaseDdlRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_update_database_ddl_async_from_dict():
+    await test_update_database_ddl_async(request_type=dict)
 
 
 def test_update_database_ddl_field_headers():
@@ -1279,7 +1291,7 @@ def test_update_database_ddl_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -1306,7 +1318,7 @@ async def test_update_database_ddl_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
@@ -1329,7 +1341,7 @@ def test_update_database_ddl_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
@@ -1369,7 +1381,7 @@ async def test_update_database_ddl_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.update_database_ddl), "__call__"
+        type(client.transport.update_database_ddl), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
@@ -1419,7 +1431,7 @@ def test_drop_database(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.drop_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -1440,19 +1452,20 @@ def test_drop_database_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_drop_database_async(transport: str = "grpc_asyncio"):
+async def test_drop_database_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.DropDatabaseRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.DropDatabaseRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.drop_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
@@ -1462,10 +1475,15 @@ async def test_drop_database_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.DropDatabaseRequest()
 
     # Establish that the response is the type that we expect.
     assert response is None
+
+
+@pytest.mark.asyncio
+async def test_drop_database_async_from_dict():
+    await test_drop_database_async(request_type=dict)
 
 
 def test_drop_database_field_headers():
@@ -1477,7 +1495,7 @@ def test_drop_database_field_headers():
     request.database = "database/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.drop_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         call.return_value = None
 
         client.drop_database(request)
@@ -1502,9 +1520,7 @@ async def test_drop_database_field_headers_async():
     request.database = "database/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.drop_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
         await client.drop_database(request)
@@ -1523,7 +1539,7 @@ def test_drop_database_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.drop_database), "__call__") as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -1555,9 +1571,7 @@ async def test_drop_database_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.drop_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -1598,9 +1612,7 @@ def test_get_database_ddl(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.GetDatabaseDdlResponse(
             statements=["statements_value"],
@@ -1615,6 +1627,7 @@ def test_get_database_ddl(
         assert args[0] == spanner_database_admin.GetDatabaseDdlRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, spanner_database_admin.GetDatabaseDdlResponse)
 
     assert response.statements == ["statements_value"]
@@ -1625,19 +1638,20 @@ def test_get_database_ddl_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_database_ddl_async(transport: str = "grpc_asyncio"):
+async def test_get_database_ddl_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.GetDatabaseDdlRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.GetDatabaseDdlRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.GetDatabaseDdlResponse(
@@ -1651,12 +1665,17 @@ async def test_get_database_ddl_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.GetDatabaseDdlRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner_database_admin.GetDatabaseDdlResponse)
 
     assert response.statements == ["statements_value"]
+
+
+@pytest.mark.asyncio
+async def test_get_database_ddl_async_from_dict():
+    await test_get_database_ddl_async(request_type=dict)
 
 
 def test_get_database_ddl_field_headers():
@@ -1668,9 +1687,7 @@ def test_get_database_ddl_field_headers():
     request.database = "database/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         call.return_value = spanner_database_admin.GetDatabaseDdlResponse()
 
         client.get_database_ddl(request)
@@ -1695,9 +1712,7 @@ async def test_get_database_ddl_field_headers_async():
     request.database = "database/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.GetDatabaseDdlResponse()
         )
@@ -1718,9 +1733,7 @@ def test_get_database_ddl_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.GetDatabaseDdlResponse()
 
@@ -1752,9 +1765,7 @@ async def test_get_database_ddl_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_database_ddl), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.GetDatabaseDdlResponse()
 
@@ -1797,7 +1808,7 @@ def test_set_iam_policy(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
 
@@ -1810,6 +1821,7 @@ def test_set_iam_policy(
         assert args[0] == iam_policy.SetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, policy.Policy)
 
     assert response.version == 774
@@ -1822,19 +1834,19 @@ def test_set_iam_policy_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
+async def test_set_iam_policy_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.SetIamPolicyRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.SetIamPolicyRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             policy.Policy(version=774, etag=b"etag_blob",)
@@ -1846,7 +1858,7 @@ async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.SetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, policy.Policy)
@@ -1854,6 +1866,11 @@ async def test_set_iam_policy_async(transport: str = "grpc_asyncio"):
     assert response.version == 774
 
     assert response.etag == b"etag_blob"
+
+
+@pytest.mark.asyncio
+async def test_set_iam_policy_async_from_dict():
+    await test_set_iam_policy_async(request_type=dict)
 
 
 def test_set_iam_policy_field_headers():
@@ -1865,7 +1882,7 @@ def test_set_iam_policy_field_headers():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         call.return_value = policy.Policy()
 
         client.set_iam_policy(request)
@@ -1890,9 +1907,7 @@ async def test_set_iam_policy_field_headers_async():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
 
         await client.set_iam_policy(request)
@@ -1907,10 +1922,10 @@ async def test_set_iam_policy_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_set_iam_policy_from_dict():
+def test_set_iam_policy_from_dict_foreign():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -1927,7 +1942,7 @@ def test_set_iam_policy_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.set_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -1959,9 +1974,7 @@ async def test_set_iam_policy_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.set_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2002,7 +2015,7 @@ def test_get_iam_policy(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
 
@@ -2015,6 +2028,7 @@ def test_get_iam_policy(
         assert args[0] == iam_policy.GetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, policy.Policy)
 
     assert response.version == 774
@@ -2027,19 +2041,19 @@ def test_get_iam_policy_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
+async def test_get_iam_policy_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.GetIamPolicyRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.GetIamPolicyRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             policy.Policy(version=774, etag=b"etag_blob",)
@@ -2051,7 +2065,7 @@ async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.GetIamPolicyRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, policy.Policy)
@@ -2059,6 +2073,11 @@ async def test_get_iam_policy_async(transport: str = "grpc_asyncio"):
     assert response.version == 774
 
     assert response.etag == b"etag_blob"
+
+
+@pytest.mark.asyncio
+async def test_get_iam_policy_async_from_dict():
+    await test_get_iam_policy_async(request_type=dict)
 
 
 def test_get_iam_policy_field_headers():
@@ -2070,7 +2089,7 @@ def test_get_iam_policy_field_headers():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         call.return_value = policy.Policy()
 
         client.get_iam_policy(request)
@@ -2095,9 +2114,7 @@ async def test_get_iam_policy_field_headers_async():
     request.resource = "resource/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
 
         await client.get_iam_policy(request)
@@ -2112,10 +2129,10 @@ async def test_get_iam_policy_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_get_iam_policy_from_dict():
+def test_get_iam_policy_from_dict_foreign():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2132,7 +2149,7 @@ def test_get_iam_policy_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_iam_policy), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2164,9 +2181,7 @@ async def test_get_iam_policy_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_iam_policy), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = policy.Policy()
 
@@ -2208,7 +2223,7 @@ def test_test_iam_permissions(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse(
@@ -2224,6 +2239,7 @@ def test_test_iam_permissions(
         assert args[0] == iam_policy.TestIamPermissionsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, iam_policy.TestIamPermissionsResponse)
 
     assert response.permissions == ["permissions_value"]
@@ -2234,18 +2250,20 @@ def test_test_iam_permissions_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_test_iam_permissions_async(transport: str = "grpc_asyncio"):
+async def test_test_iam_permissions_async(
+    transport: str = "grpc_asyncio", request_type=iam_policy.TestIamPermissionsRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = iam_policy.TestIamPermissionsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -2258,12 +2276,17 @@ async def test_test_iam_permissions_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == iam_policy.TestIamPermissionsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, iam_policy.TestIamPermissionsResponse)
 
     assert response.permissions == ["permissions_value"]
+
+
+@pytest.mark.asyncio
+async def test_test_iam_permissions_async_from_dict():
+    await test_test_iam_permissions_async(request_type=dict)
 
 
 def test_test_iam_permissions_field_headers():
@@ -2276,7 +2299,7 @@ def test_test_iam_permissions_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         call.return_value = iam_policy.TestIamPermissionsResponse()
 
@@ -2303,7 +2326,7 @@ async def test_test_iam_permissions_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             iam_policy.TestIamPermissionsResponse()
@@ -2321,11 +2344,11 @@ async def test_test_iam_permissions_field_headers_async():
     assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
 
 
-def test_test_iam_permissions_from_dict():
+def test_test_iam_permissions_from_dict_foreign():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2344,7 +2367,7 @@ def test_test_iam_permissions_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2384,7 +2407,7 @@ async def test_test_iam_permissions_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.test_iam_permissions), "__call__"
+        type(client.transport.test_iam_permissions), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = iam_policy.TestIamPermissionsResponse()
@@ -2434,7 +2457,7 @@ def test_create_backup(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
 
@@ -2455,19 +2478,19 @@ def test_create_backup_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_create_backup_async(transport: str = "grpc_asyncio"):
+async def test_create_backup_async(
+    transport: str = "grpc_asyncio", request_type=gsad_backup.CreateBackupRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = gsad_backup.CreateBackupRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/spam")
@@ -2479,10 +2502,15 @@ async def test_create_backup_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == gsad_backup.CreateBackupRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_create_backup_async_from_dict():
+    await test_create_backup_async(request_type=dict)
 
 
 def test_create_backup_field_headers():
@@ -2494,7 +2522,7 @@ def test_create_backup_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
         client.create_backup(request)
@@ -2519,9 +2547,7 @@ async def test_create_backup_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
         )
@@ -2542,7 +2568,7 @@ def test_create_backup_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.create_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -2585,9 +2611,7 @@ async def test_create_backup_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.create_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -2639,7 +2663,7 @@ def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupReques
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.Backup(
             database="database_value",
@@ -2658,6 +2682,7 @@ def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupReques
         assert args[0] == backup.GetBackupRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, backup.Backup)
 
     assert response.database == "database_value"
@@ -2676,19 +2701,19 @@ def test_get_backup_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_get_backup_async(transport: str = "grpc_asyncio"):
+async def test_get_backup_async(
+    transport: str = "grpc_asyncio", request_type=backup.GetBackupRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = backup.GetBackupRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             backup.Backup(
@@ -2706,7 +2731,7 @@ async def test_get_backup_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == backup.GetBackupRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, backup.Backup)
@@ -2722,6 +2747,11 @@ async def test_get_backup_async(transport: str = "grpc_asyncio"):
     assert response.referencing_databases == ["referencing_databases_value"]
 
 
+@pytest.mark.asyncio
+async def test_get_backup_async_from_dict():
+    await test_get_backup_async(request_type=dict)
+
+
 def test_get_backup_field_headers():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
@@ -2731,7 +2761,7 @@ def test_get_backup_field_headers():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         call.return_value = backup.Backup()
 
         client.get_backup(request)
@@ -2756,9 +2786,7 @@ async def test_get_backup_field_headers_async():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(backup.Backup())
 
         await client.get_backup(request)
@@ -2777,7 +2805,7 @@ def test_get_backup_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.get_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.Backup()
 
@@ -2809,9 +2837,7 @@ async def test_get_backup_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.get_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.Backup()
 
@@ -2852,7 +2878,7 @@ def test_update_backup(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = gsad_backup.Backup(
             database="database_value",
@@ -2871,6 +2897,7 @@ def test_update_backup(
         assert args[0] == gsad_backup.UpdateBackupRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, gsad_backup.Backup)
 
     assert response.database == "database_value"
@@ -2889,19 +2916,19 @@ def test_update_backup_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_update_backup_async(transport: str = "grpc_asyncio"):
+async def test_update_backup_async(
+    transport: str = "grpc_asyncio", request_type=gsad_backup.UpdateBackupRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = gsad_backup.UpdateBackupRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             gsad_backup.Backup(
@@ -2919,7 +2946,7 @@ async def test_update_backup_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == gsad_backup.UpdateBackupRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, gsad_backup.Backup)
@@ -2935,6 +2962,11 @@ async def test_update_backup_async(transport: str = "grpc_asyncio"):
     assert response.referencing_databases == ["referencing_databases_value"]
 
 
+@pytest.mark.asyncio
+async def test_update_backup_async_from_dict():
+    await test_update_backup_async(request_type=dict)
+
+
 def test_update_backup_field_headers():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
@@ -2944,7 +2976,7 @@ def test_update_backup_field_headers():
     request.backup.name = "backup.name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         call.return_value = gsad_backup.Backup()
 
         client.update_backup(request)
@@ -2969,9 +3001,7 @@ async def test_update_backup_field_headers_async():
     request.backup.name = "backup.name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(gsad_backup.Backup())
 
         await client.update_backup(request)
@@ -2990,7 +3020,7 @@ def test_update_backup_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.update_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = gsad_backup.Backup()
 
@@ -3029,9 +3059,7 @@ async def test_update_backup_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.update_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = gsad_backup.Backup()
 
@@ -3079,7 +3107,7 @@ def test_delete_backup(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -3100,19 +3128,19 @@ def test_delete_backup_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_delete_backup_async(transport: str = "grpc_asyncio"):
+async def test_delete_backup_async(
+    transport: str = "grpc_asyncio", request_type=backup.DeleteBackupRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = backup.DeleteBackupRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
@@ -3122,10 +3150,15 @@ async def test_delete_backup_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == backup.DeleteBackupRequest()
 
     # Establish that the response is the type that we expect.
     assert response is None
+
+
+@pytest.mark.asyncio
+async def test_delete_backup_async_from_dict():
+    await test_delete_backup_async(request_type=dict)
 
 
 def test_delete_backup_field_headers():
@@ -3137,7 +3170,7 @@ def test_delete_backup_field_headers():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         call.return_value = None
 
         client.delete_backup(request)
@@ -3162,9 +3195,7 @@ async def test_delete_backup_field_headers_async():
     request.name = "name/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
 
         await client.delete_backup(request)
@@ -3183,7 +3214,7 @@ def test_delete_backup_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.delete_backup), "__call__") as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -3215,9 +3246,7 @@ async def test_delete_backup_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.delete_backup), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = None
 
@@ -3256,7 +3285,7 @@ def test_list_backups(transport: str = "grpc", request_type=backup.ListBackupsRe
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_backups), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupsResponse(
             next_page_token="next_page_token_value",
@@ -3271,6 +3300,7 @@ def test_list_backups(transport: str = "grpc", request_type=backup.ListBackupsRe
         assert args[0] == backup.ListBackupsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListBackupsPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -3281,19 +3311,19 @@ def test_list_backups_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_backups_async(transport: str = "grpc_asyncio"):
+async def test_list_backups_async(
+    transport: str = "grpc_asyncio", request_type=backup.ListBackupsRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = backup.ListBackupsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_backups), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             backup.ListBackupsResponse(next_page_token="next_page_token_value",)
@@ -3305,12 +3335,17 @@ async def test_list_backups_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == backup.ListBackupsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListBackupsAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_backups_async_from_dict():
+    await test_list_backups_async(request_type=dict)
 
 
 def test_list_backups_field_headers():
@@ -3322,7 +3357,7 @@ def test_list_backups_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_backups), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         call.return_value = backup.ListBackupsResponse()
 
         client.list_backups(request)
@@ -3347,9 +3382,7 @@ async def test_list_backups_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_backups), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             backup.ListBackupsResponse()
         )
@@ -3370,7 +3403,7 @@ def test_list_backups_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_backups), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupsResponse()
 
@@ -3402,9 +3435,7 @@ async def test_list_backups_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.list_backups), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupsResponse()
 
@@ -3439,7 +3470,7 @@ def test_list_backups_pager():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_backups), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
@@ -3471,7 +3502,7 @@ def test_list_backups_pages():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client._transport.list_backups), "__call__") as call:
+    with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
@@ -3496,9 +3527,7 @@ async def test_list_backups_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backups),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_backups), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -3529,9 +3558,7 @@ async def test_list_backups_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backups),
-        "__call__",
-        new_callable=mock.AsyncMock,
+        type(client.transport.list_backups), "__call__", new_callable=mock.AsyncMock
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -3565,9 +3592,7 @@ def test_restore_database(
     request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/spam")
 
@@ -3588,19 +3613,20 @@ def test_restore_database_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_restore_database_async(transport: str = "grpc_asyncio"):
+async def test_restore_database_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.RestoreDatabaseRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.RestoreDatabaseRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/spam")
@@ -3612,10 +3638,15 @@ async def test_restore_database_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.RestoreDatabaseRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_restore_database_async_from_dict():
+    await test_restore_database_async(request_type=dict)
 
 
 def test_restore_database_field_headers():
@@ -3627,9 +3658,7 @@ def test_restore_database_field_headers():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         call.return_value = operations_pb2.Operation(name="operations/op")
 
         client.restore_database(request)
@@ -3654,9 +3683,7 @@ async def test_restore_database_field_headers_async():
     request.parent = "parent/value"
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             operations_pb2.Operation(name="operations/op")
         )
@@ -3677,9 +3704,7 @@ def test_restore_database_flattened():
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -3722,9 +3747,7 @@ async def test_restore_database_flattened_async():
     client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
 
     # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client._client._transport.restore_database), "__call__"
-    ) as call:
+    with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = operations_pb2.Operation(name="operations/op")
 
@@ -3780,7 +3803,7 @@ def test_list_database_operations(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabaseOperationsResponse(
@@ -3796,6 +3819,7 @@ def test_list_database_operations(
         assert args[0] == spanner_database_admin.ListDatabaseOperationsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListDatabaseOperationsPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -3806,18 +3830,21 @@ def test_list_database_operations_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_database_operations_async(transport: str = "grpc_asyncio"):
+async def test_list_database_operations_async(
+    transport: str = "grpc_asyncio",
+    request_type=spanner_database_admin.ListDatabaseOperationsRequest,
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = spanner_database_admin.ListDatabaseOperationsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -3832,12 +3859,17 @@ async def test_list_database_operations_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == spanner_database_admin.ListDatabaseOperationsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListDatabaseOperationsAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_database_operations_async_from_dict():
+    await test_list_database_operations_async(request_type=dict)
 
 
 def test_list_database_operations_field_headers():
@@ -3850,7 +3882,7 @@ def test_list_database_operations_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         call.return_value = spanner_database_admin.ListDatabaseOperationsResponse()
 
@@ -3877,7 +3909,7 @@ async def test_list_database_operations_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.ListDatabaseOperationsResponse()
@@ -3900,7 +3932,7 @@ def test_list_database_operations_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabaseOperationsResponse()
@@ -3935,7 +3967,7 @@ async def test_list_database_operations_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.ListDatabaseOperationsResponse()
@@ -3973,7 +4005,7 @@ def test_list_database_operations_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -4015,7 +4047,7 @@ def test_list_database_operations_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_database_operations), "__call__"
+        type(client.transport.list_database_operations), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -4049,7 +4081,7 @@ async def test_list_database_operations_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_database_operations),
+        type(client.transport.list_database_operations),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -4090,7 +4122,7 @@ async def test_list_database_operations_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_database_operations),
+        type(client.transport.list_database_operations),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -4135,7 +4167,7 @@ def test_list_backup_operations(
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupOperationsResponse(
@@ -4151,6 +4183,7 @@ def test_list_backup_operations(
         assert args[0] == backup.ListBackupOperationsRequest()
 
     # Establish that the response is the type that we expect.
+
     assert isinstance(response, pagers.ListBackupOperationsPager)
 
     assert response.next_page_token == "next_page_token_value"
@@ -4161,18 +4194,20 @@ def test_list_backup_operations_from_dict():
 
 
 @pytest.mark.asyncio
-async def test_list_backup_operations_async(transport: str = "grpc_asyncio"):
+async def test_list_backup_operations_async(
+    transport: str = "grpc_asyncio", request_type=backup.ListBackupOperationsRequest
+):
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
     # and we are mocking out the actual API, so just send an empty request.
-    request = backup.ListBackupOperationsRequest()
+    request = request_type()
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
@@ -4187,12 +4222,17 @@ async def test_list_backup_operations_async(transport: str = "grpc_asyncio"):
         assert len(call.mock_calls)
         _, args, _ = call.mock_calls[0]
 
-        assert args[0] == request
+        assert args[0] == backup.ListBackupOperationsRequest()
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListBackupOperationsAsyncPager)
 
     assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.asyncio
+async def test_list_backup_operations_async_from_dict():
+    await test_list_backup_operations_async(request_type=dict)
 
 
 def test_list_backup_operations_field_headers():
@@ -4205,7 +4245,7 @@ def test_list_backup_operations_field_headers():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         call.return_value = backup.ListBackupOperationsResponse()
 
@@ -4232,7 +4272,7 @@ async def test_list_backup_operations_field_headers_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             backup.ListBackupOperationsResponse()
@@ -4255,7 +4295,7 @@ def test_list_backup_operations_flattened():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupOperationsResponse()
@@ -4289,7 +4329,7 @@ async def test_list_backup_operations_flattened_async():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = backup.ListBackupOperationsResponse()
@@ -4326,7 +4366,7 @@ def test_list_backup_operations_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -4366,7 +4406,7 @@ def test_list_backup_operations_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._transport.list_backup_operations), "__call__"
+        type(client.transport.list_backup_operations), "__call__"
     ) as call:
         # Set the response to a series of pages.
         call.side_effect = (
@@ -4398,7 +4438,7 @@ async def test_list_backup_operations_async_pager():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backup_operations),
+        type(client.transport.list_backup_operations),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -4437,7 +4477,7 @@ async def test_list_backup_operations_async_pages():
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
-        type(client._client._transport.list_backup_operations),
+        type(client.transport.list_backup_operations),
         "__call__",
         new_callable=mock.AsyncMock,
     ) as call:
@@ -4503,7 +4543,7 @@ def test_transport_instance():
         credentials=credentials.AnonymousCredentials(),
     )
     client = DatabaseAdminClient(transport=transport)
-    assert client._transport is transport
+    assert client.transport is transport
 
 
 def test_transport_get_channel():
@@ -4539,7 +4579,7 @@ def test_transport_adc(transport_class):
 def test_transport_grpc_default():
     # A client should use the gRPC transport by default.
     client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
-    assert isinstance(client._transport, transports.DatabaseAdminGrpcTransport,)
+    assert isinstance(client.transport, transports.DatabaseAdminGrpcTransport,)
 
 
 def test_database_admin_base_transport_error():
@@ -4663,7 +4703,7 @@ def test_database_admin_host_no_port():
             api_endpoint="spanner.googleapis.com"
         ),
     )
-    assert client._transport._host == "spanner.googleapis.com:443"
+    assert client.transport._host == "spanner.googleapis.com:443"
 
 
 def test_database_admin_host_with_port():
@@ -4673,7 +4713,7 @@ def test_database_admin_host_with_port():
             api_endpoint="spanner.googleapis.com:8000"
         ),
     )
-    assert client._transport._host == "spanner.googleapis.com:8000"
+    assert client.transport._host == "spanner.googleapis.com:8000"
 
 
 def test_database_admin_grpc_transport_channel():
@@ -4793,7 +4833,7 @@ def test_database_admin_grpc_lro_client():
     client = DatabaseAdminClient(
         credentials=credentials.AnonymousCredentials(), transport="grpc",
     )
-    transport = client._transport
+    transport = client.transport
 
     # Ensure that we have a api-core operations client.
     assert isinstance(transport.operations_client, operations_v1.OperationsClient,)
@@ -4806,7 +4846,7 @@ def test_database_admin_grpc_lro_async_client():
     client = DatabaseAdminAsyncClient(
         credentials=credentials.AnonymousCredentials(), transport="grpc_asyncio",
     )
-    transport = client._client._transport
+    transport = client.transport
 
     # Ensure that we have a api-core operations client.
     assert isinstance(transport.operations_client, operations_v1.OperationsAsyncClient,)
@@ -4837,6 +4877,155 @@ def test_parse_backup_path():
 
     # Check that the path construction is reversible.
     actual = DatabaseAdminClient.parse_backup_path(path)
+    assert expected == actual
+
+
+def test_database_path():
+    project = "cuttlefish"
+    instance = "mussel"
+    database = "winkle"
+
+    expected = "projects/{project}/instances/{instance}/databases/{database}".format(
+        project=project, instance=instance, database=database,
+    )
+    actual = DatabaseAdminClient.database_path(project, instance, database)
+    assert expected == actual
+
+
+def test_parse_database_path():
+    expected = {
+        "project": "nautilus",
+        "instance": "scallop",
+        "database": "abalone",
+    }
+    path = DatabaseAdminClient.database_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_database_path(path)
+    assert expected == actual
+
+
+def test_instance_path():
+    project = "squid"
+    instance = "clam"
+
+    expected = "projects/{project}/instances/{instance}".format(
+        project=project, instance=instance,
+    )
+    actual = DatabaseAdminClient.instance_path(project, instance)
+    assert expected == actual
+
+
+def test_parse_instance_path():
+    expected = {
+        "project": "whelk",
+        "instance": "octopus",
+    }
+    path = DatabaseAdminClient.instance_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_instance_path(path)
+    assert expected == actual
+
+
+def test_common_billing_account_path():
+    billing_account = "oyster"
+
+    expected = "billingAccounts/{billing_account}".format(
+        billing_account=billing_account,
+    )
+    actual = DatabaseAdminClient.common_billing_account_path(billing_account)
+    assert expected == actual
+
+
+def test_parse_common_billing_account_path():
+    expected = {
+        "billing_account": "nudibranch",
+    }
+    path = DatabaseAdminClient.common_billing_account_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_common_billing_account_path(path)
+    assert expected == actual
+
+
+def test_common_folder_path():
+    folder = "cuttlefish"
+
+    expected = "folders/{folder}".format(folder=folder,)
+    actual = DatabaseAdminClient.common_folder_path(folder)
+    assert expected == actual
+
+
+def test_parse_common_folder_path():
+    expected = {
+        "folder": "mussel",
+    }
+    path = DatabaseAdminClient.common_folder_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_common_folder_path(path)
+    assert expected == actual
+
+
+def test_common_organization_path():
+    organization = "winkle"
+
+    expected = "organizations/{organization}".format(organization=organization,)
+    actual = DatabaseAdminClient.common_organization_path(organization)
+    assert expected == actual
+
+
+def test_parse_common_organization_path():
+    expected = {
+        "organization": "nautilus",
+    }
+    path = DatabaseAdminClient.common_organization_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_common_organization_path(path)
+    assert expected == actual
+
+
+def test_common_project_path():
+    project = "scallop"
+
+    expected = "projects/{project}".format(project=project,)
+    actual = DatabaseAdminClient.common_project_path(project)
+    assert expected == actual
+
+
+def test_parse_common_project_path():
+    expected = {
+        "project": "abalone",
+    }
+    path = DatabaseAdminClient.common_project_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_common_project_path(path)
+    assert expected == actual
+
+
+def test_common_location_path():
+    project = "squid"
+    location = "clam"
+
+    expected = "projects/{project}/locations/{location}".format(
+        project=project, location=location,
+    )
+    actual = DatabaseAdminClient.common_location_path(project, location)
+    assert expected == actual
+
+
+def test_parse_common_location_path():
+    expected = {
+        "project": "whelk",
+        "location": "octopus",
+    }
+    path = DatabaseAdminClient.common_location_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_common_location_path(path)
     assert expected == actual
 
 

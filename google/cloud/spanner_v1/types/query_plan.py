@@ -159,7 +159,7 @@ class QueryPlan(proto.Message):
             to its index in ``plan_nodes``.
     """
 
-    plan_nodes = proto.RepeatedField(proto.MESSAGE, number=1, message=PlanNode,)
+    plan_nodes = proto.RepeatedField(proto.MESSAGE, number=1, message="PlanNode",)
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

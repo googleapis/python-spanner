@@ -105,7 +105,7 @@ class StructType(proto.Message):
 
         name = proto.Field(proto.STRING, number=1)
 
-        type_ = proto.Field(proto.MESSAGE, number=2, message=Type,)
+        type_ = proto.Field(proto.MESSAGE, number=2, message="Type",)
 
     fields = proto.RepeatedField(proto.MESSAGE, number=1, message=Field,)
 
