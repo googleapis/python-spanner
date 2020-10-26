@@ -273,26 +273,26 @@ class TestKeySet(unittest.TestCase):
         self.assertNotEqual(keyset, other)
 
     def test_to_pb_w_all(self):
-        from google.cloud.spanner_v1 import KeySet
+        from google.cloud.spanner_v1 import KeySetPB
 
         keyset = self._make_one(all_=True)
 
-        result = keyset
+        result = keyset._to_pb()
 
-        self.assertIsInstance(result, KeySet)
+        self.assertIsInstance(result, KeySetPB)
         self.assertTrue(result.all_)
         self.assertEqual(len(result.keys), 0)
         self.assertEqual(len(result.ranges), 0)
 
     def test_to_pb_w_only_keys(self):
-        from google.cloud.spanner_v1 import KeySet
+        from google.cloud.spanner_v1 import KeySetPB
 
         KEYS = [[u"key1"], [u"key2"]]
         keyset = self._make_one(keys=KEYS)
 
-        result = keyset
+        result = keyset._to_pb()
 
-        self.assertIsInstance(result, KeySet)
+        self.assertIsInstance(result, KeySetPB)
         self.assertFalse(result.all_)
         self.assertEqual(len(result.keys), len(KEYS))
 
@@ -303,7 +303,7 @@ class TestKeySet(unittest.TestCase):
         self.assertEqual(len(result.ranges), 0)
 
     def test_to_pb_w_only_ranges(self):
-        from google.cloud.spanner_v1 import KeySet
+        from google.cloud.spanner_v1 import KeySetPB
         from google.cloud.spanner_v1.keyset import KeyRange
 
         KEY_1 = u"KEY_1"
@@ -316,9 +316,9 @@ class TestKeySet(unittest.TestCase):
         ]
         keyset = self._make_one(ranges=RANGES)
 
-        result = keyset
+        result = keyset._to_pb()
 
-        self.assertIsInstance(result, KeySet)
+        self.assertIsInstance(result, KeySetPB)
         self.assertFalse(result.all_)
         self.assertEqual(len(result.keys), 0)
         self.assertEqual(len(result.ranges), len(RANGES))
