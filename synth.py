@@ -30,7 +30,7 @@ library = gapic.py_library(
     include_protos=True,
 )
 
-s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst"])
+s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
 
 # ----------------------------------------------------------------------------
 # Generate instance admin client
