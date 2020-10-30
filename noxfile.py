@@ -65,7 +65,7 @@ def lint_setup_py(session):
 
 def default(session):
     # Install all test dependencies, then install this package in-place.
-    session.install("mock", "pytest", "pytest-cov")
+    session.install("mock", "pytest", "pytest-cov", "sqlparse")
 
     if session.python != "2.7":
         session.install("-e", ".[tracing]")
