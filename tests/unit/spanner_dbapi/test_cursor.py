@@ -6,9 +6,8 @@
 
 """Cursor() class unit tests."""
 
+import mock
 import unittest
-
-from unittest import mock
 
 
 class TestCursor(unittest.TestCase):

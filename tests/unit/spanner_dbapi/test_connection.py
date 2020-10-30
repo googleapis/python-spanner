@@ -6,10 +6,9 @@
 
 """Cloud Spanner DB-API Connection class unit tests."""
 
+import mock
 import unittest
 import warnings
-
-from unittest import mock
 
 
 def _make_credentials():
