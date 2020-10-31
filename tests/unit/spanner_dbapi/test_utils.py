@@ -32,6 +32,10 @@ class TestUtils(unittest.TestCase):
                 actual = list(pitr)
                 self.assertEqual(actual, expected)
 
+    @unittest.skipIf(
+        skip_condition,
+        'Python 2 has an outdated iterator definition'
+    )
     def test_peekIterator_list_rows_converted_to_tuples(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
 
@@ -55,6 +59,10 @@ class TestUtils(unittest.TestCase):
         pit = PeekIterator([("Clark", "Kent")])
         self.assertEqual(next(pit), ("Clark", "Kent"))
 
+    @unittest.skipIf(
+        skip_condition,
+        'Python 2 has an outdated iterator definition'
+    )
     def test_peekIterator_nonlist_rows_unconverted(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
 

@@ -190,7 +190,8 @@ class TestParser(unittest.TestCase):
         from google.cloud.spanner_dbapi.parser import values
 
         a_obj = a_args([a_args([terminal(10 ** i)]) for i in range(10)])
-        self.assertEqual(str(values(a_obj)), "VALUES%s" % str(a_obj))
+        # self.assertEqual(str(values(a_obj)), "VALUES%s" % str(a_obj))
+        self.assertEqual(str(values(a_obj)), "VALUES{}".format(a_obj))
 
     def test_expect(self):
         from google.cloud.spanner_dbapi.parser import ARGS
