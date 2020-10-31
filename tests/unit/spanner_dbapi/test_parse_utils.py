@@ -378,6 +378,7 @@ class TestParseUtils(unittest.TestCase):
         self.assertEqual(cast_for_spanner(5), 5)
         self.assertEqual(cast_for_spanner("string"), "string")
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_get_param_types(self):
         import datetime
 
