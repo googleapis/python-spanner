@@ -184,14 +184,21 @@ class TestParser(unittest.TestCase):
         a_obj = a_args([])
         self.assertTrue(a_obj._is_equal_length())
 
+    @unittest.skipIf(
+        skip_condition,
+        'Python 2 has an outdated iterator definition'
+    )
+    @unittest.skipIf(
+        skip_condition,
+        'Python 2 does not support 0-argument super() calls'
+    )
     def test_values(self):
         from google.cloud.spanner_dbapi.parser import a_args
         from google.cloud.spanner_dbapi.parser import terminal
         from google.cloud.spanner_dbapi.parser import values
 
         a_obj = a_args([a_args([terminal(10 ** i)]) for i in range(10)])
-        # self.assertEqual(str(values(a_obj)), "VALUES%s" % str(a_obj))
-        self.assertEqual(str(values(a_obj)), "VALUES{}".format(a_obj))
+        self.assertEqual(str(values(a_obj)), "VALUES%s" % str(a_obj))
 
     def test_expect(self):
         from google.cloud.spanner_dbapi.parser import ARGS
