@@ -43,7 +43,7 @@ class TestConnection(unittest.TestCase):
         database = instance.database(self.DATABASE)
         return Connection(instance, database)
 
-    @unittest.skipIf(sys.version_info[0] < 3, 'Python 2 patching is outdated')
+    @unittest.skipIf(sys.version_info[0] < 3, "Python 2 patching is outdated")
     def test_property_autocommit_setter(self):
         from google.cloud.spanner_dbapi import Connection
 
@@ -80,13 +80,9 @@ class TestConnection(unittest.TestCase):
     def test__session_checkout(self):
         from google.cloud.spanner_dbapi import Connection
 
-        with mock.patch(
-            "google.cloud.spanner_v1.database.Database",
-        ) as mock_database:
+        with mock.patch("google.cloud.spanner_v1.database.Database") as mock_database:
             mock_database._pool = mock.MagicMock()
-            mock_database._pool.get = mock.MagicMock(
-                return_value="db_session_pool"
-            )
+            mock_database._pool.get = mock.MagicMock(return_value="db_session_pool")
             connection = Connection(self.INSTANCE, mock_database)
 
             connection._session_checkout()
@@ -100,9 +96,7 @@ class TestConnection(unittest.TestCase):
     def test__release_session(self):
         from google.cloud.spanner_dbapi import Connection
 
-        with mock.patch(
-            "google.cloud.spanner_v1.database.Database",
-        ) as mock_database:
+        with mock.patch("google.cloud.spanner_v1.database.Database") as mock_database:
             mock_database._pool = mock.MagicMock()
             mock_database._pool.put = mock.MagicMock()
             connection = Connection(self.INSTANCE, mock_database)
@@ -116,9 +110,7 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import Connection
 
         connection = Connection(self.INSTANCE, self.DATABASE)
-        connection._session_checkout = mock_checkout = mock.MagicMock(
-            autospec=True
-        )
+        connection._session_checkout = mock_checkout = mock.MagicMock(autospec=True)
         connection.transaction_checkout()
         mock_checkout.assert_called_once_with()
 
@@ -133,12 +125,10 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect, InterfaceError
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists",
-            return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect("test-instance", "test-database")
 
@@ -158,9 +148,7 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_commit(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import (
-            AUTOCOMMIT_MODE_WARNING,
-        )
+        from google.cloud.spanner_dbapi.connection import AUTOCOMMIT_MODE_WARNING
 
         connection = Connection(self.INSTANCE, self.DATABASE)
 
@@ -189,9 +177,7 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_rollback(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import (
-            AUTOCOMMIT_MODE_WARNING,
-        )
+        from google.cloud.spanner_dbapi.connection import AUTOCOMMIT_MODE_WARNING
 
         connection = Connection(self.INSTANCE, self.DATABASE)
 
@@ -221,7 +207,7 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import Connection, InterfaceError
 
         with mock.patch(
-            "google.cloud.spanner_v1.database.Database", autospec=True,
+            "google.cloud.spanner_v1.database.Database", autospec=True
         ) as mock_database:
             connection = Connection(self.INSTANCE, mock_database)
 
@@ -269,8 +255,7 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists",
-            return_value=False,
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=False
         ):
             with self.assertRaises(ValueError):
                 connect("test-instance", "test-database")
@@ -279,12 +264,10 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.database.Database.exists",
-            return_value=False,
+            "google.cloud.spanner_v1.database.Database.exists", return_value=False
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
                 with self.assertRaises(ValueError):
                     connect("test-instance", "test-database")
@@ -294,8 +277,7 @@ class TestConnection(unittest.TestCase):
 
         with mock.patch("google.cloud.spanner_v1.instance.Instance.database"):
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
                 connection = connect("test-instance", "test-database")
 
@@ -312,8 +294,7 @@ class TestConnection(unittest.TestCase):
             "google.cloud.spanner_v1.instance.Instance.database"
         ) as database_mock:
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
                 connect("test-instance", database_id, pool=pool)
                 database_mock.assert_called_once_with(database_id, pool=pool)

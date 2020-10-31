@@ -13,7 +13,7 @@ from google.cloud.spanner_v1 import param_types
 class TestParseUtils(unittest.TestCase):
 
     skip_condition = sys.version_info[0] < 3
-    skip_message = 'Subtests are not supported in Python 2'
+    skip_message = "Subtests are not supported in Python 2"
 
     def test_classify_stmt(self):
         from google.cloud.spanner_dbapi.parse_utils import STMT_DDL
@@ -114,18 +114,9 @@ class TestParseUtils(unittest.TestCase):
                 (1, 2, 3, 4, 5, 6, 7, 8, 9),
                 {
                     "sql_params_list": [
-                        (
-                            "INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)",
-                            (1, 2, 3),
-                        ),
-                        (
-                            "INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)",
-                            (4, 5, 6),
-                        ),
-                        (
-                            "INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)",
-                            (7, 8, 9),
-                        ),
+                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (1, 2, 3)),
+                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (4, 5, 6)),
+                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (7, 8, 9)),
                     ]
                 },
             ),
@@ -143,11 +134,7 @@ class TestParseUtils(unittest.TestCase):
             (
                 "INSERT INTO T (f1, f2) VALUES (1, 2)",
                 None,
-                {
-                    "sql_params_list": [
-                        ("INSERT INTO T (f1, f2) VALUES (1, 2)", None)
-                    ]
-                },
+                {"sql_params_list": [("INSERT INTO T (f1, f2) VALUES (1, 2)", None)]},
             ),
             (
                 "INSERT INTO `no` (`yes`, tiff) VALUES (%s, LOWER(%s)), (%s, %s), (%s, %s)",
@@ -158,14 +145,8 @@ class TestParseUtils(unittest.TestCase):
                             "INSERT INTO `no` (`yes`, tiff)  VALUES(%s, LOWER(%s))",
                             (1, "FOO"),
                         ),
-                        (
-                            "INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)",
-                            (5, 10),
-                        ),
-                        (
-                            "INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)",
-                            (11, 29),
-                        ),
+                        ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (5, 10)),
+                        ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (11, 29)),
                     ]
                 },
             ),
@@ -178,9 +159,7 @@ class TestParseUtils(unittest.TestCase):
         for sql, params, want in cases:
             with self.subTest(sql=sql):
                 got = parse_insert(sql, params)
-                self.assertEqual(
-                    got, want, "Mismatch with parse_insert of `%s`" % sql
-                )
+                self.assertEqual(got, want, "Mismatch with parse_insert of `%s`" % sql)
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_parse_insert_invalid(self):
@@ -215,9 +194,7 @@ class TestParseUtils(unittest.TestCase):
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_rows_for_insert_or_update(self):
-        from google.cloud.spanner_dbapi.parse_utils import (
-            rows_for_insert_or_update,
-        )
+        from google.cloud.spanner_dbapi.parse_utils import rows_for_insert_or_update
         from google.cloud.spanner_dbapi.exceptions import Error
 
         with self.assertRaises(Error):
@@ -259,12 +236,7 @@ class TestParseUtils(unittest.TestCase):
                     ("fp", "cp", "o", "f3"),
                 ],
             ),
-            (
-                ["app", "name", "fn"],
-                ["ap", "n", "f1"],
-                None,
-                [("ap", "n", "f1")],
-            ),
+            (["app", "name", "fn"], ["ap", "n", "f1"], None, [("ap", "n", "f1")]),
         ]
 
         for i, (columns, params, pyformat_args, want) in enumerate(cases):
@@ -276,9 +248,7 @@ class TestParseUtils(unittest.TestCase):
     def test_sql_pyformat_args_to_spanner(self):
         import decimal
 
-        from google.cloud.spanner_dbapi.parse_utils import (
-            sql_pyformat_args_to_spanner,
-        )
+        from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 
         cases = [
             (
@@ -313,10 +283,7 @@ class TestParseUtils(unittest.TestCase):
             ),
             (
                 # Intentionally using a dict with more keys than will be resolved.
-                (
-                    "SELECT * from t WHERE f1=%(f1)s",
-                    {"f1": "app", "f2": "name"},
-                ),
+                ("SELECT * from t WHERE f1=%(f1)s", {"f1": "app", "f2": "name"}),
                 ("SELECT * from t WHERE f1=@a0", {"a0": "app"}),
             ),
             (
@@ -338,9 +305,7 @@ class TestParseUtils(unittest.TestCase):
         ]
         for ((sql_in, params), sql_want) in cases:
             with self.subTest(sql=sql_in):
-                got_sql, got_named_args = sql_pyformat_args_to_spanner(
-                    sql_in, params
-                )
+                got_sql, got_named_args = sql_pyformat_args_to_spanner(sql_in, params)
                 want_sql, want_named_args = sql_want
                 self.assertEqual(got_sql, want_sql, "SQL does not match")
                 self.assertEqual(
@@ -350,9 +315,7 @@ class TestParseUtils(unittest.TestCase):
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner_invalid(self):
         from google.cloud.spanner_dbapi import exceptions
-        from google.cloud.spanner_dbapi.parse_utils import (
-            sql_pyformat_args_to_spanner,
-        )
+        from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 
         cases = [
             (

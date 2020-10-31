@@ -66,12 +66,10 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect, InterfaceError
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists",
-            return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect(self.INSTANCE, self.DATABASE)
 
@@ -94,7 +92,7 @@ class TestCursor(unittest.TestCase):
         def run_helper(ret_value):
             transaction.execute_update.return_value = ret_value
             res = cursor._do_execute_update(
-                transaction=transaction, sql="sql", params=None,
+                transaction=transaction, sql="sql", params=None
             )
             return res
 
@@ -172,9 +170,7 @@ class TestCursor(unittest.TestCase):
             ) as mock_handle_insert:
                 sql = "sql"
                 cursor.execute(sql=sql)
-                mock_handle_insert.assert_called_once_with(
-                    connection, sql, None
-                )
+                mock_handle_insert.assert_called_once_with(connection, sql, None)
 
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
@@ -184,9 +180,7 @@ class TestCursor(unittest.TestCase):
             mock_db.run_in_transaction = mock_run_in = mock.MagicMock()
             sql = "sql"
             cursor.execute(sql=sql)
-            mock_run_in.assert_called_once_with(
-                cursor._do_execute_update, sql, None
-            )
+            mock_run_in.assert_called_once_with(cursor._do_execute_update, sql, None)
 
     def test_execute_integrity_error(self):
         from google.api_core import exceptions
@@ -242,12 +236,10 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists",
-            return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect("test-instance", "test-database")
 
@@ -255,9 +247,7 @@ class TestCursor(unittest.TestCase):
         cursor.close()
 
         with self.assertRaises(InterfaceError):
-            cursor.executemany(
-                """SELECT * FROM table1 WHERE "col1" = @a1""", ()
-            )
+            cursor.executemany("""SELECT * FROM table1 WHERE "col1" = @a1""", ())
 
     def test_executemany(self):
         from google.cloud.spanner_dbapi import connect
@@ -266,12 +256,10 @@ class TestCursor(unittest.TestCase):
         params_seq = ((1,), (2,))
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists",
-            return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists",
-                return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect("test-instance", "test-database")
 
@@ -286,8 +274,7 @@ class TestCursor(unittest.TestCase):
         )
 
     @unittest.skipIf(
-        sys.version_info[0] < 3,
-        'Python 2 has an outdated iterator definition'
+        sys.version_info[0] < 3, "Python 2 has an outdated iterator definition"
     )
     def test_fetchone(self):
         connection = self._make_connection(self.INSTANCE, mock.MagicMock())
@@ -445,11 +432,7 @@ class TestCursor(unittest.TestCase):
         is_nullable = "YES"
         spanner_type = "spanner_type"
         rows = [(column_name, is_nullable, spanner_type)]
-        expected = {
-            column_name: ColumnDetails(
-                null_ok=True, spanner_type=spanner_type,
-            )
-        }
+        expected = {column_name: ColumnDetails(null_ok=True, spanner_type=spanner_type)}
         with mock.patch(
             "google.cloud.spanner_dbapi.cursor.Cursor.run_sql_in_snapshot",
             return_value=rows,

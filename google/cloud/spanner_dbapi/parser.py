@@ -78,9 +78,7 @@ class a_args(object):
         return self.__str__()
 
     def has_expr(self):
-        return any(
-            [token for token in self.argv if not isinstance(token, terminal)]
-        )
+        return any([token for token in self.argv if not isinstance(token, terminal)])
 
     def __len__(self):
         return len(self.argv)
@@ -150,9 +148,7 @@ def expect(word, token):
     word = word.strip()
     if token == VALUES:
         if not word.startswith("VALUES"):
-            raise ProgrammingError(
-                "VALUES: `%s` does not start with VALUES" % word
-            )
+            raise ProgrammingError("VALUES: `%s` does not start with VALUES" % word)
         word = word[len("VALUES") :].lstrip()
 
         all_args = []
@@ -197,9 +193,7 @@ def expect(word, token):
         #   (FUNC, %s...)
         #   (%s, %s...)
         if not (word and word.startswith("(")):
-            raise ProgrammingError(
-                "ARGS: supposed to begin with `(` in `%s`" % word
-            )
+            raise ProgrammingError("ARGS: supposed to begin with `(` in `%s`" % word)
 
         word = word[1:]
 
@@ -223,9 +217,7 @@ def expect(word, token):
                 word = word[1:]
 
         if not (word and word.startswith(")")):
-            raise ProgrammingError(
-                "ARGS: supposed to end with `)` in `%s`" % word
-            )
+            raise ProgrammingError("ARGS: supposed to end with `)` in `%s`" % word)
 
         word = word[1:]
         return word, a_args(terms)

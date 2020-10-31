@@ -271,8 +271,7 @@ def parse_insert(insert_sql, params):
         for item in after_values_sql:
             if item.count("%s") > 0:
                 raise ProgrammingError(
-                    'no params yet there are %d "%%s" tokens'
-                    % item.count("%s")
+                    'no params yet there are %d "%%s" tokens' % item.count("%s")
                 )
 
         insert_sql = sanitize_literals_for_upload(insert_sql)
@@ -518,10 +517,7 @@ def ensure_where_clause(sql):
     Cloud Spanner requires a WHERE clause on UPDATE and DELETE statements.
     Add a dummy WHERE clause if necessary.
     """
-    if any(
-        isinstance(token, sqlparse.sql.Where)
-        for token in sqlparse.parse(sql)[0]
-    ):
+    if any(isinstance(token, sqlparse.sql.Where) for token in sqlparse.parse(sql)[0]):
         return sql
     return sql + " WHERE 1=1"
 

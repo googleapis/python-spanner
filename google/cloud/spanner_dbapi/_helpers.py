@@ -51,9 +51,7 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
     for sql, params in sql_params_list:
         sql, params = sql_pyformat_args_to_spanner(sql, params)
         param_types = get_param_types(params)
-        res = transaction.execute_sql(
-            sql, params=params, param_types=param_types
-        )
+        res = transaction.execute_sql(sql, params=params, param_types=param_types)
         # TODO: File a bug with Cloud Spanner and the Python client maintainers
         # about a lost commit when res isn't read from.
         _ = list(res)
@@ -86,9 +84,7 @@ def handle_insert(connection, sql, params):
     if parts.get("homogenous"):
         # The common case of multiple values being passed in
         # non-complex pyformat args and need to be uploaded in one RPC.
-        return connection.database.run_in_transaction(
-            _execute_insert_homogenous, parts
-        )
+        return connection.database.run_in_transaction(_execute_insert_homogenous, parts)
     else:
         # All the other cases that are esoteric and need
         #   transaction.execute_sql
@@ -148,9 +144,7 @@ class ColumnInfo:
                     "internal_size=%d" % self.internal_size
                     if self.internal_size
                     else None,
-                    "precision='%s'" % self.precision
-                    if self.precision
-                    else None,
+                    "precision='%s'" % self.precision if self.precision else None,
                     "scale='%s'" % self.scale if self.scale else None,
                     "null_ok='%s'" % self.null_ok if self.null_ok else None,
                 ],

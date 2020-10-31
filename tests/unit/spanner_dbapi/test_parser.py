@@ -12,7 +12,7 @@ import unittest
 class TestParser(unittest.TestCase):
 
     skip_condition = sys.version_info[0] < 3
-    skip_message = 'Subtests are not supported in Python 2'
+    skip_message = "Subtests are not supported in Python 2"
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_func(self):
@@ -42,10 +42,7 @@ class TestParser(unittest.TestCase):
                                     [
                                         pyfmt_str,
                                         pyfmt_str,
-                                        func(
-                                            "TAN",
-                                            a_args([pyfmt_str, pyfmt_str]),
-                                        ),
+                                        func("TAN", a_args([pyfmt_str, pyfmt_str])),
                                     ]
                                 ),
                             ),
@@ -116,11 +113,7 @@ class TestParser(unittest.TestCase):
                 "(%s,%s, f1(%s, %s))",
                 "",
                 a_args(
-                    [
-                        pyfmt_str,
-                        pyfmt_str,
-                        func("f1", a_args([pyfmt_str, pyfmt_str])),
-                    ]
+                    [pyfmt_str, pyfmt_str, func("f1", a_args([pyfmt_str, pyfmt_str]))]
                 ),
             ),
         ]
@@ -184,13 +177,9 @@ class TestParser(unittest.TestCase):
         a_obj = a_args([])
         self.assertTrue(a_obj._is_equal_length())
 
+    @unittest.skipIf(skip_condition, "Python 2 has an outdated iterator definition")
     @unittest.skipIf(
-        skip_condition,
-        'Python 2 has an outdated iterator definition'
-    )
-    @unittest.skipIf(
-        skip_condition,
-        'Python 2 does not support 0-argument super() calls'
+        skip_condition, "Python 2 does not support 0-argument super() calls"
     )
     def test_values(self):
         from google.cloud.spanner_dbapi.parser import a_args
@@ -258,10 +247,7 @@ class TestParser(unittest.TestCase):
                 "VALUES (UPPER(%s)), (%s)",
                 "",
                 values(
-                    [
-                        a_args([func("UPPER", a_args([pyfmt_str]))]),
-                        a_args([pyfmt_str]),
-                    ]
+                    [a_args([func("UPPER", a_args([pyfmt_str]))]), a_args([pyfmt_str])]
                 ),
             ),
         ]
@@ -290,9 +276,7 @@ class TestParser(unittest.TestCase):
         for text, wantException in cases:
             with self.subTest(text=text):
                 self.assertRaisesRegex(
-                    ProgrammingError,
-                    wantException,
-                    lambda: expect(text, VALUES),
+                    ProgrammingError, wantException, lambda: expect(text, VALUES)
                 )
 
     def test_as_values(self):
@@ -300,7 +284,6 @@ class TestParser(unittest.TestCase):
 
         values = (1, 2)
         with mock.patch(
-            "google.cloud.spanner_dbapi.parser.parse_values",
-            return_value=values,
+            "google.cloud.spanner_dbapi.parser.parse_values", return_value=values
         ):
             self.assertEqual(as_values(None), values[1])

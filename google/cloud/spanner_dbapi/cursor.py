@@ -160,9 +160,7 @@ class Cursor(object):
             if not self.connection.autocommit:
                 transaction = self.connection.transaction_checkout()
 
-                sql, params = parse_utils.sql_pyformat_args_to_spanner(
-                    sql, args
-                )
+                sql, params = parse_utils.sql_pyformat_args_to_spanner(sql, args)
 
                 self._result_set = transaction.execute_sql(
                     sql, params, param_types=get_param_types(params)
@@ -309,9 +307,7 @@ class Cursor(object):
         self.connection.run_prior_DDL_statements()
 
         with self.connection.database.snapshot() as snapshot:
-            res = snapshot.execute_sql(
-                sql, params=params, param_types=param_types
-            )
+            res = snapshot.execute_sql(sql, params=params, param_types=param_types)
             return list(res)
 
     def get_table_column_schema(self, table_name):

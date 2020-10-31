@@ -21,8 +21,7 @@ class TestHelpers(unittest.TestCase):
             return_value=params,
         ) as mock_pyformat:
             with mock.patch(
-                "google.cloud.spanner_dbapi._helpers.get_param_types",
-                return_value=None,
+                "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
             ) as mock_param_types:
                 transaction = mock.MagicMock()
                 transaction.execute_sql = mock_execute = mock.MagicMock()
@@ -30,9 +29,7 @@ class TestHelpers(unittest.TestCase):
 
                 mock_pyformat.assert_called_once_with(params[0], params[1])
                 mock_param_types.assert_called_once_with(None)
-                mock_execute.assert_called_once_with(
-                    sql, params=None, param_types=None
-                )
+                mock_execute.assert_called_once_with(sql, params=None, param_types=None)
 
     def test__execute_insert_homogenous(self):
         from google.cloud.spanner_dbapi import _helpers
@@ -53,8 +50,7 @@ class TestHelpers(unittest.TestCase):
         sql = "sql"
         parts = mock.MagicMock()
         with mock.patch(
-            "google.cloud.spanner_dbapi._helpers.parse_insert",
-            return_value=parts,
+            "google.cloud.spanner_dbapi._helpers.parse_insert", return_value=parts
         ):
             parts.get = mock.MagicMock(return_value=True)
             mock_run_in.return_value = 0
@@ -80,13 +76,7 @@ class TestColumnInfo(unittest.TestCase):
         null_ok = False
 
         cols = ColumnInfo(
-            name,
-            type_code,
-            display_size,
-            internal_size,
-            precision,
-            scale,
-            null_ok,
+            name, type_code, display_size, internal_size, precision, scale, null_ok
         )
 
         self.assertEqual(cols.name, name)
@@ -98,15 +88,7 @@ class TestColumnInfo(unittest.TestCase):
         self.assertEqual(cols.null_ok, null_ok)
         self.assertEqual(
             cols.fields,
-            (
-                name,
-                type_code,
-                display_size,
-                internal_size,
-                precision,
-                scale,
-                null_ok,
-            ),
+            (name, type_code, display_size, internal_size, precision, scale, null_ok),
         )
 
     def test___get_item__(self):

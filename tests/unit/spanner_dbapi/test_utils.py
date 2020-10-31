@@ -12,7 +12,7 @@ import unittest
 class TestUtils(unittest.TestCase):
 
     skip_condition = sys.version_info[0] < 3
-    skip_message = 'Subtests are not supported in Python 2'
+    skip_message = "Subtests are not supported in Python 2"
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_PeekIterator(self):
@@ -32,10 +32,7 @@ class TestUtils(unittest.TestCase):
                 actual = list(pitr)
                 self.assertEqual(actual, expected)
 
-    @unittest.skipIf(
-        skip_condition,
-        'Python 2 has an outdated iterator definition'
-    )
+    @unittest.skipIf(skip_condition, "Python 2 has an outdated iterator definition")
     def test_peekIterator_list_rows_converted_to_tuples(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
 
@@ -46,9 +43,7 @@ class TestUtils(unittest.TestCase):
         pit = PeekIterator([["a"], ["b"], ["c"], ["d"], ["e"]])
         got = list(pit)
         want = [("a",), ("b",), ("c",), ("d",), ("e",)]
-        self.assertEqual(
-            got, want, "Rows of type list must be returned as tuples"
-        )
+        self.assertEqual(got, want, "Rows of type list must be returned as tuples")
 
         seventeen = PeekIterator([[17]])
         self.assertEqual(list(seventeen), [(17,)])
@@ -59,10 +54,7 @@ class TestUtils(unittest.TestCase):
         pit = PeekIterator([("Clark", "Kent")])
         self.assertEqual(next(pit), ("Clark", "Kent"))
 
-    @unittest.skipIf(
-        skip_condition,
-        'Python 2 has an outdated iterator definition'
-    )
+    @unittest.skipIf(skip_condition, "Python 2 has an outdated iterator definition")
     def test_peekIterator_nonlist_rows_unconverted(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
 
