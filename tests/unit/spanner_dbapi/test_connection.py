@@ -7,6 +7,7 @@
 """Cloud Spanner DB-API Connection class unit tests."""
 
 import mock
+import sys
 import unittest
 import warnings
 
@@ -42,6 +43,7 @@ class TestConnection(unittest.TestCase):
         database = instance.database(self.DATABASE)
         return Connection(instance, database)
 
+    @unittest.skipIf(sys.version_info[0] < 3, 'Python 2 patching is outdated')
     def test_property_autocommit_setter(self):
         from google.cloud.spanner_dbapi import Connection
 

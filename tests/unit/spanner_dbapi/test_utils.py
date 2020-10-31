@@ -5,10 +5,16 @@
 # license that can be found in the LICENSE file or at
 # https://developers.google.com/open-source/licenses/bsd
 
+import sys
 import unittest
 
 
 class TestUtils(unittest.TestCase):
+
+    skip_condition = sys.version_info[0] < 3
+    skip_message = 'Subtests are not supported in Python 2'
+
+    @unittest.skipIf(skip_condition, skip_message)
     def test_PeekIterator(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
 
@@ -57,6 +63,7 @@ class TestUtils(unittest.TestCase):
         want = ["a", "b", "c", "d", "e"]
         self.assertEqual(got, want, "Values should be returned unchanged")
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_backtick_unicode(self):
         from google.cloud.spanner_dbapi.utils import backtick_unicode
 

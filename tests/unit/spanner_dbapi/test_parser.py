@@ -5,10 +5,16 @@
 # https://developers.google.com/open-source/licenses/bsd
 
 import mock
+import sys
 import unittest
 
 
 class TestParser(unittest.TestCase):
+
+    skip_condition = sys.version_info[0] < 3
+    skip_message = 'Subtests are not supported in Python 2'
+
+    @unittest.skipIf(skip_condition, skip_message)
     def test_func(self):
         from google.cloud.spanner_dbapi.parser import FUNC
         from google.cloud.spanner_dbapi.parser import a_args
@@ -55,6 +61,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(got_parsed, want_parsed)
                 self.assertEqual(got_unconsumed, want_unconsumed)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_func_fail(self):
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
         from google.cloud.spanner_dbapi.parser import FUNC
@@ -92,6 +99,7 @@ class TestParser(unittest.TestCase):
         func2.args = func1.args
         self.assertTrue(func1 == func2)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_a_args(self):
         from google.cloud.spanner_dbapi.parser import ARGS
         from google.cloud.spanner_dbapi.parser import a_args
@@ -123,6 +131,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(got_parsed, want_parsed)
                 self.assertEqual(got_unconsumed, want_unconsumed)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_a_args_fail(self):
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
         from google.cloud.spanner_dbapi.parser import ARGS
@@ -207,6 +216,7 @@ class TestParser(unittest.TestCase):
         with self.assertRaises(exceptions.ProgrammingError):
             expect(word="", token="ABC")
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_expect_values(self):
         from google.cloud.spanner_dbapi.parser import VALUES
         from google.cloud.spanner_dbapi.parser import a_args
@@ -254,6 +264,7 @@ class TestParser(unittest.TestCase):
                 self.assertEqual(got_parsed, want_parsed)
                 self.assertEqual(got_unconsumed, want_unconsumed)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_expect_values_fail(self):
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
         from google.cloud.spanner_dbapi.parser import VALUES

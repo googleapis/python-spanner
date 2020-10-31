@@ -7,6 +7,7 @@
 """Cursor() class unit tests."""
 
 import mock
+import sys
 import unittest
 
 
@@ -284,6 +285,10 @@ class TestCursor(unittest.TestCase):
             (mock.call(operation, (1,)), mock.call(operation, (2,)))
         )
 
+    @unittest.skipIf(
+        sys.version_info[0] < 3,
+        'Python 2 has an outdated iterator definition'
+    )
     def test_fetchone(self):
         connection = self._make_connection(self.INSTANCE, mock.MagicMock())
         cursor = self._make_one(connection)

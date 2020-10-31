@@ -4,12 +4,17 @@
 # license that can be found in the LICENSE file or at
 # https://developers.google.com/open-source/licenses/bsd
 
+import sys
 import unittest
 
 from google.cloud.spanner_v1 import param_types
 
 
 class TestParseUtils(unittest.TestCase):
+
+    skip_condition = sys.version_info[0] < 3
+    skip_message = 'Subtests are not supported in Python 2'
+
     def test_classify_stmt(self):
         from google.cloud.spanner_dbapi.parse_utils import STMT_DDL
         from google.cloud.spanner_dbapi.parse_utils import STMT_INSERT
@@ -46,6 +51,7 @@ class TestParseUtils(unittest.TestCase):
         for query, want_class in cases:
             self.assertEqual(classify_stmt(query), want_class)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_parse_insert(self):
         from google.cloud.spanner_dbapi.parse_utils import parse_insert
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
@@ -176,6 +182,7 @@ class TestParseUtils(unittest.TestCase):
                     got, want, "Mismatch with parse_insert of `%s`" % sql
                 )
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_parse_insert_invalid(self):
         from google.cloud.spanner_dbapi import exceptions
         from google.cloud.spanner_dbapi.parse_utils import parse_insert
@@ -206,6 +213,7 @@ class TestParseUtils(unittest.TestCase):
                     lambda: parse_insert(sql, params),
                 )
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_rows_for_insert_or_update(self):
         from google.cloud.spanner_dbapi.parse_utils import (
             rows_for_insert_or_update,
@@ -264,6 +272,7 @@ class TestParseUtils(unittest.TestCase):
                 got = rows_for_insert_or_update(columns, params, pyformat_args)
                 self.assertEqual(got, want)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):
         import decimal
 
@@ -338,6 +347,7 @@ class TestParseUtils(unittest.TestCase):
                     got_named_args, want_named_args, "Named args do not match"
                 )
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner_invalid(self):
         from google.cloud.spanner_dbapi import exceptions
         from google.cloud.spanner_dbapi.parse_utils import (
@@ -406,6 +416,7 @@ class TestParseUtils(unittest.TestCase):
 
         self.assertEqual(get_param_types(None), None)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_ensure_where_clause(self):
         from google.cloud.spanner_dbapi.parse_utils import ensure_where_clause
 
@@ -438,6 +449,7 @@ class TestParseUtils(unittest.TestCase):
                 got = ensure_where_clause(sql)
                 self.assertEqual(got, want)
 
+    @unittest.skipIf(skip_condition, skip_message)
     def test_escape_name(self):
         from google.cloud.spanner_dbapi.parse_utils import escape_name
 
