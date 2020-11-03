@@ -119,7 +119,7 @@ class StreamedResultSet(object):
             if source is not None and source._transaction_id is None:
                 source._transaction_id = metadata.transaction.id
 
-        if type(response).pb(response).HasField("stats"):  # last response
+        if "stats" in response:  # last response
             self._stats = response.stats
 
         values = list(response.values)
