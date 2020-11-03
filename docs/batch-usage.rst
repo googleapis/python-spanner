@@ -22,7 +22,7 @@ without raising an exception.
 
 .. code:: python
 
-    from google.cloud.spanner_v1 import KeySet
+    from google.cloud.spanner import KeySet
 
     client = spanner.Client()
     instance = client.instance(INSTANCE_NAME)
@@ -160,7 +160,7 @@ rows that do not exist will not cause errors.
 
 .. code:: python
 
-    from google.cloud.spanner_v1 import KeySet
+    from google.cloud.spanner import KeySet
 
     to_delete = KeySet(keys=[
         ('bharney@example.com',)
