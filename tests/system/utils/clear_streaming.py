@@ -14,7 +14,7 @@
 
 """Depopulate spanner databases with data for streaming system tests."""
 
-from google.cloud.spanner_v1 import Client
+from google.cloud.spanner import Client
 
 # Import relative to the script's directory
 from streaming_utils import DATABASE_NAME
