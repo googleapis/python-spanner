@@ -64,10 +64,6 @@ _EMULATOR_HOST_HTTP_SCHEME = (
 ) % ((EMULATOR_ENV_VAR,) * 3)
 SPANNER_ADMIN_SCOPE = "https://www.googleapis.com/auth/spanner.admin"
 OPTIMIZER_VERSION_ENV_VAR = "SPANNER_OPTIMIZER_VERSION"
-_USER_AGENT_DEPRECATED = (
-    "The 'user_agent' argument to 'Client' is deprecated / unused. "
-    "Please pass an appropriate 'client_info' instead."
-)
 
 
 def _get_spanner_emulator_host():
@@ -106,11 +102,6 @@ class Client(ClientWithProject):
         you only need to set this if you're developing your own library or
         partner tool.
 
-    :type user_agent: str
-    :param user_agent:
-        (Deprecated) The user agent to be used with API request.
-        Not used.
-
     :type client_options: :class:`~google.api_core.client_options.ClientOptions`
         or :class:`dict`
     :param client_options: (Optional) Client options used to set user options
@@ -130,7 +121,6 @@ class Client(ClientWithProject):
 
     _instance_admin_api = None
     _database_admin_api = None
-    user_agent = None
     _SET_PROJECT = True  # Used by from_service_account_json()
 
     SCOPE = (SPANNER_ADMIN_SCOPE,)
@@ -141,7 +131,6 @@ class Client(ClientWithProject):
         project=None,
         credentials=None,
         client_info=_CLIENT_INFO,
-        user_agent=None,
         client_options=None,
         query_options=None,
     ):
@@ -176,10 +165,6 @@ class Client(ClientWithProject):
 
         # Environment flag config has higher precedence than application config.
         self._query_options = _merge_query_options(query_options, env_query_options)
-
-        if user_agent is not None:
-            warnings.warn(_USER_AGENT_DEPRECATED, DeprecationWarning, stacklevel=2)
-            self.user_agent = user_agent
 
         if self._emulator_host is not None and (
             "http://" in self._emulator_host or "https://" in self._emulator_host
@@ -268,7 +253,7 @@ class Client(ClientWithProject):
         """
         return self.__class__(project=self.project, credentials=self._credentials)
 
-    def list_instance_configs(self, page_size=None, page_token=None):
+    def list_instance_configs(self, page_size=None):
         """List available instance configurations for the client's project.
 
         .. _RPC docs: https://cloud.google.com/spanner/docs/reference/rpc/\
@@ -282,14 +267,6 @@ class Client(ClientWithProject):
             Optional. The maximum number of configs in each page of results
             from this request. Non-positive values are ignored. Defaults
             to a sensible value set by the API.
-
-        :type page_token: str
-        :param page_token:
-            Optional. If present, return the next batch of configs, using
-            the value, which must correspond to the ``nextPageToken`` value
-            returned in the previous response.  Deprecated: use the ``pages``
-            property of the returned iterator instead of manually passing
-            the token.
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
@@ -348,7 +325,7 @@ class Client(ClientWithProject):
             self._emulator_host,
         )
 
-    def list_instances(self, filter_="", page_size=None, page_token=None):
+    def list_instances(self, filter_="", page_size=None):
         """List instances for the client's project.
 
         See
@@ -363,14 +340,6 @@ class Client(ClientWithProject):
             Optional. The maximum number of instances in each page of results
             from this request. Non-positive values are ignored. Defaults
             to a sensible value set by the API.
-
-        :type page_token: str
-        :param page_token:
-            Optional. If present, return the next batch of instances, using
-            the value, which must correspond to the ``nextPageToken`` value
-            returned in the previous response.  Deprecated: use the ``pages``
-            property of the returned iterator instead of manually passing
-            the token.
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:

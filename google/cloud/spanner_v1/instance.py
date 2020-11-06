@@ -365,7 +365,7 @@ class Instance(object):
         """
         return Database(database_id, self, ddl_statements=ddl_statements, pool=pool)
 
-    def list_databases(self, page_size=None, page_token=None):
+    def list_databases(self, page_size=None):
         """List databases for the instance.
 
         See
@@ -377,14 +377,6 @@ class Instance(object):
             from this request. Non-positive values are ignored. Defaults
             to a sensible value set by the API.
 
-        :type page_token: str
-        :param page_token:
-            Optional. If present, return the next batch of databases, using
-            the value, which must correspond to the ``nextPageToken`` value
-            returned in the previous response.  Deprecated: use the ``pages``
-            property of the returned iterator instead of manually passing
-            the token.
-
         :rtype: :class:`~google.api._ore.page_iterator.Iterator`
         :returns:
             Iterator of :class:`~google.cloud.spanner_v1.database.Database`
@@ -392,7 +384,7 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListDatabasesRequest(
-            parent=self.name, page_size=page_size, page_token=page_token
+            parent=self.name, page_size=page_size
         )
         page_iter = self._client.database_admin_api.list_databases(
             request=request, metadata=metadata
