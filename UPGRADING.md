@@ -123,6 +123,50 @@ for database_pb in instance.list_databases(page_size=5):
     ...
 ```
 
+### Deprecated Method Arguments
+
+> **WARNING**: Breaking change
+
+Deprecated arguments have been removed.
+If you use these arguments, they have no effect and can be removed without consequence.
+`user_agent` can be specified using `client_info` instead.
+Users should not be using `page_token` directly as the library handles pagination under the hood.
+
+**Before:**
+```py
+client = Client(user_agent=user_agent)
+```
+```py
+for instance in list_instances(page_token=page_token):
+    ...
+```
+```py
+for config in list_instance_configs(page_token=page_token):
+    ...
+```
+```py
+for database in list_databases(page_token=page_token):
+    ...
+```
+
+**After:**
+```py
+client = Client()
+```
+```py
+for instance_pb in client.list_instances():
+    ...
+```
+```py
+for instance_config_pb in client.list_instance_configs():
+    ...
+```
+```py
+for database_pb in instance.list_databases():
+    ...
+```
+
+
 ## Generated Surface Changes
 
 
