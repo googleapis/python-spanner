@@ -38,7 +38,6 @@ class TestClient(unittest.TestCase):
     DISPLAY_NAME = "display-name"
     NODE_COUNT = 5
     TIMEOUT_SECONDS = 80
-    USER_AGENT = "you-sir-age-int"
 
     def _get_target_class(self):
         from google.cloud import spanner
@@ -54,7 +53,6 @@ class TestClient(unittest.TestCase):
         creds,
         expected_creds=None,
         client_info=None,
-        user_agent=None,
         client_options=None,
         query_options=None,
         expected_query_options=None,
@@ -80,7 +78,6 @@ class TestClient(unittest.TestCase):
         client = self._make_one(
             project=self.PROJECT,
             credentials=creds,
-            user_agent=user_agent,
             query_options=query_options,
             **kwargs
         )
@@ -94,7 +91,6 @@ class TestClient(unittest.TestCase):
 
         self.assertEqual(client.project, self.PROJECT)
         self.assertIs(client._client_info, expected_client_info)
-        self.assertEqual(client.user_agent, user_agent)
         if expected_client_options is not None:
             self.assertIsInstance(
                 client._client_options, google.api_core.client_options.ClientOptions
@@ -126,20 +122,6 @@ class TestClient(unittest.TestCase):
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
         creds = _make_credentials()
         self._constructor_test_helper(expected_scopes, creds)
-
-    @mock.patch("warnings.warn")
-    def test_constructor_custom_user_agent_and_timeout(self, mock_warn):
-        from google.cloud.spanner_v1 import client as MUT
-
-        CUSTOM_USER_AGENT = "custom-application"
-        expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
-        creds = _make_credentials()
-        self._constructor_test_helper(
-            expected_scopes, creds, user_agent=CUSTOM_USER_AGENT
-        )
-        mock_warn.assert_called_once_with(
-            MUT._USER_AGENT_DEPRECATED, DeprecationWarning, stacklevel=2
-        )
 
     def test_constructor_custom_client_info(self):
         from google.cloud.spanner_v1 import client as MUT

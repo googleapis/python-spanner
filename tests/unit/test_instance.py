@@ -540,8 +540,7 @@ class TestInstance(unittest.TestCase):
         ] = mock.Mock(return_value=databases_pb)
 
         page_size = 42
-        page_token = "token"
-        response = instance.list_databases(page_size=page_size, page_token=page_token)
+        response = instance.list_databases(page_size=page_size)
         databases = list(response)
 
         self.assertEqual(databases, [])
@@ -551,9 +550,7 @@ class TestInstance(unittest.TestCase):
             ("x-goog-request-params", "parent={}".format(instance.name)),
         )
         ld_api.assert_called_once_with(
-            ListDatabasesRequest(
-                parent=self.INSTANCE_NAME, page_size=page_size, page_token=page_token
-            ),
+            ListDatabasesRequest(parent=self.INSTANCE_NAME, page_size=page_size),
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,
