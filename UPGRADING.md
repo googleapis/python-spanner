@@ -251,7 +251,7 @@ def list_instances(
  )
  ```
  
- This call is invalid because it mixes `request` with a keyword argument `params`. Executing this code
+ This call is invalid because it mixes `request` with a keyword argument `parent`. Executing this code
  will result in an error.
  
  ```py
