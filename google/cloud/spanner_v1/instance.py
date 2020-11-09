@@ -383,9 +383,7 @@ class Instance(object):
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
-        request = ListDatabasesRequest(
-            parent=self.name, page_size=page_size
-        )
+        request = ListDatabasesRequest(parent=self.name, page_size=page_size)
         page_iter = self._client.database_admin_api.list_databases(
             request=request, metadata=metadata
         )
