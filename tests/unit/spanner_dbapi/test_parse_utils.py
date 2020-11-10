@@ -307,7 +307,7 @@ class TestParseUtils(unittest.TestCase):
                 ),
                 (
                     "SELECT (an.p + @a0) AS np FROM an WHERE (an.p + @a1) = @a2",
-                    {"a0": 1, "a1": 1.0, "a2": 31.0},
+                    {"a0": 1, "a1": 1.0, "a2": str(31)},
                 ),
             ),
         ]
@@ -344,8 +344,9 @@ class TestParseUtils(unittest.TestCase):
 
         from google.cloud.spanner_dbapi.parse_utils import cast_for_spanner
 
-        value = decimal.Decimal(3)
-        self.assertEqual(cast_for_spanner(value), float(3.0))
+        dec = 3
+        value = decimal.Decimal(dec)
+        self.assertEqual(cast_for_spanner(value), str(dec))
         self.assertEqual(cast_for_spanner(5), 5)
         self.assertEqual(cast_for_spanner("string"), "string")
 

@@ -59,10 +59,7 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
     for sql, params in sql_params_list:
         sql, params = sql_pyformat_args_to_spanner(sql, params)
         param_types = get_param_types(params)
-        res = transaction.execute_sql(sql, params=params, param_types=param_types)
-        # TODO: File a bug with Cloud Spanner and the Python client maintainers
-        # about a lost commit when res isn't read from.
-        _ = list(res)
+        transaction.execute_update(sql, params=params, param_types=param_types)
 
 
 def _execute_insert_homogenous(transaction, parts):

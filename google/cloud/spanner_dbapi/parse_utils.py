@@ -494,7 +494,7 @@ def cast_for_spanner(value):
     :returns: Value converted to a Cloud Spanner type.
     """
     if isinstance(value, decimal.Decimal):
-        return float(value)
+        return str(value)
     return value
 
 
