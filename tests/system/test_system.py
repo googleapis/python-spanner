@@ -2752,12 +2752,22 @@ class TestTransactionsManagement(unittest.TestCase):
 
     DATABASE_NAME = "db-api-transactions-management"
 
+    DDL_STATEMENTS = (
+        """CREATE TABLE contacts (
+            contact_id INT64,
+            first_name STRING(1024),
+            last_name STRING(1024),
+            email STRING(1024)
+        )
+        PRIMARY KEY (contact_id)""",
+    )
+
     @classmethod
     def setUpClass(cls):
         """Create a test database."""
         cls._db = Config.INSTANCE.database(
             cls.DATABASE_NAME,
-            ddl_statements=DDL_STATEMENTS,
+            ddl_statements=cls.DDL_STATEMENTS,
             pool=BurstyPool(labels={"testcase": "database_api"}),
         )
         cls._db.create().result(30)  # raises on failure / timeout.
