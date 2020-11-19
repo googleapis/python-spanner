@@ -496,7 +496,6 @@ class Instance(object):
         )
         return map(self._item_to_operation, page_iter)
 
-
     def _item_to_operation(self, operation_pb):
         """Convert an operation protobuf to the native object.
         :type operation_pb: :class:`~google.longrunning.operations.Operation`
