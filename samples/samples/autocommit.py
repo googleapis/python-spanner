@@ -6,7 +6,6 @@
 
 import argparse
 
-from google.cloud import spanner_dbapi
 from google.cloud.spanner_dbapi import connect
 
 
@@ -38,9 +37,7 @@ def enable_autocommit_mode(instance_id, database_id):
 
     cursor.execute("""SELECT * FROM Singers WHERE SingerId = 13""")
 
-    print(
-        "SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*cursor.fetchone())
-    )
+    print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*cursor.fetchone()))
 
     connection.close()
     # [END spanner_enable_autocommit_mode]
@@ -58,9 +55,7 @@ if __name__ == "__main__":
         default="example_db",
     )
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser(
-        "enable_autocommit_mode", help=enable_autocommit_mode.__doc__
-    )
+    subparsers.add_parser("enable_autocommit_mode", help=enable_autocommit_mode.__doc__)
     args = parser.parse_args()
     if args.command == "enable_autocommit_mode":
         enable_autocommit_mode(args.instance_id, args.database_id)

@@ -6,7 +6,6 @@
 
 import uuid
 
-from google.api_core.exceptions import DeadlineExceeded
 from google.cloud import spanner
 import pytest
 
@@ -30,9 +29,7 @@ DATABASE_ID = unique_database_id()
 @pytest.fixture(scope="module")
 def spanner_instance():
     spanner_client = spanner.Client()
-    config_name = (
-        f"{spanner_client.project_name}/instanceConfigs/regional-us-central1"
-    )
+    config_name = f"{spanner_client.project_name}/instanceConfigs/regional-us-central1"
 
     instance = spanner_client.instance(INSTANCE_ID, config_name)
     op = instance.create()
