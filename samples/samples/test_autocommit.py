@@ -9,7 +9,7 @@ import uuid
 from google.cloud import spanner
 import pytest
 
-from . import autocommit
+import autocommit
 
 
 def unique_instance_id():
