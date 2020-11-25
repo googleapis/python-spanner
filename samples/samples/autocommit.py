@@ -12,11 +12,14 @@ from google.cloud.spanner_dbapi import connect
 def enable_autocommit_mode(instance_id, database_id):
     """Enables autocommit mode."""
     # [START spanner_enable_autocommit_mode]
+    from google.cloud.spanner_dbapi.checksum import ResultsChecksum
+
     connection = connect(instance_id, database_id)
     connection.autocommit = True
     print("Autocommit mode is enabled.")
 
     cursor = connection.cursor()
+    cursor._checksum = ResultsChecksum()
 
     cursor.execute(
         """CREATE TABLE Singers (
