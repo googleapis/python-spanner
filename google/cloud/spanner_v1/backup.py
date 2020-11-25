@@ -19,6 +19,8 @@ import re
 from google.cloud.exceptions import NotFound
 
 from google.cloud.spanner_admin_database_v1 import Backup as BackupPB
+from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import CreateBackupRequest
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
 _BACKUP_NAME_RE = re.compile(
@@ -57,10 +59,18 @@ class Backup(object):
                         the externally consistent copy of the database. If
                         not present, it is the same as the `create_time` of
                         the backup.
+
+    :type encryption_config:
+        :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
+        or :class:`dict`
+    :param encryption_config:
+        (Optional) Encryption configuration for the backup.
+        If a dict is provided, it must be of the same form as the protobuf
+        message :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
     """
 
     def __init__(
-        self, backup_id, instance, database="", expire_time=None, version_time=None
+        self, backup_id, instance, database="", expire_time=None, version_time=None, encryption_config=None
     ):
         self.backup_id = backup_id
         self._instance = instance
@@ -72,6 +82,10 @@ class Backup(object):
         self._state = None
         self._referencing_databases = None
         self._encryption_info = None
+        if type(encryption_config) == dict:
+            self._encryption_config = CreateBackupEncryptionConfig(**encryption_config)
+        else:
+            self._encryption_config = encryption_config
 
     @property
     def name(self):
@@ -165,6 +179,14 @@ class Backup(object):
         """
         return self._encryption_info
 
+    @property
+    def encryption_config(self):
+        """Encryption config for this database.
+        :rtype: :class:`~google.cloud.spanner_admin_instance_v1.CreateBackupEncryptionConfig`
+        :returns: an object representing the restore info for this database
+        """
+        return self._encryption_config
+
     @classmethod
     def from_pb(cls, backup_pb, instance):
         """Create an instance of this class from a protobuf message.
@@ -224,10 +246,15 @@ class Backup(object):
             version_time=self.version_time,
         )
 
-        future = api.create_backup(
+        request = CreateBackupRequest(
             parent=self._instance.name,
             backup_id=self.backup_id,
             backup=backup,
+            encryption_config=self._encryption_config,
+        )
+
+        future = api.create_backup(
+            request=request,
             metadata=metadata,
         )
         return future

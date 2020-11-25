@@ -424,7 +424,7 @@ class Instance(object):
         )
         return page_iter
 
-    def backup(self, backup_id, database="", expire_time=None, version_time=None):
+    def backup(self, backup_id, database="", expire_time=None, version_time=None, encryption_config=None):
         """Factory to create a backup within this instance.
 
         :type backup_id: str
@@ -445,6 +445,14 @@ class Instance(object):
             Optional. The version time that will be used to create the externally
             consistent copy of the database. If not present, it is the same as
             the `create_time` of the backup.
+
+        :type encryption_config:
+            :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
+            or :class:`dict`
+        :param encryption_config:
+            (Optional) Encryption configuration for the backup.
+            If a dict is provided, it must be of the same form as the protobuf
+            message :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
         """
         try:
             return Backup(
@@ -453,6 +461,7 @@ class Instance(object):
                 database=database.name,
                 expire_time=expire_time,
                 version_time=version_time,
+                encryption_config=encryption_config,
             )
         except AttributeError:
             return Backup(
@@ -461,6 +470,7 @@ class Instance(object):
                 database=database,
                 expire_time=expire_time,
                 version_time=version_time,
+                encryption_config=encryption_config
             )
 
     def list_backups(self, filter_="", page_size=None):
