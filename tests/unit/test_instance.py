@@ -490,6 +490,7 @@ class TestInstance(unittest.TestCase):
 
     def test_database_factory_explicit(self):
         from logging import Logger
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
         from google.cloud.spanner_v1.database import Database
         from tests._fixtures import DDL_STATEMENTS
 
@@ -498,9 +499,14 @@ class TestInstance(unittest.TestCase):
         DATABASE_ID = "database-id"
         pool = _Pool()
         logger = mock.create_autospec(Logger, instance=True)
+        encryption_config = EncryptionConfig(kms_key_name="kms_key")
 
         database = instance.database(
-            DATABASE_ID, ddl_statements=DDL_STATEMENTS, pool=pool, logger=logger
+            DATABASE_ID,
+            ddl_statements=DDL_STATEMENTS,
+            pool=pool,
+            logger=logger,
+            encryption_config=encryption_config,
         )
 
         self.assertIsInstance(database, Database)
@@ -510,6 +516,7 @@ class TestInstance(unittest.TestCase):
         self.assertIs(database._pool, pool)
         self.assertIs(database._logger, logger)
         self.assertIs(pool._bound, database)
+        self.assertIs(database._encryption_config, encryption_config)
 
     def test_list_databases(self):
         from google.cloud.spanner_admin_database_v1 import Database as DatabasePB

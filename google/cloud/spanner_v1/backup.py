@@ -71,6 +71,7 @@ class Backup(object):
         self._size_bytes = None
         self._state = None
         self._referencing_databases = None
+        self._encryption_info = None
 
     @property
     def name(self):
@@ -155,6 +156,14 @@ class Backup(object):
             referencing this backup
         """
         return self._referencing_databases
+
+    @property
+    def encryption_info(self):
+        """Encryption info for this backup.
+        :rtype: :class:`~google.clod.spanner_admin_database_v1.proto.common_pb2.EncryptionInfo`
+        :returns: a class representing the encryption info
+        """
+        return self._encryption_info
 
     @classmethod
     def from_pb(cls, backup_pb, instance):
@@ -255,6 +264,7 @@ class Backup(object):
         self._size_bytes = pb.size_bytes
         self._state = BackupPB.State(pb.state)
         self._referencing_databases = pb.referencing_databases
+        self._encryption_info = pb.encryption_info
 
     def update_expire_time(self, new_expire_time):
         """Update the expire time of this backup.

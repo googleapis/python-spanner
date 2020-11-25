@@ -170,6 +170,16 @@ class TestBackup(_BaseTest):
         expected = backup._referencing_databases = [self.DATABASE_NAME]
         self.assertEqual(backup.referencing_databases, expected)
 
+    def test_encrpytion_info_property(self):
+        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
+
+        instance = _Instance(self.INSTANCE_NAME)
+        backup = self._make_one(self.BACKUP_ID, instance)
+        expected = backup._encryption_info = EncryptionInfo(
+            kms_key_version="kms_key_version"
+        )
+        self.assertEqual(backup.encryption_info, expected)
+
     def test_create_grpc_error(self):
         from google.api_core.exceptions import GoogleAPICallError
         from google.api_core.exceptions import Unknown
@@ -442,8 +452,10 @@ class TestBackup(_BaseTest):
 
     def test_reload_success(self):
         from google.cloud.spanner_admin_database_v1 import Backup
+        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
 
         timestamp = self._make_timestamp()
+        encryption_info = EncryptionInfo(kms_key_version="kms_key_version")
 
         client = _Client()
         backup_pb = Backup(
@@ -455,6 +467,7 @@ class TestBackup(_BaseTest):
             size_bytes=10,
             state=1,
             referencing_databases=[],
+            encryption_info=encryption_info,
         )
         api = client.database_admin_api = self._make_database_admin_api()
         api.get_backup.return_value = backup_pb
@@ -470,6 +483,7 @@ class TestBackup(_BaseTest):
         self.assertEqual(backup.size_bytes, 10)
         self.assertEqual(backup.state, Backup.State.CREATING)
         self.assertEqual(backup.referencing_databases, [])
+        self.assertEqual(backup.encryption_info, encryption_info)
 
         api.get_backup.assert_called_once_with(
             name=self.BACKUP_NAME,

@@ -357,7 +357,7 @@ class Instance(object):
 
         api.delete_instance(name=self.name, metadata=metadata)
 
-    def database(self, database_id, ddl_statements=(), pool=None, logger=None):
+    def database(self, database_id, ddl_statements=(), pool=None, logger=None, encryption_config=None):
         """Factory to create a database within this instance.
 
         :type database_id: str
@@ -377,11 +377,27 @@ class Instance(object):
                        will be created when needed that will log the commit statistics
                        to stdout.
 
+        :type encryption_config:
+            :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+            or :class:`dict`
+        :param encryption_config:
+            (Optional) Encryption information about the database.
+            If a dict is provided, it must be of the same form as the protobuf
+            message :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig
+
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
         return Database(
             database_id, self, ddl_statements=ddl_statements, pool=pool, logger=logger
+        )
+        return Database(
+            database_id,
+            self,
+            ddl_statements=ddl_statements,
+            pool=pool,
+            logger=logger,
+            encryption_config=encryption_config,
         )
 
     def list_databases(self, page_size=None):
