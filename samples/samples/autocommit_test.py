@@ -48,7 +48,14 @@ def database(spanner_instance):
 
 
 def test_enable_autocommit_mode(capsys, database):
-    autocommit.enable_autocommit_mode(INSTANCE_ID, DATABASE_ID)
-    out, _ = capsys.readouterr()
-    assert "Autocommit mode is enabled." in out
-    assert "SingerId: 13, AlbumId: Russell, AlbumTitle: Morales" in out
+    import mock
+    from google.cloud.spanner_dbapi.checksum import ResultsChecksum
+
+    with mock.patch(
+        "google.cloud.spanner_dbapi.cursor.Cursor._checksum",
+        new_callable=ResultsChecksum(),
+    ):
+        autocommit.enable_autocommit_mode(INSTANCE_ID, DATABASE_ID)
+        out, _ = capsys.readouterr()
+        assert "Autocommit mode is enabled." in out
+        assert "SingerId: 13, AlbumId: Russell, AlbumTitle: Morales" in out
