@@ -15,7 +15,6 @@
 """Cloud Spanner DB-API Connection class unit tests."""
 
 import mock
-import sys
 import unittest
 import warnings
 
