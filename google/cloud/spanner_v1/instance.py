@@ -378,12 +378,14 @@ class Instance(object):
                        to stdout.
 
         :type encryption_config:
-            :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+            :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig` or
+            :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
             or :class:`dict`
         :param encryption_config:
             (Optional) Encryption information about the database.
-            If a dict is provided, it must be of the same form as the protobuf
-            message :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig
+            If a dict is provided, it must be of the same form as either of the protobuf
+            messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+            or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
 
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.

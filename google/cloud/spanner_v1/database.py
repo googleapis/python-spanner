@@ -47,6 +47,8 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
 )
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_v1 import (
     ExecuteSqlRequest,
@@ -113,8 +115,9 @@ class Database(object):
         or :class:`dict`
     :param encryption_config:
         (Optional) Encryption information about the database.
-        If a dict is provided, it must be of the same form as the protobuf
-        message :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+        If a dict is provided, it must be of the same form as either of the protobuf
+        messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+        or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
     """
 
     _spanner_api = None
@@ -139,11 +142,7 @@ class Database(object):
         self._earliest_version_time = None
         self.log_commit_stats = False
         self._logger = logger
-
-        if type(encryption_config) == dict:
-            self._encryption_config = EncryptionConfig(**encryption_config)
-        else:
-            self._encryption_config = encryption_config
+        self._encryption_config = encryption_config
 
         if pool is None:
             pool = BurstyPool()
@@ -351,6 +350,8 @@ class Database(object):
         db_name = self.database_id
         if "-" in db_name:
             db_name = "`%s`" % (db_name,)
+        if type(self._encryption_config) == dict:
+            self._encryption_config = EncryptionConfig(**self._encryption_config)
 
         request = CreateDatabaseRequest(
             parent=self._instance.name,
@@ -616,8 +617,8 @@ class Database(object):
     def restore(self, source):
         """Restore from a backup to this database.
 
-        :type backup: :class:`~google.cloud.spanner_v1.backup.Backup`
-        :param backup: the path of the backup being restored from.
+        :type source: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :param source: the path of the source being restored from.
 
         :rtype: :class:`~google.api_core.operation.Operation`
         :returns: a future used to poll the status of the create request
@@ -631,10 +632,16 @@ class Database(object):
             raise ValueError("Restore source not specified")
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        future = api.restore_database(
+        if type(self._encryption_config) == dict:
+            self._encryption_config = RestoreDatabaseEncryptionConfig(**self._encryption_config)
+        request = RestoreDatabaseRequest(
             parent=self._instance.name,
             database_id=self.database_id,
             backup=source.name,
+            encryption_config=self._encryption_config
+        )
+        future = api.restore_database(
+            request=request,
             metadata=metadata,
         )
         return future
