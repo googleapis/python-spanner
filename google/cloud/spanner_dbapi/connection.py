@@ -82,7 +82,13 @@ class Connection:
         :type value: bool
         :param value: New autocommit mode state.
         """
-        if value and not self._autocommit:
+        if (
+            value
+            and not self._autocommit
+            and self._transaction
+            and not self._transaction.committed
+            and not self._transaction.rolled_back
+        ):
             self.commit()
 
         self._autocommit = value
