@@ -220,7 +220,8 @@ class Cursor(object):
 
         try:
             res = next(self)
-            self._checksum.consume_result(res)
+            if not self.connection.autocommit:
+                self._checksum.consume_result(res)
             return res
         except StopIteration:
             return
@@ -237,7 +238,8 @@ class Cursor(object):
         res = []
         try:
             for row in self:
-                self._checksum.consume_result(row)
+                if not self.connection.autocommit:
+                    self._checksum.consume_result(row)
                 res.append(row)
         except Aborted:
             self._connection.retry_transaction()
@@ -265,7 +267,8 @@ class Cursor(object):
         for i in range(size):
             try:
                 res = next(self)
-                self._checksum.consume_result(res)
+                if not self.connection.autocommit:
+                    self._checksum.consume_result(res)
                 items.append(res)
             except StopIteration:
                 break
