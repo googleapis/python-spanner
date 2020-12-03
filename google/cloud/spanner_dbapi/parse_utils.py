@@ -533,9 +533,7 @@ def ensure_where_clause(sql):
     if any(isinstance(token, sqlparse.sql.Where) for token in sqlparse.parse(sql)[0]):
         return sql
 
-    raise ProgrammingError(
-        "Cloud Spanner requires a WHERE clause when executing DELETE or UPDATE query"
-    )
+    return sql + " WHERE 1=1"
 
 
 def escape_name(name):
