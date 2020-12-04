@@ -192,8 +192,8 @@ class Cursor(object):
                 )
         except (AlreadyExists, FailedPrecondition) as e:
             raise IntegrityError(e.details if hasattr(e, "details") else e)
-        except InvalidArgument as e:
-            raise ProgrammingError(e.details if hasattr(e, "details") else e)
+        # except InvalidArgument as e:
+        # raise ProgrammingError(e.details if hasattr(e, "details") else e)
         except InternalServerError as e:
             raise OperationalError(e.details if hasattr(e, "details") else e)
 
