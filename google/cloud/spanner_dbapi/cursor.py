@@ -171,6 +171,9 @@ class Cursor(object):
             self.connection.run_prior_DDL_statements()
 
             if not self.connection.autocommit:
+                if classification == parse_utils.STMT_UPDATING:
+                    sql = parse_utils.ensure_where_clause(sql)
+
                 sql, params = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
@@ -192,8 +195,8 @@ class Cursor(object):
                 )
         except (AlreadyExists, FailedPrecondition) as e:
             raise IntegrityError(e.details if hasattr(e, "details") else e)
-        # except InvalidArgument as e:
-        # raise ProgrammingError(e.details if hasattr(e, "details") else e)
+        except InvalidArgument as e:
+            raise ProgrammingError(e.details if hasattr(e, "details") else e)
         except InternalServerError as e:
             raise OperationalError(e.details if hasattr(e, "details") else e)
 

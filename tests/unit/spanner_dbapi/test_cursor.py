@@ -126,7 +126,7 @@ class TestCursor(unittest.TestCase):
         cursor = self._make_one(connection)
 
         with self.assertRaises(AttributeError):
-            cursor.execute(sql="")
+            cursor.execute(sql="SELECT 1")
 
     def test_execute_autocommit_off(self):
         from google.cloud.spanner_dbapi.utils import PeekIterator
