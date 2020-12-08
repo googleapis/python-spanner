@@ -156,8 +156,6 @@ class Cursor(object):
 
         self._raise_if_closed()
 
-        print("my sql log: ", sql)
-        print(args)
         self._result_set = None
 
         # Classify whether this is a read-only SQL statement.
