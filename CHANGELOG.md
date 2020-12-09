@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [2.1.1](https://www.github.com/googleapis/python-spanner/compare/v2.1.0...v2.1.1) (2020-12-09)
+
+
+### Bug Fixes
+
+* **dbapi:** executemany() hiding all the results except the last ([#181](https://www.github.com/googleapis/python-spanner/issues/181)) ([020dc17](https://www.github.com/googleapis/python-spanner/commit/020dc17c823dfb65bfaacace14d2c9f491c97e11))
+
 ## [2.1.0](https://www.github.com/googleapis/python-spanner/compare/v2.0.0...v2.1.0) (2020-11-24)
 
 
