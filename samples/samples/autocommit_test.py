@@ -54,7 +54,6 @@ def database(spanner_instance):
 def test_enable_autocommit_mode(capsys, database):
     connection = connect(INSTANCE_ID, DATABASE_ID)
     cursor = connection.cursor()
-    cursor._checksum = ResultsChecksum()
 
     with mock.patch(
         "google.cloud.spanner_dbapi.connection.Cursor",
