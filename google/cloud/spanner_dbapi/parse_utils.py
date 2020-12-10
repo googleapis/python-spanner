@@ -205,13 +205,13 @@ def parse_insert(insert_sql, params):
             (SQL, params_per_row3),
             ...
         ]
-        
+
     There are 4 variants of an INSERT statement:
     a) INSERT INTO <table> (columns...) VALUES (<inlined values>): no params
     b) INSERT INTO <table> (columns...) SELECT_STMT:               no params
     c) INSERT INTO <table> (columns...) VALUES (%s,...):           with params
     d) INSERT INTO <table> (columns...) VALUES (%s,..<EXPR>...)    with params and expressions
-    
+
     Thus given each of the forms, it will produce a dictionary describing
     how to upload the contents to Cloud Spanner:
     Case a)
@@ -222,7 +222,7 @@ def parse_insert(insert_sql, params):
                     ('INSERT INTO T (f1, f2) VALUES (1, 2)', None),
                 ],
             }
-            
+
     Case b)
             SQL: 'INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln',
         it produces:
@@ -231,7 +231,7 @@ def parse_insert(insert_sql, params):
                     ('INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln', None),
                 ]
             }
-            
+
     Case c)
             SQL: INSERT INTO T (f1, f2) VALUES (%s, %s), (%s, %s)
             Params: ['a', 'b', 'c', 'd']
@@ -242,7 +242,7 @@ def parse_insert(insert_sql, params):
                 'columns': ['f1', 'f2'],
                 'values': [('a', 'b',), ('c', 'd',)],
             }
-            
+
     Case d)
             SQL: INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s)), (UPPER(%s), %s)
             Params: ['a', 'b', 'c', 'd']
@@ -253,17 +253,17 @@ def parse_insert(insert_sql, params):
                     ('INSERT INTO T (f1, f2) VALUES (UPPER(%s), %s)', ('c', 'd',))
                 ],
             }
-    
+
     :type insert_sql: str
     :param insert_sql: A SQL insert request.
-    
+
     :type params: list
     :param params: A list of parameters.
-    
+
     :rtype: dict
     :returns: A dictionary that maps `sql_params_list` to the list of
-              parameters in cases a), b), d) or the dictionary with
-              information about the resulting table in case c).
+              parameters in cases a), b), d) or the dictionary with information
+              about the resulting table in case c).
     """  # noqa
     match = RE_INSERT.search(insert_sql)
 
@@ -356,16 +356,16 @@ def rows_for_insert_or_update(columns, params, pyformat_args=None):
         SQL:        'INSERT INTO t (f1, f2, f3) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)'
         Params A:   [(1, 2, 3), (4, 5, 6), (7, 8, 9)]
         Params B:   [1, 2, 3, 4, 5, 6, 7, 8, 9]
-        
+
     We'll have to convert both params types into:
         Params: [(1, 2, 3,), (4, 5, 6,), (7, 8, 9,)]
-        
+
     :type columns: list
     :param columns: A list of the columns of the table.
-    
+
     :type params: list
     :param params: A list of parameters.
-    
+
     :rtype: list
     :returns: A properly restructured list of the parameters.
     """  # noqa
@@ -472,7 +472,8 @@ def sql_pyformat_args_to_spanner(sql, params):
     :param params: A list of parameters.
 
     :rtype: tuple(str, dict)
-    :returns: A tuple of the sanitized SQL and a dictionary of the named arguments.
+    :returns: A tuple of the sanitized SQL and a dictionary of the named
+              arguments.
     """
     if not params:
         return sanitize_literals_for_upload(sql), params

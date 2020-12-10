@@ -177,7 +177,7 @@ def expect(word, token):
     :returns: A tuple containing the rest of the expression string and the
               parse tree for the part of the expression that has already been
               parsed.
-              
+
     :raises :class:`ProgrammingError`: If there is a parsing error.
     """
     word = word.strip()
@@ -270,7 +270,7 @@ def expect(word, token):
 
 def as_values(values_stmt):
     """Return the parsed values.
-    
+
     :type values_stmt: str
     :param values_stmt: Raw values.
 
