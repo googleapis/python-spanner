@@ -195,7 +195,6 @@ class Cursor(object):
                     self._do_execute_update, sql, args or None
                 )
         except (AlreadyExists, FailedPrecondition) as e:
-            print(sql, args)
             raise IntegrityError(e.details if hasattr(e, "details") else e)
         except InvalidArgument as e:
             raise ProgrammingError(e.details if hasattr(e, "details") else e)
