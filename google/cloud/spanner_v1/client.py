@@ -289,6 +289,7 @@ class Client(ClientWithProject):
         configuration_name=None,
         display_name=None,
         node_count=DEFAULT_NODE_COUNT,
+        labels=None,
     ):
         """Factory to create a instance associated with this client.
 
@@ -323,6 +324,7 @@ class Client(ClientWithProject):
             node_count,
             display_name,
             self._emulator_host,
+            labels
         )
 
     def list_instances(self, filter_="", page_size=None):
