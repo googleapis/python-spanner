@@ -311,7 +311,7 @@ class Instance(object):
 
         .. note::
 
-            Updates the ``display_name``, ``node_count`` and ``labels. To change those
+            Updates the ``display_name``, ``node_count`` and ``labels``. To change those
             values before updating, set them via
 
             .. code:: python
