@@ -304,15 +304,17 @@ class Connection:
             parts = parse_insert(statement.sql, statement.params)
 
             if parts.get("homogenous"):
+                _execute_insert_homogenous(transaction, parts)
                 return (
-                    _execute_insert_homogenous(transaction, parts),
+                    iter(()),
                     ResultsChecksum() if retried else statement.checksum,
                 )
             else:
+                _execute_insert_heterogenous(
+                    transaction, parts.get("sql_params_list"),
+                )
                 return (
-                    _execute_insert_heterogenous(
-                        transaction, parts.get("sql_params_list"),
-                    ),
+                    iter(()),
                     ResultsChecksum() if retried else statement.checksum,
                 )
 
