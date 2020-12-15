@@ -175,7 +175,8 @@ class Cursor(object):
                 if classification == parse_utils.STMT_UPDATING:
                     sql = parse_utils.ensure_where_clause(sql)
 
-                sql, params = sql_pyformat_args_to_spanner(sql, args)
+                if classification != parse_utils.STMT_INSERT:
+                    sql, params = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
                     sql,
