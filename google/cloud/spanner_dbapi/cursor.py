@@ -176,12 +176,12 @@ class Cursor(object):
                     sql = parse_utils.ensure_where_clause(sql)
 
                 if classification != parse_utils.STMT_INSERT:
-                    sql, params = sql_pyformat_args_to_spanner(sql, args)
+                    sql, args = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
                     sql,
-                    params,
-                    get_param_types(params),
+                    args,
+                    get_param_types(args),
                     ResultsChecksum(),
                     classification == parse_utils.STMT_INSERT,
                 )
