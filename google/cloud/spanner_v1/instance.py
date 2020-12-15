@@ -101,10 +101,13 @@ class Instance(object):
                          constructor, will fall back to the instance ID.
 
     :type emulator_host: str
-    :param emulator_host: (Optional)
+    :param emulator_host: (Optional) The address for the Cloud Spanner emulator
+                          that the database of this instance should connect to.
+                          If this value is not set, the instance will connect
+                          to the Cloud Spanner endpoint.
 
     :type labels: str
-    :param labels: (Optional)
+    :param labels: (Optional) User-assigned labels for this instance.
     """
 
     def __init__(
