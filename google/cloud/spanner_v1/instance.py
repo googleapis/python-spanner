@@ -106,7 +106,7 @@ class Instance(object):
                           If this value is not set, the instance will connect
                           to the Cloud Spanner endpoint.
 
-    :type labels: str
+    :type labels: dict (str -> str) or None
     :param labels: (Optional) User-assigned labels for this instance.
     """
 

@@ -314,7 +314,7 @@ class Client(ClientWithProject):
         :param node_count: (Optional) The number of nodes in the instance's
                             cluster; used to set up the instance's cluster.
 
-        :type labels: str
+        :type labels: dict (str -> str) or None
         :param labels: (Optional) User-assigned labels for this instance.
 
         :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
