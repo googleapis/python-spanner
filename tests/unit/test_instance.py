@@ -169,7 +169,9 @@ class TestInstance(unittest.TestCase):
     def test_labels_property(self):
         client = _Client(project=self.PROJECT)
 
-        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME, labels=self.LABELS)
+        instance = self._make_one(
+            self.INSTANCE_ID, client, self.CONFIG_NAME, labels=self.LABELS
+        )
         self.assertEqual(instance.labels, self.LABELS)
 
     def test___eq__(self):
@@ -243,7 +245,7 @@ class TestInstance(unittest.TestCase):
             configuration_name=self.CONFIG_NAME,
             display_name=self.DISPLAY_NAME,
             node_count=self.NODE_COUNT,
-            labels=self.LABELS
+            labels=self.LABELS,
         )
 
         future = instance.create()
@@ -387,7 +389,9 @@ class TestInstance(unittest.TestCase):
             instance.update()
 
         instance, field_mask, metadata = api._updated_instance
-        self.assertEqual(field_mask.paths, ["config", "display_name", "node_count", "labels"])
+        self.assertEqual(
+            field_mask.paths, ["config", "display_name", "node_count", "labels"]
+        )
         self.assertEqual(instance.name, self.INSTANCE_NAME)
         self.assertEqual(instance.config, self.CONFIG_NAME)
         self.assertEqual(instance.display_name, self.INSTANCE_ID)
@@ -406,7 +410,7 @@ class TestInstance(unittest.TestCase):
             configuration_name=self.CONFIG_NAME,
             node_count=self.NODE_COUNT,
             display_name=self.DISPLAY_NAME,
-            labels=self.LABELS
+            labels=self.LABELS,
         )
 
         future = instance.update()
@@ -414,7 +418,9 @@ class TestInstance(unittest.TestCase):
         self.assertIs(future, op_future)
 
         instance, field_mask, metadata = api._updated_instance
-        self.assertEqual(field_mask.paths, ["config", "display_name", "node_count", "labels"])
+        self.assertEqual(
+            field_mask.paths, ["config", "display_name", "node_count", "labels"]
+        )
         self.assertEqual(instance.name, self.INSTANCE_NAME)
         self.assertEqual(instance.config, self.CONFIG_NAME)
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)

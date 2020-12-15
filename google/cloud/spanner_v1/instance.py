@@ -118,7 +118,7 @@ class Instance(object):
         node_count=DEFAULT_NODE_COUNT,
         display_name=None,
         emulator_host=None,
-        labels=None
+        labels=None,
     ):
         self.instance_id = instance_id
         self._client = client

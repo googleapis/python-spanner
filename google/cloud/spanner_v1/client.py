@@ -327,7 +327,7 @@ class Client(ClientWithProject):
             node_count,
             display_name,
             self._emulator_host,
-            labels
+            labels,
         )
 
     def list_instances(self, filter_="", page_size=None):
