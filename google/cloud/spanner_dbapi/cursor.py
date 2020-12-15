@@ -181,7 +181,9 @@ class Cursor(object):
                 statement = Statement(
                     sql,
                     args,
-                    get_param_types(args),
+                    {}
+                    if classification != parse_utils.STMT_INSERT
+                    else get_param_types(args),
                     ResultsChecksum(),
                     classification == parse_utils.STMT_INSERT,
                 )
