@@ -56,10 +56,12 @@ def setUpModule():
 
     # Delete test instances that are older than an hour.
     cutoff = int(time.time()) - 1 * 60 * 60
-    for instance in Config.CLIENT.list_instances("labels.python-spanner-dbapi-systests:true"):
-        if 'created' not in instance.labels:
+    for instance in Config.CLIENT.list_instances(
+        "labels.python-spanner-dbapi-systests:true"
+    ):
+        if "created" not in instance.labels:
             continue
-        create_time = int(instance.labels['created'])
+        create_time = int(instance.labels["created"])
         if create_time > cutoff:
             continue
         # Instance cannot be deleted while backups exist.
@@ -81,7 +83,9 @@ def setUpModule():
         create_time = str(int(time.time()))
         labels = {"python-spanner-dbapi-systests": "true", "created": create_time}
 
-        Config.INSTANCE = Config.CLIENT.instance(INSTANCE_ID, config_name, labels=labels)
+        Config.INSTANCE = Config.CLIENT.instance(
+            INSTANCE_ID, config_name, labels=labels
+        )
         created_op = Config.INSTANCE.create()
         created_op.result(30)  # block until completion
 
