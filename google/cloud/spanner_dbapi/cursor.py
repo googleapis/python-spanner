@@ -42,7 +42,7 @@ from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 _UNSET_COUNT = -1
 
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
-Statement = namedtuple("Statement", "sql, params, param_types, checksum")
+Statement = namedtuple("Statement", "sql, params, param_types, checksum, is_insert")
 
 
 class Cursor(object):
@@ -178,7 +178,11 @@ class Cursor(object):
                 sql, params = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
-                    sql, params, get_param_types(params), ResultsChecksum(),
+                    sql,
+                    params,
+                    get_param_types(params),
+                    ResultsChecksum(),
+                    classification == parse_utils.STMT_INSERT,
                 )
                 (self._result_set, self._checksum,) = self.connection.run_statement(
                     statement

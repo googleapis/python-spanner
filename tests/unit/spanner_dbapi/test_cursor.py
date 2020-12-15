@@ -531,7 +531,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -570,7 +570,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
         connection._statements.append(statement)
 
         with mock.patch(

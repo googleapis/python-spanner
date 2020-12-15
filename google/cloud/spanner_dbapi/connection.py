@@ -22,6 +22,9 @@ from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1.session import _get_retry_delay
 
+from google.cloud.spanner_dbapi._helpers import _execute_insert_heterogenous
+from google.cloud.spanner_dbapi._helpers import _execute_insert_homogenous
+from google.cloud.spanner_dbapi._helpers import parse_insert
 from google.cloud.spanner_dbapi.checksum import _compare_checksums
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 from google.cloud.spanner_dbapi.cursor import Cursor
@@ -296,6 +299,22 @@ class Connection:
         transaction = self.transaction_checkout()
         if not retried:
             self._statements.append(statement)
+
+        if statement.is_insert:
+            parts = parse_insert(statement.sql, statement.params)
+
+            if parts.get("homogenous"):
+                return (
+                    _execute_insert_homogenous(transaction, parts),
+                    ResultsChecksum() if retried else statement.checksum,
+                )
+            else:
+                return (
+                    _execute_insert_heterogenous(
+                        transaction, parts.get("sql_params_list"),
+                    ),
+                    ResultsChecksum() if retried else statement.checksum,
+                )
 
         return (
             transaction.execute_sql(
