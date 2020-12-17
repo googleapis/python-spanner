@@ -1,0 +1,2 @@
+ignoreFiles:
+  - tests/system/test_system.py
