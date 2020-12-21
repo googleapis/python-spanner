@@ -244,7 +244,7 @@ class Connection:
         """
         if self._autocommit:
             warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
-        elif self._transaction:
+        elif self._transaction and not self._transaction.rolled_back:
             try:
                 self._transaction.commit()
                 self._release_session()

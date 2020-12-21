@@ -197,7 +197,7 @@ class TestConnection(unittest.TestCase):
             connection.commit()
             mock_release.assert_not_called()
 
-        connection._transaction = mock_transaction = mock.MagicMock()
+        connection._transaction = mock_transaction = mock.MagicMock(rolled_back=False)
         mock_transaction.commit = mock_commit = mock.MagicMock()
 
         with mock.patch(
@@ -383,7 +383,7 @@ class TestConnection(unittest.TestCase):
         cleared, when the transaction is commited.
         """
         connection = self._make_connection()
-        connection._transaction = mock.Mock()
+        connection._transaction = mock.Mock(rolled_back=False)
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
@@ -486,7 +486,7 @@ class TestConnection(unittest.TestCase):
 
         statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
         connection._statements.append(statement)
-        connection._transaction = mock.Mock()
+        connection._transaction = mock.Mock(rolled_back=False)
 
         with mock.patch.object(
             connection._transaction, "commit", side_effect=(Aborted("Aborted"), None),
