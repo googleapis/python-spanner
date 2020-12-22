@@ -12,16 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from pprint import pformat
 import collections
 import datetime
 import decimal
-import logging
 import math
 import operator
 import os
 import struct
-import sys
 import threading
 import time
 import unittest
@@ -53,11 +50,6 @@ from test_utils.system import unique_resource_id
 from tests._fixtures import DDL_STATEMENTS
 from tests._fixtures import EMULATOR_DDL_STATEMENTS
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
-
-
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.StreamHandler(sys.stderr))
-logger.setLevel(logging.INFO)
 
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
@@ -913,63 +905,43 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
 
         if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.memory_exporter.get_finished_spans()
-            try:
-                self.assertEqual(len(span_list), 4)
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.GetSession",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{"db.instance": self._db.name, "session_found": True}
-                    ),
-                    span=span_list[0],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.Commit",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{"db.instance": self._db.name, "num_mutations": 2}
-                    ),
-                    span=span_list[1],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.GetSession",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{"db.instance": self._db.name, "session_found": True}
-                    ),
-                    span=span_list[2],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.ReadOnlyTransaction",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{
-                            "db.instance": self._db.name,
-                            "columns": self.COLUMNS,
-                            "table_id": self.TABLE,
-                        }
-                    ),
-                    span=span_list[3],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
+            self.assertEqual(len(span_list), 4)
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[0],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Commit",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "num_mutations": 2}
+                ),
+                span=span_list[1],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[2],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "columns": self.COLUMNS,
+                        "table_id": self.TABLE,
+                    }
+                ),
+                span=span_list[3],
+            )
 
     def test_batch_insert_then_read_string_array_of_string(self):
         TABLE = "string_plus_array_of_string"
@@ -1077,110 +1049,74 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
 
         if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.memory_exporter.get_finished_spans()
-            try:
-                self.assertEqual(len(span_list), 8)
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.CreateSession",
-                    attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-                    span=span_list[0],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.GetSession",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{"db.instance": self._db.name, "session_found": True}
-                    ),
-                    span=span_list[1],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.Commit",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{"db.instance": self._db.name, "num_mutations": 1}
-                    ),
-                    span=span_list[2],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.BeginTransaction",
-                    attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-                    span=span_list[3],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.ReadOnlyTransaction",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{
-                            "db.instance": self._db.name,
-                            "table_id": self.TABLE,
-                            "columns": self.COLUMNS,
-                        }
-                    ),
-                    span=span_list[4],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.ReadOnlyTransaction",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{
-                            "db.instance": self._db.name,
-                            "table_id": self.TABLE,
-                            "columns": self.COLUMNS,
-                        }
-                    ),
-                    span=span_list[5],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.Rollback",
-                    attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
-                    span=span_list[6],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
-            try:
-                self.assertSpanAttributes(
-                    "CloudSpanner.ReadOnlyTransaction",
-                    attributes=dict(
-                        BASE_ATTRIBUTES,
-                        **{
-                            "db.instance": self._db.name,
-                            "table_id": self.TABLE,
-                            "columns": self.COLUMNS,
-                        }
-                    ),
-                    span=span_list[7],
-                )
-            except AssertionError:
-                logger.error(pformat(span_list))
-                raise
+            self.assertEqual(len(span_list), 8)
+            self.assertSpanAttributes(
+                "CloudSpanner.CreateSession",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[0],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.GetSession",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "session_found": True}
+                ),
+                span=span_list[1],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Commit",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{"db.instance": self._db.name, "num_mutations": 1}
+                ),
+                span=span_list[2],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.BeginTransaction",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[3],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[4],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[5],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.Rollback",
+                attributes=dict(BASE_ATTRIBUTES, **{"db.instance": self._db.name}),
+                span=span_list[6],
+            )
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadOnlyTransaction",
+                attributes=dict(
+                    BASE_ATTRIBUTES,
+                    **{
+                        "db.instance": self._db.name,
+                        "table_id": self.TABLE,
+                        "columns": self.COLUMNS,
+                    }
+                ),
+                span=span_list[7],
+            )
 
     def _transaction_read_then_raise(self, transaction):
         rows = list(transaction.read(self.TABLE, self.COLUMNS, self.ALL))
@@ -1528,33 +1464,21 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             session.run_in_transaction(unit_of_work, self)
 
         span_list = self.memory_exporter.get_finished_spans()
-        try:
-            self.assertEqual(len(span_list), 6)
-        except AssertionError:
-            logger.error(pformat(span_list))
-            raise
-        try:
-            self.assertEqual(
-                list(map(lambda span: span.name, span_list)),
-                [
-                    "CloudSpanner.CreateSession",
-                    "CloudSpanner.Commit",
-                    "CloudSpanner.BeginTransaction",
-                    "CloudSpanner.DMLTransaction",
-                    "CloudSpanner.Commit",
-                    "Test Span",
-                ],
-            )
-        except AssertionError:
-            logger.error(pformat(span_list))
-            raise
-        try:
-            for span in span_list[2:-1]:
-                self.assertEqual(span.context.trace_id, span_list[-1].context.trace_id)
-                self.assertEqual(span.parent.span_id, span_list[-1].context.span_id)
-        except AssertionError:
-            logger.error(pformat(span_list))
-            raise
+        self.assertEqual(len(span_list), 6)
+        self.assertEqual(
+            list(map(lambda span: span.name, span_list)),
+            [
+                "CloudSpanner.CreateSession",
+                "CloudSpanner.Commit",
+                "CloudSpanner.BeginTransaction",
+                "CloudSpanner.DMLTransaction",
+                "CloudSpanner.Commit",
+                "Test Span",
+            ],
+        )
+        for span in span_list[2:-1]:
+            self.assertEqual(span.context.trace_id, span_list[-1].context.trace_id)
+            self.assertEqual(span.parent.span_id, span_list[-1].context.span_id)
 
     def test_execute_partitioned_dml(self):
         # [START spanner_test_dml_partioned_dml_update]
