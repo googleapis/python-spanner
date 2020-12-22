@@ -117,9 +117,7 @@ def setUpModule():
 
     # Delete test instances that are older than an hour.
     cutoff = int(time.time()) - 1 * 60 * 60
-    instance_pbs = Config.CLIENT.list_instances(
-        "labels.python-spanner-systests:true"
-    )
+    instance_pbs = Config.CLIENT.list_instances("labels.python-spanner-systests:true")
     for instance_pb in instance_pbs:
         instance = Instance.from_pb(instance_pb, Config.CLIENT)
         if "created" not in instance.labels:
