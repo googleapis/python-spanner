@@ -917,7 +917,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 self.assertEqual(len(span_list), 4)
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.GetSession",
@@ -929,7 +928,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.Commit",
@@ -941,7 +939,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.GetSession",
@@ -953,7 +950,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.ReadOnlyTransaction",
@@ -969,7 +965,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
 
     def test_batch_insert_then_read_string_array_of_string(self):
         TABLE = "string_plus_array_of_string"
@@ -1081,7 +1076,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 self.assertEqual(len(span_list), 8)
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.CreateSession",
@@ -1090,7 +1084,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.GetSession",
@@ -1102,7 +1095,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.Commit",
@@ -1114,7 +1106,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.BeginTransaction",
@@ -1123,7 +1114,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.ReadOnlyTransaction",
@@ -1139,7 +1129,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.ReadOnlyTransaction",
@@ -1155,7 +1144,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.Rollback",
@@ -1164,7 +1152,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
             try:
                 self.assertSpanAttributes(
                     "CloudSpanner.ReadOnlyTransaction",
@@ -1180,7 +1167,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
                 )
             except AssertionError:
                 logger.error(pformat(span_list))
-                raise
 
     def _transaction_read_then_raise(self, transaction):
         rows = list(transaction.read(self.TABLE, self.COLUMNS, self.ALL))
@@ -1532,7 +1518,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             self.assertEqual(len(span_list), 6)
         except AssertionError:
             logger.error(pformat(span_list))
-            raise
         try:
             self.assertEqual(
                 list(map(lambda span: span.name, span_list)),
@@ -1547,14 +1532,12 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             )
         except AssertionError:
             logger.error(pformat(span_list))
-            raise
         try:
             for span in span_list[2:-1]:
                 self.assertEqual(span.context.trace_id, span_list[-1].context.trace_id)
                 self.assertEqual(span.parent.span_id, span_list[-1].context.span_id)
         except AssertionError:
             logger.error(pformat(span_list))
-            raise
 
     def test_execute_partitioned_dml(self):
         # [START spanner_test_dml_partioned_dml_update]
