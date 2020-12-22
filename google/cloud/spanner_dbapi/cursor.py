@@ -175,18 +175,40 @@ class Cursor(object):
                 sql, params = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
-                    sql, params, get_param_types(params), ResultsChecksum(),
+                    sql,
+                    params,
+                    get_param_types(params),
+                    ResultsChecksum(),
                 )
-                (self._result_set, self._checksum,) = self.connection.run_statement(
-                    statement
-                )
+                (
+                    self._result_set,
+                    self._checksum,
+                ) = self.connection.run_statement(statement)
                 self._itr = PeekIterator(self._result_set)
                 return
 
             if classification == parse_utils.STMT_NON_UPDATING:
                 self._handle_DQL(sql, args or None)
             elif classification == parse_utils.STMT_INSERT:
-                _helpers.handle_insert(self.connection, sql, args or None)
+
+                # Read INFORMATION_SCHEMA.COLUMNS to get the Spanner types for
+                # the columns included in this insert
+                table_name, columns = parse_utils.get_table_cols_for_insert(
+                    sql
+                )
+                schema = self.get_table_column_schema(table_name)
+                column_type_names = [
+                    schema[col].spanner_type.split("(")[0] for col in columns
+                ]
+                param_types = [
+                    parse_utils.COL_TYPE_NAME_TO_TYPE[ctn]
+                    for ctn in column_type_names
+                ]
+
+                _helpers.handle_insert(
+                    self.connection, sql, args or None, param_types=param_types
+                )
+
             else:
                 self.connection.database.run_in_transaction(
                     self._do_execute_update, sql, args or None
@@ -353,7 +375,9 @@ class Cursor(object):
         self.connection.run_prior_DDL_statements()
 
         with self.connection.database.snapshot() as snapshot:
-            res = snapshot.execute_sql(sql, params=params, param_types=param_types)
+            res = snapshot.execute_sql(
+                sql, params=params, param_types=param_types
+            )
             return list(res)
 
     def get_table_column_schema(self, table_name):

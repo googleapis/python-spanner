@@ -55,11 +55,20 @@ code_to_display_size = {
 }
 
 
-def _execute_insert_heterogenous(transaction, sql_params_list):
+def _execute_insert_heterogenous(
+    transaction, sql_params_list, param_types=None
+):
     for sql, params in sql_params_list:
         sql, params = sql_pyformat_args_to_spanner(sql, params)
-        param_types = get_param_types(params)
-        transaction.execute_update(sql, params=params, param_types=param_types)
+
+        if param_types is None:
+            new_param_types = get_param_types(params)
+        else:
+            new_param_types = dict(zip(params.keys(), param_types))
+
+        transaction.execute_update(
+            sql, params=params, param_types=new_param_types
+        )
 
 
 def _execute_insert_homogenous(transaction, parts):
@@ -70,7 +79,7 @@ def _execute_insert_homogenous(transaction, parts):
     return transaction.insert(table, columns, values)
 
 
-def handle_insert(connection, sql, params):
+def handle_insert(connection, sql, params, param_types=None):
     parts = parse_insert(sql, params)
 
     # The split between the two styles exists because:
@@ -89,13 +98,15 @@ def handle_insert(connection, sql, params):
     if parts.get("homogenous"):
         # The common case of multiple values being passed in
         # non-complex pyformat args and need to be uploaded in one RPC.
-        return connection.database.run_in_transaction(_execute_insert_homogenous, parts)
+        return connection.database.run_in_transaction(
+            _execute_insert_homogenous, parts
+        )
     else:
         # All the other cases that are esoteric and need
         #   transaction.execute_sql
         sql_params_list = parts.get("sql_params_list")
         return connection.database.run_in_transaction(
-            _execute_insert_heterogenous, sql_params_list
+            _execute_insert_heterogenous, sql_params_list, param_types
         )
 
 

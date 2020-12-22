@@ -27,6 +27,8 @@ from .parser import parse_values
 from .types import DateStr, TimestampStr
 from .utils import sanitize_literals_for_upload
 
+# Map native to Spanner column types, for inferring types from SQL statements
+# TODO (#566): Remove
 TYPES_MAP = {
     bool: spanner.param_types.BOOL,
     bytes: spanner.param_types.BYTES,
@@ -37,6 +39,18 @@ TYPES_MAP = {
     datetime.date: spanner.param_types.DATE,
     DateStr: spanner.param_types.DATE,
     TimestampStr: spanner.param_types.TIMESTAMP,
+}
+
+# Map Spanner column type names to the actual types
+COL_TYPE_NAME_TO_TYPE = {
+    "BOOL": spanner.param_types.BOOL,
+    "BYTES": spanner.param_types.BYTES,
+    "DATE": spanner.param_types.DATE,
+    "FLOAT64": spanner.param_types.FLOAT64,
+    "INT64": spanner.param_types.INT64,
+    "NUMERIC": spanner.param_types.NUMERIC,
+    "STRING": spanner.param_types.STRING,
+    "TIMESTAMP": spanner.param_types.TIMESTAMP,
 }
 
 SPANNER_RESERVED_KEYWORDS = {
@@ -338,6 +352,21 @@ def parse_insert(insert_sql, params):
     return {"sql_params_list": sql_param_tuples}
 
 
+def get_table_cols_for_insert(insert_sql):
+    """Get table and column names from `insert_sql`.o
+
+    :type insert_sql: str
+    :param params: A SQL INSERT statement
+
+    :rtype: tuple[str, list[str]]
+    :returns: The table name and list of column names in the statement.
+    """
+    gd = RE_INSERT.match(insert_sql).groupdict()
+    table_name = gd.get("table_name", "")
+    columns = [cn.strip() for cn in gd.get("columns", "").split(",")]
+    return table_name, columns
+
+
 def rows_for_insert_or_update(columns, params, pyformat_args=None):
     """
     Create a tupled list of params to be used as a single value per
@@ -507,17 +536,10 @@ def get_param_types(params):
     :rtype: :class:`dict`
     :returns: The types index for the given parameters.
     """
-    if params is None:
-        return
-
-    param_types = {}
-
-    for key, value in params.items():
-        type_ = type(value)
-        if type_ in TYPES_MAP:
-            param_types[key] = TYPES_MAP[type_]
-
-    return param_types
+    if params is not None:
+        return {
+            key: TYPES_MAP.get(type(value)) for key, value in params.items()
+        }
 
 
 def ensure_where_clause(sql):
