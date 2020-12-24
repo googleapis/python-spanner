@@ -95,9 +95,9 @@ class Cursor(object):
         for field in row_type.fields:
             column_info = ColumnInfo(
                 name=field.name,
-                type_code=field.type.code,
+                type_code=field.type_.code,
                 # Size of the SQL type of the column.
-                display_size=code_to_display_size.get(field.type.code),
+                display_size=code_to_display_size.get(field.type_.code),
                 # Client perceived size of the column.
                 internal_size=field.ByteSize(),
             )
