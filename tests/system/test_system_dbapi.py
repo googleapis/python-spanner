@@ -15,12 +15,15 @@
 import hashlib
 import os
 import pickle
+import time
 import unittest
 
 from google.api_core import exceptions
 
-from google.cloud.spanner_v1 import Client
 from google.cloud.spanner_v1 import BurstyPool
+from google.cloud.spanner_v1 import Client
+from google.cloud.spanner_v1.instance import Backup
+from google.cloud.spanner_v1.instance import Instance
 
 from google.cloud.spanner_dbapi.connection import Connection
 
@@ -53,6 +56,23 @@ def setUpModule():
     instances = retry(_list_instances)()
     EXISTING_INSTANCES[:] = instances
 
+    # Delete test instances that are older than an hour.
+    cutoff = int(time.time()) - 1 * 60 * 60
+    for instance_pb in Config.CLIENT.list_instances(
+        "labels.python-spanner-dbapi-systests:true"
+    ):
+        instance = Instance.from_pb(instance_pb, Config.CLIENT)
+        if "created" not in instance.labels:
+            continue
+        create_time = int(instance.labels["created"])
+        if create_time > cutoff:
+            continue
+        # Instance cannot be deleted while backups exist.
+        for backup_pb in instance.list_backups():
+            backup = Backup.from_pb(backup_pb, instance)
+            backup.delete()
+        instance.delete()
+
     if CREATE_INSTANCE:
         if not USE_EMULATOR:
             # Defend against back-end returning configs for regions we aren't
@@ -64,8 +84,12 @@ def setUpModule():
 
         Config.INSTANCE_CONFIG = configs[0]
         config_name = configs[0].name
+        create_time = str(int(time.time()))
+        labels = {"python-spanner-dbapi-systests": "true", "created": create_time}
 
-        Config.INSTANCE = Config.CLIENT.instance(INSTANCE_ID, config_name)
+        Config.INSTANCE = Config.CLIENT.instance(
+            INSTANCE_ID, config_name, labels=labels
+        )
         created_op = Config.INSTANCE.create()
         created_op.result(30)  # block until completion
 
