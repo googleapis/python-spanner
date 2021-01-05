@@ -357,7 +357,7 @@ class Instance(object):
 
         api.delete_instance(name=self.name, metadata=metadata)
 
-    def database(self, database_id, ddl_statements=(), pool=None):
+    def database(self, database_id, ddl_statements=(), pool=None, logger=None):
         """Factory to create a database within this instance.
 
         :type database_id: str
@@ -374,7 +374,9 @@ class Instance(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
-        return Database(database_id, self, ddl_statements=ddl_statements, pool=pool)
+        return Database(
+            database_id, self, ddl_statements=ddl_statements, pool=pool, logger=logger
+        )
 
     def list_databases(self, page_size=None):
         """List databases for the instance.

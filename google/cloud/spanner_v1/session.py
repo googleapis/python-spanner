@@ -349,7 +349,7 @@ class Session(object):
                 raise
 
             try:
-                txn.commit()
+                txn.commit(return_commit_stats=self._database.log_commit_stats)
             except Aborted as exc:
                 del self._transaction
                 _delay_until_retry(exc, deadline, attempts)
@@ -357,6 +357,12 @@ class Session(object):
                 del self._transaction
                 raise
             else:
+                if self._database.log_commit_stats:
+                    self._database.logger.info(
+                        "Transaction mutation count: {}".format(
+                            txn.commit_stats.mutation_count
+                        )
+                    )
                 return return_value
 
 
