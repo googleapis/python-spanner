@@ -89,7 +89,7 @@ class Cursor(object):
         if not (self._result_set and self._result_set.metadata):
             return None
 
-        row_type = self._result_set.metadata.row_type
+        row_type = self._result_set.metadata.pb().row_type
         columns = []
 
         for field in row_type.fields:
@@ -99,7 +99,7 @@ class Cursor(object):
                 # Size of the SQL type of the column.
                 display_size=code_to_display_size.get(field.type_.code),
                 # Client perceived size of the column.
-                internal_size=field.pb().ByteSize(),
+                internal_size=field.ByteSize(),
             )
             columns.append(column_info)
 
