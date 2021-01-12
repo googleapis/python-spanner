@@ -4,6 +4,32 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [2.2.0](https://www.github.com/googleapis/python-spanner/compare/v2.1.0...v2.2.0) (2021-01-12)
+
+
+### Features
+
+* add support for instance labels ([#193](https://www.github.com/googleapis/python-spanner/issues/193)) ([ed462b5](https://www.github.com/googleapis/python-spanner/commit/ed462b567a1a33f9105ffb37ba1218f379603614))
+* add support for ssl credentials; add throttled field to UpdateDatabaseDdlMetadata ([#161](https://www.github.com/googleapis/python-spanner/issues/161)) ([2faf01b](https://www.github.com/googleapis/python-spanner/commit/2faf01b135360586ef27c66976646593fd85fd1e))
+* autocommit sample ([#172](https://www.github.com/googleapis/python-spanner/issues/172)) ([4ef793c](https://www.github.com/googleapis/python-spanner/commit/4ef793c9cd5d6dec6e92faf159665e11d63762ad))
+
+
+### Bug Fixes
+
+* Convert PBs in system test cleanup ([#199](https://www.github.com/googleapis/python-spanner/issues/199)) ([ede4343](https://www.github.com/googleapis/python-spanner/commit/ede4343e518780a4ab13ae83017480d7046464d6))
+* **dbapi:** autocommit enabling fails if no transactions begun ([#177](https://www.github.com/googleapis/python-spanner/issues/177)) ([e981adb](https://www.github.com/googleapis/python-spanner/commit/e981adb3157bb06e4cb466ca81d74d85da976754))
+* **dbapi:** executemany() hiding all the results except the last ([#181](https://www.github.com/googleapis/python-spanner/issues/181)) ([020dc17](https://www.github.com/googleapis/python-spanner/commit/020dc17c823dfb65bfaacace14d2c9f491c97e11))
+* **dbapi:** Spanner protobuf changes causes KeyError's ([#206](https://www.github.com/googleapis/python-spanner/issues/206)) ([f1e21ed](https://www.github.com/googleapis/python-spanner/commit/f1e21edbf37aab93615fd415d61f829d2574916b))
+* remove client side gRPC receive limits ([#192](https://www.github.com/googleapis/python-spanner/issues/192)) ([90effc4](https://www.github.com/googleapis/python-spanner/commit/90effc4d0f4780b7a7c466169f9fc1e45dab8e7f))
+* Rename to fix "Mismatched region tag" check ([#201](https://www.github.com/googleapis/python-spanner/issues/201)) ([c000ec4](https://www.github.com/googleapis/python-spanner/commit/c000ec4d9b306baa0d5e9ed95f23c0273d9adf32))
+
+
+### Documentation
+
+* homogenize region tags ([#194](https://www.github.com/googleapis/python-spanner/issues/194)) ([1501022](https://www.github.com/googleapis/python-spanner/commit/1501022239dfa8c20290ca0e0cf6a36e9255732c))
+* homogenize region tags pt 2 ([#202](https://www.github.com/googleapis/python-spanner/issues/202)) ([87789c9](https://www.github.com/googleapis/python-spanner/commit/87789c939990794bfd91f5300bedc449fd74bd7e))
+* update CHANGELOG breaking change comment ([#180](https://www.github.com/googleapis/python-spanner/issues/180)) ([c7b3b9e](https://www.github.com/googleapis/python-spanner/commit/c7b3b9e4be29a199618be9d9ffa1d63a9d0f8de7))
+
 ## [2.1.0](https://www.github.com/googleapis/python-spanner/compare/v2.0.0...v2.1.0) (2020-11-24)
 
 
