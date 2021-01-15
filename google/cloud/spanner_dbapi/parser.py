@@ -79,6 +79,7 @@ class a_args(object):
     :type argv: list
     :param argv: A List of expression arguments.
     """
+
     def __init__(self, argv):
         self.argv = argv
 
@@ -153,6 +154,7 @@ class values(a_args):
     :rtype: str
     :returns: A string of the values expression in a tree view.
     """
+
     def __str__(self):
         return "VALUES%s" % super().__str__()
 
