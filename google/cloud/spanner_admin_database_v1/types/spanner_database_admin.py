@@ -43,6 +43,7 @@ __protobuf__ = proto.module(
         "ListDatabaseOperationsRequest",
         "ListDatabaseOperationsResponse",
         "RestoreDatabaseRequest",
+        "RestoreDatabaseEncryptionConfig",
         "RestoreDatabaseMetadata",
         "OptimizeRestoredDatabaseMetadata",
     },
@@ -59,9 +60,9 @@ class RestoreInfo(proto.Message):
     r"""Information about the database restore.
 
     Attributes:
-        source_type (~.spanner_database_admin.RestoreSourceType):
+        source_type (google.cloud.spanner_admin_database_v1.types.RestoreSourceType):
             The type of the restore source.
-        backup_info (~.gsad_backup.BackupInfo):
+        backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
             Information about the backup used to restore
             the database. The backup may no longer exist.
     """
@@ -83,15 +84,29 @@ class Database(proto.Message):
             where ``<database>`` is as specified in the
             ``CREATE DATABASE`` statement. This name can be passed to
             other API methods to identify the database.
-        state (~.spanner_database_admin.Database.State):
+        state (google.cloud.spanner_admin_database_v1.types.Database.State):
             Output only. The current database state.
-        create_time (~.timestamp.Timestamp):
+        create_time (google.protobuf.timestamp_pb2.Timestamp):
             Output only. If exists, the time at which the
             database creation started.
-        restore_info (~.spanner_database_admin.RestoreInfo):
+        restore_info (google.cloud.spanner_admin_database_v1.types.RestoreInfo):
             Output only. Applicable only for restored
             databases. Contains information about the
             restore source.
+        encryption_config (google.cloud.spanner_admin_database_v1.types.EncryptionConfig):
+            Output only. Custom encryption configuration
+            (Cloud KMS keys). Applicable only for databases
+            using the Customer Managed Encryption Keys
+            feature.
+        version_retention_period (str):
+            Output only. The period in which Cloud Spanner retains all
+            versions of data for the database. This is same as the value
+            of version_retention_period database option set using
+            [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl].
+            Defaults to 1 hour, if not set.
+        earliest_version_time (google.protobuf.timestamp_pb2.Timestamp):
+            Output only. Earliest timestamp at which
+            older versions of the data can be read.
     """
 
     class State(proto.Enum):
@@ -108,6 +123,16 @@ class Database(proto.Message):
     create_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
 
     restore_info = proto.Field(proto.MESSAGE, number=4, message="RestoreInfo",)
+
+    encryption_config = proto.Field(
+        proto.MESSAGE, number=5, message=common.EncryptionConfig,
+    )
+
+    version_retention_period = proto.Field(proto.STRING, number=6)
+
+    earliest_version_time = proto.Field(
+        proto.MESSAGE, number=7, message=timestamp.Timestamp,
+    )
 
 
 class ListDatabasesRequest(proto.Message):
@@ -142,7 +167,7 @@ class ListDatabasesResponse(proto.Message):
     [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
 
     Attributes:
-        databases (Sequence[~.spanner_database_admin.Database]):
+        databases (Sequence[google.cloud.spanner_admin_database_v1.types.Database]):
             Databases that matched the request.
         next_page_token (str):
             ``next_page_token`` can be sent in a subsequent
@@ -182,6 +207,8 @@ class CreateDatabaseRequest(proto.Message):
             statements execute atomically with the creation
             of the database: if there is an error in any
             statement, the database is not created.
+        encryption_config (google.cloud.spanner_admin_database_v1.types.EncryptionConfig):
+            Optional.
     """
 
     parent = proto.Field(proto.STRING, number=1)
@@ -189,6 +216,10 @@ class CreateDatabaseRequest(proto.Message):
     create_statement = proto.Field(proto.STRING, number=2)
 
     extra_statements = proto.RepeatedField(proto.STRING, number=3)
+
+    encryption_config = proto.Field(
+        proto.MESSAGE, number=4, message=common.EncryptionConfig,
+    )
 
 
 class CreateDatabaseMetadata(proto.Message):
@@ -283,7 +314,7 @@ class UpdateDatabaseDdlMetadata(proto.Message):
             For an update this list contains all the
             statements. For an individual statement, this
             list contains only that statement.
-        commit_timestamps (Sequence[~.timestamp.Timestamp]):
+        commit_timestamps (Sequence[google.protobuf.timestamp_pb2.Timestamp]):
             Reports the commit timestamps of all statements that have
             succeeded so far, where ``commit_timestamps[i]`` is the
             commit timestamp for the statement ``statements[i]``.
@@ -429,7 +460,7 @@ class ListDatabaseOperationsResponse(proto.Message):
     [ListDatabaseOperations][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabaseOperations].
 
     Attributes:
-        operations (Sequence[~.gl_operations.Operation]):
+        operations (Sequence[google.longrunning.operations_pb2.Operation]):
             The list of matching database [long-running
             operations][google.longrunning.Operation]. Each operation's
             name will be prefixed by the database's name. The
@@ -474,6 +505,15 @@ class RestoreDatabaseRequest(proto.Message):
             Name of the backup from which to restore. Values are of the
             form
             ``projects/<project>/instances/<instance>/backups/<backup>``.
+        encryption_config (google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig):
+            Optional. An encryption configuration describing the
+            encryption type and key resources in Cloud KMS used to
+            encrypt/decrypt the database to restore to. If no
+            ``encryption_config`` is specified, the restored database
+            will use the config default (if set) or the same encryption
+            configuration as the backup by default, namely
+            [encryption_type][google.spanner.admin.database.v1.RestoreDatabaseEncryptionConfig.encryption_type]
+            = USE_CONFIG_DEFAULT_OR_DATABASE_ENCRYPTION.
     """
 
     parent = proto.Field(proto.STRING, number=1)
@@ -481,6 +521,40 @@ class RestoreDatabaseRequest(proto.Message):
     database_id = proto.Field(proto.STRING, number=2)
 
     backup = proto.Field(proto.STRING, number=3, oneof="source")
+
+    encryption_config = proto.Field(
+        proto.MESSAGE, number=4, message="RestoreDatabaseEncryptionConfig",
+    )
+
+
+class RestoreDatabaseEncryptionConfig(proto.Message):
+    r"""Encryption configuration for the database to restore to.
+
+    Attributes:
+        encryption_type (google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig.EncryptionType):
+            Required. The encryption type of the restored
+            database.
+        kms_key_name (str):
+            Optional. The resource name of the Cloud KMS key that will
+            be used to encrypt/decrypt the database to restore to. Once
+            specified, the database will enforce customer managed
+            encryption, regardless of the backup encryption type. This
+            field should be set only when
+            [encryption_type][google.spanner.admin.database.v1.RestoreDatabaseEncryptionConfig.encryption_type]
+            is CUSTOMER_MANAGED_ENCRYPTION. Values are of the form
+            ``projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>``.
+    """
+
+    class EncryptionType(proto.Enum):
+        r"""Encryption types for the database to be restored."""
+        ENCRYPTION_TYPE_UNSPECIFIED = 0
+        USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION = 1
+        GOOGLE_DEFAULT_ENCRYPTION = 2
+        CUSTOMER_MANAGED_ENCRYPTION = 3
+
+    encryption_type = proto.Field(proto.ENUM, number=1, enum=EncryptionType,)
+
+    kms_key_name = proto.Field(proto.STRING, number=2)
 
 
 class RestoreDatabaseMetadata(proto.Message):
@@ -491,16 +565,16 @@ class RestoreDatabaseMetadata(proto.Message):
         name (str):
             Name of the database being created and
             restored to.
-        source_type (~.spanner_database_admin.RestoreSourceType):
+        source_type (google.cloud.spanner_admin_database_v1.types.RestoreSourceType):
             The type of the restore source.
-        backup_info (~.gsad_backup.BackupInfo):
+        backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
             Information about the backup used to restore
             the database.
-        progress (~.common.OperationProgress):
+        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
             The progress of the
             [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase]
             operation.
-        cancel_time (~.timestamp.Timestamp):
+        cancel_time (google.protobuf.timestamp_pb2.Timestamp):
             The time at which cancellation of this operation was
             received.
             [Operations.CancelOperation][google.longrunning.Operations.CancelOperation]
@@ -557,7 +631,7 @@ class OptimizeRestoredDatabaseMetadata(proto.Message):
         name (str):
             Name of the restored database being
             optimized.
-        progress (~.common.OperationProgress):
+        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
             The progress of the post-restore
             optimizations.
     """

@@ -368,6 +368,23 @@ message Database {
   // Output only. Applicable only for restored databases. Contains information
   // about the restore source.
   RestoreInfo restore_info = 4 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Custom encryption configuration (Cloud KMS keys).
+  // Applicable only for databases using the Customer Managed Encryption Keys
+  // feature.
+  EncryptionConfig encryption_config = 5
+      [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. The period in which Cloud Spanner retains all versions of data
+  // for the database. This is same as the value of version_retention_period
+  // database option set using
+  // [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl]. Defaults to 1 hour,
+  // if not set.
+  string version_retention_period = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+
+  // Output only. Earliest timestamp at which older versions of the data can be
+  // read.
+  google.protobuf.Timestamp earliest_version_time = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
 }
 
 // The request for [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
@@ -425,6 +442,10 @@ message CreateDatabaseRequest {
   // statements execute atomically with the creation of the database:
   // if there is an error in any statement, the database is not created.
   repeated string extra_statements = 3 [(google.api.field_behavior) = OPTIONAL];
+
+  // Optional.
+  EncryptionConfig encryption_config = 4
+      [(google.api.field_behavior) = OPTIONAL];
 }
 
 // Metadata type for the operation returned by
@@ -660,6 +681,56 @@ message RestoreDatabaseRequest {
                          type: "spanner.googleapis.com/Backup"
                        }];
   }
+
+  // Optional. An encryption configuration describing the encryption type and key
+  // resources in Cloud KMS used to encrypt/decrypt the database to restore to.
+  // If no `encryption_config` is specified, the restored database will use
+  // the config default (if set) or the same encryption configuration as
+  // the backup by default, namely
+  // [encryption_type][google.spanner.admin.database.v1.RestoreDatabaseEncryptionConfig.encryption_type] =
+  // USE_CONFIG_DEFAULT_OR_DATABASE_ENCRYPTION.
+  RestoreDatabaseEncryptionConfig encryption_config = 4 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Encryption configuration for the database to restore to.
+message RestoreDatabaseEncryptionConfig {
+  // Encryption types for the database to be restored.
+  enum EncryptionType {
+    // Unspecified. Do not use.
+    ENCRYPTION_TYPE_UNSPECIFIED = 0;
+
+    // This is the default option when
+    // [encryption_config][RestoreDatabaseEncryptionConfig.encryption_config] is
+    // empty. It will first check whether there is a config default and use
+    // it if set. if not set, it will use the backup encryption setting. Note
+    // that the config default feature is a new feature that may not be
+    // available at the beginning.
+    USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION = 1;
+
+    // Enforce google default encryption.
+    GOOGLE_DEFAULT_ENCRYPTION = 2;
+
+    // Enforce customer managed encryption. If specified, the kms_key_name
+    // must provide a valid Cloud KMS key name.
+    CUSTOMER_MANAGED_ENCRYPTION = 3;
+  }
+
+  // Required. The encryption type of the restored database.
+  EncryptionType encryption_type = 1 [(google.api.field_behavior) = REQUIRED];
+
+  // Optional. The resource name of the Cloud KMS key that will be used to
+  // encrypt/decrypt the database to restore to. Once specified, the database
+  // will enforce customer managed encryption, regardless of the backup
+  // encryption type. This field should be set only when
+  // [encryption_type][google.spanner.admin.database.v1.RestoreDatabaseEncryptionConfig.encryption_type] is
+  // CUSTOMER_MANAGED_ENCRYPTION. Values are of the form
+  // `projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>`.
+  string kms_key_name = 2 [
+    (google.api.field_behavior) = OPTIONAL,
+    (google.api.resource_reference) = {
+      type: "cloudkms.googleapis.com/CryptoKey"
+    }
+  ];
 }
 
 // Metadata type for the long-running operation returned by

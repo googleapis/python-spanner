@@ -45,6 +45,7 @@ from google.cloud.spanner_admin_database_v1.services.database_admin import pager
 from google.cloud.spanner_admin_database_v1.services.database_admin import transports
 from google.cloud.spanner_admin_database_v1.types import backup
 from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
+from google.cloud.spanner_admin_database_v1.types import common
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
 from google.iam.v1 import options_pb2 as options  # type: ignore
@@ -52,8 +53,10 @@ from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.longrunning import operations_pb2
 from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.oauth2 import service_account
+from google.protobuf import any_pb2 as gp_any  # type: ignore
 from google.protobuf import field_mask_pb2 as field_mask  # type: ignore
 from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
+from google.rpc import status_pb2 as status  # type: ignore
 from google.type import expr_pb2 as expr  # type: ignore
 
 
@@ -101,8 +104,21 @@ def test__get_default_mtls_endpoint():
     )
 
 
+def test_database_admin_client_from_service_account_info():
+    creds = credentials.AnonymousCredentials()
+    with mock.patch.object(
+        service_account.Credentials, "from_service_account_info"
+    ) as factory:
+        factory.return_value = creds
+        info = {"valid": True}
+        client = DatabaseAdminClient.from_service_account_info(info)
+        assert client.transport._credentials == creds
+
+        assert client.transport._host == "spanner.googleapis.com:443"
+
+
 @pytest.mark.parametrize(
-    "client_class", [DatabaseAdminClient, DatabaseAdminAsyncClient]
+    "client_class", [DatabaseAdminClient, DatabaseAdminAsyncClient,]
 )
 def test_database_admin_client_from_service_account_file(client_class):
     creds = credentials.AnonymousCredentials()
@@ -121,7 +137,10 @@ def test_database_admin_client_from_service_account_file(client_class):
 
 def test_database_admin_client_get_transport_class():
     transport = DatabaseAdminClient.get_transport_class()
-    assert transport == transports.DatabaseAdminGrpcTransport
+    available_transports = [
+        transports.DatabaseAdminGrpcTransport,
+    ]
+    assert transport in available_transports
 
     transport = DatabaseAdminClient.get_transport_class("grpc")
     assert transport == transports.DatabaseAdminGrpcTransport
@@ -1022,7 +1041,9 @@ def test_get_database(
     with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.Database(
-            name="name_value", state=spanner_database_admin.Database.State.CREATING,
+            name="name_value",
+            state=spanner_database_admin.Database.State.CREATING,
+            version_retention_period="version_retention_period_value",
         )
 
         response = client.get_database(request)
@@ -1040,6 +1061,8 @@ def test_get_database(
     assert response.name == "name_value"
 
     assert response.state == spanner_database_admin.Database.State.CREATING
+
+    assert response.version_retention_period == "version_retention_period_value"
 
 
 def test_get_database_from_dict():
@@ -1064,7 +1087,9 @@ async def test_get_database_async(
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.Database(
-                name="name_value", state=spanner_database_admin.Database.State.CREATING,
+                name="name_value",
+                state=spanner_database_admin.Database.State.CREATING,
+                version_retention_period="version_retention_period_value",
             )
         )
 
@@ -1082,6 +1107,8 @@ async def test_get_database_async(
     assert response.name == "name_value"
 
     assert response.state == spanner_database_admin.Database.State.CREATING
+
+    assert response.version_retention_period == "version_retention_period_value"
 
 
 @pytest.mark.asyncio
@@ -4717,7 +4744,7 @@ def test_database_admin_host_with_port():
 
 
 def test_database_admin_grpc_transport_channel():
-    channel = grpc.insecure_channel("http://localhost/")
+    channel = grpc.secure_channel("http://localhost/", grpc.local_channel_credentials())
 
     # Check that channel is used if provided.
     transport = transports.DatabaseAdminGrpcTransport(
@@ -4729,7 +4756,7 @@ def test_database_admin_grpc_transport_channel():
 
 
 def test_database_admin_grpc_asyncio_transport_channel():
-    channel = aio.insecure_channel("http://localhost/")
+    channel = aio.secure_channel("http://localhost/", grpc.local_channel_credentials())
 
     # Check that channel is used if provided.
     transport = transports.DatabaseAdminGrpcAsyncIOTransport(
@@ -4752,7 +4779,7 @@ def test_database_admin_transport_channel_mtls_with_client_cert_source(transport
         "grpc.ssl_channel_credentials", autospec=True
     ) as grpc_ssl_channel_cred:
         with mock.patch.object(
-            transport_class, "create_channel", autospec=True
+            transport_class, "create_channel"
         ) as grpc_create_channel:
             mock_ssl_cred = mock.Mock()
             grpc_ssl_channel_cred.return_value = mock_ssl_cred
@@ -4808,7 +4835,7 @@ def test_database_admin_transport_channel_mtls_with_adc(transport_class):
         ssl_credentials=mock.PropertyMock(return_value=mock_ssl_cred),
     ):
         with mock.patch.object(
-            transport_class, "create_channel", autospec=True
+            transport_class, "create_channel"
         ) as grpc_create_channel:
             mock_grpc_channel = mock.Mock()
             grpc_create_channel.return_value = mock_grpc_channel
@@ -4891,10 +4918,74 @@ def test_parse_backup_path():
     assert expected == actual
 
 
-def test_database_path():
+def test_crypto_key_path():
     project = "cuttlefish"
-    instance = "mussel"
-    database = "winkle"
+    location = "mussel"
+    key_ring = "winkle"
+    crypto_key = "nautilus"
+
+    expected = "projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}".format(
+        project=project, location=location, key_ring=key_ring, crypto_key=crypto_key,
+    )
+    actual = DatabaseAdminClient.crypto_key_path(
+        project, location, key_ring, crypto_key
+    )
+    assert expected == actual
+
+
+def test_parse_crypto_key_path():
+    expected = {
+        "project": "scallop",
+        "location": "abalone",
+        "key_ring": "squid",
+        "crypto_key": "clam",
+    }
+    path = DatabaseAdminClient.crypto_key_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_crypto_key_path(path)
+    assert expected == actual
+
+
+def test_crypto_key_version_path():
+    project = "whelk"
+    location = "octopus"
+    key_ring = "oyster"
+    crypto_key = "nudibranch"
+    crypto_key_version = "cuttlefish"
+
+    expected = "projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}/cryptoKeyVersions/{crypto_key_version}".format(
+        project=project,
+        location=location,
+        key_ring=key_ring,
+        crypto_key=crypto_key,
+        crypto_key_version=crypto_key_version,
+    )
+    actual = DatabaseAdminClient.crypto_key_version_path(
+        project, location, key_ring, crypto_key, crypto_key_version
+    )
+    assert expected == actual
+
+
+def test_parse_crypto_key_version_path():
+    expected = {
+        "project": "mussel",
+        "location": "winkle",
+        "key_ring": "nautilus",
+        "crypto_key": "scallop",
+        "crypto_key_version": "abalone",
+    }
+    path = DatabaseAdminClient.crypto_key_version_path(**expected)
+
+    # Check that the path construction is reversible.
+    actual = DatabaseAdminClient.parse_crypto_key_version_path(path)
+    assert expected == actual
+
+
+def test_database_path():
+    project = "squid"
+    instance = "clam"
+    database = "whelk"
 
     expected = "projects/{project}/instances/{instance}/databases/{database}".format(
         project=project, instance=instance, database=database,
@@ -4905,9 +4996,9 @@ def test_database_path():
 
 def test_parse_database_path():
     expected = {
-        "project": "nautilus",
-        "instance": "scallop",
-        "database": "abalone",
+        "project": "octopus",
+        "instance": "oyster",
+        "database": "nudibranch",
     }
     path = DatabaseAdminClient.database_path(**expected)
 
@@ -4917,8 +5008,8 @@ def test_parse_database_path():
 
 
 def test_instance_path():
-    project = "squid"
-    instance = "clam"
+    project = "cuttlefish"
+    instance = "mussel"
 
     expected = "projects/{project}/instances/{instance}".format(
         project=project, instance=instance,
@@ -4929,8 +5020,8 @@ def test_instance_path():
 
 def test_parse_instance_path():
     expected = {
-        "project": "whelk",
-        "instance": "octopus",
+        "project": "winkle",
+        "instance": "nautilus",
     }
     path = DatabaseAdminClient.instance_path(**expected)
 
@@ -4940,7 +5031,7 @@ def test_parse_instance_path():
 
 
 def test_common_billing_account_path():
-    billing_account = "oyster"
+    billing_account = "scallop"
 
     expected = "billingAccounts/{billing_account}".format(
         billing_account=billing_account,
@@ -4951,7 +5042,7 @@ def test_common_billing_account_path():
 
 def test_parse_common_billing_account_path():
     expected = {
-        "billing_account": "nudibranch",
+        "billing_account": "abalone",
     }
     path = DatabaseAdminClient.common_billing_account_path(**expected)
 
@@ -4961,7 +5052,7 @@ def test_parse_common_billing_account_path():
 
 
 def test_common_folder_path():
-    folder = "cuttlefish"
+    folder = "squid"
 
     expected = "folders/{folder}".format(folder=folder,)
     actual = DatabaseAdminClient.common_folder_path(folder)
@@ -4970,7 +5061,7 @@ def test_common_folder_path():
 
 def test_parse_common_folder_path():
     expected = {
-        "folder": "mussel",
+        "folder": "clam",
     }
     path = DatabaseAdminClient.common_folder_path(**expected)
 
@@ -4980,7 +5071,7 @@ def test_parse_common_folder_path():
 
 
 def test_common_organization_path():
-    organization = "winkle"
+    organization = "whelk"
 
     expected = "organizations/{organization}".format(organization=organization,)
     actual = DatabaseAdminClient.common_organization_path(organization)
@@ -4989,7 +5080,7 @@ def test_common_organization_path():
 
 def test_parse_common_organization_path():
     expected = {
-        "organization": "nautilus",
+        "organization": "octopus",
     }
     path = DatabaseAdminClient.common_organization_path(**expected)
 
@@ -4999,7 +5090,7 @@ def test_parse_common_organization_path():
 
 
 def test_common_project_path():
-    project = "scallop"
+    project = "oyster"
 
     expected = "projects/{project}".format(project=project,)
     actual = DatabaseAdminClient.common_project_path(project)
@@ -5008,7 +5099,7 @@ def test_common_project_path():
 
 def test_parse_common_project_path():
     expected = {
-        "project": "abalone",
+        "project": "nudibranch",
     }
     path = DatabaseAdminClient.common_project_path(**expected)
 
@@ -5018,8 +5109,8 @@ def test_parse_common_project_path():
 
 
 def test_common_location_path():
-    project = "squid"
-    location = "clam"
+    project = "cuttlefish"
+    location = "mussel"
 
     expected = "projects/{project}/locations/{location}".format(
         project=project, location=location,
@@ -5030,8 +5121,8 @@ def test_common_location_path():
 
 def test_parse_common_location_path():
     expected = {
-        "project": "whelk",
-        "location": "octopus",
+        "project": "winkle",
+        "location": "nautilus",
     }
     path = DatabaseAdminClient.common_location_path(**expected)
 
