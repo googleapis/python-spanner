@@ -335,9 +335,7 @@ class Database(object):
         self._create_time = response.create_time
         self._restore_info = response.restore_info
         self._version_retention_period = response.version_retention_period
-        self._earliest_version_time = _pb_timestamp_to_datetime(
-            response.earliest_version_time
-        )
+        self._earliest_version_time = response.earliest_version_time
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
