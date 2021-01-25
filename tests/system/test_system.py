@@ -383,9 +383,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         # We want to make sure the operation completes.
         operation.result(30)  # raises on failure / timeout.
 
-        database_ids = [
-            database.name for database in Config.INSTANCE.list_databases()
-        ]
+        database_ids = [database.name for database in Config.INSTANCE.list_databases()]
         self.assertIn(temp_db.name, database_ids)
 
         temp_db.reload()
