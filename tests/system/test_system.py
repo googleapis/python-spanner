@@ -711,7 +711,11 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         database = instance.database(restored_id)
         self.to_drop.append(database)
         operation = database.restore(source=backup)
-        operation.result()
+        restored_db = operation.result()
+        self.assertEqual(version_time, restored_db.restore_info.backup_info.create_time)
+
+        metadata = operation.metadata
+        self.assertEqual(version_time, metadata.backup_info.create_time)
 
         database.drop()
         backup.delete()
