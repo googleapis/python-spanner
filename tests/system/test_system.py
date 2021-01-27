@@ -585,6 +585,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
 
     @classmethod
     def setUpClass(cls):
+        from datetime import datetime
+
         pool = BurstyPool(labels={"testcase": "database_api"})
         ddl_statements = EMULATOR_DDL_STATEMENTS if USE_EMULATOR else DDL_STATEMENTS
         db1 = Config.INSTANCE.database(
@@ -597,6 +599,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         op2 = db2.create()
         op1.result(30)  # raises on failure / timeout.
         op2.result(30)  # raises on failure / timeout.
+        cls.database_version_time = datetime.utcnow().replace(tzinfo=UTC)
 
         current_config = Config.INSTANCE.configuration_name
         same_config_instance_id = "same-config" + unique_resource_id("-")
@@ -670,15 +673,13 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow() + timedelta(days=3)
         expire_time = expire_time.replace(tzinfo=UTC)
-        version_time = datetime.utcnow() - timedelta(seconds=5)
-        version_time = version_time.replace(tzinfo=UTC)
 
         # Create backup.
         backup = instance.backup(
             backup_id,
             database=self._db,
             expire_time=expire_time,
-            version_time=version_time,
+            version_time=self.database_version_time,
         )
         operation = backup.create()
         self.to_delete.append(backup)
@@ -694,7 +695,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         self.assertEqual(self._db.name, backup._database)
         self.assertEqual(expire_time, backup.expire_time)
         self.assertIsNotNone(backup.create_time)
-        self.assertEqual(version_time, backup.version_time)
+        self.assertEqual(self.database_version_time, backup.version_time)
         self.assertIsNotNone(backup.size_bytes)
         self.assertIsNotNone(backup.state)
 
@@ -710,10 +711,10 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         self.to_drop.append(database)
         operation = database.restore(source=backup)
         restored_db = operation.result()
-        self.assertEqual(version_time, restored_db.restore_info.backup_info.create_time)
+        self.assertEqual(self.database_version_time, restored_db.restore_info.backup_info.create_time)
 
         metadata = operation.metadata
-        self.assertEqual(version_time, metadata.backup_info.create_time)
+        self.assertEqual(self.database_version_time, metadata.backup_info.create_time)
 
         database.drop()
         backup.delete()
@@ -889,14 +890,12 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         instance = Config.INSTANCE
         expire_time_1 = datetime.utcnow() + timedelta(days=21)
         expire_time_1 = expire_time_1.replace(tzinfo=UTC)
-        version_time_1 = datetime.utcnow() - timedelta(minutes=5)
-        version_time_1 = version_time_1.replace(tzinfo=UTC)
 
         backup1 = Config.INSTANCE.backup(
             backup_id_1,
             database=self._dbs[0],
             expire_time=expire_time_1,
-            version_time=version_time_1,
+            version_time=self.database_version_time,
         )
 
         expire_time_2 = datetime.utcnow() + timedelta(days=1)
