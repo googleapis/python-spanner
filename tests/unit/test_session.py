@@ -1336,7 +1336,7 @@ class TestSession(OpenTelemetryBase):
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
-        response = CommitResponse(commit_timestamp=now_pb)
+        response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
         gax_api = self._make_spanner_api()
         gax_api.begin_transaction.return_value = transaction_pb
         gax_api.commit.return_value = response
