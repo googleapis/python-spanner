@@ -1368,16 +1368,13 @@ class TestBatchCheckout(_BaseTest):
             session=self.SESSION_NAME,
             mutations=[],
             single_use_transaction=expected_txn_options,
-            return_commit_stats=True
-
+            return_commit_stats=True,
         )
         api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-        database.logger.info.assert_called_once_with(
-            "Transaction mutation count: 4"
-        )
+        database.logger.info.assert_called_once_with("Transaction mutation count: 4")
 
     def test_context_mgr_failure(self):
         from google.cloud.spanner_v1.batch import Batch
@@ -1972,6 +1969,7 @@ class _Database(object):
         self.database_id = name.rsplit("/", 1)[1]
         self._instance = instance
         from logging import Logger
+
         self.logger = mock.create_autospec(Logger, instance=True)
 
 
