@@ -39,6 +39,9 @@ from .test_system import (
 )
 
 
+SPANNER_RPC_TIMEOUT_IN_SECONDS = int(os.getenv("SPANNER_RPC_TIMEOUT_IN_SECONDS", 30))
+
+
 def setUpModule():
     if USE_EMULATOR:
         from google.auth.credentials import AnonymousCredentials
@@ -91,7 +94,7 @@ def setUpModule():
             INSTANCE_ID, config_name, labels=labels
         )
         created_op = Config.INSTANCE.create()
-        created_op.result(30)  # block until completion
+        created_op.result(SPANNER_RPC_TIMEOUT_IN_SECONDS)  # block until completion
 
     else:
         Config.INSTANCE = Config.CLIENT.instance(INSTANCE_ID)
@@ -126,7 +129,7 @@ class TestTransactionsManagement(unittest.TestCase):
             ddl_statements=cls.DDL_STATEMENTS,
             pool=BurstyPool(labels={"testcase": "database_api"}),
         )
-        cls._db.create().result(30)  # raises on failure / timeout.
+        cls._db.create().result(SPANNER_RPC_TIMEOUT_IN_SECONDS)  # raises on failure / timeout.
 
     @classmethod
     def tearDownClass(cls):
