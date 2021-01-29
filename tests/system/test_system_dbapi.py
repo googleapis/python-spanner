@@ -129,7 +129,9 @@ class TestTransactionsManagement(unittest.TestCase):
             ddl_statements=cls.DDL_STATEMENTS,
             pool=BurstyPool(labels={"testcase": "database_api"}),
         )
-        cls._db.create().result(SPANNER_RPC_TIMEOUT_IN_SECONDS)  # raises on failure / timeout.
+        cls._db.create().result(
+            SPANNER_RPC_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
     @classmethod
     def tearDownClass(cls):
