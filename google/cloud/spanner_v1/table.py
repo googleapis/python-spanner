@@ -19,18 +19,39 @@ _GET_SCHEMA_TEMPLATE = "SELECT * FROM {} LIMIT 0"
 
 class Table(object):
     """Representation of a Cloud Spanner Table.
+
+    :type table_id: str
+    :param table_id: The ID of the table.
+
+    :type instance: :class:`~google.cloud.spanner_v1.database.Database`
+    :param instance: The database that owns the table.
     """
 
     def __init__(self, table_id, database):
-        self.table_id = table_id
+        self._table_id = table_id
         self._database = database
 
-    def get_schema(self):
+    @property
+    def table_id(self):
+        """The ID of the table used in SQL.
+
+        :rtype: str
+        :returns: The table ID.
         """
-        List of google.cloud.spanner_v1.types.Field
+        return self._table_id
+
+    def get_schema(self):
+        """Get the schema of this table.
+
+        :rtype: list of :class:`~google.cloud.spanner_v1.types.Field`
+        :returns: The table schema.
         """
         with self._database.snapshot() as snapshot:
             query = _GET_SCHEMA_TEMPLATE.format(self.table_id)
             results = snapshot.execute_sql(query)
-            # _ = list(results)
+            # Start iterating to force the schema to download.
+            try:
+                next(iter(results))
+            except StopIteration:
+                pass
             return list(results.fields)

@@ -47,12 +47,12 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
 )
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1.table import Table
-from google.cloud.spanner_v1.proto.transaction_pb2 import (
+from google.cloud.spanner_v1 import (
+    ExecuteSqlRequest,
     TransactionSelector,
     TransactionOptions,
 )
+from google.cloud.spanner_v1.table import Table
 
 # pylint: enable=ungrouped-imports
 
