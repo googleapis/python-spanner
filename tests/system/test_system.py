@@ -509,7 +509,6 @@ class TestTableAPI(unittest.TestCase, _TestData):
         self.assertIn(("float_value", TypeCode.FLOAT64), names_and_types)
         self.assertIn(("string_value", TypeCode.STRING), names_and_types)
         self.assertIn(("timestamp_value", TypeCode.TIMESTAMP), names_and_types)
-        self.assertIn(("numeric_value", TypeCode.NUMERIC), names_and_types)
 
 
 @unittest.skipIf(USE_EMULATOR, "Skipping backup tests")
