@@ -23,8 +23,8 @@ class Table(object):
     :type table_id: str
     :param table_id: The ID of the table.
 
-    :type instance: :class:`~google.cloud.spanner_v1.database.Database`
-    :param instance: The database that owns the table.
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :param database: The database that owns the table.
     """
 
     def __init__(self, table_id, database):
