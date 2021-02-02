@@ -11,8 +11,8 @@
       "git": {
         "name": "googleapis",
         "remote": "https://github.com/googleapis/googleapis.git",
-        "sha": "dd372aa22ded7a8ba6f0e03a80e06358a3fa0907",
-        "internalRef": "347055288"
+        "sha": "520682435235d9c503983a360a2090025aa47cd1",
+        "internalRef": "350246057"
       }
     },
     {
@@ -112,11 +112,14 @@
     "docs/_templates/layout.html",
     "docs/conf.py",
     "docs/multiprocessing.rst",
+    "docs/spanner_admin_database_v1/database_admin.rst",
     "docs/spanner_admin_database_v1/services.rst",
     "docs/spanner_admin_database_v1/types.rst",
+    "docs/spanner_admin_instance_v1/instance_admin.rst",
     "docs/spanner_admin_instance_v1/services.rst",
     "docs/spanner_admin_instance_v1/types.rst",
     "docs/spanner_v1/services.rst",
+    "docs/spanner_v1/spanner.rst",
     "docs/spanner_v1/types.rst",
     "google/cloud/spanner_admin_database_v1/__init__.py",
     "google/cloud/spanner_admin_database_v1/proto/backup.proto",
