@@ -43,7 +43,7 @@ class Table(object):
     def get_schema(self):
         """Get the schema of this table.
 
-        :rtype: list of :class:`~google.cloud.spanner_v1.types.Field`
+        :rtype: list of :class:`~google.cloud.spanner_v1.types.StructType.Field`
         :returns: The table schema.
         """
         with self._database.snapshot() as snapshot:

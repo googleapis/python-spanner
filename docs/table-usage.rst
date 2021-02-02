@@ -38,7 +38,7 @@ Getting the Table Schema
 
 Use the :meth:`~google.cloud.spanner_v1.table.Table.get_schema` method to
 inspect the columns of a table as a list of
-:class:`~google.cloud.spanner_v1.types.Field` objects.
+:class:`~google.cloud.spanner_v1.types.StructType.Field` objects.
 
 .. code:: python
 
