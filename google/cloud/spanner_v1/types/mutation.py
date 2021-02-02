@@ -31,15 +31,15 @@ class Mutation(proto.Message):
     [Commit][google.spanner.v1.Spanner.Commit] call.
 
     Attributes:
-        insert (google.cloud.spanner_v1.types.Mutation.Write):
+        insert (~.mutation.Mutation.Write):
             Insert new rows in a table. If any of the rows already
             exist, the write or transaction fails with error
             ``ALREADY_EXISTS``.
-        update (google.cloud.spanner_v1.types.Mutation.Write):
+        update (~.mutation.Mutation.Write):
             Update existing rows in a table. If any of the rows does not
             already exist, the transaction fails with error
             ``NOT_FOUND``.
-        insert_or_update (google.cloud.spanner_v1.types.Mutation.Write):
+        insert_or_update (~.mutation.Mutation.Write):
             Like [insert][google.spanner.v1.Mutation.insert], except
             that if the row already exists, then its column values are
             overwritten with the ones provided. Any column values not
@@ -52,7 +52,7 @@ class Mutation(proto.Message):
             ``NOT NULL`` columns in the table must be given a value.
             This holds true even when the row already exists and will
             therefore actually be updated.
-        replace (google.cloud.spanner_v1.types.Mutation.Write):
+        replace (~.mutation.Mutation.Write):
             Like [insert][google.spanner.v1.Mutation.insert], except
             that if the row already exists, it is deleted, and the
             column values provided are inserted instead. Unlike
@@ -64,7 +64,7 @@ class Mutation(proto.Message):
             the ``ON DELETE CASCADE`` annotation, then replacing a
             parent row also deletes the child rows. Otherwise, you must
             delete the child rows before you replace the parent row.
-        delete (google.cloud.spanner_v1.types.Mutation.Delete):
+        delete (~.mutation.Mutation.Delete):
             Delete rows from a table. Succeeds whether or
             not the named rows were present.
     """
@@ -87,7 +87,7 @@ class Mutation(proto.Message):
                 The list of columns must contain enough columns to allow
                 Cloud Spanner to derive values for all primary key columns
                 in the row(s) to be modified.
-            values (Sequence[google.protobuf.struct_pb2.ListValue]):
+            values (Sequence[~.struct.ListValue]):
                 The values to be written. ``values`` can contain more than
                 one list of values. If it does, then multiple rows are
                 written, one for each entry in ``values``. Each list in
@@ -115,7 +115,7 @@ class Mutation(proto.Message):
             table (str):
                 Required. The table whose rows will be
                 deleted.
-            key_set (google.cloud.spanner_v1.types.KeySet):
+            key_set (~.keys.KeySet):
                 Required. The primary keys of the rows within
                 [table][google.spanner.v1.Mutation.Delete.table] to delete.
                 The primary keys must be specified in the order in which

@@ -135,22 +135,6 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     )
 
     @classmethod
-    def from_service_account_info(cls, info: dict, *args, **kwargs):
-        """Creates an instance of this client using the provided credentials info.
-
-        Args:
-            info (dict): The service account private key info.
-            args: Additional arguments to pass to the constructor.
-            kwargs: Additional arguments to pass to the constructor.
-
-        Returns:
-            InstanceAdminClient: The constructed client.
-        """
-        credentials = service_account.Credentials.from_service_account_info(info)
-        kwargs["credentials"] = credentials
-        return cls(*args, **kwargs)
-
-    @classmethod
     def from_service_account_file(cls, filename: str, *args, **kwargs):
         """Creates an instance of this client using the provided credentials
         file.
@@ -162,7 +146,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             kwargs: Additional arguments to pass to the constructor.
 
         Returns:
-            InstanceAdminClient: The constructed client.
+            {@api.name}: The constructed client.
         """
         credentials = service_account.Credentials.from_service_account_file(filename)
         kwargs["credentials"] = credentials
@@ -283,10 +267,10 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 credentials identify the application to the service; if none
                 are specified, the client will attempt to ascertain the
                 credentials from the environment.
-            transport (Union[str, InstanceAdminTransport]): The
+            transport (Union[str, ~.InstanceAdminTransport]): The
                 transport to use. If set to None, a transport is chosen
                 automatically.
-            client_options (google.api_core.client_options.ClientOptions): Custom options for the
+            client_options (client_options_lib.ClientOptions): Custom options for the
                 client. It won't take effect if a ``transport`` instance is provided.
                 (1) The ``api_endpoint`` property can be used to override the
                 default endpoint provided by the client. GOOGLE_API_USE_MTLS_ENDPOINT
@@ -397,14 +381,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         given project.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsRequest):
+            request (:class:`~.spanner_instance_admin.ListInstanceConfigsRequest`):
                 The request object. The request for
                 [ListInstanceConfigs][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigs].
-            parent (str):
+            parent (:class:`str`):
                 Required. The name of the project for which a list of
                 supported instance configurations is requested. Values
                 are of the form ``projects/<project>``.
-
                 This corresponds to the ``parent`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -416,7 +399,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.cloud.spanner_admin_instance_v1.services.instance_admin.pagers.ListInstanceConfigsPager:
+            ~.pagers.ListInstanceConfigsPager:
                 The response for
                 [ListInstanceConfigs][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigs].
 
@@ -482,14 +465,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         configuration.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.GetInstanceConfigRequest):
+            request (:class:`~.spanner_instance_admin.GetInstanceConfigRequest`):
                 The request object. The request for
                 [GetInstanceConfigRequest][google.spanner.admin.instance.v1.InstanceAdmin.GetInstanceConfig].
-            name (str):
+            name (:class:`str`):
                 Required. The name of the requested instance
                 configuration. Values are of the form
                 ``projects/<project>/instanceConfigs/<config>``.
-
                 This corresponds to the ``name`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -501,7 +483,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.cloud.spanner_admin_instance_v1.types.InstanceConfig:
+            ~.spanner_instance_admin.InstanceConfig:
                 A possible configuration for a Cloud
                 Spanner instance. Configurations define
                 the geographic placement of nodes and
@@ -559,14 +541,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         r"""Lists all instances in the given project.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.ListInstancesRequest):
+            request (:class:`~.spanner_instance_admin.ListInstancesRequest`):
                 The request object. The request for
                 [ListInstances][google.spanner.admin.instance.v1.InstanceAdmin.ListInstances].
-            parent (str):
+            parent (:class:`str`):
                 Required. The name of the project for which a list of
                 instances is requested. Values are of the form
                 ``projects/<project>``.
-
                 This corresponds to the ``parent`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -578,7 +559,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.cloud.spanner_admin_instance_v1.services.instance_admin.pagers.ListInstancesPager:
+            ~.pagers.ListInstancesPager:
                 The response for
                 [ListInstances][google.spanner.admin.instance.v1.InstanceAdmin.ListInstances].
 
@@ -643,13 +624,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         r"""Gets information about a particular instance.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.GetInstanceRequest):
+            request (:class:`~.spanner_instance_admin.GetInstanceRequest`):
                 The request object. The request for
                 [GetInstance][google.spanner.admin.instance.v1.InstanceAdmin.GetInstance].
-            name (str):
+            name (:class:`str`):
                 Required. The name of the requested instance. Values are
                 of the form ``projects/<project>/instances/<instance>``.
-
                 This corresponds to the ``name`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -661,7 +641,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.cloud.spanner_admin_instance_v1.types.Instance:
+            ~.spanner_instance_admin.Instance:
                 An isolated set of Cloud Spanner
                 resources on which databases can be
                 hosted.
@@ -757,29 +737,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         successful.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.CreateInstanceRequest):
+            request (:class:`~.spanner_instance_admin.CreateInstanceRequest`):
                 The request object. The request for
                 [CreateInstance][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstance].
-            parent (str):
+            parent (:class:`str`):
                 Required. The name of the project in which to create the
                 instance. Values are of the form ``projects/<project>``.
-
                 This corresponds to the ``parent`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            instance_id (str):
+            instance_id (:class:`str`):
                 Required. The ID of the instance to create. Valid
                 identifiers are of the form ``[a-z][-a-z0-9]*[a-z0-9]``
                 and must be between 2 and 64 characters in length.
-
                 This corresponds to the ``instance_id`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            instance (google.cloud.spanner_admin_instance_v1.types.Instance):
+            instance (:class:`~.spanner_instance_admin.Instance`):
                 Required. The instance to create. The name may be
                 omitted, but if specified must be
                 ``<parent>/instances/<instance_id>``.
-
                 This corresponds to the ``instance`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -791,12 +768,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.api_core.operation.Operation:
+            ~.operation.Operation:
                 An object representing a long-running operation.
 
                 The result type for the operation will be
-                :class:`google.cloud.spanner_admin_instance_v1.types.Instance`
-                An isolated set of Cloud Spanner resources on which
+                :class:``~.spanner_instance_admin.Instance``: An
+                isolated set of Cloud Spanner resources on which
                 databases can be hosted.
 
         """
@@ -908,20 +885,19 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [name][google.spanner.admin.instance.v1.Instance.name].
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.UpdateInstanceRequest):
+            request (:class:`~.spanner_instance_admin.UpdateInstanceRequest`):
                 The request object. The request for
                 [UpdateInstance][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstance].
-            instance (google.cloud.spanner_admin_instance_v1.types.Instance):
+            instance (:class:`~.spanner_instance_admin.Instance`):
                 Required. The instance to update, which must always
                 include the instance name. Otherwise, only fields
                 mentioned in
                 [field_mask][google.spanner.admin.instance.v1.UpdateInstanceRequest.field_mask]
                 need be included.
-
                 This corresponds to the ``instance`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            field_mask (google.protobuf.field_mask_pb2.FieldMask):
+            field_mask (:class:`~.gp_field_mask.FieldMask`):
                 Required. A mask specifying which fields in
                 [Instance][google.spanner.admin.instance.v1.Instance]
                 should be updated. The field mask must always be
@@ -929,7 +905,6 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 [Instance][google.spanner.admin.instance.v1.Instance]
                 from being erased accidentally by clients that do not
                 know about them.
-
                 This corresponds to the ``field_mask`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -941,12 +916,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.api_core.operation.Operation:
+            ~.operation.Operation:
                 An object representing a long-running operation.
 
                 The result type for the operation will be
-                :class:`google.cloud.spanner_admin_instance_v1.types.Instance`
-                An isolated set of Cloud Spanner resources on which
+                :class:``~.spanner_instance_admin.Instance``: An
+                isolated set of Cloud Spanner resources on which
                 databases can be hosted.
 
         """
@@ -1023,14 +998,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
            is permanently deleted.
 
         Args:
-            request (google.cloud.spanner_admin_instance_v1.types.DeleteInstanceRequest):
+            request (:class:`~.spanner_instance_admin.DeleteInstanceRequest`):
                 The request object. The request for
                 [DeleteInstance][google.spanner.admin.instance.v1.InstanceAdmin.DeleteInstance].
-            name (str):
+            name (:class:`str`):
                 Required. The name of the instance to be deleted. Values
                 are of the form
                 ``projects/<project>/instances/<instance>``
-
                 This corresponds to the ``name`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -1095,15 +1069,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
         Args:
-            request (google.iam.v1.iam_policy_pb2.SetIamPolicyRequest):
+            request (:class:`~.iam_policy.SetIamPolicyRequest`):
                 The request object. Request message for `SetIamPolicy`
                 method.
-            resource (str):
+            resource (:class:`str`):
                 REQUIRED: The resource for which the
                 policy is being specified. See the
                 operation documentation for the
                 appropriate value for this field.
-
                 This corresponds to the ``resource`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -1115,62 +1088,72 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.iam.v1.policy_pb2.Policy:
-                Defines an Identity and Access Management (IAM) policy. It is used to
-                   specify access control policies for Cloud Platform
-                   resources.
+            ~.policy.Policy:
+                Defines an Identity and Access Management (IAM) policy.
+                It is used to specify access control policies for Cloud
+                Platform resources.
 
-                   A Policy is a collection of bindings. A binding binds
-                   one or more members to a single role. Members can be
-                   user accounts, service accounts, Google groups, and
-                   domains (such as G Suite). A role is a named list of
-                   permissions (defined by IAM or configured by users).
-                   A binding can optionally specify a condition, which
-                   is a logic expression that further constrains the
-                   role binding based on attributes about the request
-                   and/or target resource.
+                A ``Policy`` is a collection of ``bindings``. A
+                ``binding`` binds one or more ``members`` to a single
+                ``role``. Members can be user accounts, service
+                accounts, Google groups, and domains (such as G Suite).
+                A ``role`` is a named list of permissions (defined by
+                IAM or configured by users). A ``binding`` can
+                optionally specify a ``condition``, which is a logic
+                expression that further constrains the role binding
+                based on attributes about the request and/or target
+                resource.
 
-                   **JSON Example**
+                **JSON Example**
 
-                      {
-                         "bindings": [
-                            {
-                               "role":
-                               "roles/resourcemanager.organizationAdmin",
-                               "members": [ "user:mike@example.com",
-                               "group:admins@example.com",
-                               "domain:google.com",
-                               "serviceAccount:my-project-id@appspot.gserviceaccount.com"
-                               ]
+                ::
 
-                            }, { "role":
-                            "roles/resourcemanager.organizationViewer",
-                            "members": ["user:eve@example.com"],
-                            "condition": { "title": "expirable access",
-                            "description": "Does not grant access after
-                            Sep 2020", "expression": "request.time <
-                            timestamp('2020-10-01T00:00:00.000Z')", } }
+                    {
+                      "bindings": [
+                        {
+                          "role": "roles/resourcemanager.organizationAdmin",
+                          "members": [
+                            "user:mike@example.com",
+                            "group:admins@example.com",
+                            "domain:google.com",
+                            "serviceAccount:my-project-id@appspot.gserviceaccount.com"
+                          ]
+                        },
+                        {
+                          "role": "roles/resourcemanager.organizationViewer",
+                          "members": ["user:eve@example.com"],
+                          "condition": {
+                            "title": "expirable access",
+                            "description": "Does not grant access after Sep 2020",
+                            "expression": "request.time <
+                            timestamp('2020-10-01T00:00:00.000Z')",
+                          }
+                        }
+                      ]
+                    }
 
-                         ]
+                **YAML Example**
 
-                      }
+                ::
 
-                   **YAML Example**
+                    bindings:
+                    - members:
+                      - user:mike@example.com
+                      - group:admins@example.com
+                      - domain:google.com
+                      - serviceAccount:my-project-id@appspot.gserviceaccount.com
+                      role: roles/resourcemanager.organizationAdmin
+                    - members:
+                      - user:eve@example.com
+                      role: roles/resourcemanager.organizationViewer
+                      condition:
+                        title: expirable access
+                        description: Does not grant access after Sep 2020
+                        expression: request.time < timestamp('2020-10-01T00:00:00.000Z')
 
-                      bindings: - members: - user:\ mike@example.com -
-                      group:\ admins@example.com - domain:google.com -
-                      serviceAccount:\ my-project-id@appspot.gserviceaccount.com
-                      role: roles/resourcemanager.organizationAdmin -
-                      members: - user:\ eve@example.com role:
-                      roles/resourcemanager.organizationViewer
-                      condition: title: expirable access description:
-                      Does not grant access after Sep 2020 expression:
-                      request.time <
-                      timestamp('2020-10-01T00:00:00.000Z')
-
-                   For a description of IAM and its features, see the
-                   [IAM developer's
-                   guide](\ https://cloud.google.com/iam/docs).
+                For a description of IAM and its features, see the `IAM
+                developer's
+                guide <https://cloud.google.com/iam/docs>`__.
 
         """
         # Create or coerce a protobuf request object.
@@ -1224,15 +1207,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
         Args:
-            request (google.iam.v1.iam_policy_pb2.GetIamPolicyRequest):
+            request (:class:`~.iam_policy.GetIamPolicyRequest`):
                 The request object. Request message for `GetIamPolicy`
                 method.
-            resource (str):
+            resource (:class:`str`):
                 REQUIRED: The resource for which the
                 policy is being requested. See the
                 operation documentation for the
                 appropriate value for this field.
-
                 This corresponds to the ``resource`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -1244,62 +1226,72 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.iam.v1.policy_pb2.Policy:
-                Defines an Identity and Access Management (IAM) policy. It is used to
-                   specify access control policies for Cloud Platform
-                   resources.
+            ~.policy.Policy:
+                Defines an Identity and Access Management (IAM) policy.
+                It is used to specify access control policies for Cloud
+                Platform resources.
 
-                   A Policy is a collection of bindings. A binding binds
-                   one or more members to a single role. Members can be
-                   user accounts, service accounts, Google groups, and
-                   domains (such as G Suite). A role is a named list of
-                   permissions (defined by IAM or configured by users).
-                   A binding can optionally specify a condition, which
-                   is a logic expression that further constrains the
-                   role binding based on attributes about the request
-                   and/or target resource.
+                A ``Policy`` is a collection of ``bindings``. A
+                ``binding`` binds one or more ``members`` to a single
+                ``role``. Members can be user accounts, service
+                accounts, Google groups, and domains (such as G Suite).
+                A ``role`` is a named list of permissions (defined by
+                IAM or configured by users). A ``binding`` can
+                optionally specify a ``condition``, which is a logic
+                expression that further constrains the role binding
+                based on attributes about the request and/or target
+                resource.
 
-                   **JSON Example**
+                **JSON Example**
 
-                      {
-                         "bindings": [
-                            {
-                               "role":
-                               "roles/resourcemanager.organizationAdmin",
-                               "members": [ "user:mike@example.com",
-                               "group:admins@example.com",
-                               "domain:google.com",
-                               "serviceAccount:my-project-id@appspot.gserviceaccount.com"
-                               ]
+                ::
 
-                            }, { "role":
-                            "roles/resourcemanager.organizationViewer",
-                            "members": ["user:eve@example.com"],
-                            "condition": { "title": "expirable access",
-                            "description": "Does not grant access after
-                            Sep 2020", "expression": "request.time <
-                            timestamp('2020-10-01T00:00:00.000Z')", } }
+                    {
+                      "bindings": [
+                        {
+                          "role": "roles/resourcemanager.organizationAdmin",
+                          "members": [
+                            "user:mike@example.com",
+                            "group:admins@example.com",
+                            "domain:google.com",
+                            "serviceAccount:my-project-id@appspot.gserviceaccount.com"
+                          ]
+                        },
+                        {
+                          "role": "roles/resourcemanager.organizationViewer",
+                          "members": ["user:eve@example.com"],
+                          "condition": {
+                            "title": "expirable access",
+                            "description": "Does not grant access after Sep 2020",
+                            "expression": "request.time <
+                            timestamp('2020-10-01T00:00:00.000Z')",
+                          }
+                        }
+                      ]
+                    }
 
-                         ]
+                **YAML Example**
 
-                      }
+                ::
 
-                   **YAML Example**
+                    bindings:
+                    - members:
+                      - user:mike@example.com
+                      - group:admins@example.com
+                      - domain:google.com
+                      - serviceAccount:my-project-id@appspot.gserviceaccount.com
+                      role: roles/resourcemanager.organizationAdmin
+                    - members:
+                      - user:eve@example.com
+                      role: roles/resourcemanager.organizationViewer
+                      condition:
+                        title: expirable access
+                        description: Does not grant access after Sep 2020
+                        expression: request.time < timestamp('2020-10-01T00:00:00.000Z')
 
-                      bindings: - members: - user:\ mike@example.com -
-                      group:\ admins@example.com - domain:google.com -
-                      serviceAccount:\ my-project-id@appspot.gserviceaccount.com
-                      role: roles/resourcemanager.organizationAdmin -
-                      members: - user:\ eve@example.com role:
-                      roles/resourcemanager.organizationViewer
-                      condition: title: expirable access description:
-                      Does not grant access after Sep 2020 expression:
-                      request.time <
-                      timestamp('2020-10-01T00:00:00.000Z')
-
-                   For a description of IAM and its features, see the
-                   [IAM developer's
-                   guide](\ https://cloud.google.com/iam/docs).
+                For a description of IAM and its features, see the `IAM
+                developer's
+                guide <https://cloud.google.com/iam/docs>`__.
 
         """
         # Create or coerce a protobuf request object.
@@ -1355,24 +1347,22 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         Cloud Project. Otherwise returns an empty set of permissions.
 
         Args:
-            request (google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest):
+            request (:class:`~.iam_policy.TestIamPermissionsRequest`):
                 The request object. Request message for
                 `TestIamPermissions` method.
-            resource (str):
+            resource (:class:`str`):
                 REQUIRED: The resource for which the
                 policy detail is being requested. See
                 the operation documentation for the
                 appropriate value for this field.
-
                 This corresponds to the ``resource`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            permissions (Sequence[str]):
+            permissions (:class:`Sequence[str]`):
                 The set of permissions to check for the ``resource``.
                 Permissions with wildcards (such as '*' or 'storage.*')
                 are not allowed. For more information see `IAM
                 Overview <https://cloud.google.com/iam/docs/overview#permissions>`__.
-
                 This corresponds to the ``permissions`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
@@ -1384,8 +1374,8 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 sent along with the request as metadata.
 
         Returns:
-            google.iam.v1.iam_policy_pb2.TestIamPermissionsResponse:
-                Response message for TestIamPermissions method.
+            ~.iam_policy.TestIamPermissionsResponse:
+                Response message for ``TestIamPermissions`` method.
         """
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have

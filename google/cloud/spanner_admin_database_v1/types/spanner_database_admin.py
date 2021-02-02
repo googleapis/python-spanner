@@ -59,9 +59,9 @@ class RestoreInfo(proto.Message):
     r"""Information about the database restore.
 
     Attributes:
-        source_type (google.cloud.spanner_admin_database_v1.types.RestoreSourceType):
+        source_type (~.spanner_database_admin.RestoreSourceType):
             The type of the restore source.
-        backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
+        backup_info (~.gsad_backup.BackupInfo):
             Information about the backup used to restore
             the database. The backup may no longer exist.
     """
@@ -83,12 +83,12 @@ class Database(proto.Message):
             where ``<database>`` is as specified in the
             ``CREATE DATABASE`` statement. This name can be passed to
             other API methods to identify the database.
-        state (google.cloud.spanner_admin_database_v1.types.Database.State):
+        state (~.spanner_database_admin.Database.State):
             Output only. The current database state.
-        create_time (google.protobuf.timestamp_pb2.Timestamp):
+        create_time (~.timestamp.Timestamp):
             Output only. If exists, the time at which the
             database creation started.
-        restore_info (google.cloud.spanner_admin_database_v1.types.RestoreInfo):
+        restore_info (~.spanner_database_admin.RestoreInfo):
             Output only. Applicable only for restored
             databases. Contains information about the
             restore source.
@@ -142,7 +142,7 @@ class ListDatabasesResponse(proto.Message):
     [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
 
     Attributes:
-        databases (Sequence[google.cloud.spanner_admin_database_v1.types.Database]):
+        databases (Sequence[~.spanner_database_admin.Database]):
             Databases that matched the request.
         next_page_token (str):
             ``next_page_token`` can be sent in a subsequent
@@ -283,7 +283,7 @@ class UpdateDatabaseDdlMetadata(proto.Message):
             For an update this list contains all the
             statements. For an individual statement, this
             list contains only that statement.
-        commit_timestamps (Sequence[google.protobuf.timestamp_pb2.Timestamp]):
+        commit_timestamps (Sequence[~.timestamp.Timestamp]):
             Reports the commit timestamps of all statements that have
             succeeded so far, where ``commit_timestamps[i]`` is the
             commit timestamp for the statement ``statements[i]``.
@@ -429,7 +429,7 @@ class ListDatabaseOperationsResponse(proto.Message):
     [ListDatabaseOperations][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabaseOperations].
 
     Attributes:
-        operations (Sequence[google.longrunning.operations_pb2.Operation]):
+        operations (Sequence[~.gl_operations.Operation]):
             The list of matching database [long-running
             operations][google.longrunning.Operation]. Each operation's
             name will be prefixed by the database's name. The
@@ -491,16 +491,16 @@ class RestoreDatabaseMetadata(proto.Message):
         name (str):
             Name of the database being created and
             restored to.
-        source_type (google.cloud.spanner_admin_database_v1.types.RestoreSourceType):
+        source_type (~.spanner_database_admin.RestoreSourceType):
             The type of the restore source.
-        backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
+        backup_info (~.gsad_backup.BackupInfo):
             Information about the backup used to restore
             the database.
-        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
+        progress (~.common.OperationProgress):
             The progress of the
             [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase]
             operation.
-        cancel_time (google.protobuf.timestamp_pb2.Timestamp):
+        cancel_time (~.timestamp.Timestamp):
             The time at which cancellation of this operation was
             received.
             [Operations.CancelOperation][google.longrunning.Operations.CancelOperation]
@@ -557,7 +557,7 @@ class OptimizeRestoredDatabaseMetadata(proto.Message):
         name (str):
             Name of the restored database being
             optimized.
-        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
+        progress (~.common.OperationProgress):
             The progress of the post-restore
             optimizations.
     """
