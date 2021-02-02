@@ -483,6 +483,14 @@ class TestTableAPI(unittest.TestCase, _TestData):
     def tearDownClass(cls):
         cls._db.drop()
 
+    def test_exists(self):
+        table = Table("all_types", self._db)
+        self.assertTrue(table.exists())
+
+    def test_exists_not_found(self):
+        table = Table("table_does_not_exist", self._db)
+        self.assertFalse(table.exists())
+
     def test_list_tables(self):
         tables = self._db.list_tables()
         table_ids = set(table.table_id for table in tables)
@@ -490,15 +498,21 @@ class TestTableAPI(unittest.TestCase, _TestData):
         self.assertIn("contact_phones", table_ids)
         self.assertIn("all_types", table_ids)
 
-    def test_list_tables_get_schema(self):
+    def test_list_tables_reload(self):
         tables = self._db.list_tables()
         for table in tables:
-            schema = table.get_schema()
+            self.assertTrue(table.exists())
+            schema = table.schema
             self.assertIsInstance(schema, list)
 
-    def test_get_schema(self):
+    def test_reload_not_found(self):
+        table = Table("table_does_not_exist", self._db)
+        with self.assertRaises(exceptions.NotFound):
+            table.reload()
+
+    def test_schema(self):
         table = Table("all_types", self._db)
-        schema = table.get_schema()
+        schema = table.schema
         names_and_types = set((field.name, field.type_.code) for field in schema)
         self.assertIn(("pkey", TypeCode.INT64), names_and_types)
         self.assertIn(("int_value", TypeCode.INT64), names_and_types)

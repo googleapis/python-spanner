@@ -19,8 +19,8 @@ To iterate over all existing tables for an database, use its
 This method yields :class:`~google.cloud.spanner_v1.table.Table` objects.
 
 
-Constructing a Table
---------------------
+Table Factory
+-------------
 
 A table object can be created by using the
 :class:`~google.cloud.spanner_v1.table.Table` constructor. Since table
@@ -36,11 +36,11 @@ operations are executed via SQL, a
 Getting the Table Schema
 ------------------------
 
-Use the :meth:`~google.cloud.spanner_v1.table.Table.get_schema` method to
-inspect the columns of a table as a list of
+Use the :attr:`~google.cloud.spanner_v1.table.Table.schema` property to inspect
+the columns of a table as a list of
 :class:`~google.cloud.spanner_v1.types.StructType.Field` objects.
 
 .. code:: python
 
-    for field in table.get_schema():
+    for field in table.schema
         # `field` is a `Field` object.

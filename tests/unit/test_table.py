@@ -14,7 +14,14 @@
 
 import unittest
 
+from google.cloud.exceptions import NotFound
 import mock
+
+from google.cloud.spanner_v1.types import (
+    StructType,
+    Type,
+    TypeCode,
+)
 
 
 class _BaseTest(unittest.TestCase):
@@ -37,7 +44,27 @@ class TestTable(_BaseTest):
         table = self._make_one(self.TABLE_ID, db)
         self.assertEqual(table.table_id, self.TABLE_ID)
 
-    def test_get_schema(self):
+    def test_exists_executes_query(self):
+        from google.cloud.spanner_v1.database import Database, SnapshotCheckout
+        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner_v1.table import _EXISTS_TEMPLATE
+
+        db = mock.create_autospec(Database, instance=True)
+        checkout = mock.create_autospec(SnapshotCheckout, instance=True)
+        snapshot = mock.create_autospec(Snapshot, instance=True)
+        db.snapshot.return_value = checkout
+        checkout.__enter__.return_value = snapshot
+        snapshot.execute_sql.return_value = [[False]]
+        table = self._make_one(self.TABLE_ID, db)
+        exists = table.exists()
+        self.assertFalse(exists)
+        snapshot.execute_sql.assert_called_with(
+            _EXISTS_TEMPLATE,
+            params={"table_id": self.TABLE_ID},
+            param_types={"table_id": Type(code=TypeCode.STRING)},
+        )
+
+    def test_schema_executes_query(self):
         from google.cloud.spanner_v1.database import Database, SnapshotCheckout
         from google.cloud.spanner_v1.snapshot import Snapshot
         from google.cloud.spanner_v1.table import _GET_SCHEMA_TEMPLATE
@@ -48,7 +75,50 @@ class TestTable(_BaseTest):
         db.snapshot.return_value = checkout
         checkout.__enter__.return_value = snapshot
         table = self._make_one(self.TABLE_ID, db)
-        schema = table.get_schema()
+        schema = table.schema
         self.assertIsInstance(schema, list)
         expected_query = _GET_SCHEMA_TEMPLATE.format(self.TABLE_ID)
         snapshot.execute_sql.assert_called_with(expected_query)
+
+    def test_schema_returns_cache(self):
+        from google.cloud.spanner_v1.database import Database
+
+        db = mock.create_autospec(Database, instance=True)
+        table = self._make_one(self.TABLE_ID, db)
+        table._schema = [StructType.Field(name="col1")]
+        schema = table.schema
+        self.assertEqual(schema, [StructType.Field(name="col1")])
+
+    def test_reload_raises_notfound(self):
+        from google.cloud.spanner_v1.database import Database, SnapshotCheckout
+        from google.cloud.spanner_v1.snapshot import Snapshot
+
+        db = mock.create_autospec(Database, instance=True)
+        checkout = mock.create_autospec(SnapshotCheckout, instance=True)
+        snapshot = mock.create_autospec(Snapshot, instance=True)
+        db.snapshot.return_value = checkout
+        checkout.__enter__.return_value = snapshot
+        snapshot.execute_sql.return_value = [[False]]
+        table = self._make_one(self.TABLE_ID, db)
+        with self.assertRaises(NotFound):
+            table.reload()
+
+    def test_reload_executes_queries(self):
+        from google.cloud.spanner_v1.database import Database, SnapshotCheckout
+        from google.cloud.spanner_v1.snapshot import Snapshot
+        from google.cloud.spanner_v1.streamed import StreamedResultSet
+
+        db = mock.create_autospec(Database, instance=True)
+        checkout = mock.create_autospec(SnapshotCheckout, instance=True)
+        snapshot = mock.create_autospec(Snapshot, instance=True)
+        results = mock.create_autospec(StreamedResultSet, instance=True)
+        db.snapshot.return_value = checkout
+        checkout.__enter__.return_value = snapshot
+        results.fields = [StructType.Field(name="col1")]
+        snapshot.execute_sql.side_effect = [
+            [[True]],
+            results,
+        ]
+        table = self._make_one(self.TABLE_ID, db)
+        table.reload()
+        self.assertEqual(table.schema, [StructType.Field(name="col1")])
