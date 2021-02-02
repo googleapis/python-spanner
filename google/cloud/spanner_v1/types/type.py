@@ -97,7 +97,7 @@ class StructType(proto.Message):
                 the query ``"SELECT 'hello' AS Word"``), or the column name
                 (e.g., ``"ColName"`` in the query
                 ``"SELECT ColName FROM Table"``). Some columns might have an
-                empty name (e.g., `"SELECT UPPER(ColName)"`). Note that a
+                empty name (e.g., !"SELECT UPPER(ColName)"`). Note that a
                 query result can contain multiple fields with the same name.
             type_ (~.gs_type.Type):
                 The type of the field.

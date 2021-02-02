@@ -4,7 +4,7 @@
       "git": {
         "name": ".",
         "remote": "https://github.com/googleapis/python-spanner.git",
-        "sha": "2faf01b135360586ef27c66976646593fd85fd1e"
+        "sha": "be27507c51998e5a4aec54cab57515c4912f5ed5"
       }
     },
     {
