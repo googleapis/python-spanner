@@ -1243,6 +1243,14 @@ class TestDatabase(_BaseTest):
             filter_=expected_filter_, page_size=page_size
         )
 
+    def test_list_tables(self):
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        tables = database.list_tables()
+        self.assertIsNotNone(tables)
+
 
 class TestBatchCheckout(_BaseTest):
     def _get_target_class(self):
