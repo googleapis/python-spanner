@@ -39,7 +39,7 @@ from .test_system import (
 )
 
 
-SPANNER_RPC_TIMEOUT_IN_SECONDS = int(os.getenv("SPANNER_RPC_TIMEOUT_IN_SECONDS", 30))
+SPANNER_OPERATION_TIMEOUT_IN_SECONDS = int(os.getenv("SPANNER_OPERATION_TIMEOUT_IN_SECONDS", 60))
 
 
 def setUpModule():
@@ -94,7 +94,7 @@ def setUpModule():
             INSTANCE_ID, config_name, labels=labels
         )
         created_op = Config.INSTANCE.create()
-        created_op.result(SPANNER_RPC_TIMEOUT_IN_SECONDS)  # block until completion
+        created_op.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)  # block until completion
 
     else:
         Config.INSTANCE = Config.CLIENT.instance(INSTANCE_ID)
@@ -130,7 +130,7 @@ class TestTransactionsManagement(unittest.TestCase):
             pool=BurstyPool(labels={"testcase": "database_api"}),
         )
         cls._db.create().result(
-            SPANNER_RPC_TIMEOUT_IN_SECONDS
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
         )  # raises on failure / timeout.
 
     @classmethod
