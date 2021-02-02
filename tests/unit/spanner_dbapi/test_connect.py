@@ -139,3 +139,29 @@ class Test_connect(unittest.TestCase):
             ):
                 connect("test-instance", database_id, pool=pool)
                 database_mock.assert_called_once_with(database_id, pool=pool)
+
+    def test_connect_w_coonection_uri(self):
+        from google.cloud.spanner_dbapi import connect
+        from google.cloud.spanner_dbapi import Connection
+
+        PROJECT = "test-project"
+        USER_AGENT = "user-agent"
+        credentials_uri = "dummy/file/path.json"
+
+        with mock.patch(
+            "google.cloud.spanner_v1.Client.from_service_account_json"
+        ) as client_mock:
+            connection = connect(
+                "test-instance",
+                "test-database",
+                PROJECT,
+                None,
+                user_agent=USER_AGENT,
+                credentials_uri=credentials_uri,
+            )
+
+            self.assertIsInstance(connection, Connection)
+
+            client_mock.assert_called_once_with(
+                credentials_uri, project=PROJECT, client_info=mock.ANY
+            )

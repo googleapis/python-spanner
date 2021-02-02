@@ -339,6 +339,7 @@ def connect(
     credentials=None,
     pool=None,
     user_agent=None,
+    credentials_uri=None,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -368,6 +369,11 @@ def connect(
     :param user_agent: (Optional) User agent to be used with this connection's
                        requests.
 
+    :type credentials_uri: str
+    :param credentials_uri: (Optional) An optional string specifying where to retrieve
+                            the service account JSON for the credentials to connect to
+                            Cloud Spanner.
+
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
@@ -380,9 +386,14 @@ def connect(
         user_agent=user_agent or DEFAULT_USER_AGENT, python_version=PY_VERSION
     )
 
-    client = spanner.Client(
-        project=project, credentials=credentials, client_info=client_info
-    )
+    if credentials_uri:
+        client = spanner.Client.from_service_account_json(
+            credentials_uri, project=project, client_info=client_info
+        )
+    else:
+        client = spanner.Client(
+            project=project, credentials=credentials, client_info=client_info
+        )
 
     instance = client.instance(instance_id)
     if not instance.exists():
