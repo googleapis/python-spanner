@@ -34,7 +34,8 @@ def create_backup(instance_id, database_id, backup_id):
 
     # Create a backup
     expire_time = datetime.utcnow() + timedelta(days=14)
-    backup = instance.backup(backup_id, database=database, expire_time=expire_time)
+    version_time = datetime.now()
+    backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
     operation = backup.create()
 
     # Wait for backup operation to complete.
@@ -47,8 +48,8 @@ def create_backup(instance_id, database_id, backup_id):
     # Get the name, create time and backup size.
     backup.reload()
     print(
-        "Backup {} of size {} bytes was created at {}".format(
-            backup.name, backup.size_bytes, backup.create_time
+        "Backup {} of size {} bytes was created at {} for version of database at {}".format(
+            backup.name, backup.size_bytes, backup.create_time, backup.version_time
         )
     )
 
@@ -57,14 +58,17 @@ def create_backup(instance_id, database_id, backup_id):
 
 
 # [START spanner_restore_backup]
-def restore_database(instance_id, new_database_id, backup_id):
+def restore_database(instance_id, database_id, new_database_id, backup_id):
     """Restores a database from a backup."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
     # Create a backup on database_id.
 
     # Start restoring backup to a new database.
-    backup = instance.backup(backup_id)
+    expire_time = datetime.utcnow() + timedelta(days=14)
+    version_time = datetime.now()
+    backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
     new_database = instance.database(new_database_id)
     operation = new_database.restore(backup)
 
@@ -75,10 +79,11 @@ def restore_database(instance_id, new_database_id, backup_id):
     new_database.reload()
     restore_info = new_database.restore_info
     print(
-        "Database {} restored to {} from backup {}.".format(
+        "Database {} restored to {} from backup {} with version time {}.".format(
             restore_info.backup_info.source_database,
             new_database_id,
             restore_info.backup_info.backup,
+            restore_info.backup_info.version_time
         )
     )
 
