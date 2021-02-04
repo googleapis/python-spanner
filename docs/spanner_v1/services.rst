@@ -1,6 +1,6 @@
 Services for Google Cloud Spanner v1 API
 ========================================
-.. toctree::
-    :maxdepth: 2
 
-    spanner
+.. automodule:: google.cloud.spanner_v1.services.spanner
+    :members:
+    :inherited-members:
