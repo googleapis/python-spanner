@@ -55,7 +55,6 @@ class StreamedResultSet(object):
         :rtype: list of :class:`~google.cloud.spanner_v1.StructType.Field`
         :returns: list of fields describing column names / types.
         """
-        # print("here")
         return self._metadata.row_type.fields
 
     @property
