@@ -17,9 +17,11 @@
 from google.cloud import exceptions
 from google.cloud.spanner_v1 import TypeCode
 import six
+import logging
 
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_v1._helpers import _parse_value
+from google.cloud.spanner_v1._pandas_helpers import pandas_df
 
 # pylint: enable=ungrouped-imports
 
@@ -53,6 +55,7 @@ class StreamedResultSet(object):
         :rtype: list of :class:`~google.cloud.spanner_v1.StructType.Field`
         :returns: list of fields describing column names / types.
         """
+        # print("here")
         return self._metadata.row_type.fields
 
     @property
@@ -142,6 +145,11 @@ class StreamedResultSet(object):
                 iter_rows, self._rows[:] = self._rows[:], ()
             while iter_rows:
                 yield iter_rows.pop(0)
+
+    def to_dataframe(self):
+        """Returns the response in a pandas dataframe of the StreamedResultSet object"""
+        df = pandas_df.pd_dataframe(self)
+        return df
 
     def one(self):
         """Return exactly one result, or raise an exception.
