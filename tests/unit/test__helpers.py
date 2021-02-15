@@ -194,7 +194,6 @@ class Test_make_value_pb(unittest.TestCase):
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, when.rfc3339())
-
     def test_w_listvalue(self):
         from google.protobuf.struct_pb2 import Value
         from google.cloud.spanner_v1._helpers import _make_list_value_pb
@@ -214,6 +213,19 @@ class Test_make_value_pb(unittest.TestCase):
         value_pb = self._callFUT(now)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, datetime_helpers.to_rfc3339(now))
+
+    def test_w_timestamp_w_tz(self):
+        import datetime
+        import pytz
+        from google.protobuf.struct_pb2 import Value
+
+        when = datetime.datetime(
+            2021, 2, 8, 0, 0, 0, tzinfo=pytz.timezone("US/Mountain")
+        )
+        value_pb = self._callFUT(when)
+        self.assertIsInstance(value_pb, Value)
+        self.assertEqual(value_pb.string_value, "2021-02-08T07:00:00.000000Z")
+
 
     def test_w_numeric(self):
         import decimal
