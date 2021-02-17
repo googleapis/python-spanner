@@ -56,6 +56,9 @@ from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
 USE_EMULATOR = os.getenv("SPANNER_EMULATOR_HOST") is not None
 SKIP_BACKUP_TESTS = os.getenv("SKIP_BACKUP_TESTS") is not None
+SPANNER_OPERATION_TIMEOUT_IN_SECONDS = int(
+    os.getenv("SPANNER_OPERATION_TIMEOUT_IN_SECONDS", 60)
+)
 
 if CREATE_INSTANCE:
     INSTANCE_ID = "google-cloud" + unique_resource_id("-")
@@ -150,7 +153,9 @@ def setUpModule():
             INSTANCE_ID, config_name, labels=labels
         )
         created_op = Config.INSTANCE.create()
-        created_op.result(30)  # block until completion
+        created_op.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # block until completion
 
     else:
         Config.INSTANCE = Config.CLIENT.instance(INSTANCE_ID)
@@ -209,7 +214,9 @@ class TestInstanceAdminAPI(unittest.TestCase):
         self.instances_to_delete.append(instance)
 
         # We want to make sure the operation completes.
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
         # Create a new instance instance and make sure it is the same.
         instance_alt = Config.CLIENT.instance(
@@ -228,7 +235,9 @@ class TestInstanceAdminAPI(unittest.TestCase):
         operation = Config.INSTANCE.update()
 
         # We want to make sure the operation completes.
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
         # Create a new instance instance and reload it.
         instance_alt = Config.CLIENT.instance(INSTANCE_ID, None)
@@ -309,7 +318,9 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
             cls.DATABASE_NAME, ddl_statements=ddl_statements, pool=pool
         )
         operation = cls._db.create()
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
     @classmethod
     def tearDownClass(cls):
@@ -338,7 +349,9 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         self.to_delete.append(temp_db)
 
         # We want to make sure the operation completes.
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
         database_ids = [database.name for database in Config.INSTANCE.list_databases()]
         self.assertIn(temp_db.name, database_ids)
@@ -543,8 +556,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         cls._dbs = [db1, db2]
         op1 = db1.create()
         op2 = db2.create()
-        op1.result(30)  # raises on failure / timeout.
-        op2.result(30)  # raises on failure / timeout.
+        op1.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)  # raises on failure / timeout.
+        op2.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)  # raises on failure / timeout.
 
         current_config = Config.INSTANCE.configuration_name
         same_config_instance_id = "same-config" + unique_resource_id("-")
@@ -554,7 +567,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             same_config_instance_id, current_config, labels=labels
         )
         op = cls._same_config_instance.create()
-        op.result(30)
+        op.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)
         cls._instances = [cls._same_config_instance]
 
         retry = RetryErrors(exceptions.ServiceUnavailable)
@@ -573,7 +586,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
                 diff_config_instance_id, diff_configs[0], labels=labels
             )
             op = cls._diff_config_instance.create()
-            op.result(30)
+            op.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)
             cls._instances.append(cls._diff_config_instance)
 
     @classmethod
@@ -735,7 +748,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             return
         new_db = self._diff_config_instance.database("diff_config")
         op = new_db.create()
-        op.result(30)
+        op.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)
         self.to_drop.append(new_db)
         with self.assertRaises(exceptions.InvalidArgument):
             new_db.restore(source=backup1)
@@ -926,7 +939,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             cls.DATABASE_NAME, ddl_statements=ddl_statements, pool=pool
         )
         operation = cls._db.create()
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
 
     @classmethod
     def tearDownClass(cls):
@@ -1848,7 +1863,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         self.to_delete.append(_DatabaseDropper(temp_db))
 
         # We want to make sure the operation completes.
-        operation.result(30)  # raises on failure / timeout.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
         committed = self._set_up_table(row_count, database=temp_db)
 
         with temp_db.snapshot(read_timestamp=committed) as snapshot:
