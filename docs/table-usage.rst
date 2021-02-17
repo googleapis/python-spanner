@@ -22,16 +22,16 @@ This method yields :class:`~google.cloud.spanner_v1.table.Table` objects.
 Table Factory
 -------------
 
-A table object can be created by using the
-:class:`~google.cloud.spanner_v1.table.Table` constructor. Since table
-operations are executed via SQL, a
-:class:`~google.cloud.spanner_v1.database.Database` instance is required.
+A :class:`~google.cloud.spanner_v1.table.Table` object can be created with the
+:meth:`~google.cloud.spanner_v1.database.Database.table` factory method:
 
 .. code:: python
 
-    table = google.cloud.spanner_v1.table.Table(
-       "my_table_id", database
-    )
+    table = database.table("my_table_id")
+    if my_table.exists():
+        print("Table with ID 'my_table' exists.")
+    else:
+        print("Table with ID 'my_table' does not exist."
 
 Getting the Table Schema
 ------------------------
