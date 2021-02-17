@@ -602,6 +602,28 @@ class Database(object):
             filter_=database_filter, page_size=page_size
         )
 
+    def table(self, table_id):
+        """Factory to create a table object within this database.
+
+        Note: This method does not create a table in Cloud Spanner, but it can
+        be used to check if a table exists.
+
+        .. code-block:: python
+
+           my_table = database.table("my_table")
+           if my_table.exists():
+               print("Table with ID 'my_table' exists.")
+           else:
+               print("Table with ID 'my_table' does not exist.")
+
+        :type table_id: str
+        :param table_id: The ID of the table.
+
+        :rtype: :class:`~google.cloud.spanner_v1.table.Table`
+        :returns: a table owned by this database.
+        """
+        return Table(table_id, self)
+
     def list_tables(self):
         """List tables within the database.
 
@@ -613,7 +635,7 @@ class Database(object):
         with self.snapshot() as snapshot:
             results = snapshot.execute_sql(_LIST_TABLES_QUERY)
             for row in results:
-                yield Table(row[0], self)
+                yield self.table(row[0])
 
 
 class BatchCheckout(object):
