@@ -358,11 +358,7 @@ class Session(object):
                 raise
             else:
                 if self._database.log_commit_stats:
-                    self._database.logger.info(
-                        "Transaction mutation count: {}".format(
-                            txn.commit_stats.mutation_count
-                        )
-                    )
+                    self._database.logger.info(txn.commit_stats)
                 return return_value
 
 

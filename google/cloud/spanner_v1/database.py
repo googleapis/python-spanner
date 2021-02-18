@@ -237,12 +237,6 @@ class Database(object):
 
             ch = logging.StreamHandler()
             ch.setLevel(logging.INFO)
-
-            formatter = logging.Formatter(
-                "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-            )
-            ch.setFormatter(formatter)
-
             self._logger.addHandler(ch)
         return self._logger
 
@@ -657,11 +651,7 @@ class BatchCheckout(object):
                 self._batch.commit(return_commit_stats=self._database.log_commit_stats)
         finally:
             if self._database.log_commit_stats:
-                self._database.logger.info(
-                    "Transaction mutation count: {}".format(
-                        self._batch.commit_stats.mutation_count
-                    )
-                )
+                self._database.logger.info(self._batch.commit_stats)
             self._database._pool.put(self._session)
 
 
