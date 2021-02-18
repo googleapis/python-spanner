@@ -1378,7 +1378,7 @@ class TestSession(OpenTelemetryBase):
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
-        database.logger.info.assert_called_once_with("Transaction mutation count: 4")
+        database.logger.info.assert_called_once_with(commit_stats)
 
     def test_delay_helper_w_no_delay(self):
         from google.cloud.spanner_v1.session import _delay_until_retry
