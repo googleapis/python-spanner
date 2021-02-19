@@ -358,7 +358,10 @@ class Session(object):
                 raise
             else:
                 if self._database.log_commit_stats:
-                    self._database.logger.info(txn.commit_stats)
+                    self._database.logger.info(
+                        "CommitStats: {}".format(txn.commit_stats),
+                        extra={"commit_stats": txn.commit_stats},
+                    )
                 return return_value
 
 

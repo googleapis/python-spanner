@@ -1374,7 +1374,9 @@ class TestBatchCheckout(_BaseTest):
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-        database.logger.info.assert_called_once_with(commit_stats)
+        database.logger.info.assert_called_once_with(
+            "CommitStats: mutation_count: 4\n", extra={"commit_stats": commit_stats}
+        )
 
     def test_context_mgr_failure(self):
         from google.cloud.spanner_v1.batch import Batch
