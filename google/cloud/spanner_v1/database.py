@@ -96,6 +96,12 @@ class Database(object):
     :param pool: (Optional) session pool to be used by database.  If not
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
+
+    :type logger: `logging.Logger`
+    :param logger: (Optional) a custom logger that is used if `log_commit_stats`
+                   is `True` to log commit statistics. If not passed, a logger
+                   will be created when needed that will log the commit statistics
+                   to stdout.
     """
 
     _spanner_api = None

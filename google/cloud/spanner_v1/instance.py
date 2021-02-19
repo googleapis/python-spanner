@@ -371,6 +371,12 @@ class Instance(object):
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
+        :type logger: `logging.Logger`
+        :param logger: (Optional) a custom logger that is used if `log_commit_stats`
+                       is `True` to log commit statistics. If not passed, a logger
+                       will be created when needed that will log the commit statistics
+                       to stdout.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
