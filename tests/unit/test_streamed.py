@@ -165,7 +165,7 @@ class TestStreamedResultSet(unittest.TestCase):
         chunk = 13
 
         merged = streamed._merge_chunk(chunk)
-        self.assertEqual(merged, 4213)
+        self.assertEqual(merged, "4213")
         self.assertIsNone(streamed._pending_chunk)
 
     def test__merge_chunk_float64_nan_string(self):
@@ -244,9 +244,9 @@ class TestStreamedResultSet(unittest.TestCase):
 
         self.assertEqual(
             merged,
-            b"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACXBIWXMAAAsTAAAL"
-            b"EwEAmpwYAAAA\nB3RJTUUH4QQGFwsBTL3HMwAAABJpVFh0Q29tbWVudAAAAAAAU0"
-            b"FNUExFMG3E+AAAAApJREFUCNdj\nYAAAAAIAAeIhvDMAAAAASUVORK5CYII=\n",
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACXBIWXMAAAsTAAAL"
+            "EwEAmpwYAAAA\nB3RJTUUH4QQGFwsBTL3HMwAAABJpVFh0Q29tbWVudAAAAAAAU0"
+            "FNUExFMG3E+AAAAApJREFUCNdj\nYAAAAAIAAeIhvDMAAAAASUVORK5CYII=\n",
         )
         self.assertIsNone(streamed._pending_chunk)
 
@@ -278,7 +278,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
         merged = streamed._merge_chunk(chunk)
 
-        expected = [0, 1, 23, 4, 5]
+        expected = [0, 1, "23", 4, 5]
         self.assertEqual(merged, expected)
         self.assertIsNone(streamed._pending_chunk)
 
@@ -371,7 +371,7 @@ class TestStreamedResultSet(unittest.TestCase):
 
         expected = [
             [0, 1],
-            [23],
+            ["23"],
             [4, 5],
         ]
 

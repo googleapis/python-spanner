@@ -88,7 +88,7 @@ class StreamedResultSet(object):
         field = self.fields[current_column]
         merged = _merge_by_type(self._pending_chunk, value, field.type_)
         self._pending_chunk = None
-        return _parse_value(merged, field.type_)
+        return merged
 
     def _merge_values(self, values):
         """Merge values into rows.
