@@ -729,7 +729,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         )
 
         metadata = operation.metadata
-        self.assertEqual(self.database_version_time, metadata.backup_info.create_time)
+        self.assertEqual(self.database_version_time, metadata.backup_info.version_time)
 
         database.drop()
         backup.delete()
