@@ -33,6 +33,7 @@ A :class:`~google.cloud.spanner_v1.table.Table` object can be created with the
     else:
         print("Table with ID 'my_table' does not exist."
 
+
 Getting the Table Schema
 ------------------------
 
