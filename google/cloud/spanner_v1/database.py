@@ -656,7 +656,7 @@ class BatchCheckout(object):
             if exc_type is None:
                 self._batch.commit(return_commit_stats=self._database.log_commit_stats)
         finally:
-            if self._database.log_commit_stats:
+            if self._database.log_commit_stats and self._batch.commit_stats:
                 self._database.logger.info(
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},

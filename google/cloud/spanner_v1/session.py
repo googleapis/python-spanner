@@ -357,7 +357,7 @@ class Session(object):
                 del self._transaction
                 raise
             else:
-                if self._database.log_commit_stats:
+                if self._database.log_commit_stats and txn.commit_stats:
                     self._database.logger.info(
                         "CommitStats: {}".format(txn.commit_stats),
                         extra={"commit_stats": txn.commit_stats},

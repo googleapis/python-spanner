@@ -1332,7 +1332,7 @@ class TestBatchCheckout(_BaseTest):
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-    def test_context_mgr_w_commit_stats(self):
+    def test_context_mgr_w_commit_stats_success(self):
         import datetime
         from google.cloud.spanner_v1 import CommitRequest
         from google.cloud.spanner_v1 import CommitResponse
@@ -1377,6 +1377,43 @@ class TestBatchCheckout(_BaseTest):
         database.logger.info.assert_called_once_with(
             "CommitStats: mutation_count: 4\n", extra={"commit_stats": commit_stats}
         )
+
+    def test_context_mgr_w_commit_stats_error(self):
+        from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_v1 import CommitRequest
+        from google.cloud.spanner_v1 import TransactionOptions
+        from google.cloud.spanner_v1.batch import Batch
+
+        database = _Database(self.DATABASE_NAME)
+        database.log_commit_stats = True
+        api = database.spanner_api = self._make_spanner_client()
+        api.commit.side_effect = Unknown("testing")
+        pool = database._pool = _Pool()
+        session = _Session(database)
+        pool.put(session)
+        checkout = self._make_one(database)
+
+        with self.assertRaises(Unknown):
+            with checkout as batch:
+                self.assertIsNone(pool._session)
+                self.assertIsInstance(batch, Batch)
+                self.assertIs(batch._session, session)
+
+        self.assertIs(pool._session, session)
+
+        expected_txn_options = TransactionOptions(read_write={})
+
+        request = CommitRequest(
+            session=self.SESSION_NAME,
+            mutations=[],
+            single_use_transaction=expected_txn_options,
+            return_commit_stats=True,
+        )
+        api.commit.assert_called_once_with(
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+        database.logger.info.assert_not_called()
 
     def test_context_mgr_failure(self):
         from google.cloud.spanner_v1.batch import Batch
