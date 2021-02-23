@@ -176,11 +176,11 @@ RE_PYFORMAT = re.compile(r"(%s|%\([^\(\)]+\)s)+", re.DOTALL)
 def classify_stmt(query):
     """Determine SQL query type.
 
-    :type query: :class:`str`
-    :param query: SQL query.
+    :type query: str
+    :param query: A SQL query.
 
-    :rtype: :class:`str`
-    :returns: Query type name.
+    :rtype: str
+    :returns: The query type name.
     """
     if RE_DDL.match(query):
         return STMT_DDL
@@ -253,6 +253,17 @@ def parse_insert(insert_sql, params):
                     ('INSERT INTO T (f1, f2) VALUES (UPPER(%s), %s)', ('c', 'd',))
                 ],
             }
+
+    :type insert_sql: str
+    :param insert_sql: A SQL insert request.
+
+    :type params: list
+    :param params: A list of parameters.
+
+    :rtype: dict
+    :returns: A dictionary that maps `sql_params_list` to the list of
+              parameters in cases a), b), d) or the dictionary with information
+              about the resulting table in case c).
     """  # noqa
     match = RE_INSERT.search(insert_sql)
 
@@ -295,19 +306,15 @@ def parse_insert(insert_sql, params):
         # Case c)
 
         columns = [mi.strip(" `") for mi in match.group("columns").split(",")]
-        sql_params_list = []
-        insert_sql_preamble = "INSERT INTO %s (%s) VALUES %s" % (
-            match.group("table_name"),
-            match.group("columns"),
-            values.argv[0],
-        )
         values_pyformat = [str(arg) for arg in values.argv]
         rows_list = rows_for_insert_or_update(columns, params, values_pyformat)
-        insert_sql_preamble = sanitize_literals_for_upload(insert_sql_preamble)
-        for row in rows_list:
-            sql_params_list.append((insert_sql_preamble, row))
 
-        return {"sql_params_list": sql_params_list}
+        return {
+            "homogenous": True,
+            "table": match.group("table_name"),
+            "columns": columns,
+            "values": rows_list,
+        }
 
     # Case d)
     # insert_sql is of the form:
@@ -348,8 +355,16 @@ def rows_for_insert_or_update(columns, params, pyformat_args=None):
 
     We'll have to convert both params types into:
         Params: [(1, 2, 3,), (4, 5, 6,), (7, 8, 9,)]
-    """  # noqa
 
+    :type columns: list
+    :param columns: A list of the columns of the table.
+
+    :type params: list
+    :param params: A list of parameters.
+
+    :rtype: list
+    :returns: A properly restructured list of the parameters.
+    """  # noqa
     if not pyformat_args:
         # This is the case where we have for example:
         # SQL:        'INSERT INTO t (f1, f2, f3)'
@@ -445,6 +460,16 @@ def sql_pyformat_args_to_spanner(sql, params):
     becomes:
         SQL:      'SELECT * from t where f1=@a0, f2=@a1, f3=@a2'
         Params:   {'a0': 'a', 'a1': 23, 'a2': '888***'}
+
+    :type sql: str
+    :param sql: A SQL request.
+
+    :type params: list
+    :param params: A list of parameters.
+
+    :rtype: tuple(str, dict)
+    :returns: A tuple of the sanitized SQL and a dictionary of the named
+              arguments.
     """
     if not params:
         return sanitize_literals_for_upload(sql), params
@@ -488,10 +513,10 @@ def cast_for_spanner(value):
     """Convert the param to its Cloud Spanner equivalent type.
 
     :type value: Any
-    :param value: Value to convert to a Cloud Spanner type.
+    :param value: The value to convert to a Cloud Spanner type.
 
     :rtype: Any
-    :returns: Value converted to a Cloud Spanner type.
+    :returns: The value converted to a Cloud Spanner type.
     """
     if isinstance(value, decimal.Decimal):
         return str(value)
@@ -501,10 +526,10 @@ def cast_for_spanner(value):
 def get_param_types(params):
     """Determine Cloud Spanner types for the given parameters.
 
-    :type params: :class:`dict`
+    :type params: dict
     :param params: Parameters requiring to find Cloud Spanner types.
 
-    :rtype: :class:`dict`
+    :rtype: dict
     :returns: The types index for the given parameters.
     """
     if params is None:
@@ -525,7 +550,7 @@ def ensure_where_clause(sql):
     Cloud Spanner requires a WHERE clause on UPDATE and DELETE statements.
     Add a dummy WHERE clause if non detected.
 
-    :type sql: `str`
+    :type sql: str
     :param sql: SQL code to check.
     """
     if any(isinstance(token, sqlparse.sql.Where) for token in sqlparse.parse(sql)[0]):
@@ -539,10 +564,10 @@ def escape_name(name):
     Apply backticks to the name that either contain '-' or
     ' ', or is a Cloud Spanner's reserved keyword.
 
-    :type name: :class:`str`
+    :type name: str
     :param name: Name to escape.
 
-    :rtype: :class:`str`
+    :rtype: str
     :returns: Name escaped if it has to be escaped.
     """
     if "-" in name or " " in name or name.upper() in SPANNER_RESERVED_KEYWORDS:
