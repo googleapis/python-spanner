@@ -983,7 +983,7 @@ def log_commit_stats(instance_id, database_id):
         def info(self, msg, *args, **kwargs):
             if kwargs['extra'] and 'commitStats' in kwargs['extra']:
                 self._last_commit_stats = kwargs['extra']['commitStats']
-            super().self.info(msg)
+            super().info(msg)
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
