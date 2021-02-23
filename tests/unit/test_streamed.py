@@ -180,7 +180,6 @@ class TestStreamedResultSet(unittest.TestCase):
 
     def test__merge_chunk_float64_nan_string(self):
         from google.cloud.spanner_v1 import TypeCode
-        from math import isnan
 
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
