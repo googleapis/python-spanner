@@ -70,7 +70,13 @@ class Backup(object):
     """
 
     def __init__(
-        self, backup_id, instance, database="", expire_time=None, version_time=None, encryption_config=None
+        self,
+        backup_id,
+        instance,
+        database="",
+        expire_time=None,
+        version_time=None,
+        encryption_config=None,
     ):
         self.backup_id = backup_id
         self._instance = instance
@@ -253,10 +259,7 @@ class Backup(object):
             encryption_config=self._encryption_config,
         )
 
-        future = api.create_backup(
-            request=request,
-            metadata=metadata,
-        )
+        future = api.create_backup(request=request, metadata=metadata,)
         return future
 
     def exists(self):

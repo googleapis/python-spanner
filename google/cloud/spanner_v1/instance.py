@@ -357,7 +357,14 @@ class Instance(object):
 
         api.delete_instance(name=self.name, metadata=metadata)
 
-    def database(self, database_id, ddl_statements=(), pool=None, logger=None, encryption_config=None):
+    def database(
+        self,
+        database_id,
+        ddl_statements=(),
+        pool=None,
+        logger=None,
+        encryption_config=None,
+    ):
         """Factory to create a database within this instance.
 
         :type database_id: str
@@ -391,9 +398,6 @@ class Instance(object):
         :returns: a database owned by this instance.
         """
         return Database(
-            database_id, self, ddl_statements=ddl_statements, pool=pool, logger=logger
-        )
-        return Database(
             database_id,
             self,
             ddl_statements=ddl_statements,
@@ -426,7 +430,14 @@ class Instance(object):
         )
         return page_iter
 
-    def backup(self, backup_id, database="", expire_time=None, version_time=None, encryption_config=None):
+    def backup(
+        self,
+        backup_id,
+        database="",
+        expire_time=None,
+        version_time=None,
+        encryption_config=None,
+    ):
         """Factory to create a backup within this instance.
 
         :type backup_id: str
@@ -472,7 +483,7 @@ class Instance(object):
                 database=database,
                 expire_time=expire_time,
                 version_time=version_time,
-                encryption_config=encryption_config
+                encryption_config=encryption_config,
             )
 
     def list_backups(self, filter_="", page_size=None):

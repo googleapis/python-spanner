@@ -63,19 +63,20 @@ class TestBackup(_BaseTest):
 
     def test_ctor_non_defaults(self):
         from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
         instance = _Instance(self.INSTANCE_NAME)
         timestamp = self._make_timestamp()
 
         encryption_config = CreateBackupEncryptionConfig(
             encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
-            kms_key_name="key_name"
+            kms_key_name="key_name",
         )
         backup = self._make_one(
             self.BACKUP_ID,
             instance,
             database=self.DATABASE_NAME,
             expire_time=timestamp,
-            encryption_config=encryption_config
+            encryption_config=encryption_config,
         )
 
         self.assertEqual(backup.backup_id, self.BACKUP_ID)
@@ -87,19 +88,17 @@ class TestBackup(_BaseTest):
 
     def test_ctor_w_encryption_config_dict(self):
         from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
         instance = _Instance(self.INSTANCE_NAME)
         timestamp = self._make_timestamp()
 
-        encryption_config = {
-            "encryption_type": 3,
-            "kms_key_name": "key_name"
-        }
+        encryption_config = {"encryption_type": 3, "kms_key_name": "key_name"}
         backup = self._make_one(
             self.BACKUP_ID,
             instance,
             database=self.DATABASE_NAME,
             expire_time=timestamp,
-            encryption_config=encryption_config
+            encryption_config=encryption_config,
         )
         expected_encryption_config = CreateBackupEncryptionConfig(**encryption_config)
 
@@ -222,7 +221,7 @@ class TestBackup(_BaseTest):
         backup = self._make_one(self.BACKUP_ID, instance)
         expected = backup._encryption_config = CreateBackupEncryptionConfig(
             encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
-            kms_key_name="kms_key_name"
+            kms_key_name="kms_key_name",
         )
         self.assertEqual(backup.encryption_config, expected)
 
@@ -248,14 +247,11 @@ class TestBackup(_BaseTest):
             backup.create()
 
         request = CreateBackupRequest(
-            parent=self.INSTANCE_NAME,
-            backup_id=self.BACKUP_ID,
-            backup=backup_pb,
+            parent=self.INSTANCE_NAME, backup_id=self.BACKUP_ID, backup=backup_pb,
         )
 
         api.create_backup.assert_called_once_with(
-            request=request,
-            metadata=[("google-cloud-resource-prefix", backup.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", backup.name)],
         )
 
     def test_create_already_exists(self):
@@ -279,14 +275,11 @@ class TestBackup(_BaseTest):
             backup.create()
 
         request = CreateBackupRequest(
-            parent=self.INSTANCE_NAME,
-            backup_id=self.BACKUP_ID,
-            backup=backup_pb,
+            parent=self.INSTANCE_NAME, backup_id=self.BACKUP_ID, backup=backup_pb,
         )
 
         api.create_backup.assert_called_once_with(
-            request=request,
-            metadata=[("google-cloud-resource-prefix", backup.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", backup.name)],
         )
 
     def test_create_instance_not_found(self):
@@ -310,14 +303,11 @@ class TestBackup(_BaseTest):
             backup.create()
 
         request = CreateBackupRequest(
-            parent=self.INSTANCE_NAME,
-            backup_id=self.BACKUP_ID,
-            backup=backup_pb,
+            parent=self.INSTANCE_NAME, backup_id=self.BACKUP_ID, backup=backup_pb,
         )
 
         api.create_backup.assert_called_once_with(
-            request=request,
-            metadata=[("google-cloud-resource-prefix", backup.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", backup.name)],
         )
 
     def test_create_expire_time_not_set(self):
@@ -352,17 +342,14 @@ class TestBackup(_BaseTest):
         version_timestamp = datetime.utcnow() - timedelta(minutes=5)
         version_timestamp = version_timestamp.replace(tzinfo=UTC)
         expire_timestamp = self._make_timestamp()
-        encryption_config = {
-            "encryption_type": 3,
-            "kms_key_name": "key_name"
-        }
+        encryption_config = {"encryption_type": 3, "kms_key_name": "key_name"}
         backup = self._make_one(
             self.BACKUP_ID,
             instance,
             database=self.DATABASE_NAME,
             expire_time=expire_timestamp,
             version_time=version_timestamp,
-            encryption_config=encryption_config
+            encryption_config=encryption_config,
         )
 
         backup_pb = Backup(
@@ -379,12 +366,11 @@ class TestBackup(_BaseTest):
             parent=self.INSTANCE_NAME,
             backup_id=self.BACKUP_ID,
             backup=backup_pb,
-            encryption_config=expected_encryption_config
+            encryption_config=expected_encryption_config,
         )
 
         api.create_backup.assert_called_once_with(
-            request=request,
-            metadata=[("google-cloud-resource-prefix", backup.name)],
+            request=request, metadata=[("google-cloud-resource-prefix", backup.name)],
         )
 
     def test_exists_grpc_error(self):

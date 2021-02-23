@@ -17,6 +17,7 @@
 import copy
 import functools
 import grpc
+import logging
 import re
 import threading
 
@@ -123,13 +124,13 @@ class Database(object):
     _spanner_api = None
 
     def __init__(
-            self,
-            database_id,
-            instance,
-            ddl_statements=(),
-            pool=None,
-            logger=None,
-            encryption_config=None,
+        self,
+        database_id,
+        instance,
+        ddl_statements=(),
+        pool=None,
+        logger=None,
+        encryption_config=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -633,17 +634,16 @@ class Database(object):
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
         if type(self._encryption_config) == dict:
-            self._encryption_config = RestoreDatabaseEncryptionConfig(**self._encryption_config)
+            self._encryption_config = RestoreDatabaseEncryptionConfig(
+                **self._encryption_config
+            )
         request = RestoreDatabaseRequest(
             parent=self._instance.name,
             database_id=self.database_id,
             backup=source.name,
-            encryption_config=self._encryption_config
+            encryption_config=self._encryption_config,
         )
-        future = api.restore_database(
-            request=request,
-            metadata=metadata,
-        )
+        future = api.restore_database(request=request, metadata=metadata,)
         return future
 
     def is_ready(self):

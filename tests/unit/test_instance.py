@@ -618,11 +618,14 @@ class TestInstance(unittest.TestCase):
         timestamp = datetime.datetime.utcnow().replace(tzinfo=UTC)
         encryption_config = CreateBackupEncryptionConfig(
             encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
-            kms_key_name="kms_key_name"
+            kms_key_name="kms_key_name",
         )
 
         backup = instance.backup(
-            BACKUP_ID, database=DATABASE_NAME, expire_time=timestamp, encryption_config=encryption_config
+            BACKUP_ID,
+            database=DATABASE_NAME,
+            expire_time=timestamp,
+            encryption_config=encryption_config,
         )
 
         self.assertIsInstance(backup, Backup)
