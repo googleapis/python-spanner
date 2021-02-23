@@ -34,7 +34,7 @@ def create_backup(instance_id, database_id, backup_id):
 
     # Create a backup
     expire_time = datetime.utcnow() + timedelta(days=14)
-    version_time = datetime.now()
+    version_time = database.earliest_version_time()
     backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
     operation = backup.create()
 
