@@ -725,7 +725,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         operation = database.restore(source=backup)
         restored_db = operation.result()
         self.assertEqual(
-            self.database_version_time, restored_db.restore_info.backup_info.version_time
+            self.database_version_time,
+            restored_db.restore_info.backup_info.version_time,
         )
 
         metadata = operation.metadata
