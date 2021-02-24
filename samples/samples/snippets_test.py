@@ -240,7 +240,7 @@ def test_log_commit_stats(capsys):
     snippets.log_commit_stats(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
     assert "1 record(s) inserted." in out
-    assert "3 mutations(s) in transaction." in out
+    assert "3 mutation(s) in transaction." in out
 
 
 def test_update_data_with_dml(capsys):
