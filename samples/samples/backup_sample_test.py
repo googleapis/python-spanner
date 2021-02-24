@@ -38,8 +38,10 @@ def unique_backup_id():
 
 INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
+DATABASE_ID_2 = unique_database_id()
 RESTORE_DB_ID = unique_database_id()
 BACKUP_ID = unique_backup_id()
+RETENTION_PERIOD = "7d"
 
 
 @pytest.fixture(scope="module")
@@ -73,7 +75,7 @@ def test_create_backup(capsys, database):
 # Depends on test_create_backup having run first
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database(capsys):
-    backup_sample.restore_database(INSTANCE_ID, DATABASE_ID, RESTORE_DB_ID, BACKUP_ID)
+    backup_sample.restore_database(INSTANCE_ID, RESTORE_DB_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert (DATABASE_ID + " restored to ") in out
     assert (RESTORE_DB_ID + " from backup ") in out
@@ -122,10 +124,10 @@ def test_cancel_backup(capsys):
 
 
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
-def test_create_database_with_retention_period(capsys):
-    database_id = unique_database_id()
-    retention_period = "7d"
-    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, database_id, retention_period)
+def test_create_database_with_retention_period(capsys, spanner_instance):
+    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, DATABASE_ID_2, RETENTION_PERIOD)
     out, _ = capsys.readouterr()
-    assert (database_id + " created with ") in out
-    assert ("retention period " + retention_period) in out
+    assert (DATABASE_ID_2 + " created with ") in out
+    assert ("retention period " + RETENTION_PERIOD) in out
+    database = spanner_instance.database(DATABASE_ID_2)
+    database.drop()
