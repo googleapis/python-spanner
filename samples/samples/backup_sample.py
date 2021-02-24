@@ -274,6 +274,45 @@ def update_backup(instance_id, backup_id):
 # [END spanner_update_backup]
 
 
+# [START spanner_create_database_with_version_retention_period]
+def create_database_with_version_retention_period(instance_id, database_id, retention_period):
+    """Creates a database with a version retention period."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    ddl_statements = [
+        "CREATE TABLE Singers ("
+        + "  SingerId   INT64 NOT NULL,"
+        + "  FirstName  STRING(1024),"
+        + "  LastName   STRING(1024),"
+        + "  SingerInfo BYTES(MAX)"
+        + ") PRIMARY KEY (SingerId)",
+        "CREATE TABLE Albums ("
+        + "  SingerId     INT64 NOT NULL,"
+        + "  AlbumId      INT64 NOT NULL,"
+        + "  AlbumTitle   STRING(MAX)"
+        + ") PRIMARY KEY (SingerId, AlbumId),"
+        + "  INTERLEAVE IN PARENT Singers ON DELETE CASCADE",
+        "ALTER DATABASE {}"
+        " SET OPTIONS (version_retention_period = '{}')".format(
+            database_id, retention_period
+        )
+    ]
+    db = instance.database(database_id, ddl_statements)
+    operation = db.create()
+
+    operation.result(30)
+
+    db.reload()
+
+    print("Database {} created with version retention period {} and earliest version time {}".format(
+        db.database_id, db.version_retention_period(), db.earliest_version_time()
+    ))
+
+    db.drop()
+
+# [END spanner_create_database_with_version_retention_period]
+
+
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter

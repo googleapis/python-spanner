@@ -79,6 +79,15 @@ def test_restore_database(capsys):
     assert BACKUP_ID in out
 
 
+@RetryErrors(exception=DeadlineExceeded, max_tries=2)
+def test_restore_database_with_retention_period(capsys):
+    retention_period = "7d"
+    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, DATABASE_ID, retention_period)
+    out, _ = capsys.readouterr()
+    assert (DATABASE_ID + " created with ") in out
+    assert ("retention period " + retention_period) in out
+
+
 def test_list_backup_operations(capsys, spanner_instance):
     backup_sample.list_backup_operations(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
