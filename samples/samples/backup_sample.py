@@ -34,7 +34,7 @@ def create_backup(instance_id, database_id, backup_id):
 
     # Create a backup
     expire_time = datetime.utcnow() + timedelta(days=14)
-    version_time = database.earliest_version_time()
+    version_time = database.earliest_version_time
     backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
     operation = backup.create()
 
@@ -65,10 +65,10 @@ def restore_database(instance_id, database_id, new_database_id, backup_id):
     database = instance.database(database_id)
     # Create a backup on database_id.
 
-    # Start restoring backup to a new database.
+    # Start restoring an existing backup to a new database.
     expire_time = datetime.utcnow() + timedelta(days=14)
     version_time = datetime.now()
-    backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
+    backup = instance.backup(backup_id)
     new_database = instance.database(new_database_id)
     operation = new_database.restore(backup)
 
@@ -292,7 +292,7 @@ def create_database_with_version_retention_period(instance_id, database_id, rete
         + "  AlbumTitle   STRING(MAX)"
         + ") PRIMARY KEY (SingerId, AlbumId),"
         + "  INTERLEAVE IN PARENT Singers ON DELETE CASCADE",
-        "ALTER DATABASE {}"
+        "ALTER DATABASE `{}`"
         " SET OPTIONS (version_retention_period = '{}')".format(
             database_id, retention_period
         )
@@ -305,7 +305,7 @@ def create_database_with_version_retention_period(instance_id, database_id, rete
     db.reload()
 
     print("Database {} created with version retention period {} and earliest version time {}".format(
-        db.database_id, db.version_retention_period(), db.earliest_version_time()
+        db.database_id, db.version_retention_period, db.earliest_version_time
     ))
 
     db.drop()

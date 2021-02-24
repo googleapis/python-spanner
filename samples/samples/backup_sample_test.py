@@ -64,12 +64,22 @@ def database(spanner_instance):
     db.drop()
 
 
+@RetryErrors(exception=DeadlineExceeded, max_tries=2)
+def test_create_database_with_retention_period(capsys):
+    database_id = unique_database_id()
+    retention_period = "7d"
+    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, database_id, retention_period)
+    out, _ = capsys.readouterr()
+    assert (database_id + " created with ") in out
+    assert ("retention period " + retention_period) in out
+
+
 def test_create_backup(capsys, database):
     backup_sample.create_backup(INSTANCE_ID, DATABASE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
 
-
+# Depends on test_create_backup having run first
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database(capsys):
     backup_sample.restore_database(INSTANCE_ID, DATABASE_ID, RESTORE_DB_ID, BACKUP_ID)
@@ -79,15 +89,7 @@ def test_restore_database(capsys):
     assert BACKUP_ID in out
 
 
-@RetryErrors(exception=DeadlineExceeded, max_tries=2)
-def test_restore_database_with_retention_period(capsys):
-    retention_period = "7d"
-    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, DATABASE_ID, retention_period)
-    out, _ = capsys.readouterr()
-    assert (DATABASE_ID + " created with ") in out
-    assert ("retention period " + retention_period) in out
-
-
+# Depends on test_create_backup having run first
 def test_list_backup_operations(capsys, spanner_instance):
     backup_sample.list_backup_operations(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
@@ -95,6 +97,7 @@ def test_list_backup_operations(capsys, spanner_instance):
     assert DATABASE_ID in out
 
 
+# Depends on test_create_backup having run first
 def test_list_backups(capsys, spanner_instance):
     backup_sample.list_backups(INSTANCE_ID, DATABASE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
@@ -102,18 +105,21 @@ def test_list_backups(capsys, spanner_instance):
     assert id_count == 7
 
 
+# Depends on test_create_backup having run first
 def test_update_backup(capsys):
     backup_sample.update_backup(INSTANCE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
 
 
+# Depends on test_create_backup having run first
 def test_delete_backup(capsys, spanner_instance):
     backup_sample.delete_backup(INSTANCE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
 
 
+# Depends on test_create_backup having run first
 def test_cancel_backup(capsys):
     backup_sample.cancel_backup(INSTANCE_ID, DATABASE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
