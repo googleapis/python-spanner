@@ -979,7 +979,7 @@ def log_commit_stats(instance_id, database_id):
 
         def __init__(self):
             self._last_commit_stats = None
-            super().__init__()
+            super().__init__("commit_stats_sample")
 
         def info(self, msg, *args, **kwargs):
             if kwargs['extra'] and 'commitStats' in kwargs['extra']:
