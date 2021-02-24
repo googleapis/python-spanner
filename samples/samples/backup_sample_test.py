@@ -64,16 +64,6 @@ def database(spanner_instance):
     db.drop()
 
 
-@RetryErrors(exception=DeadlineExceeded, max_tries=2)
-def test_create_database_with_retention_period(capsys):
-    database_id = unique_database_id()
-    retention_period = "7d"
-    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, database_id, retention_period)
-    out, _ = capsys.readouterr()
-    assert (database_id + " created with ") in out
-    assert ("retention period " + retention_period) in out
-
-
 def test_create_backup(capsys, database):
     backup_sample.create_backup(INSTANCE_ID, DATABASE_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
@@ -129,3 +119,13 @@ def test_cancel_backup(capsys):
         "Backup deleted." in out
     )
     assert cancel_success or cancel_failure
+
+
+@RetryErrors(exception=DeadlineExceeded, max_tries=2)
+def test_create_database_with_retention_period(capsys):
+    database_id = unique_database_id()
+    retention_period = "7d"
+    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, database_id, retention_period)
+    out, _ = capsys.readouterr()
+    assert (database_id + " created with ") in out
+    assert ("retention period " + retention_period) in out
