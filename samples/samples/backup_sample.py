@@ -62,12 +62,9 @@ def restore_database(instance_id, database_id, new_database_id, backup_id):
     """Restores a database from a backup."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
     # Create a backup on database_id.
 
     # Start restoring an existing backup to a new database.
-    expire_time = datetime.utcnow() + timedelta(days=14)
-    version_time = datetime.now()
     backup = instance.backup(backup_id)
     new_database = instance.database(new_database_id)
     operation = new_database.restore(backup)
