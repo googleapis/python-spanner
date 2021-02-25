@@ -343,7 +343,7 @@ if __name__ == "__main__":  # noqa: C901
     elif args.command == "update_backup":
         update_backup(args.instance_id, args.backup_id)
     elif args.command == "restore_database":
-        restore_database(args.instance_id, args.backup_id)
+        restore_database(args.instance_id, args.database_id, args.backup_id)
     elif args.command == "list_backups":
         list_backups(args.instance_id, args.database_id, args.backup_id)
     elif args.command == "list_backup_operations":
