@@ -38,7 +38,7 @@ def unique_backup_id():
 
 INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
-DATABASE_ID_2 = unique_database_id()
+RETENTION_DATABASE_ID = unique_database_id()
 RESTORE_DB_ID = unique_database_id()
 BACKUP_ID = unique_backup_id()
 RETENTION_PERIOD = "7d"
@@ -125,9 +125,9 @@ def test_cancel_backup(capsys):
 
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_create_database_with_retention_period(capsys, spanner_instance):
-    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, DATABASE_ID_2, RETENTION_PERIOD)
+    backup_sample.create_database_with_version_retention_period(INSTANCE_ID, RETENTION_DATABASE_ID, RETENTION_PERIOD)
     out, _ = capsys.readouterr()
-    assert (DATABASE_ID_2 + " created with ") in out
+    assert (RETENTION_DATABASE_ID + " created with ") in out
     assert ("retention period " + RETENTION_PERIOD) in out
-    database = spanner_instance.database(DATABASE_ID_2)
+    database = spanner_instance.database(RETENTION_DATABASE_ID)
     database.drop()
