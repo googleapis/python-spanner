@@ -976,14 +976,13 @@ def log_commit_stats(instance_id, database_id):
     # By default, commit statistics are logged via stdout at level Info.
     # This sample uses a custom logger to access the commit statistics.
     class CommitStatsSampleLogger(logging.Logger):
-
         def __init__(self):
             self._last_commit_stats = None
             super().__init__("commit_stats_sample")
 
         def info(self, msg, *args, **kwargs):
-            if kwargs['extra'] and 'commit_stats' in kwargs['extra']:
-                self._last_commit_stats = kwargs['extra']['commit_stats']
+            if kwargs["extra"] and "commit_stats" in kwargs["extra"]:
+                self._last_commit_stats = kwargs["extra"]["commit_stats"]
             super().info(msg)
 
     spanner_client = spanner.Client()
@@ -1006,8 +1005,6 @@ def log_commit_stats(instance_id, database_id):
             commit_stats.mutation_count
         )
     )
-
-
 # [END spanner_get_commit_stats]
 
 
