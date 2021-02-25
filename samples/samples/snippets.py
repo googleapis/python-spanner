@@ -977,12 +977,12 @@ def log_commit_stats(instance_id, database_id):
     # This sample uses a custom logger to access the commit statistics.
     class CommitStatsSampleLogger(logging.Logger):
         def __init__(self):
-            self._last_commit_stats = None
+            self.last_commit_stats = None
             super().__init__("commit_stats_sample")
 
         def info(self, msg, *args, **kwargs):
             if kwargs["extra"] and "commit_stats" in kwargs["extra"]:
-                self._last_commit_stats = kwargs["extra"]["commit_stats"]
+                self.last_commit_stats = kwargs["extra"]["commit_stats"]
             super().info(msg)
 
     spanner_client = spanner.Client()
@@ -999,7 +999,7 @@ def log_commit_stats(instance_id, database_id):
         print("{} record(s) inserted.".format(row_ct))
 
     database.run_in_transaction(insert_singers)
-    commit_stats = database.logger._last_commit_stats
+    commit_stats = database.logger.last_commit_stats
     print(
         "{} mutation(s) in transaction.".format(
             commit_stats.mutation_count
