@@ -10,7 +10,7 @@ class pandas_df():
         except ImportError:
             logging.error("Pandas module not found. It is needed for converting query result to Dataframe.\n Try running 'pip3 install pandas'")
 
-        code_to_spanner_dtype_dict = {
+        code_to_spanner_dtype_dict= {
                                         1 : 'BOOL',
                                         2 : 'INT64',
                                         3 : 'FLOAT64',
