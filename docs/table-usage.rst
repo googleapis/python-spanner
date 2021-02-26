@@ -28,7 +28,7 @@ A :class:`~google.cloud.spanner_v1.table.Table` object can be created with the
 .. code:: python
 
     table = database.table("my_table_id")
-    if my_table.exists():
+    if table.exists():
         print("Table with ID 'my_table' exists.")
     else:
         print("Table with ID 'my_table' does not exist."
