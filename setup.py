@@ -41,7 +41,8 @@ extras = {
         "opentelemetry-api==0.11b0",
         "opentelemetry-sdk==0.11b0",
         "opentelemetry-instrumentation==0.11b0",
-    ]
+    ],
+    "pandas": ["pandas >= 0.25.3"],
 }
 
 

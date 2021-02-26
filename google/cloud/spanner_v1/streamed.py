@@ -17,11 +17,10 @@
 from google.cloud import exceptions
 from google.cloud.spanner_v1 import TypeCode
 import six
-import logging
 
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_v1._helpers import _parse_value
-from google.cloud.spanner_v1._pandas_helpers import pandas_df
+from google.cloud.spanner_v1._pandas_helpers import pd_dataframe
 
 # pylint: enable=ungrouped-imports
 
@@ -146,8 +145,16 @@ class StreamedResultSet(object):
                 yield iter_rows.pop(0)
 
     def to_dataframe(self):
-        """Returns the response in a pandas dataframe of the StreamedResultSet object"""
-        df = pandas_df.pd_dataframe(self)
+        """Returns the response in a pandas dataframe of the StreamedResultSet object
+
+        :param: The response of type StreamedResultSet received from spanner api.
+
+        :rtype: pandas.DataFrame
+
+        :returns: Dataframe created from the StreamedResultSet response object returned by execute_sql() method
+        """
+        response_obj = self
+        df = pd_dataframe(response_obj)
         return df
 
     def one(self):
