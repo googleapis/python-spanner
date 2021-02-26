@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud import spanner_v1
+from google.cloud import spanner_v1_mod
 from google.auth.credentials import AnonymousCredentials
 import pytest
 
@@ -25,7 +25,7 @@ VALUES = [[1, "Alice"], [2, "Bob"]]
 @pytest.fixture
 def snapshot_obj():
     try:
-        spanner_client = spanner_v1.Client(
+        spanner_client = spanner_v1_mod.Client(
             project="test-project",
             client_options={"api_endpoint": "0.0.0.0:9010"},
             credentials=AnonymousCredentials(),
@@ -38,13 +38,10 @@ def snapshot_obj():
             return snapshot
 
     except:
-        return 0
-
+        pytest.skip("Cloud Spanner Emulator configuration is incorrect")
 
 @pytest.mark.parametrize(("limit"), [(0), (1), (2)])
 def test_df(limit, snapshot_obj):
-    if snapshot_obj == 0:
-        pytest.skip("Cloud Spanner Emulator configuration is incorrect")
     results = snapshot_obj.execute_sql(
         "Select * from testTable limit {limit}".format(limit=limit)
     )
