@@ -32,29 +32,31 @@ def create_backup(instance_id, database_id, backup_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
+    # Sets the version time as the current server time
+    version_time = None
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql("SELECT CURRENT_TIMESTAMP()")
-        first_row = list(results)[0]
-        # Create a backup
-        expire_time = datetime.utcnow() + timedelta(days=14)
-        version_time = first_row[0]
-        backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
-        operation = backup.create()
+        version_time = list(results)[0][0]
 
-        # Wait for backup operation to complete.
-        operation.result(1200)
+    # Create a backup
+    expire_time = datetime.utcnow() + timedelta(days=14)
+    backup = instance.backup(backup_id, database=database, expire_time=expire_time, version_time=version_time)
+    operation = backup.create()
 
-        # Verify that the backup is ready.
-        backup.reload()
-        assert backup.is_ready() is True
+    # Wait for backup operation to complete.
+    operation.result(1200)
 
-        # Get the name, create time and backup size.
-        backup.reload()
-        print(
-            "Backup {} of size {} bytes was created at {} for version of database at {}".format(
-                backup.name, backup.size_bytes, backup.create_time, backup.version_time
-            )
+    # Verify that the backup is ready.
+    backup.reload()
+    assert backup.is_ready() is True
+
+    # Get the name, create time and backup size.
+    backup.reload()
+    print(
+        "Backup {} of size {} bytes was created at {} for version of database at {}".format(
+            backup.name, backup.size_bytes, backup.create_time, backup.version_time
         )
+    )
 
 
 # [END spanner_create_backup]
