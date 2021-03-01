@@ -353,12 +353,13 @@ def connect(
                     instances, tables and data. If not provided, will
                     attempt to determine from the environment.
 
-    :type credentials: :class:`~google.auth.credentials.Credentials`
+    :type credentials: Union[:class:`~google.auth.credentials.Credentials`, str]
     :param credentials: (Optional) The authorization credentials to attach to
                         requests. These credentials identify this application
-                        to the service. Or a string specifying (path) where to retrieve
-                        the service account JSON for the credentials to connect to
-                        Cloud Spanner.If none are specified, the client will
+                        to the service. These credentials may be specified as
+                        a file path indicating where to retrieve the service
+                        account JSON for the credentials to connect to
+                        Cloud Spanner. If none are specified, the client will
                         attempt to ascertain the credentials from the
                         environment.
 
