@@ -292,7 +292,7 @@ class Connection:
 
         :type retried: bool
         :param retried: (Optional) Retry the SQL statement if statement
-                        execution failed.Defaults to false.
+                        execution failed. Defaults to false.
 
         :rtype: :class:`google.cloud.spanner_v1.streamed.StreamedResultSet`,
                 :class:`google.cloud.spanner_dbapi.checksum.ResultsChecksum`
