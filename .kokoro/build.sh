@@ -15,7 +15,11 @@
 
 set -eo pipefail
 
-cd github/python-spanner
+if [[ -z "${PROJECT_ROOT:-}" ]]; then
+    PROJECT_ROOT="github/python-spanner"
+fi
+
+cd "${PROJECT_ROOT}"
 
 # Disable buffering, so that the logs stream through.
 export PYTHONUNBUFFERED=1
@@ -33,16 +37,16 @@ export PROJECT_ID=$(cat "${KOKORO_GFILE_DIR}/project-id.json")
 export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
 
 # Remove old nox
-python3.6 -m pip uninstall --yes --quiet nox-automation
+python3 -m pip uninstall --yes --quiet nox-automation
 
 # Install nox
-python3.6 -m pip install --upgrade --quiet nox
-python3.6 -m nox --version
+python3 -m pip install --upgrade --quiet nox
+python3 -m nox --version
 
 # If NOX_SESSION is set, it only runs the specified session,
 # otherwise run all the sessions.
 if [[ -n "${NOX_SESSION:-}" ]]; then
-    python3.6 -m nox -s "${NOX_SESSION:-}"
+    python3 -m nox -s ${NOX_SESSION:-}
 else
-    python3.6 -m nox
+    python3 -m nox
 fi
