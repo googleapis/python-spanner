@@ -17,6 +17,7 @@
 import copy
 import functools
 import grpc
+import logging
 import re
 import threading
 
@@ -47,11 +48,12 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
 )
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
-from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import (
+    ExecuteSqlRequest,
     TransactionSelector,
     TransactionOptions,
 )
+from google.cloud.spanner_v1.table import Table
 
 # pylint: enable=ungrouped-imports
 
@@ -66,6 +68,11 @@ _DATABASE_NAME_RE = re.compile(
 )
 
 _DATABASE_METADATA_FILTER = "name:{0}/operations/"
+
+_LIST_TABLES_QUERY = """SELECT TABLE_NAME
+FROM INFORMATION_SCHEMA.TABLES
+WHERE SPANNER_STATE = 'COMMITTED'
+"""
 
 DEFAULT_RETRY_BACKOFF = Retry(initial=0.02, maximum=32, multiplier=1.3)
 
@@ -95,11 +102,19 @@ class Database(object):
     :param pool: (Optional) session pool to be used by database.  If not
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
+
+    :type logger: `logging.Logger`
+    :param logger: (Optional) a custom logger that is used if `log_commit_stats`
+                   is `True` to log commit statistics. If not passed, a logger
+                   will be created when needed that will log the commit statistics
+                   to stdout.
     """
 
     _spanner_api = None
 
-    def __init__(self, database_id, instance, ddl_statements=(), pool=None):
+    def __init__(
+        self, database_id, instance, ddl_statements=(), pool=None, logger=None
+    ):
         self.database_id = database_id
         self._instance = instance
         self._ddl_statements = _check_ddl_statements(ddl_statements)
@@ -107,6 +122,10 @@ class Database(object):
         self._state = None
         self._create_time = None
         self._restore_info = None
+        self._version_retention_period = None
+        self._earliest_version_time = None
+        self.log_commit_stats = False
+        self._logger = logger
 
         if pool is None:
             pool = BurstyPool()
@@ -205,6 +224,25 @@ class Database(object):
         return self._restore_info
 
     @property
+    def version_retention_period(self):
+        """The period in which Cloud Spanner retains all versions of data
+        for the database.
+
+        :rtype: str
+        :returns: a string representing the duration of the version retention period
+        """
+        return self._version_retention_period
+
+    @property
+    def earliest_version_time(self):
+        """The earliest time at which older versions of the data can be read.
+
+        :rtype: :class:`datetime.datetime`
+        :returns: a datetime object representing the earliest version time
+        """
+        return self._earliest_version_time
+
+    @property
     def ddl_statements(self):
         """DDL Statements used to define database schema.
 
@@ -215,6 +253,25 @@ class Database(object):
         :returns: the statements
         """
         return self._ddl_statements
+
+    @property
+    def logger(self):
+        """Logger used by the database.
+
+        The default logger will log commit stats at the log level INFO using
+        `sys.stderr`.
+
+        :rtype: :class:`logging.Logger` or `None`
+        :returns: the logger
+        """
+        if self._logger is None:
+            self._logger = logging.getLogger(self.name)
+            self._logger.setLevel(logging.INFO)
+
+            ch = logging.StreamHandler()
+            ch.setLevel(logging.INFO)
+            self._logger.addHandler(ch)
+        return self._logger
 
     @property
     def spanner_api(self):
@@ -313,6 +370,8 @@ class Database(object):
         self._state = DatabasePB.State(response.state)
         self._create_time = response.create_time
         self._restore_info = response.restore_info
+        self._version_retention_period = response.version_retention_period
+        self._earliest_version_time = response.earliest_version_time
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
@@ -596,6 +655,41 @@ class Database(object):
             filter_=database_filter, page_size=page_size
         )
 
+    def table(self, table_id):
+        """Factory to create a table object within this database.
+
+        Note: This method does not create a table in Cloud Spanner, but it can
+        be used to check if a table exists.
+
+        .. code-block:: python
+
+           my_table = database.table("my_table")
+           if my_table.exists():
+               print("Table with ID 'my_table' exists.")
+           else:
+               print("Table with ID 'my_table' does not exist.")
+
+        :type table_id: str
+        :param table_id: The ID of the table.
+
+        :rtype: :class:`~google.cloud.spanner_v1.table.Table`
+        :returns: a table owned by this database.
+        """
+        return Table(table_id, self)
+
+    def list_tables(self):
+        """List tables within the database.
+
+        :type: Iterable
+        :returns:
+            Iterable of :class:`~google.cloud.spanner_v1.table.Table`
+            resources within the current database.
+        """
+        with self.snapshot() as snapshot:
+            results = snapshot.execute_sql(_LIST_TABLES_QUERY)
+            for row in results:
+                yield self.table(row[0])
+
 
 class BatchCheckout(object):
     """Context manager for using a batch from a database.
@@ -624,8 +718,13 @@ class BatchCheckout(object):
         """End ``with`` block."""
         try:
             if exc_type is None:
-                self._batch.commit()
+                self._batch.commit(return_commit_stats=self._database.log_commit_stats)
         finally:
+            if self._database.log_commit_stats and self._batch.commit_stats:
+                self._database.logger.info(
+                    "CommitStats: {}".format(self._batch.commit_stats),
+                    extra={"commit_stats": self._batch.commit_stats},
+                )
             self._database._pool.put(self._session)
 
 
