@@ -357,11 +357,11 @@ class Instance(object):
 
         api.delete_instance(name=self.name, metadata=metadata)
 
-    def database(self, database_id, ddl_statements=(), pool=None):
+    def database(self, database_id, ddl_statements=(), pool=None, logger=None):
         """Factory to create a database within this instance.
 
         :type database_id: str
-        :param database_id: The ID of the instance.
+        :param database_id: The ID of the database.
 
         :type ddl_statements: list of string
         :param ddl_statements: (Optional) DDL statements, excluding the
@@ -371,10 +371,18 @@ class Instance(object):
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
+        :type logger: `logging.Logger`
+        :param logger: (Optional) a custom logger that is used if `log_commit_stats`
+                       is `True` to log commit statistics. If not passed, a logger
+                       will be created when needed that will log the commit statistics
+                       to stdout.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
-        return Database(database_id, self, ddl_statements=ddl_statements, pool=pool)
+        return Database(
+            database_id, self, ddl_statements=ddl_statements, pool=pool, logger=logger
+        )
 
     def list_databases(self, page_size=None):
         """List databases for the instance.
@@ -400,7 +408,7 @@ class Instance(object):
         )
         return page_iter
 
-    def backup(self, backup_id, database="", expire_time=None):
+    def backup(self, backup_id, database="", expire_time=None, version_time=None):
         """Factory to create a backup within this instance.
 
         :type backup_id: str
@@ -415,13 +423,29 @@ class Instance(object):
         :param expire_time:
             Optional. The expire time that will be used when creating the backup.
             Required if the create method needs to be called.
+
+        :type version_time: :class:`datetime.datetime`
+        :param version_time:
+            Optional. The version time that will be used to create the externally
+            consistent copy of the database. If not present, it is the same as
+            the `create_time` of the backup.
         """
         try:
             return Backup(
-                backup_id, self, database=database.name, expire_time=expire_time
+                backup_id,
+                self,
+                database=database.name,
+                expire_time=expire_time,
+                version_time=version_time,
             )
         except AttributeError:
-            return Backup(backup_id, self, database=database, expire_time=expire_time)
+            return Backup(
+                backup_id,
+                self,
+                database=database,
+                expire_time=expire_time,
+                version_time=version_time,
+            )
 
     def list_backups(self, filter_="", page_size=None):
         """List backups for the instance.
