@@ -17,7 +17,6 @@ import mock
 from tests._helpers import OpenTelemetryBase, StatusCanonicalCode
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
-from google.api_core import retry as retries
 from google.api_core import gapic_v1
 
 TABLE_NAME = "citizens"
@@ -412,7 +411,9 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.execute_update(DML_QUERY_WITH_PARAM, PARAMS)
 
-    def _execute_update_helper(self, count=0, query_options=None, retry=gapic_v1.method.DEFAULT, timeout=None):
+    def _execute_update_helper(
+        self, count=0, query_options=None, retry=gapic_v1.method.DEFAULT, timeout=None
+    ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             ResultSet,
