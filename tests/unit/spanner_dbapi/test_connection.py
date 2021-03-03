@@ -390,7 +390,7 @@ class TestConnection(unittest.TestCase):
 
         sql = "INSERT INTO T (f1, f2) VALUES (%s, %s), (%s, %s)"
         params = ["a", "b", "c", "d"]
-        param_types = {"f1": str, "f2": str}            
+        param_types = {"f1": str, "f2": str}
 
         connection = self._make_connection()
 
