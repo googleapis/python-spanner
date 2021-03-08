@@ -8,8 +8,6 @@ import uuid
 
 from google.api_core.exceptions import Aborted
 from google.cloud import spanner
-from google.cloud.spanner_dbapi import connect
-import mock
 import pytest
 from test_utils.retry import RetryErrors
 
@@ -28,6 +26,10 @@ def unique_database_id():
 
 INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
+
+
+def drop_table(transaction, table_name):
+    transaction.execute_update("DROP TABLE {}".format(table_name))
 
 
 @pytest.fixture(scope="module")
@@ -53,13 +55,12 @@ def database(spanner_instance):
 
 @RetryErrors(exception=Aborted, max_tries=2)
 def test_enable_autocommit_mode(capsys, database):
-    connection = connect(INSTANCE_ID, DATABASE_ID)
-    cursor = connection.cursor()
+    # Delete table if it exists for retry attempts.
+    table = database.table('Singers')
+    if table.exists():
+        database.run_in_transaction(drop_table, 'Singers')
 
-    with mock.patch(
-        "google.cloud.spanner_dbapi.connection.Cursor", return_value=cursor,
-    ):
-        autocommit.enable_autocommit_mode(INSTANCE_ID, DATABASE_ID)
-        out, _ = capsys.readouterr()
-        assert "Autocommit mode is enabled." in out
-        assert "SingerId: 13, AlbumId: Russell, AlbumTitle: Morales" in out
+    autocommit.enable_autocommit_mode(INSTANCE_ID, DATABASE_ID)
+    out, _ = capsys.readouterr()
+    assert "Autocommit mode is enabled." in out
+    assert "SingerId: 13, AlbumId: Russell, AlbumTitle: Morales" in out
