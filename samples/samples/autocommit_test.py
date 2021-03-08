@@ -28,10 +28,6 @@ INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
 
 
-def drop_table(transaction, table_name):
-    transaction.execute_update("DROP TABLE {}".format(table_name))
-
-
 @pytest.fixture(scope="module")
 def spanner_instance():
     spanner_client = spanner.Client()
@@ -58,7 +54,8 @@ def test_enable_autocommit_mode(capsys, database):
     # Delete table if it exists for retry attempts.
     table = database.table('Singers')
     if table.exists():
-        database.run_in_transaction(drop_table, 'Singers')
+        op = database.update_ddl(["DROP TABLE Singers"])
+        op.result()
 
     autocommit.enable_autocommit_mode(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
