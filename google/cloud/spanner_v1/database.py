@@ -103,7 +103,7 @@ class Database(object):
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
 
-    :type logger: `logging.Logger`
+    :type logger: :class:`logging.Logger`
     :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                    is `True` to log commit statistics. If not passed, a logger
                    will be created when needed that will log the commit statistics
