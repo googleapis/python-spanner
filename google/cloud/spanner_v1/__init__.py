@@ -125,6 +125,7 @@ __all__ = (
     "ResultSet",
     "ResultSetMetadata",
     "ResultSetStats",
+    "RequestOptions",
     "RollbackRequest",
     "Session",
     "StructType",
