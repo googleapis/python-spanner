@@ -179,7 +179,7 @@ class Batch(_BatchBase):
 
 
 def _make_write_pb(table, columns, values):
-    """Helper for :meth:`Batch.insert` et aliae.
+    """Helper for :meth:`Batch.insert` et al.
 
     :type table: str
     :param table: Name of the table to be modified.

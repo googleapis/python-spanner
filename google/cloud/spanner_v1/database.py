@@ -310,7 +310,7 @@ class Database(object):
     def create(self):
         """Create this database within its instance
 
-        Inclues any configured schema assigned to :attr:`ddl_statements`.
+        Includes any configured schema assigned to :attr:`ddl_statements`.
 
         See
         https://cloud.google.com/spanner/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.DatabaseAdmin.CreateDatabase
@@ -568,7 +568,7 @@ class Database(object):
         :returns: The return value of ``func``.
 
         :raises Exception:
-            reraises any non-ABORT execptions raised by ``func``.
+            reraises any non-ABORT exceptions raised by ``func``.
         """
         # Sanity check: Is there a transaction already running?
         # If there is, then raise a red flag. Otherwise, mark that this one
@@ -895,7 +895,7 @@ class BatchSnapshot(object):
 
         :rtype: iterable of dict
         :returns:
-            mappings of information used peform actual partitioned reads via
+            mappings of information used perform actual partitioned reads via
             :meth:`process_read_batch`.
         """
         partitions = self._get_snapshot().partition_read(
@@ -945,7 +945,7 @@ class BatchSnapshot(object):
 
         Uses the ``PartitionQuery`` API request to start a partitioned
         query operation.  Returns a list of batch information needed to
-        peform the actual queries.
+        perform the actual queries.
 
         :type sql: str
         :param sql: SQL query statement
@@ -985,7 +985,7 @@ class BatchSnapshot(object):
 
         :rtype: iterable of dict
         :returns:
-            mappings of information used peform actual partitioned reads via
+            mappings of information used perform actual partitioned reads via
             :meth:`process_read_batch`.
         """
         partitions = self._get_snapshot().partition_query(
@@ -1065,7 +1065,7 @@ def _check_ddl_statements(value):
     https://cloud.google.com/spanner/docs/data-definition-language
 
     :type value: list of string
-    :param value: DDL statements, excluding the 'CREATE DATABSE' statement
+    :param value: DDL statements, excluding the 'CREATE DATABASE' statement
 
     :rtype: tuple
     :returns: tuple of validated DDL statement strings.

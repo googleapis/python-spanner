@@ -266,7 +266,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             Tuple(status, Sequence[int])
         :returns:
             Status code, plus counts of rows affected by each completed DML
-            statement.  Note that if the staus code is not ``OK``, the
+            statement.  Note that if the status code is not ``OK``, the
             statement triggering the error will not have an entry in the
             list, nor will any statements following that one.
         """

@@ -321,7 +321,7 @@ class Session(object):
         :returns: The return value of ``func``.
 
         :raises Exception:
-            reraises any non-ABORT execptions raised by ``func``.
+            reraises any non-ABORT exceptions raised by ``func``.
         """
         deadline = time.time() + kw.pop("timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS)
         attempts = 0

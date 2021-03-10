@@ -349,7 +349,7 @@ class Instance(object):
 
         Soon afterward:
 
-        * The instance and all databases within the instance will be deleteed.
+        * The instance and all databases within the instance will be deleted.
           All data in the databases will be permanently deleted.
         """
         api = self._client.instance_admin_api
@@ -365,7 +365,7 @@ class Instance(object):
 
         :type ddl_statements: list of string
         :param ddl_statements: (Optional) DDL statements, excluding the
-                               'CREATE DATABSE' statement.
+                               'CREATE DATABASE' statement.
 
         :type pool: concrete subclass of
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.

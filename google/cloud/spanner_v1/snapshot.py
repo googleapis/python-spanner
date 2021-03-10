@@ -297,7 +297,7 @@ class _SnapshotBase(_SessionWrapper):
         partition_size_bytes=None,
         max_partitions=None,
     ):
-        """Perform a ``ParitionRead`` API request for rows in a table.
+        """Perform a ``PartitionRead`` API request for rows in a table.
 
         :type table: str
         :param table: name of the table from which to fetch data
@@ -328,7 +328,7 @@ class _SnapshotBase(_SessionWrapper):
 
         :raises ValueError:
             for single-use snapshots, or if a transaction ID is
-            already associtated with the snapshot.
+            already associated with the snapshot.
         """
         if not self._multi_use:
             raise ValueError("Cannot use single-use snapshot.")
@@ -369,7 +369,7 @@ class _SnapshotBase(_SessionWrapper):
         partition_size_bytes=None,
         max_partitions=None,
     ):
-        """Perform a ``ParitionQuery`` API request.
+        """Perform a ``PartitionQuery`` API request.
 
         :type sql: str
         :param sql: SQL query statement
@@ -399,7 +399,7 @@ class _SnapshotBase(_SessionWrapper):
 
         :raises ValueError:
             for single-use snapshots, or if a transaction ID is
-            already associtated with the snapshot.
+            already associated with the snapshot.
         """
         if not self._multi_use:
             raise ValueError("Cannot use single-use snapshot.")
