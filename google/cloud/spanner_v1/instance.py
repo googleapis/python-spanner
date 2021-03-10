@@ -398,7 +398,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api._ore.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.database.Database`
+            Iterator of :class:`~google.cloud.spanner_admin_database_v1.types.Database`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
@@ -429,6 +429,9 @@ class Instance(object):
             Optional. The version time that will be used to create the externally
             consistent copy of the database. If not present, it is the same as
             the `create_time` of the backup.
+
+        :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :returns: a backup owned by this instance.
         """
         try:
             return Backup(
@@ -462,7 +465,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.backup.Backup`
+            Iterator of :class:`~google.cloud.spanner_admin_database_v1.types.Backup`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)

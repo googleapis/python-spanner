@@ -190,7 +190,7 @@ def _make_write_pb(table, columns, values):
     :type values: list of lists
     :param values: Values to be modified.
 
-    :rtype: :class:`google.cloud.spanner_v1.Mutation.Write`
+    :rtype: :class:`google.cloud.spanner_v1.types.Mutation.Write`
     :returns: Write protobuf
     """
     return Mutation.Write(

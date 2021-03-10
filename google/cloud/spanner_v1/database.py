@@ -138,7 +138,7 @@ class Database(object):
         """Creates an instance of this class from a protobuf.
 
         :type database_pb:
-            :class:`~google.cloud.spanner_admin_instance_v1.Instance`
+            :class:`~google.cloud.spanner_admin_instance_v1.types.Instance`
         :param database_pb: A instance protobuf object.
 
         :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
@@ -199,7 +199,7 @@ class Database(object):
     def state(self):
         """State of this database.
 
-        :rtype: :class:`~google.cloud.spanner_admin_database_v1.Database.State`
+        :rtype: :class:`~google.cloud.spanner_admin_database_v1.types.Database.State`
         :returns: an enum describing the state of the database
         """
         return self._state
@@ -218,7 +218,7 @@ class Database(object):
     def restore_info(self):
         """Restore info for this database.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.RestoreInfo`
+        :rtype: :class:`~google.cloud.spanner_v1.types.RestoreInfo`
         :returns: an object representing the restore info for this database
         """
         return self._restore_info
@@ -429,12 +429,12 @@ class Database(object):
             required if parameters are passed.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -976,12 +976,12 @@ class BatchSnapshot(object):
             differ.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
         :rtype: iterable of dict
         :returns:

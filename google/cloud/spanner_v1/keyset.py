@@ -68,7 +68,7 @@ class KeyRange(object):
     def _to_pb(self):
         """Construct a KeyRange protobuf.
 
-        :rtype: :class:`~google.cloud.spanner_v1.KeyRange`
+        :rtype: :class:`~google.cloud.spanner_v1.types.KeyRange`
         :returns: protobuf corresponding to this instance.
         """
         kwargs = {}
@@ -139,7 +139,7 @@ class KeySet(object):
     def _to_pb(self):
         """Construct a KeySet protobuf.
 
-        :rtype: :class:`~google.cloud.spanner_v1.KeySet`
+        :rtype: :class:`~google.cloud.spanner_v1.types.KeySet`
         :returns: protobuf corresponding to this instance.
         """
         if self.all_:
