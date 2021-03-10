@@ -412,7 +412,11 @@ class TestTransaction(OpenTelemetryBase):
             transaction.execute_update(DML_QUERY_WITH_PARAM, PARAMS)
 
     def _execute_update_helper(
-        self, count=0, query_options=None, retry=gapic_v1.method.DEFAULT, timeout=None
+        self,
+        count=0,
+        query_options=None,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (

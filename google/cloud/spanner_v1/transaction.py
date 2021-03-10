@@ -194,7 +194,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         query_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
-        timeout=None,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Perform an ``ExecuteSql`` API request with DML.
 
