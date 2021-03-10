@@ -22,7 +22,6 @@ from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import PartitionOptions
-from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import PartitionQueryRequest
 from google.cloud.spanner_v1 import PartitionReadRequest
 
