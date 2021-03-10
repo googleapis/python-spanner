@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 """Spanner read-write transaction support."""
 
 from google.protobuf.struct_pb2 import Struct
@@ -192,6 +191,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         param_types=None,
         query_mode=None,
         query_options=None,
+        *,
         retry=gapic_v1.method.DEFAULT,
         timeout=None,
     ):
@@ -221,7 +221,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :param query_options: (Optional) Options that are provided for query plan stability.
 
         :type retry: :class:`~google.api_core.retry.Retry`
-        :param retry: (Optional) Designation of what errors, if any, should be retried.
+        :param retry: (Optional) The retry settings for this request.
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
