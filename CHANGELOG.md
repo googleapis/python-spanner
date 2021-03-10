@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [3.2.1](https://www.github.com/googleapis/python-spanner/compare/v3.2.0...v3.2.1) (2021-03-10)
+
+
+### Bug Fixes
+
+* **db_api:** allow file path for credentials ([#221](https://www.github.com/googleapis/python-spanner/issues/221)) ([1de0284](https://www.github.com/googleapis/python-spanner/commit/1de028430b779a50d38242fe70567e92b560df5a))
+
 ## [3.2.0](https://www.github.com/googleapis/python-spanner/compare/v3.1.0...v3.2.0) (2021-03-02)
 
 
