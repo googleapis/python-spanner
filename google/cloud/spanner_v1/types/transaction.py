@@ -98,7 +98,7 @@ class TransactionOptions(proto.Message):
     transaction.
 
     Semantics
-    ~~~~~~~~~
+    ---------
 
     Cloud Spanner can commit the transaction if all read locks it
     acquired are still valid at commit time, and it is able to acquire
@@ -113,7 +113,7 @@ class TransactionOptions(proto.Message):
     than between Cloud Spanner transactions themselves.
 
     Retrying Aborted Transactions
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    -----------------------------
 
     When a transaction aborts, the application can choose to retry the
     whole transaction again. To maximize the chances of successfully
@@ -130,7 +130,7 @@ class TransactionOptions(proto.Message):
     retrying.
 
     Idle Transactions
-    ~~~~~~~~~~~~~~~~~
+    -----------------
 
     A transaction is considered idle if it has no outstanding reads or
     SQL queries and has not started a read or SQL query within the last
@@ -182,7 +182,7 @@ class TransactionOptions(proto.Message):
     Each type of timestamp bound is discussed in detail below.
 
     Strong
-    ~~~~~~
+    ------
 
     Strong reads are guaranteed to see the effects of all transactions
     that have committed before the start of the read. Furthermore, all
@@ -200,7 +200,7 @@ class TransactionOptions(proto.Message):
     [TransactionOptions.ReadOnly.strong][google.spanner.v1.TransactionOptions.ReadOnly.strong].
 
     Exact Staleness
-    ~~~~~~~~~~~~~~~
+    ---------------
 
     These timestamp bounds execute reads at a user-specified timestamp.
     Reads at a timestamp are guaranteed to see a consistent prefix of
@@ -225,7 +225,7 @@ class TransactionOptions(proto.Message):
     [TransactionOptions.ReadOnly.exact_staleness][google.spanner.v1.TransactionOptions.ReadOnly.exact_staleness].
 
     Bounded Staleness
-    ~~~~~~~~~~~~~~~~~
+    -----------------
 
     Bounded staleness modes allow Cloud Spanner to pick the read
     timestamp, subject to a user-provided staleness bound. Cloud Spanner
@@ -258,7 +258,7 @@ class TransactionOptions(proto.Message):
     [TransactionOptions.ReadOnly.min_read_timestamp][google.spanner.v1.TransactionOptions.ReadOnly.min_read_timestamp].
 
     Old Read Timestamps and Garbage Collection
-    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ------------------------------------------
 
     Cloud Spanner continuously garbage collects deleted and overwritten
     data in the background to reclaim storage space. This process is
