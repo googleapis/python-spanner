@@ -41,9 +41,7 @@ def pd_dataframe(response_obj):
             "Pandas module not found. It is needed for converting query result to Dataframe.\n Try running 'pip3 install pandas'"
         ) from err
 
-    data = []
-    for row in response_obj:
-        data.append(row)
+    data = list(response_obj)
 
     columns_dict = {}
     try:
