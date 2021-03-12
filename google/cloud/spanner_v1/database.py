@@ -631,12 +631,19 @@ class Database(object):
         """
         if source is None:
             raise ValueError("Restore source not specified")
-        api = self._instance._client.database_admin_api
-        metadata = _metadata_with_prefix(self.name)
         if type(self._encryption_config) == dict:
             self._encryption_config = RestoreDatabaseEncryptionConfig(
                 **self._encryption_config
             )
+        if (
+            self.encryption_config
+            and self.encryption_config.kms_key_name
+            and self.encryption_config.encryption_type
+            != RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+        ):
+            raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
         request = RestoreDatabaseRequest(
             parent=self._instance.name,
             database_id=self.database_id,

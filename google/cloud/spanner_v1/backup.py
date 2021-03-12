@@ -244,6 +244,13 @@ class Backup(object):
             raise ValueError("expire_time not set")
         if not self._database:
             raise ValueError("database not set")
+        if (
+            self.encryption_config
+            and self.encryption_config.kms_key_name
+            and self.encryption_config.encryption_type
+            != CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+        ):
+            raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
         backup = BackupPB(

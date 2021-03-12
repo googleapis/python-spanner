@@ -1330,6 +1330,26 @@ class TestDatabase(_BaseTest):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
+    def test_restore_w_invalid_encryption_config_dict(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            RestoreDatabaseEncryptionConfig,
+        )
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        encryption_config = {
+            "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+            "kms_key_name": "kms_key_name",
+        }
+        database = self._make_one(
+            self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
+        )
+        backup = _Backup(self.BACKUP_NAME)
+
+        with self.assertRaises(ValueError):
+            database.restore(backup)
+
     def test_is_ready(self):
         from google.cloud.spanner_admin_database_v1 import Database
 

@@ -373,6 +373,27 @@ class TestBackup(_BaseTest):
             request=request, metadata=[("google-cloud-resource-prefix", backup.name)],
         )
 
+    def test_create_w_invalid_encryption_config(self):
+        from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        expire_timestamp = self._make_timestamp()
+        encryption_config = {
+            "encryption_type": CreateBackupEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+            "kms_key_name": "key_name",
+        }
+        backup = self._make_one(
+            self.BACKUP_ID,
+            instance,
+            database=self.DATABASE_NAME,
+            expire_time=expire_timestamp,
+            encryption_config=encryption_config,
+        )
+
+        with self.assertRaises(ValueError):
+            backup.create()
+
     def test_exists_grpc_error(self):
         from google.api_core.exceptions import Unknown
 
