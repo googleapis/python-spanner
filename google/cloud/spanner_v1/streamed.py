@@ -151,8 +151,6 @@ class StreamedResultSet(object):
     def to_dataframe(self):
         """Returns the response in a pandas dataframe of the StreamedResultSet object
 
-        :param: The response of type StreamedResultSet received from spanner api.
-
         :rtype: pandas.DataFrame
 
         :returns: Dataframe created from the StreamedResultSet response object returned by execute_sql() method
