@@ -57,7 +57,7 @@ def spanner_instance():
     op.result(120)  # block until completion
     yield instance
     for backup_pb in instance.list_backups():
-        backup = instance.backup(backup_pb.name)
+        backup = instance.backup(backup_pb.name.split("/")[-1])
         backup.delete()
     instance.delete()
 
