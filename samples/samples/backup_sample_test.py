@@ -56,6 +56,9 @@ def spanner_instance():
     op = instance.create()
     op.result(120)  # block until completion
     yield instance
+    for database_pb in instance.list_databases():
+        database = instance.database(database_pb.name.split("/")[-1])
+        database.drop()
     for backup_pb in instance.list_backups():
         backup = instance.backup(backup_pb.name.split("/")[-1])
         backup.delete()
