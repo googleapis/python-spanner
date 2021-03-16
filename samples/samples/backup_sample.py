@@ -147,11 +147,10 @@ def restore_database_with_encryption_key(instance_id, new_database_id, backup_id
     new_database.reload()
     restore_info = new_database.restore_info
     print(
-        "Database {} restored to {} from backup {} with version time {} using encryption key {}.".format(
+        "Database {} restored to {} from backup {} with using encryption key {}.".format(
             restore_info.backup_info.source_database,
             new_database_id,
             restore_info.backup_info.backup,
-            restore_info.backup_info.version_time,
             new_database.encryption_config.kms_key_name,
         )
     )
