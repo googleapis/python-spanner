@@ -16,6 +16,7 @@
 import unittest
 
 import mock
+from google.api_core import gapic_v1
 
 from google.cloud.spanner_v1.param_types import INT64
 
@@ -1768,6 +1769,49 @@ class TestBatchSnapshot(_BaseTest):
             index="",
             partition_size_bytes=None,
             max_partitions=max_partitions,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_generate_read_batches_w_retry_and_timeout_params(self):
+        max_partitions = len(self.TOKENS)
+        keyset = self._make_keyset()
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_read.return_value = self.TOKENS
+
+        batches = list(
+            batch_txn.generate_read_batches(
+                self.TABLE,
+                self.COLUMNS,
+                keyset,
+                max_partitions=max_partitions,
+                retry={},
+                timeout=2.0,
+            )
+        )
+
+        expected_read = {
+            "table": self.TABLE,
+            "columns": self.COLUMNS,
+            "keyset": {"all": True},
+            "index": "",
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["read"], expected_read)
+
+        snapshot.partition_read.assert_called_once_with(
+            table=self.TABLE,
+            columns=self.COLUMNS,
+            keyset=keyset,
+            index="",
+            partition_size_bytes=None,
+            max_partitions=max_partitions,
+            retry={},
+            timeout=2.0,
         )
 
     def test_generate_read_batches_w_index_w_partition_size_bytes(self):
@@ -1806,6 +1850,8 @@ class TestBatchSnapshot(_BaseTest):
             index=self.INDEX,
             partition_size_bytes=size,
             max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_process_read_batch(self):
@@ -1863,6 +1909,8 @@ class TestBatchSnapshot(_BaseTest):
             param_types=None,
             partition_size_bytes=None,
             max_partitions=max_partitions,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_generate_query_batches_w_params_w_partition_size_bytes(self):
@@ -1902,6 +1950,54 @@ class TestBatchSnapshot(_BaseTest):
             param_types=param_types,
             partition_size_bytes=size,
             max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_generate_query_batches_w_retry_and_timeout_params(self):
+        sql = (
+            "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
+        )
+        params = {"max_age": 30}
+        param_types = {"max_age": "INT64"}
+        size = 1 << 20
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance)
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_query.return_value = self.TOKENS
+
+        batches = list(
+            batch_txn.generate_query_batches(
+                sql,
+                params=params,
+                param_types=param_types,
+                partition_size_bytes=size,
+                retry={},
+                timeout=2.0,
+            )
+        )
+
+        expected_query = {
+            "sql": sql,
+            "params": params,
+            "param_types": param_types,
+            "query_options": client._query_options,
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["query"], expected_query)
+
+        snapshot.partition_query.assert_called_once_with(
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition_size_bytes=size,
+            max_partitions=None,
+            retry={},
+            timeout=2.0,
         )
 
     def test_process_query_batch(self):

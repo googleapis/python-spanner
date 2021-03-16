@@ -123,7 +123,10 @@ class Session(object):
             request.session.labels = self._labels
 
         with trace_call("CloudSpanner.CreateSession", self, self._labels):
-            session_pb = api.create_session(request=request, metadata=metadata,)
+            session_pb = api.create_session(
+                request=request,
+                metadata=metadata,
+            )
         self._session_id = session_pb.name.split("/")[-1]
 
     def exists(self):
@@ -257,6 +260,12 @@ class Session(object):
             :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
+
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.

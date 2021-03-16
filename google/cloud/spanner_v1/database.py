@@ -26,6 +26,7 @@ from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
+from google.api_core import gapic_v1
 import six
 
 # pylint: disable=ungrouped-imports
@@ -862,6 +863,9 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Start a partitioned batch read operation.
 
@@ -893,6 +897,12 @@ class BatchSnapshot(object):
             service uses this as a hint, the actual number of partitions may
             differ.
 
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
+
         :rtype: iterable of dict
         :returns:
             mappings of information used peform actual partitioned reads via
@@ -905,6 +915,8 @@ class BatchSnapshot(object):
             index=index,
             partition_size_bytes=partition_size_bytes,
             max_partitions=max_partitions,
+            retry=retry,
+            timeout=timeout,
         )
 
         read_info = {
@@ -940,6 +952,9 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Start a partitioned query operation.
 
@@ -983,6 +998,12 @@ class BatchSnapshot(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.QueryOptions`
 
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
+
         :rtype: iterable of dict
         :returns:
             mappings of information used peform actual partitioned reads via
@@ -994,6 +1015,8 @@ class BatchSnapshot(object):
             param_types=param_types,
             partition_size_bytes=partition_size_bytes,
             max_partitions=max_partitions,
+            retry=retry,
+            timeout=timeout,
         )
 
         query_info = {"sql": sql}
