@@ -175,7 +175,9 @@ class Cursor(object):
             classification = parse_utils.classify_stmt(sql)
             if classification == parse_utils.STMT_DDL:
                 for ddl in sql.split(";"):
-                    self.connection._ddl_statements.append(ddl)
+                    ddl = ddl.strip()
+                    if ddl:
+                        self.connection._ddl_statements.append(ddl)
                 return
 
             # For every other operation, we've got to ensure that
