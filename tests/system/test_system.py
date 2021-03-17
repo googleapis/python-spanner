@@ -738,6 +738,10 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             op.result()
 
     def test_backup_workflow(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            CreateBackupEncryptionConfig,
+            RestoreDatabaseEncryptionConfig,
+        )
         from datetime import datetime
         from datetime import timedelta
         from pytz import UTC
@@ -746,6 +750,9 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow() + timedelta(days=3)
         expire_time = expire_time.replace(tzinfo=UTC)
+        encryption_config = CreateBackupEncryptionConfig(
+            encryption_type=CreateBackupEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+        )
 
         # Create backup.
         backup = instance.backup(
@@ -753,6 +760,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
             database=self._db,
             expire_time=expire_time,
             version_time=self.database_version_time,
+            encryption_config=encryption_config,
         )
         operation = backup.create()
         self.to_delete.append(backup)
@@ -771,6 +779,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         self.assertEqual(self.database_version_time, backup.version_time)
         self.assertIsNotNone(backup.size_bytes)
         self.assertIsNotNone(backup.state)
+        self.assertEqual(encryption_config, backup.encryption_config)
 
         # Update with valid argument.
         valid_expire_time = datetime.utcnow() + timedelta(days=7)
@@ -780,7 +789,10 @@ class TestBackupAPI(unittest.TestCase, _TestData):
 
         # Restore database to same instance.
         restored_id = "restored_db" + unique_resource_id("_")
-        database = instance.database(restored_id)
+        encryption_config = RestoreDatabaseEncryptionConfig(
+            encryption_type=RestoreDatabaseEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+        )
+        database = instance.database(restored_id, encryption_config=encryption_config)
         self.to_drop.append(database)
         operation = database.restore(source=backup)
         restored_db = operation.result()
@@ -791,6 +803,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
 
         metadata = operation.metadata
         self.assertEqual(self.database_version_time, metadata.backup_info.version_time)
+        self.assertEqual(encryption_config, backup.encryption_config)
 
         database.drop()
         backup.delete()
