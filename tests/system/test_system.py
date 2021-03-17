@@ -803,7 +803,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
 
         metadata = operation.metadata
         self.assertEqual(self.database_version_time, metadata.backup_info.version_time)
-        self.assertEqual(encryption_config, backup.encryption_config)
+        database.reload()
+        self.assertEqual(encryption_config, database.encryption_config)
 
         database.drop()
         backup.delete()
