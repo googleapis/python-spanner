@@ -872,6 +872,7 @@ class TestCursor(unittest.TestCase):
 
         EXP_DDLS = [
             "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ()",
+            "DROP INDEX index_name",
             "DROP TABLE table_name",
         ]
 
@@ -886,6 +887,7 @@ class TestCursor(unittest.TestCase):
         cursor = connection.cursor()
         cursor.execute(
             "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ();"
+            "DROP INDEX index_name;\n"
             "DROP TABLE table_name;"
         )
 
