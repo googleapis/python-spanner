@@ -109,7 +109,18 @@ class _SnapshotBase(_SessionWrapper):
         """
         raise NotImplementedError
 
-    def read(self, table, columns, keyset, index="", limit=0, partition=None):
+    def read(
+        self,
+        table,
+        columns,
+        keyset,
+        index="",
+        limit=0,
+        partition=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
+    ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
         :type table: str
@@ -133,6 +144,12 @@ class _SnapshotBase(_SessionWrapper):
         :param partition: (Optional) one of the partition tokens returned
                           from :meth:`partition_read`.  Incompatible with
                           ``limit``.
+
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -163,7 +180,11 @@ class _SnapshotBase(_SessionWrapper):
             partition_token=partition,
         )
         restart = functools.partial(
-            api.streaming_read, request=request, metadata=metadata,
+            api.streaming_read,
+            request=request,
+            metadata=metadata,
+            retry=retry,
+            timeout=timeout,
         )
 
         trace_attributes = {"table_id": table, "columns": columns}

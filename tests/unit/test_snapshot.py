@@ -375,7 +375,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
-    def _read_helper(self, multi_use, first=True, count=0, partition=None):
+    def _read_helper(
+        self,
+        multi_use,
+        first=True,
+        count=0,
+        partition=None,
+        timeout=gapic_v1.method.DEFAULT,
+        retry=gapic_v1.method.DEFAULT,
+    ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             PartialResultSet,
@@ -426,11 +434,23 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         if partition is not None:  # 'limit' and 'partition' incompatible
             result_set = derived.read(
-                TABLE_NAME, COLUMNS, keyset, index=INDEX, partition=partition
+                TABLE_NAME,
+                COLUMNS,
+                keyset,
+                index=INDEX,
+                partition=partition,
+                retry=retry,
+                timeout=timeout,
             )
         else:
             result_set = derived.read(
-                TABLE_NAME, COLUMNS, keyset, index=INDEX, limit=LIMIT
+                TABLE_NAME,
+                COLUMNS,
+                keyset,
+                index=INDEX,
+                limit=LIMIT,
+                retry=retry,
+                timeout=timeout,
             )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -474,6 +494,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         api.streaming_read.assert_called_once_with(
             request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
+            retry=retry,
+            timeout=timeout,
         )
 
         self.assertSpanAttributes(
@@ -503,6 +525,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
     def test_read_w_multi_use_w_first_w_count_gt_0(self):
         with self.assertRaises(ValueError):
             self._read_helper(multi_use=True, first=True, count=1)
+
+    def test_read_w_timeout_param(self):
+        self._read_helper(multi_use=True, first=False, timeout=2.0)
+
+    def test_read_w_retry_param(self):
+        self._read_helper(multi_use=True, first=False, retry=gapic_v1.method.DEFAULT)
+
+    def test_read_w_timeout_and_retry_params(self):
+        self._read_helper(multi_use=True, first=False, retry={}, timeout=2.0)
 
     def test_execute_sql_other_error(self):
         database = _Database()
