@@ -740,6 +740,7 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_backup_workflow(self):
         from google.cloud.spanner_admin_database_v1 import (
             CreateBackupEncryptionConfig,
+            EncryptionConfig,
             RestoreDatabaseEncryptionConfig,
         )
         from datetime import datetime
@@ -804,7 +805,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         metadata = operation.metadata
         self.assertEqual(self.database_version_time, metadata.backup_info.version_time)
         database.reload()
-        self.assertEqual(encryption_config, database.encryption_config)
+        expected_encryption_config = EncryptionConfig()
+        self.assertEqual(expected_encryption_config, database.encryption_config)
 
         database.drop()
         backup.delete()
