@@ -180,7 +180,7 @@ class Backup(object):
     @property
     def encryption_info(self):
         """Encryption info for this backup.
-        :rtype: :class:`~google.clod.spanner_admin_database_v1.proto.common_pb2.EncryptionInfo`
+        :rtype: :class:`~google.clod.spanner_admin_database_v1.types.EncryptionInfo`
         :returns: a class representing the encryption info
         """
         return self._encryption_info
@@ -188,7 +188,7 @@ class Backup(object):
     @property
     def encryption_config(self):
         """Encryption config for this database.
-        :rtype: :class:`~google.cloud.spanner_admin_instance_v1.CreateBackupEncryptionConfig`
+        :rtype: :class:`~google.cloud.spanner_admin_instance_v1.types.CreateBackupEncryptionConfig`
         :returns: an object representing the restore info for this database
         """
         return self._encryption_config
