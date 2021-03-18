@@ -1881,6 +1881,39 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_process_read_batch_w_retry_timeout(self):
+        keyset = self._make_keyset()
+        token = b"TOKEN"
+        batch = {
+            "partition": token,
+            "read": {
+                "table": self.TABLE,
+                "columns": self.COLUMNS,
+                "keyset": {"all": True},
+                "index": self.INDEX,
+            },
+        }
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        expected = snapshot.read.return_value = object()
+
+        found = batch_txn.process_read_batch(batch, retry={}, timeout=2.0)
+
+        self.assertIs(found, expected)
+
+        snapshot.read.assert_called_once_with(
+            table=self.TABLE,
+            columns=self.COLUMNS,
+            keyset=keyset,
+            index=self.INDEX,
+            partition=token,
+            retry={},
+            timeout=2.0,
         )
 
     def test_generate_query_batches_w_max_partitions(self):
@@ -2021,7 +2054,41 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(found, expected)
 
         snapshot.execute_sql.assert_called_once_with(
-            sql=sql, params=params, param_types=param_types, partition=token
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_process_query_batch_w_retry_timeout(self):
+        sql = (
+            "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
+        )
+        params = {"max_age": 30}
+        param_types = {"max_age": "INT64"}
+        token = b"TOKEN"
+        batch = {
+            "partition": token,
+            "query": {"sql": sql, "params": params, "param_types": param_types},
+        }
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        expected = snapshot.execute_sql.return_value = object()
+
+        found = batch_txn.process_query_batch(batch, retry={}, timeout=2.0)
+
+        self.assertIs(found, expected)
+
+        snapshot.execute_sql.assert_called_once_with(
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry={},
+            timeout=2.0,
         )
 
     def test_close_wo_session(self):
@@ -2075,6 +2142,8 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_process_w_query_batch(self):
@@ -2098,7 +2167,12 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(found, expected)
 
         snapshot.execute_sql.assert_called_once_with(
-            sql=sql, params=params, param_types=param_types, partition=token
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
 
