@@ -149,11 +149,11 @@ class StreamedResultSet(object):
                 return
 
     def to_dataframe(self):
-        """Returns the response in a pandas dataframe of the StreamedResultSet object
+        """Creates a pandas DataFrame of all rows in the result set
 
         :rtype: pandas.DataFrame
 
-        :returns: Dataframe created from the StreamedResultSet response object returned by execute_sql() method
+        :returns: DataFrame created from the result set
         """
         response_obj = self
         df = pd_dataframe(response_obj)

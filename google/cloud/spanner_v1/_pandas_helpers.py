@@ -19,24 +19,23 @@ import warnings
 def pd_dataframe(result_set):
     """This functions converts the query results into pandas dataframe
 
-    :rtype: pandas.Dataframe
+    :rtype: pandas.DataFrame
     :returns: Dataframe with the help of a mapping dictionary which maps every spanner datatype to a pandas compatible datatype.
     """
     try:
         from pandas import DataFrame
     except ImportError as err:
         raise ImportError(
-            "Pandas module not found. It is needed for converting query result to Dataframe.\n Try running 'pip3 install pandas'"
+            "Pandas module not found. It is needed for converting query result to DataFrame.\n Try running 'pip3 install pandas'"
         ) from err
 
     data = list(result_set)
 
     columns_dict = {}
+    column_list = []
     for item in result_set.fields:
+        column_list.append(item.name)
         columns_dict[item.name] = item.type_.code
-
-    # Creating list of columns to be mapped with the data
-    column_list = list(columns_dict.keys())
 
     # Creating dataframe using column headers and list of data rows
     df = DataFrame(data, columns=column_list)
@@ -44,6 +43,5 @@ def pd_dataframe(result_set):
     for k, v in columns_dict.items():
         if v.name == "TIMESTAMP" or v.name == "DATE":
             df[k] = df[k].dt.tz_localize("UTC")
-
 
     return df
