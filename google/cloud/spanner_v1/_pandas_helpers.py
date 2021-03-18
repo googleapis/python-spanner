@@ -42,6 +42,9 @@ def pd_dataframe(result_set):
 
     for k, v in columns_dict.items():
         if v.name == "TIMESTAMP" or v.name == "DATE":
-            df[k] = df[k].dt.tz_localize("UTC")
+            try:
+                df[k] = df[k].to_datetime()
+            except Exception as e:
+                df[k]=df[k].astype('datetime64[ns]')
 
     return df
