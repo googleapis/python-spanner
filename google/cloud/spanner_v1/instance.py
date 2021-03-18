@@ -349,7 +349,7 @@ class Instance(object):
 
         Soon afterward:
 
-        * The instance and all databases within the instance will be deleteed.
+        * The instance and all databases within the instance will be deleted.
           All data in the databases will be permanently deleted.
         """
         api = self._client.instance_admin_api
@@ -372,13 +372,13 @@ class Instance(object):
 
         :type ddl_statements: list of string
         :param ddl_statements: (Optional) DDL statements, excluding the
-                               'CREATE DATABSE' statement.
+                               'CREATE DATABASE' statement.
 
         :type pool: concrete subclass of
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
-        :type logger: `logging.Logger`
+        :type logger: :class:`logging.Logger`
         :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                        is `True` to log commit statistics. If not passed, a logger
                        will be created when needed that will log the commit statistics
@@ -420,7 +420,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api._ore.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.database.Database`
+            Iterator of :class:`~google.cloud.spanner_admin_database_v1.types.Database`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
@@ -466,6 +466,9 @@ class Instance(object):
             (Optional) Encryption configuration for the backup.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
+
+        :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :returns: a backup owned by this instance.
         """
         try:
             return Backup(
@@ -501,7 +504,7 @@ class Instance(object):
 
         :rtype: :class:`~google.api_core.page_iterator.Iterator`
         :returns:
-            Iterator of :class:`~google.cloud.spanner_v1.backup.Backup`
+            Iterator of :class:`~google.cloud.spanner_admin_database_v1.types.Backup`
             resources within the current instance.
         """
         metadata = _metadata_with_prefix(self.name)
