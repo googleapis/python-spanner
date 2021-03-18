@@ -116,7 +116,7 @@ class Database(object):
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
         or :class:`dict`
     :param encryption_config:
-        (Optional) Encryption information about the database.
+        (Optional) Encryption configuration for the database.
         If a dict is provided, it must be of the same form as either of the protobuf
         messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
@@ -265,7 +265,7 @@ class Database(object):
     def encryption_config(self):
         """Encryption config for this database.
         :rtype: :class:`~google.cloud.spanner_admin_instance_v1.types.EncryptionConfig`
-        :returns: an object representing the restore info for this database
+        :returns: an object representing the encryption config for this database
         """
         return self._encryption_config
 

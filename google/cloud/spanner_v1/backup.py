@@ -189,7 +189,7 @@ class Backup(object):
     def encryption_config(self):
         """Encryption config for this database.
         :rtype: :class:`~google.cloud.spanner_admin_instance_v1.types.CreateBackupEncryptionConfig`
-        :returns: an object representing the restore info for this database
+        :returns: an object representing the encryption config for this database
         """
         return self._encryption_config
 
