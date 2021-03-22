@@ -318,15 +318,15 @@ class TestDatabase(_BaseTest):
         )
         self.assertEqual(database.encryption_config, encryption_config)
 
-    def test_encryption_config(self):
+    def test_encryption_info(self):
         from google.cloud.spanner_admin_database_v1 import EncryptionInfo
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
-        encryption_info = database._encryption_info = [mock.create_autospec(
-            EncryptionInfo, instance=True
-        )]
+        encryption_info = database._encryption_info = [
+            mock.create_autospec(EncryptionInfo, instance=True)
+        ]
         self.assertEqual(database.encryption_info, encryption_info)
 
     def test_spanner_api_property_w_scopeless_creds(self):
@@ -708,7 +708,7 @@ class TestDatabase(_BaseTest):
         encryption_info = [
             EncryptionInfo(
                 encryption_type=EncryptionInfo.Type.CUSTOMER_MANAGED_ENCRYPTION,
-                kms_key_version="kms_key_version"
+                kms_key_version="kms_key_version",
             )
         ]
         api = client.database_admin_api = self._make_database_admin_api()
