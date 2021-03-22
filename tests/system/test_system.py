@@ -782,7 +782,8 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         self.assertIsNotNone(backup.size_bytes)
         self.assertIsNotNone(backup.state)
         self.assertEqual(
-            EncryptionInfo.Type.GOOGLE_DEFAULT_ENCRYPTION, backup.encryption_info
+            EncryptionInfo.Type.GOOGLE_DEFAULT_ENCRYPTION,
+            backup.encryption_info.encryption_type,
         )
 
         # Update with valid argument.
