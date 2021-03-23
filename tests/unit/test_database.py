@@ -19,6 +19,7 @@ import mock
 from google.api_core import gapic_v1
 
 from google.cloud.spanner_v1.param_types import INT64
+from google.api_core.retry import Retry
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -1780,14 +1781,14 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
-
+        retry = Retry(deadline=60)
         batches = list(
             batch_txn.generate_read_batches(
                 self.TABLE,
                 self.COLUMNS,
                 keyset,
                 max_partitions=max_partitions,
-                retry={},
+                retry=retry,
                 timeout=2.0,
             )
         )
@@ -1810,7 +1811,7 @@ class TestBatchSnapshot(_BaseTest):
             index="",
             partition_size_bytes=None,
             max_partitions=max_partitions,
-            retry={},
+            retry=retry,
             timeout=2.0,
         )
 
@@ -1901,8 +1902,8 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.read.return_value = object()
-
-        found = batch_txn.process_read_batch(batch, retry={}, timeout=2.0)
+        retry = Retry(deadline=60)
+        found = batch_txn.process_read_batch(batch, retry=retry, timeout=2.0)
 
         self.assertIs(found, expected)
 
@@ -1912,7 +1913,7 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition=token,
-            retry={},
+            retry=retry,
             timeout=2.0,
         )
 
@@ -2000,14 +2001,14 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
-
+        retry = Retry(deadline=60)
         batches = list(
             batch_txn.generate_query_batches(
                 sql,
                 params=params,
                 param_types=param_types,
                 partition_size_bytes=size,
-                retry={},
+                retry=retry,
                 timeout=2.0,
             )
         )
@@ -2029,7 +2030,7 @@ class TestBatchSnapshot(_BaseTest):
             param_types=param_types,
             partition_size_bytes=size,
             max_partitions=None,
-            retry={},
+            retry=retry,
             timeout=2.0,
         )
 
@@ -2077,8 +2078,8 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.execute_sql.return_value = object()
-
-        found = batch_txn.process_query_batch(batch, retry={}, timeout=2.0)
+        retry = Retry(deadline=60)
+        found = batch_txn.process_query_batch(batch, retry=retry, timeout=2.0)
 
         self.assertIs(found, expected)
 
@@ -2087,7 +2088,7 @@ class TestBatchSnapshot(_BaseTest):
             params=params,
             param_types=param_types,
             partition=token,
-            retry={},
+            retry=retry,
             timeout=2.0,
         )
 

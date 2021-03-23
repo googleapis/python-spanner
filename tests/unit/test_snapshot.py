@@ -21,6 +21,7 @@ from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
 )
 from google.cloud.spanner_v1.param_types import INT64
+from google.api_core.retry import Retry
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -530,10 +531,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self._read_helper(multi_use=True, first=False, timeout=2.0)
 
     def test_read_w_retry_param(self):
-        self._read_helper(multi_use=True, first=False, retry=gapic_v1.method.DEFAULT)
+        self._read_helper(multi_use=True, first=False, retry=Retry(deadline=60))
 
     def test_read_w_timeout_and_retry_params(self):
-        self._read_helper(multi_use=True, first=False, retry={}, timeout=2.0)
+        self._read_helper(
+            multi_use=True, first=False, retry=Retry(deadline=60), timeout=2.0
+        )
 
     def test_execute_sql_other_error(self):
         database = _Database()
@@ -856,11 +859,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_partition_read_ok_w_retry_param(self):
         self._partition_read_helper(
-            multi_use=True, w_txn=True, retry=gapic_v1.method.DEFAULT
+            multi_use=True, w_txn=True, retry=Retry(deadline=60)
         )
 
     def test_partition_read_ok_w_timeout_and_retry_params(self):
-        self._partition_read_helper(multi_use=True, w_txn=True, retry={}, timeout=2.0)
+        self._partition_read_helper(
+            multi_use=True, w_txn=True, retry=Retry(deadline=60), timeout=2.0
+        )
 
     def _partition_query_helper(
         self,
@@ -995,11 +1000,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self._partition_query_helper(multi_use=True, w_txn=True, timeout=2.0)
 
     def test_partition_query_ok_w_retry_param(self):
-        self._partition_query_helper(multi_use=True, w_txn=True, retry={})
+        self._partition_query_helper(
+            multi_use=True, w_txn=True, retry=Retry(deadline=30)
+        )
 
     def test_partition_query_ok_w_timeout_and_retry_params(self):
         self._partition_query_helper(
-            multi_use=True, w_txn=True, retry=gapic_v1.method.DEFAULT, timeout=2.0
+            multi_use=True, w_txn=True, retry=Retry(deadline=60), timeout=2.0
         )
 
 
