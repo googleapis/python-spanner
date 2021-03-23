@@ -115,9 +115,7 @@ def setUpModule():
     else:
         if STAGING_API_ENDPOINT:
             Config.CLIENT = Client(
-                client_options={
-                    "api_endpoint": STAGING_API_ENDPOINT
-                }
+                client_options={"api_endpoint": STAGING_API_ENDPOINT}
             )
         else:
             Config.CLIENT = Client()
@@ -561,6 +559,9 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
             rows = list(after.execute_sql(self.SQL))
         self._check_rows_data(rows)
 
+    @unittest.skipIf(
+        USE_EMULATOR, "Request tagging feature is not supported by the emulator"
+    )
     def test_db_run_in_transaction_with_request_options_then_check_request_tags(self,):
         retry = RetryInstanceState(_has_all_ddl)
         retry(self._db.reload)()
@@ -1658,6 +1659,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         # [END spanner_test_dml_with_mutation]
         # [END spanner_test_dml_update]
 
+    @unittest.skipIf(
+        USE_EMULATOR, "Request tagging feature is not supported by the emulator"
+    )
     def test_transaction_execute_update_with_transaction_tag_success(self):
         retry = RetryInstanceState(_has_all_ddl)
         retry(self._db.reload)()
