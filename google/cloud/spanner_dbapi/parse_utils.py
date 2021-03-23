@@ -237,10 +237,10 @@ def parse_insert(insert_sql, params):
             Params: ['a', 'b', 'c', 'd']
         it produces:
             {
-                'homogenous': True,
-                'table': 'T',
-                'columns': ['f1', 'f2'],
-                'values': [('a', 'b',), ('c', 'd',)],
+                'sql_params_list': [
+                    ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('a', 'b')),
+                    ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('c', 'd'))
+                ],
             }
 
     Case d)
@@ -249,7 +249,7 @@ def parse_insert(insert_sql, params):
         it produces:
             {
                 'sql_params_list': [
-                    ('INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s))', ('a', 'b',))
+                    ('INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s))', ('a', 'b',)),
                     ('INSERT INTO T (f1, f2) VALUES (UPPER(%s), %s)', ('c', 'd',))
                 ],
             }
