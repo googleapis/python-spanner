@@ -84,7 +84,7 @@ def create_backup_with_encryption_key(instance_id, database_id, backup_id, kms_k
     backup.reload()
     print(
         "Backup {} of size {} bytes was created at {} using encryption key {}".format(
-            backup.name, backup.size_bytes, backup.create_time, backup.encryption_config.kms_key_name
+            backup.name, backup.size_bytes, backup.create_time, kms_key_name
         )
     )
 
