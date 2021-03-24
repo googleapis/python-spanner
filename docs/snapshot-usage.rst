@@ -100,7 +100,7 @@ result set is too large,
             'WHERE p.employee_id == e.employee_id')
         result = snapshot.execute_sql(QUERY)
 
-        for row in list(result):
+        for row in result:
             print(row)
 
 .. note::
