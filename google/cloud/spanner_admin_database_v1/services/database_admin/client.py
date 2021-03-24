@@ -1082,13 +1082,13 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
+        # The request isn't a proto-plus wrapped type,
+        # so it must be constructed via keyword expansion.
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
             request = iam_policy.SetIamPolicyRequest(**request)
+
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.SetIamPolicyRequest()
+            request = iam_policy.SetIamPolicyRequest(resource=resource,)
 
             if resource is not None:
                 request.resource = resource
@@ -1218,13 +1218,13 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
+        # The request isn't a proto-plus wrapped type,
+        # so it must be constructed via keyword expansion.
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
             request = iam_policy.GetIamPolicyRequest(**request)
+
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.GetIamPolicyRequest()
+            request = iam_policy.GetIamPolicyRequest(resource=resource,)
 
             if resource is not None:
                 request.resource = resource
@@ -1309,13 +1309,15 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
+        # The request isn't a proto-plus wrapped type,
+        # so it must be constructed via keyword expansion.
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
             request = iam_policy.TestIamPermissionsRequest(**request)
+
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.TestIamPermissionsRequest()
+            request = iam_policy.TestIamPermissionsRequest(
+                resource=resource, permissions=permissions,
+            )
 
             if resource is not None:
                 request.resource = resource
