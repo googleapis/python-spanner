@@ -26,6 +26,7 @@ from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
+from google.api_core import gapic_v1
 import six
 
 # pylint: disable=ungrouped-imports
@@ -47,6 +48,9 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_v1 import (
     ExecuteSqlRequest,
@@ -103,17 +107,32 @@ class Database(object):
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
 
-    :type logger: `logging.Logger`
+    :type logger: :class:`logging.Logger`
     :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                    is `True` to log commit statistics. If not passed, a logger
                    will be created when needed that will log the commit statistics
                    to stdout.
+    :type encryption_config:
+        :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+        or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
+        or :class:`dict`
+    :param encryption_config:
+        (Optional) Encryption configuration for the database.
+        If a dict is provided, it must be of the same form as either of the protobuf
+        messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
+        or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
     """
 
     _spanner_api = None
 
     def __init__(
-        self, database_id, instance, ddl_statements=(), pool=None, logger=None
+        self,
+        database_id,
+        instance,
+        ddl_statements=(),
+        pool=None,
+        logger=None,
+        encryption_config=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -124,8 +143,10 @@ class Database(object):
         self._restore_info = None
         self._version_retention_period = None
         self._earliest_version_time = None
+        self._encryption_info = None
         self.log_commit_stats = False
         self._logger = logger
+        self._encryption_config = encryption_config
 
         if pool is None:
             pool = BurstyPool()
@@ -138,7 +159,7 @@ class Database(object):
         """Creates an instance of this class from a protobuf.
 
         :type database_pb:
-            :class:`~google.cloud.spanner_admin_instance_v1.Instance`
+            :class:`~google.cloud.spanner_admin_instance_v1.types.Instance`
         :param database_pb: A instance protobuf object.
 
         :type instance: :class:`~google.cloud.spanner_v1.instance.Instance`
@@ -199,7 +220,7 @@ class Database(object):
     def state(self):
         """State of this database.
 
-        :rtype: :class:`~google.cloud.spanner_admin_database_v1.Database.State`
+        :rtype: :class:`~google.cloud.spanner_admin_database_v1.types.Database.State`
         :returns: an enum describing the state of the database
         """
         return self._state
@@ -218,7 +239,7 @@ class Database(object):
     def restore_info(self):
         """Restore info for this database.
 
-        :rtype: :class:`~google.cloud.spanner_v1.database.RestoreInfo`
+        :rtype: :class:`~google.cloud.spanner_v1.types.RestoreInfo`
         :returns: an object representing the restore info for this database
         """
         return self._restore_info
@@ -241,6 +262,22 @@ class Database(object):
         :returns: a datetime object representing the earliest version time
         """
         return self._earliest_version_time
+
+    @property
+    def encryption_config(self):
+        """Encryption config for this database.
+        :rtype: :class:`~google.cloud.spanner_admin_instance_v1.types.EncryptionConfig`
+        :returns: an object representing the encryption config for this database
+        """
+        return self._encryption_config
+
+    @property
+    def encryption_info(self):
+        """Encryption info for this database.
+        :rtype: a list of :class:`~google.cloud.spanner_admin_instance_v1.types.EncryptionInfo`
+        :returns: a list of objects representing encryption info for this database
+        """
+        return self._encryption_info
 
     @property
     def ddl_statements(self):
@@ -310,7 +347,7 @@ class Database(object):
     def create(self):
         """Create this database within its instance
 
-        Inclues any configured schema assigned to :attr:`ddl_statements`.
+        Includes any configured schema assigned to :attr:`ddl_statements`.
 
         See
         https://cloud.google.com/spanner/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.DatabaseAdmin.CreateDatabase
@@ -325,11 +362,14 @@ class Database(object):
         db_name = self.database_id
         if "-" in db_name:
             db_name = "`%s`" % (db_name,)
+        if type(self._encryption_config) == dict:
+            self._encryption_config = EncryptionConfig(**self._encryption_config)
 
         request = CreateDatabaseRequest(
             parent=self._instance.name,
             create_statement="CREATE DATABASE %s" % (db_name,),
             extra_statements=list(self._ddl_statements),
+            encryption_config=self._encryption_config,
         )
         future = api.create_database(request=request, metadata=metadata)
         return future
@@ -372,6 +412,8 @@ class Database(object):
         self._restore_info = response.restore_info
         self._version_retention_period = response.version_retention_period
         self._earliest_version_time = response.earliest_version_time
+        self._encryption_config = response.encryption_config
+        self._encryption_info = response.encryption_info
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
@@ -429,12 +471,12 @@ class Database(object):
             required if parameters are passed.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -568,7 +610,7 @@ class Database(object):
         :returns: The return value of ``func``.
 
         :raises Exception:
-            reraises any non-ABORT execptions raised by ``func``.
+            reraises any non-ABORT exceptions raised by ``func``.
         """
         # Sanity check: Is there a transaction already running?
         # If there is, then raise a red flag. Otherwise, mark that this one
@@ -588,8 +630,8 @@ class Database(object):
     def restore(self, source):
         """Restore from a backup to this database.
 
-        :type backup: :class:`~google.cloud.spanner_v1.backup.Backup`
-        :param backup: the path of the backup being restored from.
+        :type source: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :param source: the path of the source being restored from.
 
         :rtype: :class:`~google.api_core.operation.Operation`
         :returns: a future used to poll the status of the create request
@@ -601,14 +643,26 @@ class Database(object):
         """
         if source is None:
             raise ValueError("Restore source not specified")
+        if type(self._encryption_config) == dict:
+            self._encryption_config = RestoreDatabaseEncryptionConfig(
+                **self._encryption_config
+            )
+        if (
+            self.encryption_config
+            and self.encryption_config.kms_key_name
+            and self.encryption_config.encryption_type
+            != RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+        ):
+            raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        future = api.restore_database(
+        request = RestoreDatabaseRequest(
             parent=self._instance.name,
             database_id=self.database_id,
             backup=source.name,
-            metadata=metadata,
+            encryption_config=self._encryption_config,
         )
+        future = api.restore_database(request=request, metadata=metadata,)
         return future
 
     def is_ready(self):
@@ -862,6 +916,9 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Start a partitioned batch read operation.
 
@@ -893,9 +950,15 @@ class BatchSnapshot(object):
             service uses this as a hint, the actual number of partitions may
             differ.
 
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
+
         :rtype: iterable of dict
         :returns:
-            mappings of information used peform actual partitioned reads via
+            mappings of information used perform actual partitioned reads via
             :meth:`process_read_batch`.
         """
         partitions = self._get_snapshot().partition_read(
@@ -905,6 +968,8 @@ class BatchSnapshot(object):
             index=index,
             partition_size_bytes=partition_size_bytes,
             max_partitions=max_partitions,
+            retry=retry,
+            timeout=timeout,
         )
 
         read_info = {
@@ -916,7 +981,9 @@ class BatchSnapshot(object):
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
 
-    def process_read_batch(self, batch):
+    def process_read_batch(
+        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+    ):
         """Process a single, partitioned read.
 
         :type batch: mapping
@@ -924,13 +991,22 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_read_batches`.
 
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
+
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         kwargs = copy.deepcopy(batch["read"])
         keyset_dict = kwargs.pop("keyset")
         kwargs["keyset"] = KeySet._from_dict(keyset_dict)
-        return self._get_snapshot().read(partition=batch["partition"], **kwargs)
+        return self._get_snapshot().read(
+            partition=batch["partition"], **kwargs, retry=retry, timeout=timeout
+        )
 
     def generate_query_batches(
         self,
@@ -940,12 +1016,15 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Start a partitioned query operation.
 
         Uses the ``PartitionQuery`` API request to start a partitioned
         query operation.  Returns a list of batch information needed to
-        peform the actual queries.
+        perform the actual queries.
 
         :type sql: str
         :param sql: SQL query statement
@@ -976,16 +1055,22 @@ class BatchSnapshot(object):
             differ.
 
         :type query_options:
-            :class:`~google.cloud.spanner_v1.ExecuteSqlRequest.QueryOptions`
+            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options:
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.QueryOptions`
+                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
 
         :rtype: iterable of dict
         :returns:
-            mappings of information used peform actual partitioned reads via
+            mappings of information used perform actual partitioned reads via
             :meth:`process_read_batch`.
         """
         partitions = self._get_snapshot().partition_query(
@@ -994,6 +1079,8 @@ class BatchSnapshot(object):
             param_types=param_types,
             partition_size_bytes=partition_size_bytes,
             max_partitions=max_partitions,
+            retry=retry,
+            timeout=timeout,
         )
 
         query_info = {"sql": sql}
@@ -1011,7 +1098,9 @@ class BatchSnapshot(object):
         for partition in partitions:
             yield {"partition": partition, "query": query_info}
 
-    def process_query_batch(self, batch):
+    def process_query_batch(
+        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+    ):
         """Process a single, partitioned query.
 
         :type batch: mapping
@@ -1019,11 +1108,17 @@ class BatchSnapshot(object):
             one of the mappings returned from an earlier call to
             :meth:`generate_query_batches`.
 
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
         return self._get_snapshot().execute_sql(
-            partition=batch["partition"], **batch["query"]
+            partition=batch["partition"], **batch["query"], retry=retry, timeout=timeout
         )
 
     def process(self, batch):
@@ -1065,7 +1160,7 @@ def _check_ddl_statements(value):
     https://cloud.google.com/spanner/docs/data-definition-language
 
     :type value: list of string
-    :param value: DDL statements, excluding the 'CREATE DATABSE' statement
+    :param value: DDL statements, excluding the 'CREATE DATABASE' statement
 
     :rtype: tuple
     :returns: tuple of validated DDL statement strings.

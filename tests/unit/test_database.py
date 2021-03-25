@@ -16,8 +16,10 @@
 import unittest
 
 import mock
+from google.api_core import gapic_v1
 
 from google.cloud.spanner_v1.param_types import INT64
+from google.api_core.retry import Retry
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -159,6 +161,18 @@ class TestDatabase(_BaseTest):
         self.assertFalse(database.log_commit_stats)
         self.assertEqual(database._logger, logger)
 
+    def test_ctor_w_encryption_config(self):
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+
+        instance = _Instance(self.INSTANCE_NAME)
+        encryption_config = EncryptionConfig(kms_key_name="kms_key")
+        database = self._make_one(
+            self.DATABASE_ID, instance, encryption_config=encryption_config
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertEqual(database._encryption_config, encryption_config)
+
     def test_from_pb_bad_database_name(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -294,6 +308,28 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
         logger = database._logger = mock.create_autospec(logging.Logger, instance=True)
         self.assertEqual(database.logger, logger)
+
+    def test_encryption_config(self):
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+
+        instance = _Instance(self.INSTANCE_NAME)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        encryption_config = database._encryption_config = mock.create_autospec(
+            EncryptionConfig, instance=True
+        )
+        self.assertEqual(database.encryption_config, encryption_config)
+
+    def test_encryption_info(self):
+        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
+
+        instance = _Instance(self.INSTANCE_NAME)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        encryption_info = database._encryption_info = [
+            mock.create_autospec(EncryptionInfo, instance=True)
+        ]
+        self.assertEqual(database.encryption_info, encryption_info)
 
     def test_spanner_api_property_w_scopeless_creds(self):
 
@@ -432,6 +468,7 @@ class TestDatabase(_BaseTest):
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=[],
+            encryption_config=None,
         )
 
         api.create_database.assert_called_once_with(
@@ -458,6 +495,7 @@ class TestDatabase(_BaseTest):
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE `{}`".format(DATABASE_ID_HYPHEN),
             extra_statements=[],
+            encryption_config=None,
         )
 
         api.create_database.assert_called_once_with(
@@ -483,6 +521,7 @@ class TestDatabase(_BaseTest):
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=[],
+            encryption_config=None,
         )
 
         api.create_database.assert_called_once_with(
@@ -493,6 +532,7 @@ class TestDatabase(_BaseTest):
     def test_create_success(self):
         from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
         op_future = object()
         client = _Client()
@@ -500,8 +540,13 @@ class TestDatabase(_BaseTest):
         api.create_database.return_value = op_future
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
+        encryption_config = EncryptionConfig(kms_key_name="kms_key_name")
         database = self._make_one(
-            self.DATABASE_ID, instance, ddl_statements=DDL_STATEMENTS, pool=pool
+            self.DATABASE_ID,
+            instance,
+            ddl_statements=DDL_STATEMENTS,
+            pool=pool,
+            encryption_config=encryption_config,
         )
 
         future = database.create()
@@ -512,6 +557,44 @@ class TestDatabase(_BaseTest):
             parent=self.INSTANCE_NAME,
             create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
             extra_statements=DDL_STATEMENTS,
+            encryption_config=encryption_config,
+        )
+
+        api.create_database.assert_called_once_with(
+            request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_create_success_w_encryption_config_dict(self):
+        from tests._fixtures import DDL_STATEMENTS
+        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.create_database.return_value = op_future
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        encryption_config = {"kms_key_name": "kms_key_name"}
+        database = self._make_one(
+            self.DATABASE_ID,
+            instance,
+            ddl_statements=DDL_STATEMENTS,
+            pool=pool,
+            encryption_config=encryption_config,
+        )
+
+        future = database.create()
+
+        self.assertIs(future, op_future)
+
+        expected_encryption_config = EncryptionConfig(**encryption_config)
+        expected_request = CreateDatabaseRequest(
+            parent=self.INSTANCE_NAME,
+            create_statement="CREATE DATABASE {}".format(self.DATABASE_ID),
+            extra_statements=DDL_STATEMENTS,
+            encryption_config=expected_encryption_config,
         )
 
         api.create_database.assert_called_once_with(
@@ -611,6 +694,8 @@ class TestDatabase(_BaseTest):
 
     def test_reload_success(self):
         from google.cloud.spanner_admin_database_v1 import Database
+        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
         from google.cloud.spanner_admin_database_v1 import GetDatabaseDdlResponse
         from google.cloud.spanner_admin_database_v1 import RestoreInfo
         from google.cloud._helpers import _datetime_to_pb_timestamp
@@ -621,6 +706,13 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         ddl_pb = GetDatabaseDdlResponse(statements=DDL_STATEMENTS)
+        encryption_config = EncryptionConfig(kms_key_name="kms_key")
+        encryption_info = [
+            EncryptionInfo(
+                encryption_type=EncryptionInfo.Type.CUSTOMER_MANAGED_ENCRYPTION,
+                kms_key_version="kms_key_version",
+            )
+        ]
         api = client.database_admin_api = self._make_database_admin_api()
         api.get_database_ddl.return_value = ddl_pb
         db_pb = Database(
@@ -629,6 +721,8 @@ class TestDatabase(_BaseTest):
             restore_info=restore_info,
             version_retention_period="1d",
             earliest_version_time=_datetime_to_pb_timestamp(timestamp),
+            encryption_config=encryption_config,
+            encryption_info=encryption_info,
         )
         api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -642,6 +736,8 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._version_retention_period, "1d")
         self.assertEqual(database._earliest_version_time, timestamp)
         self.assertEqual(database._ddl_statements, tuple(DDL_STATEMENTS))
+        self.assertEqual(database._encryption_config, encryption_config)
+        self.assertEqual(database._encryption_info, encryption_info)
 
         api.get_database_ddl.assert_called_once_with(
             database=self.DATABASE_NAME,
@@ -1128,6 +1224,7 @@ class TestDatabase(_BaseTest):
 
     def test_restore_grpc_error(self):
         from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -1140,15 +1237,20 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(Unknown):
             database.restore(backup)
 
-        api.restore_database.assert_called_once_with(
+        expected_request = RestoreDatabaseRequest(
             parent=self.INSTANCE_NAME,
             database_id=self.DATABASE_ID,
             backup=self.BACKUP_NAME,
+        )
+
+        api.restore_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_restore_not_found(self):
         from google.api_core.exceptions import NotFound
+        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -1161,33 +1263,114 @@ class TestDatabase(_BaseTest):
         with self.assertRaises(NotFound):
             database.restore(backup)
 
-        api.restore_database.assert_called_once_with(
+        expected_request = RestoreDatabaseRequest(
             parent=self.INSTANCE_NAME,
             database_id=self.DATABASE_ID,
             backup=self.BACKUP_NAME,
+        )
+
+        api.restore_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
     def test_restore_success(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            RestoreDatabaseEncryptionConfig,
+        )
+        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
+
         op_future = object()
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
         api.restore_database.return_value = op_future
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        encryption_config = RestoreDatabaseEncryptionConfig(
+            encryption_type=RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+            kms_key_name="kms_key_name",
+        )
+        database = self._make_one(
+            self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
+        )
         backup = _Backup(self.BACKUP_NAME)
 
         future = database.restore(backup)
 
         self.assertIs(future, op_future)
 
-        api.restore_database.assert_called_once_with(
+        expected_request = RestoreDatabaseRequest(
             parent=self.INSTANCE_NAME,
             database_id=self.DATABASE_ID,
             backup=self.BACKUP_NAME,
+            encryption_config=encryption_config,
+        )
+
+        api.restore_database.assert_called_once_with(
+            request=expected_request,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
+
+    def test_restore_success_w_encryption_config_dict(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            RestoreDatabaseEncryptionConfig,
+        )
+        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
+
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.restore_database.return_value = op_future
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        encryption_config = {
+            "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+            "kms_key_name": "kms_key_name",
+        }
+        database = self._make_one(
+            self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
+        )
+        backup = _Backup(self.BACKUP_NAME)
+
+        future = database.restore(backup)
+
+        self.assertIs(future, op_future)
+
+        expected_encryption_config = RestoreDatabaseEncryptionConfig(
+            encryption_type=RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+            kms_key_name="kms_key_name",
+        )
+        expected_request = RestoreDatabaseRequest(
+            parent=self.INSTANCE_NAME,
+            database_id=self.DATABASE_ID,
+            backup=self.BACKUP_NAME,
+            encryption_config=expected_encryption_config,
+        )
+
+        api.restore_database.assert_called_once_with(
+            request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_restore_w_invalid_encryption_config_dict(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            RestoreDatabaseEncryptionConfig,
+        )
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        encryption_config = {
+            "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+            "kms_key_name": "kms_key_name",
+        }
+        database = self._make_one(
+            self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
+        )
+        backup = _Backup(self.BACKUP_NAME)
+
+        with self.assertRaises(ValueError):
+            database.restore(backup)
 
     def test_is_ready(self):
         from google.cloud.spanner_admin_database_v1 import Database
@@ -1768,6 +1951,49 @@ class TestBatchSnapshot(_BaseTest):
             index="",
             partition_size_bytes=None,
             max_partitions=max_partitions,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_generate_read_batches_w_retry_and_timeout_params(self):
+        max_partitions = len(self.TOKENS)
+        keyset = self._make_keyset()
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_read.return_value = self.TOKENS
+        retry = Retry(deadline=60)
+        batches = list(
+            batch_txn.generate_read_batches(
+                self.TABLE,
+                self.COLUMNS,
+                keyset,
+                max_partitions=max_partitions,
+                retry=retry,
+                timeout=2.0,
+            )
+        )
+
+        expected_read = {
+            "table": self.TABLE,
+            "columns": self.COLUMNS,
+            "keyset": {"all": True},
+            "index": "",
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["read"], expected_read)
+
+        snapshot.partition_read.assert_called_once_with(
+            table=self.TABLE,
+            columns=self.COLUMNS,
+            keyset=keyset,
+            index="",
+            partition_size_bytes=None,
+            max_partitions=max_partitions,
+            retry=retry,
+            timeout=2.0,
         )
 
     def test_generate_read_batches_w_index_w_partition_size_bytes(self):
@@ -1806,6 +2032,8 @@ class TestBatchSnapshot(_BaseTest):
             index=self.INDEX,
             partition_size_bytes=size,
             max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_process_read_batch(self):
@@ -1835,6 +2063,39 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_process_read_batch_w_retry_timeout(self):
+        keyset = self._make_keyset()
+        token = b"TOKEN"
+        batch = {
+            "partition": token,
+            "read": {
+                "table": self.TABLE,
+                "columns": self.COLUMNS,
+                "keyset": {"all": True},
+                "index": self.INDEX,
+            },
+        }
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        expected = snapshot.read.return_value = object()
+        retry = Retry(deadline=60)
+        found = batch_txn.process_read_batch(batch, retry=retry, timeout=2.0)
+
+        self.assertIs(found, expected)
+
+        snapshot.read.assert_called_once_with(
+            table=self.TABLE,
+            columns=self.COLUMNS,
+            keyset=keyset,
+            index=self.INDEX,
+            partition=token,
+            retry=retry,
+            timeout=2.0,
         )
 
     def test_generate_query_batches_w_max_partitions(self):
@@ -1863,6 +2124,8 @@ class TestBatchSnapshot(_BaseTest):
             param_types=None,
             partition_size_bytes=None,
             max_partitions=max_partitions,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_generate_query_batches_w_params_w_partition_size_bytes(self):
@@ -1902,6 +2165,54 @@ class TestBatchSnapshot(_BaseTest):
             param_types=param_types,
             partition_size_bytes=size,
             max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_generate_query_batches_w_retry_and_timeout_params(self):
+        sql = (
+            "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
+        )
+        params = {"max_age": 30}
+        param_types = {"max_age": "INT64"}
+        size = 1 << 20
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance)
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_query.return_value = self.TOKENS
+        retry = Retry(deadline=60)
+        batches = list(
+            batch_txn.generate_query_batches(
+                sql,
+                params=params,
+                param_types=param_types,
+                partition_size_bytes=size,
+                retry=retry,
+                timeout=2.0,
+            )
+        )
+
+        expected_query = {
+            "sql": sql,
+            "params": params,
+            "param_types": param_types,
+            "query_options": client._query_options,
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["query"], expected_query)
+
+        snapshot.partition_query.assert_called_once_with(
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition_size_bytes=size,
+            max_partitions=None,
+            retry=retry,
+            timeout=2.0,
         )
 
     def test_process_query_batch(self):
@@ -1925,7 +2236,41 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(found, expected)
 
         snapshot.execute_sql.assert_called_once_with(
-            sql=sql, params=params, param_types=param_types, partition=token
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_process_query_batch_w_retry_timeout(self):
+        sql = (
+            "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
+        )
+        params = {"max_age": 30}
+        param_types = {"max_age": "INT64"}
+        token = b"TOKEN"
+        batch = {
+            "partition": token,
+            "query": {"sql": sql, "params": params, "param_types": param_types},
+        }
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        expected = snapshot.execute_sql.return_value = object()
+        retry = Retry(deadline=60)
+        found = batch_txn.process_query_batch(batch, retry=retry, timeout=2.0)
+
+        self.assertIs(found, expected)
+
+        snapshot.execute_sql.assert_called_once_with(
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry=retry,
+            timeout=2.0,
         )
 
     def test_close_wo_session(self):
@@ -1979,6 +2324,8 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_process_w_query_batch(self):
@@ -2002,7 +2349,12 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(found, expected)
 
         snapshot.execute_sql.assert_called_once_with(
-            sql=sql, params=params, param_types=param_types, partition=token
+            sql=sql,
+            params=params,
+            param_types=param_types,
+            partition=token,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
 
