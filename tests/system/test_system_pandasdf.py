@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.cloud import spanner_v1_mod
+from google.cloud import spanner_v1
 from google.auth.credentials import AnonymousCredentials
 import pytest
 
@@ -35,7 +35,7 @@ VALUES_1 = [
 @pytest.fixture
 def snapshot_obj():
     try:
-        spanner_client = spanner_v1_mod.Client(
+        spanner_client = spanner_v1.Client(
             project="test-project",
             client_options={"api_endpoint": "0.0.0.0:9010"},
             credentials=AnonymousCredentials(),
