@@ -48,5 +48,6 @@ def pd_dataframe(result_set):
                 df[k] = df[k].to_datetime()
             except Exception as e:
                 df[k]=df[k].astype('datetime64[ns]')
+                df[k]=df[k].dt.tz_localize("UTC")
 
     return df
