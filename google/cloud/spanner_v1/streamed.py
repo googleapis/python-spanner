@@ -152,7 +152,6 @@ class StreamedResultSet(object):
         """Creates a pandas DataFrame of all rows in the result set
 
         :rtype: pandas.DataFrame
-
         :returns: DataFrame created from the result set
         """
         response_obj = self
@@ -164,8 +163,7 @@ class StreamedResultSet(object):
 
         :raises: :exc:`NotFound`: If there are no results.
         :raises: :exc:`ValueError`: If there are multiple results.
-        :raises: :exc:`RuntimeError`: If consumption has already occurred,
-            in whole or in part.
+        :raises: :exc:`RuntimeError`: If consumption has already occurred,in whole or in part.
         """
         answer = self.one_or_none()
         if answer is None:

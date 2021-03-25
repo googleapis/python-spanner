@@ -20,6 +20,8 @@ def pd_dataframe(result_set):
     """This functions converts the query results into pandas dataframe
 
     :rtype: pandas.DataFrame
+    :type result_set: :class:`~google.cloud.spanner_v1.StreamedResultSet`
+    :param result_set: complete response data returned from a read/query
     :returns: Dataframe with the help of a mapping dictionary which maps every spanner datatype to a pandas compatible datatype.
     """
     try:

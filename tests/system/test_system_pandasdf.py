@@ -17,20 +17,21 @@ from google.auth.credentials import AnonymousCredentials
 import pytest
 
 # for referrence
-TABLE_NAME = 'testTable'
-COLUMNS = ['id', 'name']
-VALUES = [[1, 'Alice'], [2, 'Bob']]
+TABLE_NAME = "testTable"
+COLUMNS = ["id", "name"]
+VALUES = [[1, "Alice"], [2, "Bob"]]
 
 
-TABLE_NAME_1 = 'Functional_Alltypes'
-COLUMNS_1 = ['id','bool_col','date','float_col','string_col','timestamp_col']
+TABLE_NAME_1 = "Functional_Alltypes"
+COLUMNS_1 = ["id", "bool_col", "date", "float_col", "string_col", "timestamp_col"]
 VALUES_1 = [
-        [1,True,'2016-02-09',2.2,'David','2002-02-10T15:30:00.45Z'],
-        [2,False,'2016-10-10',2.5,'Ryan','2009-02-12T10:06:00.45Z'],
-        [10,True,'2019-01-06',None,None,None],
-	[12,True,'2018-02-02',2.6,None,None],
-	[None,None,None,None,None,None]
-        ]
+    [1, True, "2016-02-09", 2.2, "David", "2002-02-10T15:30:00.45Z"],
+    [2, False, "2016-10-10", 2.5, "Ryan", "2009-02-12T10:06:00.45Z"],
+    [10, True, "2019-01-06", None, None, None],
+    [12, True, "2018-02-02", 2.6, None, None],
+    [None, None, None, None, None, None],
+]
+
 
 @pytest.fixture
 def snapshot_obj():
@@ -50,6 +51,7 @@ def snapshot_obj():
     except:
         pytest.skip("Cloud Spanner Emulator configuration is incorrect")
 
+
 @pytest.mark.parametrize(("limit"), [(0), (1), (2)])
 def test_df(limit, snapshot_obj):
     results = snapshot_obj.execute_sql(
@@ -66,7 +68,7 @@ def test_rows_with_no_null_values(value, snapshot_obj):
     )
     df = results.to_dataframe()
     assert len(df) == value
-	
+
 
 @pytest.mark.parametrize(("value"), [2])
 def test_rows_with_one_or_more_null_values(value, snapshot_obj):
@@ -75,8 +77,8 @@ def test_rows_with_one_or_more_null_values(value, snapshot_obj):
     )
     df = results.to_dataframe()
     assert len(df) == value
-	
-	
+
+
 @pytest.mark.parametrize(("value"), [1])
 def test_rows_with_all_null_values(value, snapshot_obj):
     results = snapshot_obj.execute_sql(
