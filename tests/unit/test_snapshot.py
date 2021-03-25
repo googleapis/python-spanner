@@ -532,21 +532,16 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self._read_helper(multi_use=False)
 
     def test_read_w_request_tag_success(self):
-        request_options = RequestOptions(
-            request_tag="tag-1",
-        )
+        request_options = RequestOptions(request_tag="tag-1",)
         self._read_helper(multi_use=False, request_options=request_options)
 
     def test_read_w_transaction_tag_success(self):
-        request_options = RequestOptions(
-            transaction_tag="tag-1-1",
-        )
+        request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._read_helper(multi_use=False, request_options=request_options)
 
     def test_read_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
-            request_tag="tag-1",
-            transaction_tag="tag-1-1",
+            request_tag="tag-1", transaction_tag="tag-1-1",
         )
         self._read_helper(multi_use=False, request_options=request_options)
 
@@ -795,21 +790,16 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
     def test_execute_sql_w_request_tag_success(self):
-        request_options = RequestOptions(
-            request_tag="tag-1",
-        )
+        request_options = RequestOptions(request_tag="tag-1",)
         self._execute_sql_helper(multi_use=False, request_options=request_options)
 
     def test_execute_sql_w_transaction_tag_success(self):
-        request_options = RequestOptions(
-            transaction_tag="tag-1-1",
-        )
+        request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._execute_sql_helper(multi_use=False, request_options=request_options)
 
     def test_execute_sql_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
-            request_tag="tag-1",
-            transaction_tag="tag-1-1",
+            request_tag="tag-1", transaction_tag="tag-1-1",
         )
         self._execute_sql_helper(multi_use=False, request_options=request_options)
 
