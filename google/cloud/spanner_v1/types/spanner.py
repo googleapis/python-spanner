@@ -39,6 +39,7 @@ __protobuf__ = proto.module(
         "ListSessionsRequest",
         "ListSessionsResponse",
         "DeleteSessionRequest",
+        "RequestOptions",
         "ExecuteSqlRequest",
         "ExecuteBatchDmlRequest",
         "ExecuteBatchDmlResponse",
@@ -240,6 +241,41 @@ class DeleteSessionRequest(proto.Message):
     name = proto.Field(proto.STRING, number=1)
 
 
+class RequestOptions(proto.Message):
+    r"""Common request options for various APIs.
+
+    Attributes:
+        priority (google.cloud.spanner_v1.types.RequestOptions.Priority):
+            Priority for the request.
+    """
+
+    class Priority(proto.Enum):
+        r"""The relative priority for requests. Note that priority is not
+        applicable for
+        [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction].
+
+        The priority acts as a hint to the Cloud Spanner scheduler and does
+        not guarantee priority or order of execution. For example:
+
+        -  Some parts of a write operation always execute at
+           ``PRIORITY_HIGH``, regardless of the specified priority. This may
+           cause you to see an increase in high priority workload even when
+           executing a low priority request. This can also potentially cause
+           a priority inversion where a lower priority request will be
+           fulfilled ahead of a higher priority request.
+        -  If a transaction contains multiple operations with different
+           priorities, Cloud Spanner does not guarantee to process the
+           higher priority operations first. There may be other constraints
+           to satisfy, such as order of operations.
+        """
+        PRIORITY_UNSPECIFIED = 0
+        PRIORITY_LOW = 1
+        PRIORITY_MEDIUM = 2
+        PRIORITY_HIGH = 3
+
+    priority = proto.Field(proto.ENUM, number=1, enum=Priority,)
+
+
 class ExecuteSqlRequest(proto.Message):
     r"""The request for [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql]
     and
@@ -335,6 +371,8 @@ class ExecuteSqlRequest(proto.Message):
         query_options (google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions):
             Query optimizer configuration to use for the
             given query.
+        request_options (google.cloud.spanner_v1.types.RequestOptions):
+            Common options for this request.
     """
 
     class QueryMode(proto.Enum):
@@ -428,6 +466,8 @@ class ExecuteSqlRequest(proto.Message):
 
     query_options = proto.Field(proto.MESSAGE, number=10, message=QueryOptions,)
 
+    request_options = proto.Field(proto.MESSAGE, number=11, message="RequestOptions",)
+
 
 class ExecuteBatchDmlRequest(proto.Message):
     r"""The request for
@@ -466,6 +506,8 @@ class ExecuteBatchDmlRequest(proto.Message):
             sequence number, the transaction may be aborted.
             Replays of previously handled requests will
             yield the same response as the first execution.
+        request_options (google.cloud.spanner_v1.types.RequestOptions):
+            Common options for this request.
     """
 
     class Statement(proto.Message):
@@ -522,6 +564,8 @@ class ExecuteBatchDmlRequest(proto.Message):
     statements = proto.RepeatedField(proto.MESSAGE, number=3, message=Statement,)
 
     seqno = proto.Field(proto.INT64, number=4)
+
+    request_options = proto.Field(proto.MESSAGE, number=5, message="RequestOptions",)
 
 
 class ExecuteBatchDmlResponse(proto.Message):
@@ -867,6 +911,8 @@ class ReadRequest(proto.Message):
             must be an exact match for the values of fields common to
             this message and the PartitionReadRequest message used to
             create this partition_token.
+        request_options (google.cloud.spanner_v1.types.RequestOptions):
+            Common options for this request.
     """
 
     session = proto.Field(proto.STRING, number=1)
@@ -889,6 +935,8 @@ class ReadRequest(proto.Message):
 
     partition_token = proto.Field(proto.BYTES, number=10)
 
+    request_options = proto.Field(proto.MESSAGE, number=11, message="RequestOptions",)
+
 
 class BeginTransactionRequest(proto.Message):
     r"""The request for
@@ -900,6 +948,12 @@ class BeginTransactionRequest(proto.Message):
             transaction runs.
         options (google.cloud.spanner_v1.types.TransactionOptions):
             Required. Options for the new transaction.
+        request_options (google.cloud.spanner_v1.types.RequestOptions):
+            Common options for this request. Priority is ignored for
+            this request. Setting the priority in this request_options
+            struct will not do anything. To set the priority for a
+            transaction, set it on the reads and writes that are part of
+            this transaction instead.
     """
 
     session = proto.Field(proto.STRING, number=1)
@@ -907,6 +961,8 @@ class BeginTransactionRequest(proto.Message):
     options = proto.Field(
         proto.MESSAGE, number=2, message=gs_transaction.TransactionOptions,
     )
+
+    request_options = proto.Field(proto.MESSAGE, number=3, message="RequestOptions",)
 
 
 class CommitRequest(proto.Message):
@@ -938,6 +994,8 @@ class CommitRequest(proto.Message):
             be included in the
             [CommitResponse][google.spanner.v1.CommitResponse.commit_stats].
             Default value is ``false``.
+        request_options (google.cloud.spanner_v1.types.RequestOptions):
+            Common options for this request.
     """
 
     session = proto.Field(proto.STRING, number=1)
@@ -954,6 +1012,8 @@ class CommitRequest(proto.Message):
     mutations = proto.RepeatedField(proto.MESSAGE, number=4, message=mutation.Mutation,)
 
     return_commit_stats = proto.Field(proto.BOOL, number=5)
+
+    request_options = proto.Field(proto.MESSAGE, number=6, message="RequestOptions",)
 
 
 class CommitResponse(proto.Message):
