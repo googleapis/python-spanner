@@ -1727,7 +1727,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             with self.assertRaises(InvalidArgument):
                 transaction.batch_update([])
 
-    @unittest.skipUnless(HAS_OPENTELEMETRY_INSTALLED)
+    @unittest.skipUnless(HAS_OPENTELEMETRY_INSTALLED, "trace requires OpenTelemetry")
     def test_transaction_batch_update_w_parent_span(self):
         from opentelemetry import trace
 
