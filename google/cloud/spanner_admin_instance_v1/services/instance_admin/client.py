@@ -1185,8 +1185,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.SetIamPolicyRequest()
+            request = iam_policy.SetIamPolicyRequest(resource=resource,)
 
             if resource is not None:
                 request.resource = resource
@@ -1318,8 +1317,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.GetIamPolicyRequest()
+            request = iam_policy.GetIamPolicyRequest(resource=resource,)
 
             if resource is not None:
                 request.resource = resource
@@ -1407,8 +1405,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.TestIamPermissionsRequest(**request)
 
         elif not request:
-            # Null request, just make one.
-            request = iam_policy.TestIamPermissionsRequest()
+            request = iam_policy.TestIamPermissionsRequest(
+                resource=resource, permissions=permissions,
+            )
 
             if resource is not None:
                 request.resource = resource
