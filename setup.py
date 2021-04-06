@@ -41,7 +41,7 @@ extras = {
         "opentelemetry-sdk >= 0.11b0",
         "opentelemetry-instrumentation >= 0.11b0",
     ],
-    "libcst": "libcst >= 0.2.5"
+    "libcst": "libcst >= 0.2.5",
 }
 
 

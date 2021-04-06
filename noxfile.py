@@ -167,9 +167,7 @@ def system(session):
 
     # Install all test dependencies, then install this package into the
     # virtualenv's dist-packages.
-    session.install(
-        "mock", "pytest", "google-cloud-testutils", "-c", constraints_path
-    )
+    session.install("mock", "pytest", "google-cloud-testutils", "-c", constraints_path)
     session.install("-e", ".[tracing]", "-c", constraints_path)
 
     # Run py.test against the system tests.
