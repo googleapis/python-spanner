@@ -969,7 +969,7 @@ class BeginTransactionRequest(proto.Message):
         session (str):
             Required. The session in which the
             transaction runs.
-        options (google.cloud.spanner_v1.types.TransactionOptions):
+        options_ (google.cloud.spanner_v1.types.TransactionOptions):
             Required. Options for the new transaction.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request. Priority is ignored for
@@ -981,7 +981,7 @@ class BeginTransactionRequest(proto.Message):
 
     session = proto.Field(proto.STRING, number=1)
 
-    options = proto.Field(
+    options_ = proto.Field(
         proto.MESSAGE, number=2, message=gs_transaction.TransactionOptions,
     )
 

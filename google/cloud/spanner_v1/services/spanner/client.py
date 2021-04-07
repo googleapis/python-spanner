@@ -1136,7 +1136,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: spanner.BeginTransactionRequest = None,
         *,
         session: str = None,
-        options: transaction.TransactionOptions = None,
+        options_: transaction.TransactionOptions = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
@@ -1158,11 +1158,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 This corresponds to the ``session`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            options (google.cloud.spanner_v1.types.TransactionOptions):
+            options_ (google.cloud.spanner_v1.types.TransactionOptions):
                 Required. Options for the new
                 transaction.
 
-                This corresponds to the ``options`` field
+                This corresponds to the ``options_`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
 
@@ -1179,7 +1179,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        has_flattened_params = any([session, options])
+        has_flattened_params = any([session, options_])
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1198,8 +1198,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
             if session is not None:
                 request.session = session
-            if options is not None:
-                request.options = options
+            if options_ is not None:
+                request.options_ = options_
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.

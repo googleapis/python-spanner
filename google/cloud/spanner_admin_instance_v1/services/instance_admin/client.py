@@ -37,7 +37,7 @@ from google.api_core import operation_async  # type: ignore
 from google.cloud.spanner_admin_instance_v1.services.instance_admin import pagers
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
-from google.iam.v1 import policy_pb2 as policy  # type: ignore
+from google.iam.v1 import policy_pb2 as gi_policy  # type: ignore
 from google.protobuf import field_mask_pb2 as gp_field_mask  # type: ignore
 
 from .transports.base import InstanceAdminTransport, DEFAULT_CLIENT_INFO
@@ -1083,7 +1083,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> policy.Policy:
+    ) -> gi_policy.Policy:
         r"""Sets the access control policy on an instance resource. Replaces
         any existing policy.
 
@@ -1214,7 +1214,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> policy.Policy:
+    ) -> gi_policy.Policy:
         r"""Gets the access control policy for an instance resource. Returns
         an empty policy if an instance exists but does not have a policy
         set.

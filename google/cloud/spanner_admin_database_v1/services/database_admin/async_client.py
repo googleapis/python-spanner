@@ -36,7 +36,7 @@ from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import common
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
-from google.iam.v1 import policy_pb2 as policy  # type: ignore
+from google.iam.v1 import policy_pb2 as gi_policy  # type: ignore
 from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.protobuf import empty_pb2 as empty  # type: ignore
 from google.protobuf import field_mask_pb2 as field_mask  # type: ignore
@@ -784,7 +784,7 @@ class DatabaseAdminAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> policy.Policy:
+    ) -> gi_policy.Policy:
         r"""Sets the access control policy on a database or backup resource.
         Replaces any existing policy.
 
@@ -920,7 +920,7 @@ class DatabaseAdminAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> policy.Policy:
+    ) -> gi_policy.Policy:
         r"""Gets the access control policy for a database or backup
         resource. Returns an empty policy if a database or backup exists
         but does not have a policy set.
