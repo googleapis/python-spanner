@@ -12,25 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
-import warnings
+"""Helper module for working with the pandas library."""
+
+try:
+    import pandas
+
+    pandas_import_error = None
+except ImportError as err:
+    pandas = None
+    pandas_import_error = err
 
 
-def pd_dataframe(result_set):
+def check_pandas_import():
+    if pandas is None:
+        raise ImportError(
+            "The pandas module is required for this method.\n"
+            "Try running 'pip3 install pandas'"
+        ) from pandas_import_error
+
+
+def to_dataframe(result_set):
     """This functions converts the query results into pandas dataframe
 
-    :rtype: pandas.DataFrame
     :type result_set: :class:`~google.cloud.spanner_v1.StreamedResultSet`
     :param result_set: complete response data returned from a read/query
+
+    :rtype: pandas.DataFrame
     :returns: Dataframe with the help of a mapping dictionary which maps every spanner datatype to a pandas compatible datatype.
     """
-    try:
-        from pandas import DataFrame
-    except ImportError as err:
-        raise ImportError(
-            "Pandas module not found. It is needed for converting query result to DataFrame.\n Try running 'pip3 install pandas'"
-        ) from err
+    check_pandas_import()
 
+    # Download all results first, so that the fields property is populated.
     data = list(result_set)
 
     columns_dict = {}
@@ -40,8 +52,10 @@ def pd_dataframe(result_set):
         columns_dict[item.name] = item.type_.code
 
     # Creating dataframe using column headers and list of data rows
-    df = DataFrame(data, columns=column_list)
+    df = pandas.DataFrame(data, columns=column_list)
 
+    # Convert TIMESTAMP and DATE columns to appropriate type. The
+    # datetime64[ns, UTC] dtype is null-safe.
     for k, v in columns_dict.items():
         if v.name == "TIMESTAMP" or v.name == "DATE":
             try:

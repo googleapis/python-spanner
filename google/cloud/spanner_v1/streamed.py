@@ -19,11 +19,11 @@ from google.protobuf.struct_pb2 import Value
 from google.cloud import exceptions
 from google.cloud.spanner_v1 import PartialResultSet
 from google.cloud.spanner_v1 import TypeCode
+from google.cloud.spanner_v1 import _pandas_helpers
 import six
 
 # pylint: disable=ungrouped-imports
 from google.cloud.spanner_v1._helpers import _parse_value_pb
-from google.cloud.spanner_v1._pandas_helpers import pd_dataframe
 
 # pylint: enable=ungrouped-imports
 
@@ -154,9 +154,7 @@ class StreamedResultSet(object):
         :rtype: pandas.DataFrame
         :returns: DataFrame created from the result set
         """
-        response_obj = self
-        df = pd_dataframe(response_obj)
-        return df
+        return _pandas_helpers.to_dataframe(self)
 
     def one(self):
         """Return exactly one result, or raise an exception.
