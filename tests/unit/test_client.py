@@ -103,10 +103,7 @@ class TestClient(unittest.TestCase):
                 expected_client_options.api_endpoint,
             )
         if expected_query_options is not None:
-            self.assertEqual(
-                client._query_options,
-                expected_query_options
-            )
+            self.assertEqual(client._query_options, expected_query_options)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     @mock.patch("warnings.warn")

@@ -166,7 +166,7 @@ class Client(ClientWithProject):
 
         env_query_options = ExecuteSqlRequest.QueryOptions(
             optimizer_version=_get_spanner_optimizer_version(),
-            optimizer_statistics_package=_get_spanner_optimizer_statistics_package()
+            optimizer_statistics_package=_get_spanner_optimizer_statistics_package(),
         )
 
         # Environment flag config has higher precedence than application config.
