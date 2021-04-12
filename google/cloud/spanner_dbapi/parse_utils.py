@@ -276,7 +276,7 @@ def parse_insert(insert_sql, params):
     if not after_values_sql:
         # Case b)
         insert_sql = sanitize_literals_for_upload(insert_sql)
-        return {"sql_params_list": [(insert_sql, None)]}
+        return {"sql_params_list": [(insert_sql, params)]}
 
     if not params:
         # Case a) perhaps?
