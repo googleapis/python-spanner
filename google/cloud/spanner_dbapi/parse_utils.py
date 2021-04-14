@@ -224,11 +224,11 @@ def parse_insert(insert_sql, params):
             }
 
     Case b)
-            SQL: 'INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln',
+        SQL: 'INSERT INTO T (s, c) SELECT st, zc FROM cus WHERE col IN (%s, %s)',
         it produces:
             {
                 'sql_params_list': [
-                    ('INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln', None),
+                    ('INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln', ('a', 'b')),
                 ]
             }
 
