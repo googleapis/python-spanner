@@ -17,6 +17,21 @@ import os
 
 import setuptools
 
+# Disable version normalization performed by setuptools.setup()
+try:
+    # Try the approach of using sic(), added in setuptools 46.1.0
+    from setuptools import sic
+except ImportError:
+    # Try the approach of replacing packaging.version.Version
+    sic = lambda v: v
+    try:
+        # setuptools >=39.0.0 uses packaging from setuptools.extern
+        from setuptools.extern import packaging
+    except ImportError:
+        # setuptools <39.0.0 uses packaging from pkg_resources.extern
+        from pkg_resources.extern import packaging
+    packaging.version.Version = packaging.version.LegacyVersion
+
 
 # Package metadata.
 
@@ -29,10 +44,9 @@ version = "3.3.0"
 # 'Development Status :: 5 - Production/Stable'
 release_status = "Development Status :: 5 - Production/Stable"
 dependencies = [
-    "google-api-core[grpc] >= 1.22.0, < 2.0.0dev",
+    "google-api-core[grpc] >= 1.22.2, < 2.0.0dev",
     "google-cloud-core >= 1.4.1, < 2.0dev",
     "grpc-google-iam-v1 >= 0.12.3, < 0.13dev",
-    "libcst >= 0.2.5",
     "proto-plus >= 1.11.0",
     "sqlparse >= 0.3.0",
 ]
@@ -41,7 +55,8 @@ extras = {
         "opentelemetry-api >= 0.11b0",
         "opentelemetry-sdk >= 0.11b0",
         "opentelemetry-instrumentation >= 0.11b0",
-    ]
+    ],
+    "libcst": "libcst >= 0.2.5",
 }
 
 
@@ -69,7 +84,7 @@ if "google.cloud" in packages:
 
 setuptools.setup(
     name=name,
-    version=version,
+    version=sic(version),
     description=description,
     long_description=readme,
     author="Google LLC",
