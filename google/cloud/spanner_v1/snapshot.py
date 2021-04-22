@@ -47,10 +47,10 @@ def _restart_on_unavailable(
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
     :type method: callable
-    :param method: curried function returning iterator
+    :param method: function returning iterator
 
-    :type request: callable
-    :param request: curried function returning iterator
+    :type request: proto
+    :param request: request proto to call the method with
     """
     resume_token = b""
     item_buffer = []
