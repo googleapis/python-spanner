@@ -47,7 +47,9 @@ BASE_ATTRIBUTES = {
 
 
 class Test_restart_on_unavailable(OpenTelemetryBase):
-    def _call_fut(self, restart, request, span_name=None, session=None, attributes=None):
+    def _call_fut(
+        self, restart, request, span_name=None, session=None, attributes=None
+    ):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 
         return _restart_on_unavailable(restart, request, span_name, session, attributes)
@@ -59,7 +61,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def test_iteration_w_empty_raw(self):
         raw = _MockIterator()
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), [])
@@ -69,7 +71,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
     def test_iteration_w_non_empty_raw(self):
         ITEMS = (self._make_item(0), self._make_item(1))
         raw = _MockIterator(*ITEMS)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
@@ -84,7 +86,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             self._make_item(3),
         )
         raw = _MockIterator(*ITEMS)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
@@ -101,12 +103,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         )
         before = _MockIterator(fail_after=True, error=ServiceUnavailable("testing"))
         after = _MockIterator(*ITEMS)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
         self.assertEqual(len(restart.mock_calls), 2)
-        self.assertEqual(request.resume_token, b'')
+        self.assertEqual(request.resume_token, b"")
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_no_token(self):
@@ -124,12 +126,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             ),
         )
         after = _MockIterator(*ITEMS)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
         self.assertEqual(len(restart.mock_calls), 2)
-        self.assertEqual(request.resume_token, b'')
+        self.assertEqual(request.resume_token, b"")
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_non_retryable_internal_error_no_token(self):
@@ -142,7 +144,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         )
         before = _MockIterator(fail_after=True, error=InternalServerError("testing"))
         after = _MockIterator(*ITEMS)
-        request = mock.Mock(spec=['resume_token'])
+        request = mock.Mock(spec=["resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
@@ -160,7 +162,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
         )
         after = _MockIterator(*LAST)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + LAST))
@@ -182,7 +184,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             )
         )
         after = _MockIterator(*LAST)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + LAST))
@@ -200,7 +202,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *(FIRST + SECOND), fail_after=True, error=InternalServerError("testing")
         )
         after = _MockIterator(*LAST)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
@@ -217,7 +219,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *FIRST, fail_after=True, error=ServiceUnavailable("testing")
         )
         after = _MockIterator(*SECOND)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
@@ -238,7 +240,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             )
         )
         after = _MockIterator(*SECOND)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
@@ -255,7 +257,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *FIRST, fail_after=True, error=InternalServerError("testing")
         )
         after = _MockIterator(*SECOND)
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
@@ -267,10 +269,11 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         name = "TestSpan"
         extra_atts = {"test_att": 1}
         raw = _MockIterator()
-        request = mock.Mock(test="test", spec=['test', 'resume_token'])
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         resumable = self._call_fut(
-            restart, request, name, _Session(_Database()), extra_atts)
+            restart, request, name, _Session(_Database()), extra_atts
+        )
         self.assertEqual(list(resumable), [])
         self.assertSpanAttributes(name, attributes=dict(BASE_ATTRIBUTES, test_att=1))
 
@@ -285,7 +288,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
             )
             after = _MockIterator(*LAST)
-            request = mock.Mock(test="test", spec=['test', 'resume_token'])
+            request = mock.Mock(test="test", spec=["test", "resume_token"])
             restart = mock.Mock(spec=[], side_effect=[before, after])
             name = "TestSpan"
             resumable = self._call_fut(restart, request, name, _Session(_Database()))

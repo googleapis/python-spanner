@@ -41,7 +41,9 @@ _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
 )
 
 
-def _restart_on_unavailable(method, request, trace_name=None, session=None, attributes=None):
+def _restart_on_unavailable(
+    method, request, trace_name=None, session=None, attributes=None
+):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
     :type method: callable
@@ -198,7 +200,7 @@ class _SnapshotBase(_SessionWrapper):
             request,
             "CloudSpanner.ReadOnlyTransaction",
             self._session,
-            trace_attributes
+            trace_attributes,
         )
 
         self._read_request_count += 1
