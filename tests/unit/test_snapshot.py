@@ -293,9 +293,8 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             name = "TestSpan"
             resumable = self._call_fut(restart, request, name, _Session(_Database()))
             self.assertEqual(list(resumable), list(FIRST + LAST))
-            self.assertEqual(
-                restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-            )
+            self.assertEqual(len(restart.mock_calls), 2)
+            self.assertEqual(request.resume_token, RESUME_TOKEN)
 
             span_list = self.memory_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 2)
