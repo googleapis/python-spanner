@@ -17,52 +17,29 @@ import synthtool as s
 from synthtool import gcp
 from synthtool.languages import python
 
-gapic = gcp.GAPICBazel()
 common = gcp.CommonTemplates()
 
-# ----------------------------------------------------------------------------
-# Generate spanner GAPIC layer
-# ----------------------------------------------------------------------------
-library = gapic.py_library(
-    service="spanner",
-    version="v1",
-    bazel_target="//google/spanner/v1:spanner-v1-py",
-    include_protos=True,
-)
+spanner_default_version = "v1"
+spanner_admin_instance_default_version = "v1"
+spanner_admin_database_default_version = "v1"
 
-s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
+for library in s.get_staging_dirs(spanner_default_version):
+    if library.parent.absolute() == "spanner":
+        s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
 
-# ----------------------------------------------------------------------------
-# Generate instance admin client
-# ----------------------------------------------------------------------------
-library = gapic.py_library(
-    service="spanner_admin_instance",
-    version="v1",
-    bazel_target="//google/spanner/admin/instance/v1:admin-instance-v1-py",
-    include_protos=True,
-)
+s.remove_staging_dirs()
 
-s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
+for library in s.get_staging_dirs(spanner_admin_instance_default_version):
+    if library.parent.absolute() == "spanner_admin_instance":
+        s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
 
-# ----------------------------------------------------------------------------
-# Generate database admin client
-# ----------------------------------------------------------------------------
-library = gapic.py_library(
-    service="spanner_admin_database",
-    version="v1",
-    bazel_target="//google/spanner/admin/database/v1:admin-database-v1-py",
-    include_protos=True,
-)
+s.remove_staging_dirs()
 
-s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
+for library in s.get_staging_dirs(spanner_admin_database_default_version):
+    if library.parent.absolute() == "spanner_admin_database":
+        s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
 
-# Fix formatting for bullet lists.
-# See: https://github.com/googleapis/gapic-generator-python/issues/604
-s.replace(
-    "google/cloud/spanner_admin_database_v1/services/database_admin/*.py",
-    "``backup.expire_time``.",
-    "``backup.expire_time``.\n"
-)
+s.remove_staging_dirs()
 
 # ----------------------------------------------------------------------------
 # Add templated files
