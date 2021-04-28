@@ -66,7 +66,9 @@ class StreamedResultSet(object):
         :rtype: :class:`~google.cloud.spanner_v1.types.ResultSetMetadata`
         :returns: structure describing the results
         """
-        return ResultSetMetadata.wrap(self._metadata)
+        if self._metadata:
+            return ResultSetMetadata.wrap(self._metadata)
+        return None
 
     @property
     def stats(self):
