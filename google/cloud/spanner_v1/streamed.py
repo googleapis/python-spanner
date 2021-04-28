@@ -119,7 +119,7 @@ class StreamedResultSet(object):
         response_pb = PartialResultSet.pb(response)
 
         if self._metadata is None:  # first response
-            metadata = self._metadata = response.metadata
+            metadata = self._metadata = response_pb.metadata
 
             source = self._source
             if source is not None and source._transaction_id is None:
