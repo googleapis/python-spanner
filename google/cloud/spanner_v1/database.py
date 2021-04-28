@@ -454,7 +454,12 @@ class Database(object):
         api.drop_database(database=self.name, metadata=metadata)
 
     def execute_partitioned_dml(
-        self, dml, params=None, param_types=None, query_options=None
+        self,
+        dml,
+        params=None,
+        param_types=None,
+        query_options=None,
+        request_options=None,
     ):
         """Execute a partitionable DML statement.
 
@@ -477,6 +482,11 @@ class Database(object):
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -517,6 +527,7 @@ class Database(object):
                     params=params_pb,
                     param_types=param_types,
                     query_options=query_options,
+                    request_options=request_options,
                 )
                 restart = functools.partial(
                     api.execute_streaming_sql, request=request, metadata=metadata,

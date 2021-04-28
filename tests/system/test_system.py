@@ -48,6 +48,8 @@ from test_utils.retry import RetryErrors
 from test_utils.retry import RetryInstanceState
 from test_utils.retry import RetryResult
 from test_utils.system import unique_resource_id
+
+from google.cloud.spanner_v1.types import RequestOptions
 from tests._fixtures import DDL_STATEMENTS
 from tests._fixtures import EMULATOR_DDL_STATEMENTS
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
@@ -111,7 +113,11 @@ def setUpModule():
             project=emulator_project, credentials=AnonymousCredentials()
         )
     else:
-        Config.CLIENT = Client()
+        Config.CLIENT = Client(
+            client_options={
+                "api_endpoint": "staging-wrenchworks.sandbox.googleapis.com:443"
+            }
+        )
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
@@ -1814,6 +1820,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             update_statement,
             params={"email": nonesuch, "target": target},
             param_types={"email": param_types.STRING, "target": param_types.STRING},
+            request_options=RequestOptions(priority=2),
         )
         self.assertEqual(row_count, 1)
 

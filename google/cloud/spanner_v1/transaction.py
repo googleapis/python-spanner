@@ -122,12 +122,17 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self, return_commit_stats=False):
+    def commit(self, return_commit_stats=False, request_options=None):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
         :param return_commit_stats:
           If true, the response will return commit stats which can be accessed though commit_stats.
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
@@ -144,6 +149,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             mutations=self._mutations,
             transaction_id=self._transaction_id,
             return_commit_stats=return_commit_stats,
+            request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             response = api.commit(request=request, metadata=metadata,)
@@ -192,6 +198,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         param_types=None,
         query_mode=None,
         query_options=None,
+        request_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -220,6 +227,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
             or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -256,6 +268,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             query_mode=query_mode,
             query_options=query_options,
             seqno=seqno,
+            request_options=request_options,
         )
         with trace_call(
             "CloudSpanner.ReadWriteTransaction", self._session, trace_attributes
@@ -265,7 +278,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
         return response.stats.row_count_exact
 
-    def batch_update(self, statements):
+    def batch_update(self, statements, request_options=None):
         """Perform a batch of DML statements via an ``ExecuteBatchDml`` request.
 
         :type statements:
@@ -278,6 +291,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             corresponding DML statement.  If 'params' is passed, 'param_types'
             must also be passed, as a dict mapping names to the type of
             value passed in 'params'.
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
 
         :rtype:
             Tuple(status, Sequence[int])
@@ -319,6 +337,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             transaction=transaction,
             statements=parsed,
             seqno=seqno,
+            request_options=request_options,
         )
         with trace_call("CloudSpanner.DMLTransaction", self._session, trace_attributes):
             response = api.execute_batch_dml(request=request, metadata=metadata)

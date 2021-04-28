@@ -14,6 +14,8 @@
 
 
 import mock
+
+from google.cloud.spanner_v1.types import RequestOptions
 from tests._helpers import OpenTelemetryBase, StatusCanonicalCode
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
@@ -416,6 +418,7 @@ class TestTransaction(OpenTelemetryBase):
         self,
         count=0,
         query_options=None,
+        request_options=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
@@ -447,6 +450,7 @@ class TestTransaction(OpenTelemetryBase):
             PARAM_TYPES,
             query_mode=MODE,
             query_options=query_options,
+            request_options=request_options,
             retry=retry,
             timeout=timeout,
         )
@@ -472,6 +476,7 @@ class TestTransaction(OpenTelemetryBase):
             param_types=PARAM_TYPES,
             query_mode=MODE,
             query_options=expected_query_options,
+            request_options=request_options,
             seqno=count,
         )
         api.execute_sql.assert_called_once_with(
@@ -518,6 +523,9 @@ class TestTransaction(OpenTelemetryBase):
             query_options=ExecuteSqlRequest.QueryOptions(optimizer_version="3")
         )
 
+    def test_execute_update_w_request_options(self):
+        self._execute_update_helper(request_options=RequestOptions(priority=2))
+
     def test_batch_update_other_error(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -529,7 +537,7 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.batch_update(statements=[DML_QUERY])
 
-    def _batch_update_helper(self, error_after=None, count=0):
+    def _batch_update_helper(self, error_after=None, count=0, request_options=None):
         from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import param_types
@@ -576,7 +584,9 @@ class TestTransaction(OpenTelemetryBase):
         transaction._transaction_id = self.TRANSACTION_ID
         transaction._execute_sql_count = count
 
-        status, row_counts = transaction.batch_update(dml_statements)
+        status, row_counts = transaction.batch_update(
+            dml_statements, request_options=request_options
+        )
 
         self.assertEqual(status, expected_status)
         self.assertEqual(row_counts, expected_row_counts)
@@ -602,6 +612,7 @@ class TestTransaction(OpenTelemetryBase):
             transaction=expected_transaction,
             statements=expected_statements,
             seqno=count,
+            request_options=request_options,
         )
         api.execute_batch_dml.assert_called_once_with(
             request=expected_request,
@@ -611,7 +622,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._execute_sql_count, count + 1)
 
     def test_batch_update_wo_errors(self):
-        self._batch_update_helper()
+        self._batch_update_helper(request_options=RequestOptions(priority=2))
 
     def test_batch_update_w_errors(self):
         self._batch_update_helper(error_after=2, count=1)

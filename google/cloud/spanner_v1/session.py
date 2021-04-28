@@ -230,6 +230,7 @@ class Session(object):
         param_types=None,
         query_mode=None,
         query_options=None,
+        request_options=None,
         retry=google.api_core.gapic_v1.method.DEFAULT,
         timeout=google.api_core.gapic_v1.method.DEFAULT,
     ):
@@ -258,6 +259,11 @@ class Session(object):
             or :class:`dict`
         :param query_options: (Optional) Options that are provided for query plan stability.
 
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -273,6 +279,7 @@ class Session(object):
             param_types,
             query_mode,
             query_options=query_options,
+            request_options=request_options,
             retry=retry,
             timeout=timeout,
         )
