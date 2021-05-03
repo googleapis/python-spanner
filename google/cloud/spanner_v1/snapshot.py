@@ -34,6 +34,7 @@ from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner_v1.types import RequestOptions
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
@@ -150,6 +151,8 @@ class _SnapshotBase(_SessionWrapper):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -174,6 +177,9 @@ class _SnapshotBase(_SessionWrapper):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         transaction = self._make_txn_selector()
+
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
 
         request = ReadRequest(
             session=self._session.name,
@@ -250,6 +256,8 @@ class _SnapshotBase(_SessionWrapper):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :type partition: bytes
         :param partition: (Optional) one of the partition tokens returned
@@ -292,6 +300,9 @@ class _SnapshotBase(_SessionWrapper):
         # environment-level options
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
+
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
 
         request = ExecuteSqlRequest(
             session=self._session.name,

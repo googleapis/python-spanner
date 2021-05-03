@@ -524,7 +524,11 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_execute_update_w_request_options(self):
-        self._execute_update_helper(request_options=RequestOptions(priority=2))
+        self._execute_update_helper(
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            )
+        )
 
     def test_batch_update_other_error(self):
         database = _Database()
@@ -622,7 +626,11 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._execute_sql_count, count + 1)
 
     def test_batch_update_wo_errors(self):
-        self._batch_update_helper(request_options=RequestOptions(priority=2))
+        self._batch_update_helper(
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
+        )
 
     def test_batch_update_w_errors(self):
         self._batch_update_helper(error_after=2, count=1)

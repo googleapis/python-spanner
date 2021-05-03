@@ -31,6 +31,8 @@ from google.cloud.spanner_v1.batch import _BatchBase
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.api_core import gapic_v1
 
+from google.cloud.spanner_v1.types import RequestOptions
+
 
 class Transaction(_SnapshotBase, _BatchBase):
     """Implement read-write transaction semantics for a session.
@@ -133,6 +135,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
@@ -144,6 +148,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         trace_attributes = {"num_mutations": len(self._mutations)}
+
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
+
         request = CommitRequest(
             session=self._session.name,
             mutations=self._mutations,
@@ -232,6 +240,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -258,7 +268,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
 
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
+
         trace_attributes = {"db.statement": dml}
+
         request = ExecuteSqlRequest(
             session=self._session.name,
             sql=dml,
@@ -296,6 +310,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :rtype:
             Tuple(status, Sequence[int])
@@ -327,6 +343,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             self._execute_sql_count,
             self._execute_sql_count + 1,
         )
+
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
 
         trace_attributes = {
             # Get just the queries from the DML statement batch

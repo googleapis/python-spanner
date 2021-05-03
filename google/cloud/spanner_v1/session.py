@@ -263,6 +263,8 @@ class Session(object):
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
                 (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -337,6 +339,7 @@ class Session(object):
             reraises any non-ABORT exceptions raised by ``func``.
         """
         deadline = time.time() + kw.pop("timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS)
+        commit_request_options = kw.pop("commit_request_options", None)
         attempts = 0
 
         while True:
@@ -362,7 +365,10 @@ class Session(object):
                 raise
 
             try:
-                txn.commit(return_commit_stats=self._database.log_commit_stats)
+                txn.commit(
+                    return_commit_stats=self._database.log_commit_stats,
+                    request_options=commit_request_options,
+                )
             except Aborted as exc:
                 del self._transaction
                 _delay_until_retry(exc, deadline, attempts)

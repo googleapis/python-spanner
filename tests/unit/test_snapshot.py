@@ -738,7 +738,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_execute_sql_w_request_options(self):
         self._execute_sql_helper(
-            multi_use=False, request_options=RequestOptions(priority=2),
+            multi_use=False,
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
         )
 
     def _partition_read_helper(

@@ -60,7 +60,7 @@ from google.cloud.spanner_v1 import (
 from google.cloud.spanner_v1.table import Table
 
 # pylint: enable=ungrouped-imports
-
+from google.cloud.spanner_v1.types import RequestOptions
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 
@@ -486,7 +486,9 @@ class Database(object):
         :type request_options:
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
-                (Optional) Common options for this request.
+            (Optional) Common options for this request.
+            If a dict is provided, it must be of the same form as the protobuf
+            message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -494,6 +496,9 @@ class Database(object):
         query_options = _merge_query_options(
             self._instance._client._query_options, query_options
         )
+        if type(request_options) == dict:
+            request_options = RequestOptions(request_options)
+
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction
 
@@ -572,7 +577,7 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self):
+    def batch(self, request_options=None):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -581,7 +586,7 @@ class Database(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self)
+        return BatchCheckout(self, request_options)
 
     def batch_snapshot(self, read_timestamp=None, exact_staleness=None):
         """Return an object which wraps a batch read / query.
@@ -767,11 +772,19 @@ class BatchCheckout(object):
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
+
+    :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+    :param request_options:
+            (Optional) Common options for this request.
+            If a dict is provided, it must be of the same form as the protobuf
+            message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
     """
 
-    def __init__(self, database):
+    def __init__(self, database, request_options=None):
         self._database = database
         self._session = self._batch = None
+        self._request_options = request_options
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -783,7 +796,10 @@ class BatchCheckout(object):
         """End ``with`` block."""
         try:
             if exc_type is None:
-                self._batch.commit(return_commit_stats=self._database.log_commit_stats)
+                self._batch.commit(
+                    return_commit_stats=self._database.log_commit_stats,
+                    request_options=self._request_options,
+                )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
                 self._database.logger.info(

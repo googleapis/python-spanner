@@ -1047,7 +1047,10 @@ class TestDatabase(_BaseTest):
 
     def test_execute_partitioned_dml_w_request_options(self):
         self._execute_partitioned_dml_helper(
-            dml=DML_W_PARAM, request_options=RequestOptions(priority=2),
+            dml=DML_W_PARAM,
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
         )
 
     def test_execute_partitioned_dml_wo_params_retry_aborted(self):

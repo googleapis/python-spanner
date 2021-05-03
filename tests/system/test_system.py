@@ -113,11 +113,7 @@ def setUpModule():
             project=emulator_project, credentials=AnonymousCredentials()
         )
     else:
-        Config.CLIENT = Client(
-            client_options={
-                "api_endpoint": "staging-wrenchworks.sandbox.googleapis.com:443"
-            }
-        )
+        Config.CLIENT = Client()
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
@@ -1820,7 +1816,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             update_statement,
             params={"email": nonesuch, "target": target},
             param_types={"email": param_types.STRING, "target": param_types.STRING},
-            request_options=RequestOptions(priority=2),
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
         )
         self.assertEqual(row_count, 1)
 
