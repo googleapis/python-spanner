@@ -29,6 +29,7 @@ from google.auth import credentials  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 
 from google.cloud.spanner_v1.services.spanner import pagers
+from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
@@ -988,7 +989,7 @@ class SpannerAsyncClient:
         request: spanner.BeginTransactionRequest = None,
         *,
         session: str = None,
-        options: transaction.TransactionOptions = None,
+        options_: transaction.TransactionOptions = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
@@ -1010,11 +1011,11 @@ class SpannerAsyncClient:
                 This corresponds to the ``session`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            options (:class:`google.cloud.spanner_v1.types.TransactionOptions`):
+            options_ (:class:`google.cloud.spanner_v1.types.TransactionOptions`):
                 Required. Options for the new
                 transaction.
 
-                This corresponds to the ``options`` field
+                This corresponds to the ``options_`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
 
@@ -1031,7 +1032,7 @@ class SpannerAsyncClient:
         # Create or coerce a protobuf request object.
         # Sanity check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
-        has_flattened_params = any([session, options])
+        has_flattened_params = any([session, options_])
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1045,8 +1046,8 @@ class SpannerAsyncClient:
 
         if session is not None:
             request.session = session
-        if options is not None:
-            request.options = options
+        if options_ is not None:
+            request.options_ = options_
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1086,7 +1087,7 @@ class SpannerAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> spanner.CommitResponse:
+    ) -> commit_response.CommitResponse:
         r"""Commits a transaction. The request includes the mutations to be
         applied to rows in the database.
 

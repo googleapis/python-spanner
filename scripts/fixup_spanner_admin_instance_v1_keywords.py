@@ -43,12 +43,12 @@ class spanner_admin_instanceCallTransformer(cst.CSTTransformer):
     METHOD_TO_PARAMS: Dict[str, Tuple[str]] = {
     'create_instance': ('parent', 'instance_id', 'instance', ),
     'delete_instance': ('name', ),
-    'get_iam_policy': ('resource', 'options', ),
+    'get_iam_policy': ('resource', 'options_', ),
     'get_instance': ('name', 'field_mask', ),
     'get_instance_config': ('name', ),
     'list_instance_configs': ('parent', 'page_size', 'page_token', ),
     'list_instances': ('parent', 'page_size', 'page_token', 'filter', ),
-    'set_iam_policy': ('resource', 'policy', ),
+    'set_iam_policy': ('resource', 'policy_', ),
     'test_iam_permissions': ('resource', 'permissions', ),
     'update_instance': ('instance', 'field_mask', ),
 

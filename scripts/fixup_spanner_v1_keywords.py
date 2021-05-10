@@ -42,7 +42,7 @@ class spannerCallTransformer(cst.CSTTransformer):
     CTRL_PARAMS: Tuple[str] = ('retry', 'timeout', 'metadata')
     METHOD_TO_PARAMS: Dict[str, Tuple[str]] = {
     'batch_create_sessions': ('database', 'session_count', 'session_template', ),
-    'begin_transaction': ('session', 'options', 'request_options', ),
+    'begin_transaction': ('session', 'options_', 'request_options', ),
     'commit': ('session', 'transaction_id', 'single_use_transaction', 'mutations', 'return_commit_stats', 'request_options', ),
     'create_session': ('database', 'session', ),
     'delete_session': ('name', ),

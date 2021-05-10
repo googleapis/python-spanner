@@ -25,6 +25,7 @@ from google.api_core import gapic_v1  # type: ignore
 from google.api_core import retry as retries  # type: ignore
 from google.auth import credentials  # type: ignore
 
+from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
@@ -394,7 +395,10 @@ class SpannerTransport(abc.ABC):
         self,
     ) -> typing.Callable[
         [spanner.CommitRequest],
-        typing.Union[spanner.CommitResponse, typing.Awaitable[spanner.CommitResponse]],
+        typing.Union[
+            commit_response.CommitResponse,
+            typing.Awaitable[commit_response.CommitResponse],
+        ],
     ]:
         raise NotImplementedError()
 
