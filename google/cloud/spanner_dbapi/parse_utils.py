@@ -22,7 +22,7 @@ from functools import reduce
 import sqlparse
 from google.cloud import spanner_v1 as spanner
 
-from .exceptions import Error, ProgrammingError
+from .exceptions import Error, ProgrammingError, NotSupportedError
 from .parser import parse_values
 from .types import DateStr, TimestampStr
 from .utils import sanitize_literals_for_upload
@@ -143,6 +143,15 @@ STMT_DDL = "DDL"
 STMT_NON_UPDATING = "NON_UPDATING"
 STMT_UPDATING = "UPDATING"
 STMT_INSERT = "INSERT"
+
+# Validation error messages
+NUMERIC_MAX_SCALE_ERR_MSG = (
+    "Max scale for a numeric is 9. The requested numeric has scale {}"
+)
+NUMERIC_MAX_PRECISION_ERR_MSG = (
+    "Max precision for the whole component of a numeric is 29. The requested "
+    + "numeric has a whole component with precision {}"
+)
 
 # Heuristic for identifying statements that don't need to be run as updates.
 RE_NON_UPDATE = re.compile(r"^\s*(SELECT)", re.IGNORECASE)
@@ -509,9 +518,35 @@ def sql_pyformat_args_to_spanner(sql, params):
             resolved_value = pyfmt % params
             named_args[key] = resolved_value
         else:
+            assert_numeric_precision_and_scale(params[i])
             named_args[key] = params[i]
 
     return sanitize_literals_for_upload(sql), named_args
+
+
+def assert_numeric_precision_and_scale(value):
+    """
+    Spanner supports fixed 38 digits of precision and 9 digits of scale.
+    This number can be optionally prefixed with a plus or minus sign.
+    Read more here: https://cloud.google.com/spanner/docs/data-types#numeric_type
+
+    Asserts that input numeric field is within spanner supported range.
+    :type value: Any
+    :param value: The value to check for Cloud Spanner compatibility.
+
+    :raises NotSupportedError: if value is not within supporteed precision or scale of spanner.
+    """
+    if isinstance(value, decimal.Decimal):
+
+        scale = value.as_tuple().exponent
+        precision = len(value.as_tuple().digits)
+
+        if scale < -9:
+            raise NotSupportedError(NUMERIC_MAX_SCALE_ERR_MSG.format(abs(scale)))
+        if precision + scale > 29:
+            raise NotSupportedError(
+                NUMERIC_MAX_PRECISION_ERR_MSG.format(precision + scale)
+            )
 
 
 def get_param_types(params):
