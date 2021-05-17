@@ -27,7 +27,6 @@ from google.auth.transport.grpc import SslCredentials  # type: ignore
 import grpc  # type: ignore
 from grpc.experimental import aio  # type: ignore
 
-from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
@@ -606,7 +605,7 @@ class SpannerGrpcAsyncIOTransport(SpannerTransport):
     @property
     def commit(
         self,
-    ) -> Callable[[spanner.CommitRequest], Awaitable[commit_response.CommitResponse]]:
+    ) -> Callable[[spanner.CommitRequest], Awaitable[spanner.CommitResponse]]:
         r"""Return a callable for the commit method over gRPC.
 
         Commits a transaction. The request includes the mutations to be
@@ -640,7 +639,7 @@ class SpannerGrpcAsyncIOTransport(SpannerTransport):
             self._stubs["commit"] = self.grpc_channel.unary_unary(
                 "/google.spanner.v1.Spanner/Commit",
                 request_serializer=spanner.CommitRequest.serialize,
-                response_deserializer=commit_response.CommitResponse.deserialize,
+                response_deserializer=spanner.CommitResponse.deserialize,
             )
         return self._stubs["commit"]
 

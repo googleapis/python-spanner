@@ -36,7 +36,7 @@ from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import common
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
-from google.iam.v1 import policy_pb2 as gi_policy  # type: ignore
+from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.protobuf import empty_pb2 as empty  # type: ignore
 from google.protobuf import field_mask_pb2 as field_mask  # type: ignore
@@ -229,7 +229,7 @@ class DatabaseAdminAsyncClient:
         Returns:
             google.cloud.spanner_admin_database_v1.services.database_admin.pagers.ListDatabasesAsyncPager:
                 The response for
-                [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
+                   [ListDatabases][google.spanner.admin.database.v1.DatabaseAdmin.ListDatabases].
 
                 Iterating over this object will yield results and
                 resolve additional pages automatically.
@@ -726,7 +726,7 @@ class DatabaseAdminAsyncClient:
         Returns:
             google.cloud.spanner_admin_database_v1.types.GetDatabaseDdlResponse:
                 The response for
-                [GetDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.GetDatabaseDdl].
+                   [GetDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.GetDatabaseDdl].
 
         """
         # Create or coerce a protobuf request object.
@@ -784,7 +784,7 @@ class DatabaseAdminAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> gi_policy.Policy:
+    ) -> policy.Policy:
         r"""Sets the access control policy on a database or backup resource.
         Replaces any existing policy.
 
@@ -920,7 +920,7 @@ class DatabaseAdminAsyncClient:
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
-    ) -> gi_policy.Policy:
+    ) -> policy.Policy:
         r"""Gets the access control policy for a database or backup
         resource. Returns an empty policy if a database or backup exists
         but does not have a policy set.
@@ -1568,7 +1568,7 @@ class DatabaseAdminAsyncClient:
         Returns:
             google.cloud.spanner_admin_database_v1.services.database_admin.pagers.ListBackupsAsyncPager:
                 The response for
-                [ListBackups][google.spanner.admin.database.v1.DatabaseAdmin.ListBackups].
+                   [ListBackups][google.spanner.admin.database.v1.DatabaseAdmin.ListBackups].
 
                 Iterating over this object will yield results and
                 resolve additional pages automatically.

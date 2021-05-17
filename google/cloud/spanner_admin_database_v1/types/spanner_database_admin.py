@@ -351,16 +351,6 @@ class UpdateDatabaseDdlMetadata(proto.Message):
             constraints. When resources become available the
             operation will resume and this field will be
             false again.
-        progress (Sequence[google.cloud.spanner_admin_database_v1.types.OperationProgress]):
-            The progress of the
-            [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl]
-            operations. Currently, only index creation statements will
-            have a continuously updating progress. For non-index
-            creation statements, ``progress[i]`` will have start time
-            and end time populated with commit timestamp of operation,
-            as well as a progress of 100% once the operation has
-            completed. ``progress[i]`` is the operation progress for
-            ``statements[i]``.
     """
 
     database = proto.Field(proto.STRING, number=1)
@@ -372,10 +362,6 @@ class UpdateDatabaseDdlMetadata(proto.Message):
     )
 
     throttled = proto.Field(proto.BOOL, number=4)
-
-    progress = proto.RepeatedField(
-        proto.MESSAGE, number=5, message=common.OperationProgress,
-    )
 
 
 class DropDatabaseRequest(proto.Message):

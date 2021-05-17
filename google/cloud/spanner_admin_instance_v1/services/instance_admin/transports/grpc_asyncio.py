@@ -30,7 +30,7 @@ from grpc.experimental import aio  # type: ignore
 
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
-from google.iam.v1 import policy_pb2 as gi_policy  # type: ignore
+from google.iam.v1 import policy_pb2 as policy  # type: ignore
 from google.longrunning import operations_pb2 as operations  # type: ignore
 from google.protobuf import empty_pb2 as empty  # type: ignore
 
@@ -563,7 +563,7 @@ class InstanceAdminGrpcAsyncIOTransport(InstanceAdminTransport):
     @property
     def set_iam_policy(
         self,
-    ) -> Callable[[iam_policy.SetIamPolicyRequest], Awaitable[gi_policy.Policy]]:
+    ) -> Callable[[iam_policy.SetIamPolicyRequest], Awaitable[policy.Policy]]:
         r"""Return a callable for the set iam policy method over gRPC.
 
         Sets the access control policy on an instance resource. Replaces
@@ -586,14 +586,14 @@ class InstanceAdminGrpcAsyncIOTransport(InstanceAdminTransport):
             self._stubs["set_iam_policy"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy",
                 request_serializer=iam_policy.SetIamPolicyRequest.SerializeToString,
-                response_deserializer=gi_policy.Policy.FromString,
+                response_deserializer=policy.Policy.FromString,
             )
         return self._stubs["set_iam_policy"]
 
     @property
     def get_iam_policy(
         self,
-    ) -> Callable[[iam_policy.GetIamPolicyRequest], Awaitable[gi_policy.Policy]]:
+    ) -> Callable[[iam_policy.GetIamPolicyRequest], Awaitable[policy.Policy]]:
         r"""Return a callable for the get iam policy method over gRPC.
 
         Gets the access control policy for an instance resource. Returns
@@ -617,7 +617,7 @@ class InstanceAdminGrpcAsyncIOTransport(InstanceAdminTransport):
             self._stubs["get_iam_policy"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy",
                 request_serializer=iam_policy.GetIamPolicyRequest.SerializeToString,
-                response_deserializer=gi_policy.Policy.FromString,
+                response_deserializer=policy.Policy.FromString,
             )
         return self._stubs["get_iam_policy"]
 
