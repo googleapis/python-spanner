@@ -37,6 +37,7 @@ TYPES_MAP = {
     datetime.date: spanner.param_types.DATE,
     DateStr: spanner.param_types.DATE,
     TimestampStr: spanner.param_types.TIMESTAMP,
+    decimal.Decimal: spanner.param_types.NUMERIC,
 }
 
 SPANNER_RESERVED_KEYWORDS = {
@@ -508,23 +509,9 @@ def sql_pyformat_args_to_spanner(sql, params):
             resolved_value = pyfmt % params
             named_args[key] = resolved_value
         else:
-            named_args[key] = cast_for_spanner(params[i])
+            named_args[key] = params[i]
 
     return sanitize_literals_for_upload(sql), named_args
-
-
-def cast_for_spanner(value):
-    """Convert the param to its Cloud Spanner equivalent type.
-
-    :type value: Any
-    :param value: The value to convert to a Cloud Spanner type.
-
-    :rtype: Any
-    :returns: The value converted to a Cloud Spanner type.
-    """
-    if isinstance(value, decimal.Decimal):
-        return str(value)
-    return value
 
 
 def get_param_types(params):

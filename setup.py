@@ -17,27 +17,12 @@ import os
 
 import setuptools
 
-# Disable version normalization performed by setuptools.setup()
-try:
-    # Try the approach of using sic(), added in setuptools 46.1.0
-    from setuptools import sic
-except ImportError:
-    # Try the approach of replacing packaging.version.Version
-    sic = lambda v: v
-    try:
-        # setuptools >=39.0.0 uses packaging from setuptools.extern
-        from setuptools.extern import packaging
-    except ImportError:
-        # setuptools <39.0.0 uses packaging from pkg_resources.extern
-        from pkg_resources.extern import packaging
-    packaging.version.Version = packaging.version.LegacyVersion
-
 
 # Package metadata.
 
 name = "google-cloud-spanner"
 description = "Cloud Spanner API client library"
-version = "3.3.0"
+version = "3.4.0"
 # Should be one of:
 # 'Development Status :: 3 - Alpha'
 # 'Development Status :: 4 - Beta'
@@ -84,7 +69,7 @@ if "google.cloud" in packages:
 
 setuptools.setup(
     name=name,
-    version=sic(version),
+    version=version,
     description=description,
     long_description=readme,
     author="Google LLC",
