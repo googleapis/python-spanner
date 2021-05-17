@@ -15,6 +15,7 @@
 import collections
 import datetime
 import decimal
+import json
 import math
 import operator
 import os
@@ -54,6 +55,7 @@ from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
 
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
+STAGING_API_ENDPOINT = os.getenv("SPANNER_STAGING_HOST_API_ENDPOINT") or None
 USE_EMULATOR = os.getenv("SPANNER_EMULATOR_HOST") is not None
 SKIP_BACKUP_TESTS = os.getenv("SKIP_BACKUP_TESTS") is not None
 SPANNER_OPERATION_TIMEOUT_IN_SECONDS = int(
@@ -111,7 +113,12 @@ def setUpModule():
             project=emulator_project, credentials=AnonymousCredentials()
         )
     else:
-        Config.CLIENT = Client()
+         if STAGING_API_ENDPOINT:
+                Config.CLIENT = Client(
+                client_options={"api_endpoint": STAGING_API_ENDPOINT}
+            )
+         else:
+                Config.CLIENT = Client()
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
@@ -1067,6 +1074,20 @@ BYTES_1 = b"Ymlu"
 BYTES_2 = b"Ym9vdHM="
 NUMERIC_1 = decimal.Decimal("0.123456789")
 NUMERIC_2 = decimal.Decimal("1234567890")
+JSON_1 = json.dumps({
+        "sample_string" : "abcdef",
+        "sample_int" : 872163,
+        "sample_boolean" : True,
+        "sample_null" : None,
+        "sample_array" :[23, 76, 19]
+    })
+JSON_2 = json.dumps({
+    "sample_object" : {
+            "name" : "Anamika",
+            "id" : 2635
+        }
+    })
+
 ALL_TYPES_TABLE = "all_types"
 ALL_TYPES_COLUMNS = (
     "pkey",
@@ -1086,8 +1107,10 @@ ALL_TYPES_COLUMNS = (
     "timestamp_array",
     "numeric_value",
     "numeric_array",
+    "json_value",
+    "json_array"
 )
-EMULATOR_ALL_TYPES_COLUMNS = ALL_TYPES_COLUMNS[:-2]
+EMULATOR_ALL_TYPES_COLUMNS = ALL_TYPES_COLUMNS[:-4]
 AllTypesRowData = collections.namedtuple("AllTypesRowData", ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in ALL_TYPES_COLUMNS])
 EmulatorAllTypesRowData = collections.namedtuple(
@@ -1110,6 +1133,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=107, timestamp_value=SOME_TIME),
     AllTypesRowData(pkey=108, timestamp_value=NANO_TIME),
     AllTypesRowData(pkey=109, numeric_value=NUMERIC_1),
+    AllTypesRowData(pkey=110, json_value=JSON_1),
     # empty array values
     AllTypesRowData(pkey=201, int_array=[]),
     AllTypesRowData(pkey=202, bool_array=[]),
@@ -1119,6 +1143,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=206, string_array=[]),
     AllTypesRowData(pkey=207, timestamp_array=[]),
     AllTypesRowData(pkey=208, numeric_array=[]),
+    AllTypesRowData(pkey=209, json_array=[]),
     # non-empty array values, including nulls
     AllTypesRowData(pkey=301, int_array=[123, 456, None]),
     AllTypesRowData(pkey=302, bool_array=[True, False, None]),
@@ -1128,6 +1153,7 @@ ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=306, string_array=[u"One", u"Two", None]),
     AllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     AllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
+    AllTypesRowData(pkey=309, json_array=[JSON_1, JSON_2, None]),
 )
 EMULATOR_ALL_TYPES_ROWDATA = (
     # all nulls
@@ -2669,6 +2695,10 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
     @unittest.skipIf(USE_EMULATOR, "Skipping NUMERIC")
     def test_execute_sql_w_numeric_bindings(self):
         self._bind_test_helper(TypeCode.NUMERIC, NUMERIC_1, [NUMERIC_1, NUMERIC_2])
+    
+    @unittest.skipIf(USE_EMULATOR, "Skipping JSON")
+    def test_execute_sql_w_json_bindings(self):
+        self._bind_test_helper(TypeCode.JSON, JSON_1, [JSON_1, JSON_2])
 
     def test_execute_sql_w_query_param_struct(self):
         name = "Phred"

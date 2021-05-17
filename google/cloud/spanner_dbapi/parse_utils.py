@@ -16,6 +16,7 @@
 
 import datetime
 import decimal
+import json
 import re
 from functools import reduce
 
@@ -37,6 +38,7 @@ TYPES_MAP = {
     datetime.date: spanner.param_types.DATE,
     DateStr: spanner.param_types.DATE,
     TimestampStr: spanner.param_types.TIMESTAMP,
+    json: spanner.param_types.JSON,
 }
 
 SPANNER_RESERVED_KEYWORDS = {

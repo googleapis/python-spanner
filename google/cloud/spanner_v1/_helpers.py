@@ -17,6 +17,7 @@
 import datetime
 import decimal
 import math
+import json
 
 import six
 
@@ -130,6 +131,8 @@ def _make_value_pb(value):
         return Value(list_value=value)
     if isinstance(value, decimal.Decimal):
         return Value(string_value=str(value))
+    if isinstance(value, dict):
+        return Value(string_value=value)
     raise ValueError("Unknown type: %s" % (value,))
 
 
@@ -205,8 +208,10 @@ def _parse_value_pb(value_pb, field_type):
             _parse_value_pb(item_pb, field_type.struct_type.fields[i].type_)
             for (i, item_pb) in enumerate(value_pb.list_value.values)
         ]
-    elif field_type.code == TypeCode.NUMERIC:
+    elif type_code == TypeCode.NUMERIC:
         return decimal.Decimal(value_pb.string_value)
+    elif type_code == TypeCode.JSON:
+        return value_pb.string_value
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
 
