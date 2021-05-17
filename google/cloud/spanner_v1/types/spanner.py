@@ -51,7 +51,6 @@ __protobuf__ = proto.module(
         "ReadRequest",
         "BeginTransactionRequest",
         "CommitRequest",
-        "CommitResponse",
         "RollbackRequest",
     },
 )
@@ -252,10 +251,11 @@ class RequestOptions(proto.Message):
             used for statistics collection. Both request_tag and
             transaction_tag can be specified for a read or query that
             belongs to a transaction. This field is ignored for requests
-            where it's not applicable (e.g. CommitRequest).
-            ``request_tag`` must be a valid identifier of the form:
-            ``[a-zA-Z][a-zA-Z0-9_\-]`` between 2 and 64 characters in
-            length
+            where it's not applicable (e.g. CommitRequest). Legal
+            characters for ``request_tag`` values are all printable
+            characters (ASCII 32 - 126) and the length of a request_tag
+            is limited to 50 characters. Values that exceed this limit
+            are truncated.
         transaction_tag (str):
             A tag used for statistics collection about this transaction.
             Both request_tag and transaction_tag can be specified for a
@@ -263,8 +263,10 @@ class RequestOptions(proto.Message):
             transaction_tag should be the same for all requests
             belonging to the same transaction. If this request doesn’t
             belong to any transaction, transaction_tag will be ignored.
-            ``transaction_tag`` must be a valid identifier of the
-            format: ``[a-zA-Z][a-zA-Z0-9_\-]{0,49}``
+            Legal characters for ``transaction_tag`` values are all
+            printable characters (ASCII 32 - 126) and the length of a
+            transaction_tag is limited to 50 characters. Values that
+            exceed this limit are truncated.
     """
 
     class Priority(proto.Enum):
@@ -969,7 +971,7 @@ class BeginTransactionRequest(proto.Message):
         session (str):
             Required. The session in which the
             transaction runs.
-        options (google.cloud.spanner_v1.types.TransactionOptions):
+        options_ (google.cloud.spanner_v1.types.TransactionOptions):
             Required. Options for the new transaction.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request. Priority is ignored for
@@ -981,7 +983,7 @@ class BeginTransactionRequest(proto.Message):
 
     session = proto.Field(proto.STRING, number=1)
 
-    options = proto.Field(
+    options_ = proto.Field(
         proto.MESSAGE, number=2, message=gs_transaction.TransactionOptions,
     )
 
@@ -1037,44 +1039,6 @@ class CommitRequest(proto.Message):
     return_commit_stats = proto.Field(proto.BOOL, number=5)
 
     request_options = proto.Field(proto.MESSAGE, number=6, message="RequestOptions",)
-
-
-class CommitResponse(proto.Message):
-    r"""The response for [Commit][google.spanner.v1.Spanner.Commit].
-
-    Attributes:
-        commit_timestamp (google.protobuf.timestamp_pb2.Timestamp):
-            The Cloud Spanner timestamp at which the
-            transaction committed.
-        commit_stats (google.cloud.spanner_v1.types.CommitResponse.CommitStats):
-            The statistics about this Commit. Not returned by default.
-            For more information, see
-            [CommitRequest.return_commit_stats][google.spanner.v1.CommitRequest.return_commit_stats].
-    """
-
-    class CommitStats(proto.Message):
-        r"""Additional statistics about a commit.
-
-        Attributes:
-            mutation_count (int):
-                The total number of mutations for the transaction. Knowing
-                the ``mutation_count`` value can help you maximize the
-                number of mutations in a transaction and minimize the number
-                of API round trips. You can also monitor this value to
-                prevent transactions from exceeding the system
-                `limit <http://cloud.google.com/spanner/quotas#limits_for_creating_reading_updating_and_deleting_data>`__.
-                If the number of mutations exceeds the limit, the server
-                returns
-                `INVALID_ARGUMENT <http://cloud.google.com/spanner/docs/reference/rest/v1/Code#ENUM_VALUES.INVALID_ARGUMENT>`__.
-        """
-
-        mutation_count = proto.Field(proto.INT64, number=1)
-
-    commit_timestamp = proto.Field(
-        proto.MESSAGE, number=1, message=timestamp.Timestamp,
-    )
-
-    commit_stats = proto.Field(proto.MESSAGE, number=2, message=CommitStats,)
 
 
 class RollbackRequest(proto.Message):
