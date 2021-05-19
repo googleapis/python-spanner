@@ -207,7 +207,7 @@ class Test_make_value_pb(unittest.TestCase):
         value_pb = self._callFUT(now)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, datetime_helpers.to_rfc3339(now))
-    
+
     def test_w_timestamp_w_tz(self):
         import datetime
         import pytz
