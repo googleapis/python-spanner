@@ -131,8 +131,6 @@ def _make_value_pb(value):
         return Value(list_value=value)
     if isinstance(value, decimal.Decimal):
         return Value(string_value=str(value))
-    if isinstance(value, dict):
-        return Value(string_value=value)
     raise ValueError("Unknown type: %s" % (value,))
 
 

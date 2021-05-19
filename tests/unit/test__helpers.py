@@ -236,7 +236,7 @@ class Test_make_value_pb(unittest.TestCase):
         value = json.dumps({
             "id" : 27863,
             "Name" : "Anamika"
-        })
+        }, sort_keys=True, separators=(',', ':'))
         value_pb = self._callFUT(value)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, value)
@@ -511,7 +511,7 @@ class Test_parse_value_pb(unittest.TestCase):
         VALUE = json.dumps({
             "id" : 27863,
             "Name" : "Anamika"
-        })
+        }, sort_keys=True, separators=(',', ':'))
         field_type = Type(code=TypeCode.JSON)
         value_pb = Value(string_value=VALUE)
 

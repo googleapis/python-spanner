@@ -1075,18 +1075,18 @@ BYTES_2 = b"Ym9vdHM="
 NUMERIC_1 = decimal.Decimal("0.123456789")
 NUMERIC_2 = decimal.Decimal("1234567890")
 JSON_1 = json.dumps({
-        "sample_string" : "abcdef",
-        "sample_int" : 872163,
+        "sample_array" : [23, 76, 19],
         "sample_boolean" : True,
+        "sample_int" : 872163,
         "sample_null" : None,
-        "sample_array" :[23, 76, 19]
-    })
+        "sample_string" : "abcdef",
+    }, sort_keys=True, separators=(',', ':'))
 JSON_2 = json.dumps({
     "sample_object" : {
             "name" : "Anamika",
             "id" : 2635
         }
-    })
+    }, sort_keys=True, separators=(',', ':'))
 
 ALL_TYPES_TABLE = "all_types"
 ALL_TYPES_COLUMNS = (
