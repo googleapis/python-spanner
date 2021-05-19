@@ -33,6 +33,7 @@ class TestParseUtils(unittest.TestCase):
         cases = (
             ("SELECT 1", STMT_NON_UPDATING),
             ("SELECT s.SongName FROM Songs AS s", STMT_NON_UPDATING),
+            ("(SELECT s.SongName FROM Songs AS s)", STMT_NON_UPDATING),
             (
                 "WITH sq AS (SELECT SchoolID FROM Roster) SELECT * from sq",
                 STMT_NON_UPDATING,
@@ -254,8 +255,6 @@ class TestParseUtils(unittest.TestCase):
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):
-        import decimal
-
         from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 
         cases = [
@@ -299,16 +298,6 @@ class TestParseUtils(unittest.TestCase):
                 # since it might be useful to pass to the next user.
                 ("SELECT * from t WHERE id=10", {"f1": "app", "f2": "name"}),
                 ("SELECT * from t WHERE id=10", {"f1": "app", "f2": "name"}),
-            ),
-            (
-                (
-                    "SELECT (an.p + %s) AS np FROM an WHERE (an.p + %s) = %s",
-                    (1, 1.0, decimal.Decimal("31")),
-                ),
-                (
-                    "SELECT (an.p + @a0) AS np FROM an WHERE (an.p + @a1) = @a2",
-                    {"a0": 1, "a1": 1.0, "a2": decimal.Decimal("31")},
-                ),
             ),
         ]
         for ((sql_in, params), sql_want) in cases:
