@@ -14,7 +14,6 @@
 
 """Wrapper for streaming results."""
 
-from google.cloud.spanner_v1.param_types import JSON, NUMERIC
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
 from google.cloud import exceptions
@@ -316,8 +315,6 @@ _MERGE_BY_TYPE = {
     TypeCode.STRING: _merge_string,
     TypeCode.STRUCT: _merge_struct,
     TypeCode.TIMESTAMP: _merge_string,
-    TypeCode.NUMERIC: _merge_string,
-    TypeCode.JSON: _merge_string
 }
 
 

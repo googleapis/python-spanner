@@ -45,10 +45,7 @@ CREATE TABLE all_types (
     timestamp_value TIMESTAMP,
     timestamp_array ARRAY<TIMESTAMP>,
     numeric_value NUMERIC,
-    numeric_array ARRAY<NUMERIC>,
-    json_value JSON,
-    json_array ARRAY<JSON>,
-    )
+    numeric_array ARRAY<NUMERIC>)
     PRIMARY KEY (pkey);
 CREATE TABLE counters (
     name STRING(1024),

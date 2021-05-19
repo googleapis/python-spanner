@@ -28,7 +28,6 @@ FLOAT64 = Type(code=TypeCode.FLOAT64)
 DATE = Type(code=TypeCode.DATE)
 TIMESTAMP = Type(code=TypeCode.TIMESTAMP)
 NUMERIC = Type(code=TypeCode.NUMERIC)
-JSON = Type(code=TypeCode.JSON)
 
 
 def Array(element_type):  # pylint: disable=invalid-name
