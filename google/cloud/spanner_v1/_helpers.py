@@ -17,6 +17,7 @@
 import datetime
 import decimal
 import math
+import json
 
 import six
 
@@ -207,6 +208,8 @@ def _parse_value_pb(value_pb, field_type):
         ]
     elif type_code == TypeCode.NUMERIC:
         return decimal.Decimal(value_pb.string_value)
+    elif type_code == TypeCode.JSON:
+        return value_pb.string_value
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
 
