@@ -287,13 +287,13 @@ class Test_make_value_pb(unittest.TestCase):
         import json
         from google.protobuf.struct_pb2 import Value
 
-        value = json.dumps({
-            "id" : 27863,
-            "Name" : "Anamika"
-        }, sort_keys=True, separators=(',', ':'))
+        value = json.dumps(
+            {"id": 27863, "Name": "Anamika"}, sort_keys=True, separators=(",", ":")
+        )
         value_pb = self._callFUT(value)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, value)
+
 
 class Test_make_list_value_pb(unittest.TestCase):
     def _callFUT(self, *args, **kw):
@@ -557,10 +557,9 @@ class Test_parse_value_pb(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        VALUE = json.dumps({
-            "id" : 27863,
-            "Name" : "Anamika"
-        }, sort_keys=True, separators=(',', ':'))
+        VALUE = json.dumps(
+            {"id": 27863, "Name": "Anamika"}, sort_keys=True, separators=(",", ":")
+        )
         field_type = Type(code=TypeCode.JSON)
         value_pb = Value(string_value=VALUE)
 
