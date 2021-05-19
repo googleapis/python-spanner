@@ -55,7 +55,6 @@ from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
 
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
-STAGING_API_ENDPOINT = os.getenv("SPANNER_STAGING_HOST_API_ENDPOINT") or None
 USE_EMULATOR = os.getenv("SPANNER_EMULATOR_HOST") is not None
 SKIP_BACKUP_TESTS = os.getenv("SKIP_BACKUP_TESTS") is not None
 SPANNER_OPERATION_TIMEOUT_IN_SECONDS = int(
@@ -113,12 +112,7 @@ def setUpModule():
             project=emulator_project, credentials=AnonymousCredentials()
         )
     else:
-         if STAGING_API_ENDPOINT:
-                Config.CLIENT = Client(
-                client_options={"api_endpoint": STAGING_API_ENDPOINT}
-            )
-         else:
-                Config.CLIENT = Client()
+        Config.CLIENT = Client()
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
@@ -1075,11 +1069,12 @@ BYTES_2 = b"Ym9vdHM="
 NUMERIC_1 = decimal.Decimal("0.123456789")
 NUMERIC_2 = decimal.Decimal("1234567890")
 JSON_1 = json.dumps({
-        "sample_array" : [23, 76, 19],
         "sample_boolean" : True,
         "sample_int" : 872163,
+        "sample float" : 7871.298,
         "sample_null" : None,
         "sample_string" : "abcdef",
+        "sample_array" : [23, 76, 19],
     }, sort_keys=True, separators=(',', ':'))
 JSON_2 = json.dumps({
     "sample_object" : {
