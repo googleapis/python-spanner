@@ -20,6 +20,7 @@ from google.cloud import exceptions
 from google.cloud.spanner_v1 import PartialResultSet
 from google.cloud.spanner_v1 import ResultSetMetadata
 from google.cloud.spanner_v1 import TypeCode
+from google.cloud.spanner_v1 import _pandas_helpers
 import six
 
 # pylint: disable=ungrouped-imports
@@ -150,13 +151,20 @@ class StreamedResultSet(object):
             except StopIteration:
                 return
 
+    def to_dataframe(self):
+        """Creates a pandas DataFrame of all rows in the result set
+
+        :rtype: pandas.DataFrame
+        :returns: DataFrame created from the result set
+        """
+        return _pandas_helpers.to_dataframe(self)
+
     def one(self):
         """Return exactly one result, or raise an exception.
 
         :raises: :exc:`NotFound`: If there are no results.
         :raises: :exc:`ValueError`: If there are multiple results.
-        :raises: :exc:`RuntimeError`: If consumption has already occurred,
-            in whole or in part.
+        :raises: :exc:`RuntimeError`: If consumption has already occurred,in whole or in part.
         """
         answer = self.one_or_none()
         if answer is None:

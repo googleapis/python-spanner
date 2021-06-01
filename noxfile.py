@@ -112,7 +112,7 @@ def default(session):
         *session.posargs,
     )
 
-    session.install("-e", ".[tracing]", "-c", constraints_path)
+    session.install("-e", ".[pandas,tracing]", "-c", constraints_path)
 
     # Run py.test against the unit tests with OpenTelemetry.
     session.run(
@@ -168,7 +168,7 @@ def system(session):
     # Install all test dependencies, then install this package into the
     # virtualenv's dist-packages.
     session.install("mock", "pytest", "google-cloud-testutils", "-c", constraints_path)
-    session.install("-e", ".[tracing]", "-c", constraints_path)
+    session.install("-e", ".[pandas,tracing]", "-c", constraints_path)
 
     # Run py.test against the system tests.
     if system_test_exists:

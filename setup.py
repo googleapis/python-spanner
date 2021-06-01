@@ -36,12 +36,13 @@ dependencies = [
     "sqlparse >= 0.3.0",
 ]
 extras = {
+    "libcst": "libcst >= 0.2.5",
+    "pandas": ["pandas >= 0.25.3"],
     "tracing": [
         "opentelemetry-api >= 0.11b0",
         "opentelemetry-sdk >= 0.11b0",
         "opentelemetry-instrumentation >= 0.11b0",
     ],
-    "libcst": "libcst >= 0.2.5",
 }
 
 

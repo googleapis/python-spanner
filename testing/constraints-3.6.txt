@@ -9,6 +9,7 @@ google-api-core==1.22.2
 google-cloud-core==1.4.1
 grpc-google-iam-v1==0.12.3
 libcst==0.2.5
+pandas==0.25.3
 proto-plus==1.13.0
 sqlparse==0.3.0
 opentelemetry-api==0.11b0
