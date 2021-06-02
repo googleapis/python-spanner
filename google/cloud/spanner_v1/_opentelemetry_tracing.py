@@ -21,8 +21,7 @@ from google.cloud.spanner_v1 import SpannerClient
 
 try:
     from opentelemetry import trace
-    from opentelemetry.trace.status import Status, StatusCanonicalCode
-    from opentelemetry.instrumentation.utils import http_status_to_canonical_code
+    from opentelemetry.trace.status import Status, StatusCode
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
@@ -55,11 +54,6 @@ def trace_call(name, session, extra_attributes=None):
         try:
             yield span
         except GoogleAPICallError as error:
-            if error.code is not None:
-                span.set_status(Status(http_status_to_canonical_code(error.code)))
-            elif error.grpc_status_code is not None:
-                span.set_status(
-                    # OpenTelemetry's StatusCanonicalCode maps 1-1 with grpc status codes
-                    Status(StatusCanonicalCode(error.grpc_status_code.value[0]))
-                )
+            if error.code is not None or error.grpc_status_code is not None:
+                span.set_status(Status(StatusCode.ERROR))
             raise

@@ -5,7 +5,7 @@ import sys
 
 try:
     from opentelemetry import trace as trace_api
-    from opentelemetry.trace.status import StatusCanonicalCode
+    from opentelemetry.trace.status import StatusCode
 except ImportError:
     pass
 
@@ -75,7 +75,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
             self.assertEqual(span.attributes, expected_attributes)
             self.assertEqual(span.name, "CloudSpanner.Test")
-            self.assertEqual(span.status.canonical_code, StatusCanonicalCode.OK)
+            self.assertEqual(span.status.status_code, StatusCode.OK)
 
         def test_trace_error(self):
             extra_attributes = {"db.instance": "database_name"}
@@ -101,9 +101,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
             self.assertEqual(dict(span.attributes), expected_attributes)
             self.assertEqual(span.name, "CloudSpanner.Test")
-            self.assertEqual(
-                span.status.canonical_code, StatusCanonicalCode.INVALID_ARGUMENT
-            )
+            self.assertEqual(span.status.status_code, StatusCode.ERROR)
 
         def test_trace_grpc_error(self):
             extra_attributes = {"db.instance": "database_name"}
@@ -126,7 +124,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.memory_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
-            self.assertEqual(span.status.canonical_code, StatusCanonicalCode.DATA_LOSS)
+            self.assertEqual(span.status.status_code, StatusCode.ERROR)
 
         def test_trace_codeless_error(self):
             extra_attributes = {"db.instance": "database_name"}
@@ -147,4 +145,4 @@ if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.memory_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
-            self.assertEqual(span.status.canonical_code, StatusCanonicalCode.UNKNOWN)
+            self.assertEqual(span.status.status_code, StatusCode.ERROR)
