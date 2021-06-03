@@ -25,47 +25,46 @@ common = gcp.CommonTemplates()
 spanner_default_version = pathlib.Path("spanner/v1")
 spanner_admin_instance_default_version = pathlib.Path("spanner_admin_instance/v1")
 spanner_admin_database_default_version = pathlib.Path("spanner_admin_database/v1")
-staging_dir = 'owl-bot-staging'
 
-for library in s.get_staging_dirs(spanner_default_version):
-    if library == staging_dir / spanner_default_version:
-        # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
-        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-                r""".
+staging_dir = pathlib.Path('owl-bot-staging')
+
+if staging_dir.is_dir():
+    library = staging_dir / spanner_default_version
+    # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
+    s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+            r""".
+Attributes:""",
+            r""".\n
+Attributes:""",
+    )
+
+    # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
+    s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+            r""".
     Attributes:""",
-                r""".\n
+            r""".\n
     Attributes:""",
-        )
+    )
 
-        # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
-        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-                r""".
-        Attributes:""",
-                r""".\n
-        Attributes:""",
-        )
+    # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
+    s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        """\n    ==.*?==\n""",
+        ":",
+    )
 
-        # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
-        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-            """\n    ==.*?==\n""",
-            ":",
-        )
+    # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
+    s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        """\n    --.*?--\n""",
+        ":",
+    )
 
-        # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
-        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-            """\n    --.*?--\n""",
-            ":",
-        )
+    s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
 
-        s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
+    library = staging_dir / spanner_admin_instance_default_version
+    s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
 
-for library in s.get_staging_dirs(spanner_admin_instance_default_version):
-    if library == staging_dir / spanner_admin_instance_default_version:
-        s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
-
-for library in s.get_staging_dirs(spanner_admin_database_default_version):
-    if library == staging_dir / spanner_admin_database_default_version:
-        s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
+    library = staging_dir / spanner_admin_database_default_version
+    s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
 
 s.remove_staging_dirs()
 
