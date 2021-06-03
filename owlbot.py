@@ -13,26 +13,30 @@
 # limitations under the License.
 
 """This script is used to synthesize generated parts of this library."""
+
+import pathlib
+
 import synthtool as s
 from synthtool import gcp
 from synthtool.languages import python
 
 common = gcp.CommonTemplates()
 
-spanner_default_version = "v1"
-spanner_admin_instance_default_version = "v1"
-spanner_admin_database_default_version = "v1"
+spanner_default_version = pathlib.Path("spanner/v1")
+spanner_admin_instance_default_version = pathlib.Path("spanner_admin_instance/v1")
+spanner_admin_database_default_version = pathlib.Path("spanner_admin_database/v1")
+staging_dir = 'owl-bot-staging'
 
 for library in s.get_staging_dirs(spanner_default_version):
-    if library.parent.absolute() == "spanner":
+    if library == staging_dir / spanner_default_version:
         s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
 
 for library in s.get_staging_dirs(spanner_admin_instance_default_version):
-    if library.parent.absolute() == "spanner_admin_instance":
+    if library == staging_dir / spanner_admin_instance_default_version:
         s.move(library, excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"])
 
 for library in s.get_staging_dirs(spanner_admin_database_default_version):
-    if library.parent.absolute() == "spanner_admin_database":
+    if library == staging_dir / spanner_admin_database_default_version:
         s.move(library, excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"])
 
 s.remove_staging_dirs()
