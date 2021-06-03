@@ -17,7 +17,7 @@ import google.api_core.gapic_v1.method
 import mock
 from tests._helpers import (
     OpenTelemetryBase,
-    StatusCanonicalCode,
+    StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
 )
 
@@ -192,7 +192,7 @@ class TestSession(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.CreateSession",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=TestSession.BASE_ATTRIBUTES,
         )
 
@@ -311,7 +311,7 @@ class TestSession(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=TestSession.BASE_ATTRIBUTES,
         )
 
@@ -427,7 +427,7 @@ class TestSession(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.DeleteSession",
-            status=StatusCanonicalCode.NOT_FOUND,
+            status=StatusCode.ERROR,
             attributes=TestSession.BASE_ATTRIBUTES,
         )
 
@@ -451,7 +451,7 @@ class TestSession(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.DeleteSession",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=TestSession.BASE_ATTRIBUTES,
         )
 

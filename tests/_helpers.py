@@ -21,7 +21,6 @@ class OpenTelemetryBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         if HAS_OPENTELEMETRY_INSTALLED:
-            cls.original_tracer_provider = trace_api.get_tracer_provider()
             cls.tracer_provider = TracerProvider()
             cls.memory_exporter = InMemorySpanExporter()
             cls.span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
@@ -31,7 +30,6 @@ class OpenTelemetryBase(unittest.TestCase):
     def tearDown(self):
         if HAS_OPENTELEMETRY_INSTALLED:
             self.memory_exporter.clear()
-            trace_api.set_tracer_provider(self.original_tracer_provider)
 
     def assertNoSpans(self):
         if HAS_OPENTELEMETRY_INSTALLED:
@@ -48,5 +46,5 @@ class OpenTelemetryBase(unittest.TestCase):
                 span = span_list[0]
 
             self.assertEqual(span.name, name)
-            self.assertEqual(span.status.canonical_code, status)
+            self.assertEqual(span.status.status_code, status)
             self.assertEqual(dict(span.attributes), attributes)
