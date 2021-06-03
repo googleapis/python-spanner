@@ -29,6 +29,34 @@ staging_dir = 'owl-bot-staging'
 
 for library in s.get_staging_dirs(spanner_default_version):
     if library == staging_dir / spanner_default_version:
+        # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
+        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+                r""".
+    Attributes:""",
+                r""".\n
+    Attributes:""",
+        )
+
+        # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
+        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+                r""".
+        Attributes:""",
+                r""".\n
+        Attributes:""",
+        )
+
+        # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
+        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+            """\n    ==.*?==\n""",
+            ":",
+        )
+
+        # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
+        s.replace(library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+            """\n    --.*?--\n""",
+            ":",
+        )
+
         s.move(library, excludes=["google/cloud/spanner/**", "*.*", "docs/index.rst", "google/cloud/spanner_v1/__init__.py"])
 
 for library in s.get_staging_dirs(spanner_admin_instance_default_version):
