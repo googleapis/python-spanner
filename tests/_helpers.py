@@ -3,7 +3,7 @@ import mock
 
 try:
     from opentelemetry import trace as trace_api
-    from opentelemetry.trace.status import StatusCanonicalCode
+    from opentelemetry.trace.status import StatusCode
 
     from opentelemetry.sdk.trace import TracerProvider, export
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
@@ -14,21 +14,23 @@ try:
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
 
-    StatusCanonicalCode = mock.Mock()
+    StatusCode = mock.Mock()
 
 
 class OpenTelemetryBase(unittest.TestCase):
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         if HAS_OPENTELEMETRY_INSTALLED:
-            self.original_tracer_provider = trace_api.get_tracer_provider()
-            self.tracer_provider = TracerProvider()
-            self.memory_exporter = InMemorySpanExporter()
-            span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
-            self.tracer_provider.add_span_processor(span_processor)
-            trace_api.set_tracer_provider(self.tracer_provider)
+            cls.original_tracer_provider = trace_api.get_tracer_provider()
+            cls.tracer_provider = TracerProvider()
+            cls.memory_exporter = InMemorySpanExporter()
+            cls.span_processor = export.SimpleSpanProcessor(cls.memory_exporter)
+            cls.tracer_provider.add_span_processor(cls.span_processor)
+            trace_api.set_tracer_provider(cls.tracer_provider)
 
     def tearDown(self):
         if HAS_OPENTELEMETRY_INSTALLED:
+            self.memory_exporter.clear()
             trace_api.set_tracer_provider(self.original_tracer_provider)
 
     def assertNoSpans(self):
@@ -37,7 +39,7 @@ class OpenTelemetryBase(unittest.TestCase):
             self.assertEqual(len(span_list), 0)
 
     def assertSpanAttributes(
-        self, name, status=StatusCanonicalCode.OK, attributes=None, span=None
+        self, name, status=StatusCode.OK, attributes=None, span=None
     ):
         if HAS_OPENTELEMETRY_INSTALLED:
             if not span:

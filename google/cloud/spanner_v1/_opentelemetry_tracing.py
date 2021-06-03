@@ -52,8 +52,9 @@ def trace_call(name, session, extra_attributes=None):
         name, kind=trace.SpanKind.CLIENT, attributes=attributes
     ) as span:
         try:
+            span.set_status(Status(StatusCode.OK))
             yield span
         except GoogleAPICallError as error:
-            if error.code is not None or error.grpc_status_code is not None:
-                span.set_status(Status(StatusCode.ERROR))
+            span.set_status(Status(StatusCode.ERROR))
+            span.record_exception(error)
             raise
