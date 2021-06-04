@@ -296,7 +296,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             self.assertEqual(len(restart.mock_calls), 2)
             self.assertEqual(request.resume_token, RESUME_TOKEN)
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 2)
             for span in span_list:
                 self.assertEqual(span.name, name)
