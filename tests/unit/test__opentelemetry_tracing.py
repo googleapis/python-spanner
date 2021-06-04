@@ -69,7 +69,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
 
             expected_attributes["after_setup_attribute"] = 1
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
             self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
@@ -95,7 +95,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
 
                     raise _make_rpc_error(InvalidArgument)
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
             self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
@@ -121,7 +121,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
 
                     raise DataLoss("error")
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
             self.assertEqual(span.status.status_code, StatusCode.ERROR)
@@ -142,7 +142,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 ) as span:
                     raise GoogleAPICallError("error")
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 1)
             span = span_list[0]
             self.assertEqual(span.status.status_code, StatusCode.ERROR)
