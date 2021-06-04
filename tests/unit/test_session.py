@@ -30,11 +30,6 @@ def _make_rpc_error(error_cls, trailing_metadata=None):
     return error_cls("error", errors=(grpc_error,))
 
 
-class _ConstantTime:
-    def time(self):
-        return 1
-
-
 class TestSession(OpenTelemetryBase):
 
     PROJECT_ID = "project-id"
@@ -1189,17 +1184,9 @@ class TestSession(OpenTelemetryBase):
             return _results.pop(0)
 
         with mock.patch("time.time", _time):
-            if HAS_OPENTELEMETRY_INSTALLED:
-                with mock.patch("opentelemetry.util.time", _ConstantTime()):
-                    with mock.patch("time.sleep") as sleep_mock:
-                        with self.assertRaises(Aborted):
-                            session.run_in_transaction(
-                                unit_of_work, "abc", timeout_secs=1
-                            )
-            else:
-                with mock.patch("time.sleep") as sleep_mock:
-                    with self.assertRaises(Aborted):
-                        session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
+            with mock.patch("time.sleep") as sleep_mock:
+                with self.assertRaises(Aborted):
+                    session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
 
         sleep_mock.assert_not_called()
 
@@ -1262,15 +1249,9 @@ class TestSession(OpenTelemetryBase):
             return _results.pop(0)
 
         with mock.patch("time.time", _time):
-            if HAS_OPENTELEMETRY_INSTALLED:
-                with mock.patch("opentelemetry.util.time", _ConstantTime()):
-                    with mock.patch("time.sleep") as sleep_mock:
-                        with self.assertRaises(Aborted):
-                            session.run_in_transaction(unit_of_work, timeout_secs=8)
-            else:
-                with mock.patch("time.sleep") as sleep_mock:
-                    with self.assertRaises(Aborted):
-                        session.run_in_transaction(unit_of_work, timeout_secs=8)
+            with mock.patch("time.sleep") as sleep_mock:
+                with self.assertRaises(Aborted):
+                    session.run_in_transaction(unit_of_work, timeout_secs=8)
 
         # unpacking call args into list
         call_args = [call_[0][0] for call_ in sleep_mock.call_args_list]
