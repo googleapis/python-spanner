@@ -190,10 +190,10 @@ class TestClient(unittest.TestCase):
             expected_query_options=expected_query_options,
         )
 
-    @mock.patch("google.cloud.spanner_v1.client._get_spanner_optimizer_version")
     @mock.patch(
         "google.cloud.spanner_v1.client._get_spanner_optimizer_statistics_package"
     )
+    @mock.patch("google.cloud.spanner_v1.client._get_spanner_optimizer_version")
     def test_constructor_custom_query_options_env_config(self, mock_ver, mock_stats):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
         from google.cloud.spanner_v1 import client as MUT
