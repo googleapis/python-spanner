@@ -39,7 +39,7 @@ extras = {
     "tracing": [
         "opentelemetry-api >= 1.1.0",
         "opentelemetry-sdk >= 1.1.0",
-        "opentelemetry-instrumentation >= 0.22b0",
+        "opentelemetry-instrumentation >= 0.20b0",
     ],
     "libcst": "libcst >= 0.2.5",
 }
