@@ -328,9 +328,12 @@ class Session(object):
 
         :type kw: dict
         :param kw: (Optional) keyword arguments to be passed to ``func``.
-                   If passed, "timeout_secs" will be removed and used to
+                   If passed:
+                   "timeout_secs" will be removed and used to
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
+                   "commit_request_options" will be removed and used to set the
+                   request_options which defines the common options for requests.
 
         :rtype: Any
         :returns: The return value of ``func``.

@@ -58,9 +58,9 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
 )
 from google.cloud.spanner_v1.table import Table
+from google.cloud.spanner_v1.types import RequestOptions
 
 # pylint: enable=ungrouped-imports
-from google.cloud.spanner_v1.types import RequestOptions
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 
@@ -582,6 +582,13 @@ class Database(object):
 
         The wrapper *must* be used as a context manager, with the batch
         as the value returned by the wrapper.
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper

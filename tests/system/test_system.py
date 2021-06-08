@@ -43,13 +43,13 @@ from google.cloud.spanner_v1 import KeySet
 from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.table import Table
+from google.cloud.spanner_v1.types import RequestOptions
 
 from test_utils.retry import RetryErrors
 from test_utils.retry import RetryInstanceState
 from test_utils.retry import RetryResult
 from test_utils.system import unique_resource_id
 
-from google.cloud.spanner_v1.types import RequestOptions
 from tests._fixtures import DDL_STATEMENTS
 from tests._fixtures import EMULATOR_DDL_STATEMENTS
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
