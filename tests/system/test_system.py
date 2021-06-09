@@ -1740,6 +1740,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         retry = RetryInstanceState(_has_all_ddl)
         retry(self._db.reload)()
 
+        if HAS_OPENTELEMETRY_INSTALLED:
+            self.ot_exporter.clear()  # Clear any ot spans from above steps.
+
         session = self._db.session()
         session.create()
         self.to_delete.append(session)
