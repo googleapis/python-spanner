@@ -586,7 +586,7 @@ class Database(object):
         :type request_options:
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
-                (Optional) Common options for this request.
+                (Optional) Common options for the commit request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
