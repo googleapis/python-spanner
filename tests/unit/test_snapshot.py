@@ -19,7 +19,7 @@ import mock
 from google.cloud.spanner_v1.types import RequestOptions
 from tests._helpers import (
     OpenTelemetryBase,
-    StatusCanonicalCode,
+    StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
 )
 from google.cloud.spanner_v1.param_types import INT64
@@ -49,10 +49,12 @@ BASE_ATTRIBUTES = {
 
 
 class Test_restart_on_unavailable(OpenTelemetryBase):
-    def _call_fut(self, restart, span_name=None, session=None, attributes=None):
+    def _call_fut(
+        self, restart, request, span_name=None, session=None, attributes=None
+    ):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 
-        return _restart_on_unavailable(restart, span_name, session, attributes)
+        return _restart_on_unavailable(restart, request, span_name, session, attributes)
 
     def _make_item(self, value, resume_token=b""):
         return mock.Mock(
@@ -61,18 +63,21 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def test_iteration_w_empty_raw(self):
         raw = _MockIterator()
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), [])
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_non_empty_raw(self):
         ITEMS = (self._make_item(0), self._make_item(1))
         raw = _MockIterator(*ITEMS)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
-        restart.assert_called_once_with()
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_raw_w_resume_tken(self):
@@ -83,10 +88,11 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             self._make_item(3),
         )
         raw = _MockIterator(*ITEMS)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
-        restart.assert_called_once_with()
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_no_token(self):
@@ -99,10 +105,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         )
         before = _MockIterator(fail_after=True, error=ServiceUnavailable("testing"))
         after = _MockIterator(*ITEMS)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
-        self.assertEqual(restart.mock_calls, [mock.call(), mock.call(resume_token=b"")])
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, b"")
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_no_token(self):
@@ -120,10 +128,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             ),
         )
         after = _MockIterator(*ITEMS)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(ITEMS))
-        self.assertEqual(restart.mock_calls, [mock.call(), mock.call(resume_token=b"")])
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, b"")
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_non_retryable_internal_error_no_token(self):
@@ -136,11 +146,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         )
         before = _MockIterator(fail_after=True, error=InternalServerError("testing"))
         after = _MockIterator(*ITEMS)
+        request = mock.Mock(spec=["resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        self.assertEqual(restart.mock_calls, [mock.call()])
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable(self):
@@ -153,12 +164,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
         )
         after = _MockIterator(*LAST)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + LAST))
-        self.assertEqual(
-            restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-        )
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error(self):
@@ -175,12 +186,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             )
         )
         after = _MockIterator(*LAST)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + LAST))
-        self.assertEqual(
-            restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-        )
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_non_retryable_internal_error(self):
@@ -193,11 +204,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *(FIRST + SECOND), fail_after=True, error=InternalServerError("testing")
         )
         after = _MockIterator(*LAST)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        self.assertEqual(restart.mock_calls, [mock.call()])
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_after_token(self):
@@ -209,12 +221,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *FIRST, fail_after=True, error=ServiceUnavailable("testing")
         )
         after = _MockIterator(*SECOND)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
-        self.assertEqual(
-            restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-        )
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_after_token(self):
@@ -230,12 +242,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             )
         )
         after = _MockIterator(*SECOND)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
-        self.assertEqual(
-            restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-        )
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_non_retryable_internal_error_after_token(self):
@@ -247,19 +259,23 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             *FIRST, fail_after=True, error=InternalServerError("testing")
         )
         after = _MockIterator(*SECOND)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
-        resumable = self._call_fut(restart)
+        resumable = self._call_fut(restart, request)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        self.assertEqual(restart.mock_calls, [mock.call()])
+        restart.assert_called_once_with(request=request)
         self.assertNoSpans()
 
     def test_iteration_w_span_creation(self):
         name = "TestSpan"
         extra_atts = {"test_att": 1}
         raw = _MockIterator()
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
-        resumable = self._call_fut(restart, name, _Session(_Database()), extra_atts)
+        resumable = self._call_fut(
+            restart, request, name, _Session(_Database()), extra_atts
+        )
         self.assertEqual(list(resumable), [])
         self.assertSpanAttributes(name, attributes=dict(BASE_ATTRIBUTES, test_att=1))
 
@@ -274,15 +290,15 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
             )
             after = _MockIterator(*LAST)
+            request = mock.Mock(test="test", spec=["test", "resume_token"])
             restart = mock.Mock(spec=[], side_effect=[before, after])
             name = "TestSpan"
-            resumable = self._call_fut(restart, name, _Session(_Database()))
+            resumable = self._call_fut(restart, request, name, _Session(_Database()))
             self.assertEqual(list(resumable), list(FIRST + LAST))
-            self.assertEqual(
-                restart.mock_calls, [mock.call(), mock.call(resume_token=RESUME_TOKEN)]
-            )
+            self.assertEqual(len(restart.mock_calls), 2)
+            self.assertEqual(request.resume_token, RESUME_TOKEN)
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 2)
             for span in span_list:
                 self.assertEqual(span.name, name)
@@ -372,7 +388,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadOnlyTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -554,7 +570,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadWriteTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
@@ -698,7 +714,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadWriteTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
@@ -821,7 +837,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadOnlyTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -852,7 +868,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadOnlyTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -958,7 +974,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
@@ -976,7 +992,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
@@ -1305,7 +1321,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=BASE_ATTRIBUTES,
         )
 
@@ -1342,7 +1358,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
 
@@ -1376,7 +1392,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
 

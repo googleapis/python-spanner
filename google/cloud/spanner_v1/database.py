@@ -534,11 +534,11 @@ class Database(object):
                     query_options=query_options,
                     request_options=request_options,
                 )
-                restart = functools.partial(
-                    api.execute_streaming_sql, request=request, metadata=metadata,
+                method = functools.partial(
+                    api.execute_streaming_sql, metadata=metadata,
                 )
 
-                iterator = _restart_on_unavailable(restart)
+                iterator = _restart_on_unavailable(method, request)
 
                 result_set = StreamedResultSet(iterator)
                 list(result_set)  # consume all partials

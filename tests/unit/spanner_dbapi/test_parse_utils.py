@@ -33,6 +33,7 @@ class TestParseUtils(unittest.TestCase):
         cases = (
             ("SELECT 1", STMT_NON_UPDATING),
             ("SELECT s.SongName FROM Songs AS s", STMT_NON_UPDATING),
+            ("(SELECT s.SongName FROM Songs AS s)", STMT_NON_UPDATING),
             (
                 "WITH sq AS (SELECT SchoolID FROM Roster) SELECT * from sq",
                 STMT_NON_UPDATING,
@@ -254,8 +255,6 @@ class TestParseUtils(unittest.TestCase):
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):
-        import decimal
-
         from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 
         cases = [
@@ -300,16 +299,6 @@ class TestParseUtils(unittest.TestCase):
                 ("SELECT * from t WHERE id=10", {"f1": "app", "f2": "name"}),
                 ("SELECT * from t WHERE id=10", {"f1": "app", "f2": "name"}),
             ),
-            (
-                (
-                    "SELECT (an.p + %s) AS np FROM an WHERE (an.p + %s) = %s",
-                    (1, 1.0, decimal.Decimal("31")),
-                ),
-                (
-                    "SELECT (an.p + @a0) AS np FROM an WHERE (an.p + @a1) = @a2",
-                    {"a0": 1, "a1": 1.0, "a2": str(31)},
-                ),
-            ),
         ]
         for ((sql_in, params), sql_want) in cases:
             with self.subTest(sql=sql_in):
@@ -339,20 +328,10 @@ class TestParseUtils(unittest.TestCase):
                     lambda: sql_pyformat_args_to_spanner(sql, params),
                 )
 
-    def test_cast_for_spanner(self):
-        import decimal
-
-        from google.cloud.spanner_dbapi.parse_utils import cast_for_spanner
-
-        dec = 3
-        value = decimal.Decimal(dec)
-        self.assertEqual(cast_for_spanner(value), str(dec))
-        self.assertEqual(cast_for_spanner(5), 5)
-        self.assertEqual(cast_for_spanner("string"), "string")
-
     @unittest.skipIf(skip_condition, skip_message)
     def test_get_param_types(self):
         import datetime
+        import decimal
 
         from google.cloud.spanner_dbapi.parse_utils import DateStr
         from google.cloud.spanner_dbapi.parse_utils import TimestampStr
@@ -369,6 +348,7 @@ class TestParseUtils(unittest.TestCase):
             "h1": datetime.date(2011, 9, 1),
             "i1": b"bytes",
             "j1": None,
+            "k1": decimal.Decimal("3.194387483193242e+19"),
         }
         want_types = {
             "a1": param_types.INT64,
@@ -380,6 +360,7 @@ class TestParseUtils(unittest.TestCase):
             "g1": param_types.TIMESTAMP,
             "h1": param_types.DATE,
             "i1": param_types.BYTES,
+            "k1": param_types.NUMERIC,
         }
         got_types = get_param_types(params)
         self.assertEqual(got_types, want_types)

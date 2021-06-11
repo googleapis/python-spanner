@@ -17,27 +17,12 @@ import os
 
 import setuptools
 
-# Disable version normalization performed by setuptools.setup()
-try:
-    # Try the approach of using sic(), added in setuptools 46.1.0
-    from setuptools import sic
-except ImportError:
-    # Try the approach of replacing packaging.version.Version
-    sic = lambda v: v
-    try:
-        # setuptools >=39.0.0 uses packaging from setuptools.extern
-        from setuptools.extern import packaging
-    except ImportError:
-        # setuptools <39.0.0 uses packaging from pkg_resources.extern
-        from pkg_resources.extern import packaging
-    packaging.version.Version = packaging.version.LegacyVersion
-
 
 # Package metadata.
 
 name = "google-cloud-spanner"
 description = "Cloud Spanner API client library"
-version = "3.3.0"
+version = "3.4.0"
 # Should be one of:
 # 'Development Status :: 3 - Alpha'
 # 'Development Status :: 4 - Beta'
@@ -52,9 +37,9 @@ dependencies = [
 ]
 extras = {
     "tracing": [
-        "opentelemetry-api >= 0.11b0",
-        "opentelemetry-sdk >= 0.11b0",
-        "opentelemetry-instrumentation >= 0.11b0",
+        "opentelemetry-api >= 1.1.0",
+        "opentelemetry-sdk >= 1.1.0",
+        "opentelemetry-instrumentation >= 0.20b0",
     ],
     "libcst": "libcst >= 0.2.5",
 }
@@ -84,7 +69,7 @@ if "google.cloud" in packages:
 
 setuptools.setup(
     name=name,
-    version=sic(version),
+    version=version,
     description=description,
     long_description=readme,
     author="Google LLC",
