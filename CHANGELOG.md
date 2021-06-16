@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [3.5.1](https://www.github.com/googleapis/python-spanner/compare/v3.5.0...v3.5.1) (2021-06-16)
+
+
+### Bug Fixes
+
+* **deps:** add packaging requirement ([#368](https://www.github.com/googleapis/python-spanner/issues/368)) ([89c126c](https://www.github.com/googleapis/python-spanner/commit/89c126ceca327fcf9f344dace691522e7351dde7))
+
 ## [3.5.0](https://www.github.com/googleapis/python-spanner/compare/v3.4.0...v3.5.0) (2021-06-11)
 
 
