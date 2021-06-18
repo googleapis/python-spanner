@@ -178,6 +178,8 @@ class Cursor(object):
             if classification == parse_utils.STMT_DDL:
                 for ddl in sqlparse.split(sql):
                     if ddl:
+                        if ddl[-1] == ";":
+                            ddl = ddl[:-1]
                         self.connection._ddl_statements.append(ddl)
                 if self.connection.autocommit:
                     self.connection.run_prior_DDL_statements()

@@ -939,16 +939,16 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi.connection import connect
 
         EXP_DDLS = [
-            "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ();",
-            "DROP INDEX index_name;",
+            "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ()",
+            "DROP INDEX index_name",
             (
                 "CREATE TABLE papers ("
                 "\n    id INT64,"
                 "\n    authors ARRAY<STRING(100)>,"
                 '\n    author_list STRING(MAX) AS (ARRAY_TO_STRING(authors, ";")) stored'
-                ") PRIMARY KEY (id);"
+                ") PRIMARY KEY (id)"
             ),
-            "DROP TABLE table_name;",
+            "DROP TABLE table_name",
         ]
 
         with mock.patch(
