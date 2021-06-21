@@ -319,11 +319,7 @@ class Connection:
                 )
             else:
                 _execute_insert_heterogenous(
-                    transaction,
-                    parts.get("sql_params_list"),
-                    param_types=self._introspect_types_for_insert(statement.sql)
-                    if self.emulator_host
-                    else [],
+                    transaction, parts.get("sql_params_list"), statement.param_types,
                 )
                 return (
                     iter(()),
