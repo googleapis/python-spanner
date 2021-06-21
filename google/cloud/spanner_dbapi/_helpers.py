@@ -61,7 +61,7 @@ def _execute_insert_heterogenous(transaction, sql_params_list, param_types=None)
 
         if param_types is None:
             new_param_types = get_param_types(params)
-        else:
+        elif params:
             new_param_types = dict(zip(params.keys(), param_types))
 
         transaction.execute_update(sql, params=params, param_types=new_param_types)
