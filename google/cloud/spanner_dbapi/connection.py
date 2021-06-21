@@ -20,6 +20,7 @@ import warnings
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
+from google.cloud.spanner_v1.client import _get_spanner_emulator_host
 from google.cloud.spanner_v1.session import _get_retry_delay
 
 from google.cloud.spanner_dbapi._helpers import _execute_insert_heterogenous
@@ -61,6 +62,7 @@ class Connection:
         # within the current transaction
         self._statements = []
 
+        self.emulator_host = _get_spanner_emulator_host()
         self.is_closed = False
         self._autocommit = False
         # indicator to know if the session pool used by

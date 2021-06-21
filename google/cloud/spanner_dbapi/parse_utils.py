@@ -138,6 +138,17 @@ SPANNER_RESERVED_KEYWORDS = {
     "WITH",
     "WITHIN",
 }
+# Map Spanner column type names to the actual types
+COL_TYPE_NAME_TO_TYPE = {
+    "BOOL": spanner.param_types.BOOL,
+    "BYTES": spanner.param_types.BYTES,
+    "DATE": spanner.param_types.DATE,
+    "FLOAT64": spanner.param_types.FLOAT64,
+    "INT64": spanner.param_types.INT64,
+    "NUMERIC": spanner.param_types.NUMERIC,
+    "STRING": spanner.param_types.STRING,
+    "TIMESTAMP": spanner.param_types.TIMESTAMP,
+}
 
 STMT_DDL = "DDL"
 STMT_NON_UPDATING = "NON_UPDATING"
@@ -534,6 +545,21 @@ def get_param_types(params):
             param_types[key] = TYPES_MAP[type_]
 
     return param_types
+
+
+def get_table_cols_for_insert(insert_sql):
+    """Get table and column names from `insert_sql`.
+
+    :type insert_sql: str
+    :param params: A SQL INSERT statement.
+
+    :rtype: Tuple[str, list[str]]
+    :returns: The table name and list of column names in the statement.
+    """
+    gd = RE_INSERT.match(insert_sql).groupdict()
+    table_name = gd.get("table_name", "")
+    columns = [cn.strip() for cn in gd.get("columns", "").split(",")]
+    return table_name, columns
 
 
 def ensure_where_clause(sql):

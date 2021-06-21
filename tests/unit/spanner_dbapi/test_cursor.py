@@ -203,7 +203,9 @@ class TestCursor(unittest.TestCase):
             ) as mock_handle_insert:
                 sql = "sql"
                 cursor.execute(sql=sql)
-                mock_handle_insert.assert_called_once_with(connection, sql, None)
+                mock_handle_insert.assert_called_once_with(
+                    connection, sql, None, param_types=[]
+                )
 
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",

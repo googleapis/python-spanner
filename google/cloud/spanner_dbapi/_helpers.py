@@ -70,7 +70,7 @@ def _execute_insert_homogenous(transaction, parts):
     return transaction.insert(table, columns, values)
 
 
-def handle_insert(connection, sql, params):
+def handle_insert(connection, sql, params, param_types=None):
     parts = parse_insert(sql, params)
 
     # The split between the two styles exists because:
@@ -95,7 +95,7 @@ def handle_insert(connection, sql, params):
         #   transaction.execute_sql
         sql_params_list = parts.get("sql_params_list")
         return connection.database.run_in_transaction(
-            _execute_insert_heterogenous, sql_params_list
+            _execute_insert_heterogenous, sql_params_list, param_types
         )
 
 

@@ -121,6 +121,24 @@ class Cursor(object):
         """
         return self._row_count
 
+    def _introspect_types_for_insert(self, sql):
+        """Infer data types for the given INSERT statement, using table schema introspection.
+
+        Args:
+            sql (str): INSERT statement.
+
+        Returns:
+            list: Column types.
+        """
+        table_name, columns = parse_utils.get_table_cols_for_insert(sql)
+        schema = self.get_table_column_schema(table_name)
+
+        column_type_names = [schema[col].spanner_type.split("(")[0] for col in columns]
+        param_types = [
+            parse_utils.COL_TYPE_NAME_TO_TYPE[ctn] for ctn in column_type_names
+        ]
+        return param_types
+
     def _raise_if_closed(self):
         """Raise an exception if this cursor is closed.
 
@@ -217,7 +235,14 @@ class Cursor(object):
             if classification == parse_utils.STMT_NON_UPDATING:
                 self._handle_DQL(sql, args or None)
             elif classification == parse_utils.STMT_INSERT:
-                _helpers.handle_insert(self.connection, sql, args or None)
+                _helpers.handle_insert(
+                    self.connection,
+                    sql,
+                    args or None,
+                    param_types=self._introspect_types_for_insert(sql)
+                    if self.connection.emulator_host
+                    else [],
+                )
             else:
                 self.connection.database.run_in_transaction(
                     self._do_execute_update, sql, args or None
