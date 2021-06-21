@@ -186,6 +186,7 @@ class Cursor(object):
                                 "Only DDL statements may be batched."
                             )
                         ddl_statements.append(ddl)
+                # Only queue DDL statements if they are all correctly classified.
                 self.connection._ddl_statements.extend(ddl_statements)
                 if self.connection.autocommit:
                     self.connection.run_prior_DDL_statements()
