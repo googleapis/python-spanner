@@ -217,7 +217,7 @@ class Cursor(object):
                     args,
                     get_param_types(args or None)
                     if classification != parse_utils.STMT_INSERT
-                    else {},
+                    else self._introspect_types_for_insert(sql),
                     ResultsChecksum(),
                     classification == parse_utils.STMT_INSERT,
                 )
