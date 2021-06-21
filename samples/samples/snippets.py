@@ -1705,7 +1705,7 @@ def query_data_with_query_options(instance_id, database_id):
             "SELECT VenueId, VenueName, LastUpdateTime FROM Venues",
             query_options={
                 "optimizer_version": "1",
-                "optimizer_statistics_package": "auto_20191128_14_47_22UTC"
+                "optimizer_statistics_package": "latest"
             },
         )
 
@@ -1722,7 +1722,7 @@ def create_client_with_query_options(instance_id, database_id):
     spanner_client = spanner.Client(
         query_options={
             "optimizer_version": "1",
-            "optimizer_statistics_package": "latest"
+            "optimizer_statistics_package": "auto_20191128_14_47_22UTC"
         })
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
