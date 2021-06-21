@@ -59,6 +59,7 @@ def _execute_insert_heterogenous(transaction, sql_params_list, param_types=None)
     for sql, params in sql_params_list:
         sql, params = sql_pyformat_args_to_spanner(sql, params)
 
+        new_param_types = None
         if param_types is None:
             new_param_types = get_param_types(params)
         elif params:
