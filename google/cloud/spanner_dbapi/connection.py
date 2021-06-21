@@ -322,7 +322,7 @@ class Connection:
                     transaction,
                     parts.get("sql_params_list"),
                     param_types=self._introspect_types_for_insert(statement.sql)
-                    if self.connection.emulator_host
+                    if self.emulator_host
                     else [],
                 )
                 return (
