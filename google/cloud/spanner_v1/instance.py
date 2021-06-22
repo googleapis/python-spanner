@@ -225,7 +225,7 @@ class Instance(object):
     def processing_units(self, value):
         """Sets the processing units for requests. Affects node_count.
 
-        :param value: The numer of processing units allocated to this instance.
+        :param value: The number of processing units allocated to this instance.
         """
         self._processing_units = value
         self._node_count = value // PROCESSING_UNITS_PER_NODE
