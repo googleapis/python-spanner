@@ -182,9 +182,7 @@ class Cursor(object):
                         if ddl[-1] == ";":
                             ddl = ddl[:-1]
                         if parse_utils.classify_stmt(ddl) != parse_utils.STMT_DDL:
-                            raise ValueError(
-                                "Only DDL statements may be batched."
-                            )
+                            raise ValueError("Only DDL statements may be batched.")
                         ddl_statements.append(ddl)
                 # Only queue DDL statements if they are all correctly classified.
                 self.connection._ddl_statements.extend(ddl_statements)
