@@ -215,9 +215,8 @@ class Instance(object):
     def processing_units(self):
         """Processing units used in requests.
 
-        :rtype int
-        :returns processing_units: The number of processing units
-                                allocated to this instance.
+        :rtype: int
+        :returns: The number of processing units allocated to this instance.
         """
         return self._processing_units
 
@@ -234,9 +233,10 @@ class Instance(object):
     def node_count(self):
         """Node count used in requests.
 
-        :rtype int
-        :returns node count: The number of nodes in the instance's
-                            cluster; used to set up the instance's cluster.
+        :rtype: int
+        :returns node_count:
+            The number of nodes in the instance's cluster;
+            used to set up the instance's cluster.
         """
         return self._node_count
 
@@ -244,7 +244,7 @@ class Instance(object):
     def node_count(self, value):
         """Sets the node count for requests. Affects processing_units.
 
-        :param value: The number of nodes in the instance's cluster
+        :param value: The number of nodes in the instance's cluster.
         """
         self._node_count = value
         self._processing_units = value * PROCESSING_UNITS_PER_NODE
