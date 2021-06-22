@@ -21,13 +21,14 @@ import pkg_resources
 __version__ = pkg_resources.get_distribution("google-cloud-spanner").version
 
 from .services.spanner import SpannerClient
-from .types import RequestOptions
+from .types.commit_response import CommitResponse
 from .types.keys import KeyRange as KeyRangePB
 from .types.keys import KeySet as KeySetPB
 from .types.mutation import Mutation
 from .types.query_plan import PlanNode
 from .types.query_plan import QueryPlan
 from .types.result_set import PartialResultSet
+from .types import RequestOptions
 from .types.result_set import ResultSet
 from .types.result_set import ResultSetMetadata
 from .types.result_set import ResultSetStats
@@ -35,7 +36,6 @@ from .types.spanner import BatchCreateSessionsRequest
 from .types.spanner import BatchCreateSessionsResponse
 from .types.spanner import BeginTransactionRequest
 from .types.spanner import CommitRequest
-from .types.spanner import CommitResponse
 from .types.spanner import CreateSessionRequest
 from .types.spanner import DeleteSessionRequest
 from .types.spanner import ExecuteBatchDmlRequest

@@ -333,7 +333,7 @@ class Session(object):
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
                    "commit_request_options" will be removed and used to set the
-                   request_options which defines the common options for requests.
+                   request options for the commit request.
 
         :rtype: Any
         :returns: The return value of ``func``.

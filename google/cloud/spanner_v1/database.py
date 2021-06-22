@@ -534,11 +534,11 @@ class Database(object):
                     query_options=query_options,
                     request_options=request_options,
                 )
-                restart = functools.partial(
-                    api.execute_streaming_sql, request=request, metadata=metadata,
+                method = functools.partial(
+                    api.execute_streaming_sql, metadata=metadata,
                 )
 
-                iterator = _restart_on_unavailable(restart)
+                iterator = _restart_on_unavailable(method, request)
 
                 result_set = StreamedResultSet(iterator)
                 list(result_set)  # consume all partials
@@ -586,7 +586,7 @@ class Database(object):
         :type request_options:
             :class:`google.cloud.spanner_v1.types.RequestOptions`
         :param request_options:
-                (Optional) Common options for this request.
+                (Optional) Common options for the commit request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
@@ -783,7 +783,7 @@ class BatchCheckout(object):
     :type request_options:
             :class:`google.cloud.spanner_v1.types.RequestOptions`
     :param request_options:
-            (Optional) Common options for this request.
+            (Optional) Common options for the commit request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
     """
