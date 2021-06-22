@@ -21,6 +21,7 @@ import pkg_resources
 __version__ = pkg_resources.get_distribution("google-cloud-spanner").version
 
 from .services.spanner import SpannerClient
+from .types import RequestOptions
 from .types.keys import KeyRange as KeyRangePB
 from .types.keys import KeySet as KeySetPB
 from .types.mutation import Mutation
@@ -119,6 +120,7 @@ __all__ = (
     "PlanNode",
     "QueryPlan",
     "ReadRequest",
+    "RequestOptions",
     "ResultSet",
     "ResultSetMetadata",
     "ResultSetStats",

@@ -58,7 +58,7 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
 )
 from google.cloud.spanner_v1.table import Table
-from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions
 
 # pylint: enable=ungrouped-imports
 

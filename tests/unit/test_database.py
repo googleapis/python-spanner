@@ -21,7 +21,7 @@ from google.api_core import gapic_v1
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 
-from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions
 
 DML_WO_PARAM = """
 DELETE FROM citizens

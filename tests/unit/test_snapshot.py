@@ -16,7 +16,7 @@
 from google.api_core import gapic_v1
 import mock
 
-from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCanonicalCode,

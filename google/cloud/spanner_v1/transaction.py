@@ -29,7 +29,7 @@ from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
-from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 
 

@@ -43,7 +43,7 @@ from google.cloud.spanner_v1 import KeySet
 from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.table import Table
-from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions
 
 from test_utils.retry import RetryErrors
 from test_utils.retry import RetryInstanceState
