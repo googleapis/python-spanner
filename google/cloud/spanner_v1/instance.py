@@ -234,7 +234,7 @@ class Instance(object):
         """Node count used in requests.
 
         :rtype: int
-        :returns node_count:
+        :returns:
             The number of nodes in the instance's cluster;
             used to set up the instance's cluster.
         """
