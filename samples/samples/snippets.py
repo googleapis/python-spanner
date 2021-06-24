@@ -46,8 +46,8 @@ def create_instance(instance_id):
         display_name="This is a display name.",
         node_count=1,
         labels={
-            'cloud_spanner_samples': True,
-            'created': str(int(time.time()))
+            "cloud_spanner_samples": "true",
+            "created": str(int(time.time()))
         }
     )
 

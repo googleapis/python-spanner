@@ -41,8 +41,8 @@ def spanner_instance():
         INSTANCE_ID,
         instance_config,
         labels={
-            'cloud_spanner_samples': True,
-            'created': str(int(time.time()))
+            "cloud_spanner_samples": "true",
+            "created": str(int(time.time()))
         }
     )
     op = instance.create()
