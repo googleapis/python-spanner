@@ -18,9 +18,9 @@ from google.api_core.exceptions import DeadlineExceeded
 from google.cloud import spanner
 import pytest
 from test_utils.retry import RetryErrors
-from snippets_test import cleanup_old_instances
 
 import backup_sample
+from snippets_test import cleanup_old_instances
 
 
 def unique_instance_id():
