@@ -17,7 +17,8 @@
 
 ### Bug Fixes
 
-* classify batched DDL statements ([#360](https://www.github.com/googleapis/python-spanner/issues/360)) ([b8b24e1](https://www.github.com/googleapis/python-spanner/commit/b8b24e17a74c1296ca5de75798a1a32597691b53))
+* **db_api:** use sqlparse to split DDL statements ([#372](https://www.github.com/googleapis/python-spanner/issues/372)) ([ed9e124](https://github.com/googleapis/python-spanner/commit/ed9e124aa74e44778104e45eae1e577978d6b866))
+* **db_api:** classify batched DDL statements ([#360](https://www.github.com/googleapis/python-spanner/issues/360)) ([b8b24e1](https://www.github.com/googleapis/python-spanner/commit/b8b24e17a74c1296ca5de75798a1a32597691b53))
 * **deps:** add packaging requirement ([#368](https://www.github.com/googleapis/python-spanner/issues/368)) ([89c126c](https://www.github.com/googleapis/python-spanner/commit/89c126ceca327fcf9f344dace691522e7351dde7))
 
 
