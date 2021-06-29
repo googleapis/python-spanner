@@ -70,7 +70,7 @@ def create_instance_with_processing_units(instance_id):
         instance_id,
         configuration_name=config_name,
         display_name="This is a display name.",
-        processing_units=1000,
+        processing_units=500,
     )
 
     operation = instance.create()
