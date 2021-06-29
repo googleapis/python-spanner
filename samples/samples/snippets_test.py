@@ -59,6 +59,16 @@ def test_create_instance(spanner_instance):
     spanner_instance.reload()
 
 
+def test_create_instance_with_processing_units():
+    processing_units_instance_id = unique_instance_id()
+    snippets.create_instance_with_processing_units(processing_units_instance_id)
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(processing_units_instance_id)
+    instance.reload()
+    assert instance.processing_units == 1000
+    instance.delete()
+
+
 def test_create_database(database):
     # Reload will only succeed if the database exists.
     database.reload()
