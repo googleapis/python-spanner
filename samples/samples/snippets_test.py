@@ -65,7 +65,7 @@ def test_create_instance_with_processing_units():
     spanner_client = spanner.Client()
     instance = spanner_client.instance(processing_units_instance_id)
     instance.reload()
-    assert instance.processing_units == 1000
+    assert instance.processing_units == 500
     instance.delete()
 
 
