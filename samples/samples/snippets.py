@@ -57,6 +57,33 @@ def create_instance(instance_id):
 # [END spanner_create_instance]
 
 
+# [START spanner_create_instance_with_processing_units]
+def create_instance_with_processing_units(instance_id):
+    """Creates an instance."""
+    spanner_client = spanner.Client()
+
+    config_name = "{}/instanceConfigs/regional-us-central1".format(
+        spanner_client.project_name
+    )
+
+    instance = spanner_client.instance(
+        instance_id,
+        configuration_name=config_name,
+        display_name="This is a display name.",
+        processing_units=1000,
+    )
+
+    operation = instance.create()
+
+    print("Waiting for operation to complete...")
+    operation.result(120)
+
+    print("Created instance {}".format(instance_id))
+
+
+# [END spanner_create_instance_with_processing_units]
+
+
 # [START spanner_create_database]
 def create_database(instance_id, database_id):
     """Creates a database and tables for sample data."""
