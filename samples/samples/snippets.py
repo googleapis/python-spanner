@@ -58,7 +58,7 @@ def create_instance(instance_id):
 
 
 # [START spanner_create_instance_with_processing_units]
-def create_instance_with_processing_units(instance_id):
+def create_instance_with_processing_units(instance_id, processing_units):
     """Creates an instance."""
     spanner_client = spanner.Client()
 
@@ -70,7 +70,7 @@ def create_instance_with_processing_units(instance_id):
         instance_id,
         configuration_name=config_name,
         display_name="This is a display name.",
-        processing_units=500,
+        processing_units=processing_units,
     )
 
     operation = instance.create()
@@ -78,7 +78,8 @@ def create_instance_with_processing_units(instance_id):
     print("Waiting for operation to complete...")
     operation.result(120)
 
-    print("Created instance {}".format(instance_id))
+    print("Created instance {} with {} processing units".format(
+        instance_id, instance.processing_units))
 
 
 # [END spanner_create_instance_with_processing_units]

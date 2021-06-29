@@ -32,6 +32,7 @@ def unique_database_id():
 
 
 INSTANCE_ID = unique_instance_id()
+LCI_INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
 CMEK_DATABASE_ID = unique_database_id()
 
@@ -59,14 +60,12 @@ def test_create_instance(spanner_instance):
     spanner_instance.reload()
 
 
-def test_create_instance_with_processing_units():
-    processing_units_instance_id = unique_instance_id()
-    snippets.create_instance_with_processing_units(processing_units_instance_id)
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(processing_units_instance_id)
-    instance.reload()
-    assert instance.processing_units == 500
-    instance.delete()
+def test_create_instance_with_processing_units(capsys):
+    processing_units = 500
+    snippets.create_instance_with_processing_units(LCI_INSTANCE_ID, processing_units)
+    out, _ = capsys.readouterr()
+    assert LCI_INSTANCE_ID in out
+    assert processing_units in out
 
 
 def test_create_database(database):
