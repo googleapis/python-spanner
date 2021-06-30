@@ -109,7 +109,7 @@ s.remove_staging_dirs()
 # ----------------------------------------------------------------------------
 # Add templated files
 # ----------------------------------------------------------------------------
-templated_files = common.py_library(microgenerator=True, samples=True)
+templated_files = common.py_library(microgenerator=True, samples=True, cover=99)
 s.move(templated_files, excludes=[".coveragerc"])
 
 # Ensure CI runs on a new instance each time
