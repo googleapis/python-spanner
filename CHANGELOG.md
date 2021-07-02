@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [3.6.1](https://www.github.com/googleapis/python-spanner/compare/v3.6.0...v3.6.1) (2021-07-02)
+
+
+### Documentation
+
+* fix docstring for session.py ([#387](https://www.github.com/googleapis/python-spanner/issues/387)) ([3132587](https://www.github.com/googleapis/python-spanner/commit/3132587453f7bd0be72ebc393626b5c8b1bab982))
+
 ## [3.6.0](https://www.github.com/googleapis/python-spanner/compare/v3.5.0...v3.6.0) (2021-06-23)
 
 
