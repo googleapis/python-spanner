@@ -65,7 +65,7 @@ def test_create_instance_with_processing_units(capsys):
     snippets.create_instance_with_processing_units(LCI_INSTANCE_ID, processing_units)
     out, _ = capsys.readouterr()
     assert LCI_INSTANCE_ID in out
-    assert processing_units in out
+    assert "{} processing units".format(processing_units) in out
 
 
 def test_create_database(database):
