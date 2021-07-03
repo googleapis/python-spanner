@@ -916,7 +916,9 @@ def test_get_instance_config(
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_instance_admin.InstanceConfig(
-            name="name_value", display_name="display_name_value",
+            name="name_value",
+            display_name="display_name_value",
+            leader_options=["leader_options_value"],
         )
         response = client.get_instance_config(request)
 
@@ -929,6 +931,7 @@ def test_get_instance_config(
     assert isinstance(response, spanner_instance_admin.InstanceConfig)
     assert response.name == "name_value"
     assert response.display_name == "display_name_value"
+    assert response.leader_options == ["leader_options_value"]
 
 
 def test_get_instance_config_from_dict():
@@ -972,7 +975,9 @@ async def test_get_instance_config_async(
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_instance_admin.InstanceConfig(
-                name="name_value", display_name="display_name_value",
+                name="name_value",
+                display_name="display_name_value",
+                leader_options=["leader_options_value"],
             )
         )
         response = await client.get_instance_config(request)
@@ -986,6 +991,7 @@ async def test_get_instance_config_async(
     assert isinstance(response, spanner_instance_admin.InstanceConfig)
     assert response.name == "name_value"
     assert response.display_name == "display_name_value"
+    assert response.leader_options == ["leader_options_value"]
 
 
 @pytest.mark.asyncio
