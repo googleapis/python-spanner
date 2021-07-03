@@ -173,11 +173,23 @@ class TestCursor(unittest.TestCase):
 
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            side_effect=[parse_utils.STMT_DDL, parse_utils.STMT_INSERT],
+        ) as mock_classify_stmt:
+            sql = "sql"
+            with self.assertRaises(ValueError):
+                cursor.execute(sql=sql)
+            mock_classify_stmt.assert_called_with(sql)
+            self.assertEqual(mock_classify_stmt.call_count, 2)
+            self.assertEqual(cursor.connection._ddl_statements, [])
+
+        with mock.patch(
+            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
             return_value=parse_utils.STMT_DDL,
         ) as mock_classify_stmt:
             sql = "sql"
             cursor.execute(sql=sql)
-            mock_classify_stmt.assert_called_once_with(sql)
+            mock_classify_stmt.assert_called_with(sql)
+            self.assertEqual(mock_classify_stmt.call_count, 2)
             self.assertEqual(cursor.connection._ddl_statements, [sql])
 
         with mock.patch(
@@ -941,6 +953,13 @@ class TestCursor(unittest.TestCase):
         EXP_DDLS = [
             "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ()",
             "DROP INDEX index_name",
+            (
+                "CREATE TABLE papers ("
+                "\n    id INT64,"
+                "\n    authors ARRAY<STRING(100)>,"
+                '\n    author_list STRING(MAX) AS (ARRAY_TO_STRING(authors, ";")) stored'
+                ") PRIMARY KEY (id)"
+            ),
             "DROP TABLE table_name",
         ]
 
@@ -956,7 +975,12 @@ class TestCursor(unittest.TestCase):
         cursor.execute(
             "CREATE TABLE table_name (row_id INT64) PRIMARY KEY ();"
             "DROP INDEX index_name;\n"
-            "DROP TABLE table_name;"
+            "CREATE TABLE papers ("
+            "\n    id INT64,"
+            "\n    authors ARRAY<STRING(100)>,"
+            '\n    author_list STRING(MAX) AS (ARRAY_TO_STRING(authors, ";")) stored'
+            ") PRIMARY KEY (id);"
+            "DROP TABLE table_name;",
         )
 
         self.assertEqual(connection._ddl_statements, EXP_DDLS)

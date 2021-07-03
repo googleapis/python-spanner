@@ -4,6 +4,44 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.6.0](https://www.github.com/googleapis/python-spanner/compare/v3.5.0...v3.6.0) (2021-06-23)
+
+
+### Features
+
+* add RPC priority support ([#324](https://www.github.com/googleapis/python-spanner/issues/324)) ([51533b8](https://www.github.com/googleapis/python-spanner/commit/51533b812b68004eafeb402641b974e76bf9a837))
+* add support for low-cost instances ([#313](https://www.github.com/googleapis/python-spanner/issues/313)) ([44aa7cc](https://www.github.com/googleapis/python-spanner/commit/44aa7cc79769b6b7870b9de7204094f816150a25))
+* **spanner:** add processing_units to Instance resource ([#364](https://www.github.com/googleapis/python-spanner/issues/364)) ([113505c](https://www.github.com/googleapis/python-spanner/commit/113505c58dc52509973f4199330a8983e3c5d848))
+* update query stats samples ([#373](https://www.github.com/googleapis/python-spanner/issues/373)) ([c1ee8c2](https://www.github.com/googleapis/python-spanner/commit/c1ee8c2685a794f9f89329e16f7c461e135114af))
+
+
+### Bug Fixes
+
+* **db_api:** use sqlparse to split DDL statements ([#372](https://www.github.com/googleapis/python-spanner/issues/372)) ([ed9e124](https://github.com/googleapis/python-spanner/commit/ed9e124aa74e44778104e45eae1e577978d6b866))
+* **db_api:** classify batched DDL statements ([#360](https://www.github.com/googleapis/python-spanner/issues/360)) ([b8b24e1](https://www.github.com/googleapis/python-spanner/commit/b8b24e17a74c1296ca5de75798a1a32597691b53))
+* **deps:** add packaging requirement ([#368](https://www.github.com/googleapis/python-spanner/issues/368)) ([89c126c](https://www.github.com/googleapis/python-spanner/commit/89c126ceca327fcf9f344dace691522e7351dde7))
+
+
+### Documentation
+
+* omit mention of Python 2.7 in 'CONTRIBUTING.rst' ([#1127](https://www.github.com/googleapis/python-spanner/issues/1127)) ([#374](https://www.github.com/googleapis/python-spanner/issues/374)) ([b7b3c38](https://www.github.com/googleapis/python-spanner/commit/b7b3c383abcca99dcbae6d92b27c49ca6707010a)), closes [#1126](https://www.github.com/googleapis/python-spanner/issues/1126)
+
+## [3.5.0](https://www.github.com/googleapis/python-spanner/compare/v3.4.0...v3.5.0) (2021-06-11)
+
+
+### Features
+
+* add decimal validation for numeric precision and scale supported by Spanner ([#340](https://www.github.com/googleapis/python-spanner/issues/340)) ([aa36c5e](https://www.github.com/googleapis/python-spanner/commit/aa36c5ecf5b0decc6c5c3316cc5bc6b6981d9bf9))
+* add progress field to UpdateDatabaseDdlMetadata ([#361](https://www.github.com/googleapis/python-spanner/issues/361)) ([1c03dcc](https://www.github.com/googleapis/python-spanner/commit/1c03dcc182fc96a2ca85b23da99cbcaebfb3fe09))
+* add query statistics package support ([#129](https://www.github.com/googleapis/python-spanner/issues/129)) ([6598dea](https://www.github.com/googleapis/python-spanner/commit/6598deade66c8887514a1a6571fffb1bd7b16fd0))
+
+
+### Bug Fixes
+
+* an Aborted exception isn't properly retried ([#345](https://www.github.com/googleapis/python-spanner/issues/345)) ([e69e6ab](https://www.github.com/googleapis/python-spanner/commit/e69e6ab5cffd02bc9af6c08dbe9b5f229847d86d))
+* correctly classify select statements that begin with brackets ([#351](https://www.github.com/googleapis/python-spanner/issues/351)) ([d526acc](https://www.github.com/googleapis/python-spanner/commit/d526acca4795ebf34867ab4a256413a728fccd93))
+* update to support the open-telemetry status code spec change ([#358](https://www.github.com/googleapis/python-spanner/issues/358)) ([0f894f1](https://www.github.com/googleapis/python-spanner/commit/0f894f12622cfa6e38b838eb91e49f256d8d857d))
+
 ## [3.4.0](https://www.github.com/googleapis/python-spanner/compare/v3.3.0...v3.4.0) (2021-04-29)
 
 

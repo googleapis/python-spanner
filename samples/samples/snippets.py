@@ -25,6 +25,7 @@ import base64
 import datetime
 import decimal
 import logging
+import time
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
@@ -44,6 +45,10 @@ def create_instance(instance_id):
         configuration_name=config_name,
         display_name="This is a display name.",
         node_count=1,
+        labels={
+            "cloud_spanner_samples": "true",
+            "created": str(int(time.time()))
+        }
     )
 
     operation = instance.create()
@@ -1703,7 +1708,10 @@ def query_data_with_query_options(instance_id, database_id):
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT VenueId, VenueName, LastUpdateTime FROM Venues",
-            query_options={"optimizer_version": "1"},
+            query_options={
+                "optimizer_version": "1",
+                "optimizer_statistics_package": "latest"
+            },
         )
 
         for row in results:
@@ -1716,7 +1724,11 @@ def create_client_with_query_options(instance_id, database_id):
     # [START spanner_create_client_with_query_options]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    spanner_client = spanner.Client(query_options={"optimizer_version": "1"})
+    spanner_client = spanner.Client(
+        query_options={
+            "optimizer_version": "1",
+            "optimizer_statistics_package": "auto_20191128_14_47_22UTC"
+        })
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
