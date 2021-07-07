@@ -452,9 +452,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         default_leader = "us-east4"
         ddl_statements = [
             "ALTER DATABASE {}"
-            " SET OPTIONS (default_leader = '{}')".format(
-                temp_db_id, default_leader
-            )
+            " SET OPTIONS (default_leader = '{}')".format(temp_db_id, default_leader)
         ]
         temp_db = Config.INSTANCE.database(
             temp_db_id, pool=pool, ddl_statements=ddl_statements
@@ -609,9 +607,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
 
         ddl_statements = DDL_STATEMENTS + [
             "ALTER DATABASE {}"
-            " SET OPTIONS (default_leader = '{}')".format(
-                temp_db_id, default_leader
-            )
+            " SET OPTIONS (default_leader = '{}')".format(temp_db_id, default_leader)
         ]
         operation = temp_db.update_ddl(ddl_statements)
 

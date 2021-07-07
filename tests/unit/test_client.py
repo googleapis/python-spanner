@@ -460,7 +460,7 @@ class TestClient(unittest.TestCase):
                 InstanceConfigPB(
                     name=self.CONFIGURATION_NAME,
                     display_name=self.DISPLAY_NAME,
-                    leader_options=self.LEADER_OPTIONS
+                    leader_options=self.LEADER_OPTIONS,
                 )
             ]
         )
