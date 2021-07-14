@@ -38,6 +38,7 @@ from google.cloud.spanner_dbapi._helpers import code_to_display_size
 from google.cloud.spanner_dbapi import parse_utils
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
+from google.cloud.spanner_dbapi.parse_utils import RE_INSERT
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
@@ -258,9 +259,21 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        for params in seq_of_params:
-            self.execute(operation, params)
-            many_result_set.add_iter(self._itr)
+        if classification == parse_utils.STMT_INSERT:
+            match = RE_INSERT.search(operation)
+
+            table_name = match["table_name"].strip("`")
+
+            transaction = self.connection.transaction_checkout()
+            transaction.insert(
+                table=table_name,
+                columns=[col.strip('" ') for col in match["columns"].split(",")],
+                values=seq_of_params,
+            )
+        else:
+            for params in seq_of_params:
+                self.execute(operation, params)
+                many_result_set.add_iter(self._itr)
 
         self._result_set = many_result_set
         self._itr = many_result_set
