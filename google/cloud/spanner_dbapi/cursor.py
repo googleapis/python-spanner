@@ -264,11 +264,19 @@ class Cursor(object):
 
             table_name = match["table_name"].strip("`")
 
+            cols = []
+            for col in match["columns"].split(","):
+                col = col.strip()
+
+                if col[0] == '"' and col[-1] == '"':
+                    col = col[1:-1]
+
+                col = col.strip("`")
+                cols.append(col)
+
             transaction = self.connection.transaction_checkout()
             transaction.insert(
-                table=table_name,
-                columns=[col.strip('" ') for col in match["columns"].split(",")],
-                values=seq_of_params,
+                table=table_name, columns=cols, values=seq_of_params,
             )
         else:
             for params in seq_of_params:
