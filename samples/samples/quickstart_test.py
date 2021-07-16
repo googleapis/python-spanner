@@ -18,6 +18,7 @@ import uuid
 from google.cloud import spanner
 import mock
 import pytest
+from test_utils.retry import RetryResult
 
 import quickstart
 from snippets_test import cleanup_old_instances
@@ -71,6 +72,11 @@ def patch_instance():
 def example_database():
     spanner_client = spanner.Client()
     instance = spanner_client.instance(INSTANCE_ID)
+
+    # Ensure that instance has propagated after creation
+    retry = RetryResult(bool)
+    retry(instance.exists)()
+
     database = instance.database("my-database-id")
 
     if not database.exists():
