@@ -63,6 +63,7 @@ class Connection:
 
         self.is_closed = False
         self._autocommit = False
+        self._use_mutations = False
         # indicator to know if the session pool used by
         # this connection should be cleared on the
         # connection close
@@ -120,6 +121,32 @@ class Connection:
         :returns: The related instance object.
         """
         return self._instance
+
+    @property
+    def use_mutations(self):
+        """
+        Flag of the connection mode in which mutations
+        are used for massive DML statements.
+
+        Returns:
+            bool: True if mutations mode is enable, False otherwise.
+        """
+        return self._use_mutations
+
+    @use_mutations.setter
+    def use_mutations(self, value):
+        """Change mutations use mode.
+
+        Mutations are used by default in autocommit
+        mode and they can be used in transactions
+        mode in case of this flag set to True.
+
+        Args:
+            value (bool): New flag value.
+        """
+        self._use_mutations = value
+        if value:
+            self.autocommit = False
 
     def _session_checkout(self):
         """Get a Cloud Spanner session from the pool.

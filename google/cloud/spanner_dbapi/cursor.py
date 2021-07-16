@@ -259,25 +259,26 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if classification == parse_utils.STMT_INSERT:
-            match = RE_INSERT.search(operation)
+        if self.connection.autocommit or self.connection.use_mutations:
+            if classification == parse_utils.STMT_INSERT:
+                match = RE_INSERT.search(operation)
 
-            table_name = match["table_name"].strip("`")
+                table_name = match["table_name"].strip("`")
 
-            cols = []
-            for col in match["columns"].split(","):
-                col = col.strip()
+                cols = []
+                for col in match["columns"].split(","):
+                    col = col.strip()
 
-                if col[0] == '"' and col[-1] == '"':
-                    col = col[1:-1]
+                    if col[0] == '"' and col[-1] == '"':
+                        col = col[1:-1]
 
-                col = col.strip("`")
-                cols.append(col)
+                    col = col.strip("`")
+                    cols.append(col)
 
-            transaction = self.connection.transaction_checkout()
-            transaction.insert(
-                table=table_name, columns=cols, values=seq_of_params,
-            )
+                transaction = self.connection.transaction_checkout()
+                transaction.insert(
+                    table=table_name, columns=cols, values=seq_of_params,
+                )
         else:
             for params in seq_of_params:
                 self.execute(operation, params)

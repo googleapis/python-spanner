@@ -337,7 +337,7 @@ class TestCursor(unittest.TestCase):
             (mock.call(operation, (1,)), mock.call(operation, (2,)))
         )
 
-    def test_executemany_insert(self):
+    def test_executemany_insert_autocommit(self):
         from google.cloud.spanner_dbapi import connect
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
@@ -350,9 +350,42 @@ class TestCursor(unittest.TestCase):
             ):
                 connection = connect("test-instance", "test-database")
 
+        connection.autocommit = True
         cursor = connection.cursor()
         transact_mock = mock.Mock()
         transact_mock.insert = mock.Mock()
+
+        with mock.patch(
+            "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
+            return_value=transact_mock,
+        ):
+            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+            transact_mock.insert.assert_called_once_with(
+                table="table",
+                columns=["col1", "col2", "col3", '"col4"'],
+                values=[(1, 2, 3, 4), (5, 6, 7, 8)],
+            )
+
+    def test_executemany_insert_use_mutations(self):
+        from google.cloud.spanner_dbapi import connect
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.use_mutations = True
+        cursor = connection.cursor()
+        transact_mock = mock.Mock()
+        transact_mock.insert = mock.Mock()
+
+        self.assertFalse(connection.autocommit)
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
