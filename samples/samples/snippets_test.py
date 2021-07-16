@@ -87,7 +87,7 @@ def test_create_instance(spanner_instance):
 def test_create_instance_with_processing_units(capsys):
     processing_units = 500
     retry_429 = RetryErrors(exceptions.ResourceExhausted)
-    retry_429(enippets.create_instance_with_processing_units)(
+    retry_429(snippets.create_instance_with_processing_units)(
         LCI_INSTANCE_ID, processing_units,
     )
     out, _ = capsys.readouterr()
