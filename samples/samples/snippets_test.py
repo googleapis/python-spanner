@@ -15,10 +15,12 @@
 import time
 import uuid
 
+from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
 import pytest
+from test_utils.retry import RetryErrors
 
 import snippets
 
@@ -84,10 +86,16 @@ def test_create_instance(spanner_instance):
 
 def test_create_instance_with_processing_units(capsys):
     processing_units = 500
-    snippets.create_instance_with_processing_units(LCI_INSTANCE_ID, processing_units)
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(snippets.create_instance_with_processing_units)(
+        LCI_INSTANCE_ID, processing_units,
+    )
     out, _ = capsys.readouterr()
     assert LCI_INSTANCE_ID in out
     assert "{} processing units".format(processing_units) in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(LCI_INSTANCE_ID)
+    instance.delete()
 
 
 def test_create_database(database):
@@ -444,6 +452,10 @@ def test_query_data_with_query_options(capsys):
     assert "VenueId: 42, VenueName: Venue 42, LastUpdateTime:" in out
 
 
+@pytest.mark.skip(
+    "Failure is due to the package being missing on the backend."
+    "See: https://github.com/googleapis/python-spanner/issues/421"
+)
 def test_create_client_with_query_options(capsys):
     snippets.create_client_with_query_options(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
