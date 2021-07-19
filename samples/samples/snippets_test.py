@@ -53,6 +53,7 @@ def cleanup_old_instances(spanner_client):
 
 
 INSTANCE_ID = unique_instance_id()
+LCI_INSTANCE_ID = unique_instance_id()
 DATABASE_ID = unique_database_id()
 CMEK_DATABASE_ID = unique_database_id()
 
@@ -79,6 +80,17 @@ def database(spanner_instance):
 def test_create_instance(spanner_instance):
     # Reload will only succeed if the instance exists.
     spanner_instance.reload()
+
+
+def test_create_instance_with_processing_units(capsys):
+    processing_units = 500
+    snippets.create_instance_with_processing_units(LCI_INSTANCE_ID, processing_units)
+    out, _ = capsys.readouterr()
+    assert LCI_INSTANCE_ID in out
+    assert "{} processing units".format(processing_units) in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(LCI_INSTANCE_ID)
+    instance.delete()
 
 
 def test_create_database(database):
@@ -435,6 +447,10 @@ def test_query_data_with_query_options(capsys):
     assert "VenueId: 42, VenueName: Venue 42, LastUpdateTime:" in out
 
 
+@pytest.mark.skip(
+    "Failure is due to the package being missing on the backend."
+    "See: https://github.com/googleapis/python-spanner/issues/421"
+)
 def test_create_client_with_query_options(capsys):
     snippets.create_client_with_query_options(INSTANCE_ID, DATABASE_ID)
     out, _ = capsys.readouterr()
