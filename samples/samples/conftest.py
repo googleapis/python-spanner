@@ -125,6 +125,7 @@ def database_ddl():
     """
     return []
 
+
 @pytest.fixture(scope="module")
 def sample_database(sample_instance, database_id, database_ddl):
 

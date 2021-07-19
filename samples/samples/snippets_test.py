@@ -17,8 +17,6 @@ import uuid
 
 from google.api_core import exceptions
 from google.cloud import spanner
-from google.cloud.spanner_v1.instance import Backup
-from google.cloud.spanner_v1.instance import Instance
 import pytest
 from test_utils.retry import RetryErrors
 
@@ -32,7 +30,8 @@ CREATE TABLE Singers (
     SingerInfo   BYTES(MAX)
 ) PRIMARY KEY (SingerId)
 """
-CREATE_TABLE_ALBUMS= """\
+
+CREATE_TABLE_ALBUMS = """\
 CREATE TABLE Albums (
     SingerId     INT64 NOT NULL,
     AlbumId      INT64 NOT NULL,
@@ -40,6 +39,7 @@ CREATE TABLE Albums (
 ) PRIMARY KEY (SingerId, AlbumId),
 INTERLEAVE IN PARENT Singers ON DELETE CASCADE
 """
+
 
 @pytest.fixture(scope="module")
 def sample_name():
@@ -61,6 +61,7 @@ def lci_instance_id():
 @pytest.fixture(scope="module")
 def database_id():
     return f"test-db-{uuid.uuid4().hex[:10]}"
+
 
 @pytest.fixture(scope="module")
 def create_database_id():
