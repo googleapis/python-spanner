@@ -118,9 +118,19 @@ def database_id():
 
 
 @pytest.fixture(scope="module")
-def sample_database(sample_instance, database_id):
+def database_ddl():
+    """Sequence of DDL statements used to set up the database.
 
-    sample_database = sample_instance.database(database_id)
+    Sample testcase modules can override as needed.
+    """
+    return []
+
+@pytest.fixture(scope="module")
+def sample_database(sample_instance, database_id, database_ddl):
+
+    sample_database = sample_instance.database(
+        database_id, ddl_statements=database_ddl,
+    )
 
     if not sample_database.exists():
         sample_database.create()
