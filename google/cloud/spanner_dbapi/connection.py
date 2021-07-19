@@ -50,6 +50,11 @@ class Connection:
     :param database: The database to which the connection is linked.
     """
 
+    # use_mutations flag possible values
+    ALWAYS = "ALWAYS"
+    AUTOCOMMIT_ONLY = "AUTOCOMMIT_ONLY"
+    NEVER = "NEVER"
+
     def __init__(self, instance, database):
         self._instance = instance
         self._database = database
@@ -63,7 +68,7 @@ class Connection:
 
         self.is_closed = False
         self._autocommit = False
-        self._use_mutations = False
+        self._use_mutations = self.NEVER
         # indicator to know if the session pool used by
         # this connection should be cleared on the
         # connection close
@@ -144,9 +149,11 @@ class Connection:
         Args:
             value (bool): New flag value.
         """
+        if value not in (self.NEVER, self.AUTOCOMMIT_ONLY, self.ALWAYS):
+            raise ValueError(
+                """`use_mutations` value should be one of: "NEVER", "AUTOCOMMIT_ONLY", "ALWAYS" """
+            )
         self._use_mutations = value
-        if value:
-            self.autocommit = False
 
     def _session_checkout(self):
         """Get a Cloud Spanner session from the pool.

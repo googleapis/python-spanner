@@ -337,37 +337,36 @@ class TestCursor(unittest.TestCase):
             (mock.call(operation, (1,)), mock.call(operation, (2,)))
         )
 
-    def test_executemany_insert_autocommit(self):
+    def test_executemany_mutations_wrong_value(self):
+        """
+        Check that `use_mutations` accepts three possible
+        values and fails if other value used.
+        """
         from google.cloud.spanner_dbapi import connect
-
-        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
 
         with mock.patch(
             "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
             ):
                 connection = connect("test-instance", "test-database")
 
-        connection.autocommit = True
-        cursor = connection.cursor()
-        transact_mock = mock.Mock()
-        transact_mock.insert = mock.Mock()
+        with self.assertRaises(ValueError):
+            connection.use_mutations = "SOMETIMES"
 
-        with mock.patch(
-            "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
-            return_value=transact_mock,
+        for use_mutations in (
+            connection.NEVER,
+            connection.AUTOCOMMIT_ONLY,
+            connection.ALWAYS,
         ):
-            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+            connection.use_mutations = use_mutations
 
-            transact_mock.insert.assert_called_once_with(
-                table="table",
-                columns=["col1", "col2", "col3", '"col4"'],
-                values=[(1, 2, 3, 4), (5, 6, 7, 8)],
-            )
-
-    def test_executemany_insert_use_mutations(self):
+    def test_executemany_insert_use_mutations_never(self):
+        """
+        Check that simple `execute()` used in autocommit and
+        !autocommit modes, when `use_mutations` is set to "NEVER".
+        """
         from google.cloud.spanner_dbapi import connect
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
@@ -380,12 +379,56 @@ class TestCursor(unittest.TestCase):
             ):
                 connection = connect("test-instance", "test-database")
 
-        connection.use_mutations = True
         cursor = connection.cursor()
+        cursor.execute = mock.Mock()
+
+        # !autocommit mode
+        self.assertFalse(connection.autocommit)
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+        cursor.execute.assert_called()
+
+        cursor.execute.reset_mock()
+
+        # autocommit mode
+        connection.autocommit = True
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+        cursor.execute.assert_called()
+
+    def test_executemany_insert_use_mutations_autocommit_only(self):
+        """
+        Check that simple `execute()` used in !autocommit mode
+        and mutations are used in autocommit mode, when
+        `use_mutations` is set to "AUTOCOMMIT_ONLY".
+        """
+        from google.cloud.spanner_dbapi import connect
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.use_mutations = connection.AUTOCOMMIT_ONLY
+        cursor = connection.cursor()
+
+        cursor.execute = mock.Mock()
         transact_mock = mock.Mock()
         transact_mock.insert = mock.Mock()
 
+        # !autocommit mode
         self.assertFalse(connection.autocommit)
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+        cursor.execute.assert_called()
+        transact_mock.insert.assert_not_called()
+
+        cursor.execute.reset_mock()
+
+        # autocommit mode
+        connection.autocommit = True
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
@@ -393,11 +436,67 @@ class TestCursor(unittest.TestCase):
         ):
             cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
 
-            transact_mock.insert.assert_called_once_with(
-                table="table",
-                columns=["col1", "col2", "col3", '"col4"'],
-                values=[(1, 2, 3, 4), (5, 6, 7, 8)],
-            )
+        transact_mock.insert.assert_called_once_with(
+            table="table",
+            columns=["col1", "col2", "col3", '"col4"'],
+            values=[(1, 2, 3, 4), (5, 6, 7, 8)],
+        )
+        cursor.execute.assert_not_called()
+
+    def test_executemany_insert_use_mutations_always(self):
+        """
+        Check that mutations are used in autocommit and !autocommit
+        modes, when `use_mutations` is set to "ALWAYS".
+        """
+        from google.cloud.spanner_dbapi import connect
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.use_mutations = connection.ALWAYS
+        cursor = connection.cursor()
+
+        cursor.execute = mock.Mock()
+        transact_mock = mock.Mock()
+        transact_mock.insert = mock.Mock()
+
+        # !autocommit mode
+        self.assertFalse(connection.autocommit)
+        with mock.patch(
+            "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
+            return_value=transact_mock,
+        ):
+            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+        cursor.execute.assert_not_called()
+        transact_mock.insert.assert_called_once_with(
+            table="table",
+            columns=["col1", "col2", "col3", '"col4"'],
+            values=[(1, 2, 3, 4), (5, 6, 7, 8)],
+        )
+        transact_mock.insert.reset_mock()
+
+        # autocommit mode
+        connection.autocommit = True
+        with mock.patch(
+            "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
+            return_value=transact_mock,
+        ):
+            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+        transact_mock.insert.assert_called_once_with(
+            table="table",
+            columns=["col1", "col2", "col3", '"col4"'],
+            values=[(1, 2, 3, 4), (5, 6, 7, 8)],
+        )
+        cursor.execute.assert_not_called()
 
     @unittest.skipIf(
         sys.version_info[0] < 3, "Python 2 has an outdated iterator definition"

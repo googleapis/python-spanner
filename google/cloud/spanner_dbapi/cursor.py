@@ -259,7 +259,10 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if self.connection.autocommit or self.connection.use_mutations:
+        if (
+            self.connection.use_mutations == self.connection.AUTOCOMMIT_ONLY
+            and self.connection.autocommit
+        ) or self.connection.use_mutations == self.connection.ALWAYS:
             if classification == parse_utils.STMT_INSERT:
                 match = RE_INSERT.search(operation)
 
