@@ -128,3 +128,13 @@ def sample_database(sample_instance, database_id):
     yield sample_database
 
     sample_database.drop()
+
+
+@pytest.fixture(scope="module")
+def kms_key_name(spanner_client):
+    return "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}".format(
+        spanner_client.project,
+        "us-central1",
+        "spanner-test-keyring",
+        "spanner-test-cmek",
+    )
