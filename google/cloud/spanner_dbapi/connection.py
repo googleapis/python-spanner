@@ -129,22 +129,18 @@ class Connection:
 
     @property
     def use_mutations(self):
-        """
-        Flag of the connection mode in which mutations
-        are used for massive DML statements.
+        """Mutations use mode of this connection.
 
         Returns:
-            bool: True if mutations mode is enable, False otherwise.
+            str:
+                One of three possible values:
+                "NEVER", "AUTOCOMMIT_ONLY", "ALWAYS".
         """
         return self._use_mutations
 
     @use_mutations.setter
     def use_mutations(self, value):
         """Change mutations use mode.
-
-        Mutations are used by default in autocommit
-        mode and they can be used in transactions
-        mode in case of this flag set to True.
 
         Args:
             value (bool): New flag value.
