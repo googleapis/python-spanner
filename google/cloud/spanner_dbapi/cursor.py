@@ -38,7 +38,6 @@ from google.cloud.spanner_dbapi._helpers import code_to_display_size
 from google.cloud.spanner_dbapi import parse_utils
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
-from google.cloud.spanner_dbapi.parse_utils import RE_INSERT
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
@@ -259,13 +258,25 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
+        if (
+            classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING)
+            and not self.connection.autocommit
+        ):
             statements = []
             for params in seq_of_params:
-                statements.append(operation % tuple(params))
+                pars = []
+                for par in params:
+                    if isinstance(par, str):
+                        par = "'" + par + "'"
+                    elif par is None:
+                        par = "NULL"
+                    pars.append(par)
+
+                statements.append(operation % tuple(pars))
 
             transaction = self.connection.transaction_checkout()
-            transaction.batch_update(statements)
+            _, res = transaction.batch_update(statements)
+            many_result_set.add_iter(res)
         else:
             for params in seq_of_params:
                 self.execute(operation, params)

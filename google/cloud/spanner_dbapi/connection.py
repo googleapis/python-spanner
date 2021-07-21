@@ -127,30 +127,6 @@ class Connection:
         """
         return self._instance
 
-    @property
-    def use_mutations(self):
-        """Mutations use mode of this connection.
-
-        Returns:
-            str:
-                One of three possible values:
-                "NEVER", "AUTOCOMMIT_ONLY", "ALWAYS".
-        """
-        return self._use_mutations
-
-    @use_mutations.setter
-    def use_mutations(self, value):
-        """Change mutations use mode.
-
-        Args:
-            value (bool): New flag value.
-        """
-        if value not in (self.NEVER, self.AUTOCOMMIT_ONLY, self.ALWAYS):
-            raise ValueError(
-                """`use_mutations` value should be one of: "NEVER", "AUTOCOMMIT_ONLY", "ALWAYS" """
-            )
-        self._use_mutations = value
-
     def _session_checkout(self):
         """Get a Cloud Spanner session from the pool.
 
