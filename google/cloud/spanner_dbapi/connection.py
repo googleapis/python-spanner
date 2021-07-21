@@ -50,11 +50,6 @@ class Connection:
     :param database: The database to which the connection is linked.
     """
 
-    # use_mutations flag possible values
-    ALWAYS = "ALWAYS"
-    AUTOCOMMIT_ONLY = "AUTOCOMMIT_ONLY"
-    NEVER = "NEVER"
-
     def __init__(self, instance, database):
         self._instance = instance
         self._database = database
@@ -68,7 +63,6 @@ class Connection:
 
         self.is_closed = False
         self._autocommit = False
-        self._use_mutations = self.NEVER
         # indicator to know if the session pool used by
         # this connection should be cleared on the
         # connection close
