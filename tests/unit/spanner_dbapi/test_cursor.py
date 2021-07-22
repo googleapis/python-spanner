@@ -338,6 +338,7 @@ class TestCursor(unittest.TestCase):
         )
 
     def test_executemany_insert_batch(self):
+        from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_dbapi import connect
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
@@ -352,19 +353,23 @@ class TestCursor(unittest.TestCase):
 
         cursor = connection.cursor()
 
-        transact_mock = mock.Mock()
-        transact_mock.batch_update = mock.Mock()
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(return_value=[None, []])
 
-        with mock.patch(
-            "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout",
-            return_value=transact_mock,
-        ):
-            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
 
-        transact_mock.batch_update.assert_called_once_with(
+        connection._transaction.batch_update.assert_called_once_with(
             [
-                """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (1, 2, 3, 4)""",
-                """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (5, 6, 7, 8)""",
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
             ]
         )
 

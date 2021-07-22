@@ -258,24 +258,21 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if (
-            classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING)
-            and not self.connection.autocommit
-        ):
+        if classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
             statements = []
-            for params in seq_of_params:
-                pars = []
-                for par in params:
-                    if isinstance(par, str):
-                        par = "'" + par + "'"
-                    elif par is None:
-                        par = "NULL"
-                    pars.append(par)
 
-                statements.append(operation % tuple(pars))
+            for params in seq_of_params:
+                sql, params = parse_utils.sql_pyformat_args_to_spanner(
+                    operation, params
+                )
+                statements.append((sql, params, get_param_types(params)))
 
             transaction = self.connection.transaction_checkout()
             _, res = transaction.batch_update(statements)
+
+            if self.connection.autocommit:
+                transaction.commit()
+
             many_result_set.add_iter(res)
         else:
             for params in seq_of_params:
