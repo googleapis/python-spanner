@@ -117,6 +117,8 @@ def setUpModule():
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
+    print("zoe configs")
+    print(configs)
 
     instances = retry(_list_instances)()
     EXISTING_INSTANCES[:] = instances
@@ -463,8 +465,6 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         operation = instance.create()
         self.instances_to_delete.append(instance)
         operation.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)
-
-        print(Config.CLIENT.list_instance_configs)
 
         temp_db_id = "temp_db" + unique_resource_id("_")
         default_leader = "us-east4"
