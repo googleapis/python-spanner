@@ -117,8 +117,6 @@ def setUpModule():
     retry = RetryErrors(exceptions.ServiceUnavailable)
 
     configs = list(retry(Config.CLIENT.list_instance_configs)())
-    print("zoe configs")
-    print(configs)
 
     instances = retry(_list_instances)()
     EXISTING_INSTANCES[:] = instances
@@ -456,7 +454,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
 
         # Create a multi-region instance
         ALT_INSTANCE_ID = "new" + unique_resource_id("-")
-        config_name = "{}/instanceConfigs/cloud-devel-global-config".format(
+        config_name = "{}/instanceConfigs/nam3".format(
             Config.CLIENT.project_name
         )
         instance = Config.CLIENT.instance(
@@ -615,7 +613,7 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
 
         # Create a multi-region instance
         ALT_INSTANCE_ID = "new" + unique_resource_id("-")
-        config_name = "{}/instanceConfigs/cloud-devel-global-config".format(
+        config_name = "{}/instanceConfigs/nam3".format(
             Config.CLIENT.project_name
         )
         instance = Config.CLIENT.instance(
