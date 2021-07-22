@@ -25,6 +25,7 @@ import base64
 import datetime
 import decimal
 import logging
+import time
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
@@ -44,6 +45,11 @@ def create_instance(instance_id):
         configuration_name=config_name,
         display_name="This is a display name.",
         node_count=1,
+        labels={
+            "cloud_spanner_samples": "true",
+            "sample_name": "snippets-create_instance-explicit",
+            "created": str(int(time.time()))
+        }
     )
 
     operation = instance.create()
@@ -55,6 +61,39 @@ def create_instance(instance_id):
 
 
 # [END spanner_create_instance]
+
+
+# [START spanner_create_instance_with_processing_units]
+def create_instance_with_processing_units(instance_id, processing_units):
+    """Creates an instance."""
+    spanner_client = spanner.Client()
+
+    config_name = "{}/instanceConfigs/regional-us-central1".format(
+        spanner_client.project_name
+    )
+
+    instance = spanner_client.instance(
+        instance_id,
+        configuration_name=config_name,
+        display_name="This is a display name.",
+        processing_units=processing_units,
+        labels={
+            "cloud_spanner_samples": "true",
+            "sample_name": "snippets-create_instance_with_processing_units",
+            "created": str(int(time.time()))
+        }
+    )
+
+    operation = instance.create()
+
+    print("Waiting for operation to complete...")
+    operation.result(120)
+
+    print("Created instance {} with {} processing units".format(
+        instance_id, instance.processing_units))
+
+
+# [END spanner_create_instance_with_processing_units]
 
 
 # [START spanner_create_database]
@@ -1703,7 +1742,10 @@ def query_data_with_query_options(instance_id, database_id):
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT VenueId, VenueName, LastUpdateTime FROM Venues",
-            query_options={"optimizer_version": "1"},
+            query_options={
+                "optimizer_version": "1",
+                "optimizer_statistics_package": "latest"
+            },
         )
 
         for row in results:
@@ -1716,7 +1758,11 @@ def create_client_with_query_options(instance_id, database_id):
     # [START spanner_create_client_with_query_options]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    spanner_client = spanner.Client(query_options={"optimizer_version": "1"})
+    spanner_client = spanner.Client(
+        query_options={
+            "optimizer_version": "1",
+            "optimizer_statistics_package": "auto_20191128_14_47_22UTC"
+        })
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 

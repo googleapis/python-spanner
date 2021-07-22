@@ -12,45 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-from google.cloud import spanner
-import mock
 import pytest
 
 import quickstart
 
-SPANNER_INSTANCE = os.environ["SPANNER_INSTANCE"]
+
+@pytest.fixture(scope="module")
+def sample_name():
+    return "quickstart"
 
 
-@pytest.fixture
-def patch_instance():
-    original_instance = spanner.Client.instance
-
-    def new_instance(self, unused_instance_name):
-        return original_instance(self, SPANNER_INSTANCE)
-
-    instance_patch = mock.patch(
-        "google.cloud.spanner_v1.Client.instance", side_effect=new_instance, autospec=True
-    )
-
-    with instance_patch:
-        yield
-
-
-@pytest.fixture
-def example_database():
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(SPANNER_INSTANCE)
-    database = instance.database("my-database-id")
-
-    if not database.exists():
-        database.create()
-
-    yield
-
-
-def test_quickstart(capsys, patch_instance, example_database):
-    quickstart.run_quickstart()
+def test_quickstart(capsys, instance_id, sample_database):
+    quickstart.run_quickstart(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
+
     assert "[1]" in out

@@ -43,11 +43,13 @@ from google.cloud.spanner_v1 import KeySet
 from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.table import Table
+from google.cloud.spanner_v1 import RequestOptions
 
 from test_utils.retry import RetryErrors
 from test_utils.retry import RetryInstanceState
 from test_utils.retry import RetryResult
 from test_utils.system import unique_resource_id
+
 from tests._fixtures import DDL_STATEMENTS
 from tests._fixtures import EMULATOR_DDL_STATEMENTS
 from tests._helpers import OpenTelemetryBase, HAS_OPENTELEMETRY_INSTALLED
@@ -226,6 +228,35 @@ class TestInstanceAdminAPI(unittest.TestCase):
 
         self.assertEqual(instance, instance_alt)
         self.assertEqual(instance.display_name, instance_alt.display_name)
+
+    @unittest.skipIf(USE_EMULATOR, "Skipping LCI tests")
+    @unittest.skipUnless(CREATE_INSTANCE, "Skipping instance creation")
+    def test_create_instance_with_processing_nodes(self):
+        ALT_INSTANCE_ID = "new" + unique_resource_id("-")
+        PROCESSING_UNITS = 5000
+        instance = Config.CLIENT.instance(
+            instance_id=ALT_INSTANCE_ID,
+            configuration_name=Config.INSTANCE_CONFIG.name,
+            processing_units=PROCESSING_UNITS,
+        )
+        operation = instance.create()
+        # Make sure this instance gets deleted after the test case.
+        self.instances_to_delete.append(instance)
+
+        # We want to make sure the operation completes.
+        operation.result(
+            SPANNER_OPERATION_TIMEOUT_IN_SECONDS
+        )  # raises on failure / timeout.
+
+        # Create a new instance instance and make sure it is the same.
+        instance_alt = Config.CLIENT.instance(
+            ALT_INSTANCE_ID, Config.INSTANCE_CONFIG.name
+        )
+        instance_alt.reload()
+
+        self.assertEqual(instance, instance_alt)
+        self.assertEqual(instance.display_name, instance_alt.display_name)
+        self.assertEqual(instance.processing_units, instance_alt.processing_units)
 
     @unittest.skipIf(USE_EMULATOR, "Skipping updating instance")
     def test_update_instance(self):
@@ -1821,6 +1852,9 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
             update_statement,
             params={"email": nonesuch, "target": target},
             param_types={"email": param_types.STRING, "target": param_types.STRING},
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
         )
         self.assertEqual(row_count, 1)
 
