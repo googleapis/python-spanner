@@ -453,9 +453,10 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         pool = BurstyPool(labels={"testcase": "create_database_default_leader"})
 
         # Create a multi-region instance
+        multi_region_config = "nam3"
         ALT_INSTANCE_ID = "new" + unique_resource_id("-")
-        config_name = "{}/instanceConfigs/nam3".format(
-            Config.CLIENT.project_name
+        config_name = "{}/instanceConfigs/{}".format(
+            Config.CLIENT.project_name, multi_region_config
         )
         instance = Config.CLIENT.instance(
             instance_id=ALT_INSTANCE_ID, configuration_name=config_name
@@ -612,9 +613,10 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         pool = BurstyPool(labels={"testcase": "update_database_ddl_default_leader"})
 
         # Create a multi-region instance
+        multi_region_config = "nam3"
         ALT_INSTANCE_ID = "new" + unique_resource_id("-")
-        config_name = "{}/instanceConfigs/nam3".format(
-            Config.CLIENT.project_name
+        config_name = "{}/instanceConfigs/{}".format(
+            Config.CLIENT.project_name, multi_region_config
         )
         instance = Config.CLIENT.instance(
             instance_id=ALT_INSTANCE_ID, configuration_name=config_name
