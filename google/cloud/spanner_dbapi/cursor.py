@@ -269,17 +269,43 @@ class Cursor(object):
                 )
                 statements.append((sql, params, get_param_types(params)))
 
-            transaction = self.connection.transaction_checkout()
-            status, res = transaction.batch_update(statements)
-            many_result_set.add_iter(res)
-
-            if status.code == ABORTED:
-                raise Aborted(status.details)
-            elif status.code != OK:
-                raise OperationalError(status.details)
-
             if self.connection.autocommit:
+                transaction = self.connection.transaction_checkout()
+                status, res = transaction.batch_update(statements)
+                many_result_set.add_iter(res)
+
+                if status.code != OK:
+                    self.connection._transaction = None
+                    raise OperationalError(status.details)
+
                 transaction.commit()
+            else:
+                retried = False
+                while True:
+                    try:
+                        transaction = self.connection.transaction_checkout()
+
+                        res_checksum = ResultsChecksum()
+                        if not retried:
+                            self.connection._statements.append(
+                                (statements, res_checksum)
+                            )
+
+                        status, res = transaction.batch_update(statements)
+                        many_result_set.add_iter(res)
+                        res_checksum.consume_result(res)
+
+                        if status.code == ABORTED:
+                            self.connection._transaction = None
+                            raise Aborted(status.details)
+                        elif status.code != OK:
+                            self.connection._transaction = None
+                            raise OperationalError(status.details)
+                        break
+                    except Aborted:
+                        self.connection.retry_transaction()
+                        retried = True
+
         else:
             for params in seq_of_params:
                 self.execute(operation, params)

@@ -445,9 +445,10 @@ class TestCursor(unittest.TestCase):
             cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
 
     def test_executemany_insert_batch_aborted(self):
-        from google.api_core.exceptions import Aborted
         from google.cloud.spanner_dbapi import connect
-        from google.rpc.code_pb2 import ABORTED
+        from google.cloud.spanner_dbapi.checksum import ResultsChecksum
+        from google.cloud.spanner_v1.param_types import INT64
+        from google.rpc.code_pb2 import ABORTED, OK
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
         err_details = "Aborted details here"
@@ -460,16 +461,68 @@ class TestCursor(unittest.TestCase):
             ):
                 connection = connect("test-instance", "test-database")
 
-        connection.autocommit = True
-        cursor = connection.cursor()
-
-        connection._transaction = mock.Mock(committed=False, rolled_back=False)
-        connection._transaction.batch_update = mock.Mock(
-            return_value=(mock.Mock(code=ABORTED, details=err_details), [])
+        transaction1 = mock.Mock(committed=False, rolled_back=False)
+        transaction1.batch_update = mock.Mock(
+            side_effect=[(mock.Mock(code=ABORTED, details=err_details), [])]
         )
 
-        with self.assertRaisesRegex(Aborted, err_details):
-            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+        transaction2 = mock.Mock(committed=False, rolled_back=False)
+        transaction2.batch_update = mock.Mock(side_effect=[(mock.Mock(code=OK), [])])
+
+        connection.transaction_checkout = mock.Mock(
+            side_effect=[transaction1, transaction2]
+        )
+        connection.retry_transaction = mock.Mock()
+
+        cursor = connection.cursor()
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+        transaction1.batch_update.assert_called_with(
+            [
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+            ]
+        )
+        transaction2.batch_update.assert_called_with(
+            [
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+            ]
+        )
+        connection.retry_transaction.assert_called_once()
+
+        self.assertEqual(
+            connection._statements[0][0],
+            [
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+            ],
+        )
+        self.assertIsInstance(connection._statements[0][1], ResultsChecksum)
 
     @unittest.skipIf(
         sys.version_info[0] < 3, "Python 2 has an outdated iterator definition"
