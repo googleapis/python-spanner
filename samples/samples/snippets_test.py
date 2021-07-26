@@ -15,12 +15,12 @@
 import time
 import uuid
 
-from google.api_core import exceptions
-from google.cloud import spanner
 import pytest
+from google.api_core import exceptions
 from test_utils.retry import RetryErrors
 
 import snippets
+from google.cloud import spanner
 
 CREATE_TABLE_SINGERS = """\
 CREATE TABLE Singers (
@@ -59,6 +59,12 @@ def lci_instance_id():
 
 
 @pytest.fixture(scope="module")
+def default_leader_instance_id():
+    """Id for the default leader instance."""
+    return f"default-leader-instance-{uuid.uuid4().hex[:10]}"
+
+
+@pytest.fixture(scope="module")
 def database_id():
     return f"test-db-{uuid.uuid4().hex[:10]}"
 
@@ -71,6 +77,11 @@ def create_database_id():
 @pytest.fixture(scope="module")
 def cmek_database_id():
     return f"cmek-db-{uuid.uuid4().hex[:10]}"
+
+
+@pytest.fixture(scope="module")
+def default_leader_database_id():
+    return f"default-leader-db-{uuid.uuid4().hex[:10]}"
 
 
 @pytest.fixture(scope="module")
@@ -117,6 +128,71 @@ def test_create_database_with_encryption_config(capsys, instance_id, cmek_databa
     out, _ = capsys.readouterr()
     assert cmek_database_id in out
     assert kms_key_name in out
+
+
+def test_get_instance_config(capsys):
+    instance_config = "nam6"
+    snippets.get_instance_config(instance_config)
+    out, _ = capsys.readouterr()
+    assert instance_config in out
+
+
+def test_list_instance_config(capsys):
+    snippets.list_instance_config()
+    out, _ = capsys.readouterr()
+    assert "Available instance configs" in out
+
+
+def test_list_databases(capsys, instance_id):
+    snippets.list_databases(instance_id)
+    out, _ = capsys.readouterr()
+    assert "Databases" in out
+    assert "Default leaders of databases" in out
+
+
+def test_create_database_with_default_leader(capsys, default_leader_instance_id, default_leader_database_id):
+    multi_region_confg = "nam3"
+    default_leader = "us-east4"
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(snippets.create_database_with_default_leader)(
+        default_leader_instance_id, default_leader_database_id,
+        multi_region_confg, default_leader
+    )
+    out, _ = capsys.readouterr()
+    assert default_leader_database_id in out
+    assert default_leader in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(default_leader_instance_id)
+    instance.delete()
+
+
+def test_update_database_with_default_leader(capsys, default_leader_instance_id,
+    default_leader_database_id):
+    multi_region_confg = "nam3"
+    default_leader = "us-east4"
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(snippets.update_database_with_default_leader)(
+        default_leader_instance_id, default_leader_database_id,
+        multi_region_confg, default_leader
+    )
+    out, _ = capsys.readouterr()
+    assert default_leader_database_id in out
+    assert default_leader in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(default_leader_instance_id)
+    instance.delete()
+
+
+def test_get_database_ddl(capsys, instance_id, sample_database):
+    snippets.get_database_ddl(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert sample_database.database_id in out
+
+
+def test_query_information_schema_database_options(capsys, instance_id, sample_database):
+    snippets.query_information_schema_database_options(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "has default leader" in out
 
 
 @pytest.mark.dependency(name="insert_data")
