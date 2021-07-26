@@ -128,7 +128,7 @@ s.replace(
 python.py_samples()
 
 # ----------------------------------------------------------------------------
-# Fixup noxfile.py
+# Customize noxfile.py
 # ----------------------------------------------------------------------------
 
 def place_before(path, text, *before_text, escape=None):
