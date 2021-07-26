@@ -157,9 +157,6 @@ class TestConnection(unittest.TestCase):
         mock_transaction.committed = mock_transaction.rolled_back = False
         self.assertEqual(connection.transaction_checkout(), mock_transaction)
 
-        connection._autocommit = True
-        self.assertIsNone(connection.transaction_checkout())
-
     def test_close(self):
         from google.cloud.spanner_dbapi import connect, InterfaceError
 

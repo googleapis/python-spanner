@@ -337,9 +337,10 @@ class TestCursor(unittest.TestCase):
             (mock.call(operation, (1,)), mock.call(operation, (2,)))
         )
 
-    def test_executemany_insert_batch(self):
+    def test_executemany_insert_batch_non_autocommit(self):
         from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_dbapi import connect
+        from google.rpc.code_pb2 import OK
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
 
@@ -351,11 +352,12 @@ class TestCursor(unittest.TestCase):
             ):
                 connection = connect("test-instance", "test-database")
 
-        cursor = connection.cursor()
-
         connection._transaction = mock.Mock(committed=False, rolled_back=False)
-        connection._transaction.batch_update = mock.Mock(return_value=[None, []])
+        connection._transaction.batch_update = mock.Mock(
+            return_value=[mock.Mock(code=OK), []]
+        )
 
+        cursor = connection.cursor()
         cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
 
         connection._transaction.batch_update.assert_called_once_with(
@@ -372,6 +374,102 @@ class TestCursor(unittest.TestCase):
                 ),
             ]
         )
+
+    def test_executemany_insert_batch_autocommit(self):
+        from google.cloud.spanner_v1.param_types import INT64
+        from google.cloud.spanner_dbapi import connect
+        from google.rpc.code_pb2 import OK
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(
+            return_value=[mock.Mock(code=OK), []]
+        )
+        connection._transaction.commit = mock.Mock()
+
+        cursor = connection.cursor()
+        cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+        connection._transaction.batch_update.assert_called_once_with(
+            [
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+                (
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
+                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                ),
+            ]
+        )
+        connection._transaction.commit.assert_called_once()
+
+    def test_executemany_insert_batch_failed(self):
+        from google.cloud.spanner_dbapi import connect
+        from google.cloud.spanner_dbapi.exceptions import OperationalError
+        from google.rpc.code_pb2 import UNKNOWN
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+        err_details = "Details here"
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+        cursor = connection.cursor()
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(
+            return_value=(mock.Mock(code=UNKNOWN, details=err_details), [])
+        )
+
+        with self.assertRaisesRegex(OperationalError, err_details):
+            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
+
+    def test_executemany_insert_batch_aborted(self):
+        from google.api_core.exceptions import Aborted
+        from google.cloud.spanner_dbapi import connect
+        from google.rpc.code_pb2 import ABORTED
+
+        sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
+        err_details = "Aborted details here"
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+        cursor = connection.cursor()
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(
+            return_value=(mock.Mock(code=ABORTED, details=err_details), [])
+        )
+
+        with self.assertRaisesRegex(Aborted, err_details):
+            cursor.executemany(sql, [(1, 2, 3, 4), (5, 6, 7, 8)])
 
     @unittest.skipIf(
         sys.version_info[0] < 3, "Python 2 has an outdated iterator definition"

@@ -41,6 +41,8 @@ from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
+from google.rpc.code_pb2 import ABORTED, OK
+
 _UNSET_COUNT = -1
 
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
@@ -268,12 +270,16 @@ class Cursor(object):
                 statements.append((sql, params, get_param_types(params)))
 
             transaction = self.connection.transaction_checkout()
-            _, res = transaction.batch_update(statements)
+            status, res = transaction.batch_update(statements)
+            many_result_set.add_iter(res)
+
+            if status.code == ABORTED:
+                raise Aborted(status.details)
+            elif status.code != OK:
+                raise OperationalError(status.details)
 
             if self.connection.autocommit:
                 transaction.commit()
-
-            many_result_set.add_iter(res)
         else:
             for params in seq_of_params:
                 self.execute(operation, params)
