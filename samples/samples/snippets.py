@@ -99,9 +99,9 @@ def create_instance_with_processing_units(instance_id, processing_units):
 # [START spanner_get_instance_config]
 def get_instance_config(instance_config):
     """Gets the leader options for the instance configuration."""
-    from google.cloud.spanner_admin_instance_v1 import GetInstanceConfigRequest
     spanner_client = spanner.Client()
-    config = spanner_client.instance_admin_api.get_instance_config(name=instance_config)
+    config_name = "{}/instanceConfigs/{}".format(spanner_client.project_name, instance_config)
+    config = spanner_client.instance_admin_api.get_instance_config(name=config_name)
     print("Available leader options for instance config {}: {}".format(
         instance_config, config.leader_options))
 
@@ -316,7 +316,7 @@ def get_database_ddl(instance_id, database_id):
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
-    ddl = spanner_client.database_admin_api.get_database_ddl(database.name)
+    ddl = spanner_client.database_admin_api.get_database_ddl(database=database.name)
     print("Retrieved database DDL for {}".format(database_id))
     for statement in ddl.statements:
         print(statement)
