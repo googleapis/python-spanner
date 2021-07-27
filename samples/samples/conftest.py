@@ -68,9 +68,9 @@ def instance_id():
 
 
 @pytest.fixture(scope="module")
-def leader_instance_id():
-    """Unique id for the instance used in default leader samples."""
-    return f"leader-instance-{uuid.uuid4().hex[:10]}"
+def multi_region_instance_id():
+    """Unique id for the multi-region instance used in samples."""
+    return f"multi-instance-{uuid.uuid4().hex[:10]}"
 
 
 @pytest.fixture(scope="module")
@@ -127,12 +127,12 @@ def sample_instance(
 def multi_region_instance(
     spanner_client,
     cleanup_old_instances,
-    leader_instance_id,
+    multi_region_instance_id,
     multi_region_instance_config,
     sample_name,
 ):
     multi_region_instance = spanner_client.instance(
-        leader_instance_id,
+        multi_region_instance_id,
         multi_region_instance_config,
         labels={
             "cloud_spanner_samples": "true",

@@ -258,29 +258,9 @@ def update_database_with_default_leader(
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
-    database = instance.database(
-        database_id,
-        ddl_statements=[
-            """CREATE TABLE Singers (
-            SingerId     INT64 NOT NULL,
-            FirstName    STRING(1024),
-            LastName     STRING(1024),
-            SingerInfo   BYTES(MAX)
-        ) PRIMARY KEY (SingerId)""",
-            """CREATE TABLE Albums (
-            SingerId     INT64 NOT NULL,
-            AlbumId      INT64 NOT NULL,
-            AlbumTitle   STRING(MAX)
-        ) PRIMARY KEY (SingerId, AlbumId),
-        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
-        ],
-    )
-    operation = database.create()
+    database = instance.database(database_id)
 
-    print("Waiting for operation to complete...")
-    operation.result(120)
-
-    database.update_ddl(["ALTER DATABASE {}"
+    operation = database.update_ddl(["ALTER DATABASE {}"
                          " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
     operation.result(120)
 

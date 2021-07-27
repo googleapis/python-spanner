@@ -87,6 +87,12 @@ def database_ddl():
     return [CREATE_TABLE_SINGERS, CREATE_TABLE_ALBUMS]
 
 
+@pytest.fixture(scope="module")
+def default_leader():
+    """ Default leader for multi-region instances. """
+    return "us-east4"
+
+
 def test_create_instance_explicit(spanner_client, create_instance_id):
     # Rather than re-use 'sample_isntance', we create a new instance, to
     # ensure that the 'create_instance' snippet is tested.
@@ -144,22 +150,20 @@ def test_list_databases(capsys, instance_id):
     assert "Default leaders of databases" in out
 
 
-def test_create_database_with_default_leader(capsys, multi_region_instance, default_leader_database_id):
-    default_leader = "us-east4"
+def test_create_database_with_default_leader(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.create_database_with_default_leader)(
-        multi_region_instance, default_leader_database_id, default_leader
+        multi_region_instance_id, default_leader_database_id, default_leader
     )
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
     assert default_leader in out
 
 
-def test_update_database_with_default_leader(capsys, multi_region_instance, default_leader_database_id):
-    default_leader = "us-east4"
+def test_update_database_with_default_leader(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.update_database_with_default_leader)(
-        multi_region_instance, default_leader_database_id, default_leader
+        multi_region_instance_id, default_leader_database_id, default_leader
     )
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
@@ -172,14 +176,9 @@ def test_get_database_ddl(capsys, instance_id, sample_database):
     assert sample_database.database_id in out
 
 
-def test_query_information_schema_database_options(capsys, multi_region_instance, default_leader_database_id):
-    default_leader = "us-east4"
-    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
-    retry_429(snippets.create_database_with_default_leader)(
-        multi_region_instance, default_leader_database_id, default_leader
-    )
+def test_query_information_schema_database_options(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
     snippets.query_information_schema_database_options(
-        multi_region_instance, default_leader_database_id
+        multi_region_instance_id, default_leader_database_id
     )
     out, _ = capsys.readouterr()
     assert default_leader in out
