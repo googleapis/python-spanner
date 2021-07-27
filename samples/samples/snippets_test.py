@@ -61,7 +61,7 @@ def lci_instance_id():
 @pytest.fixture(scope="module")
 def default_leader_instance_id():
     """Id for the default leader instance."""
-    return f"default-leader-instance-{uuid.uuid4().hex[:10]}"
+    return f"default-leader-instance-{uuid.uuid4().hex[:8]}"
 
 
 @pytest.fixture(scope="module")
@@ -189,10 +189,22 @@ def test_get_database_ddl(capsys, instance_id, sample_database):
     assert sample_database.database_id in out
 
 
-def test_query_information_schema_database_options(capsys, instance_id, sample_database):
-    snippets.query_information_schema_database_options(instance_id, sample_database.database_id)
+def test_query_information_schema_database_options(capsys, default_leader_instance_id, default_leader_database_id):
+    multi_region_confg = "nam3"
+    default_leader = "us-east4"
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(snippets.create_database_with_default_leader)(
+        default_leader_instance_id, default_leader_database_id,
+        multi_region_confg, default_leader
+    )
+    snippets.query_information_schema_database_options(
+        default_leader_instance_id, default_leader_database_id
+    )
     out, _ = capsys.readouterr()
-    assert "has default leader" in out
+    assert default_leader in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(default_leader_instance_id)
+    instance.delete()
 
 
 @pytest.mark.dependency(name="insert_data")

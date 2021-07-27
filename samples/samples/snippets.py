@@ -210,12 +210,12 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
 
 # [START spanner_create_database_with_default_leader]
 def create_database_with_default_leader(
-    instance_id, database_id, configRegion, default_leader
+    instance_id, database_id, config_region, default_leader
 ):
     """Creates a database with tables with a default leader."""
     spanner_client = spanner.Client()
 
-    config_name = "{}/instanceConfigs/{}".format(spanner_client.project_name, configRegion)
+    config_name = "{}/instanceConfigs/{}".format(spanner_client.project_name, config_region)
     instance = spanner_client.instance(
         instance_id, configuration_name=config_name
     )
