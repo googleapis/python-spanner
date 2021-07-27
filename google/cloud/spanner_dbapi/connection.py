@@ -32,8 +32,7 @@ from google.cloud.spanner_dbapi.exceptions import InterfaceError
 from google.cloud.spanner_dbapi.version import DEFAULT_USER_AGENT
 from google.cloud.spanner_dbapi.version import PY_VERSION
 
-from google.cloud.spanner_dbapi.exceptions import OperationalError
-from google.rpc.code_pb2 import ABORTED, OK
+from google.rpc.code_pb2 import ABORTED
 
 
 AUTOCOMMIT_MODE_WARNING = "This method is non-operational in autocommit mode"
