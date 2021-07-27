@@ -61,7 +61,7 @@ def lci_instance_id():
 @pytest.fixture(scope="module")
 def default_leader_instance_id():
     """Id for the default leader instance."""
-    return f"default-leader-instance-{uuid.uuid4().hex[:8]}"
+    return f"default-leader-instance-{uuid.uuid4().hex[:6]}"
 
 
 @pytest.fixture(scope="module")
