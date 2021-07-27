@@ -337,6 +337,88 @@ class TestCursor(unittest.TestCase):
             (mock.call(operation, (1,)), mock.call(operation, (2,)))
         )
 
+    def test_executemany_delete_batch_autocommit(self):
+        from google.cloud.spanner_v1.param_types import INT64
+        from google.cloud.spanner_dbapi import connect
+        from google.rpc.code_pb2 import OK
+
+        sql = """DELETE FROM table WHERE col1 = %s"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(
+            return_value=[mock.Mock(code=OK), []]
+        )
+        connection._transaction.commit = mock.Mock()
+
+        cursor = connection.cursor()
+        cursor.executemany(sql, [(1,), (2,), (3,)])
+
+        connection._transaction.batch_update.assert_called_once_with(
+            [
+                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 1}, {"a0": INT64},),
+                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 2}, {"a0": INT64},),
+                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 3}, {"a0": INT64},),
+            ]
+        )
+        connection._transaction.commit.assert_called_once()
+
+    def test_executemany_update_batch_autocommit(self):
+        from google.cloud.spanner_v1.param_types import INT64, STRING
+        from google.cloud.spanner_dbapi import connect
+        from google.rpc.code_pb2 import OK
+
+        sql = """UPDATE table SET col1 = %s WHERE col2 = %s"""
+
+        with mock.patch(
+            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+            ):
+                connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._transaction.batch_update = mock.Mock(
+            return_value=[mock.Mock(code=OK), []]
+        )
+        connection._transaction.commit = mock.Mock()
+
+        cursor = connection.cursor()
+        cursor.executemany(sql, [(1, "a"), (2, "b"), (3, "c")])
+
+        connection._transaction.batch_update.assert_called_once_with(
+            [
+                (
+                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    {"a0": 1, "a1": "a"},
+                    {"a0": INT64, "a1": STRING},
+                ),
+                (
+                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    {"a0": 2, "a1": "b"},
+                    {"a0": INT64, "a1": STRING},
+                ),
+                (
+                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    {"a0": 3, "a1": "c"},
+                    {"a0": INT64, "a1": STRING},
+                ),
+            ]
+        )
+        connection._transaction.commit.assert_called_once()
+
     def test_executemany_insert_batch_non_autocommit(self):
         from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_dbapi import connect
