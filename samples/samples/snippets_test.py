@@ -15,12 +15,12 @@
 import time
 import uuid
 
-import pytest
 from google.api_core import exceptions
+from google.cloud import spanner
 from test_utils.retry import RetryErrors
 
+import pytest
 import snippets
-from google.cloud import spanner
 
 CREATE_TABLE_SINGERS = """\
 CREATE TABLE Singers (
@@ -75,7 +75,7 @@ def cmek_database_id():
 
 @pytest.fixture(scope="module")
 def default_leader_database_id():
-    return f"leader-db-{uuid.uuid4().hex[:10]}"
+    return f"leader_db_{uuid.uuid4().hex[:10]}"
 
 
 @pytest.fixture(scope="module")
