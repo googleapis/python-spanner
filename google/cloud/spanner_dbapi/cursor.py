@@ -275,6 +275,7 @@ class Cursor(object):
                 many_result_set.add_iter(res)
 
                 if status.code != OK:
+                    self.connection._transaction.rollback()
                     self.connection._transaction = None
                     raise OperationalError(status.details)
 
@@ -294,12 +295,12 @@ class Cursor(object):
                         status, res = transaction.batch_update(statements)
                         many_result_set.add_iter(res)
                         res_checksum.consume_result(res)
+                        res_checksum.consume_result(status.code)
 
                         if status.code == ABORTED:
                             self.connection._transaction = None
                             raise Aborted(status.details)
                         elif status.code != OK:
-                            self.connection._transaction = None
                             raise OperationalError(status.details)
                         break
                     except Aborted:

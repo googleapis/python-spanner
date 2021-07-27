@@ -188,11 +188,11 @@ class Connection:
                     self.connection._transaction = None
                     raise Aborted(status.details)
                 elif status.code != OK:
-                    self.connection._transaction = None
                     raise OperationalError(status.details)
 
                 retried_checksum = ResultsChecksum()
                 retried_checksum.consume_result(res)
+                retried_checksum.consume_result(status.code)
 
                 _compare_checksums(checksum, retried_checksum)
             else:
