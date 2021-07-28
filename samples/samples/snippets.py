@@ -240,6 +240,8 @@ def create_database_with_default_leader(
     print("Waiting for operation to complete...")
     operation.result(120)
 
+    database.reload()
+
     print(
         "Database {} created with default leader {}".format(
                 database.name, database.default_leader
@@ -263,6 +265,8 @@ def update_database_with_default_leader(
     operation = database.update_ddl(["ALTER DATABASE {}"
                                      " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
     operation.result(120)
+
+    database.reload()
 
     print(
         "Database {} updated with default leader {}".format(
