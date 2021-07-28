@@ -158,6 +158,15 @@ class Cursor(object):
 
         return result
 
+    def _do_batch_update(self, transaction, statements, many_result_set):
+        status, res = transaction.batch_update(statements)
+        many_result_set.add_iter(res)
+
+        if status.code == ABORTED:
+            raise Aborted(status.details)
+        elif status.code != OK:
+            raise OperationalError(status.details)
+
     def execute(self, sql, args=None):
         """Prepares and executes a Spanner database operation.
 
@@ -270,16 +279,9 @@ class Cursor(object):
                 statements.append((sql, params, get_param_types(params)))
 
             if self.connection.autocommit:
-                transaction = self.connection.transaction_checkout()
-                status, res = transaction.batch_update(statements)
-                many_result_set.add_iter(res)
-
-                if status.code != OK:
-                    self.connection._transaction.rollback()
-                    self.connection._transaction = None
-                    raise OperationalError(status.details)
-
-                transaction.commit()
+                self.connection.database.run_in_transaction(
+                    self._do_batch_update, statements, many_result_set
+                )
             else:
                 retried = False
                 while True:
