@@ -56,7 +56,7 @@ from google.cloud.spanner_v1 import RequestOptions
 
 CREATE_INSTANCE = os.getenv("GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE") is not None
 USE_EMULATOR = os.getenv("SPANNER_EMULATOR_HOST") is not None
-STAGING_API_ENDPOINT = os.getenv("SPANNER_STAGING_HOST_API_ENDPOINT") is not None
+SPANNER_API_ENDPOINT = os.getenv("SPANNER_API_ENDPOINT") is not None
 SKIP_BACKUP_TESTS = os.getenv("SKIP_BACKUP_TESTS") is not None
 SPANNER_OPERATION_TIMEOUT_IN_SECONDS = int(
     os.getenv("SPANNER_OPERATION_TIMEOUT_IN_SECONDS", 60)
@@ -113,9 +113,9 @@ def setUpModule():
             project=emulator_project, credentials=AnonymousCredentials()
         )
     else:
-        if STAGING_API_ENDPOINT:
+        if SPANNER_API_ENDPOINT:
             Config.CLIENT = Client(
-                client_options={"api_endpoint": STAGING_API_ENDPOINT}
+                client_options={"api_endpoint": SPANNER_API_ENDPOINT}
             )
         else:
             Config.CLIENT = Client()
@@ -585,6 +585,8 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
                 )
             )
         self._check_rows_data(rows)
+        # TODO: Remove the sleep option as it slows down the test execution.
+        # Add a retry logic with delay and timeout.
         time.sleep(200)
         with self._db.snapshot(exact_staleness=datetime.timedelta(seconds=1)) as after:
             # Read query stats for the request tag using SQL.

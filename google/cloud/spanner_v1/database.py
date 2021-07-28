@@ -808,10 +808,7 @@ class BatchCheckout(object):
         """End ``with`` block."""
         try:
             if exc_type is None:
-                self._batch.commit(
-                    return_commit_stats=self._database.log_commit_stats,
-                    request_options=self._request_options,
-                )
+                self._batch.commit(return_commit_stats=self._database.log_commit_stats,)
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
                 self._database.logger.info(
