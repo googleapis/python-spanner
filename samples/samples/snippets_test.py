@@ -17,9 +17,9 @@ import uuid
 
 from google.api_core import exceptions
 from google.cloud import spanner
+import pytest
 from test_utils.retry import RetryErrors
 
-import pytest
 import snippets
 
 CREATE_TABLE_SINGERS = """\
@@ -150,7 +150,7 @@ def test_list_databases(capsys, instance_id):
     assert "Default leaders of databases" in out
 
 
-def test_create_database_with_default_leader(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
+def test_create_database_with_default_leader(capsys, multi_region_instance, multi_region_instance_id, default_leader_database_id, default_leader):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.create_database_with_default_leader)(
         multi_region_instance_id, default_leader_database_id, default_leader
@@ -160,7 +160,7 @@ def test_create_database_with_default_leader(capsys, multi_region_instance_id, d
     assert default_leader in out
 
 
-def test_update_database_with_default_leader(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
+def test_update_database_with_default_leader(capsys, multi_region_instance, multi_region_instance_id, default_leader_database_id, default_leader):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.update_database_with_default_leader)(
         multi_region_instance_id, default_leader_database_id, default_leader
@@ -176,7 +176,7 @@ def test_get_database_ddl(capsys, instance_id, sample_database):
     assert sample_database.database_id in out
 
 
-def test_query_information_schema_database_options(capsys, multi_region_instance_id, default_leader_database_id, default_leader):
+def test_query_information_schema_database_options(capsys, multi_region_instance, multi_region_instance_id, default_leader_database_id, default_leader):
     snippets.query_information_schema_database_options(
         multi_region_instance_id, default_leader_database_id
     )

@@ -242,7 +242,7 @@ def create_database_with_default_leader(
 
     print(
         "Database {} created with default leader {}".format(
-            database.name, database.default_leader
+                database.name, database.default_leader
         )
     )
 
@@ -261,7 +261,7 @@ def update_database_with_default_leader(
     database = instance.database(database_id)
 
     operation = database.update_ddl(["ALTER DATABASE {}"
-                         " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
+                                     " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
     operation.result(120)
 
     print(
