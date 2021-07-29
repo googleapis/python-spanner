@@ -68,6 +68,7 @@ else:
     INSTANCE_ID = os.environ.get(
         "GOOGLE_CLOUD_TESTS_SPANNER_INSTANCE", "google-cloud-python-systest"
     )
+MULTI_REGION_INSTANCE_ID = "multi-region" + unique_resource_id("-")
 EXISTING_INSTANCES = []
 COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
@@ -355,14 +356,15 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
 
         # Create a multi-region instance
         multi_region_config = "nam3"
-        ALT_INSTANCE_ID = "new" + unique_resource_id("-")
         config_name = "{}/instanceConfigs/{}".format(
             Config.CLIENT.project_name, multi_region_config
         )
         create_time = str(int(time.time()))
         labels = {"python-spanner-systests": "true", "created": create_time}
         cls._instance = Config.CLIENT.instance(
-            instance_id=ALT_INSTANCE_ID, configuration_name=config_name, labels=labels
+            instance_id=MULTI_REGION_INSTANCE_ID,
+            configuration_name=config_name,
+            labels=labels,
         )
         operation = cls._instance.create()
         operation.result(SPANNER_OPERATION_TIMEOUT_IN_SECONDS)
@@ -373,14 +375,11 @@ class TestDatabaseAPI(unittest.TestCase, _TestData):
         cls._instance.delete()
 
     def setUp(self):
-        self.instances_to_delete = []
         self.to_delete = []
 
     def tearDown(self):
         for doomed in self.to_delete:
             doomed.drop()
-        for instance in self.instances_to_delete:
-            instance.delete()
 
     def test_list_databases(self):
         # Since `Config.INSTANCE` is newly created in `setUpModule`, the
