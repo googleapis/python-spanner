@@ -37,6 +37,13 @@ class TestCursor(unittest.TestCase):
 
         return Connection(*args, **kwargs)
 
+    def _transaction_mock(self):
+        from google.rpc.code_pb2 import OK
+
+        transaction = mock.Mock(committed=False, rolled_back=False)
+        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
+        return transaction
+
     def test_property_connection(self):
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
@@ -341,9 +348,8 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_v1.types.spanner import Session
-        from google.rpc.code_pb2 import OK
 
-        sql = """DELETE FROM table WHERE col1 = %s"""
+        sql = "DELETE FROM table WHERE col1 = %s"
 
         with mock.patch(
             "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
@@ -354,11 +360,7 @@ class TestCursor(unittest.TestCase):
                 connection = connect("test-instance", "test-database")
 
         connection.autocommit = True
-
-        transaction = mock.Mock(committed=False, rolled_back=False)
-        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
-        transaction.commit = mock.Mock()
-
+        transaction = self._transaction_mock()
         cursor = connection.cursor()
 
         with mock.patch(
@@ -373,9 +375,9 @@ class TestCursor(unittest.TestCase):
 
         transaction.batch_update.assert_called_once_with(
             [
-                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 1}, {"a0": INT64},),
-                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 2}, {"a0": INT64},),
-                ("""DELETE FROM table WHERE col1 = @a0""", {"a0": 3}, {"a0": INT64},),
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 1}, {"a0": INT64}),
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 2}, {"a0": INT64}),
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 3}, {"a0": INT64}),
             ]
         )
 
@@ -383,9 +385,8 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_v1.param_types import INT64, STRING
         from google.cloud.spanner_v1.types.spanner import Session
-        from google.rpc.code_pb2 import OK
 
-        sql = """UPDATE table SET col1 = %s WHERE col2 = %s"""
+        sql = "UPDATE table SET col1 = %s WHERE col2 = %s"
 
         with mock.patch(
             "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
@@ -396,11 +397,7 @@ class TestCursor(unittest.TestCase):
                 connection = connect("test-instance", "test-database")
 
         connection.autocommit = True
-
-        transaction = mock.Mock(committed=False, rolled_back=False)
-        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
-        transaction.commit = mock.Mock()
-
+        transaction = self._transaction_mock()
         cursor = connection.cursor()
 
         with mock.patch(
@@ -416,17 +413,17 @@ class TestCursor(unittest.TestCase):
         transaction.batch_update.assert_called_once_with(
             [
                 (
-                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    "UPDATE table SET col1 = @a0 WHERE col2 = @a1",
                     {"a0": 1, "a1": "a"},
                     {"a0": INT64, "a1": STRING},
                 ),
                 (
-                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    "UPDATE table SET col1 = @a0 WHERE col2 = @a1",
                     {"a0": 2, "a1": "b"},
                     {"a0": INT64, "a1": STRING},
                 ),
                 (
-                    """UPDATE table SET col1 = @a0 WHERE col2 = @a1""",
+                    "UPDATE table SET col1 = @a0 WHERE col2 = @a1",
                     {"a0": 3, "a1": "c"},
                     {"a0": INT64, "a1": STRING},
                 ),
@@ -437,7 +434,6 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_v1.types.spanner import Session
-        from google.rpc.code_pb2 import OK
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
 
@@ -449,8 +445,7 @@ class TestCursor(unittest.TestCase):
             ):
                 connection = connect("test-instance", "test-database")
 
-        transaction = mock.Mock(committed=False, rolled_back=False)
-        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
+        transaction = self._transaction_mock()
 
         cursor = connection.cursor()
         with mock.patch(
@@ -482,7 +477,6 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_v1.param_types import INT64
         from google.cloud.spanner_v1.types.spanner import Session
-        from google.rpc.code_pb2 import OK
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
 
@@ -496,8 +490,7 @@ class TestCursor(unittest.TestCase):
 
         connection.autocommit = True
 
-        transaction = mock.Mock(committed=False, rolled_back=False)
-        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
+        transaction = self._transaction_mock()
         transaction.commit = mock.Mock()
 
         cursor = connection.cursor()
@@ -567,7 +560,7 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_dbapi.checksum import ResultsChecksum
         from google.cloud.spanner_v1.param_types import INT64
-        from google.rpc.code_pb2 import ABORTED, OK
+        from google.rpc.code_pb2 import ABORTED
 
         sql = """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (%s, %s, %s, %s)"""
         err_details = "Aborted details here"
@@ -585,8 +578,7 @@ class TestCursor(unittest.TestCase):
             side_effect=[(mock.Mock(code=ABORTED, details=err_details), [])]
         )
 
-        transaction2 = mock.Mock(committed=False, rolled_back=False)
-        transaction2.batch_update = mock.Mock(side_effect=[(mock.Mock(code=OK), [])])
+        transaction2 = self._transaction_mock()
 
         connection.transaction_checkout = mock.Mock(
             side_effect=[transaction1, transaction2]
