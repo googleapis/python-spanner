@@ -157,8 +157,13 @@ class TestConnection(unittest.TestCase):
 
         self.assertEqual(connection.transaction_checkout(), mock_transaction)
 
-    def test_close(self):
-        from google.cloud.spanner_dbapi import connect, InterfaceError
+        connection._autocommit = True
+        self.assertIsNone(connection.transaction_checkout())
+
+    @mock.patch("google.cloud.spanner_v1.Client")
+    def test_close(self, mock_client):
+        from google.cloud.spanner_dbapi import connect
+        from google.cloud.spanner_dbapi import InterfaceError
 
         connection = connect("test-instance", "test-database")
 
