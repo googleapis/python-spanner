@@ -17,6 +17,7 @@ import time
 
 from google.api_core import exceptions
 from google.cloud.spanner_v1 import instance as instance_mod
+from tests import _fixtures
 from test_utils import retry
 from test_utils import system
 
@@ -41,6 +42,11 @@ USE_EMULATOR = os.getenv(USE_EMULATOR_ENVVAR) is not None
 EMULATOR_PROJECT_ENVVAR = "GCLOUD_PROJECT"
 EMULATOR_PROJECT_DEFAULT = "emulator-test-project"
 EMULATOR_PROJECT = os.getenv(EMULATOR_PROJECT_ENVVAR, EMULATOR_PROJECT_DEFAULT)
+
+
+DDL_STATEMENTS = (
+    _fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS
+)
 
 
 retry_503 = retry.RetryErrors(exceptions.ServiceUnavailable)
@@ -76,5 +82,13 @@ def cleanup_old_instances(spanner_client):
                 scrub_instance_ignore_not_found(instance)
 
 
-def unique_id(prefix):
-    return f"{prefix}{system.unique_resource_id('-')}"
+def unique_id(prefix, separator="-"):
+    return f"{prefix}{system.unique_resource_id(separator)}"
+
+
+def _has_all_ddl(database):
+    # Predicate to test for EC completion.
+    return len(database.ddl_statements) == len(DDL_STATEMENTS)
+
+
+retry_has_all_dll = retry.RetryInstanceState(_has_all_ddl)

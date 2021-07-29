@@ -30,6 +30,9 @@ ROW_DATA = (
 ALL = spanner_v1.KeySet(all_=True)
 SQL = "SELECT * FROM contacts ORDER BY contact_id"
 
+COUNTERS_TABLE = "counters"
+COUNTERS_COLUMNS = ("name", "value")
+
 
 def _assert_timestamp(value, nano_value):
     assert isinstance(value, datetime.datetime)

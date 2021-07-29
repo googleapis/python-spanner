@@ -123,3 +123,18 @@ def shared_instance(
 
     if _helpers.CREATE_INSTANCE:
         _helpers.retry_429_503(instance.delete)()
+
+
+@pytest.fixture(scope="session")
+def shared_database(shared_instance, operation_timeout):
+    database_name = _helpers.unique_id("test_database")
+    pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
+    database = shared_instance.database(
+        database_name, ddl_statements=_helpers.DDL_STATEMENTS, pool=pool
+    )
+    operation = database.create()
+    operation.result(operation_timeout)  # raises on failure / timeout.
+
+    yield database
+
+    database.drop()
