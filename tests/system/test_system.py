@@ -41,7 +41,6 @@ from google.cloud.spanner_v1 import KeyRange
 from google.cloud.spanner_v1 import KeySet
 from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1.table import Table
 from google.cloud.spanner_v1 import RequestOptions
 
 from test_utils.retry import RetryErrors
@@ -223,65 +222,6 @@ class _TestData(object):
                 self._check_cell_data(found_item, expected_item)
         else:
             self.assertEqual(found_cell, expected_cell)
-
-
-class TestTableAPI(unittest.TestCase, _TestData):
-    DATABASE_NAME = "test_database" + unique_resource_id("_")
-
-    @classmethod
-    def setUpClass(cls):
-        pool = BurstyPool(labels={"testcase": "database_api"})
-        ddl_statements = EMULATOR_DDL_STATEMENTS if USE_EMULATOR else DDL_STATEMENTS
-        cls._db = Config.INSTANCE.database(
-            cls.DATABASE_NAME, ddl_statements=ddl_statements, pool=pool
-        )
-        operation = cls._db.create()
-        operation.result(30)  # raises on failure / timeout.
-
-    @classmethod
-    def tearDownClass(cls):
-        cls._db.drop()
-
-    def test_exists(self):
-        table = Table("all_types", self._db)
-        self.assertTrue(table.exists())
-
-    def test_exists_not_found(self):
-        table = Table("table_does_not_exist", self._db)
-        self.assertFalse(table.exists())
-
-    def test_list_tables(self):
-        tables = self._db.list_tables()
-        table_ids = set(table.table_id for table in tables)
-        self.assertIn("contacts", table_ids)
-        self.assertIn("contact_phones", table_ids)
-        self.assertIn("all_types", table_ids)
-
-    def test_list_tables_reload(self):
-        tables = self._db.list_tables()
-        for table in tables:
-            self.assertTrue(table.exists())
-            schema = table.schema
-            self.assertIsInstance(schema, list)
-
-    def test_reload_not_found(self):
-        table = Table("table_does_not_exist", self._db)
-        with self.assertRaises(exceptions.NotFound):
-            table.reload()
-
-    def test_schema(self):
-        table = Table("all_types", self._db)
-        schema = table.schema
-        names_and_types = set((field.name, field.type_.code) for field in schema)
-        self.assertIn(("pkey", TypeCode.INT64), names_and_types)
-        self.assertIn(("int_value", TypeCode.INT64), names_and_types)
-        self.assertIn(("int_array", TypeCode.ARRAY), names_and_types)
-        self.assertIn(("bool_value", TypeCode.BOOL), names_and_types)
-        self.assertIn(("bytes_value", TypeCode.BYTES), names_and_types)
-        self.assertIn(("date_value", TypeCode.DATE), names_and_types)
-        self.assertIn(("float_value", TypeCode.FLOAT64), names_and_types)
-        self.assertIn(("string_value", TypeCode.STRING), names_and_types)
-        self.assertIn(("timestamp_value", TypeCode.TIMESTAMP), names_and_types)
 
 
 @unittest.skipIf(USE_EMULATOR, "Skipping backup tests")
