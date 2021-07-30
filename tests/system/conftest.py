@@ -71,9 +71,9 @@ def shared_instance_id():
 
 
 @pytest.fixture(scope="session")
-def instance_config(spanner_client):
+def instance_configs(spanner_client):
     if _helpers.USE_EMULATOR:
-        return None
+        return []
 
     configs = [
         config
@@ -82,10 +82,19 @@ def instance_config(spanner_client):
         # actually allowed to use.
         if _helpers.USE_EMULATOR or "-us-" in config.name
     ]
-    if not configs:
+
+    yield configs
+
+
+@pytest.fixture(scope="session")
+def instance_config(instance_configs):
+    if _helpers.USE_EMULATOR:
+        return None
+
+    if not instance_configs:
         raise ValueError("No instance configs found.")
 
-    yield configs[0]
+    yield instance_configs[0]
 
 
 @pytest.fixture(scope="session")
@@ -138,3 +147,13 @@ def shared_database(shared_instance, operation_timeout):
     yield database
 
     database.drop()
+
+
+@pytest.fixture(scope="function")
+def databases_to_delete():
+    to_delete = []
+
+    yield to_delete
+
+    for database in to_delete:
+        database.drop()

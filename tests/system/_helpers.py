@@ -55,14 +55,21 @@ retry_429_503 = retry.RetryErrors(
 )
 
 
+def scrub_instance_backups(to_scrub):
+    for backup_pb in to_scrub.list_backups():
+        bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
+        try:
+            # Instance cannot be deleted while backups exist.
+            retry_429_503(bkp.delete)()
+        except exceptions.NotFound:  # lost the race
+            pass
+
+
 def scrub_instance_ignore_not_found(to_scrub):
     """Helper for func:`cleanup_old_instances`"""
-    try:
-        for backup_pb in to_scrub.list_backups():
-            # Instance cannot be deleted while backups exist.
-            bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
-            retry_429_503(bkp.delete)()
+    scrub_instance_backups(to_scrub)
 
+    try:
         retry_429_503(to_scrub.delete)()
     except exceptions.NotFound:  # lost the race
         pass

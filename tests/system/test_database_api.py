@@ -48,16 +48,6 @@ def multiregion_instance(spanner_client, operation_timeout):
     _helpers.retry_429_503(multiregion_instance.delete)()
 
 
-@pytest.fixture(scope="function")
-def databases_to_delete():
-    to_delete = []
-
-    yield to_delete
-
-    for database in to_delete:
-        database.drop()
-
-
 def test_list_databases(shared_instance, shared_database):
     # Since `Config.INSTANCE` is newly created in `setUpModule`, the
     # database created in `setUpClass` here will be the only one.
