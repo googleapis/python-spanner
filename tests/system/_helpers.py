@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import operator
 import os
 import time
 
+import grpc
+from google.rpc import code_pb2
 from google.api_core import exceptions
 from google.cloud.spanner_v1 import instance as instance_mod
 from tests import _fixtures
@@ -48,11 +51,23 @@ DDL_STATEMENTS = (
     _fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS
 )
 
+retry_true = retry.RetryResult(operator.truth)
+retry_false = retry.RetryResult(operator.not_)
 
 retry_503 = retry.RetryErrors(exceptions.ServiceUnavailable)
 retry_429_503 = retry.RetryErrors(
     exceptions.TooManyRequests, exceptions.ServiceUnavailable,
 )
+retry_mabye_aborted_txn = retry.RetryErrors(exceptions.ServerError, exceptions.Aborted)
+retry_mabye_conflict = retry.RetryErrors(exceptions.ServerError, exceptions.Conflict)
+
+
+def _has_all_ddl(database):
+    # Predicate to test for EC completion.
+    return len(database.ddl_statements) == len(DDL_STATEMENTS)
+
+
+retry_has_all_dll = retry.RetryInstanceState(_has_all_ddl)
 
 
 def scrub_instance_backups(to_scrub):
@@ -93,9 +108,32 @@ def unique_id(prefix, separator="-"):
     return f"{prefix}{system.unique_resource_id(separator)}"
 
 
-def _has_all_ddl(database):
-    # Predicate to test for EC completion.
-    return len(database.ddl_statements) == len(DDL_STATEMENTS)
+class FauxCall:
+    def __init__(self, code, details="FauxCall"):
+        self._code = code
+        self._details = details
+
+    def initial_metadata(self):
+        return {}
+
+    def trailing_metadata(self):
+        return {}
+
+    def code(self):
+        return self._code
+
+    def details(self):
+        return self._details
 
 
-retry_has_all_dll = retry.RetryInstanceState(_has_all_ddl)
+def _check_batch_status(status_code, expected=code_pb2.OK):
+    if status_code != expected:
+
+        _status_code_to_grpc_status_code = {
+            member.value[0]: member for member in grpc.StatusCode
+        }
+        grpc_status_code = _status_code_to_grpc_status_code[status_code]
+        call = FauxCall(status_code)
+        raise exceptions.from_grpc_status(
+            grpc_status_code, "batch_update failed", errors=[call]
+        )

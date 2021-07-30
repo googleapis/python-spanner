@@ -53,18 +53,20 @@ def _assert_timestamp(value, nano_value):
         assert value.microsecond * 1000 == nano_value.nanosecond
 
 
-def _check_rows_data(rows_data, expected=ROW_DATA):
+def _check_rows_data(rows_data, expected=ROW_DATA, recurse_into_lists=True):
     assert len(rows_data) == len(expected)
 
     for row, expected in zip(rows_data, expected):
-        _check_row_data(row, expected)
+        _check_row_data(row, expected, recurse_into_lists=recurse_into_lists)
 
 
-def _check_row_data(row_data, expected):
+def _check_row_data(row_data, expected, recurse_into_lists=True):
     assert len(row_data) == len(expected)
 
     for found_cell, expected_cell in zip(row_data, expected):
-        _check_cell_data(found_cell, expected_cell)
+        _check_cell_data(
+            found_cell, expected_cell, recurse_into_lists=recurse_into_lists
+        )
 
 
 def _check_cell_data(found_cell, expected_cell, recurse_into_lists=True):
