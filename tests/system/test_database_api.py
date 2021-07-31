@@ -26,7 +26,7 @@ from . import _sample_data
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(scope="module")
 def multiregion_instance(spanner_client, operation_timeout):
     multi_region_instance_id = _helpers.unique_id("multi-region")
     multi_region_config = "nam3"
