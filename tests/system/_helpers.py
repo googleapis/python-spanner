@@ -71,13 +71,17 @@ retry_has_all_dll = retry.RetryInstanceState(_has_all_ddl)
 
 
 def scrub_instance_backups(to_scrub):
-    for backup_pb in to_scrub.list_backups():
-        bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
-        try:
-            # Instance cannot be deleted while backups exist.
-            retry_429_503(bkp.delete)()
-        except exceptions.NotFound:  # lost the race
-            pass
+    try:
+        for backup_pb in to_scrub.list_backups():
+            bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
+            try:
+                # Instance cannot be deleted while backups exist.
+                retry_429_503(bkp.delete)()
+            except exceptions.NotFound:  # lost the race
+                pass
+    except exceptions.MethodNotImplemented:
+        # The CI emulator raises 501:  local versions seem fine.
+        pass
 
 
 def scrub_instance_ignore_not_found(to_scrub):
