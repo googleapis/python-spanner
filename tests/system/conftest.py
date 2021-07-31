@@ -72,25 +72,19 @@ def shared_instance_id():
 
 @pytest.fixture(scope="session")
 def instance_configs(spanner_client):
-    if _helpers.USE_EMULATOR:
-        return []
+    configs = list(_helpers.retry_503(spanner_client.list_instance_configs)())
 
-    configs = [
-        config
-        for config in _helpers.retry_503(spanner_client.list_instance_configs)()
+    if not _helpers.USE_EMULATOR:
+
         # Defend against back-end returning configs for regions we aren't
         # actually allowed to use.
-        if _helpers.USE_EMULATOR or "-us-" in config.name
-    ]
+        configs = [config for config in configs if "-us-" in config.name]
 
     yield configs
 
 
 @pytest.fixture(scope="session")
 def instance_config(instance_configs):
-    if _helpers.USE_EMULATOR:
-        return None
-
     if not instance_configs:
         raise ValueError("No instance configs found.")
 
