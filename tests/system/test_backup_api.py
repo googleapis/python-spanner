@@ -369,9 +369,6 @@ def test_multi_create_cancel_update_error_restore_errors(
     # Restore to instance with different config.
     if diff_config_instance is not None:
         new_db = diff_config_instance.database("diff_config")
-        op = new_db.create()
-        databases_to_delete.append(new_db)
-        op.result(operation_timeout)
 
         with pytest.raises(exceptions.InvalidArgument):
             new_db.restore(source=backup1)
