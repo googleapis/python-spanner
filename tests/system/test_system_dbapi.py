@@ -437,7 +437,7 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         with self.assertRaisesRegex(
             ProgrammingError,
-            "400 DML statements can only be performed in a read-write transaction.",
+            "400 DML statements can only be performed in a read-write or partitioned-dml transaction. Current transaction type is ReadOnly.",
         ):
             cur.execute(
                 """
