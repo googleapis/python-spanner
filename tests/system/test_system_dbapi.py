@@ -435,10 +435,7 @@ SELECT * FROM contacts WHERE contact_id = 1
         conn = Connection(Config.INSTANCE, self._db, read_only=True)
         cur = conn.cursor()
 
-        with self.assertRaisesRegex(
-            ProgrammingError,
-            "400 DML statements can only be performed in a read-write or partitioned-dml transaction. Current transaction type is ReadOnly.",
-        ):
+        with self.assertRaises(ProgrammingError):
             cur.execute(
                 """
     UPDATE contacts
@@ -449,10 +446,7 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         cur.execute("SELECT * FROM contacts")
 
-        with self.assertRaisesRegex(
-            exceptions.FailedPrecondition,
-            "400 Cannot commit or rollback a read-only or partitioned-dml transaction.",
-        ):
+        with self.assertRaises(exceptions.FailedPrecondition):
             conn.commit()
 
 
