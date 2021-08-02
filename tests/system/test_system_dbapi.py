@@ -450,7 +450,8 @@ SELECT * FROM contacts WHERE contact_id = 1
         cur.execute("SELECT * FROM contacts")
 
         with self.assertRaisesRegex(
-            exceptions.FailedPrecondition, "400 Cannot commit a read-only transaction."
+            exceptions.FailedPrecondition,
+            "400 Cannot commit or rollback a read-only or partitioned-dml transaction.",
         ):
             conn.commit()
 
