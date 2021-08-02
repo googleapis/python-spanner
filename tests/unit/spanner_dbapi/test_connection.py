@@ -39,14 +39,14 @@ class TestConnection(unittest.TestCase):
 
         return ClientInfo(user_agent=USER_AGENT)
 
-    def _make_connection(self):
+    def _make_connection(self, **kwargs):
         from google.cloud.spanner_dbapi import Connection
         from google.cloud.spanner_v1.instance import Instance
 
         # We don't need a real Client object to test the constructor
         instance = Instance(INSTANCE, client=None)
         database = instance.database(DATABASE)
-        return Connection(instance, database)
+        return Connection(instance, database, **kwargs)
 
     @mock.patch("google.cloud.spanner_dbapi.connection.Connection.commit")
     def test_autocommit_setter_transaction_not_started(self, mock_commit):
@@ -104,6 +104,22 @@ class TestConnection(unittest.TestCase):
         connection = self._make_connection()
         self.assertIsInstance(connection.instance, Instance)
         self.assertEqual(connection.instance, connection._instance)
+
+    def test_read_only_connection(self):
+        connection = self._make_connection(read_only=True)
+        self.assertTrue(connection.read_only)
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Connection read/write mode can't be changed while a transaction is in progress. "
+            "Commit or rollback the current transaction and try again.",
+        ):
+            connection.read_only = False
+
+        connection._transaction = None
+        connection.read_only = False
+        self.assertFalse(connection.read_only)
 
     @staticmethod
     def _make_pool():

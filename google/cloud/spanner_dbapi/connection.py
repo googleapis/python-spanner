@@ -48,9 +48,14 @@ class Connection:
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: The database to which the connection is linked.
+
+    :type read_only: bool
+    :param read_only:
+        Flag to designate if the connection must use only ReadOnly
+        transaction type.
     """
 
-    def __init__(self, instance, database):
+    def __init__(self, instance, database, read_only=False):
         self._instance = instance
         self._database = database
         self._ddl_statements = []
@@ -67,6 +72,7 @@ class Connection:
         # this connection should be cleared on the
         # connection close
         self._own_pool = True
+        self._read_only = read_only
 
     @property
     def autocommit(self):
@@ -120,6 +126,31 @@ class Connection:
         :returns: The related instance object.
         """
         return self._instance
+
+    @property
+    def read_only(self):
+        """Flag: the connection can be used only for database reads.
+
+        Returns:
+            bool:
+                True, if the connection intended to be used for
+                database reads only.
+        """
+        return self._read_only
+
+    @read_only.setter
+    def read_only(self, value):
+        """`read_only` flag setter.
+
+        Args:
+            value (bool): True for ReadOnly mode, False for ReadWrite.
+        """
+        if self.inside_transaction:
+            raise ValueError(
+                "Connection read/write mode can't be changed while a transaction is in progress. "
+                "Commit or rollback the current transaction and try again."
+            )
+        self._read_only = value
 
     def _session_checkout(self):
         """Get a Cloud Spanner session from the pool.
@@ -209,7 +240,7 @@ class Connection:
         if not self.autocommit:
             if not self.inside_transaction:
                 self._transaction = self._session_checkout().transaction()
-                self._transaction.begin()
+                self._transaction.begin(read_only=self._read_only)
 
             return self._transaction
 

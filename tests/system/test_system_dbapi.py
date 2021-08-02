@@ -26,6 +26,7 @@ from google.cloud.spanner_v1.instance import Backup
 from google.cloud.spanner_v1.instance import Instance
 
 from google.cloud.spanner_dbapi.connection import Connection
+from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 
 from test_utils.retry import RetryErrors
 
@@ -425,6 +426,33 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         cur.execute("DROP TABLE Singers")
         conn.commit()
+
+    def test_read_only(self):
+        """
+        Check that connection set to `read_only=True` uses
+        ReadOnly transactions.
+        """
+        conn = Connection(Config.INSTANCE, self._db, read_only=True)
+        cur = conn.cursor()
+
+        with self.assertRaisesRegex(
+            ProgrammingError,
+            "400 DML statements can only be performed in a read-write transaction.",
+        ):
+            cur.execute(
+                """
+    UPDATE contacts
+    SET first_name = 'updated-first-name'
+    WHERE first_name = 'first-name'
+    """
+            )
+
+        cur.execute("SELECT * FROM contacts")
+
+        with self.assertRaisesRegex(
+            exceptions.FailedPrecondition, "400 Cannot commit a read-only transaction."
+        ):
+            conn.commit()
 
 
 def clear_table(transaction):
