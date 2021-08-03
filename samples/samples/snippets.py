@@ -114,7 +114,12 @@ def list_instance_config():
     """Lists the available instance configurations."""
     spanner_client = spanner.Client()
     configs = spanner_client.list_instance_configs()
-    print("Available instance configs: {}".format(configs))
+    for config in configs:
+        print(
+            "Available leader options for instance config {}: {}".format(
+                config.name, config.leader_options
+            )
+        )
 
 
 # [END spanner_list_instance_configs]
@@ -127,10 +132,12 @@ def list_databases(instance_id):
     instance = spanner_client.instance(instance_id)
 
     databases = list(instance.list_databases())
-    default_leaders = [database.default_leader for database in databases]
-
-    print("Databases: {}".format(databases))
-    print("Default leaders of databases: {}".format(default_leaders))
+    for database in databases:
+        print(
+            "Database {} has default leader {}".format(
+                database.name, database.default_leader
+            )
+        )
 
 
 # [END spanner_list_databases]

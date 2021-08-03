@@ -140,14 +140,13 @@ def test_get_instance_config(capsys):
 def test_list_instance_config(capsys):
     snippets.list_instance_config()
     out, _ = capsys.readouterr()
-    assert "Available instance configs" in out
+    assert "regional-us-central1" in out
 
 
 def test_list_databases(capsys, instance_id):
     snippets.list_databases(instance_id)
     out, _ = capsys.readouterr()
-    assert "Databases" in out
-    assert "Default leaders of databases" in out
+    assert "has default leader" in out
 
 
 def test_create_database_with_default_leader(capsys, multi_region_instance, multi_region_instance_id, default_leader_database_id, default_leader):
