@@ -158,7 +158,7 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(connection.transaction_checkout(), mock_transaction)
 
         connection._autocommit = True
-        self.assertIsNotNone(connection.transaction_checkout())
+        self.assertIsNone(connection.transaction_checkout())
 
     @mock.patch("google.cloud.spanner_v1.Client")
     def test_close(self, mock_client):
