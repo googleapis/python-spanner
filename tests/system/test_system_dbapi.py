@@ -448,6 +448,31 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         conn.commit()
 
+    def test_read_only_data_visibility(self):
+        conn_rw = Connection(Config.INSTANCE, self._db)
+        conn_ro = Connection(Config.INSTANCE, self._db, read_only=True)
+
+        cur_rw = conn_rw.cursor()
+        cur_ro = conn_ro.cursor()
+
+        # start read-only transaction
+        cur_ro.execute("SELECT * FROM contacts")
+
+        cur_rw.execute(
+            """INSERT INTO contacts (contact_id, first_name) VALUES (123, 'Inserted_while_read')"""
+        )
+        conn_rw.commit()
+
+        # try to read data inserted in parallel transaction
+        cur_ro.execute("SELECT * FROM contacts")
+        self.assertEqual(cur_ro.fetchall(), [])
+
+        # start new read-only transaction
+        conn_ro.commit()
+        cur_ro.execute("SELECT * FROM contacts")
+
+        self.assertEqual(cur_ro.fetchall(), [(123, "Inserted_while_read", None, None)])
+
 
 def clear_table(transaction):
     """Clear the test table."""
