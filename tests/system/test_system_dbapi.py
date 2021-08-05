@@ -446,8 +446,7 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         cur.execute("SELECT * FROM contacts")
 
-        with self.assertRaises(exceptions.FailedPrecondition):
-            conn.commit()
+        conn.commit()
 
 
 def clear_table(transaction):

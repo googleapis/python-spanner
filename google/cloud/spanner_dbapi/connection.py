@@ -279,7 +279,8 @@ class Connection:
         self.run_prior_DDL_statements()
         if self.inside_transaction:
             try:
-                self._transaction.commit()
+                if not self.read_only:
+                    self._transaction.commit()
                 self._release_session()
                 self._statements = []
             except Aborted:
@@ -295,7 +296,8 @@ class Connection:
         if self._autocommit:
             warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
         elif self._transaction:
-            self._transaction.rollback()
+            if not self.read_only:
+                self._transaction.rollback()
             self._release_session()
             self._statements = []
 

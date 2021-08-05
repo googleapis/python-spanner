@@ -121,6 +121,30 @@ class TestConnection(unittest.TestCase):
         connection.read_only = False
         self.assertFalse(connection.read_only)
 
+    def test_read_only_rollback_commit(self):
+        """
+        Check that ReadOnly transactions are not committed
+        or rolled back, but sessions are still released.
+        """
+        connection = self._make_connection(read_only=True)
+
+        transaction = mock.Mock(committed=False, rolled_back=False)
+        transaction.commit = mock.Mock()
+        transaction.rollback = mock.Mock()
+        connection._release_session = mock.Mock()
+
+        connection._transaction = transaction
+
+        connection.commit()
+        transaction.commit.assert_not_called()
+        connection._release_session.assert_called_once()
+
+        connection._release_session.reset_mock()
+
+        connection.rollback()
+        transaction.rollback.assert_not_called()
+        connection._release_session.assert_called_once()
+
     @staticmethod
     def _make_pool():
         from google.cloud.spanner_v1.pool import AbstractSessionPool
