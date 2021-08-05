@@ -85,8 +85,8 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         :type read_only: bool
         :param read_only:
-            (Optional) If True, ReadOnly transaction type will be
-            begun, ReadWrite otherwise.
+            (Optional) If True, a read-only transaction with strong timestamp bound will be started.
+            Otherwise a read/write transaction will be started.
 
         :rtype: bytes
         :returns: the ID for the newly-begun transaction.

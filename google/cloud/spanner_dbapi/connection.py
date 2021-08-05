@@ -51,8 +51,18 @@ class Connection:
 
     :type read_only: bool
     :param read_only:
-        Flag to designate if the connection must use only ReadOnly
-        transaction type.
+        Flag to indicate that the connection may only execute queries and no update or DDL statements.
+        If autocommit is true, the connection will use a single use read-only transaction with strong timestamp
+        bound for each new statement, and will immediately see any changes that have been committed by
+        any other transaction.
+        If autocommit is false, the connection will automatically start a new multi use read-only transaction
+        with strong timestamp bound when the first statement is executed. This read-only transaction will be
+        used for all subsequent statements until either commit() or rollback() is called on the connection. The
+        read-only transaction will read from a consistent snapshot of the database at the time that the
+        transaction started. This means that the transaction will not see any changes that have been
+        committed by other transactions since the start of the read-only transaction. Commit or rolling back
+        the read-only transaction is semantically the same, and only indicates that the read-only transaction
+        should end a that a new one should be started when the next statement is executed.
     """
 
     def __init__(self, instance, database, read_only=False):
@@ -133,8 +143,7 @@ class Connection:
 
         Returns:
             bool:
-                True, if the connection intended to be used for
-                database reads only.
+                True if the connection may only be used for database reads.
         """
         return self._read_only
 
