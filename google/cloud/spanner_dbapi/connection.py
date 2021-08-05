@@ -281,6 +281,10 @@ class Connection:
             try:
                 if not self.read_only:
                     self._transaction.commit()
+
+                self._session._transaction = None
+                self._transaction = None
+
                 self._release_session()
                 self._statements = []
             except Aborted:
@@ -298,6 +302,10 @@ class Connection:
         elif self._transaction:
             if not self.read_only:
                 self._transaction.rollback()
+
+            self._session._transaction = None
+            self._transaction = None
+
             self._release_session()
             self._statements = []
 
