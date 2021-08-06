@@ -837,7 +837,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
 
     def test_create_invalid(self):
         from datetime import datetime
-        from pytz import UTC
 
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow()
@@ -860,7 +859,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
         )
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         instance = Config.INSTANCE
         backup_id = "backup_id" + unique_resource_id("_")
@@ -933,7 +931,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_backup_version_time_defaults_to_create_time(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         instance = Config.INSTANCE
         backup_id = "backup_id" + unique_resource_id("_")
@@ -963,7 +960,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_create_backup_invalid_version_time_past(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow() + timedelta(days=3)
@@ -985,7 +981,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_create_backup_invalid_version_time_future(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow() + timedelta(days=3)
@@ -1007,7 +1002,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_restore_to_diff_instance(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         backup_id = "backup_id" + unique_resource_id("_")
         expire_time = datetime.utcnow() + timedelta(days=3)
@@ -1035,7 +1029,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_multi_create_cancel_update_error_restore_errors(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         backup_id_1 = "backup_id1" + unique_resource_id("_")
         backup_id_2 = "backup_id2" + unique_resource_id("_")
@@ -1092,7 +1085,6 @@ class TestBackupAPI(unittest.TestCase, _TestData):
     def test_list_backups(self):
         from datetime import datetime
         from datetime import timedelta
-        from pytz import UTC
 
         backup_id_1 = "backup_id1" + unique_resource_id("_")
         backup_id_2 = "backup_id2" + unique_resource_id("_")
@@ -2761,7 +2753,6 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
         self._bind_test_helper(TypeCode.BYTES, b"DEADBEEF", [b"FACEDACE", b"DEADBEEF"])
 
     def test_execute_sql_w_timestamp_bindings(self):
-        import pytz
         from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
         timestamp_1 = DatetimeWithNanoseconds(
@@ -2776,7 +2767,7 @@ class TestSessionAPI(OpenTelemetryBase, _TestData):
 
         # In round-trip, timestamps acquire a timezone value.
         expected_timestamps = [
-            timestamp.replace(tzinfo=pytz.UTC) for timestamp in timestamps
+            timestamp.replace(tzinfo=UTC) for timestamp in timestamps
         ]
 
         self._recurse_into_lists = False
