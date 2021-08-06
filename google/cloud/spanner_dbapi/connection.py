@@ -217,7 +217,7 @@ class Connection:
         for statement in self._statements:
             res_iter, retried_checksum = self.run_statement(statement, retried=True)
             # executing all the completed statements
-            if statement != self._statements[-1]:
+            if statement != self._statements[-1] and not self.read_only:
                 for res in res_iter:
                     retried_checksum.consume_result(res)
 
@@ -229,11 +229,13 @@ class Connection:
                 while len(retried_checksum) < len(statement.checksum):
                     try:
                         res = next(iter(res_iter))
-                        retried_checksum.consume_result(res)
+                        if not self.read_only:
+                            retried_checksum.consume_result(res)
                     except StopIteration:
                         break
 
-                _compare_checksums(statement.checksum, retried_checksum)
+                if not self.read_only:
+                    _compare_checksums(statement.checksum, retried_checksum)
 
     def transaction_checkout(self):
         """Get a Cloud Spanner transaction.
