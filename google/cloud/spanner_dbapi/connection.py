@@ -282,7 +282,8 @@ class Connection:
                 if not self.read_only:
                     self._transaction.commit()
 
-                self._session._transaction = None
+                if self._session is not None:
+                    self._session._transaction = None
                 self._transaction = None
 
                 self._release_session()
@@ -303,7 +304,8 @@ class Connection:
             if not self.read_only:
                 self._transaction.rollback()
 
-            self._session._transaction = None
+            if self._session is not None:
+                self._session._transaction = None
             self._transaction = None
 
             self._release_session()

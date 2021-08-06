@@ -140,6 +140,7 @@ class TestConnection(unittest.TestCase):
         connection._release_session.assert_called_once()
 
         connection._release_session.reset_mock()
+        connection._transaction = transaction
 
         connection.rollback()
         transaction.rollback.assert_not_called()
