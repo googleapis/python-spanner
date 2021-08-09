@@ -265,27 +265,28 @@ def test_execute_many(shared_instance, dbapi_database):
     conn = Connection(shared_instance, dbapi_database)
     cursor = conn.cursor()
 
-    cursor.execute(
+    row_data = [
+        (1, "first-name", "last-name", "test.email@example.com"),
+        (2, "first-name2", "last-name2", "test.email2@example.com"),
+    ]
+    cursor.executemany(
         """
 INSERT INTO contacts (contact_id, first_name, last_name, email)
-VALUES (1, 'first-name', 'last-name', 'test.email@example.com'),
-    (2, 'first-name2', 'last-name2', 'test.email2@example.com')
-    """
+VALUES (%s, %s, %s, %s)
+    """,
+        row_data,
     )
     conn.commit()
 
     cursor.executemany(
-        """
-SELECT * FROM contacts WHERE contact_id = @a1
-""",
-        ({"a1": 1}, {"a1": 2}),
+        """SELECT * FROM contacts WHERE contact_id = @a1""", ({"a1": 1}, {"a1": 2}),
     )
     res = cursor.fetchall()
     conn.commit()
 
-    assert len(res) == 2
-    assert res[0][0] == 1
-    assert res[1][0] == 2
+    assert len(res) == len(row_data)
+    for found, expected in zip(res, row_data):
+        assert found[0] == expected[0]
 
     # checking that execute() and executemany()
     # results are not mixed together
