@@ -80,7 +80,7 @@ def test_create_instance(
     instance.display_name == instance_alt.display_name
 
 
-def test_create_instance_with_processing_nodes(
+def test_create_instance_with_processing_units(
     not_emulator,
     if_create_instance,
     spanner_client,
