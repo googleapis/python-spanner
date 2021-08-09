@@ -41,6 +41,17 @@ def spanner_client():
     return client.Client()
 
 
+def scrub_instance_ignore_not_found(to_scrub):
+    """Helper for func:`cleanup_old_instances`"""
+    try:
+        for backup_pb in to_scrub.list_backups():
+            backup.Backup.from_pb(backup_pb, to_scrub).delete()
+
+        to_scrub.delete()
+    except exceptions.NotFound:
+        pass
+
+
 @pytest.fixture(scope="session")
 def cleanup_old_instances(spanner_client):
     """Delete instances, created by samples, that are older than an hour."""
@@ -54,17 +65,19 @@ def cleanup_old_instances(spanner_client):
             create_time = int(inst.labels["created"])
 
             if create_time <= cutoff:
-
-                for backup_pb in inst.list_backups():
-                    backup.Backup.from_pb(backup_pb, inst).delete()
-
-                inst.delete()
+                scrub_instance_ignore_not_found(inst)
 
 
 @pytest.fixture(scope="module")
 def instance_id():
     """Unique id for the instance used in samples."""
     return f"test-instance-{uuid.uuid4().hex[:10]}"
+
+
+@pytest.fixture(scope="module")
+def multi_region_instance_id():
+    """Unique id for the multi-region instance used in samples."""
+    return f"multi-instance-{uuid.uuid4().hex[:10]}"
 
 
 @pytest.fixture(scope="module")
@@ -75,12 +88,15 @@ def instance_config(spanner_client):
 
 
 @pytest.fixture(scope="module")
+def multi_region_instance_config(spanner_client):
+    return "{}/instanceConfigs/{}".format(
+        spanner_client.project_name, "nam3"
+    )
+
+
+@pytest.fixture(scope="module")
 def sample_instance(
-    spanner_client,
-    cleanup_old_instances,
-    instance_id,
-    instance_config,
-    sample_name,
+    spanner_client, cleanup_old_instances, instance_id, instance_config, sample_name,
 ):
     sample_instance = spanner_client.instance(
         instance_id,
@@ -88,7 +104,7 @@ def sample_instance(
         labels={
             "cloud_spanner_samples": "true",
             "sample_name": sample_name,
-            "created": str(int(time.time()))
+            "created": str(int(time.time())),
         },
     )
     retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
@@ -108,6 +124,42 @@ def sample_instance(
         backup.Backup.from_pb(backup_pb, sample_instance).delete()
 
     sample_instance.delete()
+
+
+@pytest.fixture(scope="module")
+def multi_region_instance(
+    spanner_client,
+    cleanup_old_instances,
+    multi_region_instance_id,
+    multi_region_instance_config,
+    sample_name,
+):
+    multi_region_instance = spanner_client.instance(
+        multi_region_instance_id,
+        multi_region_instance_config,
+        labels={
+            "cloud_spanner_samples": "true",
+            "sample_name": sample_name,
+            "created": str(int(time.time()))
+        },
+    )
+    retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
+    op = retry_429(multi_region_instance.create)()
+    op.result(120)  # block until completion
+
+    # Eventual consistency check
+    retry_found = retry.RetryResult(bool)
+    retry_found(multi_region_instance.exists)()
+
+    yield multi_region_instance
+
+    for database_pb in multi_region_instance.list_databases():
+        database.Database.from_pb(database_pb, multi_region_instance).drop()
+
+    for backup_pb in multi_region_instance.list_backups():
+        backup.Backup.from_pb(backup_pb, multi_region_instance).delete()
+
+    multi_region_instance.delete()
 
 
 @pytest.fixture(scope="module")
