@@ -49,7 +49,7 @@ def multiregion_instance(spanner_client, operation_timeout):
 
 
 def test_list_databases(shared_instance, shared_database):
-    # Since `Config.INSTANCE` is newly created in `setUpModule`, the
+    # Since `shared_instance` is newly created in `setUpModule`, the
     # database created in `setUpClass` here will be the only one.
     database_names = [database.name for database in shared_instance.list_databases()]
     assert shared_database.name in database_names
