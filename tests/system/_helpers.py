@@ -16,8 +16,6 @@ import operator
 import os
 import time
 
-import grpc
-from google.rpc import code_pb2
 from google.api_core import exceptions
 from google.cloud.spanner_v1 import instance as instance_mod
 from tests import _fixtures
@@ -110,34 +108,3 @@ def cleanup_old_instances(spanner_client):
 
 def unique_id(prefix, separator="-"):
     return f"{prefix}{system.unique_resource_id(separator)}"
-
-
-class FauxCall:
-    def __init__(self, code, details="FauxCall"):
-        self._code = code
-        self._details = details
-
-    def initial_metadata(self):
-        return {}
-
-    def trailing_metadata(self):
-        return {}
-
-    def code(self):
-        return self._code
-
-    def details(self):
-        return self._details
-
-
-def _check_batch_status(status_code, expected=code_pb2.OK):
-    if status_code != expected:
-
-        _status_code_to_grpc_status_code = {
-            member.value[0]: member for member in grpc.StatusCode
-        }
-        grpc_status_code = _status_code_to_grpc_status_code[status_code]
-        call = FauxCall(status_code)
-        raise exceptions.from_grpc_status(
-            grpc_status_code, "batch_update failed", errors=[call]
-        )

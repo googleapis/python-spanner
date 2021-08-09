@@ -22,6 +22,8 @@ import time
 
 import pytest
 
+import grpc
+from google.rpc import code_pb2
 from google.api_core import datetime_helpers
 from google.api_core import exceptions
 from google.cloud import spanner_v1
@@ -689,7 +691,7 @@ def test_transaction_batch_update_success(sessions_database, sessions_to_delete)
         status, row_counts = transaction.batch_update(
             [insert_statement, update_statement, delete_statement]
         )
-        _helpers._check_batch_status(status.code)
+        _check_batch_status(status.code)
         assert len(row_counts) == 3
 
         for row_count in row_counts:
@@ -734,7 +736,7 @@ def test_transaction_batch_update_and_execute_dml(
         status, row_counts = transaction.batch_update(
             insert_statements + update_statements
         )
-        _helpers._check_batch_status(status.code)
+        _check_batch_status(status.code)
         assert len(row_counts) == len(insert_statements) + 1
 
         for row_count in row_counts:
@@ -782,7 +784,7 @@ def test_transaction_batch_update_w_syntax_error(sessions_database, sessions_to_
         status, row_counts = transaction.batch_update(
             [insert_statement, update_statement, delete_statement]
         )
-        _helpers._check_batch_status(status.code, code_pb2.INVALID_ARGUMENT)
+        _check_batch_status(status.code, code_pb2.INVALID_ARGUMENT)
         assert len(row_counts) == 1
         assert row_counts[0] == 1
 
@@ -835,7 +837,7 @@ def test_transaction_batch_update_w_parent_span(
         status, row_counts = transaction.batch_update(
             [insert_statement, update_statement, delete_statement]
         )
-        _helpers._check_batch_status(status.code)
+        _check_batch_status(status.code)
         assert len(row_counts) == 3
         for row_count in row_counts:
             assert row_count == 1
@@ -2124,3 +2126,34 @@ def test_partition_query(sessions_database):
 
     assert union == all_data_rows
     batch_txn.close()
+
+
+class FauxCall:
+    def __init__(self, code, details="FauxCall"):
+        self._code = code
+        self._details = details
+
+    def initial_metadata(self):
+        return {}
+
+    def trailing_metadata(self):
+        return {}
+
+    def code(self):
+        return self._code
+
+    def details(self):
+        return self._details
+
+
+def _check_batch_status(status_code, expected=code_pb2.OK):
+    if status_code != expected:
+
+        _status_code_to_grpc_status_code = {
+            member.value[0]: member for member in grpc.StatusCode
+        }
+        grpc_status_code = _status_code_to_grpc_status_code[status_code]
+        call = FauxCall(status_code)
+        raise exceptions.from_grpc_status(
+            grpc_status_code, "batch_update failed", errors=[call]
+        )
