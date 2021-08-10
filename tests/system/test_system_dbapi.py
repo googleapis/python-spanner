@@ -465,7 +465,7 @@ SELECT * FROM contacts WHERE contact_id = 1
 
         # try to read data inserted in parallel transaction
         cur_ro.execute("SELECT * FROM contacts")
-        self.assertEqual(cur_ro.fetchall(), [])
+        self.assertEqual(cur_ro.fetchall(), [(123, "Inserted_while_read", None, None)])
 
         # start new read-only transaction
         conn_ro.commit()

@@ -174,6 +174,10 @@ class Cursor(object):
 
         # Classify whether this is a read-only SQL statement.
         try:
+            if self.connection.read_only:
+                self._handle_DQL(sql, args or None)
+                return
+
             classification = parse_utils.classify_stmt(sql)
             if classification == parse_utils.STMT_DDL:
                 ddl_statements = []

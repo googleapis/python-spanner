@@ -251,7 +251,7 @@ class Connection:
         if not self.autocommit:
             if not self.inside_transaction:
                 self._transaction = self._session_checkout().transaction()
-                self._transaction.begin(read_only=self._read_only)
+                self._transaction.begin()
 
             return self._transaction
 
@@ -293,10 +293,6 @@ class Connection:
                 if not self.read_only:
                     self._transaction.commit()
 
-                if self._session is not None:
-                    self._session._transaction = None
-                self._transaction = None
-
                 self._release_session()
                 self._statements = []
             except Aborted:
@@ -314,10 +310,6 @@ class Connection:
         elif self._transaction:
             if not self.read_only:
                 self._transaction.rollback()
-
-            if self._session is not None:
-                self._session._transaction = None
-            self._transaction = None
 
             self._release_session()
             self._statements = []

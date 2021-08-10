@@ -80,13 +80,8 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._check_state()
         return TransactionSelector(id=self._transaction_id)
 
-    def begin(self, read_only=False):
+    def begin(self):
         """Begin a transaction on the database.
-
-        :type read_only: bool
-        :param read_only:
-            (Optional) If True, a read-only transaction with strong timestamp bound will be started.
-            Otherwise a read/write transaction will be started.
 
         :rtype: bytes
         :returns: the ID for the newly-begun transaction.
@@ -105,10 +100,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
-        if read_only:
-            txn_options = TransactionOptions(read_only=TransactionOptions.ReadOnly())
-        else:
-            txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
+        txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             response = api.begin_transaction(
                 session=self._session.name, options=txn_options, metadata=metadata

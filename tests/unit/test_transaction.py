@@ -193,31 +193,6 @@ class TestTransaction(OpenTelemetryBase):
             "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
         )
 
-    def test_begin_read_only(self):
-        from google.cloud.spanner_v1 import Transaction as TransactionPB
-
-        transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(
-            _begin_transaction_response=transaction_pb
-        )
-        session = _Session(database)
-        transaction = self._make_one(session)
-
-        txn_id = transaction.begin(read_only=True)
-
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(transaction._transaction_id, self.TRANSACTION_ID)
-
-        session_id, txn_options, metadata = api._begun
-        self.assertEqual(session_id, session.name)
-        self.assertTrue(type(txn_options).pb(txn_options).HasField("read_only"))
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
-
-        self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
-        )
-
     def test_rollback_not_begun(self):
         session = _Session()
         transaction = self._make_one(session)
