@@ -1529,7 +1529,11 @@ def update_with_batch_dml(instance_id, database_id):
     )
 
     def update_albums(transaction):
-        row_cts = transaction.batch_update([insert_statement, update_statement])
+        status, row_cts = transaction.batch_update([insert_statement, update_statement])
+
+        # check response status and process error (if occurred)
+        # if status.code != rpc.code_pb2.OK:
+        # ...
 
         print("Executed {} SQL statements using Batch DML.".format(len(row_cts)))
 
