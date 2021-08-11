@@ -21,6 +21,7 @@ from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1.session import _get_retry_delay
+from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi._helpers import _execute_insert_heterogenous
 from google.cloud.spanner_dbapi._helpers import _execute_insert_homogenous
@@ -66,6 +67,7 @@ class Connection:
 
         self._transaction = None
         self._session = None
+        self._snapshot = None
         # SQL statements, which were executed
         # within the current transaction
         self._statements = []
@@ -266,6 +268,19 @@ class Connection:
 
             return self._transaction
 
+    def snapshot_checkout(self):
+        """Get a Cloud Spanner snapshot.
+
+        Initiate a new multi-use snapshot, if there is no snapshot in
+        this connection yet. Return the existing one otherwise.
+
+        :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
+        :returns: A Cloud Spanner snapshot object, ready to use.
+        """
+        if not self._snapshot:
+            self._snapshot = Snapshot(self._session_checkout(), multi_use=True)
+        return self._snapshot
+
     def _raise_if_closed(self):
         """Helper to check the connection state before running a query.
         Raises an exception if this connection is closed.
@@ -294,6 +309,8 @@ class Connection:
 
         This method is non-operational in autocommit mode.
         """
+        self._snapshot = None
+
         if self._autocommit:
             warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
             return
@@ -316,6 +333,8 @@ class Connection:
         This is a no-op if there is no active transaction or if the connection
         is in autocommit mode.
         """
+        self._snapshot = None
+
         if self._autocommit:
             warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
         elif self._transaction:

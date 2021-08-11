@@ -201,6 +201,27 @@ class TestConnection(unittest.TestCase):
         connection._autocommit = True
         self.assertIsNone(connection.transaction_checkout())
 
+    def test_snapshot_checkout(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE, DATABASE)
+        session_checkout = mock.MagicMock(autospec=True)
+        connection._session_checkout = session_checkout
+
+        snapshot = connection.snapshot_checkout()
+        session_checkout.assert_called_once()
+
+        self.assertEqual(snapshot, connection.snapshot_checkout())
+
+        connection.commit()
+        self.assertIsNone(connection._snapshot)
+
+        connection.snapshot_checkout()
+        self.assertIsNotNone(connection._snapshot)
+
+        connection.rollback()
+        self.assertIsNone(connection._snapshot)
+
     @mock.patch("google.cloud.spanner_v1.Client")
     def test_close(self, mock_client):
         from google.cloud.spanner_dbapi import connect
