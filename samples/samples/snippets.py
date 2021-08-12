@@ -1535,8 +1535,8 @@ def update_with_batch_dml(instance_id, database_id):
 
         if status.code != OK:
             # Do handling here.
-            # Note: the error will still be raised when
-            # commit is called by `run_in_transaction`.
+            # Note: the exception will still be raised when
+            # `commit` is called by `run_in_transaction`.
             return
 
         print("Executed {} SQL statements using Batch DML.".format(len(row_cts)))
