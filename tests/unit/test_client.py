@@ -37,8 +37,10 @@ class TestClient(unittest.TestCase):
     INSTANCE_NAME = "%s/instances/%s" % (PATH, INSTANCE_ID)
     DISPLAY_NAME = "display-name"
     NODE_COUNT = 5
+    PROCESSING_UNITS = 5000
     LABELS = {"test": "true"}
     TIMEOUT_SECONDS = 80
+    LEADER_OPTIONS = ["leader1", "leader2"]
 
     def _get_target_class(self):
         from google.cloud import spanner
@@ -456,7 +458,9 @@ class TestClient(unittest.TestCase):
         instance_config_pbs = ListInstanceConfigsResponse(
             instance_configs=[
                 InstanceConfigPB(
-                    name=self.CONFIGURATION_NAME, display_name=self.DISPLAY_NAME
+                    name=self.CONFIGURATION_NAME,
+                    display_name=self.DISPLAY_NAME,
+                    leader_options=self.LEADER_OPTIONS,
                 )
             ]
         )
@@ -472,6 +476,7 @@ class TestClient(unittest.TestCase):
         self.assertIsInstance(instance_config, InstanceConfigPB)
         self.assertEqual(instance_config.name, self.CONFIGURATION_NAME)
         self.assertEqual(instance_config.display_name, self.DISPLAY_NAME)
+        self.assertEqual(instance_config.leader_options, self.LEADER_OPTIONS)
 
         expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
@@ -580,6 +585,7 @@ class TestClient(unittest.TestCase):
                     config=self.CONFIGURATION_NAME,
                     display_name=self.DISPLAY_NAME,
                     node_count=self.NODE_COUNT,
+                    processing_units=self.PROCESSING_UNITS,
                 )
             ]
         )
@@ -597,6 +603,7 @@ class TestClient(unittest.TestCase):
         self.assertEqual(instance.config, self.CONFIGURATION_NAME)
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)
         self.assertEqual(instance.node_count, self.NODE_COUNT)
+        self.assertEqual(instance.processing_units, self.PROCESSING_UNITS)
 
         expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),
