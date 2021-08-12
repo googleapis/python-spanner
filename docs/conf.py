@@ -80,9 +80,9 @@ source_suffix = [".rst", ".md"]
 master_doc = "index"
 
 # General information about the project.
-project = u"google-cloud-spanner"
-copyright = u"2019, Google"
-author = u"Google APIs"
+project = "google-cloud-spanner"
+copyright = "2019, Google"
+author = "Google APIs"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -281,7 +281,7 @@ latex_documents = [
     (
         master_doc,
         "google-cloud-spanner.tex",
-        u"google-cloud-spanner Documentation",
+        "google-cloud-spanner Documentation",
         author,
         "manual",
     )
@@ -316,7 +316,7 @@ man_pages = [
     (
         master_doc,
         "google-cloud-spanner",
-        u"google-cloud-spanner Documentation",
+        "google-cloud-spanner Documentation",
         [author],
         1,
     )
@@ -335,7 +335,7 @@ texinfo_documents = [
     (
         master_doc,
         "google-cloud-spanner",
-        u"google-cloud-spanner Documentation",
+        "google-cloud-spanner Documentation",
         author,
         "google-cloud-spanner",
         "google-cloud-spanner Library",
@@ -363,6 +363,7 @@ intersphinx_mapping = {
     "google.api_core": ("https://googleapis.dev/python/google-api-core/latest/", None,),
     "grpc": ("https://grpc.github.io/grpc/python/", None),
     "proto-plus": ("https://proto-plus-python.readthedocs.io/en/latest/", None),
+    "protobuf": ("https://googleapis.dev/python/protobuf/latest/", None),
 }
 
 

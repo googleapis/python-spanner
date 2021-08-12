@@ -15,9 +15,11 @@
 
 from google.api_core import gapic_v1
 import mock
+
+from google.cloud.spanner_v1 import RequestOptions
 from tests._helpers import (
     OpenTelemetryBase,
-    StatusCanonicalCode,
+    StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
 )
 from google.cloud.spanner_v1.param_types import INT64
@@ -296,7 +298,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             self.assertEqual(len(restart.mock_calls), 2)
             self.assertEqual(request.resume_token, RESUME_TOKEN)
 
-            span_list = self.memory_exporter.get_finished_spans()
+            span_list = self.ot_exporter.get_finished_spans()
             self.assertEqual(len(span_list), 2)
             for span in span_list:
                 self.assertEqual(span.name, name)
@@ -386,7 +388,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadOnlyTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -568,7 +570,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadWriteTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
@@ -590,6 +592,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         partition=None,
         sql_count=0,
         query_options=None,
+        request_options=None,
         timeout=gapic_v1.method.DEFAULT,
         retry=gapic_v1.method.DEFAULT,
     ):
@@ -649,6 +652,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             PARAM_TYPES,
             query_mode=MODE,
             query_options=query_options,
+            request_options=request_options,
             partition=partition,
             retry=retry,
             timeout=timeout,
@@ -695,6 +699,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             param_types=PARAM_TYPES,
             query_mode=MODE,
             query_options=expected_query_options,
+            request_options=request_options,
             partition_token=partition,
             seqno=sql_count,
         )
@@ -709,7 +714,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.ReadWriteTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
@@ -745,6 +750,14 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self._execute_sql_helper(
             multi_use=False,
             query_options=ExecuteSqlRequest.QueryOptions(optimizer_version="3"),
+        )
+
+    def test_execute_sql_w_request_options(self):
+        self._execute_sql_helper(
+            multi_use=False,
+            request_options=RequestOptions(
+                priority=RequestOptions.Priority.PRIORITY_MEDIUM
+            ),
         )
 
     def _partition_read_helper(
@@ -824,7 +837,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadOnlyTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -855,7 +868,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadOnlyTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -961,7 +974,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
@@ -979,7 +992,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
@@ -1308,7 +1321,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.UNKNOWN,
+            status=StatusCode.ERROR,
             attributes=BASE_ATTRIBUTES,
         )
 
@@ -1345,7 +1358,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
 
@@ -1379,7 +1392,7 @@ class TestSnapshot(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction",
-            status=StatusCanonicalCode.OK,
+            status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
 

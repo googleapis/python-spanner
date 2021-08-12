@@ -30,9 +30,15 @@ class Test_merge_query_options(unittest.TestCase):
     def test_base_dict_and_merge_none(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
-        base = {"optimizer_version": "2"}
+        base = {
+            "optimizer_version": "2",
+            "optimizer_statistics_package": "auto_20191128_14_47_22UTC",
+        }
         merge = None
-        expected = ExecuteSqlRequest.QueryOptions(optimizer_version="2")
+        expected = ExecuteSqlRequest.QueryOptions(
+            optimizer_version="2",
+            optimizer_statistics_package="auto_20191128_14_47_22UTC",
+        )
         result = self._callFUT(base, merge)
         self.assertEqual(result, expected)
 
@@ -48,7 +54,10 @@ class Test_merge_query_options(unittest.TestCase):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         base = None
-        merge = ExecuteSqlRequest.QueryOptions(optimizer_version="3")
+        merge = ExecuteSqlRequest.QueryOptions(
+            optimizer_version="3",
+            optimizer_statistics_package="auto_20191128_14_47_22UTC",
+        )
         result = self._callFUT(base, merge)
         self.assertEqual(result, merge)
 
@@ -64,9 +73,15 @@ class Test_merge_query_options(unittest.TestCase):
     def test_base_object_merge_dict(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
-        base = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        base = ExecuteSqlRequest.QueryOptions(
+            optimizer_version="1",
+            optimizer_statistics_package="auto_20191128_14_47_22UTC",
+        )
         merge = {"optimizer_version": "3"}
-        expected = ExecuteSqlRequest.QueryOptions(optimizer_version="3")
+        expected = ExecuteSqlRequest.QueryOptions(
+            optimizer_version="3",
+            optimizer_statistics_package="auto_20191128_14_47_22UTC",
+        )
         result = self._callFUT(base, merge)
         self.assertEqual(result, expected)
 
@@ -177,12 +192,12 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, today.isoformat())
 
     def test_w_timestamp_w_nanos(self):
-        import pytz
+        import datetime
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
 
         when = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=pytz.UTC
+            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
         )
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
@@ -199,26 +214,23 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_datetime(self):
         import datetime
-        import pytz
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
 
-        now = datetime.datetime.utcnow().replace(tzinfo=pytz.UTC)
+        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
         value_pb = self._callFUT(now)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, datetime_helpers.to_rfc3339(now))
 
     def test_w_timestamp_w_tz(self):
         import datetime
-        import pytz
         from google.protobuf.struct_pb2 import Value
 
-        when = datetime.datetime(
-            2021, 2, 8, 0, 0, 0, tzinfo=pytz.timezone("US/Mountain")
-        )
+        zone = datetime.timezone(datetime.timedelta(hours=+1), name="CET")
+        when = datetime.datetime(2021, 2, 8, 0, 0, 0, tzinfo=zone)
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
-        self.assertEqual(value_pb.string_value, "2021-02-08T07:00:00.000000Z")
+        self.assertEqual(value_pb.string_value, "2021-02-07T23:00:00.000000Z")
 
     def test_w_unknown_type(self):
         with self.assertRaises(ValueError):
@@ -459,14 +471,14 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
 
     def test_w_timestamp_wo_nanos(self):
-        import pytz
+        import datetime
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=pytz.UTC
+            2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=datetime.timezone.utc
         )
         field_type = Type(code=TypeCode.TIMESTAMP)
         value_pb = Value(string_value=datetime_helpers.to_rfc3339(value))
@@ -476,14 +488,14 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(parsed, value)
 
     def test_w_timestamp_w_nanos(self):
-        import pytz
+        import datetime
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=pytz.UTC
+            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
         )
         field_type = Type(code=TypeCode.TIMESTAMP)
         value_pb = Value(string_value=datetime_helpers.to_rfc3339(value))

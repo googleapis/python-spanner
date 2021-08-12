@@ -14,6 +14,8 @@
 
 """Database cursor for Google Cloud Spanner DB-API."""
 
+import sqlparse
+
 from google.api_core.exceptions import Aborted
 from google.api_core.exceptions import AlreadyExists
 from google.api_core.exceptions import FailedPrecondition
@@ -38,6 +40,8 @@ from google.cloud.spanner_dbapi.parse_utils import get_param_types
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
+
+from google.rpc.code_pb2 import ABORTED, OK
 
 _UNSET_COUNT = -1
 
@@ -154,6 +158,15 @@ class Cursor(object):
 
         return result
 
+    def _do_batch_update(self, transaction, statements, many_result_set):
+        status, res = transaction.batch_update(statements)
+        many_result_set.add_iter(res)
+
+        if status.code == ABORTED:
+            raise Aborted(status.details)
+        elif status.code != OK:
+            raise OperationalError(status.details)
+
     def execute(self, sql, args=None):
         """Prepares and executes a Spanner database operation.
 
@@ -174,10 +187,16 @@ class Cursor(object):
         try:
             classification = parse_utils.classify_stmt(sql)
             if classification == parse_utils.STMT_DDL:
-                for ddl in sql.split(";"):
-                    ddl = ddl.strip()
+                ddl_statements = []
+                for ddl in sqlparse.split(sql):
                     if ddl:
-                        self.connection._ddl_statements.append(ddl)
+                        if ddl[-1] == ";":
+                            ddl = ddl[:-1]
+                        if parse_utils.classify_stmt(ddl) != parse_utils.STMT_DDL:
+                            raise ValueError("Only DDL statements may be batched.")
+                        ddl_statements.append(ddl)
+                # Only queue DDL statements if they are all correctly classified.
+                self.connection._ddl_statements.extend(ddl_statements)
                 if self.connection.autocommit:
                     self.connection.run_prior_DDL_statements()
                 return
@@ -250,9 +269,50 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        for params in seq_of_params:
-            self.execute(operation, params)
-            many_result_set.add_iter(self._itr)
+        if classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
+            statements = []
+
+            for params in seq_of_params:
+                sql, params = parse_utils.sql_pyformat_args_to_spanner(
+                    operation, params
+                )
+                statements.append((sql, params, get_param_types(params)))
+
+            if self.connection.autocommit:
+                self.connection.database.run_in_transaction(
+                    self._do_batch_update, statements, many_result_set
+                )
+            else:
+                retried = False
+                while True:
+                    try:
+                        transaction = self.connection.transaction_checkout()
+
+                        res_checksum = ResultsChecksum()
+                        if not retried:
+                            self.connection._statements.append(
+                                (statements, res_checksum)
+                            )
+
+                        status, res = transaction.batch_update(statements)
+                        many_result_set.add_iter(res)
+                        res_checksum.consume_result(res)
+                        res_checksum.consume_result(status.code)
+
+                        if status.code == ABORTED:
+                            self.connection._transaction = None
+                            raise Aborted(status.details)
+                        elif status.code != OK:
+                            raise OperationalError(status.details)
+                        break
+                    except Aborted:
+                        self.connection.retry_transaction()
+                        retried = True
+
+        else:
+            for params in seq_of_params:
+                self.execute(operation, params)
+                many_result_set.add_iter(self._itr)
 
         self._result_set = many_result_set
         self._itr = many_result_set

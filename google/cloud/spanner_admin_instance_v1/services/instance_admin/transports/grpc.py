@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,25 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-
 import warnings
-from typing import Callable, Dict, Optional, Sequence, Tuple
+from typing import Callable, Dict, Optional, Sequence, Tuple, Union
 
 from google.api_core import grpc_helpers  # type: ignore
 from google.api_core import operations_v1  # type: ignore
 from google.api_core import gapic_v1  # type: ignore
-from google import auth  # type: ignore
-from google.auth import credentials  # type: ignore
+import google.auth  # type: ignore
+from google.auth import credentials as ga_credentials  # type: ignore
 from google.auth.transport.grpc import SslCredentials  # type: ignore
 
 import grpc  # type: ignore
 
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
-from google.iam.v1 import iam_policy_pb2 as iam_policy  # type: ignore
-from google.iam.v1 import policy_pb2 as policy  # type: ignore
-from google.longrunning import operations_pb2 as operations  # type: ignore
-from google.protobuf import empty_pb2 as empty  # type: ignore
-
+from google.iam.v1 import iam_policy_pb2  # type: ignore
+from google.iam.v1 import policy_pb2  # type: ignore
+from google.longrunning import operations_pb2  # type: ignore
+from google.protobuf import empty_pb2  # type: ignore
 from .base import InstanceAdminTransport, DEFAULT_CLIENT_INFO
 
 
@@ -75,7 +72,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         self,
         *,
         host: str = "spanner.googleapis.com",
-        credentials: credentials.Credentials = None,
+        credentials: ga_credentials.Credentials = None,
         credentials_file: str = None,
         scopes: Sequence[str] = None,
         channel: grpc.Channel = None,
@@ -85,11 +82,13 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         client_cert_source_for_mtls: Callable[[], Tuple[bytes, bytes]] = None,
         quota_project_id: Optional[str] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
+        always_use_jwt_access: Optional[bool] = False,
     ) -> None:
         """Instantiate the transport.
 
         Args:
-            host (Optional[str]): The hostname to connect to.
+            host (Optional[str]):
+                 The hostname to connect to.
             credentials (Optional[google.auth.credentials.Credentials]): The
                 authorization credentials to attach to requests. These
                 credentials identify the application to the service; if none
@@ -124,6 +123,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
                 API requests. If ``None``, then default info will be used.
                 Generally, you only need to set this if you're developing
                 your own client library.
+            always_use_jwt_access (Optional[bool]): Whether self signed JWT should
+                be used for service account credentials.
 
         Raises:
           google.auth.exceptions.MutualTLSChannelError: If mutual TLS transport
@@ -177,6 +178,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
             scopes=scopes,
             quota_project_id=quota_project_id,
             client_info=client_info,
+            always_use_jwt_access=always_use_jwt_access,
         )
 
         if not self._grpc_channel:
@@ -200,7 +202,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
     def create_channel(
         cls,
         host: str = "spanner.googleapis.com",
-        credentials: credentials.Credentials = None,
+        credentials: ga_credentials.Credentials = None,
         credentials_file: str = None,
         scopes: Optional[Sequence[str]] = None,
         quota_project_id: Optional[str] = None,
@@ -231,13 +233,15 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
             google.api_core.exceptions.DuplicateCredentialArgs: If both ``credentials``
               and ``credentials_file`` are passed.
         """
-        scopes = scopes or cls.AUTH_SCOPES
+
         return grpc_helpers.create_channel(
             host,
             credentials=credentials,
             credentials_file=credentials_file,
-            scopes=scopes,
             quota_project_id=quota_project_id,
+            default_scopes=cls.AUTH_SCOPES,
+            scopes=scopes,
+            default_host=cls.DEFAULT_HOST,
             **kwargs,
         )
 
@@ -381,7 +385,9 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
     @property
     def create_instance(
         self,
-    ) -> Callable[[spanner_instance_admin.CreateInstanceRequest], operations.Operation]:
+    ) -> Callable[
+        [spanner_instance_admin.CreateInstanceRequest], operations_pb2.Operation
+    ]:
         r"""Return a callable for the create instance method over gRPC.
 
         Creates an instance and begins preparing it to begin serving.
@@ -437,14 +443,16 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
             self._stubs["create_instance"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstance",
                 request_serializer=spanner_instance_admin.CreateInstanceRequest.serialize,
-                response_deserializer=operations.Operation.FromString,
+                response_deserializer=operations_pb2.Operation.FromString,
             )
         return self._stubs["create_instance"]
 
     @property
     def update_instance(
         self,
-    ) -> Callable[[spanner_instance_admin.UpdateInstanceRequest], operations.Operation]:
+    ) -> Callable[
+        [spanner_instance_admin.UpdateInstanceRequest], operations_pb2.Operation
+    ]:
         r"""Return a callable for the update instance method over gRPC.
 
         Updates an instance, and begins allocating or releasing
@@ -507,14 +515,14 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
             self._stubs["update_instance"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstance",
                 request_serializer=spanner_instance_admin.UpdateInstanceRequest.serialize,
-                response_deserializer=operations.Operation.FromString,
+                response_deserializer=operations_pb2.Operation.FromString,
             )
         return self._stubs["update_instance"]
 
     @property
     def delete_instance(
         self,
-    ) -> Callable[[spanner_instance_admin.DeleteInstanceRequest], empty.Empty]:
+    ) -> Callable[[spanner_instance_admin.DeleteInstanceRequest], empty_pb2.Empty]:
         r"""Return a callable for the delete instance method over gRPC.
 
         Deletes an instance.
@@ -543,14 +551,14 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
             self._stubs["delete_instance"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstance",
                 request_serializer=spanner_instance_admin.DeleteInstanceRequest.serialize,
-                response_deserializer=empty.Empty.FromString,
+                response_deserializer=empty_pb2.Empty.FromString,
             )
         return self._stubs["delete_instance"]
 
     @property
     def set_iam_policy(
         self,
-    ) -> Callable[[iam_policy.SetIamPolicyRequest], policy.Policy]:
+    ) -> Callable[[iam_policy_pb2.SetIamPolicyRequest], policy_pb2.Policy]:
         r"""Return a callable for the set iam policy method over gRPC.
 
         Sets the access control policy on an instance resource. Replaces
@@ -572,15 +580,15 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         if "set_iam_policy" not in self._stubs:
             self._stubs["set_iam_policy"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/SetIamPolicy",
-                request_serializer=iam_policy.SetIamPolicyRequest.SerializeToString,
-                response_deserializer=policy.Policy.FromString,
+                request_serializer=iam_policy_pb2.SetIamPolicyRequest.SerializeToString,
+                response_deserializer=policy_pb2.Policy.FromString,
             )
         return self._stubs["set_iam_policy"]
 
     @property
     def get_iam_policy(
         self,
-    ) -> Callable[[iam_policy.GetIamPolicyRequest], policy.Policy]:
+    ) -> Callable[[iam_policy_pb2.GetIamPolicyRequest], policy_pb2.Policy]:
         r"""Return a callable for the get iam policy method over gRPC.
 
         Gets the access control policy for an instance resource. Returns
@@ -603,8 +611,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         if "get_iam_policy" not in self._stubs:
             self._stubs["get_iam_policy"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/GetIamPolicy",
-                request_serializer=iam_policy.GetIamPolicyRequest.SerializeToString,
-                response_deserializer=policy.Policy.FromString,
+                request_serializer=iam_policy_pb2.GetIamPolicyRequest.SerializeToString,
+                response_deserializer=policy_pb2.Policy.FromString,
             )
         return self._stubs["get_iam_policy"]
 
@@ -612,7 +620,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
     def test_iam_permissions(
         self,
     ) -> Callable[
-        [iam_policy.TestIamPermissionsRequest], iam_policy.TestIamPermissionsResponse
+        [iam_policy_pb2.TestIamPermissionsRequest],
+        iam_policy_pb2.TestIamPermissionsResponse,
     ]:
         r"""Return a callable for the test iam permissions method over gRPC.
 
@@ -637,8 +646,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         if "test_iam_permissions" not in self._stubs:
             self._stubs["test_iam_permissions"] = self.grpc_channel.unary_unary(
                 "/google.spanner.admin.instance.v1.InstanceAdmin/TestIamPermissions",
-                request_serializer=iam_policy.TestIamPermissionsRequest.SerializeToString,
-                response_deserializer=iam_policy.TestIamPermissionsResponse.FromString,
+                request_serializer=iam_policy_pb2.TestIamPermissionsRequest.SerializeToString,
+                response_deserializer=iam_policy_pb2.TestIamPermissionsResponse.FromString,
             )
         return self._stubs["test_iam_permissions"]
 

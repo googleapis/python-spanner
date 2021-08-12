@@ -49,7 +49,6 @@ from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 from google.cloud.client import ClientWithProject
 from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
-from google.cloud.spanner_v1.instance import DEFAULT_NODE_COUNT
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
@@ -64,6 +63,7 @@ _EMULATOR_HOST_HTTP_SCHEME = (
 ) % ((EMULATOR_ENV_VAR,) * 3)
 SPANNER_ADMIN_SCOPE = "https://www.googleapis.com/auth/spanner.admin"
 OPTIMIZER_VERSION_ENV_VAR = "SPANNER_OPTIMIZER_VERSION"
+OPTIMIZER_STATISITCS_PACKAGE_ENV_VAR = "SPANNER_OPTIMIZER_STATISTICS_PACKAGE"
 
 
 def _get_spanner_emulator_host():
@@ -72,6 +72,10 @@ def _get_spanner_emulator_host():
 
 def _get_spanner_optimizer_version():
     return os.getenv(OPTIMIZER_VERSION_ENV_VAR, "")
+
+
+def _get_spanner_optimizer_statistics_package():
+    return os.getenv(OPTIMIZER_STATISITCS_PACKAGE_ENV_VAR, "")
 
 
 class Client(ClientWithProject):
@@ -160,7 +164,8 @@ class Client(ClientWithProject):
         self._client_info = client_info
 
         env_query_options = ExecuteSqlRequest.QueryOptions(
-            optimizer_version=_get_spanner_optimizer_version()
+            optimizer_version=_get_spanner_optimizer_version(),
+            optimizer_statistics_package=_get_spanner_optimizer_statistics_package(),
         )
 
         # Environment flag config has higher precedence than application config.
@@ -288,8 +293,9 @@ class Client(ClientWithProject):
         instance_id,
         configuration_name=None,
         display_name=None,
-        node_count=DEFAULT_NODE_COUNT,
+        node_count=None,
         labels=None,
+        processing_units=None,
     ):
         """Factory to create a instance associated with this client.
 
@@ -314,6 +320,10 @@ class Client(ClientWithProject):
         :param node_count: (Optional) The number of nodes in the instance's
                             cluster; used to set up the instance's cluster.
 
+        :type processing_units: int
+        :param processing_units: (Optional) The number of processing units
+                                allocated to this instance.
+
         :type labels: dict (str -> str) or None
         :param labels: (Optional) User-assigned labels for this instance.
 
@@ -328,6 +338,7 @@ class Client(ClientWithProject):
             display_name,
             self._emulator_host,
             labels,
+            processing_units,
         )
 
     def list_instances(self, filter_="", page_size=None):
