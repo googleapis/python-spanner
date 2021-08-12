@@ -30,6 +30,8 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
 
+OPERATION_TIMEOUT_SECONDS = 240
+
 
 # [START spanner_create_instance]
 def create_instance(instance_id):
@@ -55,7 +57,7 @@ def create_instance(instance_id):
     operation = instance.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created instance {}".format(instance_id))
 
@@ -87,13 +89,60 @@ def create_instance_with_processing_units(instance_id, processing_units):
     operation = instance.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created instance {} with {} processing units".format(
         instance_id, instance.processing_units))
 
 
 # [END spanner_create_instance_with_processing_units]
+
+
+# [START spanner_get_instance_config]
+def get_instance_config(instance_config):
+    """Gets the leader options for the instance configuration."""
+    spanner_client = spanner.Client()
+    config_name = "{}/instanceConfigs/{}".format(spanner_client.project_name, instance_config)
+    config = spanner_client.instance_admin_api.get_instance_config(name=config_name)
+    print("Available leader options for instance config {}: {}".format(
+        instance_config, config.leader_options))
+
+
+# [END spanner_get_instance_config]
+
+
+# [START spanner_list_instance_configs]
+def list_instance_config():
+    """Lists the available instance configurations."""
+    spanner_client = spanner.Client()
+    configs = spanner_client.list_instance_configs()
+    for config in configs:
+        print(
+            "Available leader options for instance config {}: {}".format(
+                config.name, config.leader_options
+            )
+        )
+
+
+# [END spanner_list_instance_configs]
+
+
+# [START spanner_list_databases]
+def list_databases(instance_id):
+    """Lists databases and their leader options."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    databases = list(instance.list_databases())
+    for database in databases:
+        print(
+            "Database {} has default leader {}".format(
+                database.name, database.default_leader
+            )
+        )
+
+
+# [END spanner_list_databases]
 
 
 # [START spanner_create_database]
@@ -123,7 +172,7 @@ def create_database(instance_id, database_id):
     operation = database.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created database {} on instance {}".format(database_id, instance_id))
 
@@ -159,13 +208,119 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
     operation = database.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Database {} created with encryption key {}".format(
         database.name, database.encryption_config.kms_key_name))
 
 
 # [END spanner_create_database_with_encryption_key]
+
+
+# [START spanner_create_database_with_default_leader]
+def create_database_with_default_leader(
+    instance_id, database_id, default_leader
+):
+    """Creates a database with tables with a default leader."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(
+        database_id,
+        ddl_statements=[
+            """CREATE TABLE Singers (
+            SingerId     INT64 NOT NULL,
+            FirstName    STRING(1024),
+            LastName     STRING(1024),
+            SingerInfo   BYTES(MAX)
+        ) PRIMARY KEY (SingerId)""",
+            """CREATE TABLE Albums (
+            SingerId     INT64 NOT NULL,
+            AlbumId      INT64 NOT NULL,
+            AlbumTitle   STRING(MAX)
+        ) PRIMARY KEY (SingerId, AlbumId),
+        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+            "ALTER DATABASE {}"
+            " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader),
+        ],
+    )
+    operation = database.create()
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    database.reload()
+
+    print(
+        "Database {} created with default leader {}".format(
+                database.name, database.default_leader
+        )
+    )
+
+
+# [END spanner_create_database_with_default_leader]
+
+
+# [START spanner_update_database_with_default_leader]
+def update_database_with_default_leader(
+    instance_id, database_id, default_leader
+):
+    """Updates a database with tables with a default leader."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    operation = database.update_ddl(["ALTER DATABASE {}"
+                                     " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    database.reload()
+
+    print(
+        "Database {} updated with default leader {}".format(
+            database.name, database.default_leader
+        )
+    )
+
+
+# [END spanner_update_database_with_default_leader]
+
+
+# [START spanner_get_database_ddl]
+def get_database_ddl(instance_id, database_id):
+    """Gets the database DDL statements."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+    ddl = spanner_client.database_admin_api.get_database_ddl(database=database.name)
+    print("Retrieved database DDL for {}".format(database_id))
+    for statement in ddl.statements:
+        print(statement)
+
+
+# [END spanner_get_database_ddl]
+
+
+# [START spanner_query_information_schema_database_options]
+def query_information_schema_database_options(instance_id, database_id):
+    """Queries the default leader of a database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql(
+            "SELECT OPTION_VALUE AS default_leader "
+            "FROM INFORMATION_SCHEMA.DATABASE_OPTIONS "
+            "WHERE SCHEMA_NAME = '' AND OPTION_NAME = 'default_leader'"
+        )
+        for result in results:
+            print("Database {} has default leader {}".format(
+                database_id, result[0]
+            ))
+
+
+# [END spanner_query_information_schema_database_options]
 
 
 # [START spanner_insert_data]
@@ -346,7 +501,7 @@ def add_index(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the AlbumsByAlbumTitle index.")
 
@@ -445,7 +600,7 @@ def add_storing_index(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the AlbumsByAlbumTitle2 index.")
 
@@ -498,7 +653,7 @@ def add_column(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the MarketingBudget column.")
 
@@ -663,7 +818,7 @@ def create_table_with_timestamp(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         "Created Performances table on database {} on instance {}".format(
@@ -718,7 +873,7 @@ def add_timestamp_column(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         'Altered table "Albums" on database {} on instance {}.'.format(
@@ -811,7 +966,7 @@ def add_numeric_column(instance_id, database_id):
     operation = database.update_ddl(["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"])
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         'Altered table "Venues" on database {} on instance {}.'.format(
@@ -1411,7 +1566,7 @@ def create_table_with_datatypes(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         "Created Venues table on database {} on instance {}".format(
