@@ -229,16 +229,15 @@ class Connection:
                     self.connection._transaction = None
                     raise Aborted(status.details)
 
-                if not self.read_only:
-                    retried_checksum = ResultsChecksum()
-                    retried_checksum.consume_result(res)
-                    retried_checksum.consume_result(status.code)
+                retried_checksum = ResultsChecksum()
+                retried_checksum.consume_result(res)
+                retried_checksum.consume_result(status.code)
 
-                    _compare_checksums(checksum, retried_checksum)
+                _compare_checksums(checksum, retried_checksum)
             else:
                 res_iter, retried_checksum = self.run_statement(statement, retried=True)
                 # executing all the completed statements
-                if statement != self._statements[-1] and not self.read_only:
+                if statement != self._statements[-1]:
                     for res in res_iter:
                         retried_checksum.consume_result(res)
 
@@ -250,13 +249,11 @@ class Connection:
                     while len(retried_checksum) < len(statement.checksum):
                         try:
                             res = next(iter(res_iter))
-                            if not self.read_only:
-                                retried_checksum.consume_result(res)
+                            retried_checksum.consume_result(res)
                         except StopIteration:
                             break
 
-                    if not self.read_only:
-                        _compare_checksums(statement.checksum, retried_checksum)
+                    _compare_checksums(statement.checksum, retried_checksum)
 
     def transaction_checkout(self):
         """Get a Cloud Spanner transaction.
