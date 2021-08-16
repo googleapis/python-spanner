@@ -30,6 +30,8 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
 
+OPERATION_TIMEOUT_SECONDS = 240
+
 
 # [START spanner_create_instance]
 def create_instance(instance_id):
@@ -55,7 +57,7 @@ def create_instance(instance_id):
     operation = instance.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created instance {}".format(instance_id))
 
@@ -87,7 +89,7 @@ def create_instance_with_processing_units(instance_id, processing_units):
     operation = instance.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created instance {} with {} processing units".format(
         instance_id, instance.processing_units))
@@ -170,7 +172,7 @@ def create_database(instance_id, database_id):
     operation = database.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Created database {} on instance {}".format(database_id, instance_id))
 
@@ -206,7 +208,7 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
     operation = database.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Database {} created with encryption key {}".format(
         database.name, database.encryption_config.kms_key_name))
@@ -245,7 +247,7 @@ def create_database_with_default_leader(
     operation = database.create()
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     database.reload()
 
@@ -271,7 +273,7 @@ def update_database_with_default_leader(
 
     operation = database.update_ddl(["ALTER DATABASE {}"
                                      " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     database.reload()
 
@@ -499,7 +501,7 @@ def add_index(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the AlbumsByAlbumTitle index.")
 
@@ -598,7 +600,7 @@ def add_storing_index(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the AlbumsByAlbumTitle2 index.")
 
@@ -651,7 +653,7 @@ def add_column(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Added the MarketingBudget column.")
 
@@ -816,7 +818,7 @@ def create_table_with_timestamp(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         "Created Performances table on database {} on instance {}".format(
@@ -871,7 +873,7 @@ def add_timestamp_column(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         'Altered table "Albums" on database {} on instance {}.'.format(
@@ -964,7 +966,7 @@ def add_numeric_column(instance_id, database_id):
     operation = database.update_ddl(["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"])
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         'Altered table "Venues" on database {} on instance {}.'.format(
@@ -1509,6 +1511,8 @@ def delete_data_with_partitioned_dml(instance_id, database_id):
 def update_with_batch_dml(instance_id, database_id):
     """Updates sample data in the database using Batch DML. """
     # [START spanner_dml_batch_update]
+    from google.rpc.code_pb2 import OK
+
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
@@ -1529,7 +1533,13 @@ def update_with_batch_dml(instance_id, database_id):
     )
 
     def update_albums(transaction):
-        row_cts = transaction.batch_update([insert_statement, update_statement])
+        status, row_cts = transaction.batch_update([insert_statement, update_statement])
+
+        if status.code != OK:
+            # Do handling here.
+            # Note: the exception will still be raised when
+            # `commit` is called by `run_in_transaction`.
+            return
 
         print("Executed {} SQL statements using Batch DML.".format(len(row_cts)))
 
@@ -1564,7 +1574,7 @@ def create_table_with_datatypes(instance_id, database_id):
     )
 
     print("Waiting for operation to complete...")
-    operation.result(120)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
         "Created Venues table on database {} on instance {}".format(

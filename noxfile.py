@@ -84,9 +84,15 @@ def default(session):
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
     )
-    session.install("asyncmock", "pytest-asyncio", "-c", constraints_path)
-
-    session.install("mock", "pytest", "pytest-cov", "-c", constraints_path)
+    session.install(
+        "mock",
+        "asyncmock",
+        "pytest",
+        "pytest-cov",
+        "pytest-asyncio",
+        "-c",
+        constraints_path,
+    )
 
     session.install("-e", ".", "-c", constraints_path)
 
@@ -105,7 +111,11 @@ def default(session):
         *session.posargs,
     )
 
+    # XXX Work around Kokoro image's older pip, which borks the OT install.
+    session.run("pip", "install", "--upgrade", "pip")
     session.install("-e", ".[tracing]", "-c", constraints_path)
+    # XXX: Dump installed versions to debug OT issue
+    session.run("pip", "list")
 
     # Run py.test against the unit tests with OpenTelemetry.
     session.run(
