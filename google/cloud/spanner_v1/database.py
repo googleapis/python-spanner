@@ -52,6 +52,17 @@ from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
+from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
+from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
+from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+from google.cloud.spanner_v1 import (
+    ExecuteSqlRequest,
+    TransactionSelector,
+    TransactionOptions,
+)
 from google.cloud.spanner_v1.table import Table
 
 
@@ -68,7 +79,7 @@ _DATABASE_METADATA_FILTER = "name:{0}/operations/"
 
 _LIST_TABLES_QUERY = """SELECT TABLE_NAME
 FROM INFORMATION_SCHEMA.TABLES
-WHERE SPANNER_STATE = 'COMMITTED'
+{}
 """
 
 DEFAULT_RETRY_BACKOFF = Retry(initial=0.02, maximum=32, multiplier=1.3)
@@ -126,6 +137,7 @@ class Database(object):
         pool=None,
         logger=None,
         encryption_config=None,
+        database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED
     ):
         self.database_id = database_id
         self._instance = instance
@@ -141,6 +153,7 @@ class Database(object):
         self.log_commit_stats = False
         self._logger = logger
         self._encryption_config = encryption_config
+        self._database_dialect = database_dialect
 
         if pool is None:
             pool = BurstyPool()
@@ -295,6 +308,18 @@ class Database(object):
         return self._ddl_statements
 
     @property
+    def database_dialect(self):
+        """DDL Statements used to define database schema.
+
+        See
+        cloud.google.com/spanner/docs/data-definition-language
+
+        :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect
+        :returns: the dialect of the database
+        """
+        return self._database_dialect
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -364,7 +389,10 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
         db_name = self.database_id
         if "-" in db_name:
-            db_name = "`%s`" % (db_name,)
+            if self._database_dialect == DatabaseDialect.POSTGRESQL:
+                db_name = f"\"{db_name}\""
+            else:
+                db_name = f"`{db_name}`"
         if type(self._encryption_config) == dict:
             self._encryption_config = EncryptionConfig(**self._encryption_config)
 
@@ -373,6 +401,7 @@ class Database(object):
             create_statement="CREATE DATABASE %s" % (db_name,),
             extra_statements=list(self._ddl_statements),
             encryption_config=self._encryption_config,
+            database_dialect=self._database_dialect,
         )
         future = api.create_database(request=request, metadata=metadata)
         return future
@@ -418,6 +447,7 @@ class Database(object):
         self._encryption_config = response.encryption_config
         self._encryption_info = response.encryption_info
         self._default_leader = response.default_leader
+        self._database_dialect = response.database_dialect
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
@@ -778,7 +808,11 @@ class Database(object):
             resources within the current database.
         """
         with self.snapshot() as snapshot:
-            results = snapshot.execute_sql(_LIST_TABLES_QUERY)
+            if self._database_dialect == DatabaseDialect.POSTGRESQL:
+                where_clause = "WHERE TABLE_SCHEMA = 'PUBLIC'"
+            else:
+                where_clause = "WHERE SPANNER_STATE = 'COMMITTED'"
+            results = snapshot.execute_sql(_LIST_TABLES_QUERY.format(where_clause))
             for row in results:
                 yield self.table(row[0])
 
