@@ -190,6 +190,7 @@ class Backup(proto.Message):
         number=12,
         message=timestamp_pb2.Timestamp,
     )
+    database_dialect = proto.Field(proto.ENUM, number=10, enum=common.DatabaseDialect,)
 
 
 class CreateBackupRequest(proto.Message):
