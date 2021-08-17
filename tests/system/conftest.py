@@ -68,6 +68,16 @@ def database_operation_timeout():
 
 
 @pytest.fixture(scope="session")
+def database_restore_operation_timeout():
+    return _helpers.DATABASE_RESTORE_OPERATION_IN_SECONDS
+
+
+@pytest.fixture(scope="session")
+def backup_operation_timeout():
+    return _helpers.BACKUP_OPERATION_TIMEOUT_IN_SECONDS
+
+
+@pytest.fixture(scope="session")
 def shared_instance_id():
     if _helpers.CREATE_INSTANCE:
         return f"{_helpers.unique_id('google-cloud')}"
