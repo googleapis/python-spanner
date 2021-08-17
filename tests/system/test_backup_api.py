@@ -194,41 +194,6 @@ def test_backup_workflow(
     assert not backup.exists()
 
 
-def test_backup_create_w_version_time_dflt_to_create_time(
-    shared_instance,
-    shared_database,
-    database_version_time,
-    backups_to_delete,
-    databases_to_delete,
-    backup_operation_timeout,
-):
-    backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.utcnow() + datetime.timedelta(days=3)
-    expire_time = expire_time.replace(tzinfo=datetime.timezone.utc)
-
-    # Create backup.
-    backup = shared_instance.backup(
-        backup_id, database=shared_database, expire_time=expire_time,
-    )
-    operation = backup.create()
-    backups_to_delete.append(backup)
-
-    # Check metadata.
-    metadata = operation.metadata
-    assert backup.name == metadata.name
-    assert shared_database.name == metadata.database
-    operation.result(backup_operation_timeout)  # blocks until completion
-
-    # Check backup object.
-    backup.reload()
-    assert shared_database.name == backup._database
-    assert backup.create_time is not None
-    assert backup.create_time == backup.version_time
-
-    backup.delete()
-    assert not backup.exists()
-
-
 def test_backup_create_w_invalid_expire_time(
     shared_instance, shared_database, backup_operation_timeout
 ):
@@ -305,7 +270,18 @@ def test_database_restore_to_diff_instance(
     )
     operation = backup.create()
     backups_to_delete.append(backup)
+
+    # Check metadata.
+    metadata = operation.metadata
+    assert backup.name == metadata.name
+    assert shared_database.name == metadata.database
     operation.result(backup_operation_timeout)  # blocks until completion
+
+    # Check backup object.
+    backup.reload()
+    assert shared_database.name == backup._database
+    assert backup.create_time is not None
+    assert backup.create_time == backup.version_time
 
     # Restore database to different instance with same config.
     restored_id = _helpers.unique_id("restored_db")
