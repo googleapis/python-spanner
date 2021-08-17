@@ -1097,7 +1097,7 @@ def update_data_with_json(instance_id, database_id):
     print("Updated data.")
 
 
-# [END spanner_update_data_with_numeric_column]
+# [END spanner_update_data_with_json_column]
 
 
 # [START spanner_write_data_for_struct_queries]
