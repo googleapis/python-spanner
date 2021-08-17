@@ -179,7 +179,9 @@ def test_backup_workflow(
     )
     databases_to_delete.append(database)
     operation = database.restore(source=backup)
-    restored_db = operation.result(database_restore_operation_timeout)  # blocks until completion
+    restored_db = operation.result(
+        database_restore_operation_timeout
+    )  # blocks until completion
     assert database_version_time == restored_db.restore_info.backup_info.version_time
 
     metadata = operation.metadata
