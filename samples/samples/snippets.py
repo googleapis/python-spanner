@@ -26,12 +26,12 @@ import datetime
 import decimal
 import logging
 import time
+import json
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
 
 OPERATION_TIMEOUT_SECONDS = 240
-
 
 # [START spanner_create_instance]
 def create_instance(instance_id):
@@ -50,8 +50,8 @@ def create_instance(instance_id):
         labels={
             "cloud_spanner_samples": "true",
             "sample_name": "snippets-create_instance-explicit",
-            "created": str(int(time.time()))
-        }
+            "created": str(int(time.time())),
+        },
     )
 
     operation = instance.create()
@@ -82,8 +82,8 @@ def create_instance_with_processing_units(instance_id, processing_units):
         labels={
             "cloud_spanner_samples": "true",
             "sample_name": "snippets-create_instance_with_processing_units",
-            "created": str(int(time.time()))
-        }
+            "created": str(int(time.time())),
+        },
     )
 
     operation = instance.create()
@@ -91,8 +91,11 @@ def create_instance_with_processing_units(instance_id, processing_units):
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Created instance {} with {} processing units".format(
-        instance_id, instance.processing_units))
+    print(
+        "Created instance {} with {} processing units".format(
+            instance_id, instance.processing_units
+        )
+    )
 
 
 # [END spanner_create_instance_with_processing_units]
@@ -102,10 +105,15 @@ def create_instance_with_processing_units(instance_id, processing_units):
 def get_instance_config(instance_config):
     """Gets the leader options for the instance configuration."""
     spanner_client = spanner.Client()
-    config_name = "{}/instanceConfigs/{}".format(spanner_client.project_name, instance_config)
+    config_name = "{}/instanceConfigs/{}".format(
+        spanner_client.project_name, instance_config
+    )
     config = spanner_client.instance_admin_api.get_instance_config(name=config_name)
-    print("Available leader options for instance config {}: {}".format(
-        instance_config, config.leader_options))
+    print(
+        "Available leader options for instance config {}: {}".format(
+            instance_config, config.leader_options
+        )
+    )
 
 
 # [END spanner_get_instance_config]
@@ -202,7 +210,7 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
         ) PRIMARY KEY (SingerId, AlbumId),
         INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
         ],
-        encryption_config={'kms_key_name': kms_key_name},
+        encryption_config={"kms_key_name": kms_key_name},
     )
 
     operation = database.create()
@@ -210,17 +218,18 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Database {} created with encryption key {}".format(
-        database.name, database.encryption_config.kms_key_name))
+    print(
+        "Database {} created with encryption key {}".format(
+            database.name, database.encryption_config.kms_key_name
+        )
+    )
 
 
 # [END spanner_create_database_with_encryption_key]
 
 
 # [START spanner_create_database_with_default_leader]
-def create_database_with_default_leader(
-    instance_id, database_id, default_leader
-):
+def create_database_with_default_leader(instance_id, database_id, default_leader):
     """Creates a database with tables with a default leader."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -253,7 +262,7 @@ def create_database_with_default_leader(
 
     print(
         "Database {} created with default leader {}".format(
-                database.name, database.default_leader
+            database.name, database.default_leader
         )
     )
 
@@ -262,17 +271,19 @@ def create_database_with_default_leader(
 
 
 # [START spanner_update_database_with_default_leader]
-def update_database_with_default_leader(
-    instance_id, database_id, default_leader
-):
+def update_database_with_default_leader(instance_id, database_id, default_leader):
     """Updates a database with tables with a default leader."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
     database = instance.database(database_id)
 
-    operation = database.update_ddl(["ALTER DATABASE {}"
-                                     " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)])
+    operation = database.update_ddl(
+        [
+            "ALTER DATABASE {}"
+            " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)
+        ]
+    )
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
     database.reload()
@@ -315,9 +326,7 @@ def query_information_schema_database_options(instance_id, database_id):
             "WHERE SCHEMA_NAME = '' AND OPTION_NAME = 'default_leader'"
         )
         for result in results:
-            print("Database {} has default leader {}".format(
-                database_id, result[0]
-            ))
+            print("Database {} has default leader {}".format(database_id, result[0]))
 
 
 # [END spanner_query_information_schema_database_options]
@@ -1012,6 +1021,85 @@ def update_data_with_numeric(instance_id, database_id):
 # [END spanner_update_data_with_numeric_column]
 
 
+# [START spanner_add_json_column]
+def add_json_column(instance_id, database_id):
+    """ Adds a new JSON column to the Venues table in the example database.
+    """
+    spanner_client = spanner.Client(
+        client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"}
+    )
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    operation = database.update_ddl(
+        ["ALTER TABLE Venues ADD COLUMN RevenueDetails JSON"]
+    )
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Venues" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_add_json_column]
+
+
+# [START spanner_update_data_with_json_column]
+def update_data_with_json(instance_id, database_id):
+    """Updates Venues tables in the database with the JSON
+    column.
+
+    This updates the `RevenueDetails` column which must be created before
+    running this sample. You can add the column by running the
+    `add_json_column` sample or by running this DDL statement
+     against your database:
+
+        ALTER TABLE Venues ADD COLUMN RevenueDetails JSON
+    """
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    with database.batch() as batch:
+        batch.update(
+            table="Venues",
+            columns=("VenueId", "RevenueDetails"),
+            values=[
+                (
+                    4,
+                    json.dumps(
+                        [
+                            {"name": "room 1", "open": True},
+                            {"name": "room 2", "open": False},
+                        ]
+                    ),
+                ),
+                (19, json.dumps({"rating": 9, "open": True})),
+                (
+                    42,
+                    json.dumps(
+                        {
+                            "name": None,
+                            "open": {"Monday": True, "Tuesday": False},
+                            "tags": ["large", "airy"],
+                        }
+                    ),
+                ),
+            ],
+        )
+
+    print("Updated data.")
+
+
+# [END spanner_update_data_with_numeric_column]
+
+
 # [START spanner_write_data_for_struct_queries]
 def write_struct_data(instance_id, database_id):
     """Inserts sample data that can be used to test STRUCT parameters
@@ -1231,11 +1319,9 @@ def log_commit_stats(instance_id, database_id):
 
     database.run_in_transaction(insert_singers)
     commit_stats = database.logger.last_commit_stats
-    print(
-        "{} mutation(s) in transaction.".format(
-            commit_stats.mutation_count
-        )
-    )
+    print("{} mutation(s) in transaction.".format(commit_stats.mutation_count))
+
+
 # [END spanner_get_commit_stats]
 
 
@@ -1852,6 +1938,34 @@ def query_data_with_numeric_parameter(instance_id, database_id):
     # [END spanner_query_with_numeric_parameter]
 
 
+def query_data_with_json_parameter(instance_id, database_id):
+    """Queries sample data using SQL with a JSON parameter. """
+    # [START spanner_query_with_json_parameter]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    example_json = "{rating: 9}"
+    param = {"details": example_json}
+    param_type = {"details": param_types.JSON}
+
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql(
+            "SELECT VenueId, VenueDetails\n"
+            + "FROM Venues\n"
+            + "WHERE JSON_VALUE(VenueDetails, '$.rating') = "
+            + "JSON_VALUE(@details, '$.rating')",
+            params=param,
+            param_types=param_type,
+        )
+
+        for row in results:
+            print(u"VenueId: {}, VenueDetails: {}".format(*row))
+    # [END spanner_query_with_json_parameter]
+
+
 def query_data_with_timestamp_parameter(instance_id, database_id):
     """Queries sample data using SQL with a TIMESTAMP parameter. """
     # [START spanner_query_with_timestamp_parameter]
@@ -1899,7 +2013,7 @@ def query_data_with_query_options(instance_id, database_id):
             "SELECT VenueId, VenueName, LastUpdateTime FROM Venues",
             query_options={
                 "optimizer_version": "1",
-                "optimizer_statistics_package": "latest"
+                "optimizer_statistics_package": "latest",
             },
         )
 
@@ -1916,8 +2030,9 @@ def create_client_with_query_options(instance_id, database_id):
     spanner_client = spanner.Client(
         query_options={
             "optimizer_version": "1",
-            "optimizer_statistics_package": "auto_20191128_14_47_22UTC"
-        })
+            "optimizer_statistics_package": "auto_20191128_14_47_22UTC",
+        }
+    )
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
