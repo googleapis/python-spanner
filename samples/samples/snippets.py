@@ -24,8 +24,8 @@ import argparse
 import base64
 import datetime
 import decimal
-import logging
 import json
+import logging
 import time
 
 from google.cloud import spanner
@@ -1059,17 +1059,26 @@ def update_data_with_json(instance_id, database_id):
             table="Venues",
             columns=("VenueId", "VenueDetails"),
             values=[
-                (4, json.dumps(
-                    [{'name': 'room 1', 'open': True}, {'name': 'room 2', 'open': False}]
-                    )),
-                (19, json.dumps(
-                    {"rating" : 9, "open" : True}
-                    )),
-                (42, json.dumps(
-                    {"name" : None,
-                    "open" : {"Monday":True,"Tuesday":False},
-                    "tags" : ["large","airy"]}
-                    )),
+                (
+                    4,
+                    json.dumps(
+                        [
+                            {"name": "room 1", "open": True},
+                            {"name": "room 2", "open": False},
+                        ]
+                    ),
+                ),
+                (19, json.dumps({"rating": 9, "open": True})),
+                (
+                    42,
+                    json.dumps(
+                        {
+                            "name": None,
+                            "open": {"Monday": True, "Tuesday": False},
+                            "tags": ["large", "airy"],
+                        }
+                    ),
+                ),
             ],
         )
 
@@ -1926,6 +1935,7 @@ def query_data_with_numeric_parameter(instance_id, database_id):
             print(u"VenueId: {}, Revenue: {}".format(*row))
     # [END spanner_query_with_numeric_parameter]
 
+
 def query_data_with_json_parameter(instance_id, database_id):
     """Queries sample data using SQL with a JSON parameter. """
     # [START spanner_query_with_json_parameter]
@@ -1952,6 +1962,7 @@ def query_data_with_json_parameter(instance_id, database_id):
         for row in results:
             print(u"VenueId: {}, VenueDetails: {}".format(*row))
     # [END spanner_query_with_json_parameter]
+
 
 def query_data_with_timestamp_parameter(instance_id, database_id):
     """Queries sample data using SQL with a TIMESTAMP parameter. """
