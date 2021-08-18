@@ -604,7 +604,7 @@ def test_update_data_with_json(capsys, instance_id, sample_database):
 def test_query_data_with_json_parameter(capsys, instance_id, sample_database):
     snippets.query_data_with_json_parameter(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "VenueId: 19" in out
+    assert "VenueId: 19, VenueDetails: {\"open\":true,\"rating\":9}" in out
 
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
