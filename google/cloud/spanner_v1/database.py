@@ -809,7 +809,7 @@ class Database(object):
         """
         with self.snapshot() as snapshot:
             if self._database_dialect == DatabaseDialect.POSTGRESQL:
-                where_clause = "WHERE TABLE_SCHEMA = 'PUBLIC'"
+                where_clause = "WHERE TABLE_SCHEMA = 'public'"
             else:
                 where_clause = "WHERE SPANNER_STATE = 'COMMITTED'"
             results = snapshot.execute_sql(_LIST_TABLES_QUERY.format(where_clause))
