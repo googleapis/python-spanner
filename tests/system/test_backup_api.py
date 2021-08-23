@@ -124,7 +124,9 @@ def test_backup_workflow(
     )
 
     backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
     encryption_enum = CreateBackupEncryptionConfig.EncryptionType
     encryption_config = CreateBackupEncryptionConfig(
         encryption_type=encryption_enum.GOOGLE_DEFAULT_ENCRYPTION,
@@ -161,7 +163,9 @@ def test_backup_workflow(
     )
 
     # Update with valid argument.
-    valid_expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=7)
+    valid_expire_time = datetime.datetime.now(
+        datetime.timezone.utc
+    ) + datetime.timedelta(days=7)
     backup.update_expire_time(valid_expire_time)
     assert valid_expire_time == backup.expire_time
 
@@ -198,7 +202,9 @@ def test_backup_create_w_version_time_dflt_to_create_time(
     databases_to_delete,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
 
     # Create backup.
     backup = shared_instance.backup(
@@ -240,8 +246,12 @@ def test_backup_create_w_invalid_version_time_past(
     shared_instance, shared_database,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
-    version_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=10)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
+    version_time = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
+        days=10
+    )
 
     backup = shared_instance.backup(
         backup_id,
@@ -259,8 +269,12 @@ def test_backup_create_w_invalid_version_time_future(
     shared_instance, shared_database,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
-    version_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=2)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
+    version_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=2
+    )
 
     backup = shared_instance.backup(
         backup_id,
@@ -282,7 +296,9 @@ def test_database_restore_to_diff_instance(
     databases_to_delete,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
 
     # Create backup.
     backup = shared_instance.backup(
@@ -314,7 +330,9 @@ def test_multi_create_cancel_update_error_restore_errors(
 ):
     backup_id_1 = _helpers.unique_id("backup_id1", separator="_")
     backup_id_2 = _helpers.unique_id("backup_id2", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=3)
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
 
     backup1 = shared_instance.backup(
         backup_id_1, database=shared_database, expire_time=expire_time
@@ -345,8 +363,9 @@ def test_multi_create_cancel_update_error_restore_errors(
 
     # Update expire time to invalid value.
     max_expire_days = 366  # documented maximum
-    invalid_expire_time = datetime.datetime.now(datetime.timezone.utc) + \
-                          datetime.timedelta(days=max_expire_days + 1)
+    invalid_expire_time = datetime.datetime.now(
+        datetime.timezone.utc
+    ) + datetime.timedelta(days=max_expire_days + 1)
     with pytest.raises(exceptions.InvalidArgument):
         backup1.update_expire_time(invalid_expire_time)
 
@@ -375,7 +394,9 @@ def test_instance_list_backups(
     backup_id_1 = _helpers.unique_id("backup_id1", separator="_")
     backup_id_2 = _helpers.unique_id("backup_id2", separator="_")
 
-    expire_time_1 = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=21)
+    expire_time_1 = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=21
+    )
     expire_time_1_stamp = expire_time_1.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     backup1 = shared_instance.backup(
@@ -385,7 +406,9 @@ def test_instance_list_backups(
         version_time=database_version_time,
     )
 
-    expire_time_2 = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+    expire_time_2 = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=1
+    )
     backup2 = shared_instance.backup(
         backup_id_2, database=second_database, expire_time=expire_time_2
     )
