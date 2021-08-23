@@ -1889,14 +1889,13 @@ def test_execute_sql_w_numeric_bindings(not_emulator, sessions_database):
         [NUMERIC_1, NUMERIC_2],
     )
 
+
 def test_execute_sql_w_json_bindings(not_emulator, sessions_database):
     _bind_test_helper(
-        sessions_database,
-        spanner_v1.TypeCode.JSON,
-        JSON_1,
-        [JSON_1, JSON_2],
+        sessions_database, spanner_v1.TypeCode.JSON, JSON_1, [JSON_1, JSON_2],
     )
-    
+
+
 def test_execute_sql_w_query_param_struct(sessions_database):
     name = "Phred"
     count = 123
