@@ -282,9 +282,11 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
-        if not self._snapshot:
-            self._snapshot = Snapshot(self._session_checkout(), multi_use=True)
-        return self._snapshot
+        if self.read_only and not self.autocommit:
+            if not self._snapshot:
+                self._snapshot = Snapshot(self._session_checkout(), multi_use=True)
+
+            return self._snapshot
 
     def _raise_if_closed(self):
         """Helper to check the connection state before running a query.
