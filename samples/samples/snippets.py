@@ -1952,7 +1952,7 @@ def query_data_with_json_parameter(instance_id, database_id):
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT VenueId, VenueDetails "
-            "FROM Venues"
+            "FROM Venues "
             "WHERE JSON_VALUE(VenueDetails, '$.rating') = "
             "JSON_VALUE(@details, '$.rating')",
             params=param,
