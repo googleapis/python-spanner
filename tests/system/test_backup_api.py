@@ -79,8 +79,8 @@ def diff_config_instance(
     _helpers.scrub_instance_ignore_not_found(diff_config_instance)
 
 
-@pytest.fixture(scope="session")
-def database_version_time():
+@pytest.fixture(scope="function")
+def database_version_time(shared_database):  # Ensure database exists.
     return datetime.datetime.now(datetime.timezone.utc)
 
 
@@ -197,7 +197,6 @@ def test_backup_workflow(
 def test_backup_create_w_version_time_dflt_to_create_time(
     shared_instance,
     shared_database,
-    database_version_time,
     backups_to_delete,
     databases_to_delete,
 ):
