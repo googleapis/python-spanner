@@ -195,10 +195,7 @@ def test_backup_workflow(
 
 
 def test_backup_create_w_version_time_dflt_to_create_time(
-    shared_instance,
-    shared_database,
-    backups_to_delete,
-    databases_to_delete,
+    shared_instance, shared_database, backups_to_delete, databases_to_delete,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
