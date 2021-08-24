@@ -198,7 +198,9 @@ def test_backup_workflow(
     assert not backup.exists()
 
 
-def test_backup_create_w_invalid_expire_time(shared_instance, shared_database):
+def test_backup_create_w_invalid_expire_time(
+    shared_instance, shared_database, backup_operation_timeout
+):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc)
 
