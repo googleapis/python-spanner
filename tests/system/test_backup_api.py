@@ -82,7 +82,10 @@ def diff_config_instance(
 @pytest.fixture(scope="session")
 def database_version_time(shared_database):
     shared_database.reload()
-    diff = datetime.datetime.now(datetime.timezone.utc) - shared_database.earliest_version_time
+    diff = (
+        datetime.datetime.now(datetime.timezone.utc)
+        - shared_database.earliest_version_time
+    )
     return shared_database.earliest_version_time + diff / 2
 
 
