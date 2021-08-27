@@ -65,15 +65,8 @@ class CreateSessionRequest(proto.Message):
             The session to create.
     """
 
-    database = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    session = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message="Session",
-    )
+    database = proto.Field(proto.STRING, number=1,)
+    session = proto.Field(proto.MESSAGE, number=2, message="Session",)
 
 
 class BatchCreateSessionsRequest(proto.Message):
@@ -97,19 +90,9 @@ class BatchCreateSessionsRequest(proto.Message):
             as necessary).
     """
 
-    database = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    session_template = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message="Session",
-    )
-    session_count = proto.Field(
-        proto.INT32,
-        number=3,
-    )
+    database = proto.Field(proto.STRING, number=1,)
+    session_template = proto.Field(proto.MESSAGE, number=2, message="Session",)
+    session_count = proto.Field(proto.INT32, number=3,)
 
 
 class BatchCreateSessionsResponse(proto.Message):
@@ -121,11 +104,7 @@ class BatchCreateSessionsResponse(proto.Message):
             The freshly created sessions.
     """
 
-    session = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Session",
-    )
+    session = proto.RepeatedField(proto.MESSAGE, number=1, message="Session",)
 
 
 class Session(proto.Message):
@@ -157,24 +136,11 @@ class Session(proto.Message):
             earlier than the actual last use time.
     """
 
-    name = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    labels = proto.MapField(
-        proto.STRING,
-        proto.STRING,
-        number=2,
-    )
-    create_time = proto.Field(
-        proto.MESSAGE,
-        number=3,
-        message=timestamp_pb2.Timestamp,
-    )
+    name = proto.Field(proto.STRING, number=1,)
+    labels = proto.MapField(proto.STRING, proto.STRING, number=2,)
+    create_time = proto.Field(proto.MESSAGE, number=3, message=timestamp_pb2.Timestamp,)
     approximate_last_use_time = proto.Field(
-        proto.MESSAGE,
-        number=4,
-        message=timestamp_pb2.Timestamp,
+        proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,
     )
 
 
@@ -186,10 +152,7 @@ class GetSessionRequest(proto.Message):
             retrieve.
     """
 
-    name = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    name = proto.Field(proto.STRING, number=1,)
 
 
 class ListSessionsRequest(proto.Message):
@@ -223,22 +186,10 @@ class ListSessionsRequest(proto.Message):
                and the value of the label contains the string "dev".
     """
 
-    database = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    page_size = proto.Field(
-        proto.INT32,
-        number=2,
-    )
-    page_token = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-    filter = proto.Field(
-        proto.STRING,
-        number=4,
-    )
+    database = proto.Field(proto.STRING, number=1,)
+    page_size = proto.Field(proto.INT32, number=2,)
+    page_token = proto.Field(proto.STRING, number=3,)
+    filter = proto.Field(proto.STRING, number=4,)
 
 
 class ListSessionsResponse(proto.Message):
@@ -258,15 +209,8 @@ class ListSessionsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    sessions = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Session",
-    )
-    next_page_token = proto.Field(
-        proto.STRING,
-        number=2,
-    )
+    sessions = proto.RepeatedField(proto.MESSAGE, number=1, message="Session",)
+    next_page_token = proto.Field(proto.STRING, number=2,)
 
 
 class DeleteSessionRequest(proto.Message):
@@ -278,10 +222,7 @@ class DeleteSessionRequest(proto.Message):
             Required. The name of the session to delete.
     """
 
-    name = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    name = proto.Field(proto.STRING, number=1,)
 
 
 class RequestOptions(proto.Message):
@@ -336,48 +277,9 @@ class RequestOptions(proto.Message):
         PRIORITY_MEDIUM = 2
         PRIORITY_HIGH = 3
 
-    priority = proto.Field(
-        proto.ENUM,
-        number=1,
-        enum=Priority,
-    )
-    request_tag = proto.Field(
-        proto.STRING,
-        number=2,
-    )
-    transaction_tag = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-
-
-class RequestOptions(proto.Message):
-    r"""Common request options for various APIs.
-
-    Attributes:
-        request_tag (str):
-            A per-request tag which can be applied to queries or reads,
-            used for statistics collection. Both request_tag and
-            transaction_tag can be specified for a read or query that
-            belongs to a transaction. This field is ignored for requests
-            where it's not applicable (e.g. CommitRequest).
-            ``request_tag`` must be a valid identifier of the form:
-            ``[a-zA-Z][a-zA-Z0-9_\-]`` between 2 and 64 characters in
-            length
-        transaction_tag (str):
-            A tag used for statistics collection about this transaction.
-            Both request_tag and transaction_tag can be specified for a
-            read or query that belongs to a transaction. The value of
-            transaction_tag should be the same for all requests
-            belonging to the same transaction. If this request doesn’t
-            belong to any transaction, transaction_tag will be ignored.
-            ``transaction_tag`` must be a valid identifier of the
-            format: [a-zA-Z][a-zA-Z0-9_-]{0,49}
-    """
-
-    request_tag = proto.Field(proto.STRING, number=2)
-
-    transaction_tag = proto.Field(proto.STRING, number=3)
+    priority = proto.Field(proto.ENUM, number=1, enum=Priority,)
+    request_tag = proto.Field(proto.STRING, number=2,)
+    transaction_tag = proto.Field(proto.STRING, number=3,)
 
 
 class ExecuteSqlRequest(proto.Message):
@@ -542,72 +444,24 @@ class ExecuteSqlRequest(proto.Message):
                 garbage collection fails with an ``INVALID_ARGUMENT`` error.
         """
 
-        optimizer_version = proto.Field(
-            proto.STRING,
-            number=1,
-        )
-        optimizer_statistics_package = proto.Field(
-            proto.STRING,
-            number=2,
-        )
+        optimizer_version = proto.Field(proto.STRING, number=1,)
+        optimizer_statistics_package = proto.Field(proto.STRING, number=2,)
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionSelector,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
     )
-    sql = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-    params = proto.Field(
-        proto.MESSAGE,
-        number=4,
-        message=struct_pb2.Struct,
-    )
+    sql = proto.Field(proto.STRING, number=3,)
+    params = proto.Field(proto.MESSAGE, number=4, message=struct_pb2.Struct,)
     param_types = proto.MapField(
-        proto.STRING,
-        proto.MESSAGE,
-        number=5,
-        message=gs_type.Type,
+        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
     )
-    resume_token = proto.Field(
-        proto.BYTES,
-        number=6,
-    )
-    query_mode = proto.Field(
-        proto.ENUM,
-        number=7,
-        enum=QueryMode,
-    )
-    partition_token = proto.Field(
-        proto.BYTES,
-        number=8,
-    )
-    seqno = proto.Field(
-        proto.INT64,
-        number=9,
-    )
-    query_options = proto.Field(
-        proto.MESSAGE,
-        number=10,
-        message=QueryOptions,
-    )
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=11,
-        message="RequestOptions",
-    )
-
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=11,
-        message="RequestOptions",
-    )
+    resume_token = proto.Field(proto.BYTES, number=6,)
+    query_mode = proto.Field(proto.ENUM, number=7, enum=QueryMode,)
+    partition_token = proto.Field(proto.BYTES, number=8,)
+    seqno = proto.Field(proto.INT64, number=9,)
+    query_options = proto.Field(proto.MESSAGE, number=10, message=QueryOptions,)
+    request_options = proto.Field(proto.MESSAGE, number=11, message="RequestOptions",)
 
 
 class ExecuteBatchDmlRequest(proto.Message):
@@ -687,51 +541,19 @@ class ExecuteBatchDmlRequest(proto.Message):
                 SQL types.
         """
 
-        sql = proto.Field(
-            proto.STRING,
-            number=1,
-        )
-        params = proto.Field(
-            proto.MESSAGE,
-            number=2,
-            message=struct_pb2.Struct,
-        )
+        sql = proto.Field(proto.STRING, number=1,)
+        params = proto.Field(proto.MESSAGE, number=2, message=struct_pb2.Struct,)
         param_types = proto.MapField(
-            proto.STRING,
-            proto.MESSAGE,
-            number=3,
-            message=gs_type.Type,
+            proto.STRING, proto.MESSAGE, number=3, message=gs_type.Type,
         )
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionSelector,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
     )
-    statements = proto.RepeatedField(
-        proto.MESSAGE,
-        number=3,
-        message=Statement,
-    )
-    seqno = proto.Field(
-        proto.INT64,
-        number=4,
-    )
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=5,
-        message="RequestOptions",
-    )
-
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=5,
-        message="RequestOptions",
-    )
+    statements = proto.RepeatedField(proto.MESSAGE, number=3, message=Statement,)
+    seqno = proto.Field(proto.INT64, number=4,)
+    request_options = proto.Field(proto.MESSAGE, number=5, message="RequestOptions",)
 
 
 class ExecuteBatchDmlResponse(proto.Message):
@@ -790,15 +612,9 @@ class ExecuteBatchDmlResponse(proto.Message):
     """
 
     result_sets = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message=result_set.ResultSet,
+        proto.MESSAGE, number=1, message=result_set.ResultSet,
     )
-    status = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=status_pb2.Status,
-    )
+    status = proto.Field(proto.MESSAGE, number=2, message=status_pb2.Status,)
 
 
 class PartitionOptions(proto.Message):
@@ -826,14 +642,8 @@ class PartitionOptions(proto.Message):
             this maximum count request.
     """
 
-    partition_size_bytes = proto.Field(
-        proto.INT64,
-        number=1,
-    )
-    max_partitions = proto.Field(
-        proto.INT64,
-        number=2,
-    )
+    partition_size_bytes = proto.Field(proto.INT64, number=1,)
+    max_partitions = proto.Field(proto.INT64, number=2,)
 
 
 class PartitionQueryRequest(proto.Message):
@@ -895,34 +705,17 @@ class PartitionQueryRequest(proto.Message):
             partitions are created.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionSelector,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
     )
-    sql = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-    params = proto.Field(
-        proto.MESSAGE,
-        number=4,
-        message=struct_pb2.Struct,
-    )
+    sql = proto.Field(proto.STRING, number=3,)
+    params = proto.Field(proto.MESSAGE, number=4, message=struct_pb2.Struct,)
     param_types = proto.MapField(
-        proto.STRING,
-        proto.MESSAGE,
-        number=5,
-        message=gs_type.Type,
+        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
     )
     partition_options = proto.Field(
-        proto.MESSAGE,
-        number=6,
-        message="PartitionOptions",
+        proto.MESSAGE, number=6, message="PartitionOptions",
     )
 
 
@@ -975,36 +768,16 @@ class PartitionReadRequest(proto.Message):
             partitions are created.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionSelector,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
     )
-    table = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-    index = proto.Field(
-        proto.STRING,
-        number=4,
-    )
-    columns = proto.RepeatedField(
-        proto.STRING,
-        number=5,
-    )
-    key_set = proto.Field(
-        proto.MESSAGE,
-        number=6,
-        message=keys.KeySet,
-    )
+    table = proto.Field(proto.STRING, number=3,)
+    index = proto.Field(proto.STRING, number=4,)
+    columns = proto.RepeatedField(proto.STRING, number=5,)
+    key_set = proto.Field(proto.MESSAGE, number=6, message=keys.KeySet,)
     partition_options = proto.Field(
-        proto.MESSAGE,
-        number=9,
-        message="PartitionOptions",
+        proto.MESSAGE, number=9, message="PartitionOptions",
     )
 
 
@@ -1021,10 +794,7 @@ class Partition(proto.Message):
             token.
     """
 
-    partition_token = proto.Field(
-        proto.BYTES,
-        number=1,
-    )
+    partition_token = proto.Field(proto.BYTES, number=1,)
 
 
 class PartitionResponse(proto.Message):
@@ -1039,15 +809,9 @@ class PartitionResponse(proto.Message):
             Transaction created by this request.
     """
 
-    partitions = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Partition",
-    )
+    partitions = proto.RepeatedField(proto.MESSAGE, number=1, message="Partition",)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.Transaction,
+        proto.MESSAGE, number=2, message=gs_transaction.Transaction,
     )
 
 
@@ -1125,55 +889,18 @@ class ReadRequest(proto.Message):
             Common options for this request.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionSelector,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
     )
-    table = proto.Field(
-        proto.STRING,
-        number=3,
-    )
-    index = proto.Field(
-        proto.STRING,
-        number=4,
-    )
-    columns = proto.RepeatedField(
-        proto.STRING,
-        number=5,
-    )
-    key_set = proto.Field(
-        proto.MESSAGE,
-        number=6,
-        message=keys.KeySet,
-    )
-    limit = proto.Field(
-        proto.INT64,
-        number=8,
-    )
-    resume_token = proto.Field(
-        proto.BYTES,
-        number=9,
-    )
-    partition_token = proto.Field(
-        proto.BYTES,
-        number=10,
-    )
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=11,
-        message="RequestOptions",
-    )
-
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=11,
-        message="RequestOptions",
-    )
+    table = proto.Field(proto.STRING, number=3,)
+    index = proto.Field(proto.STRING, number=4,)
+    columns = proto.RepeatedField(proto.STRING, number=5,)
+    key_set = proto.Field(proto.MESSAGE, number=6, message=keys.KeySet,)
+    limit = proto.Field(proto.INT64, number=8,)
+    resume_token = proto.Field(proto.BYTES, number=9,)
+    partition_token = proto.Field(proto.BYTES, number=10,)
+    request_options = proto.Field(proto.MESSAGE, number=11, message="RequestOptions",)
 
 
 class BeginTransactionRequest(proto.Message):
@@ -1194,26 +921,11 @@ class BeginTransactionRequest(proto.Message):
             this transaction instead.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
+    session = proto.Field(proto.STRING, number=1,)
     options = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.TransactionOptions,
+        proto.MESSAGE, number=2, message=gs_transaction.TransactionOptions,
     )
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=3,
-        message="RequestOptions",
-    )
-
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=3,
-        message="RequestOptions",
-    )
+    request_options = proto.Field(proto.MESSAGE, number=3, message="RequestOptions",)
 
 
 class CommitRequest(proto.Message):
@@ -1248,35 +960,17 @@ class CommitRequest(proto.Message):
             Common options for this request.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    transaction_id = proto.Field(
-        proto.BYTES,
-        number=2,
-        oneof="transaction",
-    )
+    session = proto.Field(proto.STRING, number=1,)
+    transaction_id = proto.Field(proto.BYTES, number=2, oneof="transaction",)
     single_use_transaction = proto.Field(
         proto.MESSAGE,
         number=3,
         oneof="transaction",
         message=gs_transaction.TransactionOptions,
     )
-    mutations = proto.RepeatedField(
-        proto.MESSAGE,
-        number=4,
-        message=mutation.Mutation,
-    )
-    return_commit_stats = proto.Field(
-        proto.BOOL,
-        number=5,
-    )
-    request_options = proto.Field(
-        proto.MESSAGE,
-        number=6,
-        message="RequestOptions",
-    )
+    mutations = proto.RepeatedField(proto.MESSAGE, number=4, message=mutation.Mutation,)
+    return_commit_stats = proto.Field(proto.BOOL, number=5,)
+    request_options = proto.Field(proto.MESSAGE, number=6, message="RequestOptions",)
 
 
 class RollbackRequest(proto.Message):
@@ -1289,14 +983,8 @@ class RollbackRequest(proto.Message):
             Required. The transaction to roll back.
     """
 
-    session = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    transaction_id = proto.Field(
-        proto.BYTES,
-        number=2,
-    )
+    session = proto.Field(proto.STRING, number=1,)
+    transaction_id = proto.Field(proto.BYTES, number=2,)
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

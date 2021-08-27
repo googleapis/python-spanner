@@ -276,21 +276,16 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         )
 
     def test_commit_w_request_tag_success(self):
-        request_options = RequestOptions(
-            request_tag="tag-1",
-        )
+        request_options = RequestOptions(request_tag="tag-1",)
         self._test_commit_with_request_tag(request_options=request_options)
 
     def test_commit_w_transaction_tag_success(self):
-        request_options = RequestOptions(
-            transaction_tag="tag-1-1",
-        )
+        request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._test_commit_with_request_tag(request_options=request_options)
 
     def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
-            request_tag="tag-1",
-            transaction_tag="tag-1-1",
+            request_tag="tag-1", transaction_tag="tag-1-1",
         )
         self._test_commit_with_request_tag(request_options=request_options)
 
@@ -400,10 +395,7 @@ class _FauxSpannerAPI:
         self.__dict__.update(**kwargs)
 
     def commit(
-        self,
-        request=None,
-        metadata=None,
-        request_options=None,
+        self, request=None, metadata=None, request_options=None,
     ):
         from google.api_core.exceptions import Unknown
 

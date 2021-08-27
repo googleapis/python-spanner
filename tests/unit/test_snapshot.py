@@ -683,7 +683,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             partition=partition,
             retry=retry,
             timeout=timeout,
-            request_options=request_options,
         )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -730,7 +729,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             request_options=request_options,
             partition_token=partition,
             seqno=sql_count,
-            request_options=request_options,
         )
         api.execute_streaming_sql.assert_called_once_with(
             request=expected_request,
