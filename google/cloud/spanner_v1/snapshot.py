@@ -22,6 +22,7 @@ from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import PartitionOptions
+from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import PartitionQueryRequest
 from google.cloud.spanner_v1 import PartitionReadRequest
 
@@ -431,7 +432,10 @@ class _SnapshotBase(_SessionWrapper):
             "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
         ):
             response = api.partition_read(
-                request=request, metadata=metadata, retry=retry, timeout=timeout,
+                request=request,
+                metadata=metadata,
+                retry=retry,
+                timeout=timeout,
             )
 
         return [partition.partition_token for partition in response.partitions]
@@ -523,7 +527,10 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
         ):
             response = api.partition_query(
-                request=request, metadata=metadata, retry=retry, timeout=timeout,
+                request=request,
+                metadata=metadata,
+                retry=retry,
+                timeout=timeout,
             )
 
         return [partition.partition_token for partition in response.partitions]

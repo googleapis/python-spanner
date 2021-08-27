@@ -402,6 +402,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         partition=None,
         timeout=gapic_v1.method.DEFAULT,
         retry=gapic_v1.method.DEFAULT,
+        request_options=None,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
@@ -460,6 +461,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 partition=partition,
                 retry=retry,
                 timeout=timeout,
+                request_options=request_options,
             )
         else:
             result_set = derived.read(
@@ -470,6 +472,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 limit=LIMIT,
                 retry=retry,
                 timeout=timeout,
+                request_options=request_options,
             )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -509,6 +512,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             index=INDEX,
             limit=expected_limit,
             partition_token=partition,
+            request_options=request_options,
         )
         api.streaming_read.assert_called_once_with(
             request=expected_request,
@@ -526,6 +530,34 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_read_wo_multi_use(self):
         self._read_helper(multi_use=False)
+
+    def test_read_w_request_tag_success(self):
+        request_options = RequestOptions(
+            request_tag="tag-1",
+        )
+        self._read_helper(multi_use=False, request_options=request_options)
+
+    def test_read_w_transaction_tag_success(self):
+        request_options = RequestOptions(
+            transaction_tag="tag-1-1",
+        )
+        self._read_helper(multi_use=False, request_options=request_options)
+
+    def test_read_w_request_and_transaction_tag_success(self):
+        request_options = RequestOptions(
+            request_tag="tag-1",
+            transaction_tag="tag-1-1",
+        )
+        self._read_helper(multi_use=False, request_options=request_options)
+
+    def test_read_w_request_and_transaction_tag_dictionary_success(self):
+        request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
+        self._read_helper(multi_use=False, request_options=request_options)
+
+    def test_read_w_incorrect_tag_dictionary_error(self):
+        request_options = {"incorrect_tag": "tag-1-1"}
+        with self.assertRaises(ValueError):
+            self._read_helper(multi_use=False, request_options=request_options)
 
     def test_read_wo_multi_use_w_read_request_count_gt_0(self):
         with self.assertRaises(ValueError):
@@ -656,6 +688,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             partition=partition,
             retry=retry,
             timeout=timeout,
+            request_options=request_options,
         )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -702,6 +735,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             request_options=request_options,
             partition_token=partition,
             seqno=sql_count,
+            request_options=request_options,
         )
         api.execute_streaming_sql.assert_called_once_with(
             request=expected_request,
@@ -759,6 +793,34 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 priority=RequestOptions.Priority.PRIORITY_MEDIUM
             ),
         )
+
+    def test_execute_sql_w_request_tag_success(self):
+        request_options = RequestOptions(
+            request_tag="tag-1",
+        )
+        self._execute_sql_helper(multi_use=False, request_options=request_options)
+
+    def test_execute_sql_w_transaction_tag_success(self):
+        request_options = RequestOptions(
+            transaction_tag="tag-1-1",
+        )
+        self._execute_sql_helper(multi_use=False, request_options=request_options)
+
+    def test_execute_sql_w_request_and_transaction_tag_success(self):
+        request_options = RequestOptions(
+            request_tag="tag-1",
+            transaction_tag="tag-1-1",
+        )
+        self._execute_sql_helper(multi_use=False, request_options=request_options)
+
+    def test_execute_sql_w_request_and_transaction_tag_dictionary_success(self):
+        request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
+        self._execute_sql_helper(multi_use=False, request_options=request_options)
+
+    def test_execute_sql_w_incorrect_tag_dictionary_error(self):
+        request_options = {"incorrect_tag": "tag-1-1"}
+        with self.assertRaises(ValueError):
+            self._execute_sql_helper(multi_use=False, request_options=request_options)
 
     def _partition_read_helper(
         self,

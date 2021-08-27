@@ -17,6 +17,7 @@
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import Mutation
 from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import RequestOptions
 
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._helpers import _make_list_value_pbs
@@ -118,8 +119,7 @@ class _BatchBase(_SessionWrapper):
 
 
 class Batch(_BatchBase):
-    """Accumulate mutations for transmission during :meth:`commit`.
-    """
+    """Accumulate mutations for transmission during :meth:`commit`."""
 
     committed = None
     commit_stats = None
@@ -171,7 +171,10 @@ class Batch(_BatchBase):
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
-            response = api.commit(request=request, metadata=metadata,)
+            response = api.commit(
+                request=request,
+                metadata=metadata,
+            )
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
         return self.committed

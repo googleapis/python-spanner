@@ -24,6 +24,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
@@ -159,7 +160,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
-            response = api.commit(request=request, metadata=metadata,)
+            response = api.commit(
+                request=request,
+                metadata=metadata,
+            )
         self.committed = response.commit_timestamp
         if return_commit_stats:
             self.commit_stats = response.commit_stats
@@ -280,6 +284,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             param_types=param_types,
             query_mode=query_mode,
             query_options=query_options,
+            request_options=request_options,
             seqno=seqno,
             request_options=request_options,
         )
