@@ -264,7 +264,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(committed, now)
         self.assertEqual(batch.committed, committed)
 
-        (session, mutations, single_use_txn, metadata) = api._committed
+        # request tag is ignored in response
+        (session, mutations, single_use_txn, metadata, _) = api._committed
         self.assertEqual(session, self.SESSION_NAME)
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)

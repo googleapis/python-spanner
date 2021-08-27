@@ -46,7 +46,9 @@ class Transaction(_SnapshotBase, _BatchBase):
     """Timestamp at which the transaction was successfully committed."""
     rolled_back = False
     commit_stats = None
+    transaction_tag = None
     _multi_use = True
+    _read_only = False
     _execute_sql_count = 0
 
     def __init__(self, session):
@@ -150,6 +152,8 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if type(request_options) == dict:
             request_options = RequestOptions(request_options)
+        if self.transaction_tag is not None:
+            request_options.transaction_tag = self.transaction_tag
 
         request = CommitRequest(
             session=self._session.name,

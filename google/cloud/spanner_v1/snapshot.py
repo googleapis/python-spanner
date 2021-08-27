@@ -102,6 +102,7 @@ class _SnapshotBase(_SessionWrapper):
     """
 
     _multi_use = False
+    _read_only = True
     _transaction_id = None
     _read_request_count = 0
     _execute_sql_count = 0
@@ -187,6 +188,11 @@ class _SnapshotBase(_SessionWrapper):
 
         if type(request_options) == dict:
             request_options = RequestOptions(request_options)
+
+        if not self._read_only:
+            # It's a Transaction request and not running on a Snapshot.
+            if self.transaction_tag is not None:
+                request_options.transaction_tag = self.transaction_tag
 
         request = ReadRequest(
             session=self._session.name,
@@ -314,6 +320,11 @@ class _SnapshotBase(_SessionWrapper):
 
         if type(request_options) == dict:
             request_options = RequestOptions(request_options)
+
+        if not self._read_only:
+            # It's a Transaction request and not running on a Snapshot.
+            if self.transaction_tag is not None:
+                request_options.transaction_tag = self.transaction_tag
 
         request = ExecuteSqlRequest(
             session=self._session.name,

@@ -50,7 +50,6 @@ from .types.spanner import PartitionQueryRequest
 from .types.spanner import PartitionReadRequest
 from .types.spanner import PartitionResponse
 from .types.spanner import ReadRequest
-from .types.spanner import RequestOptions
 from .types.spanner import RollbackRequest
 from .types.spanner import Session
 from .types.transaction import Transaction
@@ -125,7 +124,6 @@ __all__ = (
     "ResultSet",
     "ResultSetMetadata",
     "ResultSetStats",
-    "RequestOptions",
     "RollbackRequest",
     "Session",
     "StructType",
