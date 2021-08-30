@@ -364,8 +364,12 @@ class Connection:
         self._raise_if_closed()
 
         with self.database.snapshot() as snapshot:
-            if [[1]] != list(snapshot.execute_sql("SELECT 1")):
-                raise OperationalError("The connection is invalid")
+            result = list(snapshot.execute_sql("SELECT 1"))
+            if result != [[1]]:
+                raise OperationalError(
+                    "The checking query (SELECT 1) returned an unexpected result: %s. "
+                    "Expected: [[1]]" % result
+                )
 
     def __enter__(self):
         return self

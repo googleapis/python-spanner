@@ -644,6 +644,7 @@ class TestConnection(unittest.TestCase):
         connection.database.snapshot = snapshot_method
 
         connection.validate()
+        snapshot_obj.execute_sql.assert_called_once_with("SELECT 1")
 
     def test_validate_fail(self):
         from google.cloud.spanner_dbapi.exceptions import OperationalError
@@ -666,4 +667,15 @@ class TestConnection(unittest.TestCase):
         connection.database.snapshot = snapshot_method
 
         with self.assertRaises(OperationalError):
+            connection.validate()
+
+        snapshot_obj.execute_sql.assert_called_once_with("SELECT 1")
+
+    def test_validate_closed(self):
+        from google.cloud.spanner_dbapi.exceptions import InterfaceError
+
+        connection = self._make_connection()
+        connection.close()
+
+        with self.assertRaises(InterfaceError):
             connection.validate()
