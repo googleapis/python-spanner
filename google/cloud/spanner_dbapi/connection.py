@@ -360,6 +360,8 @@ class Connection:
 
         :raises: :class:`InterfaceError`: if this connection is closed.
         :raises: :class:`OperationalError`: if the request result is incorrect.
+        :raises: :class:`google.cloud.exceptions.NotFound`: if the linked instance
+                  or database doesn't exist.
         """
         self._raise_if_closed()
 
