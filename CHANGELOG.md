@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [3.9.1](https://www.github.com/googleapis/python-spanner/compare/v3.9.0...v3.9.1) (2021-09-08)
+
+
+### Bug Fixes
+
+* **db_api:** move connection validation into a separate method ([#543](https://www.github.com/googleapis/python-spanner/issues/543)) ([237ae41](https://www.github.com/googleapis/python-spanner/commit/237ae41d0c0db61f157755cf04f84ef2d146972c))
+
 ## [3.9.0](https://www.github.com/googleapis/python-spanner/compare/v3.8.0...v3.9.0) (2021-08-26)
 
 
