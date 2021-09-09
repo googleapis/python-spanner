@@ -365,5 +365,5 @@ def test_user_agent(shared_instance, dbapi_database):
     conn = Connection(shared_instance, dbapi_database)
     assert (
         conn.instance._client._client_info.user_agent
-        == "dbapi/" + pkg_resources.get_distribution("google-cloud-spanner")
+        == "dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
     )
