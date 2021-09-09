@@ -161,6 +161,8 @@ class _SnapshotBase(_SessionWrapper):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+                Please note, the `transactionTag` setting will be ignored for snapshot
+                as it's supported for read-only transactions.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -186,13 +188,17 @@ class _SnapshotBase(_SessionWrapper):
         metadata = _metadata_with_prefix(database.name)
         transaction = self._make_txn_selector()
 
-        if type(request_options) == dict:
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
 
         if not self._read_only:
             # It's a Transaction request and not running on a Snapshot.
             if self.transaction_tag is not None:
                 request_options.transaction_tag = self.transaction_tag
+        else:
+            request_options.transaction_tag = None
 
         request = ReadRequest(
             session=self._session.name,
@@ -318,8 +324,12 @@ class _SnapshotBase(_SessionWrapper):
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
 
-        if type(request_options) == dict:
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+            if self._read_only:
+                request_options.transaction_tag = None
 
         if not self._read_only:
             # It's a Transaction request and not running on a Snapshot.

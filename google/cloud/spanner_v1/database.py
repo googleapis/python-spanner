@@ -494,6 +494,8 @@ class Database(object):
             (Optional) Common options for this request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+            Please note, the `transactionTag` setting will be ignored as it is
+            not supported for partitioned DML.
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -501,8 +503,11 @@ class Database(object):
         query_options = _merge_query_options(
             self._instance._client._query_options, query_options
         )
-        if type(request_options) == dict:
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+            request_options.transaction_tag = None
 
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction

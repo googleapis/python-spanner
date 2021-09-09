@@ -14,6 +14,7 @@
 
 
 import google.api_core.gapic_v1.method
+from google.cloud.spanner_v1 import RequestOptions
 import mock
 from tests._helpers import (
     OpenTelemetryBase,
@@ -829,6 +830,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -879,6 +881,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -949,6 +952,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         self.assertEqual(
             gax_api.commit.call_args_list,
@@ -1041,6 +1045,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         self.assertEqual(
             gax_api.commit.call_args_list,
@@ -1133,6 +1138,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1223,6 +1229,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1304,6 +1311,7 @@ class TestSession(OpenTelemetryBase):
             session=self.SESSION_NAME,
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
+            request_options=RequestOptions(),
         )
         self.assertEqual(
             gax_api.commit.call_args_list,
@@ -1377,6 +1385,7 @@ class TestSession(OpenTelemetryBase):
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             return_commit_stats=True,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1439,6 +1448,7 @@ class TestSession(OpenTelemetryBase):
             mutations=txn._mutations,
             transaction_id=TRANSACTION_ID,
             return_commit_stats=True,
+            request_options=RequestOptions(),
         )
         gax_api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],

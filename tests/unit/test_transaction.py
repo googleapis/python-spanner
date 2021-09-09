@@ -52,6 +52,7 @@ class TestTransaction(OpenTelemetryBase):
     SESSION_ID = "session-id"
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     TRANSACTION_ID = b"DEADBEEF"
+    TRANSACTION_TAG = "transaction-tag"
 
     BASE_ATTRIBUTES = {
         "db.type": "spanner",
@@ -334,6 +335,8 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
+        if self.TRANSACTION_TAG:
+            transaction.transaction_tag = self.TRANSACTION_TAG
 
         if mutate:
             transaction.delete(TABLE_NAME, keyset)
@@ -345,11 +348,18 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction.committed, now)
         self.assertIsNone(session._transaction)
 
-        session_id, mutations, txn_id, metadata = api._committed
+        session_id, mutations, txn_id, req_options, metadata = api._committed
+
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
         self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        if req_options and self.TRANSACTION_TAG:
+            self.assertEqual(req_options.transaction_tag, self.TRANSACTION_TAG)
+        elif request_options and request_options.transaction_tag:
+            self.assertEqual(
+                req_options.transaction_tag, request_options.transaction_tag
+            )
 
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
@@ -375,9 +385,16 @@ class TestTransaction(OpenTelemetryBase):
         request_options = RequestOptions(request_tag="tag-1",)
         self._commit_helper(request_options=request_options)
 
-    def test_commit_w_transaction_tag_success(self):
+    def test_commit_w_transaction_tag_ignored_success(self):
         request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._commit_helper(request_options=request_options)
+
+    def test_commit_w_transaction_tag_overridden_success(self):
+        trx_tag_back = self.TRANSACTION_TAG
+        self.TRANSACTION_TAG = None
+        request_options = RequestOptions(transaction_tag="trx-tag",)
+        self._commit_helper(request_options=request_options)
+        self.TRANSACTION_TAG = trx_tag_back
 
     def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
@@ -765,7 +782,7 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction.committed, now)
 
-        session_id, mutations, txn_id, metadata = api._committed
+        session_id, mutations, txn_id, _, metadata = api._committed
         self.assertEqual(session_id, self.SESSION_NAME)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
@@ -854,6 +871,7 @@ class _FauxSpannerAPI(object):
             request.session,
             request.mutations,
             request.transaction_id,
+            request.request_options,
             metadata,
         )
         return self._commit_response

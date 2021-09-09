@@ -159,7 +159,9 @@ class Batch(_BatchBase):
         txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         trace_attributes = {"num_mutations": len(self._mutations)}
 
-        if type(request_options) == dict:
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
 
         request = CommitRequest(
