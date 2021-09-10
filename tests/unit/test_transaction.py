@@ -20,7 +20,6 @@ from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.api_core.retry import Retry
 from google.api_core import gapic_v1
-from google.cloud.spanner_v1 import RequestOptions
 
 from tests._helpers import OpenTelemetryBase, StatusCode
 
