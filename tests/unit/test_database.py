@@ -999,6 +999,7 @@ class TestDatabase(_BaseTest):
             expected_query_options = _merge_query_options(
                 expected_query_options, query_options
             )
+
         if not request_options:
             request_options = RequestOptions()
         elif request_options.transaction_tag:
@@ -1064,6 +1065,16 @@ class TestDatabase(_BaseTest):
             request_options=RequestOptions(
                 priority=RequestOptions.Priority.PRIORITY_MEDIUM
             ),
+        )
+
+    def test_execute_partitioned_dml_w_trx_tag_ignored(self):
+        self._execute_partitioned_dml_helper(
+            dml=DML_W_PARAM, request_options=RequestOptions(transaction_tag="trx-tag"),
+        )
+
+    def test_execute_partitioned_dml_w_req_tag_used(self):
+        self._execute_partitioned_dml_helper(
+            dml=DML_W_PARAM, request_options=RequestOptions(request_tag="req-tag"),
         )
 
     def test_execute_partitioned_dml_wo_params_retry_aborted(self):

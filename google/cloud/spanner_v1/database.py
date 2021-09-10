@@ -507,7 +507,7 @@ class Database(object):
             request_options = RequestOptions()
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
-            request_options.transaction_tag = None
+        request_options.transaction_tag = None
 
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction

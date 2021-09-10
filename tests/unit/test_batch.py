@@ -245,7 +245,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
         )
 
-    def _test_commit_with_request_tag(self, request_options=None):
+    def _test_commit_with_request_options(self, request_options=None):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
@@ -279,26 +279,26 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
     def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(request_tag="tag-1",)
-        self._test_commit_with_request_tag(request_options=request_options)
+        self._test_commit_with_request_options(request_options=request_options)
 
     def test_commit_w_transaction_tag_success(self):
         request_options = RequestOptions(transaction_tag="tag-1-1",)
-        self._test_commit_with_request_tag(request_options=request_options)
+        self._test_commit_with_request_options(request_options=request_options)
 
     def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
             request_tag="tag-1", transaction_tag="tag-1-1",
         )
-        self._test_commit_with_request_tag(request_options=request_options)
+        self._test_commit_with_request_options(request_options=request_options)
 
     def test_commit_w_request_and_transaction_tag_dictionary_success(self):
         request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
-        self._test_commit_with_request_tag(request_options=request_options)
+        self._test_commit_with_request_options(request_options=request_options)
 
     def test_commit_w_incorrect_tag_dictionary_error(self):
         request_options = {"incorrect_tag": "tag-1-1"}
         with self.assertRaises(ValueError):
-            self._test_commit_with_request_tag(request_options=request_options)
+            self._test_commit_with_request_options(request_options=request_options)
 
     def test_context_mgr_already_committed(self):
         import datetime

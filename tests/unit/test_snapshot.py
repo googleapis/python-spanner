@@ -731,6 +731,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 expected_query_options, query_options
             )
 
+        if derived._read_only:
+            # Transaction tag is ignored for read only requests.
+            request_options.transaction_tag = None
+
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=SQL_QUERY_WITH_PARAM,
