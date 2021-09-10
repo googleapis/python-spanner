@@ -17,6 +17,7 @@
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import Mutation
 from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import RequestOptions
 
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._helpers import _make_list_value_pbs
