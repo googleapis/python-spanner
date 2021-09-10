@@ -120,7 +120,54 @@ CREATE TABLE users_history (
      PRIMARY KEY(id, commit_ts DESC);
 """
 
+PG_DDL = """\
+CREATE TABLE contacts (
+    contact_id BIGINT,
+    first_name VARCHAR(1024),
+    last_name VARCHAR(1024),
+    email VARCHAR(1024),
+    PRIMARY KEY (contact_id) );
+CREATE TABLE all_types (
+    pkey BIGINT NOT NULL,
+    int_value INT,
+    bool_value BOOL,
+    bytes_value BYTEA,
+    float_value DOUBLE PRECISION,
+    string_value VARCHAR(16),
+    timestamp_value TIMESTAMPTZ,
+    numeric_value NUMERIC,
+    PRIMARY KEY (pkey) );
+CREATE TABLE counters (
+    name VARCHAR(1024),
+    value BIGINT,
+    PRIMARY KEY (name));
+CREATE TABLE string_plus_array_of_string (
+    id BIGINT,
+    name VARCHAR(16),
+    PRIMARY KEY (id));
+CREATE INDEX name ON contacts(first_name, last_name);
+"""
+# CREATE TABLE contact_phones (
+#     contact_id BIGINT,
+#     phone_type VARCHAR(1024),
+#     phone_number VARCHAR(1024),
+#     PRIMARY KEY (contact_id, phone_type),
+#     FOREIGN KEY (contact_id) REFERENCES
+#     contacts(contact_id) ON DELETE CASCADE )
+#     INTERLEAVE IN PARENT contacts;
+# CREATE TABLE users_history (
+#      id BIGINT NOT NULL,
+#      commit_ts COMMIT_TIMESTAMP NOT NULL,
+#      name TEXT NOT NULL,
+#      email TEXT,
+#      deleted BOOL NOT NULL,
+#      PRIMARY KEY(id, commit_ts DESC) );
+# """
+
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 EMULATOR_DDL_STATEMENTS = [
     stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
+]
+PG_DDL_STATEMENTS = [
+    stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()
 ]

@@ -18,6 +18,7 @@ import time
 import pytest
 
 from google.cloud import spanner_v1
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from . import _helpers
 from google.cloud.spanner_admin_database_v1.types.backup import (
     CreateBackupEncryptionConfig,
@@ -49,6 +50,18 @@ def not_emulator():
 
 
 @pytest.fixture(scope="session")
+def not_postgres(database_dialect):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        pytest.skip(f"{_helpers.DATABASE_DIALECT_ENVVAR} set to POSTGRES in environment.")
+
+
+@pytest.fixture(scope="session")
+def database_dialect():
+    return DatabaseDialect[_helpers.DATABASE_DIALECT] if _helpers.DATABASE_DIALECT else \
+        DatabaseDialect.GOOGLE_STANDARD_SQL
+
+
+@pytest.fixture(scope="session")
 def spanner_client():
     if _helpers.USE_EMULATOR:
         from google.auth.credentials import AnonymousCredentials
@@ -59,7 +72,9 @@ def spanner_client():
             credentials=credentials,
         )
     else:
-        return spanner_v1.Client()  # use google.auth.default credentials
+        return spanner_v1.Client(
+            client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"}
+        )  # use google.auth.default credentials
 
 
 @pytest.fixture(scope="session")
@@ -148,11 +163,11 @@ def shared_instance(
 
 
 @pytest.fixture(scope="session")
-def shared_database(shared_instance, database_operation_timeout):
+def shared_database(shared_instance, database_operation_timeout, database_dialect):
     database_name = _helpers.unique_id("test_database")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     database = shared_instance.database(
-        database_name, ddl_statements=_helpers.DDL_STATEMENTS, pool=pool
+        database_name, ddl_statements=_helpers.DDL_STATEMENTS, pool=pool, database_dialect=database_dialect
     )
     operation = database.create()
     operation.result(database_operation_timeout)  # raises on failure / timeout.
