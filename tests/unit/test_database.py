@@ -999,7 +999,10 @@ class TestDatabase(_BaseTest):
             expected_query_options = _merge_query_options(
                 expected_query_options, query_options
             )
-
+        if not request_options:
+            request_options = RequestOptions()
+        elif request_options.transaction_tag:
+            request_options.transaction_tag = None
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=dml,
@@ -1576,6 +1579,7 @@ class TestBatchCheckout(_BaseTest):
             session=self.SESSION_NAME,
             mutations=[],
             single_use_transaction=expected_txn_options,
+            request_options=RequestOptions(),
         )
         api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1618,6 +1622,7 @@ class TestBatchCheckout(_BaseTest):
             mutations=[],
             single_use_transaction=expected_txn_options,
             return_commit_stats=True,
+            request_options=RequestOptions(),
         )
         api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
@@ -1657,6 +1662,7 @@ class TestBatchCheckout(_BaseTest):
             mutations=[],
             single_use_transaction=expected_txn_options,
             return_commit_stats=True,
+            request_options=RequestOptions(),
         )
         api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],

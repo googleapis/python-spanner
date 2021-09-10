@@ -490,6 +490,11 @@ class TestTransaction(OpenTelemetryBase):
         transaction._transaction_id = self.TRANSACTION_ID
         transaction._execute_sql_count = count
 
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
+            request_options = RequestOptions(request_options)
+
         row_count = transaction.execute_update(
             DML_QUERY_WITH_PARAM,
             PARAMS,
@@ -656,6 +661,11 @@ class TestTransaction(OpenTelemetryBase):
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
         transaction._execute_sql_count = count
+
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
+            request_options = RequestOptions(request_options)
 
         status, row_counts = transaction.batch_update(
             dml_statements, request_options=request_options

@@ -452,6 +452,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         if not first:
             derived._transaction_id = TXN_ID
 
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
+            request_options = RequestOptions(request_options)
+
         if partition is not None:  # 'limit' and 'partition' incompatible
             result_set = derived.read(
                 TABLE_NAME,
@@ -502,6 +507,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             expected_limit = 0
         else:
             expected_limit = LIMIT
+
+        # Transaction tag is ignored for read request.
+        request_options.transaction_tag = None
 
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
@@ -672,6 +680,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         derived._execute_sql_count = sql_count
         if not first:
             derived._transaction_id = TXN_ID
+
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
+            request_options = RequestOptions(request_options)
 
         result_set = derived.execute_sql(
             SQL_QUERY_WITH_PARAM,
