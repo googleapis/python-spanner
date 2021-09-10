@@ -227,6 +227,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         session = _Session(database)
         batch = self._make_one(session)
         batch.insert(TABLE_NAME, COLUMNS, VALUES)
+
         committed = batch.commit()
 
         self.assertEqual(committed, now)

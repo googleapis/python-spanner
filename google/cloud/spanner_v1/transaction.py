@@ -288,8 +288,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             param_types=param_types,
             query_mode=query_mode,
             query_options=query_options,
-            request_options=request_options,
             seqno=seqno,
+            request_options=request_options,
         )
         with trace_call(
             "CloudSpanner.ReadWriteTransaction", self._session, trace_attributes
