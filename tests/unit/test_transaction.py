@@ -467,7 +467,6 @@ class TestTransaction(OpenTelemetryBase):
         request_options=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
-        request_options=None,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
@@ -500,7 +499,6 @@ class TestTransaction(OpenTelemetryBase):
             request_options=request_options,
             retry=retry,
             timeout=timeout,
-            request_options=request_options,
         )
 
         self.assertEqual(row_count, 1)
@@ -526,7 +524,6 @@ class TestTransaction(OpenTelemetryBase):
             query_options=expected_query_options,
             request_options=request_options,
             seqno=count,
-            request_options=request_options,
         )
         api.execute_sql.assert_called_once_with(
             request=expected_request,
@@ -862,9 +859,7 @@ class _FauxSpannerAPI(object):
         return self._rollback_response
 
     def commit(
-        self,
-        request=None,
-        metadata=None,
+        self, request=None, metadata=None,
     ):
         assert not request.single_use_transaction
         self._committed = (
