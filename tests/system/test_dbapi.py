@@ -355,6 +355,13 @@ def test_DDL_commit(shared_instance, dbapi_database):
     conn.commit()
 
 
+def test_ping(shared_instance, dbapi_database):
+    """Check connection validation method."""
+    conn = Connection(shared_instance, dbapi_database)
+    conn.validate()
+    conn.close()
+
+
 def test_read_only(shared_instance, dbapi_database):
     """
     Check that connection set to `read_only=True` uses
