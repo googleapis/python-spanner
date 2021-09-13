@@ -17,9 +17,12 @@ import pickle
 
 import pytest
 
+from google.api_core import exceptions
 from google.cloud import spanner_v1
 from google.cloud.spanner_dbapi.connection import Connection
+from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 from . import _helpers
+
 
 DATABASE_NAME = "dbapi-txn"
 
@@ -349,4 +352,28 @@ def test_DDL_commit(shared_instance, dbapi_database):
     cur = conn.cursor()
 
     cur.execute("DROP TABLE Singers")
+    conn.commit()
+
+
+def test_read_only(shared_instance, dbapi_database):
+    """
+    Check that connection set to `read_only=True` uses
+    ReadOnly transactions.
+    """
+    conn = Connection(shared_instance, dbapi_database, read_only=True)
+    cur = conn.cursor()
+
+    with pytest.raises(
+        ProgrammingError,
+        match="400 DML statements can only be performed in a read-write transaction.",
+    ):
+        cur.execute(
+            """
+UPDATE contacts
+SET first_name = 'updated-first-name'
+WHERE first_name = 'first-name'
+"""
+        )
+
+    cur.execute("SELECT * FROM contacts")
     conn.commit()

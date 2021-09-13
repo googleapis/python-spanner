@@ -285,6 +285,7 @@ class Connection:
         if self.read_only and not self.autocommit:
             if not self._snapshot:
                 self._snapshot = Snapshot(self._session_checkout(), multi_use=True)
+                self._snapshot.begin()
 
             return self._snapshot
 
