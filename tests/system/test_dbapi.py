@@ -370,10 +370,7 @@ def test_read_only(shared_instance, dbapi_database):
     conn = Connection(shared_instance, dbapi_database, read_only=True)
     cur = conn.cursor()
 
-    with pytest.raises(
-        ProgrammingError,
-        match="400 DML statements can only be performed in a read-write transaction.",
-    ):
+    with pytest.raises(ProgrammingError):
         cur.execute(
             """
 UPDATE contacts
