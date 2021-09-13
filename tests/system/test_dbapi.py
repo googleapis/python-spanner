@@ -17,7 +17,6 @@ import pickle
 
 import pytest
 
-from google.api_core import exceptions
 from google.cloud import spanner_v1
 from google.cloud.spanner_dbapi.connection import Connection
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
