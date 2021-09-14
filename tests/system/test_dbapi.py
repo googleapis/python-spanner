@@ -14,10 +14,12 @@
 
 import hashlib
 import pickle
+import pkg_resources
 
 import pytest
 
 from google.cloud import spanner_v1
+from google.cloud.spanner_dbapi.connection import connect
 from google.cloud.spanner_dbapi.connection import Connection
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 from . import _helpers
@@ -359,6 +361,15 @@ def test_ping(shared_instance, dbapi_database):
     conn = Connection(shared_instance, dbapi_database)
     conn.validate()
     conn.close()
+
+
+def test_user_agent(shared_instance, dbapi_database):
+    """Check that DB API uses an appropriate user agent."""
+    conn = connect(shared_instance.name, dbapi_database.name)
+    assert (
+        conn.instance._client._client_info.user_agent
+        == "dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
+    )
 
 
 def test_read_only(shared_instance, dbapi_database):
