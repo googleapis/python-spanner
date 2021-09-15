@@ -32,12 +32,12 @@ class TestHelpers(unittest.TestCase):
                 "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
             ) as mock_param_types:
                 transaction = mock.MagicMock()
-                transaction.execute_update = mock_execute = mock.MagicMock()
+                transaction.batch_update = mock_batch = mock.MagicMock()
                 _helpers._execute_insert_heterogenous(transaction, [params])
 
                 mock_pyformat.assert_called_once_with(params[0], params[1])
                 mock_param_types.assert_called_once_with(None)
-                mock_execute.assert_called_once_with(sql, params=None, param_types=None)
+                mock_batch.assert_called_once_with([(sql, None, None)])
 
     def test__execute_insert_homogenous(self):
         from google.cloud.spanner_dbapi import _helpers
