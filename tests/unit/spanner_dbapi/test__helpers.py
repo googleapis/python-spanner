@@ -21,6 +21,8 @@ import unittest
 class TestHelpers(unittest.TestCase):
     def test__execute_insert_heterogenous(self):
         from google.cloud.spanner_dbapi import _helpers
+        from google.rpc.status_pb2 import Status
+        from google.rpc.code_pb2 import OK
 
         sql = "sql"
         params = (sql, None)
@@ -32,8 +34,35 @@ class TestHelpers(unittest.TestCase):
                 "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
             ) as mock_param_types:
                 transaction = mock.MagicMock()
-                transaction.batch_update = mock_batch = mock.MagicMock()
+                status = Status(code=OK)
+                transaction.batch_update = mock_batch = mock.MagicMock(return_value=(status, 1))
                 _helpers._execute_insert_heterogenous(transaction, [params])
+
+                mock_pyformat.assert_called_once_with(params[0], params[1])
+                mock_param_types.assert_called_once_with(None)
+                mock_batch.assert_called_once_with([(sql, None, None)])
+
+    def test__execute_insert_heterogenous_error(self):
+        from google.cloud.spanner_dbapi import _helpers
+        from google.cloud.spanner_dbapi import OperationalError
+        from google.rpc.status_pb2 import Status
+        from google.rpc.code_pb2 import UNKNOWN
+
+        sql = "sql"
+        params = (sql, None)
+        with mock.patch(
+                "google.cloud.spanner_dbapi._helpers.sql_pyformat_args_to_spanner",
+                return_value=params,
+        ) as mock_pyformat:
+            with mock.patch(
+                    "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
+            ) as mock_param_types:
+                transaction = mock.MagicMock()
+                status = Status(code=UNKNOWN)
+                transaction.batch_update = mock_batch = mock.MagicMock(return_value=(status, 0))
+
+                with self.assertRaises(OperationalError):
+                    _helpers._execute_insert_heterogenous(transaction, [params])
 
                 mock_pyformat.assert_called_once_with(params[0], params[1])
                 mock_param_types.assert_called_once_with(None)
