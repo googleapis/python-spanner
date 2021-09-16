@@ -73,92 +73,74 @@ class TestParseUtils(unittest.TestCase):
             (
                 "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
                 [1, 2, 3, 4, 5, 6],
-                {
-                    "sql_params_list": [
-                        (
-                            "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                            (1, 2, 3),
-                        ),
-                        (
-                            "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                            (4, 5, 6),
-                        ),
-                    ]
-                },
+                [
+                    (
+                        "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
+                        (1, 2, 3),
+                    ),
+                    (
+                        "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
+                        (4, 5, 6),
+                    ),
+                ],
             ),
             (
                 "INSERT INTO django_migrations(app, name, applied) VALUES (%s, %s, %s)",
                 [1, 2, 3, 4, 5, 6],
-                {
-                    "sql_params_list": [
-                        (
-                            "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                            (1, 2, 3),
-                        ),
-                        (
-                            "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)",
-                            (4, 5, 6),
-                        ),
-                    ]
-                },
+                [
+                    ("INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)", (1, 2, 3)),
+                    ("INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)", (4, 5, 6)),
+                ],
             ),
             (
                 "INSERT INTO sales.addresses (street, city, state, zip_code) "
                 "SELECT street, city, state, zip_code FROM sales.customers"
                 "ORDER BY first_name, last_name",
                 None,
-                {
-                    "sql_params_list": [
-                        (
-                            "INSERT INTO sales.addresses (street, city, state, zip_code) "
-                            "SELECT street, city, state, zip_code FROM sales.customers"
-                            "ORDER BY first_name, last_name",
-                            None,
-                        )
-                    ]
-                },
+                [
+                    (
+                        "INSERT INTO sales.addresses (street, city, state, zip_code) "
+                        "SELECT street, city, state, zip_code FROM sales.customers"
+                        "ORDER BY first_name, last_name",
+                        None,
+                    )
+                ],
             ),
             (
                 "INSERT INTO ap (n, ct, cn) "
                 "VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s),(%s,      %s, %s)",
                 (1, 2, 3, 4, 5, 6, 7, 8, 9),
-                {
-                    "sql_params_list": [
-                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (1, 2, 3)),
-                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (4, 5, 6)),
-                        ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (7, 8, 9)),
-                    ]
-                },
+                [
+                    ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (1, 2, 3)),
+                    ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (4, 5, 6)),
+                    ("INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s)", (7, 8, 9)),
+                ],
             ),
             (
                 "INSERT INTO `no` (`yes`) VALUES (%s)",
                 (1, 4, 5),
-                {
-                    "sql_params_list": [
-                        ("INSERT INTO `no` (`yes`) VALUES (%s)", (1,)),
-                        ("INSERT INTO `no` (`yes`) VALUES (%s)", (4,)),
-                        ("INSERT INTO `no` (`yes`) VALUES (%s)", (5,)),
-                    ]
-                },
+                [
+                    ("INSERT INTO `no` (`yes`) VALUES (%s)", (1,)),
+                    ("INSERT INTO `no` (`yes`) VALUES (%s)", (4,)),
+                    ("INSERT INTO `no` (`yes`) VALUES (%s)", (5,)),
+                ],
             ),
             (
                 "INSERT INTO T (f1, f2) VALUES (1, 2)",
                 None,
-                {"sql_params_list": [("INSERT INTO T (f1, f2) VALUES (1, 2)", None)]},
+                [("INSERT INTO T (f1, f2) VALUES (1, 2)", None)],
             ),
             (
                 "INSERT INTO `no` (`yes`, tiff) VALUES (%s, LOWER(%s)), (%s, %s), (%s, %s)",
                 (1, "FOO", 5, 10, 11, 29),
-                {
-                    "sql_params_list": [
-                        (
-                            "INSERT INTO `no` (`yes`, tiff)  VALUES(%s, LOWER(%s))",
-                            (1, "FOO"),
-                        ),
-                        ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (5, 10)),
-                        ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (11, 29)),
-                    ]
-                },
+                [
+                    (
+                        "INSERT INTO `no` (`yes`, tiff)  VALUES(%s, LOWER(%s))",
+                        (1, "FOO"),
+                    ),
+                    ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (5, 10)),
+                    ("INSERT INTO `no` (`yes`, tiff)  VALUES(%s, %s)", (11, 29)),
+                ],
             ),
         ]
 
@@ -425,5 +407,5 @@ WHERE tab_name.data IN (%s, %s)
         ARGS = [5, "data2", "data3"]
 
         self.assertEqual(
-            parse_insert(SQL, ARGS), {"sql_params_list": [(SQL, ARGS)]},
+            parse_insert(SQL, ARGS), [(SQL, ARGS)],
         )

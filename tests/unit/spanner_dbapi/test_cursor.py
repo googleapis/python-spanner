@@ -706,9 +706,6 @@ class TestCursor(unittest.TestCase):
     #
     # def test_do_execute_insert_heterogenous(self):
     #     pass
-    #
-    # def test_do_execute_insert_homogenous(self):
-    #     pass
 
     def test_handle_dql(self):
         from google.cloud.spanner_dbapi import utils

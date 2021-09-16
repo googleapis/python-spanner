@@ -66,41 +66,11 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
         raise OperationalError(status.message)
 
 
-def _execute_insert_homogenous(transaction, parts):
-    # Perform an insert in one shot.
-    table = parts.get("table")
-    columns = parts.get("columns")
-    values = parts.get("values")
-    return transaction.insert(table, columns, values)
-
-
 def handle_insert(connection, sql, params):
-    parts = parse_insert(sql, params)
-
-    # The split between the two styles exists because:
-    # in the common case of multiple values being passed
-    # with simple pyformat arguments,
-    #   SQL: INSERT INTO T (f1, f2) VALUES (%s, %s, %s)
-    #   Params:   [(1, 2, 3, 4, 5, 6, 7, 8, 9, 10,)]
-    # we can take advantage of a single RPC with:
-    #       transaction.insert(table, columns, values)
-    # instead of invoking:
-    #   with transaction:
-    #       for sql, params in sql_params_list:
-    #           transaction.execute_sql(sql, params, param_types)
-    # which invokes more RPCs and is more costly.
-
-    if parts.get("homogenous"):
-        # The common case of multiple values being passed in
-        # non-complex pyformat args and need to be uploaded in one RPC.
-        return connection.database.run_in_transaction(_execute_insert_homogenous, parts)
-    else:
-        # All the other cases that are esoteric and need
-        #   transaction.execute_sql
-        sql_params_list = parts.get("sql_params_list")
-        return connection.database.run_in_transaction(
-            _execute_insert_heterogenous, sql_params_list
-        )
+    sql_params_list = parse_insert(sql, params)
+    return connection.database.run_in_transaction(
+        _execute_insert_heterogenous, sql_params_list
+    )
 
 
 class ColumnInfo:

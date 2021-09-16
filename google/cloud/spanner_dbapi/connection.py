@@ -24,7 +24,6 @@ from google.cloud.spanner_v1.session import _get_retry_delay
 from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi._helpers import _execute_insert_heterogenous
-from google.cloud.spanner_dbapi._helpers import _execute_insert_homogenous
 from google.cloud.spanner_dbapi._helpers import parse_insert
 from google.cloud.spanner_dbapi.checksum import _compare_checksums
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
@@ -430,22 +429,14 @@ class Connection:
             self._statements.append(statement)
 
         if statement.is_insert:
-            parts = parse_insert(statement.sql, statement.params)
-
-            if parts.get("homogenous"):
-                _execute_insert_homogenous(transaction, parts)
-                return (
-                    iter(()),
-                    ResultsChecksum() if retried else statement.checksum,
-                )
-            else:
-                _execute_insert_heterogenous(
-                    transaction, parts.get("sql_params_list"),
-                )
-                return (
-                    iter(()),
-                    ResultsChecksum() if retried else statement.checksum,
-                )
+            sql_params_list = parse_insert(statement.sql, statement.params)
+            _execute_insert_heterogenous(
+                transaction, sql_params_list,
+            )
+            return (
+                iter(()),
+                ResultsChecksum() if retried else statement.checksum,
+            )
 
         return (
             transaction.execute_sql(

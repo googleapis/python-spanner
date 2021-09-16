@@ -68,17 +68,6 @@ class TestHelpers(unittest.TestCase):
                 mock_param_types.assert_called_once_with(None)
                 mock_batch.assert_called_once_with([(sql, None, None)])
 
-    def test__execute_insert_homogenous(self):
-        from google.cloud.spanner_dbapi import _helpers
-
-        transaction = mock.MagicMock()
-        transaction.insert = mock.MagicMock()
-        parts = mock.MagicMock()
-        parts.get = mock.MagicMock(return_value=0)
-
-        _helpers._execute_insert_homogenous(transaction, parts)
-        transaction.insert.assert_called_once_with(0, 0, 0)
-
     def test_handle_insert(self):
         from google.cloud.spanner_dbapi import _helpers
 

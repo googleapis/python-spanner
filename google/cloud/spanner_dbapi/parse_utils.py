@@ -220,42 +220,34 @@ def parse_insert(insert_sql, params):
     Case a)
             SQL: INSERT INTO T (f1, f2) VALUES (1, 2)
         it produces:
-            {
-                'sql_params_list': [
-                    ('INSERT INTO T (f1, f2) VALUES (1, 2)', None),
-                ],
-            }
+            [
+                ('INSERT INTO T (f1, f2) VALUES (1, 2)', None),
+            ]
 
     Case b)
         SQL: 'INSERT INTO T (s, c) SELECT st, zc FROM cus WHERE col IN (%s, %s)',
         it produces:
-            {
-                'sql_params_list': [
-                    ('INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln', ('a', 'b')),
-                ]
-            }
+            [
+                ('INSERT INTO T (s, c) SELECT st, zc FROM cus ORDER BY fn, ln', ('a', 'b')),
+            ]
 
     Case c)
             SQL: INSERT INTO T (f1, f2) VALUES (%s, %s), (%s, %s)
             Params: ['a', 'b', 'c', 'd']
         it produces:
-            {
-                'sql_params_list': [
-                    ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('a', 'b')),
-                    ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('c', 'd'))
-                ],
-            }
+            [
+                ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('a', 'b')),
+                ('INSERT INTO T (f1, f2) VALUES (%s, %s)', ('c', 'd'))
+            ]
 
     Case d)
             SQL: INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s)), (UPPER(%s), %s)
             Params: ['a', 'b', 'c', 'd']
         it produces:
-            {
-                'sql_params_list': [
-                    ('INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s))', ('a', 'b',)),
-                    ('INSERT INTO T (f1, f2) VALUES (UPPER(%s), %s)', ('c', 'd',))
-                ],
-            }
+            [
+                ('INSERT INTO T (f1, f2) VALUES (%s, LOWER(%s))', ('a', 'b',)),
+                ('INSERT INTO T (f1, f2) VALUES (UPPER(%s), %s)', ('c', 'd',))
+            ]
 
     :type insert_sql: str
     :param insert_sql: A SQL insert request.
@@ -264,9 +256,7 @@ def parse_insert(insert_sql, params):
     :param params: A list of parameters.
 
     :rtype: dict
-    :returns: A dictionary that maps `sql_params_list` to the list of
-              parameters in cases a), b), d) or the dictionary with information
-              about the resulting table in case c).
+    :returns: A list of (sql, param) tuples
     """  # noqa
     match = RE_INSERT.search(insert_sql)
 
@@ -279,7 +269,7 @@ def parse_insert(insert_sql, params):
     if not after_values_sql:
         # Case b)
         insert_sql = sanitize_literals_for_upload(insert_sql)
-        return {"sql_params_list": [(insert_sql, params)]}
+        return [(insert_sql, params)]
 
     if not params:
         # Case a) perhaps?
@@ -300,7 +290,7 @@ def parse_insert(insert_sql, params):
         # Confirmed case of:
         # SQL: INSERT INTO T (a1, a2) VALUES (1, 2)
         # Params: None
-        return {"sql_params_list": [(insert_sql, None)]}
+        return [(insert_sql, None)]
 
     values_str = after_values_sql[0]
     _, values = parse_values(values_str)
@@ -321,7 +311,7 @@ def parse_insert(insert_sql, params):
         for row in rows_list:
             sql_params_list.append((insert_sql_preamble, row))
 
-        return {"sql_params_list": sql_params_list}
+        return sql_params_list
 
     # Case d)
     # insert_sql is of the form:
@@ -349,7 +339,7 @@ def parse_insert(insert_sql, params):
         )
         sql_param_tuples.append((row_sql, row_params))
 
-    return {"sql_params_list": sql_param_tuples}
+    return sql_param_tuples
 
 
 def rows_for_insert_or_update(columns, params, pyformat_args=None):
