@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from google.cloud.spanner_dbapi.exceptions import OperationalError
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
 from google.cloud.spanner_dbapi.parse_utils import parse_insert
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 from google.cloud.spanner_v1 import param_types
-
+from google.rpc.code_pb2 import OK
 
 SQL_LIST_TABLES = """
             SELECT
@@ -61,7 +61,9 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
         sql, params = sql_pyformat_args_to_spanner(sql, params)
         param_types = get_param_types(params)
         statements.append((sql, params, param_types))
-    transaction.batch_update(statements)
+    status, _ = transaction.batch_update(statements)
+    if status.code != OK:
+        raise OperationalError(status.message)
 
 
 def _execute_insert_homogenous(transaction, parts):
