@@ -83,9 +83,9 @@ def scrub_referencing_databases(to_scrub, db_list):
 def scrub_instance_backups(to_scrub):
     try:
         for backup_pb in to_scrub.list_backups():
-            bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
             # Backup cannot be deleted while referencing databases exist.
-            scrub_referencing_databases(to_scrub, bkp.referencing_databases)
+            scrub_referencing_databases(to_scrub, backup_pb.referencing_databases)
+            bkp = instance_mod.Backup.from_pb(backup_pb, to_scrub)
             try:
                 # Instance cannot be deleted while backups exist.
                 retry_429_503(bkp.delete)()
