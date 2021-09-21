@@ -433,7 +433,9 @@ class Cursor(object):
             )
         else:
             # execute with single-use snapshot
-            with self.connection.database.snapshot() as snapshot:
+            with self.connection.database.snapshot(
+                **self.connection.staleness or {}
+            ) as snapshot:
                 self._handle_DQL_with_snapshot(snapshot, sql, params)
 
     def __enter__(self):

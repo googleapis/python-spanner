@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import hashlib
 import pickle
 import pkg_resources
@@ -19,6 +20,7 @@ import pkg_resources
 import pytest
 
 from google.cloud import spanner_v1
+from google.cloud._helpers import UTC
 from google.cloud.spanner_dbapi.connection import connect
 from google.cloud.spanner_dbapi.connection import Connection
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
@@ -391,3 +393,32 @@ WHERE first_name = 'first-name'
 
     cur.execute("SELECT * FROM contacts")
     conn.commit()
+
+
+def test_staleness(shared_instance, dbapi_database):
+    """Check the DB API `staleness` option."""
+    conn = Connection(shared_instance, dbapi_database)
+    cursor = conn.cursor()
+
+    before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+
+    cursor.execute(
+        """
+INSERT INTO contacts (contact_id, first_name, last_name, email)
+VALUES (1, 'first-name', 'last-name', 'test.email@example.com')
+    """
+    )
+    conn.commit()
+
+    conn.read_only = True
+    conn.staleness = {"read_timestamp": before_insert}
+    cursor.execute("SELECT * FROM contacts")
+    conn.commit()
+    assert len(cursor.fetchall()) == 0
+
+    conn.staleness = None
+    cursor.execute("SELECT * FROM contacts")
+    conn.commit()
+    assert len(cursor.fetchall()) == 1
+
+    conn.close()

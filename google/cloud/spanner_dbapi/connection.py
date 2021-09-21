@@ -87,6 +87,7 @@ class Connection:
         # connection close
         self._own_pool = True
         self._read_only = read_only
+        self._staleness = None
 
     @property
     def autocommit(self):
@@ -164,6 +165,48 @@ class Connection:
                 "Commit or rollback the current transaction and try again."
             )
         self._read_only = value
+
+    @property
+    def staleness(self):
+        """Current read staleness option value of this `Connection`.
+
+        Returns:
+            dict: Staleness type and value.
+        """
+        return self._staleness
+
+    @staleness.setter
+    def staleness(self, value):
+        """Read staleness option setter.
+
+        Args:
+            value (dict): Staleness type and value.
+        """
+        if self.inside_transaction:
+            raise ValueError(
+                "`staleness` option can't be changed while a transaction is in progress. "
+                "Commit or rollback the current transaction and try again."
+            )
+
+        if value is not None:
+            one_of_expected = False
+            for opt in (
+                "read_timestamp",
+                "min_read_timestamp",
+                "max_staleness",
+                "exact_staleness",
+            ):
+                if opt in value and value[opt]:
+                    one_of_expected = True
+                    break
+
+            if not one_of_expected:
+                raise ValueError(
+                    "Expected one of the following staleness options: "
+                    "read_timestamp, min_read_timestamp, max_staleness, exact_staleness."
+                )
+
+        self._staleness = value
 
     def _session_checkout(self):
         """Get a Cloud Spanner session from the pool.
@@ -284,7 +327,9 @@ class Connection:
         """
         if self.read_only and not self.autocommit:
             if not self._snapshot:
-                self._snapshot = Snapshot(self._session_checkout(), multi_use=True)
+                self._snapshot = Snapshot(
+                    self._session_checkout(), multi_use=True, **self._staleness or {}
+                )
                 self._snapshot.begin()
 
             return self._snapshot
