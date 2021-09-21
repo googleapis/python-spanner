@@ -15,8 +15,7 @@
 """Pools managing shared Session objects."""
 
 import datetime
-
-from six.moves import queue
+import queue
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
