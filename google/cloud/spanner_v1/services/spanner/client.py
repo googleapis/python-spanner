@@ -17,7 +17,7 @@ from collections import OrderedDict
 from distutils import util
 import os
 import re
-from typing import Callable, Dict, Optional, Iterable, Sequence, Tuple, Type, Union
+from typing import Dict, Optional, Iterable, Sequence, Tuple, Type, Union
 import pkg_resources
 
 from google.api_core import client_options as client_options_lib  # type: ignore
@@ -376,7 +376,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def create_session(
         self,
-        request: spanner.CreateSessionRequest = None,
+        request: Union[spanner.CreateSessionRequest, dict] = None,
         *,
         database: str = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
@@ -404,7 +404,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         periodically, e.g., ``"SELECT 1"``.
 
         Args:
-            request (google.cloud.spanner_v1.types.CreateSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.CreateSessionRequest, dict]):
                 The request object. The request for
                 [CreateSession][google.spanner.v1.Spanner.CreateSession].
             database (str):
@@ -463,7 +463,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def batch_create_sessions(
         self,
-        request: spanner.BatchCreateSessionsRequest = None,
+        request: Union[spanner.BatchCreateSessionsRequest, dict] = None,
         *,
         database: str = None,
         session_count: int = None,
@@ -477,7 +477,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         practices on session cache management.
 
         Args:
-            request (google.cloud.spanner_v1.types.BatchCreateSessionsRequest):
+            request (Union[google.cloud.spanner_v1.types.BatchCreateSessionsRequest, dict]):
                 The request object. The request for
                 [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
             database (str):
@@ -552,7 +552,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def get_session(
         self,
-        request: spanner.GetSessionRequest = None,
+        request: Union[spanner.GetSessionRequest, dict] = None,
         *,
         name: str = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
@@ -564,7 +564,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         is still alive.
 
         Args:
-            request (google.cloud.spanner_v1.types.GetSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.GetSessionRequest, dict]):
                 The request object. The request for
                 [GetSession][google.spanner.v1.Spanner.GetSession].
             name (str):
@@ -623,7 +623,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def list_sessions(
         self,
-        request: spanner.ListSessionsRequest = None,
+        request: Union[spanner.ListSessionsRequest, dict] = None,
         *,
         database: str = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
@@ -633,7 +633,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         r"""Lists all sessions in a given database.
 
         Args:
-            request (google.cloud.spanner_v1.types.ListSessionsRequest):
+            request (Union[google.cloud.spanner_v1.types.ListSessionsRequest, dict]):
                 The request object. The request for
                 [ListSessions][google.spanner.v1.Spanner.ListSessions].
             database (str):
@@ -703,7 +703,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def delete_session(
         self,
-        request: spanner.DeleteSessionRequest = None,
+        request: Union[spanner.DeleteSessionRequest, dict] = None,
         *,
         name: str = None,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
@@ -715,7 +715,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         of any operations that are running with this session.
 
         Args:
-            request (google.cloud.spanner_v1.types.DeleteSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.DeleteSessionRequest, dict]):
                 The request object. The request for
                 [DeleteSession][google.spanner.v1.Spanner.DeleteSession].
             name (str):
@@ -769,7 +769,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_sql(
         self,
-        request: spanner.ExecuteSqlRequest = None,
+        request: Union[spanner.ExecuteSqlRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -791,7 +791,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         instead.
 
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteSqlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
@@ -833,7 +833,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_streaming_sql(
         self,
-        request: spanner.ExecuteSqlRequest = None,
+        request: Union[spanner.ExecuteSqlRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -847,7 +847,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         column value can exceed 10 MiB.
 
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteSqlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
@@ -892,7 +892,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_batch_dml(
         self,
-        request: spanner.ExecuteBatchDmlRequest = None,
+        request: Union[spanner.ExecuteBatchDmlRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -914,7 +914,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         statements are not executed.
 
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteBatchDmlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteBatchDmlRequest, dict]):
                 The request object. The request for
                 [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
@@ -992,7 +992,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def read(
         self,
-        request: spanner.ReadRequest = None,
+        request: Union[spanner.ReadRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -1015,7 +1015,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         instead.
 
         Args:
-            request (google.cloud.spanner_v1.types.ReadRequest):
+            request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
                 The request object. The request for
                 [Read][google.spanner.v1.Spanner.Read] and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
@@ -1057,7 +1057,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def streaming_read(
         self,
-        request: spanner.ReadRequest = None,
+        request: Union[spanner.ReadRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -1071,7 +1071,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         exceed 10 MiB.
 
         Args:
-            request (google.cloud.spanner_v1.types.ReadRequest):
+            request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
                 The request object. The request for
                 [Read][google.spanner.v1.Spanner.Read] and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
@@ -1116,7 +1116,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def begin_transaction(
         self,
-        request: spanner.BeginTransactionRequest = None,
+        request: Union[spanner.BeginTransactionRequest, dict] = None,
         *,
         session: str = None,
         options: transaction.TransactionOptions = None,
@@ -1131,7 +1131,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         transaction as a side-effect.
 
         Args:
-            request (google.cloud.spanner_v1.types.BeginTransactionRequest):
+            request (Union[google.cloud.spanner_v1.types.BeginTransactionRequest, dict]):
                 The request object. The request for
                 [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction].
             session (str):
@@ -1199,7 +1199,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def commit(
         self,
-        request: spanner.CommitRequest = None,
+        request: Union[spanner.CommitRequest, dict] = None,
         *,
         session: str = None,
         transaction_id: bytes = None,
@@ -1227,7 +1227,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         things as they are now.
 
         Args:
-            request (google.cloud.spanner_v1.types.CommitRequest):
+            request (Union[google.cloud.spanner_v1.types.CommitRequest, dict]):
                 The request object. The request for
                 [Commit][google.spanner.v1.Spanner.Commit].
             session (str):
@@ -1327,7 +1327,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def rollback(
         self,
-        request: spanner.RollbackRequest = None,
+        request: Union[spanner.RollbackRequest, dict] = None,
         *,
         session: str = None,
         transaction_id: bytes = None,
@@ -1347,7 +1347,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         ``ABORTED``.
 
         Args:
-            request (google.cloud.spanner_v1.types.RollbackRequest):
+            request (Union[google.cloud.spanner_v1.types.RollbackRequest, dict]):
                 The request object. The request for
                 [Rollback][google.spanner.v1.Spanner.Rollback].
             session (str):
@@ -1410,7 +1410,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_query(
         self,
-        request: spanner.PartitionQueryRequest = None,
+        request: Union[spanner.PartitionQueryRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -1432,7 +1432,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         from the beginning.
 
         Args:
-            request (google.cloud.spanner_v1.types.PartitionQueryRequest):
+            request (Union[google.cloud.spanner_v1.types.PartitionQueryRequest, dict]):
                 The request object. The request for
                 [PartitionQuery][google.spanner.v1.Spanner.PartitionQuery]
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
@@ -1474,7 +1474,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_read(
         self,
-        request: spanner.PartitionReadRequest = None,
+        request: Union[spanner.PartitionReadRequest, dict] = None,
         *,
         retry: retries.Retry = gapic_v1.method.DEFAULT,
         timeout: float = None,
@@ -1499,7 +1499,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         from the beginning.
 
         Args:
-            request (google.cloud.spanner_v1.types.PartitionReadRequest):
+            request (Union[google.cloud.spanner_v1.types.PartitionReadRequest, dict]):
                 The request object. The request for
                 [PartitionRead][google.spanner.v1.Spanner.PartitionRead]
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
