@@ -2833,6 +2833,222 @@ async def test_create_backup_flattened_error_async():
         )
 
 
+def test_copy_backup(transport: str = "grpc", request_type=backup.CopyBackupRequest):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport=transport,
+    )
+
+    # Everything is optional in proto3 as far as the runtime is concerned,
+    # and we are mocking out the actual API, so just send an empty request.
+    request = request_type()
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = operations_pb2.Operation(name="operations/spam")
+        response = client.copy_backup(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert len(call.mock_calls) == 1
+        _, args, _ = call.mock_calls[0]
+        assert args[0] == backup.CopyBackupRequest()
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, future.Future)
+
+
+def test_copy_backup_from_dict():
+    test_copy_backup(request_type=dict)
+
+
+def test_copy_backup_empty_call():
+    # This test is a coverage failsafe to make sure that totally empty calls,
+    # i.e. request == None and no flattened fields passed, work.
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="grpc",
+    )
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        client.copy_backup()
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        assert args[0] == backup.CopyBackupRequest()
+
+
+@pytest.mark.asyncio
+async def test_copy_backup_async(
+    transport: str = "grpc_asyncio", request_type=backup.CopyBackupRequest
+):
+    client = DatabaseAdminAsyncClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport=transport,
+    )
+
+    # Everything is optional in proto3 as far as the runtime is concerned,
+    # and we are mocking out the actual API, so just send an empty request.
+    request = request_type()
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        response = await client.copy_backup(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert len(call.mock_calls)
+        _, args, _ = call.mock_calls[0]
+        assert args[0] == backup.CopyBackupRequest()
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, future.Future)
+
+
+@pytest.mark.asyncio
+async def test_copy_backup_async_from_dict():
+    await test_copy_backup_async(request_type=dict)
+
+
+def test_copy_backup_field_headers():
+    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials(),)
+
+    # Any value that is part of the HTTP/1.1 URI should be sent as
+    # a field header. Set these to a non-empty value.
+    request = backup.CopyBackupRequest()
+
+    request.parent = "parent/value"
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.copy_backup(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert len(call.mock_calls) == 1
+        _, args, _ = call.mock_calls[0]
+        assert args[0] == request
+
+    # Establish that the field header was sent.
+    _, _, kw = call.mock_calls[0]
+    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+
+
+@pytest.mark.asyncio
+async def test_copy_backup_field_headers_async():
+    client = DatabaseAdminAsyncClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+    )
+
+    # Any value that is part of the HTTP/1.1 URI should be sent as
+    # a field header. Set these to a non-empty value.
+    request = backup.CopyBackupRequest()
+
+    request.parent = "parent/value"
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/op")
+        )
+        await client.copy_backup(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert len(call.mock_calls)
+        _, args, _ = call.mock_calls[0]
+        assert args[0] == request
+
+    # Establish that the field header was sent.
+    _, _, kw = call.mock_calls[0]
+    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+
+
+def test_copy_backup_flattened():
+    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials(),)
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        # Call the method with a truthy value for each flattened field,
+        # using the keyword arguments to the method.
+        client.copy_backup(
+            parent="parent_value",
+            backup_id="backup_id_value",
+            source_backup="source_backup_value",
+        )
+
+        # Establish that the underlying call was made with the expected
+        # request object values.
+        assert len(call.mock_calls) == 1
+        _, args, _ = call.mock_calls[0]
+        assert args[0].parent == "parent_value"
+        assert args[0].backup_id == "backup_id_value"
+        assert args[0].source_backup == "source_backup_value"
+
+
+def test_copy_backup_flattened_error():
+    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials(),)
+
+    # Attempting to call a method with both a request object and flattened
+    # fields is an error.
+    with pytest.raises(ValueError):
+        client.copy_backup(
+            backup.CopyBackupRequest(),
+            parent="parent_value",
+            backup_id="backup_id_value",
+            source_backup="source_backup_value",
+        )
+
+
+@pytest.mark.asyncio
+async def test_copy_backup_flattened_async():
+    client = DatabaseAdminAsyncClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+    )
+
+    # Mock the actual call within the gRPC stub, and fake the request.
+    with mock.patch.object(type(client.transport.copy_backup), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = operations_pb2.Operation(name="operations/op")
+
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        # Call the method with a truthy value for each flattened field,
+        # using the keyword arguments to the method.
+        response = await client.copy_backup(
+            parent="parent_value",
+            backup_id="backup_id_value",
+            source_backup="source_backup_value",
+        )
+
+        # Establish that the underlying call was made with the expected
+        # request object values.
+        assert len(call.mock_calls)
+        _, args, _ = call.mock_calls[0]
+        assert args[0].parent == "parent_value"
+        assert args[0].backup_id == "backup_id_value"
+        assert args[0].source_backup == "source_backup_value"
+
+
+@pytest.mark.asyncio
+async def test_copy_backup_flattened_error_async():
+    client = DatabaseAdminAsyncClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+    )
+
+    # Attempting to call a method with both a request object and flattened
+    # fields is an error.
+    with pytest.raises(ValueError):
+        await client.copy_backup(
+            backup.CopyBackupRequest(),
+            parent="parent_value",
+            backup_id="backup_id_value",
+            source_backup="source_backup_value",
+        )
+
+
 def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupRequest):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
@@ -4859,6 +5075,7 @@ def test_database_admin_base_transport():
         "get_iam_policy",
         "test_iam_permissions",
         "create_backup",
+        "copy_backup",
         "get_backup",
         "update_backup",
         "delete_backup",
