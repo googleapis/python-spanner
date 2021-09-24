@@ -27,6 +27,8 @@ __protobuf__ = proto.module(
         "Backup",
         "CreateBackupRequest",
         "CreateBackupMetadata",
+        "CopyBackupRequest",
+        "CopyBackupMetadata",
         "UpdateBackupRequest",
         "GetBackupRequest",
         "DeleteBackupRequest",
@@ -36,6 +38,7 @@ __protobuf__ = proto.module(
         "ListBackupOperationsResponse",
         "BackupInfo",
         "CreateBackupEncryptionConfig",
+        "CopyBackupEncryptionConfig",
     },
 )
 
@@ -195,6 +198,90 @@ class CreateBackupMetadata(proto.Message):
 
     name = proto.Field(proto.STRING, number=1,)
     database = proto.Field(proto.STRING, number=2,)
+    progress = proto.Field(proto.MESSAGE, number=3, message=common.OperationProgress,)
+    cancel_time = proto.Field(proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,)
+
+
+class CopyBackupRequest(proto.Message):
+    r"""The request for
+    [CopyBackup][google.spanner.admin.database.v1.DatabaseAdmin.CopyBackup].
+
+    Attributes:
+        parent (str):
+            Required. The name of the destination instance that will
+            contain the backup copy. Values are of the form:
+            ``projects/<project>/instances/<instance>``.
+        backup_id (str):
+            Required. The id of the backup copy. The ``backup_id``
+            appended to ``parent`` forms the full backup_uri of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        source_backup (str):
+            Required. The source backup to be copied. The source backup
+            needs to be in READY state for it to be copied. Once
+            CopyBackup is in progress, the source backup cannot be
+            deleted or cleaned up on expiration until CopyBackup is
+            finished. Values are of the form:
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        expire_time (google.protobuf.timestamp_pb2.Timestamp):
+            Required. The expiration time of the backup in microsecond
+            granularity. The expiration time must be at least 6 hours
+            and at most 366 days from the ``create_time`` of the source
+            backup. Once the ``expire_time`` has passed, the backup is
+            eligible to be automatically deleted by Cloud Spanner to
+            free the resources used by the backup.
+        encryption_config (google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig):
+            Optional. The encryption configuration used to encrypt the
+            backup. If this field is not specified, the backup will use
+            the same encryption configuration as the source backup by
+            default, namely
+            [encryption_type][google.spanner.admin.database.v1.CopyBackupEncryptionConfig.encryption_type]
+            = ``USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION``.
+    """
+
+    parent = proto.Field(proto.STRING, number=1,)
+    backup_id = proto.Field(proto.STRING, number=2,)
+    source_backup = proto.Field(proto.STRING, number=3,)
+    expire_time = proto.Field(proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,)
+    encryption_config = proto.Field(
+        proto.MESSAGE, number=5, message="CopyBackupEncryptionConfig",
+    )
+
+
+class CopyBackupMetadata(proto.Message):
+    r"""Metadata type for the google.longrunning.Operation returned by
+    [CopyBackup][DatabaseAdmin.CopyBackup].
+
+    Attributes:
+        name (str):
+            The name of the backup being created through the copy
+            operation. Values are of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        source_backup (str):
+            The name of the source backup that is being copied. Values
+            are of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
+            The progress of the [CopyBackup][DatabaseAdmin.CopyBackup]
+            operation.
+        cancel_time (google.protobuf.timestamp_pb2.Timestamp):
+            The time at which cancellation of CopyBackup operation was
+            received.
+            [Operations.CancelOperation][google.longrunning.Operations.CancelOperation]
+            starts asynchronous cancellation on a long-running
+            operation. The server makes a best effort to cancel the
+            operation, but success is not guaranteed. Clients can use
+            [Operations.GetOperation][google.longrunning.Operations.GetOperation]
+            or other methods to check whether the cancellation succeeded
+            or whether the operation completed despite cancellation. On
+            successful cancellation, the operation is not deleted;
+            instead, it becomes an operation with an
+            [Operation.error][google.longrunning.Operation.error] value
+            with a [google.rpc.Status.code][] of 1, corresponding to
+            ``Code.CANCELLED``.
+    """
+
+    name = proto.Field(proto.STRING, number=1,)
+    source_backup = proto.Field(proto.STRING, number=2,)
     progress = proto.Field(proto.MESSAGE, number=3, message=common.OperationProgress,)
     cancel_time = proto.Field(proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,)
 
@@ -506,6 +593,30 @@ class CreateBackupEncryptionConfig(proto.Message):
         r"""Encryption types for the backup."""
         ENCRYPTION_TYPE_UNSPECIFIED = 0
         USE_DATABASE_ENCRYPTION = 1
+        GOOGLE_DEFAULT_ENCRYPTION = 2
+        CUSTOMER_MANAGED_ENCRYPTION = 3
+
+    encryption_type = proto.Field(proto.ENUM, number=1, enum=EncryptionType,)
+    kms_key_name = proto.Field(proto.STRING, number=2,)
+
+
+class CopyBackupEncryptionConfig(proto.Message):
+    r"""Encryption configuration for the copied backup.
+    Attributes:
+        encryption_type (google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig.EncryptionType):
+            Required. The encryption type of the backup.
+        kms_key_name (str):
+            Optional. The Cloud KMS key that will be used to protect the
+            backup. This field should be set only when
+            [encryption_type][google.spanner.admin.database.v1.CopyBackupEncryptionConfig.encryption_type]
+            is ``CUSTOMER_MANAGED_ENCRYPTION``. Values are of the form
+            ``projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>``.
+    """
+
+    class EncryptionType(proto.Enum):
+        r"""Encryption types for the backup."""
+        ENCRYPTION_TYPE_UNSPECIFIED = 0
+        USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION = 1
         GOOGLE_DEFAULT_ENCRYPTION = 2
         CUSTOMER_MANAGED_ENCRYPTION = 3
 
