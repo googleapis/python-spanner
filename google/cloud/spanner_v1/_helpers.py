@@ -17,6 +17,7 @@
 import datetime
 import decimal
 import math
+import json
 
 import six
 
@@ -166,6 +167,10 @@ def _make_value_pb(value):
     if isinstance(value, decimal.Decimal):
         _assert_numeric_precision_and_scale(value)
         return Value(string_value=str(value))
+    if isinstance(value, dict):
+        return Value(
+            string_value=json.dumps(value, sort_keys=True, separators=(",", ":"),)
+        )
     raise ValueError("Unknown type: %s" % (value,))
 
 

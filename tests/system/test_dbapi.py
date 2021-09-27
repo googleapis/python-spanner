@@ -328,6 +328,52 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
     conn.commit()
 
 
+def test_autocommit_with_json_data(shared_instance, dbapi_database):
+    """Check that DDLs in autocommit mode are immediately executed for
+    json fields."""
+    # Create table
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE JsonDetails (
+            DataId     INT64 NOT NULL,
+            Details    JSON,
+        ) PRIMARY KEY (DataId)
+    """
+    )
+    conn.close()
+
+    # Insert data to table
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute(
+        sql="INSERT INTO JsonDetails (DataId, Details) VALUES (%s, %s)",
+        args=(123, {"name": "Jakob", "age": "26"}),
+    )
+
+    # Read back the data.
+    conn = Connection(shared_instance, dbapi_database)
+    cur = conn.cursor()
+    cur.execute("""select * from JsonDetails;""")
+    got_rows = cur.fetchall()
+    conn.close()
+
+    # Assert the response
+    assert len(got_rows) == 1
+    assert got_rows[0][0] == 123
+    assert got_rows[0][1] == '{"age":"26","name":"Jakob"}'
+
+    # Drop the table
+    conn = Connection(shared_instance, dbapi_database)
+    cur = conn.cursor()
+    cur.execute("DROP TABLE JsonDetails")
+    conn.commit()
+
+
 def test_DDL_commit(shared_instance, dbapi_database):
     """Check that DDLs in commit mode are executed on calling `commit()`."""
     conn = Connection(shared_instance, dbapi_database)
