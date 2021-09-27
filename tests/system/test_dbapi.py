@@ -328,6 +328,7 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
     conn.commit()
 
 
+@pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
 def test_autocommit_with_json_data(shared_instance, dbapi_database):
     """Check that DDLs in autocommit mode are immediately executed for
     json fields."""
