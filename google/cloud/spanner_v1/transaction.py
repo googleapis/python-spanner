@@ -155,6 +155,9 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
 
+        # Request tags are not supported for commit requests.
+        request_options.request_tag = None
+
         request = CommitRequest(
             session=self._session.name,
             mutations=self._mutations,
@@ -275,6 +278,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions()
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+        request_options.transaction_tag = self.transaction_tag
 
         trace_attributes = {"db.statement": dml}
 
@@ -353,6 +357,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions()
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+        request_options.transaction_tag = self.transaction_tag
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
