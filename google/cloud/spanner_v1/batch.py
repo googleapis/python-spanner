@@ -32,6 +32,9 @@ class _BatchBase(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
+    transaction_tag = None
+    _read_only = False
+
     def __init__(self, session):
         super(_BatchBase, self).__init__(session)
         self._mutations = []
