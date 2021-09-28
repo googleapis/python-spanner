@@ -346,8 +346,7 @@ class Session(object):
         while True:
             if self._transaction is None:
                 txn = self.transaction()
-                if transaction_tag is not None:
-                    txn.transaction_tag = transaction_tag
+                txn.transaction_tag = transaction_tag
             else:
                 txn = self._transaction
             if txn._transaction_id is None:

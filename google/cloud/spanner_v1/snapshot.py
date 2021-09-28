@@ -193,12 +193,11 @@ class _SnapshotBase(_SessionWrapper):
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
 
-        if not self._read_only:
-            # It's a Transaction request and not running on a Snapshot.
-            if self.transaction_tag is not None:
-                request_options.transaction_tag = self.transaction_tag
-        else:
+        if self._read_only:
+            # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
+        else:
+            request_options.transaction_tag = self.transaction_tag
 
         request = ReadRequest(
             session=self._session.name,
@@ -329,10 +328,9 @@ class _SnapshotBase(_SessionWrapper):
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
         if self._read_only:
-            # It's a execute request on a Spanshot.
+            # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        elif self.transaction_tag is not None:
-            # It's a Transaction request and not running on a Snapshot.
+        else:
             request_options.transaction_tag = self.transaction_tag
 
         request = ExecuteSqlRequest(
