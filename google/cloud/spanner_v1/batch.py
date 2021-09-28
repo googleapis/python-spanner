@@ -166,6 +166,10 @@ class Batch(_BatchBase):
             request_options = RequestOptions()
         elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+        request_options.transaction_tag = self.transaction_tag
+
+        # Request tags are not supported for commit requests.
+        request_options.request_tag = None
 
         request = CommitRequest(
             session=self._session.name,
