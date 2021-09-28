@@ -61,6 +61,7 @@ class _BaseTest(unittest.TestCase):
     RETRY_TRANSACTION_ID = b"transaction_id_retry"
     BACKUP_ID = "backup_id"
     BACKUP_NAME = INSTANCE_NAME + "/backups/" + BACKUP_ID
+    TRANSACTION_TAG = "transaction-tag"
 
     def _make_one(self, *args, **kwargs):
         return self._get_target_class()(*args, **kwargs)
@@ -1001,9 +1002,10 @@ class TestDatabase(_BaseTest):
             )
 
         if not request_options:
-            request_options = RequestOptions()
-        elif request_options.transaction_tag:
-            request_options.transaction_tag = None
+            expected_request_options = RequestOptions()
+        else:
+            expected_request_options = RequestOptions(request_options)
+            expected_request_options.transaction_tag = None
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=dml,
@@ -1011,7 +1013,7 @@ class TestDatabase(_BaseTest):
             params=expected_params,
             param_types=param_types,
             query_options=expected_query_options,
-            request_options=request_options,
+            request_options=expected_request_options,
         )
 
         api.execute_streaming_sql.assert_any_call(
@@ -1029,7 +1031,7 @@ class TestDatabase(_BaseTest):
                 params=expected_params,
                 param_types=param_types,
                 query_options=expected_query_options,
-                request_options=request_options,
+                request_options=expected_request_options,
             )
             api.execute_streaming_sql.assert_called_with(
                 request=expected_request,
@@ -1574,7 +1576,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = self._make_one(database, request_options={"transaction_tag": self.TRANSACTION_TAG})
 
         with checkout as batch:
             self.assertIsNone(pool._session)
@@ -1583,6 +1585,7 @@ class TestBatchCheckout(_BaseTest):
 
         self.assertIs(pool._session, session)
         self.assertEqual(batch.committed, now)
+        self.assertEqual(batch.transaction_tag, self.TRANSACTION_TAG)
 
         expected_txn_options = TransactionOptions(read_write={})
 
@@ -1590,7 +1593,7 @@ class TestBatchCheckout(_BaseTest):
             session=self.SESSION_NAME,
             mutations=[],
             single_use_transaction=expected_txn_options,
-            request_options=RequestOptions(),
+            request_options=RequestOptions(transaction_tag=self.TRANSACTION_TAG),
         )
         api.commit.assert_called_once_with(
             request=request, metadata=[("google-cloud-resource-prefix", database.name)],
