@@ -393,13 +393,6 @@ class TestTransaction(OpenTelemetryBase):
         request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._commit_helper(request_options=request_options)
 
-    def test_commit_w_transaction_tag_overridden_success(self):
-        trx_tag_back = self.TRANSACTION_TAG
-        self.TRANSACTION_TAG = None
-        request_options = RequestOptions(transaction_tag="trx-tag",)
-        self._commit_helper(request_options=request_options)
-        self.TRANSACTION_TAG = trx_tag_back
-
     def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
             request_tag="tag-1", transaction_tag="tag-1-1",
