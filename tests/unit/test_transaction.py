@@ -349,7 +349,9 @@ class TestTransaction(OpenTelemetryBase):
         session_id, mutations, txn_id, actual_request_options, metadata = api._committed
 
         if request_options is None:
-            expected_request_options = RequestOptions(transaction_tag=self.TRANSACTION_TAG)
+            expected_request_options = RequestOptions(
+                transaction_tag=self.TRANSACTION_TAG
+            )
         elif type(request_options) == dict:
             expected_request_options = RequestOptions(request_options)
             expected_request_options.transaction_tag = self.TRANSACTION_TAG

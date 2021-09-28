@@ -1496,7 +1496,8 @@ class TestSession(OpenTelemetryBase):
 
         transaction_tag = "transaction_tag"
         return_value = session.run_in_transaction(
-            unit_of_work, "abc", some_arg="def", transaction_tag=transaction_tag)
+            unit_of_work, "abc", some_arg="def", transaction_tag=transaction_tag
+        )
 
         self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)

@@ -1576,7 +1576,9 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database, request_options={"transaction_tag": self.TRANSACTION_TAG})
+        checkout = self._make_one(
+            database, request_options={"transaction_tag": self.TRANSACTION_TAG}
+        )
 
         with checkout as batch:
             self.assertIsNone(pool._session)
