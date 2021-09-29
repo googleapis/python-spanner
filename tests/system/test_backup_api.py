@@ -246,8 +246,8 @@ def test_copy_backup_workflow(
     backups_to_delete.append(copy_backup)
 
     # Check metadata.
-    # metadata = operation.metadata
-    # assert copy_backup.name == metadata.name
+    metadata = operation.metadata
+    assert copy_backup.name == metadata.name
     operation.result()  # blocks indefinitely
 
     # Check backup object.

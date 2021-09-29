@@ -564,16 +564,16 @@ class Instance(object):
 
             :type expire_time: :class:`datetime.datetime`
             :param expire_time:
-                Optional. The expire time that will be used when creating the backup.
+                Optional. The expire time that will be used when creating the copy backup.
                 Required if the create method needs to be called.
 
             :type encryption_config:
-                :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
+                :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
                 or :class:`dict`
             :param encryption_config:
                 (Optional) Encryption configuration for the backup.
                 If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig`
+                message :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
 
             :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
             :returns: a copy backup owned by this instance.
