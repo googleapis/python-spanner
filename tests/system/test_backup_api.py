@@ -199,6 +199,80 @@ def test_backup_workflow(
     assert not backup.exists()
 
 
+def test_copy_backup_workflow(
+    shared_instance, shared_database, database_version_time, backups_to_delete,
+):
+    from google.cloud.spanner_admin_database_v1 import (
+        CreateBackupEncryptionConfig,
+        CopyBackupEncryptionConfig,
+        EncryptionInfo,
+    )
+
+    backup_id = _helpers.unique_id("backup_id", separator="_")
+    source_backup_id = _helpers.unique_id("source_backup_id", separator="_")
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
+    copy_encryption_enum = CopyBackupEncryptionConfig.EncryptionType
+    copy_encryption_config = CopyBackupEncryptionConfig(
+        encryption_type=copy_encryption_enum.GOOGLE_DEFAULT_ENCRYPTION,
+    )
+
+    source_encryption_enum = CreateBackupEncryptionConfig.EncryptionType
+    source_encryption_config = CreateBackupEncryptionConfig(
+        encryption_type=source_encryption_enum.GOOGLE_DEFAULT_ENCRYPTION,
+    )
+
+    # Create backup.
+    source_backup = shared_instance.backup(
+        source_backup_id,
+        database=shared_database,
+        expire_time=expire_time,
+        version_time=database_version_time,
+        encryption_config=source_encryption_config,
+    )
+    operation = source_backup.create()
+    backups_to_delete.append(source_backup)
+    operation.result()  # blocks indefinitely
+
+    # Create a copy backup
+    copy_backup = shared_instance.copy_backup(
+        backup_id=backup_id,
+        source_backup=source_backup.name,
+        expire_time=expire_time,
+        encryption_config=copy_encryption_config,
+    )
+    operation = copy_backup.create()
+    backups_to_delete.append(copy_backup)
+
+    # Check metadata.
+    metadata = operation.metadata
+    assert copy_backup.name == metadata.name
+    operation.result()  # blocks indefinitely
+
+    # Check backup object.
+    copy_backup.reload()
+    assert expire_time == copy_backup.expire_time
+    assert copy_backup.create_time is not None
+    assert copy_backup.size_bytes is not None
+    assert copy_backup.state is not None
+    assert (
+        EncryptionInfo.Type.GOOGLE_DEFAULT_ENCRYPTION
+        == copy_backup.encryption_info.encryption_type
+    )
+
+    # Update with valid argument.
+    valid_expire_time = datetime.datetime.now(
+        datetime.timezone.utc
+    ) + datetime.timedelta(days=7)
+    copy_backup.update_expire_time(valid_expire_time)
+    assert valid_expire_time == copy_backup.expire_time
+
+    source_backup.delete()
+    copy_backup.delete()
+    assert not copy_backup.exists()
+
+
 def test_backup_create_w_version_time_dflt_to_create_time(
     shared_instance, shared_database, backups_to_delete, databases_to_delete,
 ):
@@ -286,6 +360,29 @@ def test_backup_create_w_invalid_version_time_future(
 
     with pytest.raises(exceptions.InvalidArgument):
         op = backup.create()
+        op.result()  # blocks indefinitely
+
+
+def test_copy_backup_create_w_invalid_expire_time(shared_instance, shared_database):
+    backup_id = _helpers.unique_id("backup_id", separator="_")
+    source_backup_id = _helpers.unique_id("source_backup_id", separator="_")
+    valid_expire_time = datetime.datetime.now(
+        datetime.timezone.utc
+    ) + datetime.timedelta(days=7)
+    invalid_expire_time = datetime.datetime.now(datetime.timezone.utc)
+
+    source_backup = shared_instance.backup(
+        source_backup_id, database=shared_database, expire_time=valid_expire_time
+    )
+    op = source_backup.create()
+    op.result()  # blocks indefinitely
+
+    copy_backup = shared_instance.copy_backup(
+        backup_id, source_backup_id, expire_time=invalid_expire_time
+    )
+
+    with pytest.raises(exceptions.InvalidArgument):
+        op = copy_backup.create()
         op.result()  # blocks indefinitely
 
 

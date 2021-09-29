@@ -21,6 +21,8 @@ from google.cloud.exceptions import NotFound
 from google.cloud.spanner_admin_database_v1 import Backup as BackupPB
 from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
 from google.cloud.spanner_admin_database_v1 import CreateBackupRequest
+from google.cloud.spanner_admin_database_v1 import CopyBackupEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import CopyBackupRequest
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
 _BACKUP_NAME_RE = re.compile(
@@ -74,6 +76,7 @@ class Backup(object):
         backup_id,
         instance,
         database="",
+        source_backup=None,
         expire_time=None,
         version_time=None,
         encryption_config=None,
@@ -81,6 +84,7 @@ class Backup(object):
         self.backup_id = backup_id
         self._instance = instance
         self._database = database
+        self._source_backup = source_backup
         self._expire_time = expire_time
         self._create_time = None
         self._version_time = version_time
@@ -89,7 +93,14 @@ class Backup(object):
         self._referencing_databases = None
         self._encryption_info = None
         if type(encryption_config) == dict:
-            self._encryption_config = CreateBackupEncryptionConfig(**encryption_config)
+            if source_backup:
+                self._encryption_config = CopyBackupEncryptionConfig(
+                    **encryption_config
+                )
+            else:
+                self._encryption_config = CreateBackupEncryptionConfig(
+                    **encryption_config
+                )
         else:
             self._encryption_config = encryption_config
 
@@ -223,7 +234,7 @@ class Backup(object):
         return cls(backup_id, instance)
 
     def create(self):
-        """Create this backup within its instance.
+        """Create this backup or backup copy within its instance.
 
         :rtype: :class:`~google.api_core.operation.Operation`
         :returns: a future used to poll the status of the create request
@@ -234,6 +245,32 @@ class Backup(object):
         """
         if not self._expire_time:
             raise ValueError("expire_time not set")
+
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        if self._source_backup:
+            if (
+                self._encryption_config
+                and self._encryption_config.kms_key_name
+                and self._encryption_config.encryption_type
+                != CopyBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+            ):
+                raise ValueError(
+                    "kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION"
+                )
+
+            request = CopyBackupRequest(
+                parent=self._instance.name,
+                backup_id=self.backup_id,
+                source_backup=self._source_backup,
+                expire_time=self._expire_time,
+                encryption_config=self._encryption_config,
+            )
+
+            future = api.copy_backup(request=request, metadata=metadata,)
+            return future
+
         if not self._database:
             raise ValueError("database not set")
         if (
@@ -243,8 +280,7 @@ class Backup(object):
             != CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
         ):
             raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
-        api = self._instance._client.database_admin_api
-        metadata = _metadata_with_prefix(self.name)
+
         backup = BackupPB(
             database=self._database,
             expire_time=self.expire_time,
