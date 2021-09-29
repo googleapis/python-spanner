@@ -15,11 +15,11 @@
 import hashlib
 import pickle
 import pkg_resources
-
 import pytest
 
 from google.cloud import spanner_v1
 from google.cloud.spanner_dbapi.connection import connect, Connection
+from google.cloud.spanner_v1.types.data_types import JsonObject
 from . import _helpers
 
 DATABASE_NAME = "dbapi-txn"
@@ -353,7 +353,7 @@ def test_autocommit_with_json_data(shared_instance, dbapi_database):
     cur = conn.cursor()
     cur.execute(
         sql="INSERT INTO JsonDetails (DataId, Details) VALUES (%s, %s)",
-        args=(123, {"name": "Jakob", "age": "26"}),
+        args=(123, JsonObject({"name": "Jakob", "age": "26"})),
     )
 
     # Read back the data.

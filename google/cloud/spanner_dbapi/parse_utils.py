@@ -21,6 +21,7 @@ from functools import reduce
 
 import sqlparse
 from google.cloud import spanner_v1 as spanner
+from google.cloud.spanner_v1.types.data_types import JsonObject
 
 from .exceptions import Error, ProgrammingError
 from .parser import parse_values
@@ -38,7 +39,7 @@ TYPES_MAP = {
     DateStr: spanner.param_types.DATE,
     TimestampStr: spanner.param_types.TIMESTAMP,
     decimal.Decimal: spanner.param_types.NUMERIC,
-    dict: spanner.param_types.JSON,
+    JsonObject: spanner.param_types.JSON,
 }
 
 SPANNER_RESERVED_KEYWORDS = {
