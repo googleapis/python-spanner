@@ -801,12 +801,19 @@ class BatchCheckout(object):
     def __init__(self, database, request_options=None):
         self._database = database
         self._session = self._batch = None
-        self._request_options = request_options
+        if request_options is None:
+            self._request_options = RequestOptions()
+        elif type(request_options) == dict:
+            self._request_options = RequestOptions(request_options)
+        else:
+            self._request_options = request_options
 
     def __enter__(self):
         """Begin ``with`` block."""
         session = self._session = self._database._pool.get()
         batch = self._batch = Batch(session)
+        if self._request_options.transaction_tag:
+            batch.transaction_tag = self._request_options.transaction_tag
         return batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):

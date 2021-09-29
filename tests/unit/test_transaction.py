@@ -334,8 +334,7 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
-        if self.TRANSACTION_TAG:
-            transaction.transaction_tag = self.TRANSACTION_TAG
+        transaction.transaction_tag = self.TRANSACTION_TAG
 
         if mutate:
             transaction.delete(TABLE_NAME, keyset)
@@ -347,18 +346,26 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction.committed, now)
         self.assertIsNone(session._transaction)
 
-        session_id, mutations, txn_id, req_options, metadata = api._committed
+        session_id, mutations, txn_id, actual_request_options, metadata = api._committed
+
+        if request_options is None:
+            expected_request_options = RequestOptions(
+                transaction_tag=self.TRANSACTION_TAG
+            )
+        elif type(request_options) == dict:
+            expected_request_options = RequestOptions(request_options)
+            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.request_tag = None
+        else:
+            expected_request_options = request_options
+            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.request_tag = None
 
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
         self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
-        if req_options and self.TRANSACTION_TAG:
-            self.assertEqual(req_options.transaction_tag, self.TRANSACTION_TAG)
-        elif request_options and request_options.transaction_tag:
-            self.assertEqual(
-                req_options.transaction_tag, request_options.transaction_tag
-            )
+        self.assertEqual(actual_request_options, expected_request_options)
 
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
@@ -387,13 +394,6 @@ class TestTransaction(OpenTelemetryBase):
     def test_commit_w_transaction_tag_ignored_success(self):
         request_options = RequestOptions(transaction_tag="tag-1-1",)
         self._commit_helper(request_options=request_options)
-
-    def test_commit_w_transaction_tag_overridden_success(self):
-        trx_tag_back = self.TRANSACTION_TAG
-        self.TRANSACTION_TAG = None
-        request_options = RequestOptions(transaction_tag="trx-tag",)
-        self._commit_helper(request_options=request_options)
-        self.TRANSACTION_TAG = trx_tag_back
 
     def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
@@ -487,6 +487,7 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
+        transaction.transaction_tag = self.TRANSACTION_TAG
         transaction._execute_sql_count = count
 
         if request_options is None:
@@ -517,6 +518,8 @@ class TestTransaction(OpenTelemetryBase):
             expected_query_options = _merge_query_options(
                 expected_query_options, query_options
             )
+        expected_request_options = request_options
+        expected_request_options.transaction_tag = self.TRANSACTION_TAG
 
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
@@ -659,6 +662,7 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
+        transaction.transaction_tag = self.TRANSACTION_TAG
         transaction._execute_sql_count = count
 
         if request_options is None:
@@ -688,13 +692,15 @@ class TestTransaction(OpenTelemetryBase):
             ExecuteBatchDmlRequest.Statement(sql=update_dml),
             ExecuteBatchDmlRequest.Statement(sql=delete_dml),
         ]
+        expected_request_options = request_options
+        expected_request_options.transaction_tag = self.TRANSACTION_TAG
 
         expected_request = ExecuteBatchDmlRequest(
             session=self.SESSION_NAME,
             transaction=expected_transaction,
             statements=expected_statements,
             seqno=count,
-            request_options=request_options,
+            request_options=expected_request_options,
         )
         api.execute_batch_dml.assert_called_once_with(
             request=expected_request,

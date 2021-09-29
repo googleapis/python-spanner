@@ -509,7 +509,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
             expected_limit = LIMIT
 
         # Transaction tag is ignored for read request.
-        request_options.transaction_tag = None
+        expected_request_options = request_options
+        expected_request_options.transaction_tag = None
 
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
@@ -520,7 +521,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             index=INDEX,
             limit=expected_limit,
             partition_token=partition,
-            request_options=request_options,
+            request_options=expected_request_options,
         )
         api.streaming_read.assert_called_once_with(
             request=expected_request,
@@ -733,7 +734,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         if derived._read_only:
             # Transaction tag is ignored for read only requests.
-            request_options.transaction_tag = None
+            expected_request_options = request_options
+            expected_request_options.transaction_tag = None
 
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
@@ -743,7 +745,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             param_types=PARAM_TYPES,
             query_mode=MODE,
             query_options=expected_query_options,
-            request_options=request_options,
+            request_options=expected_request_options,
             partition_token=partition,
             seqno=sql_count,
         )
