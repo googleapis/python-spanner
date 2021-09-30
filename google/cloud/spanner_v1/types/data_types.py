@@ -17,7 +17,7 @@
 
 class JsonObject(dict):
     """
-    JsonObject type help format Django jsonfield to compatible Cloud Spanner's
+    JsonObject type help format Django JSONField to compatible Cloud Spanner's
     JSON type. Before making queries, it'll help differentiate between
     normal parameters and JSON parameters.
     """
