@@ -29,7 +29,7 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1.types.data_types import JsonObject
+from google.cloud.spanner_v1 import JsonObject
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (

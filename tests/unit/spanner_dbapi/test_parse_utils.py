@@ -16,7 +16,7 @@ import sys
 import unittest
 
 from google.cloud.spanner_v1 import param_types
-from google.cloud.spanner_v1.types.data_types import JsonObject
+from google.cloud.spanner_v1 import JsonObject
 
 
 class TestParseUtils(unittest.TestCase):

@@ -21,7 +21,7 @@ from functools import reduce
 
 import sqlparse
 from google.cloud import spanner_v1 as spanner
-from google.cloud.spanner_v1.types.data_types import JsonObject
+from google.cloud.spanner_v1 import JsonObject
 
 from .exceptions import Error, ProgrammingError
 from .parser import parse_values

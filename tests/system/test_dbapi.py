@@ -19,7 +19,7 @@ import pytest
 
 from google.cloud import spanner_v1
 from google.cloud.spanner_dbapi.connection import connect, Connection
-from google.cloud.spanner_v1.types.data_types import JsonObject
+from google.cloud.spanner_v1 import JsonObject
 from . import _helpers
 
 DATABASE_NAME = "dbapi-txn"
