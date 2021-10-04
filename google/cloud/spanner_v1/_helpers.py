@@ -18,6 +18,7 @@ import datetime
 import decimal
 import math
 import json
+from google.cloud.spanner_v1.types.data_types import JsonObject
 
 import six
 

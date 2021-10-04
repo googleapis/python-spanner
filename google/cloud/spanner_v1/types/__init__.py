@@ -62,6 +62,7 @@ from .type import (
     Type,
     TypeCode,
 )
+from .data_types import JsonObject
 
 __all__ = (
     "CommitResponse",
@@ -101,4 +102,5 @@ __all__ = (
     "StructType",
     "Type",
     "TypeCode",
+    "JsonObject",
 )
