@@ -120,6 +120,8 @@ def test_backup_workflow(
     database_version_time,
     backups_to_delete,
     databases_to_delete,
+    backup_operation_timeout,
+    database_restore_operation_timeout,
 ):
     from google.cloud.spanner_admin_database_v1 import (
         CreateBackupEncryptionConfig,
@@ -152,7 +154,7 @@ def test_backup_workflow(
     metadata = operation.metadata
     assert backup.name == metadata.name
     assert shared_database.name == metadata.database
-    operation.result()  # blocks indefinitely
+    operation.result(backup_operation_timeout)  # blocks until completion
 
     # Check backup object.
     backup.reload()
@@ -184,7 +186,9 @@ def test_backup_workflow(
     )
     databases_to_delete.append(database)
     operation = database.restore(source=backup)
-    restored_db = operation.result()  # blocks indefinitely
+    restored_db = operation.result(
+        database_restore_operation_timeout
+    )  # blocks until completion
     assert database_version_time == restored_db.restore_info.backup_info.version_time
 
     metadata = operation.metadata
@@ -199,38 +203,9 @@ def test_backup_workflow(
     assert not backup.exists()
 
 
-def test_backup_create_w_version_time_dflt_to_create_time(
-    shared_instance, shared_database, backups_to_delete, databases_to_delete,
+def test_backup_create_w_invalid_expire_time(
+    shared_instance, shared_database, backup_operation_timeout
 ):
-    backup_id = _helpers.unique_id("backup_id", separator="_")
-    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
-        days=3
-    )
-
-    # Create backup.
-    backup = shared_instance.backup(
-        backup_id, database=shared_database, expire_time=expire_time,
-    )
-    operation = backup.create()
-    backups_to_delete.append(backup)
-
-    # Check metadata.
-    metadata = operation.metadata
-    assert backup.name == metadata.name
-    assert shared_database.name == metadata.database
-    operation.result()  # blocks indefinitely
-
-    # Check backup object.
-    backup.reload()
-    assert shared_database.name == backup._database
-    assert backup.create_time is not None
-    assert backup.create_time == backup.version_time
-
-    backup.delete()
-    assert not backup.exists()
-
-
-def test_backup_create_w_invalid_expire_time(shared_instance, shared_database):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc)
 
@@ -240,11 +215,11 @@ def test_backup_create_w_invalid_expire_time(shared_instance, shared_database):
 
     with pytest.raises(exceptions.InvalidArgument):
         op = backup.create()
-        op.result()  # blocks indefinitely
+        op.result(backup_operation_timeout)  # blocks until completion
 
 
 def test_backup_create_w_invalid_version_time_past(
-    shared_instance, shared_database,
+    shared_instance, shared_database, backup_operation_timeout,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
@@ -263,11 +238,11 @@ def test_backup_create_w_invalid_version_time_past(
 
     with pytest.raises(exceptions.InvalidArgument):
         op = backup.create()
-        op.result()  # blocks indefinitely
+        op.result(backup_operation_timeout)  # blocks until completion
 
 
 def test_backup_create_w_invalid_version_time_future(
-    shared_instance, shared_database,
+    shared_instance, shared_database, backup_operation_timeout,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
@@ -286,7 +261,7 @@ def test_backup_create_w_invalid_version_time_future(
 
     with pytest.raises(exceptions.InvalidArgument):
         op = backup.create()
-        op.result()  # blocks indefinitely
+        op.result(backup_operation_timeout)  # blocks until completion
 
 
 def test_database_restore_to_diff_instance(
@@ -295,6 +270,8 @@ def test_database_restore_to_diff_instance(
     backups_to_delete,
     same_config_instance,
     databases_to_delete,
+    backup_operation_timeout,
+    database_restore_operation_timeout,
 ):
     backup_id = _helpers.unique_id("backup_id", separator="_")
     expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
@@ -305,16 +282,27 @@ def test_database_restore_to_diff_instance(
     backup = shared_instance.backup(
         backup_id, database=shared_database, expire_time=expire_time,
     )
-    op = backup.create()
+    operation = backup.create()
     backups_to_delete.append(backup)
-    op.result()
+
+    # Check metadata.
+    metadata = operation.metadata
+    assert backup.name == metadata.name
+    assert shared_database.name == metadata.database
+    operation.result(backup_operation_timeout)  # blocks until completion
+
+    # Check backup object.
+    backup.reload()
+    assert shared_database.name == backup._database
+    assert backup.create_time is not None
+    assert backup.create_time == backup.version_time
 
     # Restore database to different instance with same config.
     restored_id = _helpers.unique_id("restored_db")
     database = same_config_instance.database(restored_id)
     databases_to_delete.append(database)
     operation = database.restore(source=backup)
-    operation.result()  # blocks indefinitely
+    operation.result(database_restore_operation_timeout)  # blocks until completion
 
     database.drop()
     backup.delete()
@@ -328,6 +316,7 @@ def test_multi_create_cancel_update_error_restore_errors(
     diff_config_instance,
     backups_to_delete,
     databases_to_delete,
+    backup_operation_timeout,
 ):
     backup_id_1 = _helpers.unique_id("backup_id1", separator="_")
     backup_id_2 = _helpers.unique_id("backup_id2", separator="_")
@@ -358,7 +347,7 @@ def test_multi_create_cancel_update_error_restore_errors(
     op2.cancel()
     assert op2.cancelled()
 
-    op1.result()  # blocks indefinitely
+    op1.result(backup_operation_timeout)  # blocks until completion
     backup1.reload()
     assert backup1.is_ready()
 
@@ -388,6 +377,7 @@ def test_instance_list_backups(
     second_database,
     database_version_time,
     backups_to_delete,
+    backup_operation_timeout,
 ):
     # Remove un-scrubbed backups FBO count below.
     _helpers.scrub_instance_backups(shared_instance)
@@ -422,7 +412,7 @@ def test_instance_list_backups(
     # Create two backups.
     op1 = backup1.create()
     backups_to_delete.append(backup1)
-    op1.result()  # blocks indefinitely
+    op1.result(backup_operation_timeout)  # blocks until completion
     backup1.reload()
 
     create_time_compare = datetime.datetime.now(datetime.timezone.utc)
