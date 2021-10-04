@@ -169,7 +169,11 @@ def _make_value_pb(value):
         return Value(string_value=str(value))
     if isinstance(value, JsonObject):
         return Value(
-            string_value=json.dumps(value, sort_keys=True, separators=(",", ":"),)
+            string_value=json.dumps(
+                value,
+                sort_keys=True,
+                separators=(",", ":"),
+            )
         )
     raise ValueError("Unknown type: %s" % (value,))
 
