@@ -81,10 +81,12 @@ def diff_config_instance(
 
 @pytest.fixture(scope="session")
 def database_version_time(shared_database):
-    # Backup tests are failing because of timeout. As a temporary fix
-    # we are increasing db version time to current time.
-    # Read more: https://github.com/googleapis/python-spanner/issues/496
-    return datetime.datetime.now(datetime.timezone.utc)
+    shared_database.reload()
+    diff = (
+        datetime.datetime.now(datetime.timezone.utc)
+        - shared_database.earliest_version_time
+    )
+    return shared_database.earliest_version_time + diff / 2
 
 
 @pytest.fixture(scope="session")
@@ -397,6 +399,11 @@ def test_instance_list_backups(
         days=21
     )
     expire_time_1_stamp = expire_time_1.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    # Backup tests are failing because of timeout. As a temporary fix
+    # we are increasing db version time to current time.
+    # Read more: https://github.com/googleapis/python-spanner/issues/496
+    database_version_time = datetime.datetime.now(datetime.timezone.utc)
 
     backup1 = shared_instance.backup(
         backup_id_1,
