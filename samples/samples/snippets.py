@@ -2056,7 +2056,7 @@ def set_transaction_tag(instance_id, database_id):
         # Sets the request tag to "app=concert,env=dev,action=update".
         #  This request tag will only be set on this request.
         transaction.execute_update(
-            "UPDATE Venues SET Capacity = Capacity/4 WHERE OutdoorVenue = false",
+            "UPDATE Venues SET Capacity = CAST(Capacity/4 AS INT664) WHERE OutdoorVenue = false",
             request_options={"request_tag": "app=concert,env=dev,action=update"}
         )
         print("Venue capacities updated.")
