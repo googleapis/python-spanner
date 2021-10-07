@@ -4,6 +4,34 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [3.11.1](https://www.github.com/googleapis/python-spanner/compare/v3.11.0...v3.11.1) (2021-10-04)
+
+
+### Bug Fixes
+
+* add support for json data type ([#593](https://www.github.com/googleapis/python-spanner/issues/593)) ([bc5ddc3](https://www.github.com/googleapis/python-spanner/commit/bc5ddc3fb1eb7eff9a266fe3d1c3c8a4a6fd3763))
+* remove database_version_time param from test_instance_list_backups ([#609](https://www.github.com/googleapis/python-spanner/issues/609)) ([db63aee](https://www.github.com/googleapis/python-spanner/commit/db63aee2b15fd812d78d980bc302d9a217ca711e))
+
+## [3.11.0](https://www.github.com/googleapis/python-spanner/compare/v3.10.0...v3.11.0) (2021-09-29)
+
+
+### Features
+
+* adding support for spanner request options tags ([#276](https://www.github.com/googleapis/python-spanner/issues/276)) ([e16f376](https://www.github.com/googleapis/python-spanner/commit/e16f37649b0023da48ec55a2e65261ee930b9ec4))
+
+## [3.10.0](https://www.github.com/googleapis/python-spanner/compare/v3.9.0...v3.10.0) (2021-09-17)
+
+
+### Features
+
+* set a separate user agent for the DB API ([#566](https://www.github.com/googleapis/python-spanner/issues/566)) ([b5f977e](https://www.github.com/googleapis/python-spanner/commit/b5f977ebf61527914af3c8356aeeae9418114215))
+
+
+### Bug Fixes
+
+* **db_api:** move connection validation into a separate method ([#543](https://www.github.com/googleapis/python-spanner/issues/543)) ([237ae41](https://www.github.com/googleapis/python-spanner/commit/237ae41d0c0db61f157755cf04f84ef2d146972c))
+* handle google.api_core.exceptions.OutOfRange exception and throw InegrityError as expected by dbapi standards ([#571](https://www.github.com/googleapis/python-spanner/issues/571)) ([dffcf13](https://www.github.com/googleapis/python-spanner/commit/dffcf13d10a0cfb6b61231ae907367563f8eed87))
+
 ## [3.9.0](https://www.github.com/googleapis/python-spanner/compare/v3.8.0...v3.9.0) (2021-08-26)
 
 
