@@ -173,7 +173,7 @@ class Connection:
         Returns:
             dict: Staleness type and value.
         """
-        return self._staleness
+        return self._staleness or {}
 
     @staleness.setter
     def staleness(self, value):
@@ -328,7 +328,7 @@ class Connection:
         if self.read_only and not self.autocommit:
             if not self._snapshot:
                 self._snapshot = Snapshot(
-                    self._session_checkout(), multi_use=True, **self._staleness or {}
+                    self._session_checkout(), multi_use=True, **self.staleness
                 )
                 self._snapshot.begin()
 
