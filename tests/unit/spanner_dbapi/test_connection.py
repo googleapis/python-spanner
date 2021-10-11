@@ -774,7 +774,7 @@ class TestConnection(unittest.TestCase):
 
     def test_staleness_inside_transaction(self):
         """
-        Check that it's impossible to change the `steleness`
+        Check that it's impossible to change the `staleness`
         option if a transaction is in progress.
         """
         connection = self._make_connection()
@@ -785,7 +785,7 @@ class TestConnection(unittest.TestCase):
 
     def test_staleness_multi_use(self):
         """
-        Check that `steleness` option is correctly
+        Check that `staleness` option is correctly
         sent to the `Snapshot()` constructor.
 
         READ_ONLY, NOT AUTOCOMMIT
