@@ -57,7 +57,7 @@ retry_false = retry.RetryResult(operator.not_)
 
 retry_503 = retry.RetryErrors(exceptions.ServiceUnavailable)
 retry_429_503 = retry.RetryErrors(
-    exceptions.TooManyRequests, exceptions.ServiceUnavailable,
+    exceptions.TooManyRequests, exceptions.ServiceUnavailable, 8
 )
 retry_mabye_aborted_txn = retry.RetryErrors(exceptions.ServerError, exceptions.Aborted)
 retry_mabye_conflict = retry.RetryErrors(exceptions.ServerError, exceptions.Conflict)
@@ -107,7 +107,7 @@ def scrub_instance_ignore_not_found(to_scrub):
 
 
 def cleanup_old_instances(spanner_client):
-    cutoff = int(time.time()) - 1 * 60 * 60  # one hour ago
+    cutoff = int(time.time()) - 2 * 60 * 60  # one hour ago
     instance_filter = "labels.python-spanner-systests:true"
 
     for instance_pb in spanner_client.list_instances(filter_=instance_filter):
