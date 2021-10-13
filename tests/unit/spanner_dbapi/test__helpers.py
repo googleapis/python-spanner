@@ -35,7 +35,9 @@ class TestHelpers(unittest.TestCase):
             ) as mock_param_types:
                 transaction = mock.MagicMock()
                 status = Status(code=OK)
-                transaction.batch_update = mock_batch = mock.MagicMock(return_value=(status, 1))
+                transaction.batch_update = mock_batch = mock.MagicMock(
+                    return_value=(status, 1)
+                )
                 _helpers._execute_insert_heterogenous(transaction, [params])
 
                 mock_pyformat.assert_called_once_with(params[0], params[1])
@@ -51,15 +53,17 @@ class TestHelpers(unittest.TestCase):
         sql = "sql"
         params = (sql, None)
         with mock.patch(
-                "google.cloud.spanner_dbapi._helpers.sql_pyformat_args_to_spanner",
-                return_value=params,
+            "google.cloud.spanner_dbapi._helpers.sql_pyformat_args_to_spanner",
+            return_value=params,
         ) as mock_pyformat:
             with mock.patch(
-                    "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
+                "google.cloud.spanner_dbapi._helpers.get_param_types", return_value=None
             ) as mock_param_types:
                 transaction = mock.MagicMock()
                 status = Status(code=UNKNOWN)
-                transaction.batch_update = mock_batch = mock.MagicMock(return_value=(status, 0))
+                transaction.batch_update = mock_batch = mock.MagicMock(
+                    return_value=(status, 0)
+                )
 
                 with self.assertRaises(OperationalError):
                     _helpers._execute_insert_heterogenous(transaction, [params])
