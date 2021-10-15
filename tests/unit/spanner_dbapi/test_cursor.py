@@ -437,14 +437,9 @@ class TestCursor(unittest.TestCase):
         transaction.batch_update.assert_called_once_with(
             [
                 (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3), (@a4, @a5, @a6, @a7)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4, "a4": 5, "a5": 6, "a6": 7, "a7": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64, "a4": INT64, "a5": INT64, "a6": INT64, "a7": INT64},
                 ),
             ]
         )
@@ -477,14 +472,9 @@ class TestCursor(unittest.TestCase):
         transaction.batch_update.assert_called_once_with(
             [
                 (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3), (@a4, @a5, @a6, @a7)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4, "a4": 5, "a5": 6, "a6": 7, "a7": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64, "a4": INT64, "a5": INT64, "a6": INT64, "a7": INT64},
                 ),
             ]
         )
@@ -533,7 +523,7 @@ class TestCursor(unittest.TestCase):
 
         transaction1 = mock.Mock(committed=False, rolled_back=False)
         transaction1.batch_update = mock.Mock(
-            side_effect=[(mock.Mock(code=ABORTED, details=err_details), [])]
+            side_effect=[(mock.Mock(code=ABORTED, message=err_details), [])]
         )
 
         transaction2 = self._transaction_mock()
@@ -549,28 +539,18 @@ class TestCursor(unittest.TestCase):
         transaction1.batch_update.assert_called_with(
             [
                 (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3), (@a4, @a5, @a6, @a7)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4, "a4": 5, "a5": 6, "a6": 7, "a7": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64, "a4": INT64, "a5": INT64, "a6": INT64, "a7": INT64},
                 ),
             ]
         )
         transaction2.batch_update.assert_called_with(
             [
                 (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
+                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3), (@a4, @a5, @a6, @a7)""",
+                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4, "a4": 5, "a5": 6, "a6": 7, "a7": 8},
+                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64, "a4": INT64, "a5": INT64, "a6": INT64, "a7": INT64},
                 ),
             ]
         )
@@ -579,17 +559,14 @@ class TestCursor(unittest.TestCase):
         self.assertEqual(
             connection._statements[0][0],
             [
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 1, "a1": 2, "a2": 3, "a3": 4},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-                (
-                    """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3)""",
-                    {"a0": 5, "a1": 6, "a2": 7, "a3": 8},
-                    {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64},
-                ),
-            ],
+                [
+                    (
+                        """INSERT INTO table (col1, "col2", `col3`, `"col4"`) VALUES (@a0, @a1, @a2, @a3), (@a4, @a5, @a6, @a7)""",
+                        {"a0": 1, "a1": 2, "a2": 3, "a3": 4, "a4": 5, "a5": 6, "a6": 7, "a7": 8},
+                        {"a0": INT64, "a1": INT64, "a2": INT64, "a3": INT64, "a4": INT64, "a5": INT64, "a6": INT64, "a7": INT64},
+                    ),
+                ],
+            ]
         )
         self.assertIsInstance(connection._statements[0][1], ResultsChecksum)
 
