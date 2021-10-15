@@ -299,19 +299,19 @@ def parse_insert(insert_sql, params):
         # Case c)
 
         columns = [mi.strip(" `") for mi in match.group("columns").split(",")]
-        sql_params_list = []
-        insert_sql_preamble = "INSERT INTO %s (%s) VALUES %s" % (
-            match.group("table_name"),
-            match.group("columns"),
-            values.argv[0],
-        )
         values_pyformat = [str(arg) for arg in values.argv]
         rows_list = rows_for_insert_or_update(columns, params, values_pyformat)
-        insert_sql_preamble = sanitize_literals_for_upload(insert_sql_preamble)
+        values_template = ', '.join([str(values.argv[0])] * len(rows_list))
+        insert_sql = "INSERT INTO {} ({}) VALUES {}".format(
+            match.group("table_name"),
+            match.group("columns"),
+            values_template,
+        )
+        insert_sql = sanitize_literals_for_upload(insert_sql)
+        flat_params = []
         for row in rows_list:
-            sql_params_list.append((insert_sql_preamble, row))
-
-        return sql_params_list
+            flat_params.extend(row)
+        return [(insert_sql, tuple(flat_params))]
 
     # Case d)
     # insert_sql is of the form:
@@ -331,7 +331,7 @@ def parse_insert(insert_sql, params):
 
     sql_param_tuples = []
     for token_arg in values.argv:
-        row_sql = before_values_sql + " VALUES%s" % token_arg
+        row_sql = before_values_sql + " VALUES %s" % token_arg
         row_sql = sanitize_literals_for_upload(row_sql)
         row_params, params = (
             tuple(params[0 : len(token_arg)]),
