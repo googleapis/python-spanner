@@ -270,7 +270,13 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
+        if classification == parse_utils.STMT_INSERT:
+            flat_params = []
+            for params in seq_of_params:
+                flat_params.extend(params)
+            self.execute(operation, flat_params)
+
+        elif classification == parse_utils.STMT_UPDATING:
             statements = []
 
             for params in seq_of_params:
