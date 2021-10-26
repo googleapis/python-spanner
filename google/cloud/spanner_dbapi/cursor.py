@@ -14,6 +14,9 @@
 
 """Database cursor for Google Cloud Spanner DB-API."""
 
+import warnings
+from collections import namedtuple
+
 import sqlparse
 
 from google.api_core.exceptions import Aborted
@@ -22,8 +25,6 @@ from google.api_core.exceptions import FailedPrecondition
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import InvalidArgument
 from google.api_core.exceptions import OutOfRange
-
-from collections import namedtuple
 
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
@@ -44,8 +45,6 @@ from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
 from google.rpc.code_pb2 import ABORTED, OK
 
-_UNSET_COUNT = -1
-
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
 Statement = namedtuple("Statement", "sql, params, param_types, checksum, is_insert")
 
@@ -60,7 +59,6 @@ class Cursor(object):
     def __init__(self, connection):
         self._itr = None
         self._result_set = None
-        self._row_count = _UNSET_COUNT
         self.lastrowid = None
         self.connection = connection
         self._is_closed = False
@@ -119,12 +117,17 @@ class Cursor(object):
 
     @property
     def rowcount(self):
-        """The number of rows produced by the last `.execute()`.
+        """The number of rows produced by the last `execute()` call.
 
-        :rtype: int
-        :returns: The number of rows produced by the last .execute*().
+        :raises: :class:`NotImplemented`.
         """
-        return self._row_count
+        warnings.warn(
+            "The `rowcount` property is non-operational. Request "
+            "resulting rows are streamed by the `fetch*()` methods "
+            "and can't be counted before they are all streamed.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     def _raise_if_closed(self):
         """Raise an exception if this cursor is closed.
@@ -153,11 +156,7 @@ class Cursor(object):
         result = transaction.execute_update(
             sql, params=params, param_types=get_param_types(params)
         )
-        self._itr = None
-        if type(result) == int:
-            self._row_count = result
-
-        return result
+        self._itr = iter([result])
 
     def _do_batch_update(self, transaction, statements, many_result_set):
         status, res = transaction.batch_update(statements)
@@ -421,9 +420,6 @@ class Cursor(object):
         # Read the first element so that the StreamedResultSet can
         # return the metadata after a DQL statement. See issue #155.
         self._itr = PeekIterator(self._result_set)
-        # Unfortunately, Spanner doesn't seem to send back
-        # information about the number of rows available.
-        self._row_count = _UNSET_COUNT
 
     def _handle_DQL(self, sql, params):
         if self.connection.read_only and not self.connection.autocommit:
