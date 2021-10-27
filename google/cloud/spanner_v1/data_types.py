@@ -12,19 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-docker:
-  image: gcr.io/cloud-devrel-public-resources/owlbot-python:latest
+"""Custom data types for spanner."""
 
-deep-remove-regex:
-  - /owl-bot-staging
 
-deep-copy-regex:
-  - source: /google/spanner/(v.*)/.*-py/(.*)
-    dest: /owl-bot-staging/spanner/$1/$2
-  - source: /google/spanner/admin/instance/(v.*)/.*-py/(.*)
-    dest: /owl-bot-staging/spanner_admin_instance/$1/$2
-  - source: /google/spanner/admin/database/(v.*)/.*-py/(.*)
-    dest: /owl-bot-staging/spanner_admin_database/$1/$2
+class JsonObject(dict):
+    """
+    JsonObject type help format Django JSONField to compatible Cloud Spanner's
+    JSON type. Before making queries, it'll help differentiate between
+    normal parameters and JSON parameters.
+    """
 
-begin-after-commit-hash: b154da710c5c9eedee127c07f74b6158c9c22382
-
+    pass

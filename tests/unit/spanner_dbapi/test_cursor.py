@@ -61,12 +61,19 @@ class TestCursor(unittest.TestCase):
         self.assertIsNotNone(cursor.description)
         self.assertIsInstance(cursor.description[0], ColumnInfo)
 
-    def test_property_rowcount(self):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
-
+    @mock.patch("warnings.warn")
+    def test_property_rowcount(self, warn_mock):
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
-        self.assertEqual(cursor.rowcount, _UNSET_COUNT)
+
+        cursor.rowcount
+        warn_mock.assert_called_once_with(
+            "The `rowcount` property is non-operational. Request "
+            "resulting rows are streamed by the `fetch*()` methods "
+            "and can't be counted before they are all streamed.",
+            UserWarning,
+            stacklevel=2,
+        )
 
     def test_callproc(self):
         from google.cloud.spanner_dbapi.exceptions import InterfaceError
@@ -94,26 +101,25 @@ class TestCursor(unittest.TestCase):
             cursor.execute("SELECT * FROM database")
 
     def test_do_execute_update(self):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
+        from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
+        cursor._checksum = ResultsChecksum()
         transaction = mock.MagicMock()
 
         def run_helper(ret_value):
             transaction.execute_update.return_value = ret_value
-            res = cursor._do_execute_update(
+            cursor._do_execute_update(
                 transaction=transaction, sql="SELECT * WHERE true", params={},
             )
-            return res
+            return cursor.fetchall()
 
         expected = "good"
-        self.assertEqual(run_helper(expected), expected)
-        self.assertEqual(cursor._row_count, _UNSET_COUNT)
+        self.assertEqual(run_helper(expected), [expected])
 
         expected = 1234
-        self.assertEqual(run_helper(expected), expected)
-        self.assertEqual(cursor._row_count, expected)
+        self.assertEqual(run_helper(expected), [expected])
 
     def test_execute_programming_error(self):
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
@@ -706,7 +712,6 @@ class TestCursor(unittest.TestCase):
 
     def test_handle_dql(self):
         from google.cloud.spanner_dbapi import utils
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
 
         connection = self._make_connection(self.INSTANCE, mock.MagicMock())
         connection.database.snapshot.return_value.__enter__.return_value = (
@@ -714,16 +719,10 @@ class TestCursor(unittest.TestCase):
         ) = mock.MagicMock()
         cursor = self._make_one(connection)
 
-        mock_snapshot.execute_sql.return_value = int(0)
+        mock_snapshot.execute_sql.return_value = ["0"]
         cursor._handle_DQL("sql", params=None)
-        self.assertEqual(cursor._row_count, 0)
-        self.assertIsNone(cursor._itr)
-
-        mock_snapshot.execute_sql.return_value = "0"
-        cursor._handle_DQL("sql", params=None)
-        self.assertEqual(cursor._result_set, "0")
+        self.assertEqual(cursor._result_set, ["0"])
         self.assertIsInstance(cursor._itr, utils.PeekIterator)
-        self.assertEqual(cursor._row_count, _UNSET_COUNT)
 
     def test_context(self):
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
@@ -835,37 +834,6 @@ class TestCursor(unittest.TestCase):
                     return_value=((1, 2, 3), None),
                 ):
                     cursor.execute("SELECT * FROM table_name")
-
-                retry_mock.assert_called_with()
-
-    @mock.patch("google.cloud.spanner_v1.Client")
-    def test_peek_iterator_aborted_autocommit(self, mock_client):
-        """
-        Checking that an Aborted exception is retried in case it happened while
-        streaming the first element with a PeekIterator in autocommit mode.
-        """
-        from google.api_core.exceptions import Aborted
-        from google.cloud.spanner_dbapi.connection import connect
-
-        connection = connect("test-instance", "test-database")
-
-        connection.autocommit = True
-        cursor = connection.cursor()
-        with mock.patch(
-            "google.cloud.spanner_dbapi.utils.PeekIterator.__init__",
-            side_effect=(Aborted("Aborted"), None),
-        ):
-            with mock.patch(
-                "google.cloud.spanner_dbapi.connection.Connection.retry_transaction"
-            ) as retry_mock:
-                with mock.patch(
-                    "google.cloud.spanner_dbapi.connection.Connection.run_statement",
-                    return_value=((1, 2, 3), None),
-                ):
-                    with mock.patch(
-                        "google.cloud.spanner_v1.database.Database.snapshot"
-                    ):
-                        cursor.execute("SELECT * FROM table_name")
 
                 retry_mock.assert_called_with()
 

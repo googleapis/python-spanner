@@ -17,6 +17,7 @@
 import datetime
 import decimal
 import math
+import json
 
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
@@ -26,7 +27,7 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
-
+from google.cloud.spanner_v1 import JsonObject
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -164,6 +165,10 @@ def _make_value_pb(value):
     if isinstance(value, decimal.Decimal):
         _assert_numeric_precision_and_scale(value)
         return Value(string_value=str(value))
+    if isinstance(value, JsonObject):
+        return Value(
+            string_value=json.dumps(value, sort_keys=True, separators=(",", ":"),)
+        )
     raise ValueError("Unknown type: %s" % (value,))
 
 
