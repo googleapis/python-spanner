@@ -134,7 +134,11 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction = mock.Mock()
 
         cursor = connection.cursor()
-        cursor._itr = mock.Mock(__next__=mock.Mock(side_effect=Aborted("Aborted"),))
+        cursor._itr = mock.Mock(
+            __next__=mock.Mock(
+                side_effect=Aborted("Aborted"),
+            )
+        )
 
         cursor.fetchone()
         cursor.fetchall()
@@ -574,7 +578,10 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction()
 
         run_mock.assert_has_calls(
-            (mock.call(statement, retried=True), mock.call(statement, retried=True),)
+            (
+                mock.call(statement, retried=True),
+                mock.call(statement, retried=True),
+            )
         )
 
     def test_retry_transaction_raise_max_internal_retries(self):
@@ -631,7 +638,10 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction()
 
         run_mock.assert_has_calls(
-            (mock.call(statement, retried=True), mock.call(statement, retried=True),)
+            (
+                mock.call(statement, retried=True),
+                mock.call(statement, retried=True),
+            )
         )
 
     def test_retry_transaction_w_multiple_statement(self):
@@ -759,10 +769,6 @@ class TestConnection(unittest.TestCase):
     def test_staleness_invalid_value(self):
         """Check that `staleness` property accepts only correct values."""
         connection = self._make_connection()
-
-        # incorrect value
-        with self.assertRaises(ValueError):
-            connection.staleness = {"read_timestamp": None}
 
         # incorrect staleness type
         with self.assertRaises(ValueError):

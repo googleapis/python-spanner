@@ -188,23 +188,17 @@ class Connection:
                 "Commit or rollback the current transaction and try again."
             )
 
-        if value is not None:
-            one_of_expected = False
-            for opt in (
-                "read_timestamp",
-                "min_read_timestamp",
-                "max_staleness",
-                "exact_staleness",
-            ):
-                if opt in value and value[opt]:
-                    one_of_expected = True
-                    break
-
-            if not one_of_expected:
-                raise ValueError(
-                    "Expected one of the following staleness options: "
-                    "read_timestamp, min_read_timestamp, max_staleness, exact_staleness."
-                )
+        possible_opts = (
+            "read_timestamp",
+            "min_read_timestamp",
+            "max_staleness",
+            "exact_staleness",
+        )
+        if value is not None and sum([opt in value for opt in possible_opts]) != 1:
+            raise ValueError(
+                "Expected one of the following staleness options: "
+                "read_timestamp, min_read_timestamp, max_staleness, exact_staleness."
+            )
 
         self._staleness = value
 
