@@ -11,12 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from google.api_core.exceptions import Aborted
 from google.cloud.spanner_dbapi.exceptions import OperationalError
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
 from google.cloud.spanner_dbapi.parse_utils import parse_insert
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 from google.cloud.spanner_v1 import param_types
-from google.rpc.code_pb2 import OK
+from google.rpc.code_pb2 import OK, ABORTED
 
 SQL_LIST_TABLES = """
             SELECT
@@ -63,6 +64,8 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
         statements.append((sql, params, param_types))
     status, _ = transaction.batch_update(statements)
     if status.code != OK:
+        if status.code == ABORTED:
+            raise Aborted(status.details)
         raise OperationalError(status.message)
 
 

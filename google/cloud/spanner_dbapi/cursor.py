@@ -270,15 +270,15 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
-        if classification == parse_utils.STMT_INSERT:
-            flat_params = []
-            for params in seq_of_params:
-                flat_params.extend(params)
-            self.execute(operation, flat_params)
-
-        elif classification == parse_utils.STMT_UPDATING:
+        if classification in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
             statements = []
 
+            if classification == parse_utils.STMT_INSERT:
+                flat_params = []
+                for params in seq_of_params:
+                    flat_params.extend(params)
+                operation, params = parse_utils.parse_insert(operation, flat_params)[0]
+                seq_of_params = [params]
             for params in seq_of_params:
                 sql, params = parse_utils.sql_pyformat_args_to_spanner(
                     operation, params
@@ -286,9 +286,12 @@ class Cursor(object):
                 statements.append((sql, params, get_param_types(params)))
 
             if self.connection.autocommit:
-                self.connection.database.run_in_transaction(
-                    self._do_batch_update, statements, many_result_set
-                )
+                if classification == parse_utils.STMT_INSERT:
+                    self.execute(operation, flat_params)
+                else:
+                    self.connection.database.run_in_transaction(
+                        self._do_batch_update, statements, many_result_set
+                    )
             else:
                 retried = False
                 while True:
