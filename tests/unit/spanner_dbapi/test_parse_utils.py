@@ -111,16 +111,14 @@ class TestParseUtils(unittest.TestCase):
                 [
                     (
                         "INSERT INTO ap (n, ct, cn) VALUES (%s, %s, %s), (%s, %s, %s), (%s, %s, %s)",
-                        (1, 2, 3, 4, 5, 6, 7, 8, 9)
+                        (1, 2, 3, 4, 5, 6, 7, 8, 9),
                     ),
                 ],
             ),
             (
                 "INSERT INTO `no` (`yes`) VALUES (%s)",
                 (1, 4, 5),
-                [
-                    ("INSERT INTO `no` (`yes`) VALUES (%s), (%s), (%s)", (1, 4, 5))
-                ],
+                [("INSERT INTO `no` (`yes`) VALUES (%s), (%s), (%s)", (1, 4, 5))],
             ),
             (
                 "INSERT INTO T (f1, f2) VALUES (1, 2)",

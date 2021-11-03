@@ -301,11 +301,9 @@ def parse_insert(insert_sql, params):
         columns = [mi.strip(" `") for mi in match.group("columns").split(",")]
         values_pyformat = [str(arg) for arg in values.argv]
         rows_list = rows_for_insert_or_update(columns, params, values_pyformat)
-        values_template = ', '.join([str(values.argv[0])] * len(rows_list))
+        values_template = ", ".join([str(values.argv[0])] * len(rows_list))
         insert_sql = "INSERT INTO {} ({}) VALUES {}".format(
-            match.group("table_name"),
-            match.group("columns"),
-            values_template,
+            match.group("table_name"), match.group("columns"), values_template,
         )
         insert_sql = sanitize_literals_for_upload(insert_sql)
         flat_params = []
