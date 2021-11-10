@@ -353,27 +353,6 @@ class TestParseUtils(unittest.TestCase):
         self.assertEqual(get_param_types(None), None)
 
     @unittest.skipIf(skip_condition, skip_message)
-    def test_ensure_where_clause(self):
-        from google.cloud.spanner_dbapi.parse_utils import ensure_where_clause
-
-        cases = (
-            "UPDATE a SET a.b=10 FROM articles a JOIN d c ON a.ai = c.ai WHERE c.ci = 1",
-            "UPDATE T SET A = 1 WHERE C1 = 1 AND C2 = 2",
-            "UPDATE T SET r=r*0.9 WHERE id IN (SELECT id FROM items WHERE r / w >= 1.3 AND q > 100)",
-        )
-        err_cases = (
-            "UPDATE (SELECT * FROM A JOIN c ON ai.id = c.id WHERE cl.ci = 1) SET d=5",
-            "DELETE * FROM TABLE",
-        )
-        for sql in cases:
-            with self.subTest(sql=sql):
-                ensure_where_clause(sql)
-
-        for sql in err_cases:
-            with self.subTest(sql=sql):
-                self.assertEqual(ensure_where_clause(sql), sql + " WHERE 1=1")
-
-    @unittest.skipIf(skip_condition, skip_message)
     def test_escape_name(self):
         from google.cloud.spanner_dbapi.parse_utils import escape_name
 

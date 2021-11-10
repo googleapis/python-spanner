@@ -526,20 +526,6 @@ def get_param_types(params):
     return param_types
 
 
-def ensure_where_clause(sql):
-    """
-    Cloud Spanner requires a WHERE clause on UPDATE and DELETE statements.
-    Add a dummy WHERE clause if non detected.
-
-    :type sql: str
-    :param sql: SQL code to check.
-    """
-    if any(isinstance(token, sqlparse.sql.Where) for token in sqlparse.parse(sql)[0]):
-        return sql
-
-    return sql + " WHERE 1=1"
-
-
 def escape_name(name):
     """
     Apply backticks to the name that either contain '-' or
