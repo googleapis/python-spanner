@@ -87,7 +87,7 @@ def multi_region_instance_id():
 @pytest.fixture(scope="module")
 def instance_config(spanner_client):
     return "{}/instanceConfigs/{}".format(
-        spanner_client.project_name, "regional-us-central1"
+        spanner_client.project_name, "us-west1"
     )
 
 
