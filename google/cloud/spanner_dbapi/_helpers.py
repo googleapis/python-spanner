@@ -11,13 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from google.api_core.exceptions import Aborted
-from google.cloud.spanner_dbapi.exceptions import OperationalError
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
-from google.cloud.spanner_dbapi.parse_utils import parse_insert
 from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
 from google.cloud.spanner_v1 import param_types
-from google.rpc.code_pb2 import OK, ABORTED
 
 SQL_LIST_TABLES = """
             SELECT
@@ -56,23 +52,14 @@ CODE_TO_DISPLAY_SIZE = {
 }
 
 
-def _execute_insert_heterogenous(transaction, sql_params_list):
-    statements = []
-    for sql, params in sql_params_list:
-        sql, params = sql_pyformat_args_to_spanner(sql, params)
-        param_types = get_param_types(params)
-        statements.append((sql, params, param_types))
-    status, _ = transaction.batch_update(statements)
-    if status.code != OK:
-        if status.code == ABORTED:
-            raise Aborted(status.details)
-        raise OperationalError(status.message)
+def _execute_insert_heterogenous(transaction, sql, params):
+    sql, params = sql_pyformat_args_to_spanner(sql, params)
+    transaction.execute_update(sql, params, get_param_types(params))
 
 
 def handle_insert(connection, sql, params):
-    sql_params_list = parse_insert(sql, params)
     return connection.database.run_in_transaction(
-        _execute_insert_heterogenous, sql_params_list
+        _execute_insert_heterogenous, sql, params
     )
 
 
