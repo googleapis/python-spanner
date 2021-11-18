@@ -533,7 +533,7 @@ def connect(
     client_info = ClientInfo(
         user_agent=user_agent or DEFAULT_USER_AGENT,
         python_version=PY_VERSION,
-        client_library_version=spanner.__version__
+        client_library_version=spanner.__version__,
     )
 
     if isinstance(credentials, str):
