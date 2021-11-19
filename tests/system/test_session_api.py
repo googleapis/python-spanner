@@ -19,7 +19,6 @@ import math
 import struct
 import threading
 import time
-import json
 import pytest
 
 import grpc
