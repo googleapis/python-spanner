@@ -54,9 +54,7 @@ JSON_1 = JsonObject(
         "sample_array": [23, 76, 19],
     }
 )
-JSON_2 = JsonObject(
-    {"sample_object": {"name": "Anamika", "id": 2635}},
-)
+JSON_2 = JsonObject({"sample_object": {"name": "Anamika", "id": 2635}},)
 
 COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
