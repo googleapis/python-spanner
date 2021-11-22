@@ -182,9 +182,9 @@ class Cursor(object):
         many_result_set.add_iter(res)
 
         if status.code == ABORTED:
-            raise Aborted(status.details)
+            raise Aborted(status.message)
         elif status.code != OK:
-            raise OperationalError(status.details)
+            raise OperationalError(status.message)
 
     def _batch_DDLs(self, sql):
         """
@@ -332,9 +332,9 @@ class Cursor(object):
 
                         if status.code == ABORTED:
                             self.connection._transaction = None
-                            raise Aborted(status.details)
+                            raise Aborted(status.message)
                         elif status.code != OK:
-                            raise OperationalError(status.details)
+                            raise OperationalError(status.message)
                         break
                     except Aborted:
                         self.connection.retry_transaction()
@@ -428,7 +428,9 @@ class Cursor(object):
             )
         else:
             # execute with single-use snapshot
-            with self.connection.database.snapshot() as snapshot:
+            with self.connection.database.snapshot(
+                **self.connection.staleness
+            ) as snapshot:
                 self._handle_DQL_with_snapshot(snapshot, sql, params)
 
     def __enter__(self):
