@@ -264,3 +264,18 @@ def docfx(session):
         os.path.join("docs", ""),
         os.path.join("docs", "_build", "html", ""),
     )
+
+
+@nox.session(python=DEFAULT_PYTHON_VERSION)
+def mypy(session):
+    """Verify type hints are mypy compatible."""
+    session.install("-e", ".")
+    session.install("mypy", "types-setuptools")
+    session.run("mypy", "--install-types", "--non-interactive")
+    session.run(
+        "mypy",
+        "-p",
+        "google.cloud.spanner_v1",
+        "--no-incremental",
+        "--ignore-missing-imports",
+    )
