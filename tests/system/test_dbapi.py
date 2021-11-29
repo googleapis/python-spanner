@@ -12,15 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import hashlib
 import pickle
 import pkg_resources
-
 import pytest
 
 from google.cloud import spanner_v1
-from google.cloud.spanner_dbapi.connection import connect, Connection
+from google.cloud._helpers import UTC
+from google.cloud.spanner_dbapi.connection import connect
+from google.cloud.spanner_dbapi.connection import Connection
+from google.cloud.spanner_dbapi.exceptions import ProgrammingError
+from google.cloud.spanner_v1 import JsonObject
 from . import _helpers
+
 
 DATABASE_NAME = "dbapi-txn"
 
@@ -328,6 +333,45 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
     conn.commit()
 
 
+@pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
+def test_autocommit_with_json_data(shared_instance, dbapi_database):
+    """Check that DDLs in autocommit mode are immediately executed for
+    json fields."""
+    # Create table
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE JsonDetails (
+            DataId     INT64 NOT NULL,
+            Details    JSON,
+        ) PRIMARY KEY (DataId)
+    """
+    )
+
+    # Insert data to table
+    cur.execute(
+        sql="INSERT INTO JsonDetails (DataId, Details) VALUES (%s, %s)",
+        args=(123, JsonObject({"name": "Jakob", "age": "26"})),
+    )
+
+    # Read back the data.
+    cur.execute("""select * from JsonDetails;""")
+    got_rows = cur.fetchall()
+
+    # Assert the response
+    assert len(got_rows) == 1
+    assert got_rows[0][0] == 123
+    assert got_rows[0][1] == {"age": "26", "name": "Jakob"}
+
+    # Drop the table
+    cur.execute("DROP TABLE JsonDetails")
+    conn.commit()
+    conn.close()
+
+
 def test_DDL_commit(shared_instance, dbapi_database):
     """Check that DDLs in commit mode are executed on calling `commit()`."""
     conn = Connection(shared_instance, dbapi_database)
@@ -365,5 +409,59 @@ def test_user_agent(shared_instance, dbapi_database):
     conn = connect(shared_instance.name, dbapi_database.name)
     assert (
         conn.instance._client._client_info.user_agent
-        == "dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
+        == "gl-dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
     )
+    assert (
+        conn.instance._client._client_info.client_library_version
+        == pkg_resources.get_distribution("google-cloud-spanner").version
+    )
+
+
+def test_read_only(shared_instance, dbapi_database):
+    """
+    Check that connection set to `read_only=True` uses
+    ReadOnly transactions.
+    """
+    conn = Connection(shared_instance, dbapi_database, read_only=True)
+    cur = conn.cursor()
+
+    with pytest.raises(ProgrammingError):
+        cur.execute(
+            """
+UPDATE contacts
+SET first_name = 'updated-first-name'
+WHERE first_name = 'first-name'
+"""
+        )
+
+    cur.execute("SELECT * FROM contacts")
+    conn.commit()
+
+
+def test_staleness(shared_instance, dbapi_database):
+    """Check the DB API `staleness` option."""
+    conn = Connection(shared_instance, dbapi_database)
+    cursor = conn.cursor()
+
+    before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+
+    cursor.execute(
+        """
+INSERT INTO contacts (contact_id, first_name, last_name, email)
+VALUES (1, 'first-name', 'last-name', 'test.email@example.com')
+    """
+    )
+    conn.commit()
+
+    conn.read_only = True
+    conn.staleness = {"read_timestamp": before_insert}
+    cursor.execute("SELECT * FROM contacts")
+    conn.commit()
+    assert len(cursor.fetchall()) == 0
+
+    conn.staleness = None
+    cursor.execute("SELECT * FROM contacts")
+    conn.commit()
+    assert len(cursor.fetchall()) == 1
+
+    conn.close()

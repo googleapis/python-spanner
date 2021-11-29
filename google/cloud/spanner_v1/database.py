@@ -27,7 +27,6 @@ from google.api_core.retry import if_exception_type
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
-import six
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
@@ -494,6 +493,8 @@ class Database(object):
             (Optional) Common options for this request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+            Please note, the `transactionTag` setting will be ignored as it is
+            not supported for partitioned DML.
 
         :rtype: int
         :returns: Count of rows affected by the DML statement.
@@ -501,8 +502,11 @@ class Database(object):
         query_options = _merge_query_options(
             self._instance._client._query_options, query_options
         )
-        if type(request_options) == dict:
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) == dict:
             request_options = RequestOptions(request_options)
+        request_options.transaction_tag = None
 
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction
@@ -796,12 +800,19 @@ class BatchCheckout(object):
     def __init__(self, database, request_options=None):
         self._database = database
         self._session = self._batch = None
-        self._request_options = request_options
+        if request_options is None:
+            self._request_options = RequestOptions()
+        elif type(request_options) == dict:
+            self._request_options = RequestOptions(request_options)
+        else:
+            self._request_options = request_options
 
     def __enter__(self):
         """Begin ``with`` block."""
         session = self._session = self._database._pool.get()
         batch = self._batch = Batch(session)
+        if self._request_options.transaction_tag:
+            batch.transaction_tag = self._request_options.transaction_tag
         return batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1207,7 +1218,7 @@ def _check_ddl_statements(value):
         if elements in ``value`` are not strings, or if ``value`` contains
         a ``CREATE DATABASE`` statement.
     """
-    if not all(isinstance(line, six.string_types) for line in value):
+    if not all(isinstance(line, str) for line in value):
         raise ValueError("Pass a list of strings")
 
     if any("create database" in line.lower() for line in value):
