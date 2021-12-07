@@ -364,7 +364,7 @@ def test_autocommit_with_json_data(shared_instance, dbapi_database):
     # Assert the response
     assert len(got_rows) == 1
     assert got_rows[0][0] == 123
-    assert got_rows[0][1] == '{"age":"26","name":"Jakob"}'
+    assert got_rows[0][1] == {"age": "26", "name": "Jakob"}
 
     # Drop the table
     cur.execute("DROP TABLE JsonDetails")
@@ -409,7 +409,11 @@ def test_user_agent(shared_instance, dbapi_database):
     conn = connect(shared_instance.name, dbapi_database.name)
     assert (
         conn.instance._client._client_info.user_agent
-        == "dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
+        == "gl-dbapi/" + pkg_resources.get_distribution("google-cloud-spanner").version
+    )
+    assert (
+        conn.instance._client._client_info.client_library_version
+        == pkg_resources.get_distribution("google-cloud-spanner").version
     )
 
 
