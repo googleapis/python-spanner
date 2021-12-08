@@ -87,7 +87,7 @@ def multi_region_instance_id():
 @pytest.fixture(scope="module")
 def instance_config(spanner_client):
     return "{}/instanceConfigs/{}".format(
-        spanner_client.project_name, "regional-us-west1"
+        spanner_client.project_name, "regional-us-central1"
     )
 
 
@@ -201,7 +201,7 @@ def sample_database(sample_instance, database_id, database_ddl):
 def kms_key_name(spanner_client):
     return "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}".format(
         spanner_client.project,
-        "us-west1",
+        "us-central1",
         "spanner-test-keyring",
         "spanner-test-cmek",
     )
