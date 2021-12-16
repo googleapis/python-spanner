@@ -53,7 +53,7 @@ def same_config_instance(spanner_client, shared_instance, instance_operation_tim
 def diff_config(shared_instance, instance_configs):
     current_config = shared_instance.configuration_name
     for config in reversed(instance_configs):
-        if "west1" in config.name and config.name != current_config:
+        if "-us-" in config.name and config.name != current_config:
             return config.name
     return None
 
