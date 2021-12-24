@@ -14,7 +14,6 @@
 
 """Database cursor for Google Cloud Spanner DB API."""
 
-import warnings
 from collections import namedtuple
 
 import sqlparse
