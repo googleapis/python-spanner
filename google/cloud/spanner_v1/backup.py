@@ -76,10 +76,10 @@ class Backup(object):
         backup_id,
         instance,
         database="",
-        source_backup=None,
         expire_time=None,
         version_time=None,
         encryption_config=None,
+        source_backup=None,
     ):
         self.backup_id = backup_id
         self._instance = instance
@@ -92,6 +92,8 @@ class Backup(object):
         self._state = None
         self._referencing_databases = None
         self._encryption_info = None
+        self._max_expire_time = None
+        self._referencing_backups = None
         if type(encryption_config) == dict:
             if source_backup:
                 self._encryption_config = CopyBackupEncryptionConfig(
@@ -195,6 +197,26 @@ class Backup(object):
         :returns: a class representing the encryption info
         """
         return self._encryption_info
+
+    @property
+    def max_expire_time(self):
+        """The max allowed expiration time of the backup.
+
+        :rtype: :class:`datetime.datetime`
+        :returns: a datetime object representing the max expire time of
+            this backup
+        """
+        return self._max_expire_time
+
+    @property
+    def referencing_backups(self):
+        """The names of the destination backups being created by copying this source backup.
+
+        :rtype: list of strings
+        :returns: a list of backup path strings which specify the backups that are
+            referencing this copy backup
+        """
+        return self._referencing_backups
 
     @classmethod
     def from_pb(cls, backup_pb, instance):
@@ -330,6 +352,8 @@ class Backup(object):
         self._state = BackupPB.State(pb.state)
         self._referencing_databases = pb.referencing_databases
         self._encryption_info = pb.encryption_info
+        self._max_expire_time = pb.max_expire_time
+        self._referencing_backups = pb.referencing_backups
 
     def update_expire_time(self, new_expire_time):
         """Update the expire time of this backup.
