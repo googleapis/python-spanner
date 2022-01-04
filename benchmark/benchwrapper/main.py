@@ -1,4 +1,4 @@
-# Copyright 2022 Google, Inc.
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -38,41 +38,62 @@ SPANNER_DATABASE = "somedatabase"
 
 class SpannerBenchWrapperService(spanner_service.SpannerBenchWrapperServicer):
     """Benchwrapper Servicer class to implement Read, Insert and Update
-    methods."""
+    methods.
+
+    :type project_id: str
+    :param project_id: Spanner project
+
+    :type instance_id: str
+    :param instance_id: The ID of instance that owns the database.
+
+    :type database_id: str
+    :param database_id: the ID of the database.
+    """
 
     def __init__(self,
-                 project=SPANNER_PROJECT,
+                 project_id=SPANNER_PROJECT,
                  instance_id=SPANNER_INSTANCE,
                  database_id=SPANNER_DATABASE) -> None:
 
-        spanner_client = spanner.Client(project)
+        spanner_client = spanner.Client(project_id)
         instance = spanner_client.instance(instance_id)
         self.database = instance.database(database_id)
 
         super().__init__()
 
-    def Read(self, request, context):
+    def Read(self, request, _):
         """Read represents operations like Go's ReadOnlyTransaction.Query,
         Java's ReadOnlyTransaction.executeQuery, Python's snapshot.read, and
         Node's Transaction.Read.
 
         It will typically be used to read many items.
+
+        :type request:
+            :class: `benchmark.benchwrapper.proto.spanner_pb2.ReadQuery`
+        :param request: A ReadQuery request object.
+
+        :rtype: :class:`benchmark.benchwrapper.proto.spanner_pb2.EmptyResponse`
+        :returns: An EmptyResponse object.
         """
         with self.database.snapshot() as snapshot:
-            results = snapshot.execute_sql(request.query)
-
-        for _ in results:
-            # do nothing with the data
-            continue
+            # Stream the response to the query.
+            list(snapshot.execute_sql(request.query))
 
         return spanner_messages.EmptyResponse()
 
-    def Insert(self, request, context):
+    def Insert(self, request, _):
         """Insert represents operations like Go's Client.Apply, Java's
         DatabaseClient.writeAtLeastOnce, Python's transaction.commit, and Node's
         Transaction.Commit.
 
         It will typically be used to insert many items.
+
+        :type request:
+            :class: `benchmark.benchwrapper.proto.spanner_pb2.InsertQuery`
+        :param request: An InsertQuery request object.
+
+        :rtype: :class:`benchmark.benchwrapper.proto.spanner_pb2.EmptyResponse`
+        :returns: An EmptyResponse object.
         """
         with self.database.batch() as batch:
             batch.insert(
@@ -83,22 +104,35 @@ class SpannerBenchWrapperService(spanner_service.SpannerBenchWrapperServicer):
 
         return spanner_messages.EmptyResponse()
 
-    def Update(self, request, context):
+    def Update(self, request, _):
         """Update represents operations like Go's
         ReadWriteTransaction.BatchUpdate, Java's TransactionRunner.run,
         Python's Batch.update, and Node's Transaction.BatchUpdate.
 
         It will typically be used to update many items.
+
+        :type request:
+            :class: `benchmark.benchwrapper.proto.spanner_pb2.UpdateQuery`
+        :param request: An UpdateQuery request object.
+
+        :rtype: :class:`benchmark.benchwrapper.proto.spanner_pb2.EmptyResponse`
+        :returns: An EmptyResponse object.
         """
         self.database.run_in_transaction(self.update_singers, request.queries)
 
         return spanner_messages.EmptyResponse()
 
     def update_singers(self, transaction, stmts):
-        """Method to execute batch_update in a transaction."""
-        status, row_cts = transaction.batch_update(stmts)
+        """Method to execute batch_update in a transaction.
 
-        print(status, row_cts)
+        :type transaction:
+            :class: `google.cloud.spanner_v1.transaction.Transaction`
+        :param transaction: A Spanner Transaction object.
+        :type stmts:
+            :class: `google.protobuf.pyext._message.RepeatedScalarContainer`
+        :param stmts: Statements which are update queries.
+        """
+        transaction.batch_update(stmts)
 
 
 def get_opts():
@@ -141,17 +175,16 @@ def start_grpc_server(num_workers, port):
 
 def serve():
     """Driver method."""
-    opts = get_opts()
-
-    validate_opts(opts)
-
     if "SPANNER_EMULATOR_HOST" not in os.environ:
         raise ValueError("This benchmarking server only works when connected "
                          "to an emulator. Please set SPANNER_EMULATOR_HOST.")
+
+    opts = get_opts()
+
+    validate_opts(opts)
 
     start_grpc_server(10, opts.port)
 
 
 if __name__ == "__main__":
     serve()
-  
