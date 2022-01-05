@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""This script wraps the client library in a gRPC interface that a benchmarker
-can communicate through."""
+"""The gRPC Benchwrapper around Python Client Library.
+Usage:
+  # Start the emulator using either docker or gcloud CLI.
+
+  # Set up instance and load data into database.
+
+  # Set up environment variables.
+  $ export SPANNER_EMULATOR_HOST=localhost:9010
+
+  # Run the benchmark from python-spanner/ directory.
+  $ python3 -m benchmark.benchwrapper.main --port 8081
+
+"""
 
 from concurrent import futures
 from optparse   import OptionParser
