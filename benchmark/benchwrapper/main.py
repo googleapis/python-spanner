@@ -41,7 +41,7 @@ class SpannerBenchWrapperService(spanner_service.SpannerBenchWrapperServicer):
     methods.
 
     :type project_id: str
-    :param project_id: Spanner project
+    :param project_id: Spanner project.
 
     :type instance_id: str
     :param instance_id: The ID of instance that owns the database.
