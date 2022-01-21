@@ -60,7 +60,8 @@ Python >= 3.6
 
 Deprecated Python Versions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-Python == 2.7. Python 2.7 support will be removed on January 1, 2020.
+Python == 2.7.
+Python == 3.5.
 
 
 Mac/Linux
