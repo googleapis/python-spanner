@@ -138,6 +138,9 @@ class Database(proto.Message):
             option set using DatabaseAdmin.CreateDatabase or
             DatabaseAdmin.UpdateDatabaseDdl. If not explicitly set, this
             is empty.
+        database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
+            Output only. The dialect of the Cloud Spanner
+            Database.
     """
 
     class State(proto.Enum):
@@ -162,6 +165,7 @@ class Database(proto.Message):
         proto.MESSAGE, number=7, message=timestamp_pb2.Timestamp,
     )
     default_leader = proto.Field(proto.STRING, number=9,)
+    database_dialect = proto.Field(proto.ENUM, number=10, enum=common.DatabaseDialect,)
 
 
 class ListDatabasesRequest(proto.Message):
@@ -238,6 +242,9 @@ class CreateDatabaseRequest(proto.Message):
             the database. If this field is not specified,
             Cloud Spanner will encrypt/decrypt all data at
             rest using Google default encryption.
+        database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
+            Optional. The dialect of the Cloud Spanner
+            Database.
     """
 
     parent = proto.Field(proto.STRING, number=1,)
@@ -246,6 +253,7 @@ class CreateDatabaseRequest(proto.Message):
     encryption_config = proto.Field(
         proto.MESSAGE, number=4, message=common.EncryptionConfig,
     )
+    database_dialect = proto.Field(proto.ENUM, number=5, enum=common.DatabaseDialect,)
 
 
 class CreateDatabaseMetadata(proto.Message):

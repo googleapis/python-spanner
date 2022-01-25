@@ -31,6 +31,7 @@ from .common import (
     EncryptionConfig,
     EncryptionInfo,
     OperationProgress,
+    DatabaseDialect,
 )
 from .spanner_database_admin import (
     CreateDatabaseMetadata,
@@ -73,6 +74,7 @@ __all__ = (
     "EncryptionConfig",
     "EncryptionInfo",
     "OperationProgress",
+    "DatabaseDialect",
     "CreateDatabaseMetadata",
     "CreateDatabaseRequest",
     "Database",

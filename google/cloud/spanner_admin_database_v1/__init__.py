@@ -32,6 +32,7 @@ from .types.backup import UpdateBackupRequest
 from .types.common import EncryptionConfig
 from .types.common import EncryptionInfo
 from .types.common import OperationProgress
+from .types.common import DatabaseDialect
 from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
@@ -67,6 +68,7 @@ __all__ = (
     "Database",
     "DatabaseAdminClient",
     "DatabaseRole",
+    "DatabaseDialect",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",
