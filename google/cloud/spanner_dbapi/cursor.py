@@ -138,7 +138,7 @@ class Cursor(object):
 
     @property
     def rowcount(self):
-        """The number of rows produced by the last `.execute()`.
+        """The number of rows produced by the last `.execute()` call.
 
         :rtype: int
         :returns: The number of rows produced by the last .execute*().
