@@ -330,7 +330,8 @@ def update_backup(instance_id, backup_id):
 
     # Expire time must be within 366 days of the create time of the backup.
     old_expire_time = backup.expire_time
-    new_expire_time = old_expire_time + timedelta(days=30)
+    # New expire time should be less than the max expire time
+    new_expire_time = min(backup.max_expire_time, old_expire_time + timedelta(days=30))
     backup.update_expire_time(new_expire_time)
     print(
         "Backup {} expire time was updated from {} to {}.".format(
@@ -381,6 +382,33 @@ def create_database_with_version_retention_period(instance_id, database_id, rete
 # [END spanner_create_database_with_version_retention_period]
 
 
+# [START spanner_copy_backup]
+def copy_backup(instance_id, backup_id, source_backup_path):
+    """Copies a backup."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    # Create a backup object and wait for copy backup operation to complete.
+    expire_time = datetime.utcnow() + timedelta(days=14)
+    copy_backup = instance.copy_backup(backup_id, source_backup=source_backup_path, expire_time=expire_time)
+    operation = copy_backup.create()
+
+    # Wait for copy backup operation to complete.
+    operation.result(2100)
+
+    # Verify that the copy backup is ready.
+    copy_backup.reload()
+    assert copy_backup.is_ready() is True
+
+    print(
+        "Backup {} of size {} bytes was created at {} with version time {}".format(
+            copy_backup.name, copy_backup.size_bytes, copy_backup.create_time, copy_backup.version_time,
+        )
+    )
+
+# [END spanner_copy_backup]
+
+
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -404,6 +432,7 @@ if __name__ == "__main__":  # noqa: C901
         "list_database_operations", help=list_database_operations.__doc__
     )
     subparsers.add_parser("delete_backup", help=delete_backup.__doc__)
+    subparsers.add_parser("copy_backup", help=copy_backup.__doc__)
 
     args = parser.parse_args()
 
@@ -423,5 +452,7 @@ if __name__ == "__main__":  # noqa: C901
         list_database_operations(args.instance_id)
     elif args.command == "delete_backup":
         delete_backup(args.instance_id, args.backup_id)
+    elif args.command == "copy_backup":
+        copy_backup(args.instance_id, args.backup_id, args.source_backup_id)
     else:
         print("Command {} did not match expected commands.".format(args.command))

@@ -22,6 +22,9 @@ import pytest
 
 from google.cloud import spanner_v1
 from . import _helpers
+from google.cloud.spanner_admin_database_v1.types.backup import (
+    CreateBackupEncryptionConfig,
+)
 
 
 @pytest.fixture(scope="function")

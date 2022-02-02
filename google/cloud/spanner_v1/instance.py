@@ -555,18 +555,14 @@ class Instance(object):
         self, backup_id, source_backup, expire_time=None, encryption_config=None,
     ):
         """Factory to create a copy backup within this instance.
-
             :type backup_id: str
             :param backup_id: The ID of the backup copy.
-
-            :type source_backup_id: str
-            :param backup_id: The ID of the source backup to be copied.
-
+            :type source_backup: str
+            :param source_backup_id: The full path of the source backup to be copied.
             :type expire_time: :class:`datetime.datetime`
             :param expire_time:
                 Optional. The expire time that will be used when creating the copy backup.
                 Required if the create method needs to be called.
-
             :type encryption_config:
                 :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
                 or :class:`dict`
@@ -574,7 +570,6 @@ class Instance(object):
                 (Optional) Encryption configuration for the backup.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
-
             :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
             :returns: a copy backup owned by this instance.
             """

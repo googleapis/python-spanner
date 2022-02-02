@@ -201,7 +201,6 @@ class Backup(object):
     @property
     def max_expire_time(self):
         """The max allowed expiration time of the backup.
-
         :rtype: :class:`datetime.datetime`
         :returns: a datetime object representing the max expire time of
             this backup
@@ -211,7 +210,6 @@ class Backup(object):
     @property
     def referencing_backups(self):
         """The names of the destination backups being created by copying this source backup.
-
         :rtype: list of strings
         :returns: a list of backup path strings which specify the backups that are
             referencing this copy backup
