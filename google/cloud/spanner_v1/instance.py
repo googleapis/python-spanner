@@ -426,6 +426,7 @@ class Instance(object):
         pool=None,
         logger=None,
         encryption_config=None,
+        creator_role=None,
     ):
         """Factory to create a database within this instance.
 
@@ -466,6 +467,7 @@ class Instance(object):
             pool=pool,
             logger=logger,
             encryption_config=encryption_config,
+            creator_role=creator_role,
         )
 
     def list_databases(self, page_size=None):
@@ -571,7 +573,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListBackupsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_backups(
             request=request, metadata=metadata
@@ -599,7 +603,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListBackupOperationsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_backup_operations(
             request=request, metadata=metadata
@@ -627,7 +633,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListDatabaseOperationsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_database_operations(
             request=request, metadata=metadata

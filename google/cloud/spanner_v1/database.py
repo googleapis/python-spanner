@@ -114,6 +114,9 @@ class Database(object):
         If a dict is provided, it must be of the same form as either of the protobuf
         messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
+
+    :type creator_role: str or None
+    :param creator_role: (Optional) user-assigned creator_role for the session.
     """
 
     _spanner_api = None
@@ -126,6 +129,7 @@ class Database(object):
         pool=None,
         logger=None,
         encryption_config=None,
+        creator_role=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -141,9 +145,10 @@ class Database(object):
         self.log_commit_stats = False
         self._logger = logger
         self._encryption_config = encryption_config
+        self._creator_role = creator_role
 
         if pool is None:
-            pool = BurstyPool()
+            pool = BurstyPool(creator_role=creator_role)
 
         self._pool = pool
         pool.bind(self)
@@ -441,7 +446,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         request = UpdateDatabaseDdlRequest(
-            database=self.name, statements=ddl_statements, operation_id=operation_id,
+            database=self.name,
+            statements=ddl_statements,
+            operation_id=operation_id,
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
@@ -544,7 +551,8 @@ class Database(object):
                     request_options=request_options,
                 )
                 method = functools.partial(
-                    api.execute_streaming_sql, metadata=metadata,
+                    api.execute_streaming_sql,
+                    metadata=metadata,
                 )
 
                 iterator = _restart_on_unavailable(method, request)
@@ -556,16 +564,23 @@ class Database(object):
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
-    def session(self, labels=None):
+    def session(self, labels=None, creator_role=None):
         """Factory to create a session for this database.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
+        :type creator_role: str or None
+        :param creator_role: (Optional) user-assigned creator_role for the session.
+
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: a session bound to this database.
         """
-        return Session(self, labels=labels)
+        role = self._creator_role
+        # If the pool has another role specified we use that role instead.
+        if creator_role:
+            role = creator_role
+        return Session(self, labels=labels, creator_role=role)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.
@@ -694,7 +709,10 @@ class Database(object):
             backup=source.name,
             encryption_config=self._encryption_config or None,
         )
-        future = api.restore_database(request=request, metadata=metadata,)
+        future = api.restore_database(
+            request=request,
+            metadata=metadata,
+        )
         return future
 
     def is_ready(self):
@@ -1032,7 +1050,11 @@ class BatchSnapshot(object):
             yield {"partition": partition, "read": read_info.copy()}
 
     def process_read_batch(
-        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+        self,
+        batch,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned read.
 
@@ -1149,7 +1171,11 @@ class BatchSnapshot(object):
             yield {"partition": partition, "query": query_info}
 
     def process_query_batch(
-        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+        self,
+        batch,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned query.
 

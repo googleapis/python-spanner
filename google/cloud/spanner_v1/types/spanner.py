@@ -135,6 +135,8 @@ class Session(proto.Message):
             Output only. The approximate timestamp when
             the session is last used. It is typically
             earlier than the actual last use time.
+        creator_role (str):
+            The database role which created this session.
     """
 
     name = proto.Field(proto.STRING, number=1,)
@@ -143,6 +145,7 @@ class Session(proto.Message):
     approximate_last_use_time = proto.Field(
         proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,
     )
+    creator_role = proto.Field(proto.STRING, number=5,)
 
 
 class GetSessionRequest(proto.Message):

@@ -465,7 +465,9 @@ def test_create_session(
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.create_session), "__call__") as call:
         # Designate an appropriate return value for the call.
-        call.return_value = spanner.Session(name="name_value",)
+        call.return_value = spanner.Session(
+            name="name_value", creator_role="creator_role_value",
+        )
         response = client.create_session(request)
 
         # Establish that the underlying gRPC stub method was called.
@@ -476,6 +478,7 @@ def test_create_session(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 def test_create_session_from_dict():
@@ -513,7 +516,7 @@ async def test_create_session_async(
     with mock.patch.object(type(client.transport.create_session), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner.Session(name="name_value",)
+            spanner.Session(name="name_value", creator_role="creator_role_value",)
         )
         response = await client.create_session(request)
 
@@ -525,6 +528,7 @@ async def test_create_session_async(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 @pytest.mark.asyncio
@@ -885,7 +889,9 @@ def test_get_session(transport: str = "grpc", request_type=spanner.GetSessionReq
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_session), "__call__") as call:
         # Designate an appropriate return value for the call.
-        call.return_value = spanner.Session(name="name_value",)
+        call.return_value = spanner.Session(
+            name="name_value", creator_role="creator_role_value",
+        )
         response = client.get_session(request)
 
         # Establish that the underlying gRPC stub method was called.
@@ -896,6 +902,7 @@ def test_get_session(transport: str = "grpc", request_type=spanner.GetSessionReq
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 def test_get_session_from_dict():
@@ -933,7 +940,7 @@ async def test_get_session_async(
     with mock.patch.object(type(client.transport.get_session), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner.Session(name="name_value",)
+            spanner.Session(name="name_value", creator_role="creator_role_value",)
         )
         response = await client.get_session(request)
 
@@ -945,6 +952,7 @@ async def test_get_session_async(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 @pytest.mark.asyncio
