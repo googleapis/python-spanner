@@ -14,6 +14,7 @@
 
 """Database cursor for Google Cloud Spanner DB API."""
 
+import warnings
 from collections import namedtuple
 
 import sqlparse
@@ -43,6 +44,8 @@ from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
 from google.rpc.code_pb2 import ABORTED, OK
+
+_UNSET_COUNT = -1
 
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
 Statement = namedtuple("Statement", "sql, params, param_types, checksum, is_insert")
@@ -80,6 +83,7 @@ class Cursor(object):
     def __init__(self, connection):
         self._itr = None
         self._result_set = None
+        self._row_count = _UNSET_COUNT
         self.lastrowid = None
         self.connection = connection
         self._is_closed = False
@@ -134,13 +138,12 @@ class Cursor(object):
 
     @property
     def rowcount(self):
-        """The number of rows produced by the last `execute()` call.
+        """The number of rows produced by the last `.execute()`.
 
-        The property is non-operational and always returns -1. Request
-        resulting rows are streamed by the `fetch*()` methods and
-        can't be counted before they are all streamed.
+        :rtype: int
+        :returns: The number of rows produced by the last .execute*().
         """
-        return -1
+        return self._row_count
 
     @check_not_closed
     def callproc(self, procname, args=None):
@@ -170,7 +173,11 @@ class Cursor(object):
         result = transaction.execute_update(
             sql, params=params, param_types=get_param_types(params)
         )
-        self._itr = iter([result])
+        self._itr = None
+        if type(result) == int:
+            self._row_count = result
+
+        return result
 
     def _do_batch_update(self, transaction, statements, many_result_set):
         status, res = transaction.batch_update(statements)
@@ -250,9 +257,10 @@ class Cursor(object):
                     class_ == parse_utils.STMT_INSERT,
                 )
 
-                (self._result_set, self._checksum,) = self.connection.run_statement(
-                    statement
-                )
+                (
+                    self._result_set,
+                    self._checksum,
+                ) = self.connection.run_statement(statement)
                 while True:
                     try:
                         self._itr = PeekIterator(self._result_set)
@@ -414,6 +422,9 @@ class Cursor(object):
         # Read the first element so that the StreamedResultSet can
         # return the metadata after a DQL statement.
         self._itr = PeekIterator(self._result_set)
+        # Unfortunately, Spanner doesn't seem to send back
+        # information about the number of rows available.
+        self._row_count = _UNSET_COUNT
 
     def _handle_DQL(self, sql, params):
         sql, params = parse_utils.sql_pyformat_args_to_spanner(sql, params)
