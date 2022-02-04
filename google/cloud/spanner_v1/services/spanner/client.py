@@ -475,7 +475,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -565,7 +565,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, session_count])
         if request is not None and has_flattened_params:
@@ -640,7 +640,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -715,7 +715,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -790,7 +790,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -1217,7 +1217,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A transaction.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, options])
         if request is not None and has_flattened_params:
@@ -1339,7 +1339,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any(
             [session, transaction_id, mutations, single_use_transaction]
@@ -1429,7 +1429,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, transaction_id])
         if request is not None and has_flattened_params:
