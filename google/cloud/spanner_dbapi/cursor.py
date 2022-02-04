@@ -137,11 +137,13 @@ class Cursor(object):
 
     @property
     def rowcount(self):
-        """The number of rows produced by the last `.execute()` call.
+        """The number of rows updated by the last UPDATE, DELETE request's `execute()` call.
+        For SELECT requests the rowcount returns -1.
 
         :rtype: int
-        :returns: The number of rows produced by the last .execute*().
+        :returns: The number of rows updated by the last UPDATE, DELETE request's .execute*() call.
         """
+
         return self._row_count
 
     @check_not_closed
@@ -186,6 +188,8 @@ class Cursor(object):
             raise Aborted(status.message)
         elif status.code != OK:
             raise OperationalError(status.message)
+
+        self._row_count = sum([max(val, 0) for val in res])
 
     def _batch_DDLs(self, sql):
         """
