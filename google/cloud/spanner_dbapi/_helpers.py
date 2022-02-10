@@ -55,7 +55,7 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
 
 def handle_insert(connection, sql, params):
     return connection.database.run_in_transaction(
-        _execute_insert_heterogenous, (sql, params)
+        _execute_insert_heterogenous, ((sql, params),)
     )
 
 
