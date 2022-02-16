@@ -32,9 +32,15 @@ async def sample_create_instance():
     client = spanner_admin_instance_v1.InstanceAdminAsyncClient()
 
     # Initialize request argument(s)
+    instance = spanner_admin_instance_v1.Instance()
+    instance.name = "name_value"
+    instance.config = "config_value"
+    instance.display_name = "display_name_value"
+
     request = spanner_admin_instance_v1.CreateInstanceRequest(
         parent="parent_value",
         instance_id="instance_id_value",
+        instance=instance,
     )
 
     # Make the request

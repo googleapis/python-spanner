@@ -32,8 +32,12 @@ def sample_execute_batch_dml():
     client = spanner_v1.SpannerClient()
 
     # Initialize request argument(s)
+    statements = spanner_v1.Statement()
+    statements.sql = "sql_value"
+
     request = spanner_v1.ExecuteBatchDmlRequest(
         session="session_value",
+        statements=statements,
         seqno=550,
     )
 

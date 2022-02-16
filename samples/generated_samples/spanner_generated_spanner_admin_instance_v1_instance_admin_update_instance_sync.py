@@ -32,7 +32,13 @@ def sample_update_instance():
     client = spanner_admin_instance_v1.InstanceAdminClient()
 
     # Initialize request argument(s)
+    instance = spanner_admin_instance_v1.Instance()
+    instance.name = "name_value"
+    instance.config = "config_value"
+    instance.display_name = "display_name_value"
+
     request = spanner_admin_instance_v1.UpdateInstanceRequest(
+        instance=instance,
     )
 
     # Make the request

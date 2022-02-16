@@ -62,7 +62,7 @@ class CreateSessionRequest(proto.Message):
             Required. The database in which the new
             session is created.
         session (google.cloud.spanner_v1.types.Session):
-            The session to create.
+            Required. The session to create.
     """
 
     database = proto.Field(proto.STRING, number=1,)
