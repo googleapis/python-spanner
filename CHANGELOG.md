@@ -4,6 +4,59 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.13.0](https://github.com/googleapis/python-spanner/compare/v3.12.1...v3.13.0) (2022-02-04)
+
+
+### Features
+
+* add api key support ([819be92](https://github.com/googleapis/python-spanner/commit/819be92e46f63133724dd0d3f5e57b20e33e299e))
+* add database dialect ([#671](https://github.com/googleapis/python-spanner/issues/671)) ([819be92](https://github.com/googleapis/python-spanner/commit/819be92e46f63133724dd0d3f5e57b20e33e299e))
+
+
+### Bug Fixes
+
+* add support for row_count in cursor. ([#675](https://github.com/googleapis/python-spanner/issues/675)) ([d431339](https://github.com/googleapis/python-spanner/commit/d431339069874abf345347b777b3811464925e46))
+* resolve DuplicateCredentialArgs error when using credentials_file ([#676](https://github.com/googleapis/python-spanner/issues/676)) ([39ff137](https://github.com/googleapis/python-spanner/commit/39ff13796adc13b6702d003e4d549775f8cef202))
+
+### [3.12.1](https://www.github.com/googleapis/python-spanner/compare/v3.12.0...v3.12.1) (2022-01-06)
+
+
+### Bug Fixes
+
+* Django and SQLAlchemy APIs are failing to use rowcount ([#654](https://www.github.com/googleapis/python-spanner/issues/654)) ([698260e](https://www.github.com/googleapis/python-spanner/commit/698260e4597badd38e5ad77dda43506a016826d8))
+
+## [3.12.0](https://www.github.com/googleapis/python-spanner/compare/v3.11.1...v3.12.0) (2021-11-25)
+
+
+### Features
+
+* add context manager support in client ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+* add context manager support in client ([#637](https://www.github.com/googleapis/python-spanner/issues/637)) ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+* add support for python 3.10 ([#626](https://www.github.com/googleapis/python-spanner/issues/626)) ([17ca61b](https://www.github.com/googleapis/python-spanner/commit/17ca61b3a8d3f70c400fb57be5edc9073079b9e4)), closes [#623](https://www.github.com/googleapis/python-spanner/issues/623)
+* **db_api:** add an ability to set ReadOnly/ReadWrite connection mode ([#475](https://www.github.com/googleapis/python-spanner/issues/475)) ([cd3b950](https://www.github.com/googleapis/python-spanner/commit/cd3b950e042cd55d5f4a7234dd79c60d49faa15b))
+* **db_api:** make rowcount property NotImplemented ([#603](https://www.github.com/googleapis/python-spanner/issues/603)) ([b5a567f](https://www.github.com/googleapis/python-spanner/commit/b5a567f1db8762802182a3319c16b6456bb208d8))
+* **db_api:** raise exception with message for executemany() ([#595](https://www.github.com/googleapis/python-spanner/issues/595)) ([95908f6](https://www.github.com/googleapis/python-spanner/commit/95908f67e81554858060f0831d10ff05d149fbba))
+* **db_api:** support JSON data type ([#627](https://www.github.com/googleapis/python-spanner/issues/627)) ([d760c2c](https://www.github.com/googleapis/python-spanner/commit/d760c2c240cc80fadaaba9d3a4a3847e10c3c093))
+* **db_api:** support stale reads ([#584](https://www.github.com/googleapis/python-spanner/issues/584)) ([8ca868c](https://www.github.com/googleapis/python-spanner/commit/8ca868c3b3f487c1ef4f655aedd0ac2ca449c103))
+
+
+### Bug Fixes
+
+* **db_api:** emit warning instead of an exception for `rowcount` property ([#628](https://www.github.com/googleapis/python-spanner/issues/628)) ([62ff9ae](https://www.github.com/googleapis/python-spanner/commit/62ff9ae80a9972b0062aca0e9bb3affafb8ec490))
+* **deps:** drop packaging dependency ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+* **deps:** require google-api-core >= 1.28.0 ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+* improper types in pagers generation ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+
+
+### Performance Improvements
+
+* **dbapi:** set headers correctly for dynamic routing ([#644](https://www.github.com/googleapis/python-spanner/issues/644)) ([d769ff8](https://www.github.com/googleapis/python-spanner/commit/d769ff803c41394c9c175e3de772039d816b9cb5))
+
+
+### Documentation
+
+* list oneofs in docstring ([5ae4be8](https://www.github.com/googleapis/python-spanner/commit/5ae4be8ce0a429b33b31a119d7079ce4deb50ca2))
+
 ### [3.11.1](https://www.github.com/googleapis/python-spanner/compare/v3.11.0...v3.11.1) (2021-10-04)
 
 

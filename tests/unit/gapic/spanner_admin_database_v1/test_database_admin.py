@@ -29,6 +29,7 @@ from google.api_core import future
 from google.api_core import gapic_v1
 from google.api_core import grpc_helpers
 from google.api_core import grpc_helpers_async
+from google.api_core import operation
 from google.api_core import operation_async  # type: ignore
 from google.api_core import operations_v1
 from google.api_core import path_template
@@ -266,20 +267,20 @@ def test_database_admin_client_client_options(
     # unsupported value.
     with mock.patch.dict(os.environ, {"GOOGLE_API_USE_MTLS_ENDPOINT": "Unsupported"}):
         with pytest.raises(MutualTLSChannelError):
-            client = client_class()
+            client = client_class(transport=transport_name)
 
     # Check the case GOOGLE_API_USE_CLIENT_CERTIFICATE has unsupported value.
     with mock.patch.dict(
         os.environ, {"GOOGLE_API_USE_CLIENT_CERTIFICATE": "Unsupported"}
     ):
         with pytest.raises(ValueError):
-            client = client_class()
+            client = client_class(transport=transport_name)
 
     # Check the case quota_project_id is provided
     options = client_options.ClientOptions(quota_project_id="octopus")
     with mock.patch.object(transport_class, "__init__") as patched:
         patched.return_value = None
-        client = client_class(transport=transport_name, client_options=options)
+        client = client_class(client_options=options, transport=transport_name)
         patched.assert_called_once_with(
             credentials=None,
             credentials_file=None,
@@ -338,7 +339,7 @@ def test_database_admin_client_mtls_env_auto(
         )
         with mock.patch.object(transport_class, "__init__") as patched:
             patched.return_value = None
-            client = client_class(transport=transport_name, client_options=options)
+            client = client_class(client_options=options, transport=transport_name)
 
             if use_client_cert_env == "false":
                 expected_client_cert_source = None
@@ -416,6 +417,87 @@ def test_database_admin_client_mtls_env_auto(
 
 
 @pytest.mark.parametrize(
+    "client_class", [DatabaseAdminClient, DatabaseAdminAsyncClient]
+)
+@mock.patch.object(
+    DatabaseAdminClient,
+    "DEFAULT_ENDPOINT",
+    modify_default_endpoint(DatabaseAdminClient),
+)
+@mock.patch.object(
+    DatabaseAdminAsyncClient,
+    "DEFAULT_ENDPOINT",
+    modify_default_endpoint(DatabaseAdminAsyncClient),
+)
+def test_database_admin_client_get_mtls_endpoint_and_cert_source(client_class):
+    mock_client_cert_source = mock.Mock()
+
+    # Test the case GOOGLE_API_USE_CLIENT_CERTIFICATE is "true".
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_CLIENT_CERTIFICATE": "true"}):
+        mock_api_endpoint = "foo"
+        options = client_options.ClientOptions(
+            client_cert_source=mock_client_cert_source, api_endpoint=mock_api_endpoint
+        )
+        api_endpoint, cert_source = client_class.get_mtls_endpoint_and_cert_source(
+            options
+        )
+        assert api_endpoint == mock_api_endpoint
+        assert cert_source == mock_client_cert_source
+
+    # Test the case GOOGLE_API_USE_CLIENT_CERTIFICATE is "false".
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_CLIENT_CERTIFICATE": "false"}):
+        mock_client_cert_source = mock.Mock()
+        mock_api_endpoint = "foo"
+        options = client_options.ClientOptions(
+            client_cert_source=mock_client_cert_source, api_endpoint=mock_api_endpoint
+        )
+        api_endpoint, cert_source = client_class.get_mtls_endpoint_and_cert_source(
+            options
+        )
+        assert api_endpoint == mock_api_endpoint
+        assert cert_source is None
+
+    # Test the case GOOGLE_API_USE_MTLS_ENDPOINT is "never".
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_MTLS_ENDPOINT": "never"}):
+        api_endpoint, cert_source = client_class.get_mtls_endpoint_and_cert_source()
+        assert api_endpoint == client_class.DEFAULT_ENDPOINT
+        assert cert_source is None
+
+    # Test the case GOOGLE_API_USE_MTLS_ENDPOINT is "always".
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_MTLS_ENDPOINT": "always"}):
+        api_endpoint, cert_source = client_class.get_mtls_endpoint_and_cert_source()
+        assert api_endpoint == client_class.DEFAULT_MTLS_ENDPOINT
+        assert cert_source is None
+
+    # Test the case GOOGLE_API_USE_MTLS_ENDPOINT is "auto" and default cert doesn't exist.
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_CLIENT_CERTIFICATE": "true"}):
+        with mock.patch(
+            "google.auth.transport.mtls.has_default_client_cert_source",
+            return_value=False,
+        ):
+            api_endpoint, cert_source = client_class.get_mtls_endpoint_and_cert_source()
+            assert api_endpoint == client_class.DEFAULT_ENDPOINT
+            assert cert_source is None
+
+    # Test the case GOOGLE_API_USE_MTLS_ENDPOINT is "auto" and default cert exists.
+    with mock.patch.dict(os.environ, {"GOOGLE_API_USE_CLIENT_CERTIFICATE": "true"}):
+        with mock.patch(
+            "google.auth.transport.mtls.has_default_client_cert_source",
+            return_value=True,
+        ):
+            with mock.patch(
+                "google.auth.transport.mtls.default_client_cert_source",
+                return_value=mock_client_cert_source,
+            ):
+                (
+                    api_endpoint,
+                    cert_source,
+                ) = client_class.get_mtls_endpoint_and_cert_source()
+                assert api_endpoint == client_class.DEFAULT_MTLS_ENDPOINT
+                assert cert_source == mock_client_cert_source
+
+
+@pytest.mark.parametrize(
     "client_class,transport_class,transport_name",
     [
         (DatabaseAdminClient, transports.DatabaseAdminGrpcTransport, "grpc"),
@@ -433,7 +515,7 @@ def test_database_admin_client_client_options_scopes(
     options = client_options.ClientOptions(scopes=["1", "2"],)
     with mock.patch.object(transport_class, "__init__") as patched:
         patched.return_value = None
-        client = client_class(transport=transport_name, client_options=options)
+        client = client_class(client_options=options, transport=transport_name)
         patched.assert_called_once_with(
             credentials=None,
             credentials_file=None,
@@ -447,24 +529,31 @@ def test_database_admin_client_client_options_scopes(
 
 
 @pytest.mark.parametrize(
-    "client_class,transport_class,transport_name",
+    "client_class,transport_class,transport_name,grpc_helpers",
     [
-        (DatabaseAdminClient, transports.DatabaseAdminGrpcTransport, "grpc"),
+        (
+            DatabaseAdminClient,
+            transports.DatabaseAdminGrpcTransport,
+            "grpc",
+            grpc_helpers,
+        ),
         (
             DatabaseAdminAsyncClient,
             transports.DatabaseAdminGrpcAsyncIOTransport,
             "grpc_asyncio",
+            grpc_helpers_async,
         ),
     ],
 )
 def test_database_admin_client_client_options_credentials_file(
-    client_class, transport_class, transport_name
+    client_class, transport_class, transport_name, grpc_helpers
 ):
     # Check the case credentials file is provided.
     options = client_options.ClientOptions(credentials_file="credentials.json")
+
     with mock.patch.object(transport_class, "__init__") as patched:
         patched.return_value = None
-        client = client_class(transport=transport_name, client_options=options)
+        client = client_class(client_options=options, transport=transport_name)
         patched.assert_called_once_with(
             credentials=None,
             credentials_file="credentials.json",
@@ -497,9 +586,79 @@ def test_database_admin_client_client_options_from_dict():
         )
 
 
-def test_list_databases(
-    transport: str = "grpc", request_type=spanner_database_admin.ListDatabasesRequest
+@pytest.mark.parametrize(
+    "client_class,transport_class,transport_name,grpc_helpers",
+    [
+        (
+            DatabaseAdminClient,
+            transports.DatabaseAdminGrpcTransport,
+            "grpc",
+            grpc_helpers,
+        ),
+        (
+            DatabaseAdminAsyncClient,
+            transports.DatabaseAdminGrpcAsyncIOTransport,
+            "grpc_asyncio",
+            grpc_helpers_async,
+        ),
+    ],
+)
+def test_database_admin_client_create_channel_credentials_file(
+    client_class, transport_class, transport_name, grpc_helpers
 ):
+    # Check the case credentials file is provided.
+    options = client_options.ClientOptions(credentials_file="credentials.json")
+
+    with mock.patch.object(transport_class, "__init__") as patched:
+        patched.return_value = None
+        client = client_class(client_options=options, transport=transport_name)
+        patched.assert_called_once_with(
+            credentials=None,
+            credentials_file="credentials.json",
+            host=client.DEFAULT_ENDPOINT,
+            scopes=None,
+            client_cert_source_for_mtls=None,
+            quota_project_id=None,
+            client_info=transports.base.DEFAULT_CLIENT_INFO,
+            always_use_jwt_access=True,
+        )
+
+    # test that the credentials from file are saved and used as the credentials.
+    with mock.patch.object(
+        google.auth, "load_credentials_from_file", autospec=True
+    ) as load_creds, mock.patch.object(
+        google.auth, "default", autospec=True
+    ) as adc, mock.patch.object(
+        grpc_helpers, "create_channel"
+    ) as create_channel:
+        creds = ga_credentials.AnonymousCredentials()
+        file_creds = ga_credentials.AnonymousCredentials()
+        load_creds.return_value = (file_creds, None)
+        adc.return_value = (creds, None)
+        client = client_class(client_options=options, transport=transport_name)
+        create_channel.assert_called_with(
+            "spanner.googleapis.com:443",
+            credentials=file_creds,
+            credentials_file=None,
+            quota_project_id=None,
+            default_scopes=(
+                "https://www.googleapis.com/auth/cloud-platform",
+                "https://www.googleapis.com/auth/spanner.admin",
+            ),
+            scopes=None,
+            default_host="spanner.googleapis.com",
+            ssl_credentials=None,
+            options=[
+                ("grpc.max_send_message_length", -1),
+                ("grpc.max_receive_message_length", -1),
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.ListDatabasesRequest, dict,]
+)
+def test_list_databases(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -524,10 +683,6 @@ def test_list_databases(
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListDatabasesPager)
     assert response.next_page_token == "next_page_token_value"
-
-
-def test_list_databases_from_dict():
-    test_list_databases(request_type=dict)
 
 
 def test_list_databases_empty_call():
@@ -708,8 +863,10 @@ async def test_list_databases_flattened_error_async():
         )
 
 
-def test_list_databases_pager():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_databases_pager(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -751,8 +908,10 @@ def test_list_databases_pager():
         assert all(isinstance(i, spanner_database_admin.Database) for i in results)
 
 
-def test_list_databases_pages():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_databases_pages(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -866,9 +1025,10 @@ async def test_list_databases_async_pages():
             assert page_.raw_page.next_page_token == token
 
 
-def test_create_database(
-    transport: str = "grpc", request_type=spanner_database_admin.CreateDatabaseRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.CreateDatabaseRequest, dict,]
+)
+def test_create_database(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -890,10 +1050,6 @@ def test_create_database(
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_create_database_from_dict():
-    test_create_database(request_type=dict)
 
 
 def test_create_database_empty_call():
@@ -1085,9 +1241,10 @@ async def test_create_database_flattened_error_async():
         )
 
 
-def test_get_database(
-    transport: str = "grpc", request_type=spanner_database_admin.GetDatabaseRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.GetDatabaseRequest, dict,]
+)
+def test_get_database(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -1104,6 +1261,7 @@ def test_get_database(
             state=spanner_database_admin.Database.State.CREATING,
             version_retention_period="version_retention_period_value",
             default_leader="default_leader_value",
+            database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
         )
         response = client.get_database(request)
 
@@ -1118,10 +1276,7 @@ def test_get_database(
     assert response.state == spanner_database_admin.Database.State.CREATING
     assert response.version_retention_period == "version_retention_period_value"
     assert response.default_leader == "default_leader_value"
-
-
-def test_get_database_from_dict():
-    test_get_database(request_type=dict)
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 def test_get_database_empty_call():
@@ -1161,6 +1316,7 @@ async def test_get_database_async(
                 state=spanner_database_admin.Database.State.CREATING,
                 version_retention_period="version_retention_period_value",
                 default_leader="default_leader_value",
+                database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             )
         )
         response = await client.get_database(request)
@@ -1176,6 +1332,7 @@ async def test_get_database_async(
     assert response.state == spanner_database_admin.Database.State.CREATING
     assert response.version_retention_period == "version_retention_period_value"
     assert response.default_leader == "default_leader_value"
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 @pytest.mark.asyncio
@@ -1308,10 +1465,10 @@ async def test_get_database_flattened_error_async():
         )
 
 
-def test_update_database_ddl(
-    transport: str = "grpc",
-    request_type=spanner_database_admin.UpdateDatabaseDdlRequest,
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.UpdateDatabaseDdlRequest, dict,]
+)
+def test_update_database_ddl(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -1335,10 +1492,6 @@ def test_update_database_ddl(
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_update_database_ddl_from_dict():
-    test_update_database_ddl(request_type=dict)
 
 
 def test_update_database_ddl_empty_call():
@@ -1542,9 +1695,10 @@ async def test_update_database_ddl_flattened_error_async():
         )
 
 
-def test_drop_database(
-    transport: str = "grpc", request_type=spanner_database_admin.DropDatabaseRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.DropDatabaseRequest, dict,]
+)
+def test_drop_database(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -1566,10 +1720,6 @@ def test_drop_database(
 
     # Establish that the response is the type that we expect.
     assert response is None
-
-
-def test_drop_database_from_dict():
-    test_drop_database(request_type=dict)
 
 
 def test_drop_database_empty_call():
@@ -1741,9 +1891,10 @@ async def test_drop_database_flattened_error_async():
         )
 
 
-def test_get_database_ddl(
-    transport: str = "grpc", request_type=spanner_database_admin.GetDatabaseDdlRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.GetDatabaseDdlRequest, dict,]
+)
+def test_get_database_ddl(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -1768,10 +1919,6 @@ def test_get_database_ddl(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner_database_admin.GetDatabaseDdlResponse)
     assert response.statements == ["statements_value"]
-
-
-def test_get_database_ddl_from_dict():
-    test_get_database_ddl(request_type=dict)
 
 
 def test_get_database_ddl_empty_call():
@@ -1952,9 +2099,8 @@ async def test_get_database_ddl_flattened_error_async():
         )
 
 
-def test_set_iam_policy(
-    transport: str = "grpc", request_type=iam_policy_pb2.SetIamPolicyRequest
-):
+@pytest.mark.parametrize("request_type", [iam_policy_pb2.SetIamPolicyRequest, dict,])
+def test_set_iam_policy(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -1978,10 +2124,6 @@ def test_set_iam_policy(
     assert isinstance(response, policy_pb2.Policy)
     assert response.version == 774
     assert response.etag == b"etag_blob"
-
-
-def test_set_iam_policy_from_dict():
-    test_set_iam_policy(request_type=dict)
 
 
 def test_set_iam_policy_empty_call():
@@ -2171,9 +2313,8 @@ async def test_set_iam_policy_flattened_error_async():
         )
 
 
-def test_get_iam_policy(
-    transport: str = "grpc", request_type=iam_policy_pb2.GetIamPolicyRequest
-):
+@pytest.mark.parametrize("request_type", [iam_policy_pb2.GetIamPolicyRequest, dict,])
+def test_get_iam_policy(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -2197,10 +2338,6 @@ def test_get_iam_policy(
     assert isinstance(response, policy_pb2.Policy)
     assert response.version == 774
     assert response.etag == b"etag_blob"
-
-
-def test_get_iam_policy_from_dict():
-    test_get_iam_policy(request_type=dict)
 
 
 def test_get_iam_policy_empty_call():
@@ -2390,9 +2527,10 @@ async def test_get_iam_policy_flattened_error_async():
         )
 
 
-def test_test_iam_permissions(
-    transport: str = "grpc", request_type=iam_policy_pb2.TestIamPermissionsRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [iam_policy_pb2.TestIamPermissionsRequest, dict,]
+)
+def test_test_iam_permissions(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -2419,10 +2557,6 @@ def test_test_iam_permissions(
     # Establish that the response is the type that we expect.
     assert isinstance(response, iam_policy_pb2.TestIamPermissionsResponse)
     assert response.permissions == ["permissions_value"]
-
-
-def test_test_iam_permissions_from_dict():
-    test_test_iam_permissions(request_type=dict)
 
 
 def test_test_iam_permissions_empty_call():
@@ -2646,9 +2780,8 @@ async def test_test_iam_permissions_flattened_error_async():
         )
 
 
-def test_create_backup(
-    transport: str = "grpc", request_type=gsad_backup.CreateBackupRequest
-):
+@pytest.mark.parametrize("request_type", [gsad_backup.CreateBackupRequest, dict,])
+def test_create_backup(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -2670,10 +2803,6 @@ def test_create_backup(
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_create_backup_from_dict():
-    test_create_backup(request_type=dict)
 
 
 def test_create_backup_empty_call():
@@ -2876,7 +3005,8 @@ async def test_create_backup_flattened_error_async():
         )
 
 
-def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupRequest):
+@pytest.mark.parametrize("request_type", [backup.GetBackupRequest, dict,])
+def test_get_backup(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -2894,6 +3024,7 @@ def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupReques
             size_bytes=1089,
             state=backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
+            database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
         )
         response = client.get_backup(request)
 
@@ -2909,10 +3040,7 @@ def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupReques
     assert response.size_bytes == 1089
     assert response.state == backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
-
-
-def test_get_backup_from_dict():
-    test_get_backup(request_type=dict)
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 def test_get_backup_empty_call():
@@ -2952,6 +3080,7 @@ async def test_get_backup_async(
                 size_bytes=1089,
                 state=backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
+                database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             )
         )
         response = await client.get_backup(request)
@@ -2968,6 +3097,7 @@ async def test_get_backup_async(
     assert response.size_bytes == 1089
     assert response.state == backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 @pytest.mark.asyncio
@@ -3096,9 +3226,8 @@ async def test_get_backup_flattened_error_async():
         )
 
 
-def test_update_backup(
-    transport: str = "grpc", request_type=gsad_backup.UpdateBackupRequest
-):
+@pytest.mark.parametrize("request_type", [gsad_backup.UpdateBackupRequest, dict,])
+def test_update_backup(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -3116,6 +3245,7 @@ def test_update_backup(
             size_bytes=1089,
             state=gsad_backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
+            database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
         )
         response = client.update_backup(request)
 
@@ -3131,10 +3261,7 @@ def test_update_backup(
     assert response.size_bytes == 1089
     assert response.state == gsad_backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
-
-
-def test_update_backup_from_dict():
-    test_update_backup(request_type=dict)
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 def test_update_backup_empty_call():
@@ -3174,6 +3301,7 @@ async def test_update_backup_async(
                 size_bytes=1089,
                 state=gsad_backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
+                database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             )
         )
         response = await client.update_backup(request)
@@ -3190,6 +3318,7 @@ async def test_update_backup_async(
     assert response.size_bytes == 1089
     assert response.state == gsad_backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
+    assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 @pytest.mark.asyncio
@@ -3334,9 +3463,8 @@ async def test_update_backup_flattened_error_async():
         )
 
 
-def test_delete_backup(
-    transport: str = "grpc", request_type=backup.DeleteBackupRequest
-):
+@pytest.mark.parametrize("request_type", [backup.DeleteBackupRequest, dict,])
+def test_delete_backup(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -3358,10 +3486,6 @@ def test_delete_backup(
 
     # Establish that the response is the type that we expect.
     assert response is None
-
-
-def test_delete_backup_from_dict():
-    test_delete_backup(request_type=dict)
 
 
 def test_delete_backup_empty_call():
@@ -3532,7 +3656,8 @@ async def test_delete_backup_flattened_error_async():
         )
 
 
-def test_list_backups(transport: str = "grpc", request_type=backup.ListBackupsRequest):
+@pytest.mark.parametrize("request_type", [backup.ListBackupsRequest, dict,])
+def test_list_backups(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -3557,10 +3682,6 @@ def test_list_backups(transport: str = "grpc", request_type=backup.ListBackupsRe
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListBackupsPager)
     assert response.next_page_token == "next_page_token_value"
-
-
-def test_list_backups_from_dict():
-    test_list_backups(request_type=dict)
 
 
 def test_list_backups_empty_call():
@@ -3738,8 +3859,10 @@ async def test_list_backups_flattened_error_async():
         )
 
 
-def test_list_backups_pager():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_backups_pager(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
@@ -3770,8 +3893,10 @@ def test_list_backups_pager():
         assert all(isinstance(i, backup.Backup) for i in results)
 
 
-def test_list_backups_pages():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_backups_pages(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
@@ -3852,9 +3977,10 @@ async def test_list_backups_async_pages():
             assert page_.raw_page.next_page_token == token
 
 
-def test_restore_database(
-    transport: str = "grpc", request_type=spanner_database_admin.RestoreDatabaseRequest
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.RestoreDatabaseRequest, dict,]
+)
+def test_restore_database(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -3876,10 +4002,6 @@ def test_restore_database(
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_restore_database_from_dict():
-    test_restore_database(request_type=dict)
 
 
 def test_restore_database_empty_call():
@@ -4079,10 +4201,10 @@ async def test_restore_database_flattened_error_async():
         )
 
 
-def test_list_database_operations(
-    transport: str = "grpc",
-    request_type=spanner_database_admin.ListDatabaseOperationsRequest,
-):
+@pytest.mark.parametrize(
+    "request_type", [spanner_database_admin.ListDatabaseOperationsRequest, dict,]
+)
+def test_list_database_operations(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -4109,10 +4231,6 @@ def test_list_database_operations(
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListDatabaseOperationsPager)
     assert response.next_page_token == "next_page_token_value"
-
-
-def test_list_database_operations_from_dict():
-    test_list_database_operations(request_type=dict)
 
 
 def test_list_database_operations_empty_call():
@@ -4307,8 +4425,10 @@ async def test_list_database_operations_flattened_error_async():
         )
 
 
-def test_list_database_operations_pager():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_database_operations_pager(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4349,8 +4469,10 @@ def test_list_database_operations_pager():
         assert all(isinstance(i, operations_pb2.Operation) for i in results)
 
 
-def test_list_database_operations_pages():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_database_operations_pages(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4461,9 +4583,8 @@ async def test_list_database_operations_async_pages():
             assert page_.raw_page.next_page_token == token
 
 
-def test_list_backup_operations(
-    transport: str = "grpc", request_type=backup.ListBackupOperationsRequest
-):
+@pytest.mark.parametrize("request_type", [backup.ListBackupOperationsRequest, dict,])
+def test_list_backup_operations(request_type, transport: str = "grpc"):
     client = DatabaseAdminClient(
         credentials=ga_credentials.AnonymousCredentials(), transport=transport,
     )
@@ -4490,10 +4611,6 @@ def test_list_backup_operations(
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListBackupOperationsPager)
     assert response.next_page_token == "next_page_token_value"
-
-
-def test_list_backup_operations_from_dict():
-    test_list_backup_operations(request_type=dict)
 
 
 def test_list_backup_operations_empty_call():
@@ -4685,8 +4802,10 @@ async def test_list_backup_operations_flattened_error_async():
         )
 
 
-def test_list_backup_operations_pager():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_backup_operations_pager(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4725,8 +4844,10 @@ def test_list_backup_operations_pager():
         assert all(isinstance(i, operations_pb2.Operation) for i in results)
 
 
-def test_list_backup_operations_pages():
-    client = DatabaseAdminClient(credentials=ga_credentials.AnonymousCredentials,)
+def test_list_backup_operations_pages(transport_name: str = "grpc"):
+    client = DatabaseAdminClient(
+        credentials=ga_credentials.AnonymousCredentials, transport=transport_name,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4849,6 +4970,23 @@ def test_credentials_transport_error():
         client = DatabaseAdminClient(
             client_options={"credentials_file": "credentials.json"},
             transport=transport,
+        )
+
+    # It is an error to provide an api_key and a transport instance.
+    transport = transports.DatabaseAdminGrpcTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+    )
+    options = client_options.ClientOptions()
+    options.api_key = "api_key"
+    with pytest.raises(ValueError):
+        client = DatabaseAdminClient(client_options=options, transport=transport,)
+
+    # It is an error to provide an api_key and a credential.
+    options = mock.Mock()
+    options.api_key = "api_key"
+    with pytest.raises(ValueError):
+        client = DatabaseAdminClient(
+            client_options=options, credentials=ga_credentials.AnonymousCredentials()
         )
 
     # It is an error to provide scopes and a transport instance.
@@ -5510,7 +5648,7 @@ def test_parse_common_location_path():
     assert expected == actual
 
 
-def test_client_withDEFAULT_CLIENT_INFO():
+def test_client_with_default_client_info():
     client_info = gapic_v1.client_info.ClientInfo()
 
     with mock.patch.object(
@@ -5575,3 +5713,33 @@ def test_client_ctx():
             with client:
                 pass
             close.assert_called()
+
+
+@pytest.mark.parametrize(
+    "client_class,transport_class",
+    [
+        (DatabaseAdminClient, transports.DatabaseAdminGrpcTransport),
+        (DatabaseAdminAsyncClient, transports.DatabaseAdminGrpcAsyncIOTransport),
+    ],
+)
+def test_api_key_credentials(client_class, transport_class):
+    with mock.patch.object(
+        google.auth._default, "get_api_key_credentials", create=True
+    ) as get_api_key_credentials:
+        mock_cred = mock.Mock()
+        get_api_key_credentials.return_value = mock_cred
+        options = client_options.ClientOptions()
+        options.api_key = "api_key"
+        with mock.patch.object(transport_class, "__init__") as patched:
+            patched.return_value = None
+            client = client_class(client_options=options)
+            patched.assert_called_once_with(
+                credentials=mock_cred,
+                credentials_file=None,
+                host=client.DEFAULT_ENDPOINT,
+                scopes=None,
+                client_cert_source_for_mtls=None,
+                quota_project_id=None,
+                client_info=transports.base.DEFAULT_CLIENT_INFO,
+                always_use_jwt_access=True,
+            )
