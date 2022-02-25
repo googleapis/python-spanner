@@ -453,8 +453,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         periodically, e.g., ``"SELECT 1"``.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -547,8 +546,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         practices on session cache management.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -656,8 +654,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         is still alive.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -745,8 +742,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
     ) -> pagers.ListSessionsPager:
         r"""Lists all sessions in a given database.
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -849,8 +845,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         of any operations that are running with this session.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -943,8 +938,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         instead.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1021,8 +1015,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         column value can exceed 10 MiB.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1111,8 +1104,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         statements are not executed.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1238,8 +1230,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         instead.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1317,8 +1308,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         exceed 10 MiB.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1401,8 +1391,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         transaction as a side-effect.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1518,8 +1507,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         things as they are now.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1660,8 +1648,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         ``ABORTED``.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1764,8 +1751,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         from the beginning.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1853,8 +1839,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         from the beginning.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 

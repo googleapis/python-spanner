@@ -503,8 +503,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
     ) -> pagers.ListDatabasesPager:
         r"""Lists Cloud Spanner databases.
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -616,8 +615,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         successful.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -738,8 +736,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
     ) -> spanner_database_admin.Database:
         r"""Gets the state of a Cloud Spanner database.
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -838,8 +835,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         The operation has no response.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -983,8 +979,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         requests for a few seconds after the database has been deleted.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1066,8 +1061,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [Operations][google.longrunning.Operations] API.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1167,8 +1161,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1322,8 +1315,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1478,8 +1470,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         permission on the containing instance.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1595,8 +1586,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         databases can run concurrently.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1727,8 +1717,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1819,8 +1808,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1929,8 +1917,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2014,8 +2001,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         the most recent ``create_time``.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2136,8 +2122,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         first restore to complete.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2281,8 +2266,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         operations.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2397,8 +2381,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         order starting from the most recently started operation.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 

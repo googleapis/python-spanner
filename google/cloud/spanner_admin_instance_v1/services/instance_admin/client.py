@@ -449,8 +449,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         given project.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -553,8 +552,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         configuration.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -647,8 +645,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     ) -> pagers.ListInstancesPager:
         r"""Lists all instances in the given project.
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -749,8 +746,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -881,8 +877,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         successful.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1061,8 +1056,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [name][google.spanner.admin.instance.v1.Instance.name].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1203,8 +1197,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
            is permanently deleted.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1290,8 +1283,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1441,8 +1433,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1594,8 +1585,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         Cloud Project. Otherwise returns an empty set of permissions.
 
 
-
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 

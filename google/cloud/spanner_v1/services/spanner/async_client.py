@@ -245,7 +245,7 @@ class SpannerAsyncClient:
         periodically, e.g., ``"SELECT 1"``.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -347,7 +347,7 @@ class SpannerAsyncClient:
         practices on session cache management.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -464,7 +464,7 @@ class SpannerAsyncClient:
         is still alive.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -561,7 +561,7 @@ class SpannerAsyncClient:
     ) -> pagers.ListSessionsAsyncPager:
         r"""Lists all sessions in a given database.
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -673,7 +673,7 @@ class SpannerAsyncClient:
         of any operations that are running with this session.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -775,7 +775,7 @@ class SpannerAsyncClient:
         instead.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -860,7 +860,7 @@ class SpannerAsyncClient:
         column value can exceed 10 MiB.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -948,7 +948,7 @@ class SpannerAsyncClient:
         statements are not executed.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1082,7 +1082,7 @@ class SpannerAsyncClient:
         instead.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1168,7 +1168,7 @@ class SpannerAsyncClient:
         exceed 10 MiB.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1250,7 +1250,7 @@ class SpannerAsyncClient:
         transaction as a side-effect.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1375,7 +1375,7 @@ class SpannerAsyncClient:
         things as they are now.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1525,7 +1525,7 @@ class SpannerAsyncClient:
         ``ABORTED``.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1637,7 +1637,7 @@ class SpannerAsyncClient:
         from the beginning.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
@@ -1733,7 +1733,7 @@ class SpannerAsyncClient:
         from the beginning.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_v1
 
