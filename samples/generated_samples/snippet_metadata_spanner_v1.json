@@ -10,8 +10,8 @@
           "shortName": "BatchCreateSessions"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_batch_create_sessions_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_BatchCreateSessions_async",
+      "file": "spanner_v1_generated_spanner_batch_create_sessions_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_BatchCreateSessions_async",
       "segments": [
         {
           "end": 45,
@@ -54,8 +54,8 @@
           "shortName": "BatchCreateSessions"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_batch_create_sessions_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_BatchCreateSessions_sync",
+      "file": "spanner_v1_generated_spanner_batch_create_sessions_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_BatchCreateSessions_sync",
       "segments": [
         {
           "end": 45,
@@ -99,8 +99,8 @@
           "shortName": "BeginTransaction"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_begin_transaction_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_BeginTransaction_async",
+      "file": "spanner_v1_generated_spanner_begin_transaction_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_BeginTransaction_async",
       "segments": [
         {
           "end": 44,
@@ -143,8 +143,8 @@
           "shortName": "BeginTransaction"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_begin_transaction_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_BeginTransaction_sync",
+      "file": "spanner_v1_generated_spanner_begin_transaction_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_BeginTransaction_sync",
       "segments": [
         {
           "end": 44,
@@ -188,8 +188,8 @@
           "shortName": "Commit"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_commit_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Commit_async",
+      "file": "spanner_v1_generated_spanner_commit_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_Commit_async",
       "segments": [
         {
           "end": 45,
@@ -232,8 +232,8 @@
           "shortName": "Commit"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_commit_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Commit_sync",
+      "file": "spanner_v1_generated_spanner_commit_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_Commit_sync",
       "segments": [
         {
           "end": 45,
@@ -277,8 +277,8 @@
           "shortName": "CreateSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_create_session_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_CreateSession_async",
+      "file": "spanner_v1_generated_spanner_create_session_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_CreateSession_async",
       "segments": [
         {
           "end": 44,
@@ -321,8 +321,8 @@
           "shortName": "CreateSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_create_session_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_CreateSession_sync",
+      "file": "spanner_v1_generated_spanner_create_session_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_CreateSession_sync",
       "segments": [
         {
           "end": 44,
@@ -366,8 +366,8 @@
           "shortName": "DeleteSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_delete_session_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_DeleteSession_async",
+      "file": "spanner_v1_generated_spanner_delete_session_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_DeleteSession_async",
       "segments": [
         {
           "end": 42,
@@ -408,8 +408,8 @@
           "shortName": "DeleteSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_delete_session_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_DeleteSession_sync",
+      "file": "spanner_v1_generated_spanner_delete_session_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_DeleteSession_sync",
       "segments": [
         {
           "end": 42,
@@ -451,8 +451,8 @@
           "shortName": "ExecuteBatchDml"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_batch_dml_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteBatchDml_async",
+      "file": "spanner_v1_generated_spanner_execute_batch_dml_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteBatchDml_async",
       "segments": [
         {
           "end": 49,
@@ -495,8 +495,8 @@
           "shortName": "ExecuteBatchDml"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_batch_dml_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteBatchDml_sync",
+      "file": "spanner_v1_generated_spanner_execute_batch_dml_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteBatchDml_sync",
       "segments": [
         {
           "end": 49,
@@ -540,8 +540,8 @@
           "shortName": "ExecuteSql"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_sql_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteSql_async",
+      "file": "spanner_v1_generated_spanner_execute_sql_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteSql_async",
       "segments": [
         {
           "end": 45,
@@ -584,8 +584,8 @@
           "shortName": "ExecuteSql"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_sql_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteSql_sync",
+      "file": "spanner_v1_generated_spanner_execute_sql_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteSql_sync",
       "segments": [
         {
           "end": 45,
@@ -629,8 +629,8 @@
           "shortName": "ExecuteStreamingSql"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_streaming_sql_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteStreamingSql_async",
+      "file": "spanner_v1_generated_spanner_execute_streaming_sql_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteStreamingSql_async",
       "segments": [
         {
           "end": 46,
@@ -673,8 +673,8 @@
           "shortName": "ExecuteStreamingSql"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_execute_streaming_sql_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ExecuteStreamingSql_sync",
+      "file": "spanner_v1_generated_spanner_execute_streaming_sql_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_ExecuteStreamingSql_sync",
       "segments": [
         {
           "end": 46,
@@ -718,8 +718,8 @@
           "shortName": "GetSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_get_session_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_GetSession_async",
+      "file": "spanner_v1_generated_spanner_get_session_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_GetSession_async",
       "segments": [
         {
           "end": 44,
@@ -762,8 +762,8 @@
           "shortName": "GetSession"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_get_session_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_GetSession_sync",
+      "file": "spanner_v1_generated_spanner_get_session_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_GetSession_sync",
       "segments": [
         {
           "end": 44,
@@ -807,8 +807,8 @@
           "shortName": "ListSessions"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_list_sessions_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ListSessions_async",
+      "file": "spanner_v1_generated_spanner_list_sessions_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_ListSessions_async",
       "segments": [
         {
           "end": 45,
@@ -851,8 +851,8 @@
           "shortName": "ListSessions"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_list_sessions_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_ListSessions_sync",
+      "file": "spanner_v1_generated_spanner_list_sessions_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_ListSessions_sync",
       "segments": [
         {
           "end": 45,
@@ -896,8 +896,8 @@
           "shortName": "PartitionQuery"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_partition_query_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_PartitionQuery_async",
+      "file": "spanner_v1_generated_spanner_partition_query_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_PartitionQuery_async",
       "segments": [
         {
           "end": 45,
@@ -940,8 +940,8 @@
           "shortName": "PartitionQuery"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_partition_query_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_PartitionQuery_sync",
+      "file": "spanner_v1_generated_spanner_partition_query_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_PartitionQuery_sync",
       "segments": [
         {
           "end": 45,
@@ -985,8 +985,8 @@
           "shortName": "PartitionRead"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_partition_read_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_PartitionRead_async",
+      "file": "spanner_v1_generated_spanner_partition_read_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_PartitionRead_async",
       "segments": [
         {
           "end": 45,
@@ -1029,8 +1029,8 @@
           "shortName": "PartitionRead"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_partition_read_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_PartitionRead_sync",
+      "file": "spanner_v1_generated_spanner_partition_read_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_PartitionRead_sync",
       "segments": [
         {
           "end": 45,
@@ -1074,8 +1074,8 @@
           "shortName": "Read"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_read_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Read_async",
+      "file": "spanner_v1_generated_spanner_read_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_Read_async",
       "segments": [
         {
           "end": 46,
@@ -1118,8 +1118,8 @@
           "shortName": "Read"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_read_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Read_sync",
+      "file": "spanner_v1_generated_spanner_read_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_Read_sync",
       "segments": [
         {
           "end": 46,
@@ -1163,8 +1163,8 @@
           "shortName": "Rollback"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_rollback_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Rollback_async",
+      "file": "spanner_v1_generated_spanner_rollback_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_Rollback_async",
       "segments": [
         {
           "end": 43,
@@ -1205,8 +1205,8 @@
           "shortName": "Rollback"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_rollback_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_Rollback_sync",
+      "file": "spanner_v1_generated_spanner_rollback_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_Rollback_sync",
       "segments": [
         {
           "end": 43,
@@ -1248,8 +1248,8 @@
           "shortName": "StreamingRead"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_streaming_read_async.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_StreamingRead_async",
+      "file": "spanner_v1_generated_spanner_streaming_read_async.py",
+      "regionTag": "spanner_v1_generated_Spanner_StreamingRead_async",
       "segments": [
         {
           "end": 47,
@@ -1292,8 +1292,8 @@
           "shortName": "StreamingRead"
         }
       },
-      "file": "spanner_generated_spanner_v1_spanner_streaming_read_sync.py",
-      "regionTag": "spanner_generated_spanner_v1_Spanner_StreamingRead_sync",
+      "file": "spanner_v1_generated_spanner_streaming_read_sync.py",
+      "regionTag": "spanner_v1_generated_Spanner_StreamingRead_sync",
       "segments": [
         {
           "end": 47,

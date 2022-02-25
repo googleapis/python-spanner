@@ -10,8 +10,8 @@
           "shortName": "CreateInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_create_instance_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_CreateInstance_async",
+      "file": "spanner_v1_generated_instance_admin_create_instance_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_CreateInstance_async",
       "segments": [
         {
           "end": 55,
@@ -54,8 +54,8 @@
           "shortName": "CreateInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_create_instance_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_CreateInstance_sync",
+      "file": "spanner_v1_generated_instance_admin_create_instance_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_CreateInstance_sync",
       "segments": [
         {
           "end": 55,
@@ -99,8 +99,8 @@
           "shortName": "DeleteInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_delete_instance_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_DeleteInstance_async",
+      "file": "spanner_v1_generated_instance_admin_delete_instance_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_DeleteInstance_async",
       "segments": [
         {
           "end": 42,
@@ -141,8 +141,8 @@
           "shortName": "DeleteInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_delete_instance_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_DeleteInstance_sync",
+      "file": "spanner_v1_generated_instance_admin_delete_instance_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_DeleteInstance_sync",
       "segments": [
         {
           "end": 42,
@@ -184,8 +184,8 @@
           "shortName": "GetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_iam_policy_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetIamPolicy_async",
+      "file": "spanner_v1_generated_instance_admin_get_iam_policy_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetIamPolicy_async",
       "segments": [
         {
           "end": 44,
@@ -228,8 +228,8 @@
           "shortName": "GetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_iam_policy_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetIamPolicy_sync",
+      "file": "spanner_v1_generated_instance_admin_get_iam_policy_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetIamPolicy_sync",
       "segments": [
         {
           "end": 44,
@@ -273,8 +273,8 @@
           "shortName": "GetInstanceConfig"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_instance_config_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetInstanceConfig_async",
+      "file": "spanner_v1_generated_instance_admin_get_instance_config_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetInstanceConfig_async",
       "segments": [
         {
           "end": 44,
@@ -317,8 +317,8 @@
           "shortName": "GetInstanceConfig"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_instance_config_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetInstanceConfig_sync",
+      "file": "spanner_v1_generated_instance_admin_get_instance_config_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetInstanceConfig_sync",
       "segments": [
         {
           "end": 44,
@@ -362,8 +362,8 @@
           "shortName": "GetInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_instance_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetInstance_async",
+      "file": "spanner_v1_generated_instance_admin_get_instance_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetInstance_async",
       "segments": [
         {
           "end": 44,
@@ -406,8 +406,8 @@
           "shortName": "GetInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_get_instance_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_GetInstance_sync",
+      "file": "spanner_v1_generated_instance_admin_get_instance_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_GetInstance_sync",
       "segments": [
         {
           "end": 44,
@@ -451,8 +451,8 @@
           "shortName": "ListInstanceConfigs"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_list_instance_configs_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_ListInstanceConfigs_async",
+      "file": "spanner_v1_generated_instance_admin_list_instance_configs_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_ListInstanceConfigs_async",
       "segments": [
         {
           "end": 45,
@@ -495,8 +495,8 @@
           "shortName": "ListInstanceConfigs"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_list_instance_configs_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_ListInstanceConfigs_sync",
+      "file": "spanner_v1_generated_instance_admin_list_instance_configs_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_ListInstanceConfigs_sync",
       "segments": [
         {
           "end": 45,
@@ -540,8 +540,8 @@
           "shortName": "ListInstances"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_list_instances_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_ListInstances_async",
+      "file": "spanner_v1_generated_instance_admin_list_instances_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_ListInstances_async",
       "segments": [
         {
           "end": 45,
@@ -584,8 +584,8 @@
           "shortName": "ListInstances"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_list_instances_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_ListInstances_sync",
+      "file": "spanner_v1_generated_instance_admin_list_instances_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_ListInstances_sync",
       "segments": [
         {
           "end": 45,
@@ -629,8 +629,8 @@
           "shortName": "SetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_set_iam_policy_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_SetIamPolicy_async",
+      "file": "spanner_v1_generated_instance_admin_set_iam_policy_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_SetIamPolicy_async",
       "segments": [
         {
           "end": 44,
@@ -673,8 +673,8 @@
           "shortName": "SetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_set_iam_policy_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_SetIamPolicy_sync",
+      "file": "spanner_v1_generated_instance_admin_set_iam_policy_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_SetIamPolicy_sync",
       "segments": [
         {
           "end": 44,
@@ -718,8 +718,8 @@
           "shortName": "TestIamPermissions"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_test_iam_permissions_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_TestIamPermissions_async",
+      "file": "spanner_v1_generated_instance_admin_test_iam_permissions_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_TestIamPermissions_async",
       "segments": [
         {
           "end": 45,
@@ -762,8 +762,8 @@
           "shortName": "TestIamPermissions"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_test_iam_permissions_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_TestIamPermissions_sync",
+      "file": "spanner_v1_generated_instance_admin_test_iam_permissions_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_TestIamPermissions_sync",
       "segments": [
         {
           "end": 45,
@@ -807,8 +807,8 @@
           "shortName": "UpdateInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_update_instance_async.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_UpdateInstance_async",
+      "file": "spanner_v1_generated_instance_admin_update_instance_async.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_UpdateInstance_async",
       "segments": [
         {
           "end": 53,
@@ -851,8 +851,8 @@
           "shortName": "UpdateInstance"
         }
       },
-      "file": "spanner_generated_spanner_admin_instance_v1_instance_admin_update_instance_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_instance_v1_InstanceAdmin_UpdateInstance_sync",
+      "file": "spanner_v1_generated_instance_admin_update_instance_sync.py",
+      "regionTag": "spanner_v1_generated_InstanceAdmin_UpdateInstance_sync",
       "segments": [
         {
           "end": 53,

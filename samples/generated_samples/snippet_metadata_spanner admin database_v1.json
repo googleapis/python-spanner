@@ -10,8 +10,8 @@
           "shortName": "CreateBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_create_backup_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_CreateBackup_async",
+      "file": "spanner_v1_generated_database_admin_create_backup_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_CreateBackup_async",
       "segments": [
         {
           "end": 49,
@@ -54,8 +54,8 @@
           "shortName": "CreateBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_create_backup_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_CreateBackup_sync",
+      "file": "spanner_v1_generated_database_admin_create_backup_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_CreateBackup_sync",
       "segments": [
         {
           "end": 49,
@@ -99,8 +99,8 @@
           "shortName": "CreateDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_create_database_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_CreateDatabase_async",
+      "file": "spanner_v1_generated_database_admin_create_database_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_CreateDatabase_async",
       "segments": [
         {
           "end": 49,
@@ -143,8 +143,8 @@
           "shortName": "CreateDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_create_database_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_CreateDatabase_sync",
+      "file": "spanner_v1_generated_database_admin_create_database_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_CreateDatabase_sync",
       "segments": [
         {
           "end": 49,
@@ -188,8 +188,8 @@
           "shortName": "DeleteBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_delete_backup_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_DeleteBackup_async",
+      "file": "spanner_v1_generated_database_admin_delete_backup_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_DeleteBackup_async",
       "segments": [
         {
           "end": 42,
@@ -230,8 +230,8 @@
           "shortName": "DeleteBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_delete_backup_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_DeleteBackup_sync",
+      "file": "spanner_v1_generated_database_admin_delete_backup_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_DeleteBackup_sync",
       "segments": [
         {
           "end": 42,
@@ -273,8 +273,8 @@
           "shortName": "DropDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_drop_database_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_DropDatabase_async",
+      "file": "spanner_v1_generated_database_admin_drop_database_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_DropDatabase_async",
       "segments": [
         {
           "end": 42,
@@ -315,8 +315,8 @@
           "shortName": "DropDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_drop_database_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_DropDatabase_sync",
+      "file": "spanner_v1_generated_database_admin_drop_database_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_DropDatabase_sync",
       "segments": [
         {
           "end": 42,
@@ -358,8 +358,8 @@
           "shortName": "GetBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_backup_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetBackup_async",
+      "file": "spanner_v1_generated_database_admin_get_backup_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetBackup_async",
       "segments": [
         {
           "end": 44,
@@ -402,8 +402,8 @@
           "shortName": "GetBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_backup_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetBackup_sync",
+      "file": "spanner_v1_generated_database_admin_get_backup_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetBackup_sync",
       "segments": [
         {
           "end": 44,
@@ -447,8 +447,8 @@
           "shortName": "GetDatabaseDdl"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_database_ddl_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetDatabaseDdl_async",
+      "file": "spanner_v1_generated_database_admin_get_database_ddl_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetDatabaseDdl_async",
       "segments": [
         {
           "end": 44,
@@ -491,8 +491,8 @@
           "shortName": "GetDatabaseDdl"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_database_ddl_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetDatabaseDdl_sync",
+      "file": "spanner_v1_generated_database_admin_get_database_ddl_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetDatabaseDdl_sync",
       "segments": [
         {
           "end": 44,
@@ -536,8 +536,8 @@
           "shortName": "GetDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_database_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetDatabase_async",
+      "file": "spanner_v1_generated_database_admin_get_database_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetDatabase_async",
       "segments": [
         {
           "end": 44,
@@ -580,8 +580,8 @@
           "shortName": "GetDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_database_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetDatabase_sync",
+      "file": "spanner_v1_generated_database_admin_get_database_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetDatabase_sync",
       "segments": [
         {
           "end": 44,
@@ -625,8 +625,8 @@
           "shortName": "GetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_iam_policy_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetIamPolicy_async",
+      "file": "spanner_v1_generated_database_admin_get_iam_policy_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetIamPolicy_async",
       "segments": [
         {
           "end": 44,
@@ -669,8 +669,8 @@
           "shortName": "GetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_get_iam_policy_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_GetIamPolicy_sync",
+      "file": "spanner_v1_generated_database_admin_get_iam_policy_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_GetIamPolicy_sync",
       "segments": [
         {
           "end": 44,
@@ -714,8 +714,8 @@
           "shortName": "ListBackupOperations"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_backup_operations_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListBackupOperations_async",
+      "file": "spanner_v1_generated_database_admin_list_backup_operations_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListBackupOperations_async",
       "segments": [
         {
           "end": 45,
@@ -758,8 +758,8 @@
           "shortName": "ListBackupOperations"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_backup_operations_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListBackupOperations_sync",
+      "file": "spanner_v1_generated_database_admin_list_backup_operations_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListBackupOperations_sync",
       "segments": [
         {
           "end": 45,
@@ -803,8 +803,8 @@
           "shortName": "ListBackups"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_backups_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListBackups_async",
+      "file": "spanner_v1_generated_database_admin_list_backups_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListBackups_async",
       "segments": [
         {
           "end": 45,
@@ -847,8 +847,8 @@
           "shortName": "ListBackups"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_backups_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListBackups_sync",
+      "file": "spanner_v1_generated_database_admin_list_backups_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListBackups_sync",
       "segments": [
         {
           "end": 45,
@@ -892,8 +892,8 @@
           "shortName": "ListDatabaseOperations"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_database_operations_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListDatabaseOperations_async",
+      "file": "spanner_v1_generated_database_admin_list_database_operations_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListDatabaseOperations_async",
       "segments": [
         {
           "end": 45,
@@ -936,8 +936,8 @@
           "shortName": "ListDatabaseOperations"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_database_operations_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListDatabaseOperations_sync",
+      "file": "spanner_v1_generated_database_admin_list_database_operations_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListDatabaseOperations_sync",
       "segments": [
         {
           "end": 45,
@@ -981,8 +981,8 @@
           "shortName": "ListDatabases"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_databases_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListDatabases_async",
+      "file": "spanner_v1_generated_database_admin_list_databases_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListDatabases_async",
       "segments": [
         {
           "end": 45,
@@ -1025,8 +1025,8 @@
           "shortName": "ListDatabases"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_list_databases_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_ListDatabases_sync",
+      "file": "spanner_v1_generated_database_admin_list_databases_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_ListDatabases_sync",
       "segments": [
         {
           "end": 45,
@@ -1070,8 +1070,8 @@
           "shortName": "RestoreDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_restore_database_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_RestoreDatabase_async",
+      "file": "spanner_v1_generated_database_admin_restore_database_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_RestoreDatabase_async",
       "segments": [
         {
           "end": 50,
@@ -1114,8 +1114,8 @@
           "shortName": "RestoreDatabase"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_restore_database_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_RestoreDatabase_sync",
+      "file": "spanner_v1_generated_database_admin_restore_database_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_RestoreDatabase_sync",
       "segments": [
         {
           "end": 50,
@@ -1159,8 +1159,8 @@
           "shortName": "SetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_set_iam_policy_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_SetIamPolicy_async",
+      "file": "spanner_v1_generated_database_admin_set_iam_policy_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_SetIamPolicy_async",
       "segments": [
         {
           "end": 44,
@@ -1203,8 +1203,8 @@
           "shortName": "SetIamPolicy"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_set_iam_policy_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_SetIamPolicy_sync",
+      "file": "spanner_v1_generated_database_admin_set_iam_policy_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_SetIamPolicy_sync",
       "segments": [
         {
           "end": 44,
@@ -1248,8 +1248,8 @@
           "shortName": "TestIamPermissions"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_test_iam_permissions_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_TestIamPermissions_async",
+      "file": "spanner_v1_generated_database_admin_test_iam_permissions_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_TestIamPermissions_async",
       "segments": [
         {
           "end": 45,
@@ -1292,8 +1292,8 @@
           "shortName": "TestIamPermissions"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_test_iam_permissions_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_TestIamPermissions_sync",
+      "file": "spanner_v1_generated_database_admin_test_iam_permissions_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_TestIamPermissions_sync",
       "segments": [
         {
           "end": 45,
@@ -1337,8 +1337,8 @@
           "shortName": "UpdateBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_update_backup_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_UpdateBackup_async",
+      "file": "spanner_v1_generated_database_admin_update_backup_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_UpdateBackup_async",
       "segments": [
         {
           "end": 43,
@@ -1381,8 +1381,8 @@
           "shortName": "UpdateBackup"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_update_backup_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_UpdateBackup_sync",
+      "file": "spanner_v1_generated_database_admin_update_backup_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_UpdateBackup_sync",
       "segments": [
         {
           "end": 43,
@@ -1426,8 +1426,8 @@
           "shortName": "UpdateDatabaseDdl"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_update_database_ddl_async.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_UpdateDatabaseDdl_async",
+      "file": "spanner_v1_generated_database_admin_update_database_ddl_async.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_UpdateDatabaseDdl_async",
       "segments": [
         {
           "end": 49,
@@ -1470,8 +1470,8 @@
           "shortName": "UpdateDatabaseDdl"
         }
       },
-      "file": "spanner_generated_spanner_admin_database_v1_database_admin_update_database_ddl_sync.py",
-      "regionTag": "spanner_generated_spanner_admin_database_v1_DatabaseAdmin_UpdateDatabaseDdl_sync",
+      "file": "spanner_v1_generated_database_admin_update_database_ddl_sync.py",
+      "regionTag": "spanner_v1_generated_DatabaseAdmin_UpdateDatabaseDdl_sync",
       "segments": [
         {
           "end": 49,

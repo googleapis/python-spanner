@@ -242,7 +242,7 @@ class DatabaseAdminAsyncClient:
     ) -> pagers.ListDatabasesAsyncPager:
         r"""Lists Cloud Spanner databases.
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -364,7 +364,7 @@ class DatabaseAdminAsyncClient:
         successful.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -485,7 +485,7 @@ class DatabaseAdminAsyncClient:
     ) -> spanner_database_admin.Database:
         r"""Gets the state of a Cloud Spanner database.
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -594,7 +594,7 @@ class DatabaseAdminAsyncClient:
         The operation has no response.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -748,7 +748,7 @@ class DatabaseAdminAsyncClient:
         requests for a few seconds after the database has been deleted.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -840,7 +840,7 @@ class DatabaseAdminAsyncClient:
         [Operations][google.longrunning.Operations] API.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -950,7 +950,7 @@ class DatabaseAdminAsyncClient:
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1105,7 +1105,7 @@ class DatabaseAdminAsyncClient:
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1271,7 +1271,7 @@ class DatabaseAdminAsyncClient:
         permission on the containing instance.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1388,7 +1388,7 @@ class DatabaseAdminAsyncClient:
         databases can run concurrently.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1519,7 +1519,7 @@ class DatabaseAdminAsyncClient:
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1620,7 +1620,7 @@ class DatabaseAdminAsyncClient:
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1739,7 +1739,7 @@ class DatabaseAdminAsyncClient:
         [Backup][google.spanner.admin.database.v1.Backup].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1833,7 +1833,7 @@ class DatabaseAdminAsyncClient:
         the most recent ``create_time``.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -1964,7 +1964,7 @@ class DatabaseAdminAsyncClient:
         first restore to complete.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2108,7 +2108,7 @@ class DatabaseAdminAsyncClient:
         operations.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 
@@ -2231,7 +2231,7 @@ class DatabaseAdminAsyncClient:
         order starting from the most recently started operation.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_database_v1
 

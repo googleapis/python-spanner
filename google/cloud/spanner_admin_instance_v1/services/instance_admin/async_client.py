@@ -245,7 +245,7 @@ class InstanceAdminAsyncClient:
         given project.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -358,7 +358,7 @@ class InstanceAdminAsyncClient:
         configuration.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -461,7 +461,7 @@ class InstanceAdminAsyncClient:
     ) -> pagers.ListInstancesAsyncPager:
         r"""Lists all instances in the given project.
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -572,7 +572,7 @@ class InstanceAdminAsyncClient:
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -713,7 +713,7 @@ class InstanceAdminAsyncClient:
         successful.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -892,7 +892,7 @@ class InstanceAdminAsyncClient:
         [name][google.spanner.admin.instance.v1.Instance.name].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1033,7 +1033,7 @@ class InstanceAdminAsyncClient:
            is permanently deleted.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1129,7 +1129,7 @@ class InstanceAdminAsyncClient:
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1280,7 +1280,7 @@ class InstanceAdminAsyncClient:
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
@@ -1443,7 +1443,7 @@ class InstanceAdminAsyncClient:
         Cloud Project. Otherwise returns an empty set of permissions.
 
 
-        .. code-block::
+        .. code-block:: python
 
             from google.cloud import spanner_admin_instance_v1
 
