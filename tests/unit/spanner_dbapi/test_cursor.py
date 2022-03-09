@@ -37,11 +37,13 @@ class TestCursor(unittest.TestCase):
 
         return Connection(*args, **kwargs)
 
-    def _transaction_mock(self):
+    def _transaction_mock(self, mock_response=[]):
         from google.rpc.code_pb2 import OK
 
         transaction = mock.Mock(committed=False, rolled_back=False)
-        transaction.batch_update = mock.Mock(return_value=[mock.Mock(code=OK), []])
+        transaction.batch_update = mock.Mock(
+            return_value=[mock.Mock(code=OK), mock_response]
+        )
         return transaction
 
     def test_property_connection(self):
@@ -66,6 +68,7 @@ class TestCursor(unittest.TestCase):
 
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
+
         self.assertEqual(cursor.rowcount, _UNSET_COUNT)
 
     def test_callproc(self):
@@ -114,6 +117,38 @@ class TestCursor(unittest.TestCase):
         expected = 1234
         self.assertEqual(run_helper(expected), expected)
         self.assertEqual(cursor._row_count, expected)
+
+    def test_do_batch_update(self):
+        from google.cloud.spanner_dbapi import connect
+        from google.cloud.spanner_v1.param_types import INT64
+        from google.cloud.spanner_v1.types.spanner import Session
+
+        sql = "DELETE FROM table WHERE col1 = %s"
+
+        connection = connect("test-instance", "test-database")
+
+        connection.autocommit = True
+        transaction = self._transaction_mock(mock_response=[1, 1, 1])
+        cursor = connection.cursor()
+
+        with mock.patch(
+            "google.cloud.spanner_v1.services.spanner.client.SpannerClient.create_session",
+            return_value=Session(),
+        ):
+            with mock.patch(
+                "google.cloud.spanner_v1.session.Session.transaction",
+                return_value=transaction,
+            ):
+                cursor.executemany(sql, [(1,), (2,), (3,)])
+
+        transaction.batch_update.assert_called_once_with(
+            [
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 1}, {"a0": INT64}),
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 2}, {"a0": INT64}),
+                ("DELETE FROM table WHERE col1 = @a0", {"a0": 3}, {"a0": INT64}),
+            ]
+        )
+        self.assertEqual(cursor._row_count, 3)
 
     def test_execute_programming_error(self):
         from google.cloud.spanner_dbapi.exceptions import ProgrammingError
@@ -250,6 +285,13 @@ class TestCursor(unittest.TestCase):
         ):
             with self.assertRaises(IntegrityError):
                 cursor.execute(sql="sql")
+
+        with mock.patch(
+            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            side_effect=exceptions.OutOfRange("message"),
+        ):
+            with self.assertRaises(IntegrityError):
+                cursor.execute("sql")
 
     def test_execute_invalid_argument(self):
         from google.api_core import exceptions
@@ -493,7 +535,7 @@ class TestCursor(unittest.TestCase):
 
         transaction = mock.Mock(committed=False, rolled_back=False)
         transaction.batch_update = mock.Mock(
-            return_value=(mock.Mock(code=UNKNOWN, details=err_details), [])
+            return_value=(mock.Mock(code=UNKNOWN, message=err_details), [])
         )
 
         with mock.patch(
@@ -707,14 +749,9 @@ class TestCursor(unittest.TestCase):
         ) = mock.MagicMock()
         cursor = self._make_one(connection)
 
-        mock_snapshot.execute_sql.return_value = int(0)
+        mock_snapshot.execute_sql.return_value = ["0"]
         cursor._handle_DQL("sql", params=None)
-        self.assertEqual(cursor._row_count, 0)
-        self.assertIsNone(cursor._itr)
-
-        mock_snapshot.execute_sql.return_value = "0"
-        cursor._handle_DQL("sql", params=None)
-        self.assertEqual(cursor._result_set, "0")
+        self.assertEqual(cursor._result_set, ["0"])
         self.assertIsInstance(cursor._itr, utils.PeekIterator)
         self.assertEqual(cursor._row_count, _UNSET_COUNT)
 
@@ -828,37 +865,6 @@ class TestCursor(unittest.TestCase):
                     return_value=((1, 2, 3), None),
                 ):
                     cursor.execute("SELECT * FROM table_name")
-
-                retry_mock.assert_called_with()
-
-    @mock.patch("google.cloud.spanner_v1.Client")
-    def test_peek_iterator_aborted_autocommit(self, mock_client):
-        """
-        Checking that an Aborted exception is retried in case it happened while
-        streaming the first element with a PeekIterator in autocommit mode.
-        """
-        from google.api_core.exceptions import Aborted
-        from google.cloud.spanner_dbapi.connection import connect
-
-        connection = connect("test-instance", "test-database")
-
-        connection.autocommit = True
-        cursor = connection.cursor()
-        with mock.patch(
-            "google.cloud.spanner_dbapi.utils.PeekIterator.__init__",
-            side_effect=(Aborted("Aborted"), None),
-        ):
-            with mock.patch(
-                "google.cloud.spanner_dbapi.connection.Connection.retry_transaction"
-            ) as retry_mock:
-                with mock.patch(
-                    "google.cloud.spanner_dbapi.connection.Connection.run_statement",
-                    return_value=((1, 2, 3), None),
-                ):
-                    with mock.patch(
-                        "google.cloud.spanner_v1.database.Database.snapshot"
-                    ):
-                        cursor.execute("SELECT * FROM table_name")
 
                 retry_mock.assert_called_with()
 

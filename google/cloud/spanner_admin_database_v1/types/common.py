@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,8 +21,20 @@ from google.rpc import status_pb2  # type: ignore
 
 __protobuf__ = proto.module(
     package="google.spanner.admin.database.v1",
-    manifest={"OperationProgress", "EncryptionConfig", "EncryptionInfo",},
+    manifest={
+        "DatabaseDialect",
+        "OperationProgress",
+        "EncryptionConfig",
+        "EncryptionInfo",
+    },
 )
+
+
+class DatabaseDialect(proto.Enum):
+    r"""Indicates the dialect type of a database."""
+    DATABASE_DIALECT_UNSPECIFIED = 0
+    GOOGLE_STANDARD_SQL = 1
+    POSTGRESQL = 2
 
 
 class OperationProgress(proto.Message):
@@ -47,6 +59,7 @@ class OperationProgress(proto.Message):
 
 class EncryptionConfig(proto.Message):
     r"""Encryption configuration for a Cloud Spanner database.
+
     Attributes:
         kms_key_name (str):
             The Cloud KMS key to be used for encrypting and decrypting

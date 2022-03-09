@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -42,6 +42,7 @@ __protobuf__ = proto.module(
 
 class Backup(proto.Message):
     r"""A backup of a Cloud Spanner database.
+
     Attributes:
         database (str):
             Required for the
@@ -103,6 +104,9 @@ class Backup(proto.Message):
         encryption_info (google.cloud.spanner_admin_database_v1.types.EncryptionInfo):
             Output only. The encryption information for
             the backup.
+        database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
+            Output only. The database dialect information
+            for the backup.
     """
 
     class State(proto.Enum):
@@ -124,6 +128,7 @@ class Backup(proto.Message):
     encryption_info = proto.Field(
         proto.MESSAGE, number=8, message=common.EncryptionInfo,
     )
+    database_dialect = proto.Field(proto.ENUM, number=10, enum=common.DatabaseDialect,)
 
 
 class CreateBackupRequest(proto.Message):
@@ -461,6 +466,7 @@ class ListBackupOperationsResponse(proto.Message):
 
 class BackupInfo(proto.Message):
     r"""Information about a backup.
+
     Attributes:
         backup (str):
             Name of the backup.
@@ -491,6 +497,7 @@ class BackupInfo(proto.Message):
 
 class CreateBackupEncryptionConfig(proto.Message):
     r"""Encryption configuration for the backup to create.
+
     Attributes:
         encryption_type (google.cloud.spanner_admin_database_v1.types.CreateBackupEncryptionConfig.EncryptionType):
             Required. The encryption type of the backup.

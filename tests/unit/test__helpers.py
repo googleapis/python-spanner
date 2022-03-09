@@ -146,11 +146,9 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.bool_value, True)
 
     def test_w_int(self):
-        import six
         from google.protobuf.struct_pb2 import Value
 
-        for int_type in six.integer_types:  # include 'long' on Python 2
-            value_pb = self._callFUT(int_type(42))
+        value_pb = self._callFUT(42)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "42")
 
@@ -569,13 +567,21 @@ class Test_parse_value_pb(unittest.TestCase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        VALUE = json.dumps(
-            {"id": 27863, "Name": "Anamika"}, sort_keys=True, separators=(",", ":")
-        )
+        VALUE = {"id": 27863, "Name": "Anamika"}
+        str_repr = json.dumps(VALUE, sort_keys=True, separators=(",", ":"))
+
         field_type = Type(code=TypeCode.JSON)
-        value_pb = Value(string_value=VALUE)
+        value_pb = Value(string_value=str_repr)
 
         self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
+
+        VALUE = None
+        str_repr = json.dumps(VALUE, sort_keys=True, separators=(",", ":"))
+
+        field_type = Type(code=TypeCode.JSON)
+        value_pb = Value(string_value=str_repr)
+
+        self.assertEqual(self._callFUT(value_pb, field_type), {})
 
     def test_w_unknown_type(self):
         from google.protobuf.struct_pb2 import Value

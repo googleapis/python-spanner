@@ -18,8 +18,6 @@ import datetime
 import decimal
 import math
 
-import six
-
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
 
@@ -28,7 +26,7 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
-
+from google.cloud.spanner_v1 import JsonObject
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -139,7 +137,7 @@ def _make_value_pb(value):
         return Value(list_value=_make_list_value_pb(value))
     if isinstance(value, bool):
         return Value(bool_value=value)
-    if isinstance(value, six.integer_types):
+    if isinstance(value, int):
         return Value(string_value=str(value))
     if isinstance(value, float):
         if math.isnan(value):
@@ -156,16 +154,19 @@ def _make_value_pb(value):
         return Value(string_value=_datetime_to_rfc3339(value, ignore_zone=False))
     if isinstance(value, datetime.date):
         return Value(string_value=value.isoformat())
-    if isinstance(value, six.binary_type):
+    if isinstance(value, bytes):
         value = _try_to_coerce_bytes(value)
         return Value(string_value=value)
-    if isinstance(value, six.text_type):
+    if isinstance(value, str):
         return Value(string_value=value)
     if isinstance(value, ListValue):
         return Value(list_value=value)
     if isinstance(value, decimal.Decimal):
         _assert_numeric_precision_and_scale(value)
         return Value(string_value=str(value))
+    if isinstance(value, JsonObject):
+        return Value(string_value=value.serialize())
+
     raise ValueError("Unknown type: %s" % (value,))
 
 
@@ -240,7 +241,7 @@ def _parse_value_pb(value_pb, field_type):
     elif type_code == TypeCode.NUMERIC:
         return decimal.Decimal(value_pb.string_value)
     elif type_code == TypeCode.JSON:
-        return value_pb.string_value
+        return JsonObject.from_str(value_pb.string_value)
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
 

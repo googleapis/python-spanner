@@ -22,7 +22,7 @@ import setuptools
 
 name = "google-cloud-spanner"
 description = "Cloud Spanner API client library"
-version = "3.9.0"
+version = "3.13.0"
 # Should be one of:
 # 'Development Status :: 3 - Alpha'
 # 'Development Status :: 4 - Beta'
@@ -32,13 +32,13 @@ dependencies = [
     # NOTE: Maintainers, please do not require google-api-core>=2.x.x
     # Until this issue is closed
     # https://github.com/googleapis/google-cloud-python/issues/10566
-    "google-api-core[grpc] >= 1.26.0, <3.0.0dev",
+    "google-api-core[grpc] >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
     # NOTE: Maintainers, please do not require google-cloud-core>=2.x.x
     # Until this issue is closed
     # https://github.com/googleapis/google-cloud-python/issues/10566
     "google-cloud-core >= 1.4.1, < 3.0dev",
     "grpc-google-iam-v1 >= 0.12.3, < 0.13dev",
-    "proto-plus >= 1.11.0",
+    "proto-plus >= 1.15.0, != 1.19.6",
     "sqlparse >= 0.3.0",
     "packaging >= 14.3",
 ]
@@ -92,6 +92,8 @@ setuptools.setup(
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
         "Operating System :: OS Independent",
         "Topic :: Internet",
     ],

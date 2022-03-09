@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,15 +16,20 @@
 from collections import OrderedDict
 import functools
 import re
-from typing import Dict, Sequence, Tuple, Type, Union
+from typing import Dict, Optional, Sequence, Tuple, Type, Union
 import pkg_resources
 
-import google.api_core.client_options as ClientOptions  # type: ignore
-from google.api_core import exceptions as core_exceptions  # type: ignore
-from google.api_core import gapic_v1  # type: ignore
-from google.api_core import retry as retries  # type: ignore
+from google.api_core.client_options import ClientOptions
+from google.api_core import exceptions as core_exceptions
+from google.api_core import gapic_v1
+from google.api_core import retry as retries
 from google.auth import credentials as ga_credentials  # type: ignore
 from google.oauth2 import service_account  # type: ignore
+
+try:
+    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault]
+except AttributeError:  # pragma: NO COVER
+    OptionalRetry = Union[retries.Retry, object]  # type: ignore
 
 from google.api_core import operation  # type: ignore
 from google.api_core import operation_async  # type: ignore
@@ -131,6 +136,42 @@ class InstanceAdminAsyncClient:
 
     from_service_account_json = from_service_account_file
 
+    @classmethod
+    def get_mtls_endpoint_and_cert_source(
+        cls, client_options: Optional[ClientOptions] = None
+    ):
+        """Return the API endpoint and client cert source for mutual TLS.
+
+        The client cert source is determined in the following order:
+        (1) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is not "true", the
+        client cert source is None.
+        (2) if `client_options.client_cert_source` is provided, use the provided one; if the
+        default client cert source exists, use the default one; otherwise the client cert
+        source is None.
+
+        The API endpoint is determined in the following order:
+        (1) if `client_options.api_endpoint` if provided, use the provided one.
+        (2) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is "always", use the
+        default mTLS endpoint; if the environment variabel is "never", use the default API
+        endpoint; otherwise if client cert source exists, use the default mTLS endpoint, otherwise
+        use the default API endpoint.
+
+        More details can be found at https://google.aip.dev/auth/4114.
+
+        Args:
+            client_options (google.api_core.client_options.ClientOptions): Custom options for the
+                client. Only the `api_endpoint` and `client_cert_source` properties may be used
+                in this method.
+
+        Returns:
+            Tuple[str, Callable[[], Tuple[bytes, bytes]]]: returns the API endpoint and the
+                client cert source to use.
+
+        Raises:
+            google.auth.exceptions.MutualTLSChannelError: If any errors happen.
+        """
+        return InstanceAdminClient.get_mtls_endpoint_and_cert_source(client_options)  # type: ignore
+
     @property
     def transport(self) -> InstanceAdminTransport:
         """Returns the transport used by the client instance.
@@ -193,18 +234,39 @@ class InstanceAdminAsyncClient:
 
     async def list_instance_configs(
         self,
-        request: spanner_instance_admin.ListInstanceConfigsRequest = None,
+        request: Union[spanner_instance_admin.ListInstanceConfigsRequest, dict] = None,
         *,
         parent: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstanceConfigsAsyncPager:
         r"""Lists the supported instance configurations for a
         given project.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instance_configs():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstanceConfigsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instance_configs(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsRequest, dict]):
                 The request object. The request for
                 [ListInstanceConfigs][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigs].
             parent (:class:`str`):
@@ -231,7 +293,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
@@ -285,18 +347,38 @@ class InstanceAdminAsyncClient:
 
     async def get_instance_config(
         self,
-        request: spanner_instance_admin.GetInstanceConfigRequest = None,
+        request: Union[spanner_instance_admin.GetInstanceConfigRequest, dict] = None,
         *,
         name: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.InstanceConfig:
         r"""Gets information about a particular instance
         configuration.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance_config():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceConfigRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance_config(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.GetInstanceConfigRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceConfigRequest, dict]):
                 The request object. The request for
                 [GetInstanceConfigRequest][google.spanner.admin.instance.v1.InstanceAdmin.GetInstanceConfig].
             name (:class:`str`):
@@ -322,7 +404,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -370,17 +452,37 @@ class InstanceAdminAsyncClient:
 
     async def list_instances(
         self,
-        request: spanner_instance_admin.ListInstancesRequest = None,
+        request: Union[spanner_instance_admin.ListInstancesRequest, dict] = None,
         *,
         parent: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstancesAsyncPager:
         r"""Lists all instances in the given project.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instances():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstancesRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instances(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.ListInstancesRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstancesRequest, dict]):
                 The request object. The request for
                 [ListInstances][google.spanner.admin.instance.v1.InstanceAdmin.ListInstances].
             parent (:class:`str`):
@@ -407,7 +509,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
@@ -461,17 +563,36 @@ class InstanceAdminAsyncClient:
 
     async def get_instance(
         self,
-        request: spanner_instance_admin.GetInstanceRequest = None,
+        request: Union[spanner_instance_admin.GetInstanceRequest, dict] = None,
         *,
         name: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.GetInstanceRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceRequest, dict]):
                 The request object. The request for
                 [GetInstance][google.spanner.admin.instance.v1.InstanceAdmin.GetInstance].
             name (:class:`str`):
@@ -495,7 +616,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -543,12 +664,12 @@ class InstanceAdminAsyncClient:
 
     async def create_instance(
         self,
-        request: spanner_instance_admin.CreateInstanceRequest = None,
+        request: Union[spanner_instance_admin.CreateInstanceRequest, dict] = None,
         *,
         parent: str = None,
         instance_id: str = None,
         instance: spanner_instance_admin.Instance = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation_async.AsyncOperation:
@@ -591,8 +712,39 @@ class InstanceAdminAsyncClient:
         is [Instance][google.spanner.admin.instance.v1.Instance], if
         successful.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_create_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.CreateInstanceRequest(
+                    parent="parent_value",
+                    instance_id="instance_id_value",
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.create_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.CreateInstanceRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.CreateInstanceRequest, dict]):
                 The request object. The request for
                 [CreateInstance][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstance].
             parent (:class:`str`):
@@ -635,7 +787,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, instance_id, instance])
         if request is not None and has_flattened_params:
@@ -685,11 +837,11 @@ class InstanceAdminAsyncClient:
 
     async def update_instance(
         self,
-        request: spanner_instance_admin.UpdateInstanceRequest = None,
+        request: Union[spanner_instance_admin.UpdateInstanceRequest, dict] = None,
         *,
         instance: spanner_instance_admin.Instance = None,
         field_mask: field_mask_pb2.FieldMask = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation_async.AsyncOperation:
@@ -739,8 +891,37 @@ class InstanceAdminAsyncClient:
         on resource
         [name][google.spanner.admin.instance.v1.Instance.name].
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_update_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.UpdateInstanceRequest(
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.update_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.UpdateInstanceRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.UpdateInstanceRequest, dict]):
                 The request object. The request for
                 [UpdateInstance][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstance].
             instance (:class:`google.cloud.spanner_admin_instance_v1.types.Instance`):
@@ -782,7 +963,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([instance, field_mask])
         if request is not None and has_flattened_params:
@@ -832,10 +1013,10 @@ class InstanceAdminAsyncClient:
 
     async def delete_instance(
         self,
-        request: spanner_instance_admin.DeleteInstanceRequest = None,
+        request: Union[spanner_instance_admin.DeleteInstanceRequest, dict] = None,
         *,
         name: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
@@ -851,8 +1032,25 @@ class InstanceAdminAsyncClient:
            irrevocably disappear from the API. All data in the databases
            is permanently deleted.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_delete_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.DeleteInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_instance(request=request)
+
         Args:
-            request (:class:`google.cloud.spanner_admin_instance_v1.types.DeleteInstanceRequest`):
+            request (Union[google.cloud.spanner_admin_instance_v1.types.DeleteInstanceRequest, dict]):
                 The request object. The request for
                 [DeleteInstance][google.spanner.admin.instance.v1.InstanceAdmin.DeleteInstance].
             name (:class:`str`):
@@ -870,7 +1068,7 @@ class InstanceAdminAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -917,10 +1115,10 @@ class InstanceAdminAsyncClient:
 
     async def set_iam_policy(
         self,
-        request: iam_policy_pb2.SetIamPolicyRequest = None,
+        request: Union[iam_policy_pb2.SetIamPolicyRequest, dict] = None,
         *,
         resource: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> policy_pb2.Policy:
@@ -930,8 +1128,28 @@ class InstanceAdminAsyncClient:
         Authorization requires ``spanner.instances.setIamPolicy`` on
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_set_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.SetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.set_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.iam.v1.iam_policy_pb2.SetIamPolicyRequest`):
+            request (Union[google.iam.v1.iam_policy_pb2.SetIamPolicyRequest, dict]):
                 The request object. Request message for `SetIamPolicy`
                 method.
             resource (:class:`str`):
@@ -1009,7 +1227,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
@@ -1047,10 +1265,10 @@ class InstanceAdminAsyncClient:
 
     async def get_iam_policy(
         self,
-        request: iam_policy_pb2.GetIamPolicyRequest = None,
+        request: Union[iam_policy_pb2.GetIamPolicyRequest, dict] = None,
         *,
         resource: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> policy_pb2.Policy:
@@ -1061,8 +1279,28 @@ class InstanceAdminAsyncClient:
         Authorization requires ``spanner.instances.getIamPolicy`` on
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.get_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.iam.v1.iam_policy_pb2.GetIamPolicyRequest`):
+            request (Union[google.iam.v1.iam_policy_pb2.GetIamPolicyRequest, dict]):
                 The request object. Request message for `GetIamPolicy`
                 method.
             resource (:class:`str`):
@@ -1140,7 +1378,7 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
@@ -1188,11 +1426,11 @@ class InstanceAdminAsyncClient:
 
     async def test_iam_permissions(
         self,
-        request: iam_policy_pb2.TestIamPermissionsRequest = None,
+        request: Union[iam_policy_pb2.TestIamPermissionsRequest, dict] = None,
         *,
         resource: str = None,
         permissions: Sequence[str] = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> iam_policy_pb2.TestIamPermissionsResponse:
@@ -1204,8 +1442,29 @@ class InstanceAdminAsyncClient:
         ``spanner.instances.list`` permission on the containing Google
         Cloud Project. Otherwise returns an empty set of permissions.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_test_iam_permissions():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.TestIamPermissionsRequest(
+                    resource="resource_value",
+                    permissions=['permissions_value_1', 'permissions_value_2'],
+                )
+
+                # Make the request
+                response = client.test_iam_permissions(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (:class:`google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest`):
+            request (Union[google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest, dict]):
                 The request object. Request message for
                 `TestIamPermissions` method.
             resource (:class:`str`):
@@ -1237,7 +1496,7 @@ class InstanceAdminAsyncClient:
                 Response message for TestIamPermissions method.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource, permissions])
         if request is not None and has_flattened_params:
@@ -1274,6 +1533,12 @@ class InstanceAdminAsyncClient:
 
         # Done; return the response.
         return response
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        await self.transport.close()
 
 
 try:

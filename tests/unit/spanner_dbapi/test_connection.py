@@ -14,6 +14,7 @@
 
 """Cloud Spanner DB-API Connection class unit tests."""
 
+import datetime
 import mock
 import unittest
 import warnings
@@ -39,14 +40,14 @@ class TestConnection(unittest.TestCase):
 
         return ClientInfo(user_agent=USER_AGENT)
 
-    def _make_connection(self):
+    def _make_connection(self, **kwargs):
         from google.cloud.spanner_dbapi import Connection
         from google.cloud.spanner_v1.instance import Instance
 
         # We don't need a real Client object to test the constructor
         instance = Instance(INSTANCE, client=None)
         database = instance.database(DATABASE)
-        return Connection(instance, database)
+        return Connection(instance, database, **kwargs)
 
     @mock.patch("google.cloud.spanner_dbapi.connection.Connection.commit")
     def test_autocommit_setter_transaction_not_started(self, mock_commit):
@@ -105,6 +106,42 @@ class TestConnection(unittest.TestCase):
         self.assertIsInstance(connection.instance, Instance)
         self.assertEqual(connection.instance, connection._instance)
 
+    def test_read_only_connection(self):
+        connection = self._make_connection(read_only=True)
+        self.assertTrue(connection.read_only)
+
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        with self.assertRaisesRegex(
+            ValueError,
+            "Connection read/write mode can't be changed while a transaction is in progress. "
+            "Commit or rollback the current transaction and try again.",
+        ):
+            connection.read_only = False
+
+        connection._transaction = None
+        connection.read_only = False
+        self.assertFalse(connection.read_only)
+
+    def test_read_only_not_retried(self):
+        """
+        Testing the unlikely case of a read-only transaction
+        failed with Aborted exception. In this case the
+        transaction should not be automatically retried.
+        """
+        from google.api_core.exceptions import Aborted
+
+        connection = self._make_connection(read_only=True)
+        connection.retry_transaction = mock.Mock()
+
+        cursor = connection.cursor()
+        cursor._itr = mock.Mock(__next__=mock.Mock(side_effect=Aborted("Aborted"),))
+
+        cursor.fetchone()
+        cursor.fetchall()
+        cursor.fetchmany(5)
+
+        connection.retry_transaction.assert_not_called()
+
     @staticmethod
     def _make_pool():
         from google.cloud.spanner_v1.pool import AbstractSessionPool
@@ -159,6 +196,32 @@ class TestConnection(unittest.TestCase):
 
         connection._autocommit = True
         self.assertIsNone(connection.transaction_checkout())
+
+    def test_snapshot_checkout(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE, DATABASE, read_only=True)
+        connection.autocommit = False
+
+        session_checkout = mock.MagicMock(autospec=True)
+        connection._session_checkout = session_checkout
+
+        snapshot = connection.snapshot_checkout()
+        session_checkout.assert_called_once()
+
+        self.assertEqual(snapshot, connection.snapshot_checkout())
+
+        connection.commit()
+        self.assertIsNone(connection._snapshot)
+
+        connection.snapshot_checkout()
+        self.assertIsNotNone(connection._snapshot)
+
+        connection.rollback()
+        self.assertIsNone(connection._snapshot)
+
+        connection.autocommit = True
+        self.assertIsNone(connection.snapshot_checkout())
 
     @mock.patch("google.cloud.spanner_v1.Client")
     def test_close(self, mock_client):
@@ -626,9 +689,6 @@ class TestConnection(unittest.TestCase):
         run_mock.assert_called_with(statement, retried=True)
 
     def test_validate_ok(self):
-        def exit_func(self, exc_type, exc_value, traceback):
-            pass
-
         connection = self._make_connection()
 
         # mock snapshot context manager
@@ -637,7 +697,7 @@ class TestConnection(unittest.TestCase):
 
         snapshot_ctx = mock.Mock()
         snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
-        snapshot_ctx.__exit__ = exit_func
+        snapshot_ctx.__exit__ = exit_ctx_func
         snapshot_method = mock.Mock(return_value=snapshot_ctx)
 
         connection.database.snapshot = snapshot_method
@@ -648,9 +708,6 @@ class TestConnection(unittest.TestCase):
     def test_validate_fail(self):
         from google.cloud.spanner_dbapi.exceptions import OperationalError
 
-        def exit_func(self, exc_type, exc_value, traceback):
-            pass
-
         connection = self._make_connection()
 
         # mock snapshot context manager
@@ -659,7 +716,7 @@ class TestConnection(unittest.TestCase):
 
         snapshot_ctx = mock.Mock()
         snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
-        snapshot_ctx.__exit__ = exit_func
+        snapshot_ctx.__exit__ = exit_ctx_func
         snapshot_method = mock.Mock(return_value=snapshot_ctx)
 
         connection.database.snapshot = snapshot_method
@@ -672,9 +729,6 @@ class TestConnection(unittest.TestCase):
     def test_validate_error(self):
         from google.cloud.exceptions import NotFound
 
-        def exit_func(self, exc_type, exc_value, traceback):
-            pass
-
         connection = self._make_connection()
 
         # mock snapshot context manager
@@ -683,7 +737,7 @@ class TestConnection(unittest.TestCase):
 
         snapshot_ctx = mock.Mock()
         snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
-        snapshot_ctx.__exit__ = exit_func
+        snapshot_ctx.__exit__ = exit_ctx_func
         snapshot_method = mock.Mock(return_value=snapshot_ctx)
 
         connection.database.snapshot = snapshot_method
@@ -701,3 +755,117 @@ class TestConnection(unittest.TestCase):
 
         with self.assertRaises(InterfaceError):
             connection.validate()
+
+    def test_staleness_invalid_value(self):
+        """Check that `staleness` property accepts only correct values."""
+        connection = self._make_connection()
+
+        # incorrect staleness type
+        with self.assertRaises(ValueError):
+            connection.staleness = {"something": 4}
+
+        # no expected staleness types
+        with self.assertRaises(ValueError):
+            connection.staleness = {}
+
+    def test_staleness_inside_transaction(self):
+        """
+        Check that it's impossible to change the `staleness`
+        option if a transaction is in progress.
+        """
+        connection = self._make_connection()
+        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+
+        with self.assertRaises(ValueError):
+            connection.staleness = {"read_timestamp": datetime.datetime(2021, 9, 21)}
+
+    def test_staleness_multi_use(self):
+        """
+        Check that `staleness` option is correctly
+        sent to the `Snapshot()` constructor.
+
+        READ_ONLY, NOT AUTOCOMMIT
+        """
+        timestamp = datetime.datetime(2021, 9, 20)
+
+        connection = self._make_connection()
+        connection._session = "session"
+        connection.read_only = True
+        connection.staleness = {"read_timestamp": timestamp}
+
+        with mock.patch(
+            "google.cloud.spanner_dbapi.connection.Snapshot"
+        ) as snapshot_mock:
+            connection.snapshot_checkout()
+
+        snapshot_mock.assert_called_with(
+            "session", multi_use=True, read_timestamp=timestamp
+        )
+
+    def test_staleness_single_use_autocommit(self):
+        """
+        Check that `staleness` option is correctly
+        sent to the snapshot context manager.
+
+        NOT READ_ONLY, AUTOCOMMIT
+        """
+        timestamp = datetime.datetime(2021, 9, 20)
+
+        connection = self._make_connection()
+        connection._session_checkout = mock.MagicMock(autospec=True)
+
+        connection.autocommit = True
+        connection.staleness = {"read_timestamp": timestamp}
+
+        # mock snapshot context manager
+        snapshot_obj = mock.Mock()
+        snapshot_obj.execute_sql = mock.Mock(return_value=[1])
+
+        snapshot_ctx = mock.Mock()
+        snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
+        snapshot_ctx.__exit__ = exit_ctx_func
+        snapshot_method = mock.Mock(return_value=snapshot_ctx)
+
+        connection.database.snapshot = snapshot_method
+
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1")
+
+        connection.database.snapshot.assert_called_with(read_timestamp=timestamp)
+
+    def test_staleness_single_use_readonly_autocommit(self):
+        """
+        Check that `staleness` option is correctly sent to the
+        snapshot context manager while in `autocommit` mode.
+
+        READ_ONLY, AUTOCOMMIT
+        """
+        timestamp = datetime.datetime(2021, 9, 20)
+
+        connection = self._make_connection()
+        connection.autocommit = True
+        connection.read_only = True
+        connection._session_checkout = mock.MagicMock(autospec=True)
+
+        connection.staleness = {"read_timestamp": timestamp}
+
+        # mock snapshot context manager
+        snapshot_obj = mock.Mock()
+        snapshot_obj.execute_sql = mock.Mock(return_value=[1])
+
+        snapshot_ctx = mock.Mock()
+        snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
+        snapshot_ctx.__exit__ = exit_ctx_func
+        snapshot_method = mock.Mock(return_value=snapshot_ctx)
+
+        connection.database.snapshot = snapshot_method
+
+        cursor = connection.cursor()
+        cursor.execute("SELECT 1")
+
+        connection.database.snapshot.assert_called_with(read_timestamp=timestamp)
+
+
+def exit_ctx_func(self, exc_type, exc_value, traceback):
+    """Context __exit__ method mock."""
+    pass

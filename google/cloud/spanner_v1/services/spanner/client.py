@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,21 +14,25 @@
 # limitations under the License.
 #
 from collections import OrderedDict
-from distutils import util
 import os
 import re
-from typing import Callable, Dict, Optional, Iterable, Sequence, Tuple, Type, Union
+from typing import Dict, Optional, Iterable, Sequence, Tuple, Type, Union
 import pkg_resources
 
-from google.api_core import client_options as client_options_lib  # type: ignore
-from google.api_core import exceptions as core_exceptions  # type: ignore
-from google.api_core import gapic_v1  # type: ignore
-from google.api_core import retry as retries  # type: ignore
+from google.api_core import client_options as client_options_lib
+from google.api_core import exceptions as core_exceptions
+from google.api_core import gapic_v1
+from google.api_core import retry as retries
 from google.auth import credentials as ga_credentials  # type: ignore
 from google.auth.transport import mtls  # type: ignore
 from google.auth.transport.grpc import SslCredentials  # type: ignore
 from google.auth.exceptions import MutualTLSChannelError  # type: ignore
 from google.oauth2 import service_account  # type: ignore
+
+try:
+    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault]
+except AttributeError:  # pragma: NO COVER
+    OptionalRetry = Union[retries.Retry, object]  # type: ignore
 
 from google.cloud.spanner_v1.services.spanner import pagers
 from google.cloud.spanner_v1.types import commit_response
@@ -254,6 +258,73 @@ class SpannerClient(metaclass=SpannerClientMeta):
         m = re.match(r"^projects/(?P<project>.+?)/locations/(?P<location>.+?)$", path)
         return m.groupdict() if m else {}
 
+    @classmethod
+    def get_mtls_endpoint_and_cert_source(
+        cls, client_options: Optional[client_options_lib.ClientOptions] = None
+    ):
+        """Return the API endpoint and client cert source for mutual TLS.
+
+        The client cert source is determined in the following order:
+        (1) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is not "true", the
+        client cert source is None.
+        (2) if `client_options.client_cert_source` is provided, use the provided one; if the
+        default client cert source exists, use the default one; otherwise the client cert
+        source is None.
+
+        The API endpoint is determined in the following order:
+        (1) if `client_options.api_endpoint` if provided, use the provided one.
+        (2) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is "always", use the
+        default mTLS endpoint; if the environment variabel is "never", use the default API
+        endpoint; otherwise if client cert source exists, use the default mTLS endpoint, otherwise
+        use the default API endpoint.
+
+        More details can be found at https://google.aip.dev/auth/4114.
+
+        Args:
+            client_options (google.api_core.client_options.ClientOptions): Custom options for the
+                client. Only the `api_endpoint` and `client_cert_source` properties may be used
+                in this method.
+
+        Returns:
+            Tuple[str, Callable[[], Tuple[bytes, bytes]]]: returns the API endpoint and the
+                client cert source to use.
+
+        Raises:
+            google.auth.exceptions.MutualTLSChannelError: If any errors happen.
+        """
+        if client_options is None:
+            client_options = client_options_lib.ClientOptions()
+        use_client_cert = os.getenv("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false")
+        use_mtls_endpoint = os.getenv("GOOGLE_API_USE_MTLS_ENDPOINT", "auto")
+        if use_client_cert not in ("true", "false"):
+            raise ValueError(
+                "Environment variable `GOOGLE_API_USE_CLIENT_CERTIFICATE` must be either `true` or `false`"
+            )
+        if use_mtls_endpoint not in ("auto", "never", "always"):
+            raise MutualTLSChannelError(
+                "Environment variable `GOOGLE_API_USE_MTLS_ENDPOINT` must be `never`, `auto` or `always`"
+            )
+
+        # Figure out the client cert source to use.
+        client_cert_source = None
+        if use_client_cert == "true":
+            if client_options.client_cert_source:
+                client_cert_source = client_options.client_cert_source
+            elif mtls.has_default_client_cert_source():
+                client_cert_source = mtls.default_client_cert_source()
+
+        # Figure out which api endpoint to use.
+        if client_options.api_endpoint is not None:
+            api_endpoint = client_options.api_endpoint
+        elif use_mtls_endpoint == "always" or (
+            use_mtls_endpoint == "auto" and client_cert_source
+        ):
+            api_endpoint = cls.DEFAULT_MTLS_ENDPOINT
+        else:
+            api_endpoint = cls.DEFAULT_ENDPOINT
+
+        return api_endpoint, client_cert_source
+
     def __init__(
         self,
         *,
@@ -304,50 +375,22 @@ class SpannerClient(metaclass=SpannerClientMeta):
         if client_options is None:
             client_options = client_options_lib.ClientOptions()
 
-        # Create SSL credentials for mutual TLS if needed.
-        use_client_cert = bool(
-            util.strtobool(os.getenv("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false"))
+        api_endpoint, client_cert_source_func = self.get_mtls_endpoint_and_cert_source(
+            client_options
         )
 
-        client_cert_source_func = None
-        is_mtls = False
-        if use_client_cert:
-            if client_options.client_cert_source:
-                is_mtls = True
-                client_cert_source_func = client_options.client_cert_source
-            else:
-                is_mtls = mtls.has_default_client_cert_source()
-                if is_mtls:
-                    client_cert_source_func = mtls.default_client_cert_source()
-                else:
-                    client_cert_source_func = None
-
-        # Figure out which api endpoint to use.
-        if client_options.api_endpoint is not None:
-            api_endpoint = client_options.api_endpoint
-        else:
-            use_mtls_env = os.getenv("GOOGLE_API_USE_MTLS_ENDPOINT", "auto")
-            if use_mtls_env == "never":
-                api_endpoint = self.DEFAULT_ENDPOINT
-            elif use_mtls_env == "always":
-                api_endpoint = self.DEFAULT_MTLS_ENDPOINT
-            elif use_mtls_env == "auto":
-                if is_mtls:
-                    api_endpoint = self.DEFAULT_MTLS_ENDPOINT
-                else:
-                    api_endpoint = self.DEFAULT_ENDPOINT
-            else:
-                raise MutualTLSChannelError(
-                    "Unsupported GOOGLE_API_USE_MTLS_ENDPOINT value. Accepted "
-                    "values: never, auto, always"
-                )
+        api_key_value = getattr(client_options, "api_key", None)
+        if api_key_value and credentials:
+            raise ValueError(
+                "client_options.api_key and credentials are mutually exclusive"
+            )
 
         # Save or instantiate the transport.
         # Ordinarily, we provide the transport, but allowing a custom transport
         # instance provides an extensibility point for unusual situations.
         if isinstance(transport, SpannerTransport):
             # transport is a SpannerTransport instance.
-            if credentials or client_options.credentials_file:
+            if credentials or client_options.credentials_file or api_key_value:
                 raise ValueError(
                     "When providing a transport instance, "
                     "provide its credentials directly."
@@ -359,6 +402,15 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 )
             self._transport = transport
         else:
+            import google.auth._default  # type: ignore
+
+            if api_key_value and hasattr(
+                google.auth._default, "get_api_key_credentials"
+            ):
+                credentials = google.auth._default.get_api_key_credentials(
+                    api_key_value
+                )
+
             Transport = type(self).get_transport_class(transport)
             self._transport = Transport(
                 credentials=credentials,
@@ -368,18 +420,15 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 client_cert_source_for_mtls=client_cert_source_func,
                 quota_project_id=client_options.quota_project_id,
                 client_info=client_info,
-                always_use_jwt_access=(
-                    Transport == type(self).get_transport_class("grpc")
-                    or Transport == type(self).get_transport_class("grpc_asyncio")
-                ),
+                always_use_jwt_access=True,
             )
 
     def create_session(
         self,
-        request: spanner.CreateSessionRequest = None,
+        request: Union[spanner.CreateSessionRequest, dict] = None,
         *,
         database: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
@@ -403,8 +452,28 @@ class SpannerClient(metaclass=SpannerClientMeta):
         Idle sessions can be kept alive by sending a trivial SQL query
         periodically, e.g., ``"SELECT 1"``.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_create_session():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.CreateSessionRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                response = client.create_session(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.CreateSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.CreateSessionRequest, dict]):
                 The request object. The request for
                 [CreateSession][google.spanner.v1.Spanner.CreateSession].
             database (str):
@@ -425,7 +494,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -463,11 +532,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def batch_create_sessions(
         self,
-        request: spanner.BatchCreateSessionsRequest = None,
+        request: Union[spanner.BatchCreateSessionsRequest, dict] = None,
         *,
         database: str = None,
         session_count: int = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.BatchCreateSessionsResponse:
@@ -476,8 +545,29 @@ class SpannerClient(metaclass=SpannerClientMeta):
         the clients. See https://goo.gl/TgSFN2 for best
         practices on session cache management.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_batch_create_sessions():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.BatchCreateSessionsRequest(
+                    database="database_value",
+                    session_count=1420,
+                )
+
+                # Make the request
+                response = client.batch_create_sessions(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.BatchCreateSessionsRequest):
+            request (Union[google.cloud.spanner_v1.types.BatchCreateSessionsRequest, dict]):
                 The request object. The request for
                 [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
             database (str):
@@ -512,7 +602,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, session_count])
         if request is not None and has_flattened_params:
@@ -552,10 +642,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def get_session(
         self,
-        request: spanner.GetSessionRequest = None,
+        request: Union[spanner.GetSessionRequest, dict] = None,
         *,
         name: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
@@ -563,8 +653,28 @@ class SpannerClient(metaclass=SpannerClientMeta):
         exist. This is mainly useful for determining whether a session
         is still alive.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_get_session():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.GetSessionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_session(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.GetSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.GetSessionRequest, dict]):
                 The request object. The request for
                 [GetSession][google.spanner.v1.Spanner.GetSession].
             name (str):
@@ -585,7 +695,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -623,17 +733,37 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def list_sessions(
         self,
-        request: spanner.ListSessionsRequest = None,
+        request: Union[spanner.ListSessionsRequest, dict] = None,
         *,
         database: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListSessionsPager:
         r"""Lists all sessions in a given database.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_list_sessions():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ListSessionsRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                page_result = client.list_sessions(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ListSessionsRequest):
+            request (Union[google.cloud.spanner_v1.types.ListSessionsRequest, dict]):
                 The request object. The request for
                 [ListSessions][google.spanner.v1.Spanner.ListSessions].
             database (str):
@@ -659,7 +789,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -703,10 +833,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def delete_session(
         self,
-        request: spanner.DeleteSessionRequest = None,
+        request: Union[spanner.DeleteSessionRequest, dict] = None,
         *,
         name: str = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
@@ -714,8 +844,25 @@ class SpannerClient(metaclass=SpannerClientMeta):
         with it. This will asynchronously trigger cancellation
         of any operations that are running with this session.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_delete_session():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.DeleteSessionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_session(request=request)
+
         Args:
-            request (google.cloud.spanner_v1.types.DeleteSessionRequest):
+            request (Union[google.cloud.spanner_v1.types.DeleteSessionRequest, dict]):
                 The request object. The request for
                 [DeleteSession][google.spanner.v1.Spanner.DeleteSession].
             name (str):
@@ -732,7 +879,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -769,9 +916,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_sql(
         self,
-        request: spanner.ExecuteSqlRequest = None,
+        request: Union[spanner.ExecuteSqlRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
@@ -790,8 +937,29 @@ class SpannerClient(metaclass=SpannerClientMeta):
         [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql]
         instead.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_execute_sql():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ExecuteSqlRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                response = client.execute_sql(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteSqlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
@@ -833,9 +1001,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_streaming_sql(
         self,
-        request: spanner.ExecuteSqlRequest = None,
+        request: Union[spanner.ExecuteSqlRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
@@ -846,8 +1014,30 @@ class SpannerClient(metaclass=SpannerClientMeta):
         individual row in the result set can exceed 100 MiB, and no
         column value can exceed 10 MiB.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_execute_streaming_sql():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ExecuteSqlRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                stream = client.execute_streaming_sql(request=request)
+
+                # Handle the response
+                for response in stream:
+                    print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteSqlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
@@ -892,9 +1082,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_batch_dml(
         self,
-        request: spanner.ExecuteBatchDmlRequest = None,
+        request: Union[spanner.ExecuteBatchDmlRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.ExecuteBatchDmlResponse:
@@ -913,8 +1103,33 @@ class SpannerClient(metaclass=SpannerClientMeta):
         Execution stops after the first failed statement; the remaining
         statements are not executed.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_execute_batch_dml():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                statements = spanner_v1.Statement()
+                statements.sql = "sql_value"
+
+                request = spanner_v1.ExecuteBatchDmlRequest(
+                    session="session_value",
+                    statements=statements,
+                    seqno=550,
+                )
+
+                # Make the request
+                response = client.execute_batch_dml(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ExecuteBatchDmlRequest):
+            request (Union[google.cloud.spanner_v1.types.ExecuteBatchDmlRequest, dict]):
                 The request object. The request for
                 [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
@@ -992,9 +1207,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def read(
         self,
-        request: spanner.ReadRequest = None,
+        request: Union[spanner.ReadRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
@@ -1014,8 +1229,30 @@ class SpannerClient(metaclass=SpannerClientMeta):
         calling [StreamingRead][google.spanner.v1.Spanner.StreamingRead]
         instead.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_read():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ReadRequest(
+                    session="session_value",
+                    table="table_value",
+                    columns=['columns_value_1', 'columns_value_2'],
+                )
+
+                # Make the request
+                response = client.read(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ReadRequest):
+            request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
                 The request object. The request for
                 [Read][google.spanner.v1.Spanner.Read] and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
@@ -1057,9 +1294,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def streaming_read(
         self,
-        request: spanner.ReadRequest = None,
+        request: Union[spanner.ReadRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
@@ -1070,8 +1307,31 @@ class SpannerClient(metaclass=SpannerClientMeta):
         the result set can exceed 100 MiB, and no column value can
         exceed 10 MiB.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_streaming_read():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ReadRequest(
+                    session="session_value",
+                    table="table_value",
+                    columns=['columns_value_1', 'columns_value_2'],
+                )
+
+                # Make the request
+                stream = client.streaming_read(request=request)
+
+                # Handle the response
+                for response in stream:
+                    print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.ReadRequest):
+            request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
                 The request object. The request for
                 [Read][google.spanner.v1.Spanner.Read] and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
@@ -1116,11 +1376,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def begin_transaction(
         self,
-        request: spanner.BeginTransactionRequest = None,
+        request: Union[spanner.BeginTransactionRequest, dict] = None,
         *,
         session: str = None,
         options: transaction.TransactionOptions = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> transaction.Transaction:
@@ -1130,8 +1390,28 @@ class SpannerClient(metaclass=SpannerClientMeta):
         [Commit][google.spanner.v1.Spanner.Commit] can begin a new
         transaction as a side-effect.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_begin_transaction():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.BeginTransactionRequest(
+                    session="session_value",
+                )
+
+                # Make the request
+                response = client.begin_transaction(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.BeginTransactionRequest):
+            request (Union[google.cloud.spanner_v1.types.BeginTransactionRequest, dict]):
                 The request object. The request for
                 [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction].
             session (str):
@@ -1159,7 +1439,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 A transaction.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, options])
         if request is not None and has_flattened_params:
@@ -1199,13 +1479,13 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def commit(
         self,
-        request: spanner.CommitRequest = None,
+        request: Union[spanner.CommitRequest, dict] = None,
         *,
         session: str = None,
         transaction_id: bytes = None,
         mutations: Sequence[mutation.Mutation] = None,
         single_use_transaction: transaction.TransactionOptions = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> commit_response.CommitResponse:
@@ -1226,8 +1506,29 @@ class SpannerClient(metaclass=SpannerClientMeta):
         perform another read from the database to see the state of
         things as they are now.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_commit():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.CommitRequest(
+                    transaction_id=b'transaction_id_blob',
+                    session="session_value",
+                )
+
+                # Make the request
+                response = client.commit(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.CommitRequest):
+            request (Union[google.cloud.spanner_v1.types.CommitRequest, dict]):
                 The request object. The request for
                 [Commit][google.spanner.v1.Spanner.Commit].
             session (str):
@@ -1281,7 +1582,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any(
             [session, transaction_id, mutations, single_use_transaction]
@@ -1327,11 +1628,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def rollback(
         self,
-        request: spanner.RollbackRequest = None,
+        request: Union[spanner.RollbackRequest, dict] = None,
         *,
         session: str = None,
         transaction_id: bytes = None,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
@@ -1346,8 +1647,26 @@ class SpannerClient(metaclass=SpannerClientMeta):
         transaction is not found. ``Rollback`` never returns
         ``ABORTED``.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_rollback():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.RollbackRequest(
+                    session="session_value",
+                    transaction_id=b'transaction_id_blob',
+                )
+
+                # Make the request
+                client.rollback(request=request)
+
         Args:
-            request (google.cloud.spanner_v1.types.RollbackRequest):
+            request (Union[google.cloud.spanner_v1.types.RollbackRequest, dict]):
                 The request object. The request for
                 [Rollback][google.spanner.v1.Spanner.Rollback].
             session (str):
@@ -1371,7 +1690,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, transaction_id])
         if request is not None and has_flattened_params:
@@ -1410,9 +1729,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_query(
         self,
-        request: spanner.PartitionQueryRequest = None,
+        request: Union[spanner.PartitionQueryRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
@@ -1431,8 +1750,29 @@ class SpannerClient(metaclass=SpannerClientMeta):
         to resume the query, and the whole operation must be restarted
         from the beginning.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_partition_query():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.PartitionQueryRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                response = client.partition_query(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.PartitionQueryRequest):
+            request (Union[google.cloud.spanner_v1.types.PartitionQueryRequest, dict]):
                 The request object. The request for
                 [PartitionQuery][google.spanner.v1.Spanner.PartitionQuery]
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
@@ -1474,9 +1814,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_read(
         self,
-        request: spanner.PartitionReadRequest = None,
+        request: Union[spanner.PartitionReadRequest, dict] = None,
         *,
-        retry: retries.Retry = gapic_v1.method.DEFAULT,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
@@ -1498,8 +1838,29 @@ class SpannerClient(metaclass=SpannerClientMeta):
         to resume the read, and the whole operation must be restarted
         from the beginning.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            def sample_partition_read():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.PartitionReadRequest(
+                    session="session_value",
+                    table="table_value",
+                )
+
+                # Make the request
+                response = client.partition_read(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
-            request (google.cloud.spanner_v1.types.PartitionReadRequest):
+            request (Union[google.cloud.spanner_v1.types.PartitionReadRequest, dict]):
                 The request object. The request for
                 [PartitionRead][google.spanner.v1.Spanner.PartitionRead]
             retry (google.api_core.retry.Retry): Designation of what errors, if any,
@@ -1538,6 +1899,19 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         # Done; return the response.
         return response
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        """Releases underlying transport's resources.
+
+        .. warning::
+            ONLY use as a context manager if the transport is NOT shared
+            with other clients! Exiting the with block will CLOSE the transport
+            and may cause errors in other clients!
+        """
+        self.transport.close()
 
 
 try:

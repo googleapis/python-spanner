@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,6 +32,7 @@ from .types.backup import UpdateBackupRequest
 from .types.common import EncryptionConfig
 from .types.common import EncryptionInfo
 from .types.common import OperationProgress
+from .types.common import DatabaseDialect
 from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
@@ -63,6 +64,7 @@ __all__ = (
     "CreateDatabaseRequest",
     "Database",
     "DatabaseAdminClient",
+    "DatabaseDialect",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",

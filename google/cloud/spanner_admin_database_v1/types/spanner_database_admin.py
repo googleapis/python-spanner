@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -55,12 +55,17 @@ class RestoreSourceType(proto.Enum):
 
 class RestoreInfo(proto.Message):
     r"""Information about the database restore.
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
     Attributes:
         source_type (google.cloud.spanner_admin_database_v1.types.RestoreSourceType):
             The type of the restore source.
         backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
             Information about the backup used to restore
             the database. The backup may no longer exist.
+
+            This field is a member of `oneof`_ ``source_info``.
     """
 
     source_type = proto.Field(proto.ENUM, number=1, enum="RestoreSourceType",)
@@ -71,6 +76,7 @@ class RestoreInfo(proto.Message):
 
 class Database(proto.Message):
     r"""A Cloud Spanner database.
+
     Attributes:
         name (str):
             Required. The name of the database. Values are of the form
@@ -129,6 +135,9 @@ class Database(proto.Message):
             option set using DatabaseAdmin.CreateDatabase or
             DatabaseAdmin.UpdateDatabaseDdl. If not explicitly set, this
             is empty.
+        database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
+            Output only. The dialect of the Cloud Spanner
+            Database.
     """
 
     class State(proto.Enum):
@@ -153,6 +162,7 @@ class Database(proto.Message):
         proto.MESSAGE, number=7, message=timestamp_pb2.Timestamp,
     )
     default_leader = proto.Field(proto.STRING, number=9,)
+    database_dialect = proto.Field(proto.ENUM, number=10, enum=common.DatabaseDialect,)
 
 
 class ListDatabasesRequest(proto.Message):
@@ -229,6 +239,9 @@ class CreateDatabaseRequest(proto.Message):
             the database. If this field is not specified,
             Cloud Spanner will encrypt/decrypt all data at
             rest using Google default encryption.
+        database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
+            Optional. The dialect of the Cloud Spanner
+            Database.
     """
 
     parent = proto.Field(proto.STRING, number=1,)
@@ -237,6 +250,7 @@ class CreateDatabaseRequest(proto.Message):
     encryption_config = proto.Field(
         proto.MESSAGE, number=4, message=common.EncryptionConfig,
     )
+    database_dialect = proto.Field(proto.ENUM, number=5, enum=common.DatabaseDialect,)
 
 
 class CreateDatabaseMetadata(proto.Message):
@@ -510,6 +524,9 @@ class RestoreDatabaseRequest(proto.Message):
     r"""The request for
     [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase].
 
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
     Attributes:
         parent (str):
             Required. The name of the instance in which to create the
@@ -527,6 +544,8 @@ class RestoreDatabaseRequest(proto.Message):
             Name of the backup from which to restore. Values are of the
             form
             ``projects/<project>/instances/<instance>/backups/<backup>``.
+
+            This field is a member of `oneof`_ ``source``.
         encryption_config (google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig):
             Optional. An encryption configuration describing the
             encryption type and key resources in Cloud KMS used to
@@ -547,6 +566,7 @@ class RestoreDatabaseRequest(proto.Message):
 
 class RestoreDatabaseEncryptionConfig(proto.Message):
     r"""Encryption configuration for the restored database.
+
     Attributes:
         encryption_type (google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig.EncryptionType):
             Required. The encryption type of the restored
@@ -575,6 +595,9 @@ class RestoreDatabaseMetadata(proto.Message):
     r"""Metadata type for the long-running operation returned by
     [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase].
 
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
     Attributes:
         name (str):
             Name of the database being created and
@@ -584,6 +607,8 @@ class RestoreDatabaseMetadata(proto.Message):
         backup_info (google.cloud.spanner_admin_database_v1.types.BackupInfo):
             Information about the backup used to restore
             the database.
+
+            This field is a member of `oneof`_ ``source_info``.
         progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
             The progress of the
             [RestoreDatabase][google.spanner.admin.database.v1.DatabaseAdmin.RestoreDatabase]

@@ -19,23 +19,16 @@ from google.cloud.spanner_v1 import param_types
 
 
 SQL_LIST_TABLES = """
-            SELECT
-              t.table_name
-            FROM
-              information_schema.tables AS t
-            WHERE
-              t.table_catalog = '' and t.table_schema = ''
-            """
+SELECT table_name
+FROM information_schema.tables
+WHERE table_catalog = '' AND table_schema = ''
+"""
 
-SQL_GET_TABLE_COLUMN_SCHEMA = """SELECT
-                COLUMN_NAME, IS_NULLABLE, SPANNER_TYPE
-            FROM
-                INFORMATION_SCHEMA.COLUMNS
-            WHERE
-                TABLE_SCHEMA = ''
-            AND
-                TABLE_NAME = @table_name
-            """
+SQL_GET_TABLE_COLUMN_SCHEMA = """
+SELECT COLUMN_NAME, IS_NULLABLE, SPANNER_TYPE
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE TABLE_SCHEMA = '' AND TABLE_NAME = @table_name
+"""
 
 # This table maps spanner_types to Spanner's data type sizes as per
 #   https://cloud.google.com/spanner/docs/data-types#allowable-types
@@ -46,7 +39,7 @@ SQL_GET_TABLE_COLUMN_SCHEMA = """SELECT
 # does not send back the actual size, we have to lookup the respective size.
 # Some fields' sizes are dependent upon the dynamic data hence aren't sent back
 # by Cloud Spanner.
-code_to_display_size = {
+CODE_TO_DISPLAY_SIZE = {
     param_types.BOOL.code: 1,
     param_types.DATE.code: 4,
     param_types.FLOAT64.code: 8,
@@ -64,10 +57,9 @@ def _execute_insert_heterogenous(transaction, sql_params_list):
 
 def _execute_insert_homogenous(transaction, parts):
     # Perform an insert in one shot.
-    table = parts.get("table")
-    columns = parts.get("columns")
-    values = parts.get("values")
-    return transaction.insert(table, columns, values)
+    return transaction.insert(
+        parts.get("table"), parts.get("columns"), parts.get("values")
+    )
 
 
 def handle_insert(connection, sql, params):

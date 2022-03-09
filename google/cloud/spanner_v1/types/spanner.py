@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ class CreateSessionRequest(proto.Message):
             Required. The database in which the new
             session is created.
         session (google.cloud.spanner_v1.types.Session):
-            The session to create.
+            Required. The session to create.
     """
 
     database = proto.Field(proto.STRING, number=1,)
@@ -109,6 +109,7 @@ class BatchCreateSessionsResponse(proto.Message):
 
 class Session(proto.Message):
     r"""A session in the Cloud Spanner API.
+
     Attributes:
         name (str):
             Output only. The name of the session. This is
@@ -146,6 +147,7 @@ class Session(proto.Message):
 
 class GetSessionRequest(proto.Message):
     r"""The request for [GetSession][google.spanner.v1.Spanner.GetSession].
+
     Attributes:
         name (str):
             Required. The name of the session to
@@ -227,6 +229,7 @@ class DeleteSessionRequest(proto.Message):
 
 class RequestOptions(proto.Message):
     r"""Common request options for various APIs.
+
     Attributes:
         priority (google.cloud.spanner_v1.types.RequestOptions.Priority):
             Priority for the request.
@@ -239,18 +242,20 @@ class RequestOptions(proto.Message):
             characters for ``request_tag`` values are all printable
             characters (ASCII 32 - 126) and the length of a request_tag
             is limited to 50 characters. Values that exceed this limit
-            are truncated.
+            are truncated. Any leading underscore (_) characters will be
+            removed from the string.
         transaction_tag (str):
             A tag used for statistics collection about this transaction.
             Both request_tag and transaction_tag can be specified for a
             read or query that belongs to a transaction. The value of
             transaction_tag should be the same for all requests
-            belonging to the same transaction. If this request doesn’t
+            belonging to the same transaction. If this request doesn't
             belong to any transaction, transaction_tag will be ignored.
             Legal characters for ``transaction_tag`` values are all
             printable characters (ASCII 32 - 126) and the length of a
             transaction_tag is limited to 50 characters. Values that
-            exceed this limit are truncated.
+            exceed this limit are truncated. Any leading underscore (_)
+            characters will be removed from the string.
     """
 
     class Priority(proto.Enum):
@@ -298,10 +303,10 @@ class ExecuteSqlRequest(proto.Message):
             concurrency.
 
             Standard DML statements require a read-write
-            transaction. To protect against replays, single-
-            use transactions are not supported.  The caller
-            must either supply an existing transaction ID or
-            begin a new transaction.
+            transaction. To protect against replays,
+            single-use transactions are not supported.  The
+            caller must either supply an existing
+            transaction ID or begin a new transaction.
             Partitioned DML requires an existing Partitioned
             DML transaction ID.
         sql (str):
@@ -389,6 +394,7 @@ class ExecuteSqlRequest(proto.Message):
 
     class QueryOptions(proto.Message):
         r"""Query optimizer configuration.
+
         Attributes:
             optimizer_version (str):
                 An option to control the selection of optimizer version.
@@ -507,6 +513,7 @@ class ExecuteBatchDmlRequest(proto.Message):
 
     class Statement(proto.Message):
         r"""A single DML statement.
+
         Attributes:
             sql (str):
                 Required. The DML string.
@@ -930,12 +937,22 @@ class BeginTransactionRequest(proto.Message):
 
 class CommitRequest(proto.Message):
     r"""The request for [Commit][google.spanner.v1.Spanner.Commit].
+
+    This message has `oneof`_ fields (mutually exclusive fields).
+    For each oneof, at most one member field can be set at the same time.
+    Setting any member of the oneof automatically clears all other
+    members.
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
     Attributes:
         session (str):
             Required. The session in which the
             transaction to be committed is running.
         transaction_id (bytes):
             Commit a previously-started transaction.
+
+            This field is a member of `oneof`_ ``transaction``.
         single_use_transaction (google.cloud.spanner_v1.types.TransactionOptions):
             Execute mutations in a temporary transaction. Note that
             unlike commit of a previously-started transaction, commit
@@ -946,6 +963,8 @@ class CommitRequest(proto.Message):
             are executed more than once. If this is undesirable, use
             [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction]
             and [Commit][google.spanner.v1.Spanner.Commit] instead.
+
+            This field is a member of `oneof`_ ``transaction``.
         mutations (Sequence[google.cloud.spanner_v1.types.Mutation]):
             The mutations to be executed when this
             transaction commits. All mutations are applied
@@ -975,6 +994,7 @@ class CommitRequest(proto.Message):
 
 class RollbackRequest(proto.Message):
     r"""The request for [Rollback][google.spanner.v1.Spanner.Rollback].
+
     Attributes:
         session (str):
             Required. The session in which the
