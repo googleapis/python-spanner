@@ -90,7 +90,9 @@ class TestClient(unittest.TestCase):
 
         self.assertIs(client._credentials, expected_creds)
         if expected_scopes is not None:
-            creds.with_scopes.assert_called_once_with(expected_scopes, default_scopes=None)
+            creds.with_scopes.assert_called_once_with(
+                expected_scopes, default_scopes=None
+            )
 
         self.assertEqual(client.project, self.PROJECT)
         self.assertIs(client._client_info, expected_client_info)
@@ -252,7 +254,9 @@ class TestClient(unittest.TestCase):
             credentials=mock.ANY, client_info=client_info, client_options=client_options
         )
 
-        credentials.with_scopes.assert_called_once_with(expected_scopes, default_scopes=None)
+        credentials.with_scopes.assert_called_once_with(
+            expected_scopes, default_scopes=None
+        )
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_instance_admin_api_emulator_env(self, mock_em):
@@ -350,7 +354,9 @@ class TestClient(unittest.TestCase):
             credentials=mock.ANY, client_info=client_info, client_options=client_options
         )
 
-        credentials.with_scopes.assert_called_once_with(expected_scopes, default_scopes=None)
+        credentials.with_scopes.assert_called_once_with(
+            expected_scopes, default_scopes=None
+        )
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_database_admin_api_emulator_env(self, mock_em):
