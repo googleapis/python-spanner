@@ -72,7 +72,7 @@ def default(session):
     # Install all test dependencies, then install this package in-place.
     session.install("asyncmock", "pytest-asyncio")
 
-    session.install("mock", "pytest", "pytest-cov")
+    session.install("mock", "pytest", "pytest-cov", "pytz")
     session.install("-e", ".")
 
     # Run py.test against the unit tests.
@@ -143,7 +143,7 @@ def system(session):
     # Install all test dependencies, then install this package into the
     # virtualenv's dist-packages.
     session.install(
-        "mock", "pytest", "google-cloud-testutils",
+        "mock", "pytest", "google-cloud-testutils", "pytz",
     )
     session.install("-e", ".[tracing]")
 
