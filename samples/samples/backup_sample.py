@@ -192,7 +192,7 @@ def cancel_backup(instance_id, database_id, backup_id):
 
 
 # [START spanner_list_backup_operations]
-def list_backup_operations(instance_id, database_id):
+def list_backup_operations(instance_id, database_id, backup_id):
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -208,6 +208,21 @@ def list_backup_operations(instance_id, database_id):
         print(
             "Backup {} on database {}: {}% complete.".format(
                 metadata.name, metadata.database, metadata.progress.progress_percent
+            )
+        )
+    
+    # List the CopyBackup operations.
+    filter_ = (
+        "(metadata.@type:type.googleapis.com/"
+        "google.spanner.admin.database.v1.CopyBackupMetadata)"
+        " AND (metadata.source_backup:{})"
+    ).format(backup_id)
+    operations = instance.list_backup_operations(filter_=filter_)
+    for op in operations:
+        metadata = op.metadata
+        print(
+            "Backup {} on source backup {}: {}% complete.".format(
+                metadata.name, metadata.source_backup, metadata.progress.progress_percent
             )
         )
 
@@ -447,7 +462,7 @@ if __name__ == "__main__":  # noqa: C901
     elif args.command == "list_backups":
         list_backups(args.instance_id, args.database_id, args.backup_id)
     elif args.command == "list_backup_operations":
-        list_backup_operations(args.instance_id, args.database_id)
+        list_backup_operations(args.instance_id, args.database_id, args.backup_id)
     elif args.command == "list_database_operations":
         list_database_operations(args.instance_id)
     elif args.command == "delete_backup":

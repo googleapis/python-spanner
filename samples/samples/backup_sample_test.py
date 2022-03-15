@@ -100,17 +100,19 @@ def test_restore_database_with_encryption_key(
     assert kms_key_name in out
 
 
-@pytest.mark.dependency(depends=["create_backup"])
+@pytest.mark.dependency(depends=["create_backup", "copy_backup"])
 def test_list_backup_operations(capsys, instance_id, sample_database):
     backup_sample.list_backup_operations(
-        instance_id, sample_database.database_id)
+        instance_id, sample_database.database_id, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
     assert sample_database.database_id in out
+    assert COPY_BACKUP_ID in out
+    print(out)
 
 
 @pytest.mark.dependency(depends=["create_backup"])
-def test_list_backups(capsys, instance_id, sample_database):
+def test_list_backups(capsys, instance_id, sample_database, ):
     backup_sample.list_backups(
         instance_id, sample_database.database_id, BACKUP_ID,
     )
