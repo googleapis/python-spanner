@@ -328,6 +328,9 @@ class DatabaseAdminTransport(abc.ABC):
                 default_timeout=3600.0,
                 client_info=client_info,
             ),
+            self.list_database_roles: gapic_v1.method.wrap_method(
+                self.list_database_roles, default_timeout=None, client_info=client_info,
+            ),
         }
 
     def close(self):
@@ -508,6 +511,18 @@ class DatabaseAdminTransport(abc.ABC):
         Union[
             backup.ListBackupOperationsResponse,
             Awaitable[backup.ListBackupOperationsResponse],
+        ],
+    ]:
+        raise NotImplementedError()
+
+    @property
+    def list_database_roles(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.ListDatabaseRolesRequest],
+        Union[
+            spanner_database_admin.ListDatabaseRolesResponse,
+            Awaitable[spanner_database_admin.ListDatabaseRolesResponse],
         ],
     ]:
         raise NotImplementedError()

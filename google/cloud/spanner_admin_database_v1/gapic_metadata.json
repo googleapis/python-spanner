@@ -65,6 +65,11 @@
                 "list_database_operations"
               ]
             },
+            "ListDatabaseRoles": {
+              "methods": [
+                "list_database_roles"
+              ]
+            },
             "ListDatabases": {
               "methods": [
                 "list_databases"
@@ -153,6 +158,11 @@
             "ListDatabaseOperations": {
               "methods": [
                 "list_database_operations"
+              ]
+            },
+            "ListDatabaseRoles": {
+              "methods": [
+                "list_database_roles"
               ]
             },
             "ListDatabases": {

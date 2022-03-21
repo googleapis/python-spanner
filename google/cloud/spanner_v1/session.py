@@ -117,16 +117,13 @@ class Session(object):
 
         request = CreateSessionRequest(database=self._database.name)
         if self._database._creator_role is not None:
-            request.session = Session(creator_role=self._database._creator_role)
+            request.session.creator_role = self._database._creator_role
 
         if self._labels:
             request.session.labels = self._labels
 
         with trace_call("CloudSpanner.CreateSession", self, self._labels):
-            session_pb = api.create_session(
-                request=request,
-                metadata=metadata,
-            )
+            session_pb = api.create_session(request=request, metadata=metadata,)
         self._session_id = session_pb.name.split("/")[-1]
 
     def exists(self):

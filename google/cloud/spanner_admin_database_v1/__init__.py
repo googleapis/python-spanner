@@ -35,12 +35,15 @@ from .types.common import OperationProgress
 from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
+from .types.spanner_database_admin import DatabaseRole
 from .types.spanner_database_admin import DropDatabaseRequest
 from .types.spanner_database_admin import GetDatabaseDdlRequest
 from .types.spanner_database_admin import GetDatabaseDdlResponse
 from .types.spanner_database_admin import GetDatabaseRequest
 from .types.spanner_database_admin import ListDatabaseOperationsRequest
 from .types.spanner_database_admin import ListDatabaseOperationsResponse
+from .types.spanner_database_admin import ListDatabaseRolesRequest
+from .types.spanner_database_admin import ListDatabaseRolesResponse
 from .types.spanner_database_admin import ListDatabasesRequest
 from .types.spanner_database_admin import ListDatabasesResponse
 from .types.spanner_database_admin import OptimizeRestoredDatabaseMetadata
@@ -63,6 +66,7 @@ __all__ = (
     "CreateDatabaseRequest",
     "Database",
     "DatabaseAdminClient",
+    "DatabaseRole",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",
@@ -77,6 +81,8 @@ __all__ = (
     "ListBackupsResponse",
     "ListDatabaseOperationsRequest",
     "ListDatabaseOperationsResponse",
+    "ListDatabaseRolesRequest",
+    "ListDatabaseRolesResponse",
     "ListDatabasesRequest",
     "ListDatabasesResponse",
     "OperationProgress",

@@ -14,6 +14,7 @@
 
 """User friendly container for Cloud Spanner Instance."""
 
+import imp
 import google.api_core.operation
 from google.api_core.exceptions import InvalidArgument
 import re
@@ -642,6 +643,30 @@ class Instance(object):
         )
         return map(self._item_to_operation, page_iter)
 
+    # def _list_database_roles(self, db_name, page_size=None):
+    #     """Lists Cloud Spanner database roles.
+
+    #     :type page_size: int
+    #     :param page_size:
+    #         Optional. The maximum number of operations in each page of results
+    #         from this request. Non-positive values are ignored. Defaults to a
+    #         sensible value set by the API.
+
+    #     :rtype: :class:`~google.api_core.page_iterator.Iterator`
+    #     :returns:
+    #         Iterator of :class:`~google.api_core.operation.Operation`
+    #         resources within the current instance.
+    #     """
+    #     metadata = _metadata_with_prefix(self.name)
+    #     request = ListDatabaseRolesRequest(
+    #         parent=db_name,
+    #         page_size=page_size,
+    #     )
+    #     page_iter = self._client.database_admin_api.list_database_roles(
+    #         request=request, metadata=metadata
+    #     )
+    #     return map(self._item_to_operation, page_iter)
+
     def _item_to_operation(self, operation_pb):
         """Convert an operation protobuf to the native object.
         :type operation_pb: :class:`~google.longrunning.operations.Operation`
@@ -651,6 +676,7 @@ class Instance(object):
         """
         operations_client = self._client.database_admin_api.transport.operations_client
         metadata_type = _type_string_to_type_pb(operation_pb.metadata.type_url)
+
         response_type = _OPERATION_RESPONSE_TYPES[metadata_type]
         return google.api_core.operation.from_gapic(
             operation_pb, operations_client, response_type, metadata_type=metadata_type

@@ -32,6 +32,7 @@ from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
@@ -758,6 +759,29 @@ class Database(object):
         return self._instance.list_database_operations(
             filter_=database_filter, page_size=page_size
         )
+
+    def list_database_roles(self, page_size=None):
+        """Lists Cloud Spanner database roles.
+
+        :type page_size: int
+        :param page_size:
+            Optional. The maximum number of operations in each page of results
+            from this request. Non-positive values are ignored. Defaults to a
+            sensible value set by the API.
+
+        :type: Iterable
+        :returns:
+            Iterable of :class:`~google.cloud.spanner_admin_database_v1.types.spanner_database_admin.DatabaseRole`
+            resources within the current database.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = ListDatabaseRolesRequest(
+            parent=self.name,
+            page_size=page_size,
+        )
+        return api.list_database_roles(request=request, metadata=metadata)
 
     def table(self, table_id):
         """Factory to create a table object within this database.
