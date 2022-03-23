@@ -44,6 +44,7 @@ PROCESSING_UNITS_PER_NODE = 1000
 _OPERATION_METADATA_MESSAGES = (
     backup.Backup,
     backup.CreateBackupMetadata,
+    backup.CopyBackupMetadata,
     spanner_database_admin.CreateDatabaseMetadata,
     spanner_database_admin.Database,
     spanner_database_admin.OptimizeRestoredDatabaseMetadata,
@@ -58,6 +59,7 @@ _OPERATION_METADATA_TYPES = {
 
 _OPERATION_RESPONSE_TYPES = {
     backup.CreateBackupMetadata: backup.Backup,
+    backup.CopyBackupMetadata: backup.Backup,
     spanner_database_admin.CreateDatabaseMetadata: spanner_database_admin.Database,
     spanner_database_admin.OptimizeRestoredDatabaseMetadata: spanner_database_admin.Database,
     spanner_database_admin.RestoreDatabaseMetadata: spanner_database_admin.Database,

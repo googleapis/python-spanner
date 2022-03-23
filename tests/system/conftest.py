@@ -14,9 +14,6 @@
 
 import datetime
 import time
-from google.cloud.spanner_admin_database_v1.types.backup import (
-    CreateBackupEncryptionConfig,
-)
 
 import pytest
 

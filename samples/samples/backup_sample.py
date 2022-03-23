@@ -213,9 +213,8 @@ def list_backup_operations(instance_id, database_id, backup_id):
     
     # List the CopyBackup operations.
     filter_ = (
-        "(metadata.@type:type.googleapis.com/"
-        "google.spanner.admin.database.v1.CopyBackupMetadata)"
-        " AND (metadata.source_backup:{})"
+        "(metadata.@type:type.googleapis.com/google.spanner.admin.database.v1.CopyBackupMetadata) "
+        "AND (metadata.source_backup:{})"
     ).format(backup_id)
     operations = instance.list_backup_operations(filter_=filter_)
     for op in operations:
@@ -405,7 +404,7 @@ def copy_backup(instance_id, backup_id, source_backup_path):
 
     # Create a backup object and wait for copy backup operation to complete.
     expire_time = datetime.utcnow() + timedelta(days=14)
-    copy_backup = instance.copy_backup(backup_id, source_backup=source_backup_path, expire_time=expire_time)
+    copy_backup = instance.copy_backup(backup_id=backup_id, source_backup=source_backup_path, expire_time=expire_time)
     operation = copy_backup.create()
 
     # Wait for copy backup operation to complete.

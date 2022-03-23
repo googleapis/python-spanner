@@ -266,20 +266,27 @@ class Backup(object):
         if not self._expire_time:
             raise ValueError("expire_time not set")
 
+        if not self._database and not self._source_backup:
+            raise ValueError("database and source backup both not set")
+
+        if (
+            (
+                self._encryption_config
+                and self._encryption_config.kms_key_name
+                and self._encryption_config.encryption_type
+                != CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+            )
+            and self._encryption_config
+            and self._encryption_config.kms_key_name
+            and self._encryption_config.encryption_type
+            != CopyBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
+        ):
+            raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
+
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
 
         if self._source_backup:
-            if (
-                self._encryption_config
-                and self._encryption_config.kms_key_name
-                and self._encryption_config.encryption_type
-                != CopyBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
-            ):
-                raise ValueError(
-                    "kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION"
-                )
-
             request = CopyBackupRequest(
                 parent=self._instance.name,
                 backup_id=self.backup_id,
@@ -290,16 +297,6 @@ class Backup(object):
 
             future = api.copy_backup(request=request, metadata=metadata,)
             return future
-
-        if not self._database:
-            raise ValueError("database not set")
-        if (
-            self._encryption_config
-            and self._encryption_config.kms_key_name
-            and self._encryption_config.encryption_type
-            != CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION
-        ):
-            raise ValueError("kms_key_name only used with CUSTOMER_MANAGED_ENCRYPTION")
 
         backup = BackupPB(
             database=self._database,

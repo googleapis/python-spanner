@@ -203,7 +203,6 @@ def test_copy_backup_workflow(
     shared_instance, shared_backup, backups_to_delete,
 ):
     from google.cloud.spanner_admin_database_v1 import (
-        CreateBackupEncryptionConfig,
         CopyBackupEncryptionConfig,
         EncryptionInfo,
     )
@@ -344,25 +343,6 @@ def test_backup_create_w_invalid_version_time_future(
     with pytest.raises(exceptions.InvalidArgument):
         op = backup.create()
         op.result()  # blocks indefinitely
-
-
-def test_copy_backup_create_w_invalid_expire_time(
-    shared_instance, shared_backup,
-):
-    backup_id = _helpers.unique_id("backup_id", separator="_")
-    invalid_expire_time = datetime.datetime.now(datetime.timezone.utc)
-
-    shared_backup.reload()
-
-    copy_backup = shared_instance.copy_backup(
-        backup_id=backup_id,
-        source_backup=shared_backup.name,
-        expire_time=invalid_expire_time,
-    )
-
-    with pytest.raises(exceptions.InvalidArgument):
-        operation = copy_backup.create()
-        operation.result()  # blocks indefinitely
 
 
 def test_database_restore_to_diff_instance(
