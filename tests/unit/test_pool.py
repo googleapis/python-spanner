@@ -433,7 +433,7 @@ class TestPingingPool(unittest.TestCase):
         session = pool.get()
 
         self.assertIs(session, SESSIONS[0])
-        self.assertFalse(session._exists_checked)
+        self.assertTrue(session._exists_checked)
         self.assertFalse(pool._sessions.full())
 
     def test_get_hit_w_ping(self):

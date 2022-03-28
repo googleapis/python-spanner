@@ -387,15 +387,14 @@ class PingingPool(AbstractSessionPool):
         if timeout is None:
             timeout = self.default_timeout
 
-        ping_after, session = self._sessions.get(block=True, timeout=timeout)
+        _, session = self._sessions.get(block=True, timeout=timeout)
 
-        if _NOW() > ping_after:
-            # Using session.exists() guarantees the returned session exists.
-            # session.ping() uses a cached result in the backend which could
-            # result in a recently deleted session being returned.
-            if not session.exists():
-                session = self._new_session()
-                session.create()
+        # Using session.exists() guarantees the returned session exists.
+        # session.ping() uses a cached result in the backend which could
+        # result in a recently deleted session being returned.
+        if not session.exists():
+            session = self._new_session()
+            session.create()
 
         return session
 
