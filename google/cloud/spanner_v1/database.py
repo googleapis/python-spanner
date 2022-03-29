@@ -759,7 +759,7 @@ class Database(object):
 
         :type page_size: int
         :param page_size:
-            Optional. The maximum number of operations in each page of results
+            Optional. The maximum number of database roles in each page of results
             from this request. Non-positive values are ignored. Defaults to a
             sensible value set by the API.
 
