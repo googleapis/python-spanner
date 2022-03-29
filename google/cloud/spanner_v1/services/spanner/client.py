@@ -60,7 +60,10 @@ class SpannerClientMeta(type):
     _transport_registry["grpc"] = SpannerGrpcTransport
     _transport_registry["grpc_asyncio"] = SpannerGrpcAsyncIOTransport
 
-    def get_transport_class(cls, label: str = None,) -> Type[SpannerTransport]:
+    def get_transport_class(
+        cls,
+        label: str = None,
+    ) -> Type[SpannerTransport]:
         """Returns an appropriate transport class.
 
         Args:
@@ -168,10 +171,16 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return self._transport
 
     @staticmethod
-    def database_path(project: str, instance: str, database: str,) -> str:
+    def database_path(
+        project: str,
+        instance: str,
+        database: str,
+    ) -> str:
         """Returns a fully-qualified database string."""
         return "projects/{project}/instances/{instance}/databases/{database}".format(
-            project=project, instance=instance, database=database,
+            project=project,
+            instance=instance,
+            database=database,
         )
 
     @staticmethod
@@ -184,10 +193,18 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def session_path(project: str, instance: str, database: str, session: str,) -> str:
+    def session_path(
+        project: str,
+        instance: str,
+        database: str,
+        session: str,
+    ) -> str:
         """Returns a fully-qualified session string."""
         return "projects/{project}/instances/{instance}/databases/{database}/sessions/{session}".format(
-            project=project, instance=instance, database=database, session=session,
+            project=project,
+            instance=instance,
+            database=database,
+            session=session,
         )
 
     @staticmethod
@@ -200,7 +217,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_billing_account_path(billing_account: str,) -> str:
+    def common_billing_account_path(
+        billing_account: str,
+    ) -> str:
         """Returns a fully-qualified billing_account string."""
         return "billingAccounts/{billing_account}".format(
             billing_account=billing_account,
@@ -213,9 +232,13 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_folder_path(folder: str,) -> str:
+    def common_folder_path(
+        folder: str,
+    ) -> str:
         """Returns a fully-qualified folder string."""
-        return "folders/{folder}".format(folder=folder,)
+        return "folders/{folder}".format(
+            folder=folder,
+        )
 
     @staticmethod
     def parse_common_folder_path(path: str) -> Dict[str, str]:
@@ -224,9 +247,13 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_organization_path(organization: str,) -> str:
+    def common_organization_path(
+        organization: str,
+    ) -> str:
         """Returns a fully-qualified organization string."""
-        return "organizations/{organization}".format(organization=organization,)
+        return "organizations/{organization}".format(
+            organization=organization,
+        )
 
     @staticmethod
     def parse_common_organization_path(path: str) -> Dict[str, str]:
@@ -235,9 +262,13 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_project_path(project: str,) -> str:
+    def common_project_path(
+        project: str,
+    ) -> str:
         """Returns a fully-qualified project string."""
-        return "projects/{project}".format(project=project,)
+        return "projects/{project}".format(
+            project=project,
+        )
 
     @staticmethod
     def parse_common_project_path(path: str) -> Dict[str, str]:
@@ -246,10 +277,14 @@ class SpannerClient(metaclass=SpannerClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_location_path(project: str, location: str,) -> str:
+    def common_location_path(
+        project: str,
+        location: str,
+    ) -> str:
         """Returns a fully-qualified location string."""
         return "projects/{project}/locations/{location}".format(
-            project=project, location=location,
+            project=project,
+            location=location,
         )
 
     @staticmethod
@@ -528,7 +563,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -641,7 +681,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -732,7 +777,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -829,12 +879,20 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListSessionsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -920,7 +978,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def execute_sql(
@@ -1003,7 +1064,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1084,7 +1150,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1209,7 +1280,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1296,7 +1372,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1378,7 +1459,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1481,7 +1567,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1630,7 +1721,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1733,7 +1829,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def partition_query(
@@ -1816,7 +1915,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1904,7 +2008,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1925,7 +2034,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
 try:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution("google-cloud-spanner",).version,
+        gapic_version=pkg_resources.get_distribution(
+            "google-cloud-spanner",
+        ).version,
     )
 except pkg_resources.DistributionNotFound:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()

@@ -447,7 +447,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         request = UpdateDatabaseDdlRequest(
-            database=self.name, statements=ddl_statements, operation_id=operation_id,
+            database=self.name,
+            statements=ddl_statements,
+            operation_id=operation_id,
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
@@ -550,7 +552,8 @@ class Database(object):
                     request_options=request_options,
                 )
                 method = functools.partial(
-                    api.execute_streaming_sql, metadata=metadata,
+                    api.execute_streaming_sql,
+                    metadata=metadata,
                 )
 
                 iterator = _restart_on_unavailable(method, request)
@@ -707,7 +710,10 @@ class Database(object):
             backup=source.name,
             encryption_config=self._encryption_config or None,
         )
-        future = api.restore_database(request=request, metadata=metadata,)
+        future = api.restore_database(
+            request=request,
+            metadata=metadata,
+        )
         return future
 
     def is_ready(self):
@@ -771,7 +777,10 @@ class Database(object):
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
 
-        request = ListDatabaseRolesRequest(parent=self.name, page_size=page_size,)
+        request = ListDatabaseRolesRequest(
+            parent=self.name,
+            page_size=page_size,
+        )
         return api.list_database_roles(request=request, metadata=metadata)
 
     def table(self, table_id):
@@ -1065,7 +1074,11 @@ class BatchSnapshot(object):
             yield {"partition": partition, "read": read_info.copy()}
 
     def process_read_batch(
-        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+        self,
+        batch,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned read.
 
@@ -1182,7 +1195,11 @@ class BatchSnapshot(object):
             yield {"partition": partition, "query": query_info}
 
     def process_query_batch(
-        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
+        self,
+        batch,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned query.
 

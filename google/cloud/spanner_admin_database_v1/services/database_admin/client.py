@@ -64,7 +64,10 @@ class DatabaseAdminClientMeta(type):
     _transport_registry["grpc"] = DatabaseAdminGrpcTransport
     _transport_registry["grpc_asyncio"] = DatabaseAdminGrpcAsyncIOTransport
 
-    def get_transport_class(cls, label: str = None,) -> Type[DatabaseAdminTransport]:
+    def get_transport_class(
+        cls,
+        label: str = None,
+    ) -> Type[DatabaseAdminTransport]:
         """Returns an appropriate transport class.
 
         Args:
@@ -177,10 +180,16 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return self._transport
 
     @staticmethod
-    def backup_path(project: str, instance: str, backup: str,) -> str:
+    def backup_path(
+        project: str,
+        instance: str,
+        backup: str,
+    ) -> str:
         """Returns a fully-qualified backup string."""
         return "projects/{project}/instances/{instance}/backups/{backup}".format(
-            project=project, instance=instance, backup=backup,
+            project=project,
+            instance=instance,
+            backup=backup,
         )
 
     @staticmethod
@@ -194,7 +203,10 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
     @staticmethod
     def crypto_key_path(
-        project: str, location: str, key_ring: str, crypto_key: str,
+        project: str,
+        location: str,
+        key_ring: str,
+        crypto_key: str,
     ) -> str:
         """Returns a fully-qualified crypto_key string."""
         return "projects/{project}/locations/{location}/keyRings/{key_ring}/cryptoKeys/{crypto_key}".format(
@@ -240,10 +252,16 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def database_path(project: str, instance: str, database: str,) -> str:
+    def database_path(
+        project: str,
+        instance: str,
+        database: str,
+    ) -> str:
         """Returns a fully-qualified database string."""
         return "projects/{project}/instances/{instance}/databases/{database}".format(
-            project=project, instance=instance, database=database,
+            project=project,
+            instance=instance,
+            database=database,
         )
 
     @staticmethod
@@ -257,11 +275,17 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
     @staticmethod
     def database_role_path(
-        project: str, instance: str, database: str, role: str,
+        project: str,
+        instance: str,
+        database: str,
+        role: str,
     ) -> str:
         """Returns a fully-qualified database_role string."""
         return "projects/{project}/instances/{instance}/databases/{database}/databaseRoles/{role}".format(
-            project=project, instance=instance, database=database, role=role,
+            project=project,
+            instance=instance,
+            database=database,
+            role=role,
         )
 
     @staticmethod
@@ -274,10 +298,14 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def instance_path(project: str, instance: str,) -> str:
+    def instance_path(
+        project: str,
+        instance: str,
+    ) -> str:
         """Returns a fully-qualified instance string."""
         return "projects/{project}/instances/{instance}".format(
-            project=project, instance=instance,
+            project=project,
+            instance=instance,
         )
 
     @staticmethod
@@ -287,7 +315,9 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_billing_account_path(billing_account: str,) -> str:
+    def common_billing_account_path(
+        billing_account: str,
+    ) -> str:
         """Returns a fully-qualified billing_account string."""
         return "billingAccounts/{billing_account}".format(
             billing_account=billing_account,
@@ -300,9 +330,13 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_folder_path(folder: str,) -> str:
+    def common_folder_path(
+        folder: str,
+    ) -> str:
         """Returns a fully-qualified folder string."""
-        return "folders/{folder}".format(folder=folder,)
+        return "folders/{folder}".format(
+            folder=folder,
+        )
 
     @staticmethod
     def parse_common_folder_path(path: str) -> Dict[str, str]:
@@ -311,9 +345,13 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_organization_path(organization: str,) -> str:
+    def common_organization_path(
+        organization: str,
+    ) -> str:
         """Returns a fully-qualified organization string."""
-        return "organizations/{organization}".format(organization=organization,)
+        return "organizations/{organization}".format(
+            organization=organization,
+        )
 
     @staticmethod
     def parse_common_organization_path(path: str) -> Dict[str, str]:
@@ -322,9 +360,13 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_project_path(project: str,) -> str:
+    def common_project_path(
+        project: str,
+    ) -> str:
         """Returns a fully-qualified project string."""
-        return "projects/{project}".format(project=project,)
+        return "projects/{project}".format(
+            project=project,
+        )
 
     @staticmethod
     def parse_common_project_path(path: str) -> Dict[str, str]:
@@ -333,10 +375,14 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_location_path(project: str, location: str,) -> str:
+    def common_location_path(
+        project: str,
+        location: str,
+    ) -> str:
         """Returns a fully-qualified location string."""
         return "projects/{project}/locations/{location}".format(
-            project=project, location=location,
+            project=project,
+            location=location,
         )
 
     @staticmethod
@@ -600,12 +646,20 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListDatabasesPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -730,7 +784,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -827,7 +886,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -969,7 +1033,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -1061,7 +1130,10 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def get_database_ddl(
@@ -1154,7 +1226,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1307,7 +1384,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1461,7 +1543,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1573,7 +1660,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1709,7 +1801,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -1871,7 +1968,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -1969,7 +2071,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -2079,7 +2186,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -2164,7 +2276,10 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def list_backups(
@@ -2259,12 +2374,20 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListBackupsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -2410,7 +2533,12 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -2527,12 +2655,20 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListDatabaseOperationsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -2640,12 +2776,20 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListBackupOperationsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -2724,12 +2868,20 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListDatabaseRolesPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
