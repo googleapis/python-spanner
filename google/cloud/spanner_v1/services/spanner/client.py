@@ -463,6 +463,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Union[spanner.CreateSessionRequest, dict] = None,
         *,
         database: str = None,
+        creator_role: str = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
@@ -548,6 +549,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
             # request, apply these.
             if database is not None:
                 request.database = database
+            if creator_role is not None:
+                request.session_template.creator_role = creator_role
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -576,6 +579,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         *,
         database: str = None,
         session_count: int = None,
+        creator_role: str = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
@@ -663,6 +667,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 request.database = database
             if session_count is not None:
                 request.session_count = session_count
+            if creator_role is not None:
+                request.session_template.creator_role = creator_role
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -786,6 +792,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Union[spanner.ListSessionsRequest, dict] = None,
         *,
         database: str = None,
+        creator_role: str = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
         timeout: float = None,
         metadata: Sequence[Tuple[str, str]] = (),
@@ -858,6 +865,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
             # request, apply these.
             if database is not None:
                 request.database = database
+            if creator_role is not None:
+                request.creator_role = creator_role
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.

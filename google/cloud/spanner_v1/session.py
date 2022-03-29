@@ -57,11 +57,12 @@ class Session(object):
     _session_id = None
     _transaction = None
 
-    def __init__(self, database, labels=None):
+    def __init__(self, database, labels=None, creator_role=None):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
+        self._creator_role = creator_role
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -115,6 +116,8 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
 
         request = CreateSessionRequest(database=self._database.name)
+        if self._database._creator_role is not None:
+            request.session.creator_role = self._database._creator_role
 
         if self._labels:
             request.session.labels = self._labels
