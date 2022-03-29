@@ -75,6 +75,7 @@ __all__ = (
     "DatabaseAdminClient",
     "DatabaseRole",
     "DatabaseDialect",
+    "DatabaseRole",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",
