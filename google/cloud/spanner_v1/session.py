@@ -444,4 +444,4 @@ def _get_retry_delay(cause, attempts):
         nanos = retry_info.retry_delay.nanos
         return retry_info.retry_delay.seconds + nanos / 1.0e9
 
-    return 2**attempts + random.random()
+    return 2 ** attempts + random.random()
