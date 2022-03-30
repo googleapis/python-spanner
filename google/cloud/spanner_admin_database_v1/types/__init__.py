@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 from .backup import (
     Backup,
     BackupInfo,
+    CopyBackupEncryptionConfig,
+    CopyBackupMetadata,
+    CopyBackupRequest,
     CreateBackupEncryptionConfig,
     CreateBackupMetadata,
     CreateBackupRequest,
@@ -58,6 +61,9 @@ from .spanner_database_admin import (
 __all__ = (
     "Backup",
     "BackupInfo",
+    "CopyBackupEncryptionConfig",
+    "CopyBackupMetadata",
+    "CopyBackupRequest",
     "CreateBackupEncryptionConfig",
     "CreateBackupMetadata",
     "CreateBackupRequest",

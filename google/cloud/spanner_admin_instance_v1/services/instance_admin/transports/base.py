@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -189,10 +189,14 @@ class InstanceAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.create_instance: gapic_v1.method.wrap_method(
-                self.create_instance, default_timeout=3600.0, client_info=client_info,
+                self.create_instance,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.update_instance: gapic_v1.method.wrap_method(
-                self.update_instance, default_timeout=3600.0, client_info=client_info,
+                self.update_instance,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.delete_instance: gapic_v1.method.wrap_method(
                 self.delete_instance,
@@ -210,7 +214,9 @@ class InstanceAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.set_iam_policy: gapic_v1.method.wrap_method(
-                self.set_iam_policy, default_timeout=30.0, client_info=client_info,
+                self.set_iam_policy,
+                default_timeout=30.0,
+                client_info=client_info,
             ),
             self.get_iam_policy: gapic_v1.method.wrap_method(
                 self.get_iam_policy,
@@ -237,9 +243,9 @@ class InstanceAdminTransport(abc.ABC):
     def close(self):
         """Closes resources associated with the transport.
 
-       .. warning::
-            Only call this method if the transport is NOT shared
-            with other clients - this may cause errors in other clients!
+        .. warning::
+             Only call this method if the transport is NOT shared
+             with other clients - this may cause errors in other clients!
         """
         raise NotImplementedError()
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -244,6 +244,27 @@ class InstanceAdminAsyncClient:
         r"""Lists the supported instance configurations for a
         given project.
 
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instance_configs():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstanceConfigsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instance_configs(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsRequest, dict]):
                 The request object. The request for
@@ -313,12 +334,20 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListInstanceConfigsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -335,6 +364,26 @@ class InstanceAdminAsyncClient:
     ) -> spanner_instance_admin.InstanceConfig:
         r"""Gets information about a particular instance
         configuration.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance_config():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceConfigRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance_config(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceConfigRequest, dict]):
@@ -404,7 +453,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -419,6 +473,26 @@ class InstanceAdminAsyncClient:
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstancesAsyncPager:
         r"""Lists all instances in the given project.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instances():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstancesRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instances(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstancesRequest, dict]):
@@ -489,12 +563,20 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListInstancesAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -510,6 +592,25 @@ class InstanceAdminAsyncClient:
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceRequest, dict]):
@@ -577,7 +678,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -631,6 +737,37 @@ class InstanceAdminAsyncClient:
         The [response][google.longrunning.Operation.response] field type
         is [Instance][google.spanner.admin.instance.v1.Instance], if
         successful.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_create_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.CreateInstanceRequest(
+                    parent="parent_value",
+                    instance_id="instance_id_value",
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.create_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.CreateInstanceRequest, dict]):
@@ -711,7 +848,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -779,6 +921,35 @@ class InstanceAdminAsyncClient:
         Authorization requires ``spanner.instances.update`` permission
         on resource
         [name][google.spanner.admin.instance.v1.Instance.name].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_update_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.UpdateInstanceRequest(
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.update_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.UpdateInstanceRequest, dict]):
@@ -858,7 +1029,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -891,6 +1067,23 @@ class InstanceAdminAsyncClient:
         -  The instance and *all of its databases* immediately and
            irrevocably disappear from the API. All data in the databases
            is permanently deleted.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_delete_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.DeleteInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_instance(request=request)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.DeleteInstanceRequest, dict]):
@@ -953,7 +1146,10 @@ class InstanceAdminAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def set_iam_policy(
@@ -970,6 +1166,26 @@ class InstanceAdminAsyncClient:
 
         Authorization requires ``spanner.instances.setIamPolicy`` on
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_set_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.SetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.set_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.SetIamPolicyRequest, dict]):
@@ -1064,7 +1280,9 @@ class InstanceAdminAsyncClient:
         if isinstance(request, dict):
             request = iam_policy_pb2.SetIamPolicyRequest(**request)
         elif not request:
-            request = iam_policy_pb2.SetIamPolicyRequest(resource=resource,)
+            request = iam_policy_pb2.SetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1081,7 +1299,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1101,6 +1324,26 @@ class InstanceAdminAsyncClient:
 
         Authorization requires ``spanner.instances.getIamPolicy`` on
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.get_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.GetIamPolicyRequest, dict]):
@@ -1195,7 +1438,9 @@ class InstanceAdminAsyncClient:
         if isinstance(request, dict):
             request = iam_policy_pb2.GetIamPolicyRequest(**request)
         elif not request:
-            request = iam_policy_pb2.GetIamPolicyRequest(resource=resource,)
+            request = iam_policy_pb2.GetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1222,7 +1467,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1244,6 +1494,27 @@ class InstanceAdminAsyncClient:
         resource will result in a NOT_FOUND error if the user has
         ``spanner.instances.list`` permission on the containing Google
         Cloud Project. Otherwise returns an empty set of permissions.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_test_iam_permissions():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.TestIamPermissionsRequest(
+                    resource="resource_value",
+                    permissions=['permissions_value_1', 'permissions_value_2'],
+                )
+
+                # Make the request
+                response = client.test_iam_permissions(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest, dict]):
@@ -1293,7 +1564,8 @@ class InstanceAdminAsyncClient:
             request = iam_policy_pb2.TestIamPermissionsRequest(**request)
         elif not request:
             request = iam_policy_pb2.TestIamPermissionsRequest(
-                resource=resource, permissions=permissions,
+                resource=resource,
+                permissions=permissions,
             )
 
         # Wrap the RPC method; this adds retry and timeout information,
@@ -1311,7 +1583,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response

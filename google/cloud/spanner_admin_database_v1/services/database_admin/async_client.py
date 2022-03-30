@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -242,6 +242,26 @@ class DatabaseAdminAsyncClient:
     ) -> pagers.ListDatabasesAsyncPager:
         r"""Lists Cloud Spanner databases.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_list_databases():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.ListDatabasesRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_databases(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.ListDatabasesRequest, dict]):
                 The request object. The request for
@@ -311,12 +331,20 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListDatabasesAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -342,6 +370,31 @@ class DatabaseAdminAsyncClient:
         The [response][google.longrunning.Operation.response] field type
         is [Database][google.spanner.admin.database.v1.Database], if
         successful.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_create_database():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.CreateDatabaseRequest(
+                    parent="parent_value",
+                    create_statement="create_statement_value",
+                )
+
+                # Make the request
+                operation = client.create_database(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.CreateDatabaseRequest, dict]):
@@ -416,7 +469,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -439,6 +497,25 @@ class DatabaseAdminAsyncClient:
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_database_admin.Database:
         r"""Gets the state of a Cloud Spanner database.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_get_database():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.GetDatabaseRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_database(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.GetDatabaseRequest, dict]):
@@ -504,7 +581,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -528,6 +610,31 @@ class DatabaseAdminAsyncClient:
         [metadata][google.longrunning.Operation.metadata] field type is
         [UpdateDatabaseDdlMetadata][google.spanner.admin.database.v1.UpdateDatabaseDdlMetadata].
         The operation has no response.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_update_database_ddl():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
+                    database="database_value",
+                    statements=['statements_value_1', 'statements_value_2'],
+                )
+
+                # Make the request
+                operation = client.update_database_ddl(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.UpdateDatabaseDdlRequest, dict]):
@@ -631,7 +738,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -657,6 +769,23 @@ class DatabaseAdminAsyncClient:
         for the database will be retained according to their
         ``expire_time``. Note: Cloud Spanner might continue to accept
         requests for a few seconds after the database has been deleted.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_drop_database():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.DropDatabaseRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                client.drop_database(request=request)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.DropDatabaseRequest, dict]):
@@ -716,7 +845,10 @@ class DatabaseAdminAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def get_database_ddl(
@@ -732,6 +864,26 @@ class DatabaseAdminAsyncClient:
         formatted DDL statements. This method does not show pending
         schema updates, those may be queried using the
         [Operations][google.longrunning.Operations] API.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_get_database_ddl():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.GetDatabaseDdlRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                response = client.get_database_ddl(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.GetDatabaseDdlRequest, dict]):
@@ -799,7 +951,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -822,6 +979,26 @@ class DatabaseAdminAsyncClient:
         backups, authorization requires ``spanner.backups.setIamPolicy``
         permission on
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_set_iam_policy():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.SetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.set_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.SetIamPolicyRequest, dict]):
@@ -916,7 +1093,9 @@ class DatabaseAdminAsyncClient:
         if isinstance(request, dict):
             request = iam_policy_pb2.SetIamPolicyRequest(**request)
         elif not request:
-            request = iam_policy_pb2.SetIamPolicyRequest(resource=resource,)
+            request = iam_policy_pb2.SetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -933,7 +1112,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -957,6 +1141,26 @@ class DatabaseAdminAsyncClient:
         backups, authorization requires ``spanner.backups.getIamPolicy``
         permission on
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_get_iam_policy():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.GetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.get_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.GetIamPolicyRequest, dict]):
@@ -1051,7 +1255,9 @@ class DatabaseAdminAsyncClient:
         if isinstance(request, dict):
             request = iam_policy_pb2.GetIamPolicyRequest(**request)
         elif not request:
-            request = iam_policy_pb2.GetIamPolicyRequest(resource=resource,)
+            request = iam_policy_pb2.GetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1078,7 +1284,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1103,6 +1314,27 @@ class DatabaseAdminAsyncClient:
         Calling this method on a backup that does not exist will result
         in a NOT_FOUND error if the user has ``spanner.backups.list``
         permission on the containing instance.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_test_iam_permissions():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.TestIamPermissionsRequest(
+                    resource="resource_value",
+                    permissions=['permissions_value_1', 'permissions_value_2'],
+                )
+
+                # Make the request
+                response = client.test_iam_permissions(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest, dict]):
@@ -1152,7 +1384,8 @@ class DatabaseAdminAsyncClient:
             request = iam_policy_pb2.TestIamPermissionsRequest(**request)
         elif not request:
             request = iam_policy_pb2.TestIamPermissionsRequest(
-                resource=resource, permissions=permissions,
+                resource=resource,
+                permissions=permissions,
             )
 
         # Wrap the RPC method; this adds retry and timeout information,
@@ -1170,7 +1403,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1199,6 +1437,31 @@ class DatabaseAdminAsyncClient:
         creation and delete the backup. There can be only one pending
         backup creation per database. Backup creation of different
         databases can run concurrently.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_create_backup():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.CreateBackupRequest(
+                    parent="parent_value",
+                    backup_id="backup_id_value",
+                )
+
+                # Make the request
+                operation = client.create_backup(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.CreateBackupRequest, dict]):
@@ -1281,7 +1544,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -1289,6 +1557,173 @@ class DatabaseAdminAsyncClient:
             self._client._transport.operations_client,
             gsad_backup.Backup,
             metadata_type=gsad_backup.CreateBackupMetadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    async def copy_backup(
+        self,
+        request: Union[backup.CopyBackupRequest, dict] = None,
+        *,
+        parent: str = None,
+        backup_id: str = None,
+        source_backup: str = None,
+        expire_time: timestamp_pb2.Timestamp = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: float = None,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> operation_async.AsyncOperation:
+        r"""Starts copying a Cloud Spanner Backup. The returned backup
+        [long-running operation][google.longrunning.Operation] will have
+        a name of the format
+        ``projects/<project>/instances/<instance>/backups/<backup>/operations/<operation_id>``
+        and can be used to track copying of the backup. The operation is
+        associated with the destination backup. The
+        [metadata][google.longrunning.Operation.metadata] field type is
+        [CopyBackupMetadata][google.spanner.admin.database.v1.CopyBackupMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is [Backup][google.spanner.admin.database.v1.Backup], if
+        successful. Cancelling the returned operation will stop the
+        copying and delete the backup. Concurrent CopyBackup requests
+        can run on the same source backup.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_copy_backup():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.CopyBackupRequest(
+                    parent="parent_value",
+                    backup_id="backup_id_value",
+                    source_backup="source_backup_value",
+                )
+
+                # Make the request
+                operation = client.copy_backup(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_database_v1.types.CopyBackupRequest, dict]):
+                The request object. The request for
+                [CopyBackup][google.spanner.admin.database.v1.DatabaseAdmin.CopyBackup].
+            parent (:class:`str`):
+                Required. The name of the destination instance that will
+                contain the backup copy. Values are of the form:
+                ``projects/<project>/instances/<instance>``.
+
+                This corresponds to the ``parent`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            backup_id (:class:`str`):
+                Required. The id of the backup copy. The ``backup_id``
+                appended to ``parent`` forms the full backup_uri of the
+                form
+                ``projects/<project>/instances/<instance>/backups/<backup>``.
+
+                This corresponds to the ``backup_id`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            source_backup (:class:`str`):
+                Required. The source backup to be copied. The source
+                backup needs to be in READY state for it to be copied.
+                Once CopyBackup is in progress, the source backup cannot
+                be deleted or cleaned up on expiration until CopyBackup
+                is finished. Values are of the form:
+                ``projects/<project>/instances/<instance>/backups/<backup>``.
+
+                This corresponds to the ``source_backup`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            expire_time (:class:`google.protobuf.timestamp_pb2.Timestamp`):
+                Required. The expiration time of the backup in
+                microsecond granularity. The expiration time must be at
+                least 6 hours and at most 366 days from the
+                ``create_time`` of the source backup. Once the
+                ``expire_time`` has passed, the backup is eligible to be
+                automatically deleted by Cloud Spanner to free the
+                resources used by the backup.
+
+                This corresponds to the ``expire_time`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.api_core.operation_async.AsyncOperation:
+                An object representing a long-running operation.
+
+                The result type for the operation will be
+                :class:`google.cloud.spanner_admin_database_v1.types.Backup`
+                A backup of a Cloud Spanner database.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([parent, backup_id, source_backup, expire_time])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        request = backup.CopyBackupRequest(request)
+
+        # If we have keyword arguments corresponding to fields on the
+        # request, apply these.
+        if parent is not None:
+            request.parent = parent
+        if backup_id is not None:
+            request.backup_id = backup_id
+        if source_backup is not None:
+            request.source_backup = source_backup
+        if expire_time is not None:
+            request.expire_time = expire_time
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = gapic_v1.method_async.wrap_method(
+            self._client._transport.copy_backup,
+            default_timeout=3600.0,
+            client_info=DEFAULT_CLIENT_INFO,
+        )
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
+        )
+
+        # Send the request.
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Wrap the response in an operation future.
+        response = operation_async.from_gapic(
+            response,
+            self._client._transport.operations_client,
+            backup.Backup,
+            metadata_type=backup.CopyBackupMetadata,
         )
 
         # Done; return the response.
@@ -1305,6 +1740,26 @@ class DatabaseAdminAsyncClient:
     ) -> backup.Backup:
         r"""Gets metadata on a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_get_backup():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.GetBackupRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_backup(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.GetBackupRequest, dict]):
@@ -1369,7 +1824,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1386,6 +1846,25 @@ class DatabaseAdminAsyncClient:
     ) -> gsad_backup.Backup:
         r"""Updates a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_update_backup():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.UpdateBackupRequest(
+                )
+
+                # Make the request
+                response = client.update_backup(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.UpdateBackupRequest, dict]):
@@ -1470,7 +1949,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1486,6 +1970,23 @@ class DatabaseAdminAsyncClient:
     ) -> None:
         r"""Deletes a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_delete_backup():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.DeleteBackupRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_backup(request=request)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.DeleteBackupRequest, dict]):
@@ -1548,7 +2049,10 @@ class DatabaseAdminAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def list_backups(
@@ -1563,6 +2067,27 @@ class DatabaseAdminAsyncClient:
         r"""Lists completed and pending backups. Backups returned are
         ordered by ``create_time`` in descending order, starting from
         the most recent ``create_time``.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_list_backups():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.ListBackupsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_backups(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.ListBackupsRequest, dict]):
@@ -1632,12 +2157,20 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListBackupsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -1673,6 +2206,32 @@ class DatabaseAdminAsyncClient:
         operation completes, a new restore operation can be initiated,
         without waiting for the optimize operation associated with the
         first restore to complete.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_restore_database():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.RestoreDatabaseRequest(
+                    backup="backup_value",
+                    parent="parent_value",
+                    database_id="database_id_value",
+                )
+
+                # Make the request
+                operation = client.restore_database(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.RestoreDatabaseRequest, dict]):
@@ -1757,7 +2316,12 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -1791,6 +2355,27 @@ class DatabaseAdminAsyncClient:
         Operations returned include those that have
         completed/failed/canceled within the last 7 days, and pending
         operations.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_list_database_operations():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.ListDatabaseOperationsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_database_operations(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.ListDatabaseOperationsRequest, dict]):
@@ -1861,12 +2446,20 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListDatabaseOperationsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -1893,6 +2486,27 @@ class DatabaseAdminAsyncClient:
         operations. Operations returned are ordered by
         ``operation.metadata.value.progress.start_time`` in descending
         order starting from the most recently started operation.
+
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_list_backup_operations():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_database_v1.ListBackupOperationsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_backup_operations(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.ListBackupOperationsRequest, dict]):
@@ -1963,12 +2577,20 @@ class DatabaseAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListBackupOperationsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
