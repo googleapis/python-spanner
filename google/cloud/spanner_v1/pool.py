@@ -116,7 +116,7 @@ class AbstractSessionPool(object):
         :returns: new session instance.
         """
         return self._database.session(
-            labels=self.labels, creator_role=self._creator_role
+            labels=self.labels, creator_role=self.creator_role
         )
 
     def session(self, **kwargs):
@@ -190,6 +190,7 @@ class FixedSizePool(AbstractSessionPool):
                 database=database.name,
                 session_count=self.size - self._sessions.qsize(),
                 metadata=metadata,
+                creator_role=self.creator_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -390,7 +391,7 @@ class PingingPool(AbstractSessionPool):
                 database=database.name,
                 session_count=self.size - created_session_count,
                 metadata=metadata,
-                creator_role=self._creator_role,
+                creator_role=self.creator_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()

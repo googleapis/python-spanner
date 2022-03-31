@@ -73,6 +73,14 @@ class Session(object):
         return self._session_id
 
     @property
+    def creator_role(self):
+        """User-assigned creator-role for the session.
+
+        :rtype: str
+        :returns: the creator role str (None if no creator role were assigned)."""
+        return self._creator_role
+
+    @property
     def labels(self):
         """User-assigned labels for the session.
 
@@ -116,8 +124,8 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
 
         request = CreateSessionRequest(database=self._database.name)
-        if self._database._creator_role is not None:
-            request.session.creator_role = self._database._creator_role
+        if self._database and self._database.creator_role is not None:
+            request.session.creator_role = self._database.creator_role
 
         if self._labels:
             request.session.labels = self._labels

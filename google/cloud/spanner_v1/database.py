@@ -301,6 +301,15 @@ class Database(object):
         return self._ddl_statements
 
     @property
+    def creator_role(self):
+        """Creator role used in sessions to connect to this database.
+
+        :rtype: str
+        :returns: an str with the name of the database role.
+        """
+        return self._creator_role
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -578,7 +587,7 @@ class Database(object):
         :returns: a session bound to this database.
         """
         role = self._creator_role
-        # If the pool has another role specified we use that role instead.
+        # If role is specified then that role is used instead.
         if creator_role:
             role = creator_role
         return Session(self, labels=labels, creator_role=role)

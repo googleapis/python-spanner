@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import imp
 import unittest
 
 import mock
@@ -544,6 +545,7 @@ class TestInstance(unittest.TestCase):
         self.assertIsNone(database._logger)
         pool = database._pool
         self.assertIs(pool._database, database)
+        self.assertIsNone(database.creator_role)
 
     def test_database_factory_explicit(self):
         from logging import Logger
@@ -553,6 +555,7 @@ class TestInstance(unittest.TestCase):
         client = _Client(self.PROJECT)
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
         DATABASE_ID = "database-id"
+        CREATOR_ROLE = "dummy-role"
         pool = _Pool()
         logger = mock.create_autospec(Logger, instance=True)
         encryption_config = {"kms_key_name": "kms_key_name"}
@@ -563,6 +566,7 @@ class TestInstance(unittest.TestCase):
             pool=pool,
             logger=logger,
             encryption_config=encryption_config,
+            creator_role=CREATOR_ROLE,
         )
 
         self.assertIsInstance(database, Database)
@@ -573,6 +577,7 @@ class TestInstance(unittest.TestCase):
         self.assertIs(database._logger, logger)
         self.assertIs(pool._bound, database)
         self.assertIs(database._encryption_config, encryption_config)
+        self.assertIs(database.creator_role, CREATOR_ROLE)
 
     def test_list_databases(self):
         from google.cloud.spanner_admin_database_v1 import Database as DatabasePB

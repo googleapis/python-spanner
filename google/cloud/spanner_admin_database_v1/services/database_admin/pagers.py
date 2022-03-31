@@ -599,9 +599,6 @@ class ListDatabaseRolesPager:
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
             self._response = self._method(self._request, metadata=self._metadata)
-            import pdb
-
-            pdb.set_trace()
             yield self._response
 
     def __iter__(self) -> Iterator[spanner_database_admin.DatabaseRole]:

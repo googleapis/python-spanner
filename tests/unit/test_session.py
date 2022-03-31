@@ -15,6 +15,7 @@
 
 import google.api_core.gapic_v1.method
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.session import Session
 import mock
 from tests._helpers import (
     OpenTelemetryBase,
@@ -45,6 +46,7 @@ class TestSession(OpenTelemetryBase):
     DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
     SESSION_ID = "session-id"
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
+    CREATOR_ROLE = "dummy-role"
     BASE_ATTRIBUTES = {
         "db.type": "spanner",
         "db.url": "spanner.googleapis.com",
@@ -61,19 +63,20 @@ class TestSession(OpenTelemetryBase):
         return self._getTargetClass()(*args, **kwargs)
 
     @staticmethod
-    def _make_database(name=DATABASE_NAME):
+    def _make_database(name=DATABASE_NAME, creator_role=None):
         from google.cloud.spanner_v1.database import Database
 
         database = mock.create_autospec(Database, instance=True)
         database.name = name
         database.log_commit_stats = False
+        database.creator_role = creator_role
         return database
 
     @staticmethod
-    def _make_session_pb(name, labels=None):
+    def _make_session_pb(name, labels=None, creator_role=None):
         from google.cloud.spanner_v1 import Session
 
-        return Session(name=name, labels=labels)
+        return Session(name=name, labels=labels, creator_role=creator_role)
 
     def _make_spanner_api(self):
         from google.cloud.spanner_v1 import SpannerClient
@@ -86,6 +89,20 @@ class TestSession(OpenTelemetryBase):
         self.assertIs(session.session_id, None)
         self.assertIs(session._database, database)
         self.assertEqual(session.labels, {})
+
+    def test_constructor_w_creator_role(self):
+        database = self._make_database(creator_role=self.CREATOR_ROLE)
+        session = self._make_one(database, creator_role=self.CREATOR_ROLE)
+        self.assertIs(session.session_id, None)
+        self.assertIs(session._database, database)
+        self.assertEqual(session.creator_role, self.CREATOR_ROLE)
+
+    def test_constructor_wo_creator_role(self):
+        database = self._make_database()
+        session = self._make_one(database)
+        self.assertIs(session.session_id, None)
+        self.assertIs(session._database, database)
+        self.assertIs(session.creator_role, None)
 
     def test_constructor_w_labels(self):
         database = self._make_database()
@@ -125,6 +142,65 @@ class TestSession(OpenTelemetryBase):
             session.create()
 
         self.assertNoSpans()
+
+    def test_create_w_creator_role(self):
+        from google.cloud.spanner_v1 import CreateSessionRequest
+        from google.cloud.spanner_v1 import Session as SessionRequestProto
+
+        session_pb = self._make_session_pb(
+            self.SESSION_NAME, creator_role=self.CREATOR_ROLE
+        )
+        gax_api = self._make_spanner_api()
+        gax_api.create_session.return_value = session_pb
+        database = self._make_database(creator_role=self.CREATOR_ROLE)
+        database.spanner_api = gax_api
+        session = self._make_one(database, creator_role=self.CREATOR_ROLE)
+
+        session.create()
+
+        self.assertEqual(session.session_id, self.SESSION_ID)
+        self.assertEqual(session.creator_role, self.CREATOR_ROLE)
+        session_template = SessionRequestProto(creator_role=self.CREATOR_ROLE)
+
+        request = CreateSessionRequest(
+            database=database.name,
+            session=session_template,
+        )
+
+        gax_api.create_session.assert_called_once_with(
+            request=request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+        self.assertSpanAttributes(
+            "CloudSpanner.CreateSession", attributes=TestSession.BASE_ATTRIBUTES
+        )
+
+    def test_create_wo_creator_role(self):
+        from google.cloud.spanner_v1 import CreateSessionRequest
+
+        session_pb = self._make_session_pb(self.SESSION_NAME)
+        gax_api = self._make_spanner_api()
+        gax_api.create_session.return_value = session_pb
+        database = self._make_database()
+        database.spanner_api = gax_api
+        session = self._make_one(database)
+        session.create()
+
+        self.assertEqual(session.session_id, self.SESSION_ID)
+        self.assertIsNone(session.creator_role)
+
+        request = CreateSessionRequest(
+            database=database.name,
+        )
+
+        gax_api.create_session.assert_called_once_with(
+            request=request, metadata=[("google-cloud-resource-prefix", database.name)]
+        )
+
+        self.assertSpanAttributes(
+            "CloudSpanner.CreateSession", attributes=TestSession.BASE_ATTRIBUTES
+        )
 
     def test_create_ok(self):
         from google.cloud.spanner_v1 import CreateSessionRequest

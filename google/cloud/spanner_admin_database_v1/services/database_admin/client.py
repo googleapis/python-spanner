@@ -2856,9 +2856,6 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        import pdb
-
-        pdb.set_trace()
         rpc = self._transport._wrapped_methods[self._transport.list_database_roles]
 
         # Certain fields should be provided within the metadata header;

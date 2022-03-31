@@ -44,12 +44,15 @@ class TestAbstractSessionPool(unittest.TestCase):
         pool = self._make_one()
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, {})
+        self.assertIsNone(pool.creator_role)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
-        pool = self._make_one(labels=labels)
+        creator_role = "dummy-role"
+        pool = self._make_one(labels=labels, creator_role=creator_role)
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind_abstract(self):
         pool = self._make_one()
@@ -82,7 +85,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         new_session = pool._new_session()
 
         self.assertIs(new_session, session)
-        database.session.assert_called_once_with()
+        database.session.assert_called_once_with(labels={}, creator_role=None)
 
     def test__new_session_w_labels(self):
         labels = {"foo": "bar"}
@@ -94,7 +97,19 @@ class TestAbstractSessionPool(unittest.TestCase):
         new_session = pool._new_session()
 
         self.assertIs(new_session, session)
-        database.session.assert_called_once_with(labels=labels)
+        database.session.assert_called_once_with(labels=labels, creator_role=None)
+
+    def test__new_session_w_creator_role(self):
+        creator_role = "dummy-role"
+        pool = self._make_one(creator_role=creator_role)
+        database = pool._database = _make_database("name")
+        session = _make_session()
+        database.session.return_value = session
+
+        new_session = pool._new_session()
+
+        self.assertIs(new_session, session)
+        database.session.assert_called_once_with(labels={}, creator_role=creator_role)
 
     def test_session_wo_kwargs(self):
         from google.cloud.spanner_v1.pool import SessionCheckout
@@ -133,15 +148,20 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertEqual(pool.default_timeout, 10)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
+        self.assertIsNone(pool.creator_role)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
-        pool = self._make_one(size=4, default_timeout=30, labels=labels)
+        creator_role = "dummy-role"
+        pool = self._make_one(
+            size=4, default_timeout=30, labels=labels, creator_role=creator_role
+        )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
         self.assertEqual(pool.default_timeout, 30)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind(self):
         pool = self._make_one()
@@ -272,14 +292,17 @@ class TestBurstyPool(unittest.TestCase):
         self.assertEqual(pool.target_size, 10)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
+        self.assertIsNone(pool.creator_role)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
-        pool = self._make_one(target_size=4, labels=labels)
+        creator_role = "dummy-role"
+        pool = self._make_one(target_size=4, labels=labels, creator_role=creator_role)
         self.assertIsNone(pool._database)
         self.assertEqual(pool.target_size, 4)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
 
     def test_get_empty(self):
         pool = self._make_one()
@@ -392,11 +415,17 @@ class TestPingingPool(unittest.TestCase):
         self.assertEqual(pool._delta.seconds, 3000)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
+        self.assertIsNone(pool.creator_role)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
+        creator_role = "dummy-role"
         pool = self._make_one(
-            size=4, default_timeout=30, ping_interval=1800, labels=labels
+            size=4,
+            default_timeout=30,
+            ping_interval=1800,
+            labels=labels,
+            creator_role=creator_role,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -404,6 +433,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertEqual(pool._delta.seconds, 1800)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind(self):
         pool = self._make_one()
@@ -624,11 +654,17 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, {})
+        self.assertIsNone(pool.creator_role)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
+        creator_role = "dummy-role"
         pool = self._make_one(
-            size=4, default_timeout=30, ping_interval=1800, labels=labels
+            size=4,
+            default_timeout=30,
+            ping_interval=1800,
+            labels=labels,
+            creator_role=creator_role,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -637,6 +673,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind(self):
         pool = self._make_one()
@@ -887,15 +924,27 @@ class _Database(object):
         self._sessions = []
 
         def mock_batch_create_sessions(
-            database=None, session_count=10, timeout=10, metadata=[]
+            database=None,
+            session_count=10,
+            timeout=10,
+            metadata=[],
+            creator_role=None,
+            labels={},
         ):
             from google.cloud.spanner_v1 import BatchCreateSessionsResponse
             from google.cloud.spanner_v1 import Session
 
             if session_count < 2:
-                response = BatchCreateSessionsResponse(session=[Session()])
+                response = BatchCreateSessionsResponse(
+                    session=[Session(creator_role=creator_role, labels=labels)]
+                )
             else:
-                response = BatchCreateSessionsResponse(session=[Session(), Session()])
+                response = BatchCreateSessionsResponse(
+                    session=[
+                        Session(creator_role=creator_role, labels=labels),
+                        Session(creator_role=creator_role, labels=labels),
+                    ]
+                )
             return response
 
         from google.cloud.spanner_v1 import SpannerClient
@@ -903,7 +952,7 @@ class _Database(object):
         self.spanner_api = mock.create_autospec(SpannerClient, instance=True)
         self.spanner_api.batch_create_sessions.side_effect = mock_batch_create_sessions
 
-    def session(self):
+    def session(self, **kwargs):
         # always return first session in the list
         # to avoid reversing the order of putting
         # sessions into pool (important for order tests)
