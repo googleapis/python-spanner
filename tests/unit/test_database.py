@@ -1539,6 +1539,51 @@ class TestDatabase(_BaseTest):
             filter_=expected_filter_, page_size=page_size
         )
 
+    def test_list_database_roles_grpc_error(self):
+        from google.api_core.exceptions import Unknown
+        from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
+
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.list_database_roles.side_effect = Unknown("testing")
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        with self.assertRaises(Unknown):
+            database.list_database_roles()
+
+        expected_request = ListDatabaseRolesRequest(
+            parent=database.name,
+        )
+
+        api.list_database_roles.assert_called_once_with(
+            request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_list_database_roles_defaults(self):
+        from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
+
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        instance.list_database_roles = mock.MagicMock(return_value=[])
+        pool = _Pool()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+
+        resp = database.list_database_roles()
+
+        expected_request = ListDatabaseRolesRequest(
+            parent=database.name,
+        )
+
+        api.list_database_roles.assert_called_once_with(
+            request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+        self.assertIsNotNone(resp)
+
     def test_table_factory_defaults(self):
         from google.cloud.spanner_v1.table import Table
 
