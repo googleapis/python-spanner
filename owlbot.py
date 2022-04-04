@@ -166,6 +166,8 @@ s.replace("CONTRIBUTING.rst", "samples/snippets", "samples/samples")
 
 python.py_samples()
 
+python.configure_previous_major_version_branches()
+
 # ----------------------------------------------------------------------------
 # Customize noxfile.py
 # ----------------------------------------------------------------------------
