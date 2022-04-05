@@ -174,11 +174,15 @@ class Cursor(object):
                 sql, params = sql_pyformat_args_to_spanner(sql, args)
 
                 statement = Statement(
-                    sql, params, get_param_types(params), ResultsChecksum(),
+                    sql,
+                    params,
+                    get_param_types(params),
+                    ResultsChecksum(),
                 )
-                (self._result_set, self._checksum,) = self.connection.run_statement(
-                    statement
-                )
+                (
+                    self._result_set,
+                    self._checksum,
+                ) = self.connection.run_statement(statement)
                 self._itr = PeekIterator(self._result_set)
                 return
 

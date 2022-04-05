@@ -22,7 +22,10 @@ from google.protobuf import timestamp_pb2 as timestamp  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package="google.spanner.admin.database.v1", manifest={"OperationProgress",},
+    package="google.spanner.admin.database.v1",
+    manifest={
+        "OperationProgress",
+    },
 )
 
 
@@ -43,9 +46,17 @@ class OperationProgress(proto.Message):
 
     progress_percent = proto.Field(proto.INT32, number=1)
 
-    start_time = proto.Field(proto.MESSAGE, number=2, message=timestamp.Timestamp,)
+    start_time = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=timestamp.Timestamp,
+    )
 
-    end_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
+    end_time = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp.Timestamp,
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

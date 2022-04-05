@@ -30,38 +30,40 @@ def _make_credentials():
 
 
 class Test_connect(unittest.TestCase):
+    CREDENTIALS = _make_credentials()
+
     def test_connect(self):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_dbapi import Connection
 
         PROJECT = "test-project"
         USER_AGENT = "user-agent"
-        CREDENTIALS = _make_credentials()
 
         with mock.patch("google.cloud.spanner_v1.Client") as client_mock:
             connection = connect(
                 "test-instance",
                 "test-database",
                 PROJECT,
-                CREDENTIALS,
+                self.CREDENTIALS,
                 user_agent=USER_AGENT,
             )
 
             self.assertIsInstance(connection, Connection)
 
             client_mock.assert_called_once_with(
-                project=PROJECT, credentials=CREDENTIALS, client_info=mock.ANY
+                project=PROJECT, credentials=self.CREDENTIALS, client_info=mock.ANY
             )
 
     def test_instance_not_found(self):
         from google.cloud.spanner_dbapi import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=False,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=False,
         ) as exists_mock:
 
             with self.assertRaises(ValueError):
-                connect("test-instance", "test-database")
+                connect("test-instance", "test-database", credentials=self.CREDENTIALS)
 
             exists_mock.assert_called_once_with()
 
@@ -69,14 +71,18 @@ class Test_connect(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=False,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=False,
             ) as exists_mock:
 
                 with self.assertRaises(ValueError):
-                    connect("test-instance", "test-database")
+                    connect(
+                        "test-instance", "test-database", credentials=self.CREDENTIALS
+                    )
 
                 exists_mock.assert_called_once_with()
 
@@ -89,7 +95,9 @@ class Test_connect(unittest.TestCase):
         with mock.patch(
             "google.cloud.spanner_v1.client.Client.instance"
         ) as instance_mock:
-            connection = connect(INSTANCE, "test-database")
+            connection = connect(
+                INSTANCE, "test-database", credentials=self.CREDENTIALS
+            )
 
             instance_mock.assert_called_once_with(INSTANCE)
 
@@ -105,9 +113,12 @@ class Test_connect(unittest.TestCase):
             "google.cloud.spanner_v1.instance.Instance.database"
         ) as database_mock:
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", DATABASE)
+                connection = connect(
+                    "test-instance", DATABASE, credentials=self.CREDENTIALS
+                )
 
                 database_mock.assert_called_once_with(DATABASE, pool=mock.ANY)
 
@@ -118,9 +129,12 @@ class Test_connect(unittest.TestCase):
 
         with mock.patch("google.cloud.spanner_v1.instance.Instance.database"):
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
                 self.assertIsNotNone(connection.database._pool)
 
@@ -135,7 +149,13 @@ class Test_connect(unittest.TestCase):
             "google.cloud.spanner_v1.instance.Instance.database"
         ) as database_mock:
             with mock.patch(
-                "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+                "google.cloud.spanner_v1.instance.Instance.exists",
+                return_value=True,
             ):
-                connect("test-instance", database_id, pool=pool)
+                connect(
+                    "test-instance",
+                    database_id,
+                    pool=pool,
+                    credentials=self.CREDENTIALS,
+                )
                 database_mock.assert_called_once_with(database_id, pool=pool)

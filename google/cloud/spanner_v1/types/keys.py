@@ -22,7 +22,11 @@ from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package="google.spanner.v1", manifest={"KeyRange", "KeySet",},
+    package="google.spanner.v1",
+    manifest={
+        "KeyRange",
+        "KeySet",
+    },
 )
 
 
@@ -157,19 +161,31 @@ class KeyRange(proto.Message):
     """
 
     start_closed = proto.Field(
-        proto.MESSAGE, number=1, oneof="start_key_type", message=struct.ListValue,
+        proto.MESSAGE,
+        number=1,
+        oneof="start_key_type",
+        message=struct.ListValue,
     )
 
     start_open = proto.Field(
-        proto.MESSAGE, number=2, oneof="start_key_type", message=struct.ListValue,
+        proto.MESSAGE,
+        number=2,
+        oneof="start_key_type",
+        message=struct.ListValue,
     )
 
     end_closed = proto.Field(
-        proto.MESSAGE, number=3, oneof="end_key_type", message=struct.ListValue,
+        proto.MESSAGE,
+        number=3,
+        oneof="end_key_type",
+        message=struct.ListValue,
     )
 
     end_open = proto.Field(
-        proto.MESSAGE, number=4, oneof="end_key_type", message=struct.ListValue,
+        proto.MESSAGE,
+        number=4,
+        oneof="end_key_type",
+        message=struct.ListValue,
     )
 
 
@@ -200,9 +216,17 @@ class KeySet(proto.Message):
             only yielded once.
     """
 
-    keys = proto.RepeatedField(proto.MESSAGE, number=1, message=struct.ListValue,)
+    keys = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message=struct.ListValue,
+    )
 
-    ranges = proto.RepeatedField(proto.MESSAGE, number=2, message="KeyRange",)
+    ranges = proto.RepeatedField(
+        proto.MESSAGE,
+        number=2,
+        message="KeyRange",
+    )
 
     all_ = proto.Field(proto.BOOL, number=3)
 

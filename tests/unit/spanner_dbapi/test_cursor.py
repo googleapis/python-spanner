@@ -18,11 +18,23 @@ import mock
 import sys
 import unittest
 
+import google.auth.credentials
+
+
+def _make_credentials():
+    class _CredentialsWithScopes(
+        google.auth.credentials.Credentials, google.auth.credentials.Scoped
+    ):
+        pass
+
+    return mock.Mock(spec=_CredentialsWithScopes)
+
 
 class TestCursor(unittest.TestCase):
 
     INSTANCE = "test-instance"
     DATABASE = "test-database"
+    CREDENTIALS = _make_credentials()
 
     def _get_target_class(self):
         from google.cloud.spanner_dbapi import Cursor
@@ -79,7 +91,9 @@ class TestCursor(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
-                connection = connect(self.INSTANCE, self.DATABASE)
+                connection = connect(
+                    self.INSTANCE, self.DATABASE, credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         self.assertFalse(cursor.is_closed)
@@ -100,7 +114,9 @@ class TestCursor(unittest.TestCase):
         def run_helper(ret_value):
             transaction.execute_update.return_value = ret_value
             res = cursor._do_execute_update(
-                transaction=transaction, sql="SELECT * WHERE true", params={},
+                transaction=transaction,
+                sql="SELECT * WHERE true",
+                params={},
             )
             return res
 
@@ -249,7 +265,9 @@ class TestCursor(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor.close()
@@ -470,12 +488,16 @@ class TestCursor(unittest.TestCase):
         from google.cloud.spanner_dbapi.connection import connect
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor._checksum = ResultsChecksum()
@@ -501,18 +523,27 @@ class TestCursor(unittest.TestCase):
 
         row = ["field1", "field2"]
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            cursor._checksum,
+        )
         connection._statements.append(statement)
 
         with mock.patch(
@@ -540,10 +571,12 @@ class TestCursor(unittest.TestCase):
         row2 = ["updated_field1", "field2"]
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=True,
             ):
                 connection = connect("test-instance", "test-database")
 
@@ -551,7 +584,12 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            cursor._checksum,
+        )
         connection._statements.append(statement)
 
         with mock.patch(

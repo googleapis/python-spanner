@@ -77,10 +77,10 @@ class InstanceAdminTransport(abc.ABC):
             scope (Optional[Sequence[str]]): A list of scopes.
             quota_project_id (Optional[str]): An optional project to use for billing
                 and quota.
-            client_info (google.api_core.gapic_v1.client_info.ClientInfo):	
-                The client info used to send a user-agent string along with	
-                API requests. If ``None``, then default info will be used.	
-                Generally, you only need to set this if you're developing	
+            client_info (google.api_core.gapic_v1.client_info.ClientInfo):
+                The client info used to send a user-agent string along with
+                API requests. If ``None``, then default info will be used.
+                Generally, you only need to set this if you're developing
                 your own client library.
         """
         # Save the hostname. Default to port 443 (HTTPS) if none is specified.
@@ -121,7 +121,8 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -134,7 +135,8 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -147,7 +149,8 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
@@ -160,17 +163,22 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
                 client_info=client_info,
             ),
             self.create_instance: gapic_v1.method.wrap_method(
-                self.create_instance, default_timeout=3600.0, client_info=client_info,
+                self.create_instance,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.update_instance: gapic_v1.method.wrap_method(
-                self.update_instance, default_timeout=3600.0, client_info=client_info,
+                self.update_instance,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.delete_instance: gapic_v1.method.wrap_method(
                 self.delete_instance,
@@ -179,14 +187,17 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=3600.0,
                 client_info=client_info,
             ),
             self.set_iam_policy: gapic_v1.method.wrap_method(
-                self.set_iam_policy, default_timeout=30.0, client_info=client_info,
+                self.set_iam_policy,
+                default_timeout=30.0,
+                client_info=client_info,
             ),
             self.get_iam_policy: gapic_v1.method.wrap_method(
                 self.get_iam_policy,
@@ -195,7 +206,8 @@ class InstanceAdminTransport(abc.ABC):
                     maximum=32.0,
                     multiplier=1.3,
                     predicate=retries.if_exception_type(
-                        exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                        exceptions.DeadlineExceeded,
+                        exceptions.ServiceUnavailable,
                     ),
                 ),
                 default_timeout=30.0,

@@ -138,7 +138,9 @@ class TestConnection(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         self.assertFalse(connection.is_closed)
         connection.close()
@@ -264,7 +266,7 @@ class TestConnection(unittest.TestCase):
             "google.cloud.spanner_v1.instance.Instance.exists", return_value=False
         ):
             with self.assertRaises(ValueError):
-                connect("test-instance", "test-database")
+                connect("test-instance", "test-database", credentials=self.CREDENTIALS)
 
     def test_connect_database_not_found(self):
         from google.cloud.spanner_dbapi import connect
@@ -276,7 +278,9 @@ class TestConnection(unittest.TestCase):
                 "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
                 with self.assertRaises(ValueError):
-                    connect("test-instance", "test-database")
+                    connect(
+                        "test-instance", "test-database", credentials=self.CREDENTIALS
+                    )
 
     def test_default_sessions_pool(self):
         from google.cloud.spanner_dbapi import connect
@@ -285,7 +289,9 @@ class TestConnection(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
                 self.assertIsNotNone(connection.database._pool)
 
@@ -302,7 +308,12 @@ class TestConnection(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
-                connect("test-instance", database_id, pool=pool)
+                connect(
+                    "test-instance",
+                    database_id,
+                    pool=pool,
+                    credentials=self.CREDENTIALS,
+                )
                 database_mock.assert_called_once_with(database_id, pool=pool)
 
     def test_run_statement_remember_statements(self):
@@ -316,7 +327,12 @@ class TestConnection(unittest.TestCase):
 
         connection = self._make_connection()
 
-        statement = Statement(sql, params, param_types, ResultsChecksum(),)
+        statement = Statement(
+            sql,
+            params,
+            param_types,
+            ResultsChecksum(),
+        )
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout"
         ):
@@ -338,7 +354,12 @@ class TestConnection(unittest.TestCase):
 
         connection = self._make_connection()
 
-        statement = Statement(sql, params, param_types, ResultsChecksum(),)
+        statement = Statement(
+            sql,
+            params,
+            param_types,
+            ResultsChecksum(),
+        )
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection.transaction_checkout"
         ):
@@ -390,7 +411,12 @@ class TestConnection(unittest.TestCase):
         checksum.consume_result(row)
         retried_checkum = ResultsChecksum()
 
-        statement = Statement("SELECT 1", [], {}, checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            checksum,
+        )
         connection._statements.append(statement)
 
         with mock.patch(
@@ -423,7 +449,12 @@ class TestConnection(unittest.TestCase):
         checksum.consume_result(row)
         retried_checkum = ResultsChecksum()
 
-        statement = Statement("SELECT 1", [], {}, checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            checksum,
+        )
         connection._statements.append(statement)
 
         with mock.patch(
@@ -442,23 +473,34 @@ class TestConnection(unittest.TestCase):
 
         row = ["field1", "field2"]
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            cursor._checksum,
+        )
         connection._statements.append(statement)
         connection._transaction = mock.Mock()
 
         with mock.patch.object(
-            connection._transaction, "commit", side_effect=(Aborted("Aborted"), None),
+            connection._transaction,
+            "commit",
+            side_effect=(Aborted("Aborted"), None),
         ):
             with mock.patch(
                 "google.cloud.spanner_dbapi.connection.Connection.run_statement",
@@ -496,18 +538,27 @@ class TestConnection(unittest.TestCase):
         row = ["field1", "field2"]
 
         with mock.patch(
-            "google.cloud.spanner_v1.instance.Instance.exists", return_value=True,
+            "google.cloud.spanner_v1.instance.Instance.exists",
+            return_value=True,
         ):
             with mock.patch(
-                "google.cloud.spanner_v1.database.Database.exists", return_value=True,
+                "google.cloud.spanner_v1.database.Database.exists",
+                return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum,)
+        statement = Statement(
+            "SELECT 1",
+            [],
+            {},
+            cursor._checksum,
+        )
         connection._statements.append(statement)
 
         metadata_mock = mock.Mock()
