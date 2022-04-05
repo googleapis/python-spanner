@@ -30,20 +30,20 @@ def _make_credentials():
 
 
 class Test_connect(unittest.TestCase):
+    PROJECT = "test-project"
     CREDENTIALS = _make_credentials()
 
     def test_connect(self):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_dbapi import Connection
 
-        PROJECT = "test-project"
         USER_AGENT = "user-agent"
 
         with mock.patch("google.cloud.spanner_v1.Client") as client_mock:
             connection = connect(
                 "test-instance",
                 "test-database",
-                PROJECT,
+                self.PROJECT,
                 self.CREDENTIALS,
                 user_agent=USER_AGENT,
             )
@@ -51,7 +51,7 @@ class Test_connect(unittest.TestCase):
             self.assertIsInstance(connection, Connection)
 
             client_mock.assert_called_once_with(
-                project=PROJECT, credentials=self.CREDENTIALS, client_info=mock.ANY
+                project=self.PROJECT, credentials=self.CREDENTIALS, client_info=mock.ANY
             )
 
     def test_instance_not_found(self):
@@ -63,7 +63,9 @@ class Test_connect(unittest.TestCase):
         ) as exists_mock:
 
             with self.assertRaises(ValueError):
-                connect("test-instance", "test-database", credentials=self.CREDENTIALS)
+                connect(
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
+                )
 
             exists_mock.assert_called_once_with()
 
@@ -81,7 +83,7 @@ class Test_connect(unittest.TestCase):
 
                 with self.assertRaises(ValueError):
                     connect(
-                        "test-instance", "test-database", credentials=self.CREDENTIALS
+                        "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                     )
 
                 exists_mock.assert_called_once_with()
@@ -96,7 +98,7 @@ class Test_connect(unittest.TestCase):
             "google.cloud.spanner_v1.client.Client.instance"
         ) as instance_mock:
             connection = connect(
-                INSTANCE, "test-database", credentials=self.CREDENTIALS
+                INSTANCE, "test-database", self.PROJECT, self.CREDENTIALS
             )
 
             instance_mock.assert_called_once_with(INSTANCE)
@@ -117,7 +119,7 @@ class Test_connect(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", DATABASE, credentials=self.CREDENTIALS
+                    "test-instance", DATABASE, self.PROJECT, self.CREDENTIALS
                 )
 
                 database_mock.assert_called_once_with(DATABASE, pool=mock.ANY)
@@ -133,7 +135,7 @@ class Test_connect(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
                 self.assertIsNotNone(connection.database._pool)
@@ -155,7 +157,8 @@ class Test_connect(unittest.TestCase):
                 connect(
                     "test-instance",
                     database_id,
+                    self.PROJECT,
+                    self.CREDENTIALS,
                     pool=pool,
-                    credentials=self.CREDENTIALS,
                 )
                 database_mock.assert_called_once_with(database_id, pool=pool)

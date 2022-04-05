@@ -139,7 +139,7 @@ class TestConnection(unittest.TestCase):
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         self.assertFalse(connection.is_closed)
@@ -266,7 +266,9 @@ class TestConnection(unittest.TestCase):
             "google.cloud.spanner_v1.instance.Instance.exists", return_value=False
         ):
             with self.assertRaises(ValueError):
-                connect("test-instance", "test-database", credentials=self.CREDENTIALS)
+                connect(
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
+                )
 
     def test_connect_database_not_found(self):
         from google.cloud.spanner_dbapi import connect
@@ -279,7 +281,7 @@ class TestConnection(unittest.TestCase):
             ):
                 with self.assertRaises(ValueError):
                     connect(
-                        "test-instance", "test-database", credentials=self.CREDENTIALS
+                        "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                     )
 
     def test_default_sessions_pool(self):
@@ -290,7 +292,7 @@ class TestConnection(unittest.TestCase):
                 "google.cloud.spanner_v1.instance.Instance.exists", return_value=True
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
                 self.assertIsNotNone(connection.database._pool)
@@ -311,8 +313,9 @@ class TestConnection(unittest.TestCase):
                 connect(
                     "test-instance",
                     database_id,
+                    self.PROJECT,
+                    self.CREDENTIALS,
                     pool=pool,
-                    credentials=self.CREDENTIALS,
                 )
                 database_mock.assert_called_once_with(database_id, pool=pool)
 
@@ -481,7 +484,7 @@ class TestConnection(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()
@@ -546,7 +549,7 @@ class TestConnection(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()

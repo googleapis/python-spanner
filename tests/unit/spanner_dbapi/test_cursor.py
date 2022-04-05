@@ -35,6 +35,7 @@ class TestCursor(unittest.TestCase):
     INSTANCE = "test-instance"
     DATABASE = "test-database"
     CREDENTIALS = _make_credentials()
+    PROJECT = "test-project"
 
     def _get_target_class(self):
         from google.cloud.spanner_dbapi import Cursor
@@ -92,7 +93,7 @@ class TestCursor(unittest.TestCase):
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect(
-                    self.INSTANCE, self.DATABASE, credentials=self.CREDENTIALS
+                    self.INSTANCE, self.DATABASE, self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()
@@ -266,7 +267,7 @@ class TestCursor(unittest.TestCase):
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()
@@ -287,7 +288,9 @@ class TestCursor(unittest.TestCase):
             with mock.patch(
                 "google.cloud.spanner_v1.database.Database.exists", return_value=True
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         with mock.patch(
@@ -496,7 +499,7 @@ class TestCursor(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()
@@ -531,7 +534,7 @@ class TestCursor(unittest.TestCase):
                 return_value=True,
             ):
                 connection = connect(
-                    "test-instance", "test-database", credentials=self.CREDENTIALS
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
                 )
 
         cursor = connection.cursor()
@@ -578,7 +581,9 @@ class TestCursor(unittest.TestCase):
                 "google.cloud.spanner_v1.database.Database.exists",
                 return_value=True,
             ):
-                connection = connect("test-instance", "test-database")
+                connection = connect(
+                    "test-instance", "test-database", self.PROJECT, self.CREDENTIALS
+                )
 
         cursor = connection.cursor()
         cursor._checksum = ResultsChecksum()
