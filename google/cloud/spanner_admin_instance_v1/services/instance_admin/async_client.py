@@ -236,7 +236,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -250,12 +251,20 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListInstanceConfigsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -326,7 +335,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -340,7 +350,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -410,7 +425,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -424,12 +440,20 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListInstancesAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -497,7 +521,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -511,7 +536,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -644,7 +674,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -791,7 +826,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation_async.from_gapic(
@@ -870,7 +910,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=3600.0,
@@ -885,7 +926,10 @@ class InstanceAdminAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def set_iam_policy(
@@ -1007,7 +1051,9 @@ class InstanceAdminAsyncClient:
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.SetIamPolicyRequest(resource=resource,)
+            request = iam_policy.SetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1024,7 +1070,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1149,7 +1200,9 @@ class InstanceAdminAsyncClient:
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.GetIamPolicyRequest(resource=resource,)
+            request = iam_policy.GetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1160,7 +1213,8 @@ class InstanceAdminAsyncClient:
                 maximum=32.0,
                 multiplier=1.3,
                 predicate=retries.if_exception_type(
-                    exceptions.DeadlineExceeded, exceptions.ServiceUnavailable,
+                    exceptions.DeadlineExceeded,
+                    exceptions.ServiceUnavailable,
                 ),
             ),
             default_timeout=30.0,
@@ -1174,7 +1228,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1245,7 +1304,8 @@ class InstanceAdminAsyncClient:
 
         elif not request:
             request = iam_policy.TestIamPermissionsRequest(
-                resource=resource, permissions=permissions,
+                resource=resource,
+                permissions=permissions,
             )
 
         # Wrap the RPC method; this adds retry and timeout information,
@@ -1263,7 +1323,12 @@ class InstanceAdminAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response

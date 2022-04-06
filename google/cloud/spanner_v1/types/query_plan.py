@@ -22,7 +22,11 @@ from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package="google.spanner.v1", manifest={"PlanNode", "QueryPlan",},
+    package="google.spanner.v1",
+    manifest={
+        "PlanNode",
+        "QueryPlan",
+    },
 )
 
 
@@ -132,19 +136,37 @@ class PlanNode(proto.Message):
 
     index = proto.Field(proto.INT32, number=1)
 
-    kind = proto.Field(proto.ENUM, number=2, enum=Kind,)
+    kind = proto.Field(
+        proto.ENUM,
+        number=2,
+        enum=Kind,
+    )
 
     display_name = proto.Field(proto.STRING, number=3)
 
-    child_links = proto.RepeatedField(proto.MESSAGE, number=4, message=ChildLink,)
-
-    short_representation = proto.Field(
-        proto.MESSAGE, number=5, message=ShortRepresentation,
+    child_links = proto.RepeatedField(
+        proto.MESSAGE,
+        number=4,
+        message=ChildLink,
     )
 
-    metadata = proto.Field(proto.MESSAGE, number=6, message=struct.Struct,)
+    short_representation = proto.Field(
+        proto.MESSAGE,
+        number=5,
+        message=ShortRepresentation,
+    )
 
-    execution_stats = proto.Field(proto.MESSAGE, number=7, message=struct.Struct,)
+    metadata = proto.Field(
+        proto.MESSAGE,
+        number=6,
+        message=struct.Struct,
+    )
+
+    execution_stats = proto.Field(
+        proto.MESSAGE,
+        number=7,
+        message=struct.Struct,
+    )
 
 
 class QueryPlan(proto.Message):
@@ -159,7 +181,11 @@ class QueryPlan(proto.Message):
             to its index in ``plan_nodes``.
     """
 
-    plan_nodes = proto.RepeatedField(proto.MESSAGE, number=1, message="PlanNode",)
+    plan_nodes = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="PlanNode",
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

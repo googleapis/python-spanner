@@ -19,7 +19,12 @@ import proto  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package="google.spanner.v1", manifest={"TypeCode", "Type", "StructType",},
+    package="google.spanner.v1",
+    manifest={
+        "TypeCode",
+        "Type",
+        "StructType",
+    },
 )
 
 
@@ -64,11 +69,23 @@ class Type(proto.Message):
             fields.
     """
 
-    code = proto.Field(proto.ENUM, number=1, enum="TypeCode",)
+    code = proto.Field(
+        proto.ENUM,
+        number=1,
+        enum="TypeCode",
+    )
 
-    array_element_type = proto.Field(proto.MESSAGE, number=2, message="Type",)
+    array_element_type = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message="Type",
+    )
 
-    struct_type = proto.Field(proto.MESSAGE, number=3, message="StructType",)
+    struct_type = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message="StructType",
+    )
 
 
 class StructType(proto.Message):
@@ -105,9 +122,17 @@ class StructType(proto.Message):
 
         name = proto.Field(proto.STRING, number=1)
 
-        type_ = proto.Field(proto.MESSAGE, number=2, message="Type",)
+        type_ = proto.Field(
+            proto.MESSAGE,
+            number=2,
+            message="Type",
+        )
 
-    fields = proto.RepeatedField(proto.MESSAGE, number=1, message=Field,)
+    fields = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message=Field,
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

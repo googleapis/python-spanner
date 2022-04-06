@@ -119,8 +119,7 @@ class _BatchBase(_SessionWrapper):
 
 
 class Batch(_BatchBase):
-    """Accumulate mutations for transmission during :meth:`commit`.
-    """
+    """Accumulate mutations for transmission during :meth:`commit`."""
 
     committed = None
     """Timestamp at which the batch was successfully committed."""

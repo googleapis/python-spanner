@@ -109,15 +109,27 @@ class Backup(proto.Message):
 
     database = proto.Field(proto.STRING, number=2)
 
-    expire_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
+    expire_time = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp.Timestamp,
+    )
 
     name = proto.Field(proto.STRING, number=1)
 
-    create_time = proto.Field(proto.MESSAGE, number=4, message=timestamp.Timestamp,)
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp.Timestamp,
+    )
 
     size_bytes = proto.Field(proto.INT64, number=5)
 
-    state = proto.Field(proto.ENUM, number=6, enum=State,)
+    state = proto.Field(
+        proto.ENUM,
+        number=6,
+        enum=State,
+    )
 
     referencing_databases = proto.RepeatedField(proto.STRING, number=7)
 
@@ -147,7 +159,11 @@ class CreateBackupRequest(proto.Message):
 
     backup_id = proto.Field(proto.STRING, number=2)
 
-    backup = proto.Field(proto.MESSAGE, number=3, message="Backup",)
+    backup = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message="Backup",
+    )
 
 
 class CreateBackupMetadata(proto.Message):
@@ -185,9 +201,17 @@ class CreateBackupMetadata(proto.Message):
 
     database = proto.Field(proto.STRING, number=2)
 
-    progress = proto.Field(proto.MESSAGE, number=3, message=common.OperationProgress,)
+    progress = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=common.OperationProgress,
+    )
 
-    cancel_time = proto.Field(proto.MESSAGE, number=4, message=timestamp.Timestamp,)
+    cancel_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp.Timestamp,
+    )
 
 
 class UpdateBackupRequest(proto.Message):
@@ -211,9 +235,17 @@ class UpdateBackupRequest(proto.Message):
             accidentally by clients that do not know about them.
     """
 
-    backup = proto.Field(proto.MESSAGE, number=1, message="Backup",)
+    backup = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        message="Backup",
+    )
 
-    update_mask = proto.Field(proto.MESSAGE, number=2, message=field_mask.FieldMask,)
+    update_mask = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=field_mask.FieldMask,
+    )
 
 
 class GetBackupRequest(proto.Message):
@@ -336,7 +368,11 @@ class ListBackupsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    backups = proto.RepeatedField(proto.MESSAGE, number=1, message="Backup",)
+    backups = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Backup",
+    )
 
     next_page_token = proto.Field(proto.STRING, number=2)
 
@@ -449,7 +485,9 @@ class ListBackupOperationsResponse(proto.Message):
         return self
 
     operations = proto.RepeatedField(
-        proto.MESSAGE, number=1, message=gl_operations.Operation,
+        proto.MESSAGE,
+        number=1,
+        message=gl_operations.Operation,
     )
 
     next_page_token = proto.Field(proto.STRING, number=2)
@@ -472,7 +510,11 @@ class BackupInfo(proto.Message):
 
     backup = proto.Field(proto.STRING, number=1)
 
-    create_time = proto.Field(proto.MESSAGE, number=2, message=timestamp.Timestamp,)
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=timestamp.Timestamp,
+    )
 
     source_database = proto.Field(proto.STRING, number=3)
 

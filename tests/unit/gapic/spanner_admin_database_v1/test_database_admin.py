@@ -390,7 +390,9 @@ def test_database_admin_client_client_options_scopes(
     client_class, transport_class, transport_name
 ):
     # Check the case scopes are provided.
-    options = client_options.ClientOptions(scopes=["1", "2"],)
+    options = client_options.ClientOptions(
+        scopes=["1", "2"],
+    )
     with mock.patch.object(transport_class, "__init__") as patched:
         patched.return_value = None
         client = client_class(client_options=options)
@@ -458,7 +460,8 @@ def test_list_databases(
     transport: str = "grpc", request_type=spanner_database_admin.ListDatabasesRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -497,7 +500,8 @@ async def test_list_databases_async(
     request_type=spanner_database_admin.ListDatabasesRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -533,7 +537,9 @@ async def test_list_databases_async_from_dict():
 
 
 def test_list_databases_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -553,12 +559,17 @@ def test_list_databases_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_list_databases_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -580,11 +591,16 @@ async def test_list_databases_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_list_databases_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -593,7 +609,9 @@ def test_list_databases_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.list_databases(parent="parent_value",)
+        client.list_databases(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -604,19 +622,24 @@ def test_list_databases_flattened():
 
 
 def test_list_databases_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.list_databases(
-            spanner_database_admin.ListDatabasesRequest(), parent="parent_value",
+            spanner_database_admin.ListDatabasesRequest(),
+            parent="parent_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_list_databases_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -628,7 +651,9 @@ async def test_list_databases_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.list_databases(parent="parent_value",)
+        response = await client.list_databases(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -640,18 +665,23 @@ async def test_list_databases_flattened_async():
 
 @pytest.mark.asyncio
 async def test_list_databases_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.list_databases(
-            spanner_database_admin.ListDatabasesRequest(), parent="parent_value",
+            spanner_database_admin.ListDatabasesRequest(),
+            parent="parent_value",
         )
 
 
 def test_list_databases_pager():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -666,10 +696,14 @@ def test_list_databases_pager():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[], next_page_token="def",
+                databases=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[spanner_database_admin.Database(),], next_page_token="ghi",
+                databases=[
+                    spanner_database_admin.Database(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabasesResponse(
                 databases=[
@@ -694,7 +728,9 @@ def test_list_databases_pager():
 
 
 def test_list_databases_pages():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_databases), "__call__") as call:
@@ -709,10 +745,14 @@ def test_list_databases_pages():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[], next_page_token="def",
+                databases=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[spanner_database_admin.Database(),], next_page_token="ghi",
+                databases=[
+                    spanner_database_admin.Database(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabasesResponse(
                 databases=[
@@ -729,7 +769,9 @@ def test_list_databases_pages():
 
 @pytest.mark.asyncio
 async def test_list_databases_async_pager():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -746,10 +788,14 @@ async def test_list_databases_async_pager():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[], next_page_token="def",
+                databases=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[spanner_database_admin.Database(),], next_page_token="ghi",
+                databases=[
+                    spanner_database_admin.Database(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabasesResponse(
                 databases=[
@@ -759,7 +805,9 @@ async def test_list_databases_async_pager():
             ),
             RuntimeError,
         )
-        async_pager = await client.list_databases(request={},)
+        async_pager = await client.list_databases(
+            request={},
+        )
         assert async_pager.next_page_token == "abc"
         responses = []
         async for response in async_pager:
@@ -771,7 +819,9 @@ async def test_list_databases_async_pager():
 
 @pytest.mark.asyncio
 async def test_list_databases_async_pages():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -788,10 +838,14 @@ async def test_list_databases_async_pages():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[], next_page_token="def",
+                databases=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabasesResponse(
-                databases=[spanner_database_admin.Database(),], next_page_token="ghi",
+                databases=[
+                    spanner_database_admin.Database(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabasesResponse(
                 databases=[
@@ -812,7 +866,8 @@ def test_create_database(
     transport: str = "grpc", request_type=spanner_database_admin.CreateDatabaseRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -846,7 +901,8 @@ async def test_create_database_async(
     request_type=spanner_database_admin.CreateDatabaseRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -878,7 +934,9 @@ async def test_create_database_async_from_dict():
 
 
 def test_create_database_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -898,12 +956,17 @@ def test_create_database_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_create_database_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -925,11 +988,16 @@ async def test_create_database_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_create_database_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.create_database), "__call__") as call:
@@ -939,7 +1007,8 @@ def test_create_database_flattened():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         client.create_database(
-            parent="parent_value", create_statement="create_statement_value",
+            parent="parent_value",
+            create_statement="create_statement_value",
         )
 
         # Establish that the underlying call was made with the expected
@@ -953,7 +1022,9 @@ def test_create_database_flattened():
 
 
 def test_create_database_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -967,7 +1038,9 @@ def test_create_database_flattened_error():
 
 @pytest.mark.asyncio
 async def test_create_database_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.create_database), "__call__") as call:
@@ -980,7 +1053,8 @@ async def test_create_database_flattened_async():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         response = await client.create_database(
-            parent="parent_value", create_statement="create_statement_value",
+            parent="parent_value",
+            create_statement="create_statement_value",
         )
 
         # Establish that the underlying call was made with the expected
@@ -995,7 +1069,9 @@ async def test_create_database_flattened_async():
 
 @pytest.mark.asyncio
 async def test_create_database_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -1011,7 +1087,8 @@ def test_get_database(
     transport: str = "grpc", request_type=spanner_database_admin.GetDatabaseRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1022,7 +1099,8 @@ def test_get_database(
     with mock.patch.object(type(client.transport.get_database), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = spanner_database_admin.Database(
-            name="name_value", state=spanner_database_admin.Database.State.CREATING,
+            name="name_value",
+            state=spanner_database_admin.Database.State.CREATING,
         )
 
         response = client.get_database(request)
@@ -1052,7 +1130,8 @@ async def test_get_database_async(
     request_type=spanner_database_admin.GetDatabaseRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1064,7 +1143,8 @@ async def test_get_database_async(
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner_database_admin.Database(
-                name="name_value", state=spanner_database_admin.Database.State.CREATING,
+                name="name_value",
+                state=spanner_database_admin.Database.State.CREATING,
             )
         )
 
@@ -1090,7 +1170,9 @@ async def test_get_database_async_from_dict():
 
 
 def test_get_database_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1110,12 +1192,17 @@ def test_get_database_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_get_database_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1137,11 +1224,16 @@ async def test_get_database_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 def test_get_database_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_database), "__call__") as call:
@@ -1150,7 +1242,9 @@ def test_get_database_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.get_database(name="name_value",)
+        client.get_database(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1161,19 +1255,24 @@ def test_get_database_flattened():
 
 
 def test_get_database_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.get_database(
-            spanner_database_admin.GetDatabaseRequest(), name="name_value",
+            spanner_database_admin.GetDatabaseRequest(),
+            name="name_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_get_database_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_database), "__call__") as call:
@@ -1185,7 +1284,9 @@ async def test_get_database_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.get_database(name="name_value",)
+        response = await client.get_database(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1197,13 +1298,16 @@ async def test_get_database_flattened_async():
 
 @pytest.mark.asyncio
 async def test_get_database_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.get_database(
-            spanner_database_admin.GetDatabaseRequest(), name="name_value",
+            spanner_database_admin.GetDatabaseRequest(),
+            name="name_value",
         )
 
 
@@ -1212,7 +1316,8 @@ def test_update_database_ddl(
     request_type=spanner_database_admin.UpdateDatabaseDdlRequest,
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1248,7 +1353,8 @@ async def test_update_database_ddl_async(
     request_type=spanner_database_admin.UpdateDatabaseDdlRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1282,7 +1388,9 @@ async def test_update_database_ddl_async_from_dict():
 
 
 def test_update_database_ddl_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1304,12 +1412,17 @@ def test_update_database_ddl_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_update_database_ddl_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1333,11 +1446,16 @@ async def test_update_database_ddl_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 def test_update_database_ddl_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -1349,7 +1467,8 @@ def test_update_database_ddl_flattened():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         client.update_database_ddl(
-            database="database_value", statements=["statements_value"],
+            database="database_value",
+            statements=["statements_value"],
         )
 
         # Establish that the underlying call was made with the expected
@@ -1363,7 +1482,9 @@ def test_update_database_ddl_flattened():
 
 
 def test_update_database_ddl_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -1377,7 +1498,9 @@ def test_update_database_ddl_flattened_error():
 
 @pytest.mark.asyncio
 async def test_update_database_ddl_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -1392,7 +1515,8 @@ async def test_update_database_ddl_flattened_async():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         response = await client.update_database_ddl(
-            database="database_value", statements=["statements_value"],
+            database="database_value",
+            statements=["statements_value"],
         )
 
         # Establish that the underlying call was made with the expected
@@ -1407,7 +1531,9 @@ async def test_update_database_ddl_flattened_async():
 
 @pytest.mark.asyncio
 async def test_update_database_ddl_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -1423,7 +1549,8 @@ def test_drop_database(
     transport: str = "grpc", request_type=spanner_database_admin.DropDatabaseRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1457,7 +1584,8 @@ async def test_drop_database_async(
     request_type=spanner_database_admin.DropDatabaseRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1487,7 +1615,9 @@ async def test_drop_database_async_from_dict():
 
 
 def test_drop_database_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1507,12 +1637,17 @@ def test_drop_database_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_drop_database_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1532,11 +1667,16 @@ async def test_drop_database_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 def test_drop_database_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
@@ -1545,7 +1685,9 @@ def test_drop_database_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.drop_database(database="database_value",)
+        client.drop_database(
+            database="database_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1556,19 +1698,24 @@ def test_drop_database_flattened():
 
 
 def test_drop_database_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.drop_database(
-            spanner_database_admin.DropDatabaseRequest(), database="database_value",
+            spanner_database_admin.DropDatabaseRequest(),
+            database="database_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_drop_database_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.drop_database), "__call__") as call:
@@ -1578,7 +1725,9 @@ async def test_drop_database_flattened_async():
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.drop_database(database="database_value",)
+        response = await client.drop_database(
+            database="database_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1590,13 +1739,16 @@ async def test_drop_database_flattened_async():
 
 @pytest.mark.asyncio
 async def test_drop_database_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.drop_database(
-            spanner_database_admin.DropDatabaseRequest(), database="database_value",
+            spanner_database_admin.DropDatabaseRequest(),
+            database="database_value",
         )
 
 
@@ -1604,7 +1756,8 @@ def test_get_database_ddl(
     transport: str = "grpc", request_type=spanner_database_admin.GetDatabaseDdlRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1643,7 +1796,8 @@ async def test_get_database_ddl_async(
     request_type=spanner_database_admin.GetDatabaseDdlRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1679,7 +1833,9 @@ async def test_get_database_ddl_async_from_dict():
 
 
 def test_get_database_ddl_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1699,12 +1855,17 @@ def test_get_database_ddl_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_get_database_ddl_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1726,11 +1887,16 @@ async def test_get_database_ddl_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "database=database/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "database=database/value",
+    ) in kw["metadata"]
 
 
 def test_get_database_ddl_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
@@ -1739,7 +1905,9 @@ def test_get_database_ddl_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.get_database_ddl(database="database_value",)
+        client.get_database_ddl(
+            database="database_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1750,19 +1918,24 @@ def test_get_database_ddl_flattened():
 
 
 def test_get_database_ddl_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.get_database_ddl(
-            spanner_database_admin.GetDatabaseDdlRequest(), database="database_value",
+            spanner_database_admin.GetDatabaseDdlRequest(),
+            database="database_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_get_database_ddl_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_database_ddl), "__call__") as call:
@@ -1774,7 +1947,9 @@ async def test_get_database_ddl_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.get_database_ddl(database="database_value",)
+        response = await client.get_database_ddl(
+            database="database_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1786,13 +1961,16 @@ async def test_get_database_ddl_flattened_async():
 
 @pytest.mark.asyncio
 async def test_get_database_ddl_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.get_database_ddl(
-            spanner_database_admin.GetDatabaseDdlRequest(), database="database_value",
+            spanner_database_admin.GetDatabaseDdlRequest(),
+            database="database_value",
         )
 
 
@@ -1800,7 +1978,8 @@ def test_set_iam_policy(
     transport: str = "grpc", request_type=iam_policy.SetIamPolicyRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1810,7 +1989,10 @@ def test_set_iam_policy(
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
-        call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
+        call.return_value = policy.Policy(
+            version=774,
+            etag=b"etag_blob",
+        )
 
         response = client.set_iam_policy(request)
 
@@ -1838,7 +2020,8 @@ async def test_set_iam_policy_async(
     transport: str = "grpc_asyncio", request_type=iam_policy.SetIamPolicyRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -1849,7 +2032,10 @@ async def test_set_iam_policy_async(
     with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            policy.Policy(version=774, etag=b"etag_blob",)
+            policy.Policy(
+                version=774,
+                etag=b"etag_blob",
+            )
         )
 
         response = await client.set_iam_policy(request)
@@ -1874,7 +2060,9 @@ async def test_set_iam_policy_async_from_dict():
 
 
 def test_set_iam_policy_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1894,12 +2082,17 @@ def test_set_iam_policy_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_set_iam_policy_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -1919,11 +2112,16 @@ async def test_set_iam_policy_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 def test_set_iam_policy_from_dict_foreign():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
@@ -1939,7 +2137,9 @@ def test_set_iam_policy_from_dict_foreign():
 
 
 def test_set_iam_policy_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
@@ -1948,7 +2148,9 @@ def test_set_iam_policy_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.set_iam_policy(resource="resource_value",)
+        client.set_iam_policy(
+            resource="resource_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1959,19 +2161,24 @@ def test_set_iam_policy_flattened():
 
 
 def test_set_iam_policy_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.set_iam_policy(
-            iam_policy.SetIamPolicyRequest(), resource="resource_value",
+            iam_policy.SetIamPolicyRequest(),
+            resource="resource_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_set_iam_policy_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
@@ -1981,7 +2188,9 @@ async def test_set_iam_policy_flattened_async():
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.set_iam_policy(resource="resource_value",)
+        response = await client.set_iam_policy(
+            resource="resource_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -1993,13 +2202,16 @@ async def test_set_iam_policy_flattened_async():
 
 @pytest.mark.asyncio
 async def test_set_iam_policy_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.set_iam_policy(
-            iam_policy.SetIamPolicyRequest(), resource="resource_value",
+            iam_policy.SetIamPolicyRequest(),
+            resource="resource_value",
         )
 
 
@@ -2007,7 +2219,8 @@ def test_get_iam_policy(
     transport: str = "grpc", request_type=iam_policy.GetIamPolicyRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2017,7 +2230,10 @@ def test_get_iam_policy(
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
-        call.return_value = policy.Policy(version=774, etag=b"etag_blob",)
+        call.return_value = policy.Policy(
+            version=774,
+            etag=b"etag_blob",
+        )
 
         response = client.get_iam_policy(request)
 
@@ -2045,7 +2261,8 @@ async def test_get_iam_policy_async(
     transport: str = "grpc_asyncio", request_type=iam_policy.GetIamPolicyRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2056,7 +2273,10 @@ async def test_get_iam_policy_async(
     with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            policy.Policy(version=774, etag=b"etag_blob",)
+            policy.Policy(
+                version=774,
+                etag=b"etag_blob",
+            )
         )
 
         response = await client.get_iam_policy(request)
@@ -2081,7 +2301,9 @@ async def test_get_iam_policy_async_from_dict():
 
 
 def test_get_iam_policy_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2101,12 +2323,17 @@ def test_get_iam_policy_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_get_iam_policy_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2126,11 +2353,16 @@ async def test_get_iam_policy_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 def test_get_iam_policy_from_dict_foreign():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
         # Designate an appropriate return value for the call.
@@ -2146,7 +2378,9 @@ def test_get_iam_policy_from_dict_foreign():
 
 
 def test_get_iam_policy_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
@@ -2155,7 +2389,9 @@ def test_get_iam_policy_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.get_iam_policy(resource="resource_value",)
+        client.get_iam_policy(
+            resource="resource_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -2166,19 +2402,24 @@ def test_get_iam_policy_flattened():
 
 
 def test_get_iam_policy_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.get_iam_policy(
-            iam_policy.GetIamPolicyRequest(), resource="resource_value",
+            iam_policy.GetIamPolicyRequest(),
+            resource="resource_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_get_iam_policy_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
@@ -2188,7 +2429,9 @@ async def test_get_iam_policy_flattened_async():
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(policy.Policy())
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.get_iam_policy(resource="resource_value",)
+        response = await client.get_iam_policy(
+            resource="resource_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -2200,13 +2443,16 @@ async def test_get_iam_policy_flattened_async():
 
 @pytest.mark.asyncio
 async def test_get_iam_policy_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.get_iam_policy(
-            iam_policy.GetIamPolicyRequest(), resource="resource_value",
+            iam_policy.GetIamPolicyRequest(),
+            resource="resource_value",
         )
 
 
@@ -2214,7 +2460,8 @@ def test_test_iam_permissions(
     transport: str = "grpc", request_type=iam_policy.TestIamPermissionsRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2254,7 +2501,8 @@ async def test_test_iam_permissions_async(
     transport: str = "grpc_asyncio", request_type=iam_policy.TestIamPermissionsRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2267,7 +2515,9 @@ async def test_test_iam_permissions_async(
     ) as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            iam_policy.TestIamPermissionsResponse(permissions=["permissions_value"],)
+            iam_policy.TestIamPermissionsResponse(
+                permissions=["permissions_value"],
+            )
         )
 
         response = await client.test_iam_permissions(request)
@@ -2290,7 +2540,9 @@ async def test_test_iam_permissions_async_from_dict():
 
 
 def test_test_iam_permissions_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2312,12 +2564,17 @@ def test_test_iam_permissions_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_test_iam_permissions_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2341,11 +2598,16 @@ async def test_test_iam_permissions_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "resource=resource/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "resource=resource/value",
+    ) in kw["metadata"]
 
 
 def test_test_iam_permissions_from_dict_foreign():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
         type(client.transport.test_iam_permissions), "__call__"
@@ -2363,7 +2625,9 @@ def test_test_iam_permissions_from_dict_foreign():
 
 
 def test_test_iam_permissions_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -2375,7 +2639,8 @@ def test_test_iam_permissions_flattened():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         client.test_iam_permissions(
-            resource="resource_value", permissions=["permissions_value"],
+            resource="resource_value",
+            permissions=["permissions_value"],
         )
 
         # Establish that the underlying call was made with the expected
@@ -2389,7 +2654,9 @@ def test_test_iam_permissions_flattened():
 
 
 def test_test_iam_permissions_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -2403,7 +2670,9 @@ def test_test_iam_permissions_flattened_error():
 
 @pytest.mark.asyncio
 async def test_test_iam_permissions_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -2418,7 +2687,8 @@ async def test_test_iam_permissions_flattened_async():
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
         response = await client.test_iam_permissions(
-            resource="resource_value", permissions=["permissions_value"],
+            resource="resource_value",
+            permissions=["permissions_value"],
         )
 
         # Establish that the underlying call was made with the expected
@@ -2433,7 +2703,9 @@ async def test_test_iam_permissions_flattened_async():
 
 @pytest.mark.asyncio
 async def test_test_iam_permissions_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -2449,7 +2721,8 @@ def test_create_backup(
     transport: str = "grpc", request_type=gsad_backup.CreateBackupRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2482,7 +2755,8 @@ async def test_create_backup_async(
     transport: str = "grpc_asyncio", request_type=gsad_backup.CreateBackupRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2514,7 +2788,9 @@ async def test_create_backup_async_from_dict():
 
 
 def test_create_backup_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2534,12 +2810,17 @@ def test_create_backup_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_create_backup_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2561,11 +2842,16 @@ async def test_create_backup_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_create_backup_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
@@ -2593,7 +2879,9 @@ def test_create_backup_flattened():
 
 
 def test_create_backup_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -2608,7 +2896,9 @@ def test_create_backup_flattened_error():
 
 @pytest.mark.asyncio
 async def test_create_backup_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.create_backup), "__call__") as call:
@@ -2640,7 +2930,9 @@ async def test_create_backup_flattened_async():
 
 @pytest.mark.asyncio
 async def test_create_backup_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -2655,7 +2947,8 @@ async def test_create_backup_flattened_error_async():
 
 def test_get_backup(transport: str = "grpc", request_type=backup.GetBackupRequest):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2705,7 +2998,8 @@ async def test_get_backup_async(
     transport: str = "grpc_asyncio", request_type=backup.GetBackupRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2753,7 +3047,9 @@ async def test_get_backup_async_from_dict():
 
 
 def test_get_backup_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2773,12 +3069,17 @@ def test_get_backup_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_get_backup_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2798,11 +3099,16 @@ async def test_get_backup_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 def test_get_backup_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
@@ -2811,7 +3117,9 @@ def test_get_backup_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.get_backup(name="name_value",)
+        client.get_backup(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -2822,19 +3130,24 @@ def test_get_backup_flattened():
 
 
 def test_get_backup_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.get_backup(
-            backup.GetBackupRequest(), name="name_value",
+            backup.GetBackupRequest(),
+            name="name_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_get_backup_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.get_backup), "__call__") as call:
@@ -2844,7 +3157,9 @@ async def test_get_backup_flattened_async():
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(backup.Backup())
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.get_backup(name="name_value",)
+        response = await client.get_backup(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -2856,13 +3171,16 @@ async def test_get_backup_flattened_async():
 
 @pytest.mark.asyncio
 async def test_get_backup_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.get_backup(
-            backup.GetBackupRequest(), name="name_value",
+            backup.GetBackupRequest(),
+            name="name_value",
         )
 
 
@@ -2870,7 +3188,8 @@ def test_update_backup(
     transport: str = "grpc", request_type=gsad_backup.UpdateBackupRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2920,7 +3239,8 @@ async def test_update_backup_async(
     transport: str = "grpc_asyncio", request_type=gsad_backup.UpdateBackupRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -2968,7 +3288,9 @@ async def test_update_backup_async_from_dict():
 
 
 def test_update_backup_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -2988,12 +3310,17 @@ def test_update_backup_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "backup.name=backup.name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "backup.name=backup.name/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_update_backup_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3013,11 +3340,16 @@ async def test_update_backup_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "backup.name=backup.name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "backup.name=backup.name/value",
+    ) in kw["metadata"]
 
 
 def test_update_backup_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
@@ -3042,7 +3374,9 @@ def test_update_backup_flattened():
 
 
 def test_update_backup_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -3056,7 +3390,9 @@ def test_update_backup_flattened_error():
 
 @pytest.mark.asyncio
 async def test_update_backup_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.update_backup), "__call__") as call:
@@ -3083,7 +3419,9 @@ async def test_update_backup_flattened_async():
 
 @pytest.mark.asyncio
 async def test_update_backup_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -3099,7 +3437,8 @@ def test_delete_backup(
     transport: str = "grpc", request_type=backup.DeleteBackupRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3132,7 +3471,8 @@ async def test_delete_backup_async(
     transport: str = "grpc_asyncio", request_type=backup.DeleteBackupRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3162,7 +3502,9 @@ async def test_delete_backup_async_from_dict():
 
 
 def test_delete_backup_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3182,12 +3524,17 @@ def test_delete_backup_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_delete_backup_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3207,11 +3554,16 @@ async def test_delete_backup_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "name=name/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "name=name/value",
+    ) in kw["metadata"]
 
 
 def test_delete_backup_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
@@ -3220,7 +3572,9 @@ def test_delete_backup_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.delete_backup(name="name_value",)
+        client.delete_backup(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3231,19 +3585,24 @@ def test_delete_backup_flattened():
 
 
 def test_delete_backup_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.delete_backup(
-            backup.DeleteBackupRequest(), name="name_value",
+            backup.DeleteBackupRequest(),
+            name="name_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_delete_backup_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.delete_backup), "__call__") as call:
@@ -3253,7 +3612,9 @@ async def test_delete_backup_flattened_async():
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.delete_backup(name="name_value",)
+        response = await client.delete_backup(
+            name="name_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3265,19 +3626,23 @@ async def test_delete_backup_flattened_async():
 
 @pytest.mark.asyncio
 async def test_delete_backup_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.delete_backup(
-            backup.DeleteBackupRequest(), name="name_value",
+            backup.DeleteBackupRequest(),
+            name="name_value",
         )
 
 
 def test_list_backups(transport: str = "grpc", request_type=backup.ListBackupsRequest):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3315,7 +3680,8 @@ async def test_list_backups_async(
     transport: str = "grpc_asyncio", request_type=backup.ListBackupsRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3326,7 +3692,9 @@ async def test_list_backups_async(
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Designate an appropriate return value for the call.
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            backup.ListBackupsResponse(next_page_token="next_page_token_value",)
+            backup.ListBackupsResponse(
+                next_page_token="next_page_token_value",
+            )
         )
 
         response = await client.list_backups(request)
@@ -3349,7 +3717,9 @@ async def test_list_backups_async_from_dict():
 
 
 def test_list_backups_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3369,12 +3739,17 @@ def test_list_backups_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_list_backups_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3396,11 +3771,16 @@ async def test_list_backups_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_list_backups_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
@@ -3409,7 +3789,9 @@ def test_list_backups_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.list_backups(parent="parent_value",)
+        client.list_backups(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3420,19 +3802,24 @@ def test_list_backups_flattened():
 
 
 def test_list_backups_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.list_backups(
-            backup.ListBackupsRequest(), parent="parent_value",
+            backup.ListBackupsRequest(),
+            parent="parent_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_list_backups_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
@@ -3444,7 +3831,9 @@ async def test_list_backups_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.list_backups(parent="parent_value",)
+        response = await client.list_backups(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3456,32 +3845,52 @@ async def test_list_backups_flattened_async():
 
 @pytest.mark.asyncio
 async def test_list_backups_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.list_backups(
-            backup.ListBackupsRequest(), parent="parent_value",
+            backup.ListBackupsRequest(),
+            parent="parent_value",
         )
 
 
 def test_list_backups_pager():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
-                backups=[backup.Backup(), backup.Backup(), backup.Backup(),],
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
                 next_page_token="abc",
             ),
-            backup.ListBackupsResponse(backups=[], next_page_token="def",),
             backup.ListBackupsResponse(
-                backups=[backup.Backup(),], next_page_token="ghi",
+                backups=[],
+                next_page_token="def",
             ),
-            backup.ListBackupsResponse(backups=[backup.Backup(), backup.Backup(),],),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
+            ),
             RuntimeError,
         )
 
@@ -3499,21 +3908,38 @@ def test_list_backups_pager():
 
 
 def test_list_backups_pages():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.list_backups), "__call__") as call:
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
-                backups=[backup.Backup(), backup.Backup(), backup.Backup(),],
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
                 next_page_token="abc",
             ),
-            backup.ListBackupsResponse(backups=[], next_page_token="def",),
             backup.ListBackupsResponse(
-                backups=[backup.Backup(),], next_page_token="ghi",
+                backups=[],
+                next_page_token="def",
             ),
-            backup.ListBackupsResponse(backups=[backup.Backup(), backup.Backup(),],),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
+            ),
             RuntimeError,
         )
         pages = list(client.list_backups(request={}).pages)
@@ -3523,7 +3949,9 @@ def test_list_backups_pages():
 
 @pytest.mark.asyncio
 async def test_list_backups_async_pager():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -3532,17 +3960,34 @@ async def test_list_backups_async_pager():
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
-                backups=[backup.Backup(), backup.Backup(), backup.Backup(),],
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
                 next_page_token="abc",
             ),
-            backup.ListBackupsResponse(backups=[], next_page_token="def",),
             backup.ListBackupsResponse(
-                backups=[backup.Backup(),], next_page_token="ghi",
+                backups=[],
+                next_page_token="def",
             ),
-            backup.ListBackupsResponse(backups=[backup.Backup(), backup.Backup(),],),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
+            ),
             RuntimeError,
         )
-        async_pager = await client.list_backups(request={},)
+        async_pager = await client.list_backups(
+            request={},
+        )
         assert async_pager.next_page_token == "abc"
         responses = []
         async for response in async_pager:
@@ -3554,7 +3999,9 @@ async def test_list_backups_async_pager():
 
 @pytest.mark.asyncio
 async def test_list_backups_async_pages():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -3563,14 +4010,29 @@ async def test_list_backups_async_pages():
         # Set the response to a series of pages.
         call.side_effect = (
             backup.ListBackupsResponse(
-                backups=[backup.Backup(), backup.Backup(), backup.Backup(),],
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
                 next_page_token="abc",
             ),
-            backup.ListBackupsResponse(backups=[], next_page_token="def",),
             backup.ListBackupsResponse(
-                backups=[backup.Backup(),], next_page_token="ghi",
+                backups=[],
+                next_page_token="def",
             ),
-            backup.ListBackupsResponse(backups=[backup.Backup(), backup.Backup(),],),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupsResponse(
+                backups=[
+                    backup.Backup(),
+                    backup.Backup(),
+                ],
+            ),
             RuntimeError,
         )
         pages = []
@@ -3584,7 +4046,8 @@ def test_restore_database(
     transport: str = "grpc", request_type=spanner_database_admin.RestoreDatabaseRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3618,7 +4081,8 @@ async def test_restore_database_async(
     request_type=spanner_database_admin.RestoreDatabaseRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3650,7 +4114,9 @@ async def test_restore_database_async_from_dict():
 
 
 def test_restore_database_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3670,12 +4136,17 @@ def test_restore_database_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_restore_database_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3697,11 +4168,16 @@ async def test_restore_database_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_restore_database_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
@@ -3729,7 +4205,9 @@ def test_restore_database_flattened():
 
 
 def test_restore_database_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -3744,7 +4222,9 @@ def test_restore_database_flattened_error():
 
 @pytest.mark.asyncio
 async def test_restore_database_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(type(client.transport.restore_database), "__call__") as call:
@@ -3776,7 +4256,9 @@ async def test_restore_database_flattened_async():
 
 @pytest.mark.asyncio
 async def test_restore_database_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -3794,7 +4276,8 @@ def test_list_database_operations(
     request_type=spanner_database_admin.ListDatabaseOperationsRequest,
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3835,7 +4318,8 @@ async def test_list_database_operations_async(
     request_type=spanner_database_admin.ListDatabaseOperationsRequest,
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -3873,7 +4357,9 @@ async def test_list_database_operations_async_from_dict():
 
 
 def test_list_database_operations_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3895,12 +4381,17 @@ def test_list_database_operations_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_list_database_operations_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -3924,11 +4415,16 @@ async def test_list_database_operations_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_list_database_operations_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -3939,7 +4435,9 @@ def test_list_database_operations_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.list_database_operations(parent="parent_value",)
+        client.list_database_operations(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3950,7 +4448,9 @@ def test_list_database_operations_flattened():
 
 
 def test_list_database_operations_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -3963,7 +4463,9 @@ def test_list_database_operations_flattened_error():
 
 @pytest.mark.asyncio
 async def test_list_database_operations_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -3977,7 +4479,9 @@ async def test_list_database_operations_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.list_database_operations(parent="parent_value",)
+        response = await client.list_database_operations(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -3989,7 +4493,9 @@ async def test_list_database_operations_flattened_async():
 
 @pytest.mark.asyncio
 async def test_list_database_operations_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
@@ -4001,7 +4507,9 @@ async def test_list_database_operations_flattened_error_async():
 
 
 def test_list_database_operations_pager():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4018,13 +4526,20 @@ def test_list_database_operations_pager():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[], next_page_token="def",
+                operations=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4043,7 +4558,9 @@ def test_list_database_operations_pager():
 
 
 def test_list_database_operations_pages():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4060,13 +4577,20 @@ def test_list_database_operations_pages():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[], next_page_token="def",
+                operations=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4077,7 +4601,9 @@ def test_list_database_operations_pages():
 
 @pytest.mark.asyncio
 async def test_list_database_operations_async_pager():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4096,17 +4622,26 @@ async def test_list_database_operations_async_pager():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[], next_page_token="def",
+                operations=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
-        async_pager = await client.list_database_operations(request={},)
+        async_pager = await client.list_database_operations(
+            request={},
+        )
         assert async_pager.next_page_token == "abc"
         responses = []
         async for response in async_pager:
@@ -4118,7 +4653,9 @@ async def test_list_database_operations_async_pager():
 
 @pytest.mark.asyncio
 async def test_list_database_operations_async_pages():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4137,13 +4674,20 @@ async def test_list_database_operations_async_pages():
                 next_page_token="abc",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[], next_page_token="def",
+                operations=[],
+                next_page_token="def",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
             ),
             spanner_database_admin.ListDatabaseOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4158,7 +4702,8 @@ def test_list_backup_operations(
     transport: str = "grpc", request_type=backup.ListBackupOperationsRequest
 ):
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -4198,7 +4743,8 @@ async def test_list_backup_operations_async(
     transport: str = "grpc_asyncio", request_type=backup.ListBackupOperationsRequest
 ):
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport=transport,
+        credentials=credentials.AnonymousCredentials(),
+        transport=transport,
     )
 
     # Everything is optional in proto3 as far as the runtime is concerned,
@@ -4236,7 +4782,9 @@ async def test_list_backup_operations_async_from_dict():
 
 
 def test_list_backup_operations_field_headers():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -4258,12 +4806,17 @@ def test_list_backup_operations_field_headers():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
 async def test_list_backup_operations_field_headers_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
     # a field header. Set these to a non-empty value.
@@ -4287,11 +4840,16 @@ async def test_list_backup_operations_field_headers_async():
 
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
-    assert ("x-goog-request-params", "parent=parent/value",) in kw["metadata"]
+    assert (
+        "x-goog-request-params",
+        "parent=parent/value",
+    ) in kw["metadata"]
 
 
 def test_list_backup_operations_flattened():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4302,7 +4860,9 @@ def test_list_backup_operations_flattened():
 
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        client.list_backup_operations(parent="parent_value",)
+        client.list_backup_operations(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -4313,19 +4873,24 @@ def test_list_backup_operations_flattened():
 
 
 def test_list_backup_operations_flattened_error():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         client.list_backup_operations(
-            backup.ListBackupOperationsRequest(), parent="parent_value",
+            backup.ListBackupOperationsRequest(),
+            parent="parent_value",
         )
 
 
 @pytest.mark.asyncio
 async def test_list_backup_operations_flattened_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4339,7 +4904,9 @@ async def test_list_backup_operations_flattened_async():
         )
         # Call the method with a truthy value for each flattened field,
         # using the keyword arguments to the method.
-        response = await client.list_backup_operations(parent="parent_value",)
+        response = await client.list_backup_operations(
+            parent="parent_value",
+        )
 
         # Establish that the underlying call was made with the expected
         # request object values.
@@ -4351,18 +4918,23 @@ async def test_list_backup_operations_flattened_async():
 
 @pytest.mark.asyncio
 async def test_list_backup_operations_flattened_error_async():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials(),)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
 
     # Attempting to call a method with both a request object and flattened
     # fields is an error.
     with pytest.raises(ValueError):
         await client.list_backup_operations(
-            backup.ListBackupOperationsRequest(), parent="parent_value",
+            backup.ListBackupOperationsRequest(),
+            parent="parent_value",
         )
 
 
 def test_list_backup_operations_pager():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4378,12 +4950,21 @@ def test_list_backup_operations_pager():
                 ],
                 next_page_token="abc",
             ),
-            backup.ListBackupOperationsResponse(operations=[], next_page_token="def",),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[],
+                next_page_token="def",
             ),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupOperationsResponse(
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4402,7 +4983,9 @@ def test_list_backup_operations_pager():
 
 
 def test_list_backup_operations_pages():
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4418,12 +5001,21 @@ def test_list_backup_operations_pages():
                 ],
                 next_page_token="abc",
             ),
-            backup.ListBackupOperationsResponse(operations=[], next_page_token="def",),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[],
+                next_page_token="def",
             ),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupOperationsResponse(
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4434,7 +5026,9 @@ def test_list_backup_operations_pages():
 
 @pytest.mark.asyncio
 async def test_list_backup_operations_async_pager():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4452,16 +5046,27 @@ async def test_list_backup_operations_async_pager():
                 ],
                 next_page_token="abc",
             ),
-            backup.ListBackupOperationsResponse(operations=[], next_page_token="def",),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[],
+                next_page_token="def",
             ),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupOperationsResponse(
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
-        async_pager = await client.list_backup_operations(request={},)
+        async_pager = await client.list_backup_operations(
+            request={},
+        )
         assert async_pager.next_page_token == "abc"
         responses = []
         async for response in async_pager:
@@ -4473,7 +5078,9 @@ async def test_list_backup_operations_async_pager():
 
 @pytest.mark.asyncio
 async def test_list_backup_operations_async_pages():
-    client = DatabaseAdminAsyncClient(credentials=credentials.AnonymousCredentials,)
+    client = DatabaseAdminAsyncClient(
+        credentials=credentials.AnonymousCredentials,
+    )
 
     # Mock the actual call within the gRPC stub, and fake the request.
     with mock.patch.object(
@@ -4491,12 +5098,21 @@ async def test_list_backup_operations_async_pages():
                 ],
                 next_page_token="abc",
             ),
-            backup.ListBackupOperationsResponse(operations=[], next_page_token="def",),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(),], next_page_token="ghi",
+                operations=[],
+                next_page_token="def",
             ),
             backup.ListBackupOperationsResponse(
-                operations=[operations.Operation(), operations.Operation(),],
+                operations=[
+                    operations.Operation(),
+                ],
+                next_page_token="ghi",
+            ),
+            backup.ListBackupOperationsResponse(
+                operations=[
+                    operations.Operation(),
+                    operations.Operation(),
+                ],
             ),
             RuntimeError,
         )
@@ -4514,7 +5130,8 @@ def test_credentials_transport_error():
     )
     with pytest.raises(ValueError):
         client = DatabaseAdminClient(
-            credentials=credentials.AnonymousCredentials(), transport=transport,
+            credentials=credentials.AnonymousCredentials(),
+            transport=transport,
         )
 
     # It is an error to provide a credentials file and a transport instance.
@@ -4533,7 +5150,8 @@ def test_credentials_transport_error():
     )
     with pytest.raises(ValueError):
         client = DatabaseAdminClient(
-            client_options={"scopes": ["1", "2"]}, transport=transport,
+            client_options={"scopes": ["1", "2"]},
+            transport=transport,
         )
 
 
@@ -4578,8 +5196,13 @@ def test_transport_adc(transport_class):
 
 def test_transport_grpc_default():
     # A client should use the gRPC transport by default.
-    client = DatabaseAdminClient(credentials=credentials.AnonymousCredentials(),)
-    assert isinstance(client.transport, transports.DatabaseAdminGrpcTransport,)
+    client = DatabaseAdminClient(
+        credentials=credentials.AnonymousCredentials(),
+    )
+    assert isinstance(
+        client.transport,
+        transports.DatabaseAdminGrpcTransport,
+    )
 
 
 def test_database_admin_base_transport_error():
@@ -4642,7 +5265,8 @@ def test_database_admin_base_transport_with_credentials_file():
         Transport.return_value = None
         load_creds.return_value = (credentials.AnonymousCredentials(), None)
         transport = transports.DatabaseAdminTransport(
-            credentials_file="credentials.json", quota_project_id="octopus",
+            credentials_file="credentials.json",
+            quota_project_id="octopus",
         )
         load_creds.assert_called_once_with(
             "credentials.json",
@@ -4721,7 +5345,8 @@ def test_database_admin_grpc_transport_channel():
 
     # Check that channel is used if provided.
     transport = transports.DatabaseAdminGrpcTransport(
-        host="squid.clam.whelk", channel=channel,
+        host="squid.clam.whelk",
+        channel=channel,
     )
     assert transport.grpc_channel == channel
     assert transport._host == "squid.clam.whelk:443"
@@ -4732,7 +5357,8 @@ def test_database_admin_grpc_asyncio_transport_channel():
 
     # Check that channel is used if provided.
     transport = transports.DatabaseAdminGrpcAsyncIOTransport(
-        host="squid.clam.whelk", channel=channel,
+        host="squid.clam.whelk",
+        channel=channel,
     )
     assert transport.grpc_channel == channel
     assert transport._host == "squid.clam.whelk:443"
@@ -4831,12 +5457,16 @@ def test_database_admin_transport_channel_mtls_with_adc(transport_class):
 
 def test_database_admin_grpc_lro_client():
     client = DatabaseAdminClient(
-        credentials=credentials.AnonymousCredentials(), transport="grpc",
+        credentials=credentials.AnonymousCredentials(),
+        transport="grpc",
     )
     transport = client.transport
 
     # Ensure that we have a api-core operations client.
-    assert isinstance(transport.operations_client, operations_v1.OperationsClient,)
+    assert isinstance(
+        transport.operations_client,
+        operations_v1.OperationsClient,
+    )
 
     # Ensure that subsequent calls to the property send the exact same object.
     assert transport.operations_client is transport.operations_client
@@ -4844,12 +5474,16 @@ def test_database_admin_grpc_lro_client():
 
 def test_database_admin_grpc_lro_async_client():
     client = DatabaseAdminAsyncClient(
-        credentials=credentials.AnonymousCredentials(), transport="grpc_asyncio",
+        credentials=credentials.AnonymousCredentials(),
+        transport="grpc_asyncio",
     )
     transport = client.transport
 
     # Ensure that we have a api-core operations client.
-    assert isinstance(transport.operations_client, operations_v1.OperationsAsyncClient,)
+    assert isinstance(
+        transport.operations_client,
+        operations_v1.OperationsAsyncClient,
+    )
 
     # Ensure that subsequent calls to the property send the exact same object.
     assert transport.operations_client is transport.operations_client
@@ -4861,7 +5495,9 @@ def test_backup_path():
     backup = "whelk"
 
     expected = "projects/{project}/instances/{instance}/backups/{backup}".format(
-        project=project, instance=instance, backup=backup,
+        project=project,
+        instance=instance,
+        backup=backup,
     )
     actual = DatabaseAdminClient.backup_path(project, instance, backup)
     assert expected == actual
@@ -4886,7 +5522,9 @@ def test_database_path():
     database = "winkle"
 
     expected = "projects/{project}/instances/{instance}/databases/{database}".format(
-        project=project, instance=instance, database=database,
+        project=project,
+        instance=instance,
+        database=database,
     )
     actual = DatabaseAdminClient.database_path(project, instance, database)
     assert expected == actual
@@ -4910,7 +5548,8 @@ def test_instance_path():
     instance = "clam"
 
     expected = "projects/{project}/instances/{instance}".format(
-        project=project, instance=instance,
+        project=project,
+        instance=instance,
     )
     actual = DatabaseAdminClient.instance_path(project, instance)
     assert expected == actual
@@ -4952,7 +5591,9 @@ def test_parse_common_billing_account_path():
 def test_common_folder_path():
     folder = "cuttlefish"
 
-    expected = "folders/{folder}".format(folder=folder,)
+    expected = "folders/{folder}".format(
+        folder=folder,
+    )
     actual = DatabaseAdminClient.common_folder_path(folder)
     assert expected == actual
 
@@ -4971,7 +5612,9 @@ def test_parse_common_folder_path():
 def test_common_organization_path():
     organization = "winkle"
 
-    expected = "organizations/{organization}".format(organization=organization,)
+    expected = "organizations/{organization}".format(
+        organization=organization,
+    )
     actual = DatabaseAdminClient.common_organization_path(organization)
     assert expected == actual
 
@@ -4990,7 +5633,9 @@ def test_parse_common_organization_path():
 def test_common_project_path():
     project = "scallop"
 
-    expected = "projects/{project}".format(project=project,)
+    expected = "projects/{project}".format(
+        project=project,
+    )
     actual = DatabaseAdminClient.common_project_path(project)
     assert expected == actual
 
@@ -5011,7 +5656,8 @@ def test_common_location_path():
     location = "clam"
 
     expected = "projects/{project}/locations/{location}".format(
-        project=project, location=location,
+        project=project,
+        location=location,
     )
     actual = DatabaseAdminClient.common_location_path(project, location)
     assert expected == actual
@@ -5036,7 +5682,8 @@ def test_client_withDEFAULT_CLIENT_INFO():
         transports.DatabaseAdminTransport, "_prep_wrapped_messages"
     ) as prep:
         client = DatabaseAdminClient(
-            credentials=credentials.AnonymousCredentials(), client_info=client_info,
+            credentials=credentials.AnonymousCredentials(),
+            client_info=client_info,
         )
         prep.assert_called_once_with(client_info)
 
@@ -5045,6 +5692,7 @@ def test_client_withDEFAULT_CLIENT_INFO():
     ) as prep:
         transport_class = DatabaseAdminClient.get_transport_class()
         transport = transport_class(
-            credentials=credentials.AnonymousCredentials(), client_info=client_info,
+            credentials=credentials.AnonymousCredentials(),
+            client_info=client_info,
         )
         prep.assert_called_once_with(client_info)

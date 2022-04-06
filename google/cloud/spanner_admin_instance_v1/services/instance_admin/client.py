@@ -57,7 +57,10 @@ class InstanceAdminClientMeta(type):
     _transport_registry["grpc"] = InstanceAdminGrpcTransport
     _transport_registry["grpc_asyncio"] = InstanceAdminGrpcAsyncIOTransport
 
-    def get_transport_class(cls, label: str = None,) -> Type[InstanceAdminTransport]:
+    def get_transport_class(
+        cls,
+        label: str = None,
+    ) -> Type[InstanceAdminTransport]:
         """Return an appropriate transport class.
 
         Args:
@@ -164,10 +167,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return self._transport
 
     @staticmethod
-    def instance_path(project: str, instance: str,) -> str:
+    def instance_path(
+        project: str,
+        instance: str,
+    ) -> str:
         """Return a fully-qualified instance string."""
         return "projects/{project}/instances/{instance}".format(
-            project=project, instance=instance,
+            project=project,
+            instance=instance,
         )
 
     @staticmethod
@@ -177,10 +184,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def instance_config_path(project: str, instance_config: str,) -> str:
+    def instance_config_path(
+        project: str,
+        instance_config: str,
+    ) -> str:
         """Return a fully-qualified instance_config string."""
         return "projects/{project}/instanceConfigs/{instance_config}".format(
-            project=project, instance_config=instance_config,
+            project=project,
+            instance_config=instance_config,
         )
 
     @staticmethod
@@ -193,7 +204,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_billing_account_path(billing_account: str,) -> str:
+    def common_billing_account_path(
+        billing_account: str,
+    ) -> str:
         """Return a fully-qualified billing_account string."""
         return "billingAccounts/{billing_account}".format(
             billing_account=billing_account,
@@ -206,9 +219,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_folder_path(folder: str,) -> str:
+    def common_folder_path(
+        folder: str,
+    ) -> str:
         """Return a fully-qualified folder string."""
-        return "folders/{folder}".format(folder=folder,)
+        return "folders/{folder}".format(
+            folder=folder,
+        )
 
     @staticmethod
     def parse_common_folder_path(path: str) -> Dict[str, str]:
@@ -217,9 +234,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_organization_path(organization: str,) -> str:
+    def common_organization_path(
+        organization: str,
+    ) -> str:
         """Return a fully-qualified organization string."""
-        return "organizations/{organization}".format(organization=organization,)
+        return "organizations/{organization}".format(
+            organization=organization,
+        )
 
     @staticmethod
     def parse_common_organization_path(path: str) -> Dict[str, str]:
@@ -228,9 +249,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_project_path(project: str,) -> str:
+    def common_project_path(
+        project: str,
+    ) -> str:
         """Return a fully-qualified project string."""
-        return "projects/{project}".format(project=project,)
+        return "projects/{project}".format(
+            project=project,
+        )
 
     @staticmethod
     def parse_common_project_path(path: str) -> Dict[str, str]:
@@ -239,10 +264,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_location_path(project: str, location: str,) -> str:
+    def common_location_path(
+        project: str,
+        location: str,
+    ) -> str:
         """Return a fully-qualified location string."""
         return "projects/{project}/locations/{location}".format(
-            project=project, location=location,
+            project=project,
+            location=location,
         )
 
     @staticmethod
@@ -441,12 +470,20 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListInstanceConfigsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -524,7 +561,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -601,12 +643,20 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListInstancesPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -681,7 +731,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -815,7 +870,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -963,7 +1023,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -1050,7 +1115,10 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def set_iam_policy(
@@ -1172,7 +1240,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.SetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.SetIamPolicyRequest(resource=resource,)
+            request = iam_policy.SetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1185,7 +1255,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1310,7 +1385,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             request = iam_policy.GetIamPolicyRequest(**request)
 
         elif not request:
-            request = iam_policy.GetIamPolicyRequest(resource=resource,)
+            request = iam_policy.GetIamPolicyRequest(
+                resource=resource,
+            )
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
@@ -1323,7 +1400,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1394,7 +1476,8 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         elif not request:
             request = iam_policy.TestIamPermissionsRequest(
-                resource=resource, permissions=permissions,
+                resource=resource,
+                permissions=permissions,
             )
 
         # Wrap the RPC method; this adds retry and timeout information,
@@ -1408,7 +1491,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response

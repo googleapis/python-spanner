@@ -33,7 +33,9 @@ from google.protobuf import empty_pb2 as empty  # type: ignore
 
 try:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution("google-cloud-spanner",).version,
+        gapic_version=pkg_resources.get_distribution(
+            "google-cloud-spanner",
+        ).version,
     )
 except pkg_resources.DistributionNotFound:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()
@@ -73,10 +75,10 @@ class SpannerTransport(abc.ABC):
             scope (Optional[Sequence[str]]): A list of scopes.
             quota_project_id (Optional[str]): An optional project to use for billing
                 and quota.
-            client_info (google.api_core.gapic_v1.client_info.ClientInfo):	
-                The client info used to send a user-agent string along with	
-                API requests. If ``None``, then default info will be used.	
-                Generally, you only need to set this if you're developing	
+            client_info (google.api_core.gapic_v1.client_info.ClientInfo):
+                The client info used to send a user-agent string along with
+                API requests. If ``None``, then default info will be used.
+                Generally, you only need to set this if you're developing
                 your own client library.
         """
         # Save the hostname. Default to port 443 (HTTPS) if none is specified.
@@ -116,7 +118,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -127,7 +131,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=60.0,
                 client_info=client_info,
@@ -138,7 +144,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -149,7 +157,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=3600.0,
                 client_info=client_info,
@@ -160,7 +170,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -171,7 +183,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -187,7 +201,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -198,13 +214,17 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
             ),
             self.streaming_read: gapic_v1.method.wrap_method(
-                self.streaming_read, default_timeout=3600.0, client_info=client_info,
+                self.streaming_read,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.begin_transaction: gapic_v1.method.wrap_method(
                 self.begin_transaction,
@@ -212,7 +232,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -223,7 +245,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=3600.0,
                 client_info=client_info,
@@ -234,7 +258,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -245,7 +271,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,
@@ -256,7 +284,9 @@ class SpannerTransport(abc.ABC):
                     initial=0.25,
                     maximum=32.0,
                     multiplier=1.3,
-                    predicate=retries.if_exception_type(exceptions.ServiceUnavailable,),
+                    predicate=retries.if_exception_type(
+                        exceptions.ServiceUnavailable,
+                    ),
                 ),
                 default_timeout=30.0,
                 client_info=client_info,

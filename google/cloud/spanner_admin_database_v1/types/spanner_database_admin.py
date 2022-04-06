@@ -66,10 +66,17 @@ class RestoreInfo(proto.Message):
             the database. The backup may no longer exist.
     """
 
-    source_type = proto.Field(proto.ENUM, number=1, enum="RestoreSourceType",)
+    source_type = proto.Field(
+        proto.ENUM,
+        number=1,
+        enum="RestoreSourceType",
+    )
 
     backup_info = proto.Field(
-        proto.MESSAGE, number=2, oneof="source_info", message=gsad_backup.BackupInfo,
+        proto.MESSAGE,
+        number=2,
+        oneof="source_info",
+        message=gsad_backup.BackupInfo,
     )
 
 
@@ -103,11 +110,23 @@ class Database(proto.Message):
 
     name = proto.Field(proto.STRING, number=1)
 
-    state = proto.Field(proto.ENUM, number=2, enum=State,)
+    state = proto.Field(
+        proto.ENUM,
+        number=2,
+        enum=State,
+    )
 
-    create_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp.Timestamp,
+    )
 
-    restore_info = proto.Field(proto.MESSAGE, number=4, message="RestoreInfo",)
+    restore_info = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message="RestoreInfo",
+    )
 
 
 class ListDatabasesRequest(proto.Message):
@@ -154,7 +173,11 @@ class ListDatabasesResponse(proto.Message):
     def raw_page(self):
         return self
 
-    databases = proto.RepeatedField(proto.MESSAGE, number=1, message="Database",)
+    databases = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Database",
+    )
 
     next_page_token = proto.Field(proto.STRING, number=2)
 
@@ -294,7 +317,9 @@ class UpdateDatabaseDdlMetadata(proto.Message):
     statements = proto.RepeatedField(proto.STRING, number=2)
 
     commit_timestamps = proto.RepeatedField(
-        proto.MESSAGE, number=3, message=timestamp.Timestamp,
+        proto.MESSAGE,
+        number=3,
+        message=timestamp.Timestamp,
     )
 
 
@@ -439,7 +464,9 @@ class ListDatabaseOperationsResponse(proto.Message):
         return self
 
     operations = proto.RepeatedField(
-        proto.MESSAGE, number=1, message=gl_operations.Operation,
+        proto.MESSAGE,
+        number=1,
+        message=gl_operations.Operation,
     )
 
     next_page_token = proto.Field(proto.STRING, number=2)
@@ -525,15 +552,30 @@ class RestoreDatabaseMetadata(proto.Message):
 
     name = proto.Field(proto.STRING, number=1)
 
-    source_type = proto.Field(proto.ENUM, number=2, enum="RestoreSourceType",)
-
-    backup_info = proto.Field(
-        proto.MESSAGE, number=3, oneof="source_info", message=gsad_backup.BackupInfo,
+    source_type = proto.Field(
+        proto.ENUM,
+        number=2,
+        enum="RestoreSourceType",
     )
 
-    progress = proto.Field(proto.MESSAGE, number=4, message=common.OperationProgress,)
+    backup_info = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        oneof="source_info",
+        message=gsad_backup.BackupInfo,
+    )
 
-    cancel_time = proto.Field(proto.MESSAGE, number=5, message=timestamp.Timestamp,)
+    progress = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=common.OperationProgress,
+    )
+
+    cancel_time = proto.Field(
+        proto.MESSAGE,
+        number=5,
+        message=timestamp.Timestamp,
+    )
 
     optimize_database_operation_name = proto.Field(proto.STRING, number=6)
 
@@ -556,7 +598,11 @@ class OptimizeRestoredDatabaseMetadata(proto.Message):
 
     name = proto.Field(proto.STRING, number=1)
 
-    progress = proto.Field(proto.MESSAGE, number=2, message=common.OperationProgress,)
+    progress = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=common.OperationProgress,
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))
