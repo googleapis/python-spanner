@@ -128,8 +128,7 @@ class DatabaseAdminServicer(object):
     """
 
     def ListDatabases(self, request, context):
-        """Lists Cloud Spanner databases.
-        """
+        """Lists Cloud Spanner databases."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
@@ -149,8 +148,7 @@ class DatabaseAdminServicer(object):
         raise NotImplementedError("Method not implemented!")
 
     def GetDatabase(self, request, context):
-        """Gets the state of a Cloud Spanner database.
-        """
+        """Gets the state of a Cloud Spanner database."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
@@ -248,22 +246,19 @@ class DatabaseAdminServicer(object):
         raise NotImplementedError("Method not implemented!")
 
     def GetBackup(self, request, context):
-        """Gets metadata on a pending or completed [Backup][google.spanner.admin.database.v1.Backup].
-        """
+        """Gets metadata on a pending or completed [Backup][google.spanner.admin.database.v1.Backup]."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
     def UpdateBackup(self, request, context):
-        """Updates a pending or completed [Backup][google.spanner.admin.database.v1.Backup].
-        """
+        """Updates a pending or completed [Backup][google.spanner.admin.database.v1.Backup]."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
     def DeleteBackup(self, request, context):
-        """Deletes a pending or completed [Backup][google.spanner.admin.database.v1.Backup].
-        """
+        """Deletes a pending or completed [Backup][google.spanner.admin.database.v1.Backup]."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")

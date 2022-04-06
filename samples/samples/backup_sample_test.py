@@ -22,17 +22,17 @@ import backup_sample
 
 
 def unique_instance_id():
-    """ Creates a unique id for the database. """
+    """Creates a unique id for the database."""
     return f"test-instance-{uuid.uuid4().hex[:10]}"
 
 
 def unique_database_id():
-    """ Creates a unique id for the database. """
+    """Creates a unique id for the database."""
     return f"test-db-{uuid.uuid4().hex[:10]}"
 
 
 def unique_backup_id():
-    """ Creates a unique id for the backup. """
+    """Creates a unique id for the backup."""
     return f"test-backup-{uuid.uuid4().hex[:10]}"
 
 
@@ -57,7 +57,7 @@ def spanner_instance():
 
 @pytest.fixture(scope="module")
 def database(spanner_instance):
-    """ Creates a temporary database that is removed after testing. """
+    """Creates a temporary database that is removed after testing."""
     db = spanner_instance.database(DATABASE_ID)
     db.create()
     yield db

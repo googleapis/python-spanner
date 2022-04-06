@@ -156,8 +156,7 @@ class SpannerServicer(object):
         raise NotImplementedError("Method not implemented!")
 
     def ListSessions(self, request, context):
-        """Lists all sessions in a given database.
-        """
+        """Lists all sessions in a given database."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")

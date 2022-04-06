@@ -120,29 +120,25 @@ class InstanceAdminServicer(object):
     """
 
     def ListInstanceConfigs(self, request, context):
-        """Lists the supported instance configurations for a given project.
-        """
+        """Lists the supported instance configurations for a given project."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
     def GetInstanceConfig(self, request, context):
-        """Gets information about a particular instance configuration.
-        """
+        """Gets information about a particular instance configuration."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
     def ListInstances(self, request, context):
-        """Lists all instances in the given project.
-        """
+        """Lists all instances in the given project."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
 
     def GetInstance(self, request, context):
-        """Gets information about a particular instance.
-        """
+        """Gets information about a particular instance."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details("Method not implemented!")
         raise NotImplementedError("Method not implemented!")
