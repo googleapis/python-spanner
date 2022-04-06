@@ -618,7 +618,9 @@ class TestDatabase(_BaseTest):
             database.update_ddl(DDL_STATEMENTS)
 
         expected_request = UpdateDatabaseDdlRequest(
-            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+            database=self.DATABASE_NAME,
+            statements=DDL_STATEMENTS,
+            operation_id="",
         )
 
         api.update_database_ddl.assert_called_once_with(
@@ -642,7 +644,9 @@ class TestDatabase(_BaseTest):
             database.update_ddl(DDL_STATEMENTS)
 
         expected_request = UpdateDatabaseDdlRequest(
-            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+            database=self.DATABASE_NAME,
+            statements=DDL_STATEMENTS,
+            operation_id="",
         )
 
         api.update_database_ddl.assert_called_once_with(
@@ -667,7 +671,9 @@ class TestDatabase(_BaseTest):
         self.assertIs(future, op_future)
 
         expected_request = UpdateDatabaseDdlRequest(
-            database=self.DATABASE_NAME, statements=DDL_STATEMENTS, operation_id="",
+            database=self.DATABASE_NAME,
+            statements=DDL_STATEMENTS,
+            operation_id="",
         )
 
         api.update_database_ddl.assert_called_once_with(

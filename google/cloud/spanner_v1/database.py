@@ -336,7 +336,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         request = UpdateDatabaseDdlRequest(
-            database=self.name, statements=ddl_statements, operation_id=operation_id,
+            database=self.name,
+            statements=ddl_statements,
+            operation_id=operation_id,
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
@@ -418,7 +420,9 @@ class Database(object):
                     query_options=query_options,
                 )
                 restart = functools.partial(
-                    api.execute_streaming_sql, request=request, metadata=metadata,
+                    api.execute_streaming_sql,
+                    request=request,
+                    metadata=metadata,
                 )
 
                 iterator = _restart_on_unavailable(restart)

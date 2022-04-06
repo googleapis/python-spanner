@@ -163,7 +163,9 @@ class _SnapshotBase(_SessionWrapper):
             partition_token=partition,
         )
         restart = functools.partial(
-            api.streaming_read, request=request, metadata=metadata,
+            api.streaming_read,
+            request=request,
+            metadata=metadata,
         )
 
         trace_attributes = {"table_id": table, "columns": columns}
@@ -357,7 +359,10 @@ class _SnapshotBase(_SessionWrapper):
         with trace_call(
             "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
         ):
-            response = api.partition_read(request=request, metadata=metadata,)
+            response = api.partition_read(
+                request=request,
+                metadata=metadata,
+            )
 
         return [partition.partition_token for partition in response.partitions]
 
@@ -438,7 +443,10 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
         ):
-            response = api.partition_query(request=request, metadata=metadata,)
+            response = api.partition_query(
+                request=request,
+                metadata=metadata,
+            )
 
         return [partition.partition_token for partition in response.partitions]
 

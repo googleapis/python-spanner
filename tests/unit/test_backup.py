@@ -185,7 +185,10 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
+        backup_pb = Backup(
+            database=self.DATABASE_NAME,
+            expire_time=timestamp,
+        )
 
         with self.assertRaises(GoogleAPICallError):
             backup.create()
@@ -211,7 +214,10 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
+        backup_pb = Backup(
+            database=self.DATABASE_NAME,
+            expire_time=timestamp,
+        )
 
         with self.assertRaises(Conflict):
             backup.create()
@@ -237,7 +243,10 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
+        backup_pb = Backup(
+            database=self.DATABASE_NAME,
+            expire_time=timestamp,
+        )
 
         with self.assertRaises(NotFound):
             backup.create()
@@ -278,7 +287,10 @@ class TestBackup(_BaseTest):
             self.BACKUP_ID, instance, database=self.DATABASE_NAME, expire_time=timestamp
         )
 
-        backup_pb = Backup(database=self.DATABASE_NAME, expire_time=timestamp,)
+        backup_pb = Backup(
+            database=self.DATABASE_NAME,
+            expire_time=timestamp,
+        )
 
         future = backup.create()
         self.assertIs(future, op_future)
@@ -475,7 +487,10 @@ class TestBackup(_BaseTest):
         with self.assertRaises(Unknown):
             backup.update_expire_time(expire_time)
 
-        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
+        backup_update = Backup(
+            name=self.BACKUP_NAME,
+            expire_time=expire_time,
+        )
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,
@@ -497,7 +512,10 @@ class TestBackup(_BaseTest):
         with self.assertRaises(NotFound):
             backup.update_expire_time(expire_time)
 
-        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
+        backup_update = Backup(
+            name=self.BACKUP_NAME,
+            expire_time=expire_time,
+        )
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,
@@ -517,7 +535,10 @@ class TestBackup(_BaseTest):
 
         backup.update_expire_time(expire_time)
 
-        backup_update = Backup(name=self.BACKUP_NAME, expire_time=expire_time,)
+        backup_update = Backup(
+            name=self.BACKUP_NAME,
+            expire_time=expire_time,
+        )
         update_mask = {"paths": ["expire_time"]}
         api.update_backup.assert_called_once_with(
             backup=backup_update,

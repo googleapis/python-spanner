@@ -22,7 +22,12 @@ from google.cloud.spanner_v1.types import keys
 from google.protobuf import struct_pb2 as struct  # type: ignore
 
 
-__protobuf__ = proto.module(package="google.spanner.v1", manifest={"Mutation",},)
+__protobuf__ = proto.module(
+    package="google.spanner.v1",
+    manifest={
+        "Mutation",
+    },
+)
 
 
 class Mutation(proto.Message):
@@ -106,7 +111,11 @@ class Mutation(proto.Message):
 
         columns = proto.RepeatedField(proto.STRING, number=2)
 
-        values = proto.RepeatedField(proto.MESSAGE, number=3, message=struct.ListValue,)
+        values = proto.RepeatedField(
+            proto.MESSAGE,
+            number=3,
+            message=struct.ListValue,
+        )
 
     class Delete(proto.Message):
         r"""Arguments to [delete][google.spanner.v1.Mutation.delete] operations.
@@ -127,19 +136,46 @@ class Mutation(proto.Message):
 
         table = proto.Field(proto.STRING, number=1)
 
-        key_set = proto.Field(proto.MESSAGE, number=2, message=keys.KeySet,)
+        key_set = proto.Field(
+            proto.MESSAGE,
+            number=2,
+            message=keys.KeySet,
+        )
 
-    insert = proto.Field(proto.MESSAGE, number=1, oneof="operation", message=Write,)
-
-    update = proto.Field(proto.MESSAGE, number=2, oneof="operation", message=Write,)
-
-    insert_or_update = proto.Field(
-        proto.MESSAGE, number=3, oneof="operation", message=Write,
+    insert = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        oneof="operation",
+        message=Write,
     )
 
-    replace = proto.Field(proto.MESSAGE, number=4, oneof="operation", message=Write,)
+    update = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        oneof="operation",
+        message=Write,
+    )
 
-    delete = proto.Field(proto.MESSAGE, number=5, oneof="operation", message=Delete,)
+    insert_or_update = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        oneof="operation",
+        message=Write,
+    )
+
+    replace = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        oneof="operation",
+        message=Write,
+    )
+
+    delete = proto.Field(
+        proto.MESSAGE,
+        number=5,
+        oneof="operation",
+        message=Delete,
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

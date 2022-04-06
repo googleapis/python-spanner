@@ -70,7 +70,11 @@ class CreateSessionRequest(proto.Message):
 
     database = proto.Field(proto.STRING, number=1)
 
-    session = proto.Field(proto.MESSAGE, number=2, message="Session",)
+    session = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message="Session",
+    )
 
 
 class BatchCreateSessionsRequest(proto.Message):
@@ -96,7 +100,11 @@ class BatchCreateSessionsRequest(proto.Message):
 
     database = proto.Field(proto.STRING, number=1)
 
-    session_template = proto.Field(proto.MESSAGE, number=2, message="Session",)
+    session_template = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message="Session",
+    )
 
     session_count = proto.Field(proto.INT32, number=3)
 
@@ -110,7 +118,11 @@ class BatchCreateSessionsResponse(proto.Message):
             The freshly created sessions.
     """
 
-    session = proto.RepeatedField(proto.MESSAGE, number=1, message="Session",)
+    session = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Session",
+    )
 
 
 class Session(proto.Message):
@@ -148,10 +160,16 @@ class Session(proto.Message):
 
     labels = proto.MapField(proto.STRING, proto.STRING, number=2)
 
-    create_time = proto.Field(proto.MESSAGE, number=3, message=timestamp.Timestamp,)
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp.Timestamp,
+    )
 
     approximate_last_use_time = proto.Field(
-        proto.MESSAGE, number=4, message=timestamp.Timestamp,
+        proto.MESSAGE,
+        number=4,
+        message=timestamp.Timestamp,
     )
 
 
@@ -224,7 +242,11 @@ class ListSessionsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    sessions = proto.RepeatedField(proto.MESSAGE, number=1, message="Session",)
+    sessions = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Session",
+    )
 
     next_page_token = proto.Field(proto.STRING, number=2)
 
@@ -373,26 +395,43 @@ class ExecuteSqlRequest(proto.Message):
     session = proto.Field(proto.STRING, number=1)
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionSelector,
     )
 
     sql = proto.Field(proto.STRING, number=3)
 
-    params = proto.Field(proto.MESSAGE, number=4, message=struct.Struct,)
+    params = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=struct.Struct,
+    )
 
     param_types = proto.MapField(
-        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
+        proto.STRING,
+        proto.MESSAGE,
+        number=5,
+        message=gs_type.Type,
     )
 
     resume_token = proto.Field(proto.BYTES, number=6)
 
-    query_mode = proto.Field(proto.ENUM, number=7, enum=QueryMode,)
+    query_mode = proto.Field(
+        proto.ENUM,
+        number=7,
+        enum=QueryMode,
+    )
 
     partition_token = proto.Field(proto.BYTES, number=8)
 
     seqno = proto.Field(proto.INT64, number=9)
 
-    query_options = proto.Field(proto.MESSAGE, number=10, message=QueryOptions,)
+    query_options = proto.Field(
+        proto.MESSAGE,
+        number=10,
+        message=QueryOptions,
+    )
 
 
 class ExecuteBatchDmlRequest(proto.Message):
@@ -473,19 +512,32 @@ class ExecuteBatchDmlRequest(proto.Message):
 
         sql = proto.Field(proto.STRING, number=1)
 
-        params = proto.Field(proto.MESSAGE, number=2, message=struct.Struct,)
+        params = proto.Field(
+            proto.MESSAGE,
+            number=2,
+            message=struct.Struct,
+        )
 
         param_types = proto.MapField(
-            proto.STRING, proto.MESSAGE, number=3, message=gs_type.Type,
+            proto.STRING,
+            proto.MESSAGE,
+            number=3,
+            message=gs_type.Type,
         )
 
     session = proto.Field(proto.STRING, number=1)
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionSelector,
     )
 
-    statements = proto.RepeatedField(proto.MESSAGE, number=3, message=Statement,)
+    statements = proto.RepeatedField(
+        proto.MESSAGE,
+        number=3,
+        message=Statement,
+    )
 
     seqno = proto.Field(proto.INT64, number=4)
 
@@ -546,10 +598,16 @@ class ExecuteBatchDmlResponse(proto.Message):
     """
 
     result_sets = proto.RepeatedField(
-        proto.MESSAGE, number=1, message=result_set.ResultSet,
+        proto.MESSAGE,
+        number=1,
+        message=result_set.ResultSet,
     )
 
-    status = proto.Field(proto.MESSAGE, number=2, message=gr_status.Status,)
+    status = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=gr_status.Status,
+    )
 
 
 class PartitionOptions(proto.Message):
@@ -644,19 +702,30 @@ class PartitionQueryRequest(proto.Message):
     session = proto.Field(proto.STRING, number=1)
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionSelector,
     )
 
     sql = proto.Field(proto.STRING, number=3)
 
-    params = proto.Field(proto.MESSAGE, number=4, message=struct.Struct,)
+    params = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=struct.Struct,
+    )
 
     param_types = proto.MapField(
-        proto.STRING, proto.MESSAGE, number=5, message=gs_type.Type,
+        proto.STRING,
+        proto.MESSAGE,
+        number=5,
+        message=gs_type.Type,
     )
 
     partition_options = proto.Field(
-        proto.MESSAGE, number=6, message="PartitionOptions",
+        proto.MESSAGE,
+        number=6,
+        message="PartitionOptions",
     )
 
 
@@ -712,7 +781,9 @@ class PartitionReadRequest(proto.Message):
     session = proto.Field(proto.STRING, number=1)
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionSelector,
     )
 
     table = proto.Field(proto.STRING, number=3)
@@ -721,10 +792,16 @@ class PartitionReadRequest(proto.Message):
 
     columns = proto.RepeatedField(proto.STRING, number=5)
 
-    key_set = proto.Field(proto.MESSAGE, number=6, message=keys.KeySet,)
+    key_set = proto.Field(
+        proto.MESSAGE,
+        number=6,
+        message=keys.KeySet,
+    )
 
     partition_options = proto.Field(
-        proto.MESSAGE, number=9, message="PartitionOptions",
+        proto.MESSAGE,
+        number=9,
+        message="PartitionOptions",
     )
 
 
@@ -756,10 +833,16 @@ class PartitionResponse(proto.Message):
             Transaction created by this request.
     """
 
-    partitions = proto.RepeatedField(proto.MESSAGE, number=1, message="Partition",)
+    partitions = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Partition",
+    )
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.Transaction,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.Transaction,
     )
 
 
@@ -838,7 +921,9 @@ class ReadRequest(proto.Message):
     session = proto.Field(proto.STRING, number=1)
 
     transaction = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionSelector,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionSelector,
     )
 
     table = proto.Field(proto.STRING, number=3)
@@ -847,7 +932,11 @@ class ReadRequest(proto.Message):
 
     columns = proto.RepeatedField(proto.STRING, number=5)
 
-    key_set = proto.Field(proto.MESSAGE, number=6, message=keys.KeySet,)
+    key_set = proto.Field(
+        proto.MESSAGE,
+        number=6,
+        message=keys.KeySet,
+    )
 
     limit = proto.Field(proto.INT64, number=8)
 
@@ -871,7 +960,9 @@ class BeginTransactionRequest(proto.Message):
     session = proto.Field(proto.STRING, number=1)
 
     options = proto.Field(
-        proto.MESSAGE, number=2, message=gs_transaction.TransactionOptions,
+        proto.MESSAGE,
+        number=2,
+        message=gs_transaction.TransactionOptions,
     )
 
 
@@ -912,7 +1003,11 @@ class CommitRequest(proto.Message):
         message=gs_transaction.TransactionOptions,
     )
 
-    mutations = proto.RepeatedField(proto.MESSAGE, number=4, message=mutation.Mutation,)
+    mutations = proto.RepeatedField(
+        proto.MESSAGE,
+        number=4,
+        message=mutation.Mutation,
+    )
 
 
 class CommitResponse(proto.Message):
@@ -925,7 +1020,9 @@ class CommitResponse(proto.Message):
     """
 
     commit_timestamp = proto.Field(
-        proto.MESSAGE, number=1, message=timestamp.Timestamp,
+        proto.MESSAGE,
+        number=1,
+        message=timestamp.Timestamp,
     )
 
 
