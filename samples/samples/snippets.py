@@ -602,7 +602,7 @@ def create_table_with_timestamp(instance_id, database_id):
 
 # [START spanner_insert_data_with_timestamp_column]
 def insert_data_with_timestamp(instance_id, database_id):
-    """Inserts data with a COMMIT_TIMESTAMP field into a table. """
+    """Inserts data with a COMMIT_TIMESTAMP field into a table."""
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -628,8 +628,7 @@ def insert_data_with_timestamp(instance_id, database_id):
 
 # [START spanner_add_timestamp_column]
 def add_timestamp_column(instance_id, database_id):
-    """ Adds a new TIMESTAMP column to the Albums table in the example database.
-    """
+    """Adds a new TIMESTAMP column to the Albums table in the example database."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -726,8 +725,7 @@ def query_data_with_timestamp(instance_id, database_id):
 
 # [START spanner_add_numeric_column]
 def add_numeric_column(instance_id, database_id):
-    """ Adds a new NUMERIC column to the Venues table in the example database.
-    """
+    """Adds a new NUMERIC column to the Venues table in the example database."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -810,7 +808,7 @@ def write_struct_data(instance_id, database_id):
 
 
 def query_with_struct(instance_id, database_id):
-    """Query a table using STRUCT parameters. """
+    """Query a table using STRUCT parameters."""
     # [START spanner_create_struct_with_data]
     record_type = param_types.Struct(
         [
@@ -840,7 +838,7 @@ def query_with_struct(instance_id, database_id):
 
 
 def query_with_array_of_struct(instance_id, database_id):
-    """Query a table using an array of STRUCT parameters. """
+    """Query a table using an array of STRUCT parameters."""
     # [START spanner_create_user_defined_struct]
     name_type = param_types.Struct(
         [
@@ -879,7 +877,7 @@ def query_with_array_of_struct(instance_id, database_id):
 
 # [START spanner_field_access_on_struct_parameters]
 def query_struct_field(instance_id, database_id):
-    """Query a table using field access on a STRUCT parameter. """
+    """Query a table using field access on a STRUCT parameter."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -907,7 +905,7 @@ def query_struct_field(instance_id, database_id):
 
 # [START spanner_field_access_on_nested_struct_parameters]
 def query_nested_struct_field(instance_id, database_id):
-    """Query a table using nested field access on a STRUCT parameter. """
+    """Query a table using nested field access on a STRUCT parameter."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -950,7 +948,7 @@ def query_nested_struct_field(instance_id, database_id):
 
 
 def insert_data_with_dml(instance_id, database_id):
-    """Inserts sample data into the given database using a DML statement. """
+    """Inserts sample data into the given database using a DML statement."""
     # [START spanner_dml_standard_insert]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -972,7 +970,7 @@ def insert_data_with_dml(instance_id, database_id):
 
 
 def update_data_with_dml(instance_id, database_id):
-    """Updates sample data from the database using a DML statement. """
+    """Updates sample data from the database using a DML statement."""
     # [START spanner_dml_standard_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -995,7 +993,7 @@ def update_data_with_dml(instance_id, database_id):
 
 
 def delete_data_with_dml(instance_id, database_id):
-    """Deletes sample data from the database using a DML statement. """
+    """Deletes sample data from the database using a DML statement."""
     # [START spanner_dml_standard_delete]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1016,7 +1014,7 @@ def delete_data_with_dml(instance_id, database_id):
 
 
 def update_data_with_dml_timestamp(instance_id, database_id):
-    """Updates data with Timestamp from the database using a DML statement. """
+    """Updates data with Timestamp from the database using a DML statement."""
     # [START spanner_dml_standard_update_with_timestamp]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1068,7 +1066,7 @@ def dml_write_read_transaction(instance_id, database_id):
 
 
 def update_data_with_dml_struct(instance_id, database_id):
-    """Updates data with a DML statement and STRUCT parameters. """
+    """Updates data with a DML statement and STRUCT parameters."""
     # [START spanner_dml_structs]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1100,7 +1098,7 @@ def update_data_with_dml_struct(instance_id, database_id):
 
 
 def insert_with_dml(instance_id, database_id):
-    """Inserts data with a DML statement into the database. """
+    """Inserts data with a DML statement into the database."""
     # [START spanner_dml_getting_started_insert]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1145,7 +1143,7 @@ def query_data_with_parameter(instance_id, database_id):
 
 
 def write_with_dml_transaction(instance_id, database_id):
-    """ Transfers part of a marketing budget from one album to another. """
+    """Transfers part of a marketing budget from one album to another."""
     # [START spanner_dml_getting_started_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1208,7 +1206,7 @@ def write_with_dml_transaction(instance_id, database_id):
 
 
 def update_data_with_partitioned_dml(instance_id, database_id):
-    """ Update sample data with a partitioned DML statement. """
+    """Update sample data with a partitioned DML statement."""
     # [START spanner_dml_partitioned_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1226,7 +1224,7 @@ def update_data_with_partitioned_dml(instance_id, database_id):
 
 
 def delete_data_with_partitioned_dml(instance_id, database_id):
-    """ Delete sample data with a partitioned DML statement. """
+    """Delete sample data with a partitioned DML statement."""
     # [START spanner_dml_partitioned_delete]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1241,7 +1239,7 @@ def delete_data_with_partitioned_dml(instance_id, database_id):
 
 
 def update_with_batch_dml(instance_id, database_id):
-    """Updates sample data in the database using Batch DML. """
+    """Updates sample data in the database using Batch DML."""
     # [START spanner_dml_batch_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1272,7 +1270,7 @@ def update_with_batch_dml(instance_id, database_id):
 
 
 def create_table_with_datatypes(instance_id, database_id):
-    """Creates a table with supported dataypes. """
+    """Creates a table with supported dataypes."""
     # [START spanner_create_table_with_datatypes]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1309,7 +1307,7 @@ def create_table_with_datatypes(instance_id, database_id):
 
 
 def insert_datatypes_data(instance_id, database_id):
-    """Inserts data with supported datatypes into a table. """
+    """Inserts data with supported datatypes into a table."""
     # [START spanner_insert_datatypes_data]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1379,7 +1377,7 @@ def insert_datatypes_data(instance_id, database_id):
 
 
 def query_data_with_array(instance_id, database_id):
-    """Queries sample data using SQL with an ARRAY parameter. """
+    """Queries sample data using SQL with an ARRAY parameter."""
     # [START spanner_query_with_array_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1406,7 +1404,7 @@ def query_data_with_array(instance_id, database_id):
 
 
 def query_data_with_bool(instance_id, database_id):
-    """Queries sample data using SQL with a BOOL parameter. """
+    """Queries sample data using SQL with a BOOL parameter."""
     # [START spanner_query_with_bool_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1432,7 +1430,7 @@ def query_data_with_bool(instance_id, database_id):
 
 
 def query_data_with_bytes(instance_id, database_id):
-    """Queries sample data using SQL with a BYTES parameter. """
+    """Queries sample data using SQL with a BYTES parameter."""
     # [START spanner_query_with_bytes_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1457,7 +1455,7 @@ def query_data_with_bytes(instance_id, database_id):
 
 
 def query_data_with_date(instance_id, database_id):
-    """Queries sample data using SQL with a DATE parameter. """
+    """Queries sample data using SQL with a DATE parameter."""
     # [START spanner_query_with_date_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1483,7 +1481,7 @@ def query_data_with_date(instance_id, database_id):
 
 
 def query_data_with_float(instance_id, database_id):
-    """Queries sample data using SQL with a FLOAT64 parameter. """
+    """Queries sample data using SQL with a FLOAT64 parameter."""
     # [START spanner_query_with_float_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1509,7 +1507,7 @@ def query_data_with_float(instance_id, database_id):
 
 
 def query_data_with_int(instance_id, database_id):
-    """Queries sample data using SQL with a INT64 parameter. """
+    """Queries sample data using SQL with a INT64 parameter."""
     # [START spanner_query_with_int_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1535,7 +1533,7 @@ def query_data_with_int(instance_id, database_id):
 
 
 def query_data_with_string(instance_id, database_id):
-    """Queries sample data using SQL with a STRING parameter. """
+    """Queries sample data using SQL with a STRING parameter."""
     # [START spanner_query_with_string_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1560,7 +1558,7 @@ def query_data_with_string(instance_id, database_id):
 
 
 def query_data_with_numeric_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a NUMERIC parameter. """
+    """Queries sample data using SQL with a NUMERIC parameter."""
     # [START spanner_query_with_numeric_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1585,7 +1583,7 @@ def query_data_with_numeric_parameter(instance_id, database_id):
 
 
 def query_data_with_timestamp_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a TIMESTAMP parameter. """
+    """Queries sample data using SQL with a TIMESTAMP parameter."""
     # [START spanner_query_with_timestamp_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
