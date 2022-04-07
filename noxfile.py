@@ -133,6 +133,7 @@ def system(session):
         "mock",
         "pytest",
         "google-cloud-testutils",
+        "pytz",
     )
     session.install("-e", ".[tracing]")
 
