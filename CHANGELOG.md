@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+### [2.1.1](https://github.com/googleapis/python-spanner/compare/v2.1.0...v2.1.1) (2022-04-07)
+
+
+### Bug Fixes
+
+* **deps:** require google-api-core >= 1.31.5, >= 2.3.2 on v2 release ([#688](https://github.com/googleapis/python-spanner/issues/688)) ([ad8ba58](https://github.com/googleapis/python-spanner/commit/ad8ba5851c400ecbbd69c166700d619f691e4e61))
+
 ## [2.1.0](https://www.github.com/googleapis/python-spanner/compare/v2.0.0...v2.1.0) (2020-11-24)
 
 
