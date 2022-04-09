@@ -16,7 +16,7 @@
 from collections import OrderedDict
 import os
 import re
-from typing import Dict, Optional, Iterable, Sequence, Tuple, Type, Union
+from typing import Dict, Mapping, Optional, Iterable, Sequence, Tuple, Type, Union
 import pkg_resources
 
 from google.api_core import client_options as client_options_lib
@@ -490,7 +490,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_create_session():
                 # Create a client
@@ -588,7 +588,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_batch_create_sessions():
                 # Create a client
@@ -701,7 +701,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_get_session():
                 # Create a client
@@ -794,7 +794,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_list_sessions():
                 # Create a client
@@ -905,7 +905,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_delete_session():
                 # Create a client
@@ -1001,7 +1001,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_execute_sql():
                 # Create a client
@@ -1083,7 +1083,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_execute_streaming_sql():
                 # Create a client
@@ -1177,7 +1177,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_execute_batch_dml():
                 # Create a client
@@ -1308,7 +1308,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_read():
                 # Create a client
@@ -1391,7 +1391,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_streaming_read():
                 # Create a client
@@ -1479,7 +1479,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_begin_transaction():
                 # Create a client
@@ -1600,7 +1600,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_commit():
                 # Create a client
@@ -1746,7 +1746,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_rollback():
                 # Create a client
@@ -1852,7 +1852,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_partition_query():
                 # Create a client
@@ -1945,7 +1945,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         .. code-block:: python
 
-            from google.cloud import spanner_v1
+                    from google.cloud import spanner_v1
 
             def sample_partition_read():
                 # Create a client
