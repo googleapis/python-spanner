@@ -15,7 +15,6 @@
 
 import google.api_core.gapic_v1.method
 from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1.session import Session
 import mock
 from tests._helpers import (
     OpenTelemetryBase,

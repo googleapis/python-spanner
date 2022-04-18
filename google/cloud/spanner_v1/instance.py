@@ -14,7 +14,6 @@
 
 """User friendly container for Cloud Spanner Instance."""
 
-import imp
 import google.api_core.operation
 from google.api_core.exceptions import InvalidArgument
 import re

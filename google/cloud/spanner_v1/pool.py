@@ -16,7 +16,6 @@
 
 import datetime
 import queue
-import proto
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
