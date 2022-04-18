@@ -329,6 +329,46 @@ def test_create_role_grant_access_success(
         for _ in results:
             pass
 
+    ddl_remove_roles = [
+        f"REVOKE SELECT ON TABLE T FROM ROLE {creator_role_parent}",
+        f"DROP ROLE {creator_role_parent}",
+        f"DROP ROLE {creator_role_orphan}",
+    ]
+    # Revoke permission and Delete roles.
+    operation = temp_db.update_ddl(ddl_remove_roles)
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+
+def test_list_database_role_success(
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+):
+    creator_role_parent = _helpers.unique_id("role_parent", separator="_")
+    creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
+
+    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db = shared_instance.database(temp_db_id)
+
+    create_op = temp_db.create()
+    databases_to_delete.append(temp_db)
+    create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    # Create role and grant select permission on table contacts for parent role.
+    ddl_statements = _helpers.DDL_STATEMENTS + [
+        f"CREATE ROLE {creator_role_parent}",
+        f"CREATE ROLE {creator_role_orphan}",
+    ]
+    operation = temp_db.update_ddl(ddl_statements)
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    # List database roles.
+    roles_list = []
+    for role in temp_db.list_database_roles():
+        roles_list.append(role.name.split("/")[-1])
+    assert creator_role_parent in roles_list
+    assert creator_role_orphan in roles_list
+
 
 def test_db_batch_insert_then_db_snapshot_read(shared_database):
     _helpers.retry_has_all_dll(shared_database.reload)()
