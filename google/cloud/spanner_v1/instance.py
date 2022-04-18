@@ -688,7 +688,6 @@ class Instance(object):
         """
         operations_client = self._client.database_admin_api.transport.operations_client
         metadata_type = _type_string_to_type_pb(operation_pb.metadata.type_url)
-
         response_type = _OPERATION_RESPONSE_TYPES[metadata_type]
         return google.api_core.operation.from_gapic(
             operation_pb, operations_client, response_type, metadata_type=metadata_type
