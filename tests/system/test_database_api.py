@@ -289,6 +289,47 @@ def test_update_ddl_w_default_leader_success(
     assert len(temp_db.ddl_statements) == len(ddl_statements)
 
 
+def test_create_role_grant_access_success(
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+):
+    creator_role_parent = _helpers.unique_id("role_parent", separator="_")
+    creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
+
+    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db = shared_instance.database(temp_db_id)
+
+    create_op = temp_db.create()
+    databases_to_delete.append(temp_db)
+    create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    # Create role and grant select permission on table contacts for parent role.
+    ddl_statements = _helpers.DDL_STATEMENTS + [
+        f"CREATE ROLE {creator_role_parent}",
+        f"CREATE ROLE {creator_role_orphan}",
+        f"GRANT SELECT ON TABLE contacts TO ROLE {creator_role_parent}",
+    ]
+    operation = temp_db.update_ddl(ddl_statements)
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    # Perform select with orphan role on table contacts.
+    # Expect PermissionDenied exception.
+    temp_db = shared_instance.database(temp_db_id, creator_role=creator_role_orphan)
+    with pytest.raises(exceptions.PermissionDenied):
+        with temp_db.snapshot() as snapshot:
+            results = snapshot.execute_sql("SELECT * FROM contacts")
+            for row in results:
+                pass
+
+    # Perform select with parent role on table contacts. Expect success.
+    temp_db = shared_instance.database(temp_db_id, creator_role=creator_role_parent)
+    with temp_db.snapshot() as snapshot:
+        results = snapshot.execute_sql("SELECT * FROM contacts")
+        for _ in results:
+            pass
+
+
 def test_db_batch_insert_then_db_snapshot_read(shared_database):
     _helpers.retry_has_all_dll(shared_database.reload)()
     sd = _sample_data
