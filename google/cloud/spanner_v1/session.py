@@ -124,7 +124,7 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
 
         request = CreateSessionRequest(database=self._database.name)
-        if self._database and self._database.creator_role is not None:
+        if self._database.creator_role is not None:
             request.session.creator_role = self._database.creator_role
 
         if self._labels:

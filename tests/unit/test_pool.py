@@ -164,15 +164,18 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind(self):
+        creator_role = "dummy-role"
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database)] * 10
+        database._creator_role = creator_role
         database._sessions.extend(SESSIONS)
 
         pool.bind(database)
 
         self.assertIs(pool._database, database)
         self.assertEqual(pool.size, 10)
+        self.assertEqual(pool.creator_role, creator_role)
         self.assertEqual(pool.default_timeout, 10)
         self.assertTrue(pool._sessions.full())
 
@@ -304,6 +307,14 @@ class TestBurstyPool(unittest.TestCase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.creator_role, creator_role)
 
+    def test_ctor_explicit_w_creator_role_in_db(self):
+        creator_role = "dummy-role"
+        pool = self._make_one()
+        database = pool._database = _Database("name")
+        database._creator_role = creator_role
+        pool.bind(database)
+        self.assertEqual(pool.creator_role, creator_role)
+
     def test_get_empty(self):
         pool = self._make_one()
         database = _Database("name")
@@ -433,6 +444,16 @@ class TestPingingPool(unittest.TestCase):
         self.assertEqual(pool._delta.seconds, 1800)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
+        self.assertEqual(pool.creator_role, creator_role)
+
+    def test_ctor_explicit_w_creator_role_in_db(self):
+        creator_role = "dummy-role"
+        pool = self._make_one()
+        database = pool._database = _Database("name")
+        SESSIONS = [_Session(database)] * 10
+        database._sessions.extend(SESSIONS)
+        database._creator_role = creator_role
+        pool.bind(database)
         self.assertEqual(pool.creator_role, creator_role)
 
     def test_bind(self):
@@ -675,6 +696,16 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.creator_role, creator_role)
 
+    def test_ctor_explicit_w_creator_role_in_db(self):
+        creator_role = "dummy-role"
+        pool = self._make_one()
+        database = pool._database = _Database("name")
+        SESSIONS = [_Session(database)] * 10
+        database._sessions.extend(SESSIONS)
+        database._creator_role = creator_role
+        pool.bind(database)
+        self.assertEqual(pool.creator_role, creator_role)
+
     def test_bind(self):
         pool = self._make_one()
         database = _Database("name")
@@ -831,10 +862,10 @@ class TestSessionCheckout(unittest.TestCase):
 
     def test_ctor_w_kwargs(self):
         pool = _Pool()
-        checkout = self._make_one(pool, foo="bar")
+        checkout = self._make_one(pool, foo="bar", creator_role="dummy-role")
         self.assertIs(checkout._pool, pool)
         self.assertIsNone(checkout._session)
-        self.assertEqual(checkout._kwargs, {"foo": "bar"})
+        self.assertEqual(checkout._kwargs, {"foo": "bar", "creator_role": "dummy-role"})
 
     def test_context_manager_wo_kwargs(self):
         session = object()
@@ -922,6 +953,7 @@ class _Database(object):
     def __init__(self, name):
         self.name = name
         self._sessions = []
+        self._creator_role = None
 
         def mock_batch_create_sessions(
             database=None,
@@ -951,6 +983,15 @@ class _Database(object):
 
         self.spanner_api = mock.create_autospec(SpannerClient, instance=True)
         self.spanner_api.batch_create_sessions.side_effect = mock_batch_create_sessions
+
+    @property
+    def creator_role(self):
+        """Creator role used in sessions to connect to this database.
+
+        :rtype: str
+        :returns: an str with the name of the database role.
+        """
+        return self._creator_role
 
     def session(self, **kwargs):
         # always return first session in the list
