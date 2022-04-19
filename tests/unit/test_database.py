@@ -17,7 +17,6 @@ import unittest
 
 import mock
 from google.api_core import gapic_v1
-from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 
@@ -1793,7 +1792,6 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     def test_context_mgr_session_not_found_error(self):
-        from google.cloud.spanner_v1.database import SnapshotCheckout
         from google.cloud.exceptions import NotFound
 
         database = _Database(self.DATABASE_NAME)
@@ -1809,14 +1807,12 @@ class TestSnapshotCheckout(_BaseTest):
 
         self.assertEqual(pool._session, session)
         with self.assertRaises(NotFound):
-            with checkout as snapshot:
-                raise NotFound(f"Session not found")
+            with checkout as _:
+                raise NotFound("Session not found")
         # Assert that session-1 was removed from pool and new session was added.
         self.assertEqual(pool._session, new_session)
 
     def test_context_mgr_unknown_error(self):
-        from google.cloud.spanner_v1.database import SnapshotCheckout
-
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
         pool = database._pool = _Pool()
@@ -1829,8 +1825,8 @@ class TestSnapshotCheckout(_BaseTest):
 
         self.assertEqual(pool._session, session)
         with self.assertRaises(Testing):
-            with checkout as snapshot:
-                raise Testing(f"Session not found")
+            with checkout as _:
+                raise Testing("Unknown error.")
         # Assert that session-1 was not removed from pool.
         self.assertEqual(pool._session, session)
         pool._new_session.assert_not_called()
