@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 from collections import OrderedDict
 import os
 import re
-from typing import Dict, Optional, Sequence, Tuple, Type, Union
+from typing import Dict, Mapping, Optional, Sequence, Tuple, Type, Union
 import pkg_resources
 
 from google.api_core import client_options as client_options_lib
@@ -58,7 +58,10 @@ class InstanceAdminClientMeta(type):
     _transport_registry["grpc"] = InstanceAdminGrpcTransport
     _transport_registry["grpc_asyncio"] = InstanceAdminGrpcAsyncIOTransport
 
-    def get_transport_class(cls, label: str = None,) -> Type[InstanceAdminTransport]:
+    def get_transport_class(
+        cls,
+        label: str = None,
+    ) -> Type[InstanceAdminTransport]:
         """Returns an appropriate transport class.
 
         Args:
@@ -184,10 +187,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return self._transport
 
     @staticmethod
-    def instance_path(project: str, instance: str,) -> str:
+    def instance_path(
+        project: str,
+        instance: str,
+    ) -> str:
         """Returns a fully-qualified instance string."""
         return "projects/{project}/instances/{instance}".format(
-            project=project, instance=instance,
+            project=project,
+            instance=instance,
         )
 
     @staticmethod
@@ -197,10 +204,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def instance_config_path(project: str, instance_config: str,) -> str:
+    def instance_config_path(
+        project: str,
+        instance_config: str,
+    ) -> str:
         """Returns a fully-qualified instance_config string."""
         return "projects/{project}/instanceConfigs/{instance_config}".format(
-            project=project, instance_config=instance_config,
+            project=project,
+            instance_config=instance_config,
         )
 
     @staticmethod
@@ -213,7 +224,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_billing_account_path(billing_account: str,) -> str:
+    def common_billing_account_path(
+        billing_account: str,
+    ) -> str:
         """Returns a fully-qualified billing_account string."""
         return "billingAccounts/{billing_account}".format(
             billing_account=billing_account,
@@ -226,9 +239,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_folder_path(folder: str,) -> str:
+    def common_folder_path(
+        folder: str,
+    ) -> str:
         """Returns a fully-qualified folder string."""
-        return "folders/{folder}".format(folder=folder,)
+        return "folders/{folder}".format(
+            folder=folder,
+        )
 
     @staticmethod
     def parse_common_folder_path(path: str) -> Dict[str, str]:
@@ -237,9 +254,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_organization_path(organization: str,) -> str:
+    def common_organization_path(
+        organization: str,
+    ) -> str:
         """Returns a fully-qualified organization string."""
-        return "organizations/{organization}".format(organization=organization,)
+        return "organizations/{organization}".format(
+            organization=organization,
+        )
 
     @staticmethod
     def parse_common_organization_path(path: str) -> Dict[str, str]:
@@ -248,9 +269,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_project_path(project: str,) -> str:
+    def common_project_path(
+        project: str,
+    ) -> str:
         """Returns a fully-qualified project string."""
-        return "projects/{project}".format(project=project,)
+        return "projects/{project}".format(
+            project=project,
+        )
 
     @staticmethod
     def parse_common_project_path(path: str) -> Dict[str, str]:
@@ -259,10 +284,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
-    def common_location_path(project: str, location: str,) -> str:
+    def common_location_path(
+        project: str,
+        location: str,
+    ) -> str:
         """Returns a fully-qualified location string."""
         return "projects/{project}/locations/{location}".format(
-            project=project, location=location,
+            project=project,
+            location=location,
         )
 
     @staticmethod
@@ -448,6 +477,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         r"""Lists the supported instance configurations for a
         given project.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instance_configs():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstanceConfigsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instance_configs(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsRequest, dict]):
                 The request object. The request for
@@ -507,12 +556,20 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListInstanceConfigsPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -529,6 +586,25 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     ) -> spanner_instance_admin.InstanceConfig:
         r"""Gets information about a particular instance
         configuration.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance_config():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceConfigRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance_config(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceConfigRequest, dict]):
@@ -588,7 +664,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -603,6 +684,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstancesPager:
         r"""Lists all instances in the given project.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instances():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstancesRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instances(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstancesRequest, dict]):
@@ -663,12 +764,20 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListInstancesPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -684,6 +793,25 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstanceRequest, dict]):
@@ -741,7 +869,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -795,6 +928,36 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         The [response][google.longrunning.Operation.response] field type
         is [Instance][google.spanner.admin.instance.v1.Instance], if
         successful.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_create_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.CreateInstanceRequest(
+                    parent="parent_value",
+                    instance_id="instance_id_value",
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.create_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.CreateInstanceRequest, dict]):
@@ -875,7 +1038,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -943,6 +1111,34 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         Authorization requires ``spanner.instances.update`` permission
         on resource
         [name][google.spanner.admin.instance.v1.Instance.name].
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_update_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance = spanner_admin_instance_v1.Instance()
+                instance.name = "name_value"
+                instance.config = "config_value"
+                instance.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.UpdateInstanceRequest(
+                    instance=instance,
+                )
+
+                # Make the request
+                operation = client.update_instance(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.UpdateInstanceRequest, dict]):
@@ -1022,7 +1218,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Wrap the response in an operation future.
         response = operation.from_gapic(
@@ -1055,6 +1256,22 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         -  The instance and *all of its databases* immediately and
            irrevocably disappear from the API. All data in the databases
            is permanently deleted.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_delete_instance():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.DeleteInstanceRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_instance(request=request)
 
         Args:
             request (Union[google.cloud.spanner_admin_instance_v1.types.DeleteInstanceRequest, dict]):
@@ -1107,7 +1324,10 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         # Send the request.
         rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     def set_iam_policy(
@@ -1124,6 +1344,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         Authorization requires ``spanner.instances.setIamPolicy`` on
         [resource][google.iam.v1.SetIamPolicyRequest.resource].
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+            from google.iam.v1 import iam_policy_pb2  # type: ignore
+
+            def sample_set_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = iam_policy_pb2.SetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.set_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.SetIamPolicyRequest, dict]):
@@ -1146,21 +1386,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         Returns:
             google.iam.v1.policy_pb2.Policy:
-                Defines an Identity and Access Management (IAM) policy. It is used to
-                   specify access control policies for Cloud Platform
-                   resources.
+                An Identity and Access Management (IAM) policy, which specifies access
+                   controls for Google Cloud resources.
 
                    A Policy is a collection of bindings. A binding binds
-                   one or more members to a single role. Members can be
-                   user accounts, service accounts, Google groups, and
-                   domains (such as G Suite). A role is a named list of
-                   permissions (defined by IAM or configured by users).
-                   A binding can optionally specify a condition, which
-                   is a logic expression that further constrains the
-                   role binding based on attributes about the request
-                   and/or target resource.
+                   one or more members, or principals, to a single role.
+                   Principals can be user accounts, service accounts,
+                   Google groups, and domains (such as G Suite). A role
+                   is a named list of permissions; each role can be an
+                   IAM predefined role or a user-created custom role.
 
-                   **JSON Example**
+                   For some types of Google Cloud resources, a binding
+                   can also specify a condition, which is a logical
+                   expression that allows access to a resource only if
+                   the expression evaluates to true. A condition can add
+                   constraints based on attributes of the request, the
+                   resource, or both. To learn which resources support
+                   conditions in their IAM policies, see the [IAM
+                   documentation](\ https://cloud.google.com/iam/help/conditions/resource-policies).
+
+                   **JSON example:**
 
                       {
                          "bindings": [
@@ -1175,17 +1420,17 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
                             }, { "role":
                             "roles/resourcemanager.organizationViewer",
-                            "members": ["user:eve@example.com"],
+                            "members": [ "user:eve@example.com" ],
                             "condition": { "title": "expirable access",
                             "description": "Does not grant access after
                             Sep 2020", "expression": "request.time <
                             timestamp('2020-10-01T00:00:00.000Z')", } }
 
-                         ]
+                         ], "etag": "BwWWja0YfJA=", "version": 3
 
                       }
 
-                   **YAML Example**
+                   **YAML example:**
 
                       bindings: - members: - user:\ mike@example.com -
                       group:\ admins@example.com - domain:google.com -
@@ -1196,11 +1441,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                       condition: title: expirable access description:
                       Does not grant access after Sep 2020 expression:
                       request.time <
-                      timestamp('2020-10-01T00:00:00.000Z')
+                      timestamp('2020-10-01T00:00:00.000Z') etag:
+                      BwWWja0YfJA= version: 3
 
                    For a description of IAM and its features, see the
-                   [IAM developer's
-                   guide](\ https://cloud.google.com/iam/docs).
+                   [IAM
+                   documentation](\ https://cloud.google.com/iam/docs/).
 
         """
         # Create or coerce a protobuf request object.
@@ -1234,7 +1480,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1254,6 +1505,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         Authorization requires ``spanner.instances.getIamPolicy`` on
         [resource][google.iam.v1.GetIamPolicyRequest.resource].
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+            from google.iam.v1 import iam_policy_pb2  # type: ignore
+
+            def sample_get_iam_policy():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = iam_policy_pb2.GetIamPolicyRequest(
+                    resource="resource_value",
+                )
+
+                # Make the request
+                response = client.get_iam_policy(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.GetIamPolicyRequest, dict]):
@@ -1276,21 +1547,26 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         Returns:
             google.iam.v1.policy_pb2.Policy:
-                Defines an Identity and Access Management (IAM) policy. It is used to
-                   specify access control policies for Cloud Platform
-                   resources.
+                An Identity and Access Management (IAM) policy, which specifies access
+                   controls for Google Cloud resources.
 
                    A Policy is a collection of bindings. A binding binds
-                   one or more members to a single role. Members can be
-                   user accounts, service accounts, Google groups, and
-                   domains (such as G Suite). A role is a named list of
-                   permissions (defined by IAM or configured by users).
-                   A binding can optionally specify a condition, which
-                   is a logic expression that further constrains the
-                   role binding based on attributes about the request
-                   and/or target resource.
+                   one or more members, or principals, to a single role.
+                   Principals can be user accounts, service accounts,
+                   Google groups, and domains (such as G Suite). A role
+                   is a named list of permissions; each role can be an
+                   IAM predefined role or a user-created custom role.
 
-                   **JSON Example**
+                   For some types of Google Cloud resources, a binding
+                   can also specify a condition, which is a logical
+                   expression that allows access to a resource only if
+                   the expression evaluates to true. A condition can add
+                   constraints based on attributes of the request, the
+                   resource, or both. To learn which resources support
+                   conditions in their IAM policies, see the [IAM
+                   documentation](\ https://cloud.google.com/iam/help/conditions/resource-policies).
+
+                   **JSON example:**
 
                       {
                          "bindings": [
@@ -1305,17 +1581,17 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
                             }, { "role":
                             "roles/resourcemanager.organizationViewer",
-                            "members": ["user:eve@example.com"],
+                            "members": [ "user:eve@example.com" ],
                             "condition": { "title": "expirable access",
                             "description": "Does not grant access after
                             Sep 2020", "expression": "request.time <
                             timestamp('2020-10-01T00:00:00.000Z')", } }
 
-                         ]
+                         ], "etag": "BwWWja0YfJA=", "version": 3
 
                       }
 
-                   **YAML Example**
+                   **YAML example:**
 
                       bindings: - members: - user:\ mike@example.com -
                       group:\ admins@example.com - domain:google.com -
@@ -1326,11 +1602,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                       condition: title: expirable access description:
                       Does not grant access after Sep 2020 expression:
                       request.time <
-                      timestamp('2020-10-01T00:00:00.000Z')
+                      timestamp('2020-10-01T00:00:00.000Z') etag:
+                      BwWWja0YfJA= version: 3
 
                    For a description of IAM and its features, see the
-                   [IAM developer's
-                   guide](\ https://cloud.google.com/iam/docs).
+                   [IAM
+                   documentation](\ https://cloud.google.com/iam/docs/).
 
         """
         # Create or coerce a protobuf request object.
@@ -1364,7 +1641,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1386,6 +1668,27 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         resource will result in a NOT_FOUND error if the user has
         ``spanner.instances.list`` permission on the containing Google
         Cloud Project. Otherwise returns an empty set of permissions.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_admin_instance_v1
+            from google.iam.v1 import iam_policy_pb2  # type: ignore
+
+            def sample_test_iam_permissions():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = iam_policy_pb2.TestIamPermissionsRequest(
+                    resource="resource_value",
+                    permissions=['permissions_value_1', 'permissions_value_2'],
+                )
+
+                # Make the request
+                response = client.test_iam_permissions(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest, dict]):
@@ -1452,7 +1755,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response

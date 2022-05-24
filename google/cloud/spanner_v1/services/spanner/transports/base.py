@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,7 +33,9 @@ from google.protobuf import empty_pb2  # type: ignore
 
 try:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution("google-cloud-spanner",).version,
+        gapic_version=pkg_resources.get_distribution(
+            "google-cloud-spanner",
+        ).version,
     )
 except pkg_resources.DistributionNotFound:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()
@@ -85,6 +87,7 @@ class SpannerTransport(abc.ABC):
             always_use_jwt_access (Optional[bool]): Whether self signed JWT should
                 be used for service account credentials.
         """
+
         # Save the hostname. Default to port 443 (HTTPS) if none is specified.
         if ":" not in host:
             host += ":443"
@@ -243,7 +246,9 @@ class SpannerTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.streaming_read: gapic_v1.method.wrap_method(
-                self.streaming_read, default_timeout=3600.0, client_info=client_info,
+                self.streaming_read,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.begin_transaction: gapic_v1.method.wrap_method(
                 self.begin_transaction,
@@ -320,9 +325,9 @@ class SpannerTransport(abc.ABC):
     def close(self):
         """Closes resources associated with the transport.
 
-       .. warning::
-            Only call this method if the transport is NOT shared
-            with other clients - this may cause errors in other clients!
+        .. warning::
+             Only call this method if the transport is NOT shared
+             with other clients - this may cause errors in other clients!
         """
         raise NotImplementedError()
 
@@ -464,6 +469,10 @@ class SpannerTransport(abc.ABC):
         [spanner.PartitionReadRequest],
         Union[spanner.PartitionResponse, Awaitable[spanner.PartitionResponse]],
     ]:
+        raise NotImplementedError()
+
+    @property
+    def kind(self) -> str:
         raise NotImplementedError()
 
 

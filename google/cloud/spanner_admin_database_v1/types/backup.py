@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ __protobuf__ = proto.module(
         "Backup",
         "CreateBackupRequest",
         "CreateBackupMetadata",
+        "CopyBackupRequest",
+        "CopyBackupMetadata",
         "UpdateBackupRequest",
         "GetBackupRequest",
         "DeleteBackupRequest",
@@ -36,6 +38,7 @@ __protobuf__ = proto.module(
         "ListBackupOperationsResponse",
         "BackupInfo",
         "CreateBackupEncryptionConfig",
+        "CopyBackupEncryptionConfig",
     },
 )
 
@@ -107,6 +110,23 @@ class Backup(proto.Message):
         database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
             Output only. The database dialect information
             for the backup.
+        referencing_backups (Sequence[str]):
+            Output only. The names of the destination backups being
+            created by copying this source backup. The backup names are
+            of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+            Referencing backups may exist in different instances. The
+            existence of any referencing backup prevents the backup from
+            being deleted. When the copy operation is done (either
+            successfully completed or cancelled or the destination
+            backup is deleted), the reference to the backup is removed.
+        max_expire_time (google.protobuf.timestamp_pb2.Timestamp):
+            Output only. The max allowed expiration time of the backup,
+            with microseconds granularity. A backup's expiration time
+            can be configured in multiple APIs: CreateBackup,
+            UpdateBackup, CopyBackup. When updating or copying an
+            existing backup, the expiration time specified must be less
+            than ``Backup.max_expire_time``.
     """
 
     class State(proto.Enum):
@@ -115,20 +135,61 @@ class Backup(proto.Message):
         CREATING = 1
         READY = 2
 
-    database = proto.Field(proto.STRING, number=2,)
+    database = proto.Field(
+        proto.STRING,
+        number=2,
+    )
     version_time = proto.Field(
-        proto.MESSAGE, number=9, message=timestamp_pb2.Timestamp,
+        proto.MESSAGE,
+        number=9,
+        message=timestamp_pb2.Timestamp,
     )
-    expire_time = proto.Field(proto.MESSAGE, number=3, message=timestamp_pb2.Timestamp,)
-    name = proto.Field(proto.STRING, number=1,)
-    create_time = proto.Field(proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,)
-    size_bytes = proto.Field(proto.INT64, number=5,)
-    state = proto.Field(proto.ENUM, number=6, enum=State,)
-    referencing_databases = proto.RepeatedField(proto.STRING, number=7,)
+    expire_time = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp_pb2.Timestamp,
+    )
+    name = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp_pb2.Timestamp,
+    )
+    size_bytes = proto.Field(
+        proto.INT64,
+        number=5,
+    )
+    state = proto.Field(
+        proto.ENUM,
+        number=6,
+        enum=State,
+    )
+    referencing_databases = proto.RepeatedField(
+        proto.STRING,
+        number=7,
+    )
     encryption_info = proto.Field(
-        proto.MESSAGE, number=8, message=common.EncryptionInfo,
+        proto.MESSAGE,
+        number=8,
+        message=common.EncryptionInfo,
     )
-    database_dialect = proto.Field(proto.ENUM, number=10, enum=common.DatabaseDialect,)
+    database_dialect = proto.Field(
+        proto.ENUM,
+        number=10,
+        enum=common.DatabaseDialect,
+    )
+    referencing_backups = proto.RepeatedField(
+        proto.STRING,
+        number=11,
+    )
+    max_expire_time = proto.Field(
+        proto.MESSAGE,
+        number=12,
+        message=timestamp_pb2.Timestamp,
+    )
 
 
 class CreateBackupRequest(proto.Message):
@@ -159,11 +220,23 @@ class CreateBackupRequest(proto.Message):
             = ``USE_DATABASE_ENCRYPTION``.
     """
 
-    parent = proto.Field(proto.STRING, number=1,)
-    backup_id = proto.Field(proto.STRING, number=2,)
-    backup = proto.Field(proto.MESSAGE, number=3, message="Backup",)
+    parent = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    backup_id = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    backup = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message="Backup",
+    )
     encryption_config = proto.Field(
-        proto.MESSAGE, number=4, message="CreateBackupEncryptionConfig",
+        proto.MESSAGE,
+        number=4,
+        message="CreateBackupEncryptionConfig",
     )
 
 
@@ -198,10 +271,138 @@ class CreateBackupMetadata(proto.Message):
             1, corresponding to ``Code.CANCELLED``.
     """
 
-    name = proto.Field(proto.STRING, number=1,)
-    database = proto.Field(proto.STRING, number=2,)
-    progress = proto.Field(proto.MESSAGE, number=3, message=common.OperationProgress,)
-    cancel_time = proto.Field(proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,)
+    name = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    database = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    progress = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=common.OperationProgress,
+    )
+    cancel_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp_pb2.Timestamp,
+    )
+
+
+class CopyBackupRequest(proto.Message):
+    r"""The request for
+    [CopyBackup][google.spanner.admin.database.v1.DatabaseAdmin.CopyBackup].
+
+    Attributes:
+        parent (str):
+            Required. The name of the destination instance that will
+            contain the backup copy. Values are of the form:
+            ``projects/<project>/instances/<instance>``.
+        backup_id (str):
+            Required. The id of the backup copy. The ``backup_id``
+            appended to ``parent`` forms the full backup_uri of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        source_backup (str):
+            Required. The source backup to be copied. The source backup
+            needs to be in READY state for it to be copied. Once
+            CopyBackup is in progress, the source backup cannot be
+            deleted or cleaned up on expiration until CopyBackup is
+            finished. Values are of the form:
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        expire_time (google.protobuf.timestamp_pb2.Timestamp):
+            Required. The expiration time of the backup in microsecond
+            granularity. The expiration time must be at least 6 hours
+            and at most 366 days from the ``create_time`` of the source
+            backup. Once the ``expire_time`` has passed, the backup is
+            eligible to be automatically deleted by Cloud Spanner to
+            free the resources used by the backup.
+        encryption_config (google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig):
+            Optional. The encryption configuration used to encrypt the
+            backup. If this field is not specified, the backup will use
+            the same encryption configuration as the source backup by
+            default, namely
+            [encryption_type][google.spanner.admin.database.v1.CopyBackupEncryptionConfig.encryption_type]
+            = ``USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION``.
+    """
+
+    parent = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    backup_id = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    source_backup = proto.Field(
+        proto.STRING,
+        number=3,
+    )
+    expire_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp_pb2.Timestamp,
+    )
+    encryption_config = proto.Field(
+        proto.MESSAGE,
+        number=5,
+        message="CopyBackupEncryptionConfig",
+    )
+
+
+class CopyBackupMetadata(proto.Message):
+    r"""Metadata type for the google.longrunning.Operation returned by
+    [CopyBackup][google.spanner.admin.database.v1.DatabaseAdmin.CopyBackup].
+
+    Attributes:
+        name (str):
+            The name of the backup being created through the copy
+            operation. Values are of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        source_backup (str):
+            The name of the source backup that is being copied. Values
+            are of the form
+            ``projects/<project>/instances/<instance>/backups/<backup>``.
+        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
+            The progress of the
+            [CopyBackup][google.spanner.admin.database.v1.DatabaseAdmin.CopyBackup]
+            operation.
+        cancel_time (google.protobuf.timestamp_pb2.Timestamp):
+            The time at which cancellation of CopyBackup operation was
+            received.
+            [Operations.CancelOperation][google.longrunning.Operations.CancelOperation]
+            starts asynchronous cancellation on a long-running
+            operation. The server makes a best effort to cancel the
+            operation, but success is not guaranteed. Clients can use
+            [Operations.GetOperation][google.longrunning.Operations.GetOperation]
+            or other methods to check whether the cancellation succeeded
+            or whether the operation completed despite cancellation. On
+            successful cancellation, the operation is not deleted;
+            instead, it becomes an operation with an
+            [Operation.error][google.longrunning.Operation.error] value
+            with a [google.rpc.Status.code][google.rpc.Status.code] of
+            1, corresponding to ``Code.CANCELLED``.
+    """
+
+    name = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    source_backup = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    progress = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=common.OperationProgress,
+    )
+    cancel_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp_pb2.Timestamp,
+    )
 
 
 class UpdateBackupRequest(proto.Message):
@@ -225,9 +426,15 @@ class UpdateBackupRequest(proto.Message):
             accidentally by clients that do not know about them.
     """
 
-    backup = proto.Field(proto.MESSAGE, number=1, message="Backup",)
+    backup = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        message="Backup",
+    )
     update_mask = proto.Field(
-        proto.MESSAGE, number=2, message=field_mask_pb2.FieldMask,
+        proto.MESSAGE,
+        number=2,
+        message=field_mask_pb2.FieldMask,
     )
 
 
@@ -241,7 +448,10 @@ class GetBackupRequest(proto.Message):
             ``projects/<project>/instances/<instance>/backups/<backup>``.
     """
 
-    name = proto.Field(proto.STRING, number=1,)
+    name = proto.Field(
+        proto.STRING,
+        number=1,
+    )
 
 
 class DeleteBackupRequest(proto.Message):
@@ -255,7 +465,10 @@ class DeleteBackupRequest(proto.Message):
             ``projects/<project>/instances/<instance>/backups/<backup>``.
     """
 
-    name = proto.Field(proto.STRING, number=1,)
+    name = proto.Field(
+        proto.STRING,
+        number=1,
+    )
 
 
 class ListBackupsRequest(proto.Message):
@@ -325,10 +538,22 @@ class ListBackupsRequest(proto.Message):
             to the same ``parent`` and with the same ``filter``.
     """
 
-    parent = proto.Field(proto.STRING, number=1,)
-    filter = proto.Field(proto.STRING, number=2,)
-    page_size = proto.Field(proto.INT32, number=3,)
-    page_token = proto.Field(proto.STRING, number=4,)
+    parent = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    filter = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    page_size = proto.Field(
+        proto.INT32,
+        number=3,
+    )
+    page_token = proto.Field(
+        proto.STRING,
+        number=4,
+    )
 
 
 class ListBackupsResponse(proto.Message):
@@ -350,8 +575,15 @@ class ListBackupsResponse(proto.Message):
     def raw_page(self):
         return self
 
-    backups = proto.RepeatedField(proto.MESSAGE, number=1, message="Backup",)
-    next_page_token = proto.Field(proto.STRING, number=2,)
+    backups = proto.RepeatedField(
+        proto.MESSAGE,
+        number=1,
+        message="Backup",
+    )
+    next_page_token = proto.Field(
+        proto.STRING,
+        number=2,
+    )
 
 
 class ListBackupOperationsRequest(proto.Message):
@@ -386,6 +618,8 @@ class ListBackupOperationsRequest(proto.Message):
                is
                ``type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata``.
             -  ``metadata.<field_name>`` - any field in metadata.value.
+               ``metadata.@type`` must be specified first if filtering
+               on metadata fields.
             -  ``error`` - Error associated with the long-running
                operation.
             -  ``response.@type`` - the type of response.
@@ -399,8 +633,14 @@ class ListBackupOperationsRequest(proto.Message):
             Here are a few examples:
 
             -  ``done:true`` - The operation is complete.
-            -  ``metadata.database:prod`` - The database the backup was
-               taken from has a name containing the string "prod".
+            -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata) AND``
+               ``metadata.database:prod`` - Returns operations where:
+
+               -  The operation's metadata type is
+                  [CreateBackupMetadata][google.spanner.admin.database.v1.CreateBackupMetadata].
+               -  The database the backup was taken from has a name
+                  containing the string "prod".
+
             -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata) AND``
                ``(metadata.name:howl) AND``
                ``(metadata.progress.start_time < \"2018-03-28T14:50:00Z\") AND``
@@ -410,6 +650,37 @@ class ListBackupOperationsRequest(proto.Message):
                   [CreateBackupMetadata][google.spanner.admin.database.v1.CreateBackupMetadata].
                -  The backup name contains the string "howl".
                -  The operation started before 2018-03-28T14:50:00Z.
+               -  The operation resulted in an error.
+
+            -  ``(metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CopyBackupMetadata) AND``
+               ``(metadata.source_backup:test) AND``
+               ``(metadata.progress.start_time < \"2022-01-18T14:50:00Z\") AND``
+               ``(error:*)`` - Returns operations where:
+
+               -  The operation's metadata type is
+                  [CopyBackupMetadata][google.spanner.admin.database.v1.CopyBackupMetadata].
+               -  The source backup of the copied backup name contains
+                  the string "test".
+               -  The operation started before 2022-01-18T14:50:00Z.
+               -  The operation resulted in an error.
+
+            -  ``((metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CreateBackupMetadata) AND``
+               ``(metadata.database:test_db)) OR``
+               ``((metadata.@type=type.googleapis.com/google.spanner.admin.database.v1.CopyBackupMetadata) AND``
+               ``(metadata.source_backup:test_bkp)) AND``
+               ``(error:*)`` - Returns operations where:
+
+               -  The operation's metadata matches either of criteria:
+
+                  -  The operation's metadata type is
+                     [CreateBackupMetadata][google.spanner.admin.database.v1.CreateBackupMetadata]
+                     AND the database the backup was taken from has name
+                     containing string "test_db"
+                  -  The operation's metadata type is
+                     [CopyBackupMetadata][google.spanner.admin.database.v1.CopyBackupMetadata]
+                     AND the backup the backup was copied from has name
+                     containing string "test_bkp"
+
                -  The operation resulted in an error.
         page_size (int):
             Number of operations to be returned in the
@@ -423,10 +694,22 @@ class ListBackupOperationsRequest(proto.Message):
             to the same ``parent`` and with the same ``filter``.
     """
 
-    parent = proto.Field(proto.STRING, number=1,)
-    filter = proto.Field(proto.STRING, number=2,)
-    page_size = proto.Field(proto.INT32, number=3,)
-    page_token = proto.Field(proto.STRING, number=4,)
+    parent = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    filter = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    page_size = proto.Field(
+        proto.INT32,
+        number=3,
+    )
+    page_token = proto.Field(
+        proto.STRING,
+        number=4,
+    )
 
 
 class ListBackupOperationsResponse(proto.Message):
@@ -437,11 +720,9 @@ class ListBackupOperationsResponse(proto.Message):
         operations (Sequence[google.longrunning.operations_pb2.Operation]):
             The list of matching backup [long-running
             operations][google.longrunning.Operation]. Each operation's
-            name will be prefixed by the backup's name and the
-            operation's
-            [metadata][google.longrunning.Operation.metadata] will be of
-            type
-            [CreateBackupMetadata][google.spanner.admin.database.v1.CreateBackupMetadata].
+            name will be prefixed by the backup's name. The operation's
+            [metadata][google.longrunning.Operation.metadata] field type
+            ``metadata.type_url`` describes the type of the metadata.
             Operations returned include those that are pending or have
             completed/failed/canceled within the last 7 days. Operations
             returned are ordered by
@@ -459,9 +740,14 @@ class ListBackupOperationsResponse(proto.Message):
         return self
 
     operations = proto.RepeatedField(
-        proto.MESSAGE, number=1, message=operations_pb2.Operation,
+        proto.MESSAGE,
+        number=1,
+        message=operations_pb2.Operation,
     )
-    next_page_token = proto.Field(proto.STRING, number=2,)
+    next_page_token = proto.Field(
+        proto.STRING,
+        number=2,
+    )
 
 
 class BackupInfo(proto.Message):
@@ -487,12 +773,24 @@ class BackupInfo(proto.Message):
             from.
     """
 
-    backup = proto.Field(proto.STRING, number=1,)
-    version_time = proto.Field(
-        proto.MESSAGE, number=4, message=timestamp_pb2.Timestamp,
+    backup = proto.Field(
+        proto.STRING,
+        number=1,
     )
-    create_time = proto.Field(proto.MESSAGE, number=2, message=timestamp_pb2.Timestamp,)
-    source_database = proto.Field(proto.STRING, number=3,)
+    version_time = proto.Field(
+        proto.MESSAGE,
+        number=4,
+        message=timestamp_pb2.Timestamp,
+    )
+    create_time = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=timestamp_pb2.Timestamp,
+    )
+    source_database = proto.Field(
+        proto.STRING,
+        number=3,
+    )
 
 
 class CreateBackupEncryptionConfig(proto.Message):
@@ -516,8 +814,47 @@ class CreateBackupEncryptionConfig(proto.Message):
         GOOGLE_DEFAULT_ENCRYPTION = 2
         CUSTOMER_MANAGED_ENCRYPTION = 3
 
-    encryption_type = proto.Field(proto.ENUM, number=1, enum=EncryptionType,)
-    kms_key_name = proto.Field(proto.STRING, number=2,)
+    encryption_type = proto.Field(
+        proto.ENUM,
+        number=1,
+        enum=EncryptionType,
+    )
+    kms_key_name = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+
+
+class CopyBackupEncryptionConfig(proto.Message):
+    r"""Encryption configuration for the copied backup.
+
+    Attributes:
+        encryption_type (google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig.EncryptionType):
+            Required. The encryption type of the backup.
+        kms_key_name (str):
+            Optional. The Cloud KMS key that will be used to protect the
+            backup. This field should be set only when
+            [encryption_type][google.spanner.admin.database.v1.CopyBackupEncryptionConfig.encryption_type]
+            is ``CUSTOMER_MANAGED_ENCRYPTION``. Values are of the form
+            ``projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>``.
+    """
+
+    class EncryptionType(proto.Enum):
+        r"""Encryption types for the backup."""
+        ENCRYPTION_TYPE_UNSPECIFIED = 0
+        USE_CONFIG_DEFAULT_OR_BACKUP_ENCRYPTION = 1
+        GOOGLE_DEFAULT_ENCRYPTION = 2
+        CUSTOMER_MANAGED_ENCRYPTION = 3
+
+    encryption_type = proto.Field(
+        proto.ENUM,
+        number=1,
+        enum=EncryptionType,
+    )
+    kms_key_name = proto.Field(
+        proto.STRING,
+        number=2,
+    )
 
 
 __all__ = tuple(sorted(__protobuf__.manifest))

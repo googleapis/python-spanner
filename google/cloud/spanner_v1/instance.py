@@ -44,6 +44,7 @@ PROCESSING_UNITS_PER_NODE = 1000
 _OPERATION_METADATA_MESSAGES = (
     backup.Backup,
     backup.CreateBackupMetadata,
+    backup.CopyBackupMetadata,
     spanner_database_admin.CreateDatabaseMetadata,
     spanner_database_admin.Database,
     spanner_database_admin.OptimizeRestoredDatabaseMetadata,
@@ -58,6 +59,7 @@ _OPERATION_METADATA_TYPES = {
 
 _OPERATION_RESPONSE_TYPES = {
     backup.CreateBackupMetadata: backup.Backup,
+    backup.CopyBackupMetadata: backup.Backup,
     spanner_database_admin.CreateDatabaseMetadata: spanner_database_admin.Database,
     spanner_database_admin.OptimizeRestoredDatabaseMetadata: spanner_database_admin.Database,
     spanner_database_admin.RestoreDatabaseMetadata: spanner_database_admin.Database,
@@ -551,6 +553,41 @@ class Instance(object):
                 encryption_config=encryption_config,
             )
 
+    def copy_backup(
+        self,
+        backup_id,
+        source_backup,
+        expire_time=None,
+        encryption_config=None,
+    ):
+        """Factory to create a copy backup within this instance.
+
+        :type backup_id: str
+        :param backup_id: The ID of the backup copy.
+        :type source_backup: str
+        :param source_backup_id: The full path of the source backup to be copied.
+        :type expire_time: :class:`datetime.datetime`
+        :param expire_time:
+            Optional. The expire time that will be used when creating the copy backup.
+            Required if the create method needs to be called.
+        :type encryption_config:
+            :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
+            or :class:`dict`
+        :param encryption_config:
+            (Optional) Encryption configuration for the backup.
+            If a dict is provided, it must be of the same form as the protobuf
+            message :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
+        :rtype: :class:`~google.cloud.spanner_v1.backup.Backup`
+        :returns: a copy backup owned by this instance.
+        """
+        return Backup(
+            backup_id,
+            self,
+            source_backup=source_backup,
+            expire_time=expire_time,
+            encryption_config=encryption_config,
+        )
+
     def list_backups(self, filter_="", page_size=None):
         """List backups for the instance.
 
@@ -571,7 +608,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListBackupsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_backups(
             request=request, metadata=metadata
@@ -599,7 +638,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListBackupOperationsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_backup_operations(
             request=request, metadata=metadata
@@ -627,7 +668,9 @@ class Instance(object):
         """
         metadata = _metadata_with_prefix(self.name)
         request = ListDatabaseOperationsRequest(
-            parent=self.name, filter=filter_, page_size=page_size,
+            parent=self.name,
+            filter=filter_,
+            page_size=page_size,
         )
         page_iter = self._client.database_admin_api.list_database_operations(
             request=request, metadata=metadata
