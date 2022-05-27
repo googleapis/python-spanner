@@ -183,6 +183,10 @@ def classify_stmt(query):
     :rtype: str
     :returns: The query type name.
     """
+    # sqlparse will strip Cloud Spanner comments,
+    # still, special commenting styles, like
+    # PostgreSQL dollar quoted comments are not
+    # supported and will not be stripped.
     query = sqlparse.format(query, strip_comments=True).strip()
 
     if RE_DDL.match(query):
