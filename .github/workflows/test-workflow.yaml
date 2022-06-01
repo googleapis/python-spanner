@@ -1,5 +1,10 @@
 name: learn-github-actions
-on: [push]
+on: 
+  pull_request:
+    types: [opened, reopened]
+    branches:    
+      - 'main'
+
 jobs:
   check-bats-version:
     runs-on: ubuntu-latest
