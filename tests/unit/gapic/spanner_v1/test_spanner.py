@@ -642,6 +642,7 @@ def test_create_session(request_type, transport: str = "grpc"):
         # Designate an appropriate return value for the call.
         call.return_value = spanner.Session(
             name="name_value",
+            creator_role="creator_role_value",
         )
         response = client.create_session(request)
 
@@ -653,6 +654,7 @@ def test_create_session(request_type, transport: str = "grpc"):
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 def test_create_session_empty_call():
@@ -690,6 +692,7 @@ async def test_create_session_async(
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner.Session(
                 name="name_value",
+                creator_role="creator_role_value",
             )
         )
         response = await client.create_session(request)
@@ -702,6 +705,7 @@ async def test_create_session_async(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 @pytest.mark.asyncio
@@ -1120,6 +1124,7 @@ def test_get_session(request_type, transport: str = "grpc"):
         # Designate an appropriate return value for the call.
         call.return_value = spanner.Session(
             name="name_value",
+            creator_role="creator_role_value",
         )
         response = client.get_session(request)
 
@@ -1131,6 +1136,7 @@ def test_get_session(request_type, transport: str = "grpc"):
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 def test_get_session_empty_call():
@@ -1168,6 +1174,7 @@ async def test_get_session_async(
         call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
             spanner.Session(
                 name="name_value",
+                creator_role="creator_role_value",
             )
         )
         response = await client.get_session(request)
@@ -1180,6 +1187,7 @@ async def test_get_session_async(
     # Establish that the response is the type that we expect.
     assert isinstance(response, spanner.Session)
     assert response.name == "name_value"
+    assert response.creator_role == "creator_role_value"
 
 
 @pytest.mark.asyncio
