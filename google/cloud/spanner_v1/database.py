@@ -116,8 +116,8 @@ class Database(object):
         messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
 
-    :type creator_role: str or None
-    :param creator_role: (Optional) user-assigned creator_role for the session.
+    :type database_role: str or None
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     _spanner_api = None
@@ -130,7 +130,7 @@ class Database(object):
         pool=None,
         logger=None,
         encryption_config=None,
-        creator_role=None,
+        database_role=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -146,10 +146,10 @@ class Database(object):
         self.log_commit_stats = False
         self._logger = logger
         self._encryption_config = encryption_config
-        self._creator_role = creator_role
+        self._database_role = database_role
 
         if pool is None:
-            pool = BurstyPool(creator_role=creator_role)
+            pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
         pool.bind(self)
@@ -301,13 +301,13 @@ class Database(object):
         return self._ddl_statements
 
     @property
-    def creator_role(self):
-        """Creator role used in sessions to connect to this database.
+    def database_role(self):
+        """Database role used in sessions to connect to this database.
 
         :rtype: str
         :returns: an str with the name of the database role.
         """
-        return self._creator_role
+        return self._database_role
 
     @property
     def logger(self):
@@ -574,23 +574,23 @@ class Database(object):
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
-    def session(self, labels=None, creator_role=None):
+    def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
-        :type creator_role: str or None
-        :param creator_role: (Optional) user-assigned creator_role for the session.
+        :type database_role: str or None
+        :param database_role: (Optional) user-assigned database_role for the session.
 
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: a session bound to this database.
         """
-        role = self._creator_role
+        role = self._database_role
         # If role is specified then that role is used instead.
-        if creator_role:
-            role = creator_role
-        return Session(self, labels=labels, creator_role=role)
+        if database_role:
+            role = database_role
+        return Session(self, labels=labels, database_role=role)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.

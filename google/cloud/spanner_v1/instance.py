@@ -428,7 +428,7 @@ class Instance(object):
         pool=None,
         logger=None,
         encryption_config=None,
-        creator_role=None,
+        database_role=None,
     ):
         """Factory to create a database within this instance.
 
@@ -469,7 +469,7 @@ class Instance(object):
             pool=pool,
             logger=logger,
             encryption_config=encryption_config,
-            creator_role=creator_role,
+            database_role=database_role,
         )
 
     def list_databases(self, page_size=None):

@@ -57,12 +57,12 @@ class Session(object):
     _session_id = None
     _transaction = None
 
-    def __init__(self, database, labels=None, creator_role=None):
+    def __init__(self, database, labels=None, database_role=None):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
-        self._creator_role = creator_role
+        self._database_role = database_role
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -73,12 +73,12 @@ class Session(object):
         return self._session_id
 
     @property
-    def creator_role(self):
-        """User-assigned creator-role for the session.
+    def database_role(self):
+        """User-assigned database-role for the session.
 
         :rtype: str
-        :returns: the creator role str (None if no creator role were assigned)."""
-        return self._creator_role
+        :returns: the database role str (None if no database role were assigned)."""
+        return self._database_role
 
     @property
     def labels(self):
@@ -124,8 +124,8 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
 
         request = CreateSessionRequest(database=self._database.name)
-        if self._database.creator_role is not None:
-            request.session.creator_role = self._database.creator_role
+        if self._database.database_role is not None:
+            request.session.creator_role = self._database.database_role
 
         if self._labels:
             request.session.labels = self._labels

@@ -42,7 +42,7 @@ def sample_name():
 @pytest.fixture(scope="session")
 def spanner_client():
     """Shared client used across all samples in a session."""
-    return client.Client()
+    return client.Client(client_options={'api_endpoint': 'staging-wrenchworks.sandbox.googleapis.com'})
 
 
 def scrub_instance_ignore_not_found(to_scrub):

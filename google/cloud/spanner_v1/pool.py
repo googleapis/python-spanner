@@ -34,11 +34,11 @@ class AbstractSessionPool(object):
 
     _database = None
 
-    def __init__(self, labels=None, creator_role=None):
+    def __init__(self, labels=None, database_role=None):
         if labels is None:
             labels = {}
         self._labels = labels
-        self._creator_role = creator_role
+        self._database_role = database_role
 
     @property
     def labels(self):
@@ -50,13 +50,13 @@ class AbstractSessionPool(object):
         return self._labels
 
     @property
-    def creator_role(self):
-        """User-assigned creator_role for sessions created by the pool.
+    def database_role(self):
+        """User-assigned database_role for sessions created by the pool.
 
         :rtype: str
-        :returns: creator_role assigned by the user
+        :returns: database_role assigned by the user
         """
-        return self._creator_role
+        return self._database_role
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -115,7 +115,7 @@ class AbstractSessionPool(object):
         :returns: new session instance.
         """
         return self._database.session(
-            labels=self.labels, creator_role=self.creator_role
+            labels=self.labels, database_role=self.database_role
         )
 
     def session(self, **kwargs):
@@ -166,9 +166,9 @@ class FixedSizePool(AbstractSessionPool):
         size=DEFAULT_SIZE,
         default_timeout=DEFAULT_TIMEOUT,
         labels=None,
-        creator_role=None,
+        database_role=None,
     ):
-        super(FixedSizePool, self).__init__(labels=labels, creator_role=creator_role)
+        super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
@@ -183,15 +183,15 @@ class FixedSizePool(AbstractSessionPool):
         self._database = database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
-        if self._creator_role is None and self._database.creator_role:
-            self._creator_role = self._database.creator_role
+        if self._database_role is None and self._database.database_role:
+            self._database_role = self._database.database_role
 
         while not self._sessions.full():
             resp = api.batch_create_sessions(
                 database=database.name,
                 session_count=self.size - self._sessions.qsize(),
                 metadata=metadata,
-                creator_role=self.creator_role,
+                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -264,8 +264,8 @@ class BurstyPool(AbstractSessionPool):
                     by the pool.
     """
 
-    def __init__(self, target_size=10, labels=None, creator_role=None):
-        super(BurstyPool, self).__init__(labels=labels, creator_role=creator_role)
+    def __init__(self, target_size=10, labels=None, database_role=None):
+        super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
@@ -278,8 +278,8 @@ class BurstyPool(AbstractSessionPool):
                          when needed.
         """
         self._database = database
-        if self._creator_role is None and self._database.creator_role:
-            self._creator_role = self._database.creator_role
+        if self._database_role is None and self._database.database_role:
+            self._database_role = self._database.database_role
 
     def get(self):
         """Check a session out from the pool.
@@ -369,9 +369,9 @@ class PingingPool(AbstractSessionPool):
         default_timeout=10,
         ping_interval=3000,
         labels=None,
-        creator_role=None,
+        database_role=None,
     ):
-        super(PingingPool, self).__init__(labels=labels, creator_role=creator_role)
+        super(PingingPool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)
@@ -388,15 +388,15 @@ class PingingPool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         created_session_count = 0
-        if self._creator_role is None and self._database.creator_role:
-            self._creator_role = self._database.creator_role
+        if self._database_role is None and self._database.database_role:
+            self._database_role = self._database.database_role
 
         while created_session_count < self.size:
             resp = api.batch_create_sessions(
                 database=database.name,
                 session_count=self.size - created_session_count,
                 metadata=metadata,
-                creator_role=self.creator_role,
+                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -509,7 +509,7 @@ class TransactionPingingPool(PingingPool):
         default_timeout=10,
         ping_interval=3000,
         labels=None,
-        creator_role=None,
+        database_role=None,
     ):
         self._pending_sessions = queue.Queue()
 
@@ -518,7 +518,7 @@ class TransactionPingingPool(PingingPool):
             default_timeout,
             ping_interval,
             labels=labels,
-            creator_role=creator_role,
+            database_role=database_role,
         )
 
         self.begin_pending_transactions()
@@ -531,8 +531,8 @@ class TransactionPingingPool(PingingPool):
                          when needed.
         """
         super(TransactionPingingPool, self).bind(database)
-        if self._creator_role is None and self._database.creator_role:
-            self._creator_role = self._database.creator_role
+        if self._database_role is None and self._database.database_role:
+            self._database_role = self._database.database_role
         self.begin_pending_transactions()
 
     def put(self, session):

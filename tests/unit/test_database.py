@@ -62,7 +62,7 @@ class _BaseTest(unittest.TestCase):
     BACKUP_ID = "backup_id"
     BACKUP_NAME = INSTANCE_NAME + "/backups/" + BACKUP_ID
     TRANSACTION_TAG = "transaction-tag"
-    CREATOR_ROLE = "dummy-role"
+    DATABASE_ROLE = "dummy-role"
 
     def _make_one(self, *args, **kwargs):
         return self._get_target_class()(*args, **kwargs)
@@ -114,7 +114,7 @@ class TestDatabase(_BaseTest):
         self.assertIsNone(database._logger)
         # BurstyPool does not create sessions during 'bind()'.
         self.assertTrue(database._pool._sessions.empty())
-        self.assertIsNone(database.creator_role)
+        self.assertIsNone(database.database_role)
 
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -129,11 +129,11 @@ class TestDatabase(_BaseTest):
     def test_ctor_w_database_role(self):
         instance = _Instance(self.INSTANCE_NAME)
         database = self._make_one(
-            self.DATABASE_ID, instance, creator_role=self.CREATOR_ROLE
+            self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
-        self.assertIs(database.creator_role, self.CREATOR_ROLE)
+        self.assertIs(database.database_role, self.DATABASE_ROLE)
 
     def test_ctor_w_ddl_statements_non_string(self):
 

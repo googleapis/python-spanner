@@ -653,3 +653,22 @@ def test_set_request_tag(capsys, instance_id, sample_database):
     snippets.set_request_tag(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+
+@pytest.mark.dependency(name="fine_grained_access_control_for_admin", depends=["insert_data"])
+def test_fine_grained_access_control_for_admin(capsys, instance_id, sample_database):
+    snippets.fine_grained_access_control_for_admin(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "New role new_parent and new_child added and granted SELECT permissions" in out
+    assert "Revoked permissions and dropped role new_child" in out
+
+@pytest.mark.dependency(depends=["fine_grained_access_control_for_admin"])
+def test_fine_grained_access_control_for_user(capsys, instance_id, sample_database):
+    snippets.fine_grained_access_control_for_user(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+
+@pytest.mark.dependency(depends=["fine_grained_access_control_for_admin"])
+def test_list_database_roles(capsys, instance_id, sample_database):
+    snippets.list_database_roles(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "new_parent" in out

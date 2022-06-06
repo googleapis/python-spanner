@@ -30,6 +30,7 @@ import time
 
 from google.cloud import spanner
 from google.cloud.spanner_v1 import param_types
+from google.cloud import spanner_admin_database_v1
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -2115,6 +2116,73 @@ def set_request_tag(instance_id, database_id):
 
     # [END spanner_set_request_tag]
 
+
+def fine_grained_access_control_for_admin(instance_id, database_id):
+    """Showcases how to manage a user defined database role."""
+    # [START fine_grained_access_control_for_admin]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+    role_parent = "new_parent"
+    role_child = "new_child"
+
+    operation = database.update_ddl(
+        [
+            "CREATE ROLE {}".format(role_parent),
+            "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_parent),
+            "CREATE ROLE {}".format(role_child),
+            "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_child),
+        ]
+    )
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print("New role {} and {} added and granted SELECT permissions".format(role_parent, role_child))
+    
+    operation = database.update_ddl(
+        [
+            "REVOKE SELECT ON TABLE Singers FROM ROLE {}".format(role_child),
+            "DROP ROLE {}".format(role_child)
+        ]
+    )
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print("Revoked permissions and dropped role {}".format(role_child))
+
+    # [END fine_grained_access_control_for_admin]
+
+
+def fine_grained_access_control_for_user(instance_id, database_id):
+    """Showcases how a user defined database role is used by member."""
+    # [START fine_grained_access_control_for_user]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    role = "new_parent"
+    database = instance.database(database_id, creator_role=role)
+
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql("SELECT * FROM Singers")
+        for _ in results:
+            pass
+
+    # [END fine_grained_access_control_for_admin]
+
+
+def list_database_roles(instance_id, database_id):
+    """Showcases how to list Database Roles."""
+    # [START list_database_roles]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # List database roles.
+    print('Database Roles are:')
+    for role in database.list_database_roles():
+        print(role.name.split("/")[-1])
+    # [END list_database_roles]
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(

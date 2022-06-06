@@ -315,7 +315,7 @@ def test_create_role_grant_access_success(
 
     # Perform select with orphan role on table contacts.
     # Expect PermissionDenied exception.
-    temp_db = shared_instance.database(temp_db_id, creator_role=creator_role_orphan)
+    temp_db = shared_instance.database(temp_db_id, database_role=creator_role_orphan)
     with pytest.raises(exceptions.PermissionDenied):
         with temp_db.snapshot() as snapshot:
             results = snapshot.execute_sql("SELECT * FROM contacts")
@@ -323,14 +323,14 @@ def test_create_role_grant_access_success(
                 pass
 
     # Perform select with parent role on table contacts. Expect success.
-    temp_db = shared_instance.database(temp_db_id, creator_role=creator_role_parent)
+    temp_db = shared_instance.database(temp_db_id, database_role=creator_role_parent)
     with temp_db.snapshot() as snapshot:
         results = snapshot.execute_sql("SELECT * FROM contacts")
         for _ in results:
             pass
 
     ddl_remove_roles = [
-        f"REVOKE SELECT ON TABLE T FROM ROLE {creator_role_parent}",
+        f"REVOKE SELECT ON TABLE contacts FROM ROLE {creator_role_parent}",
         f"DROP ROLE {creator_role_parent}",
         f"DROP ROLE {creator_role_orphan}",
     ]
