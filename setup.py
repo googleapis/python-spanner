@@ -32,9 +32,10 @@ dependencies = [
     "google-api-core[grpc] >= 1.31.5, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.0",
     "google-cloud-core >= 1.4.1, < 3.0dev",
     "grpc-google-iam-v1 >= 0.12.3, < 0.13dev",
-    "libcst >= 0.2.5",
+    "libcst >= 0.2.5, <1.0.0dev",
     "proto-plus == 1.11.0",
-    "sqlparse >= 0.3.0",
+    "sqlparse >= 0.3.0, <1.0.0dev",
+    "protobuf<4.0.0dev",
 ]
 extras = {
     "tracing": [
