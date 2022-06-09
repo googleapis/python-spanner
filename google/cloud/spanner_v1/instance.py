@@ -460,6 +460,11 @@ class Instance(object):
             messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
             or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
 
+        :type database_dialect:
+            :class:`~google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
+        :param database_dialect:
+            (Optional) database dialect for the database
+
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """

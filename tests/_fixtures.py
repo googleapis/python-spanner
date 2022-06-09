@@ -147,22 +147,6 @@ CREATE TABLE string_plus_array_of_string (
     PRIMARY KEY (id));
 CREATE INDEX name ON contacts(first_name, last_name);
 """
-# CREATE TABLE contact_phones (
-#     contact_id BIGINT,
-#     phone_type VARCHAR(1024),
-#     phone_number VARCHAR(1024),
-#     PRIMARY KEY (contact_id, phone_type),
-#     FOREIGN KEY (contact_id) REFERENCES
-#     contacts(contact_id) ON DELETE CASCADE )
-#     INTERLEAVE IN PARENT contacts;
-# CREATE TABLE users_history (
-#      id BIGINT NOT NULL,
-#      commit_ts COMMIT_TIMESTAMP NOT NULL,
-#      name TEXT NOT NULL,
-#      email TEXT,
-#      deleted BOOL NOT NULL,
-#      PRIMARY KEY(id, commit_ts DESC) );
-# """
 
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 EMULATOR_DDL_STATEMENTS = [

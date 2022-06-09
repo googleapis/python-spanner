@@ -21,7 +21,6 @@ import pytest
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
 from google.cloud.spanner_dbapi.connection import connect
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_dbapi.connection import Connection
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 from google.cloud.spanner_v1 import JsonObject
@@ -39,6 +38,7 @@ DDL_STATEMENTS = (
     )
     PRIMARY KEY (contact_id)""",
 )
+
 
 @pytest.fixture(scope="session")
 def raw_database(shared_instance, database_operation_timeout, not_postgres):

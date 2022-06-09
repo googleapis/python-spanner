@@ -218,11 +218,11 @@ class Backup(object):
         return self._referencing_backups
 
     def database_dialect(self):
-        """Encryption info for this backup.
+        """Database Dialect for this backup.
         :rtype: :class:`~google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
         :returns: a class representing the dialect of this backup's database
         """
-        return self._encryption_info
+        return self._database_dialect
 
     @classmethod
     def from_pb(cls, backup_pb, instance):
