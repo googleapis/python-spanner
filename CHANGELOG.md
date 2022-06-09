@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [1.19.3](https://github.com/googleapis/python-spanner/compare/v1.19.2...v1.19.3) (2022-06-09)
+
+
+### Bug Fixes
+
+* **deps:** require protobuf<4.0.0 on v1 branch ([#744](https://github.com/googleapis/python-spanner/issues/744)) ([ba57023](https://github.com/googleapis/python-spanner/commit/ba570234a3651f436221ce16797c4a751a5aeb25))
+
 ### [1.19.2](https://github.com/googleapis/python-spanner/compare/v1.19.1...v1.19.2) (2022-04-07)
 
 
