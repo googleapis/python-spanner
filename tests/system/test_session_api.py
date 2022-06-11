@@ -1986,6 +1986,7 @@ def test_execute_sql_w_numeric_bindings(not_emulator, not_postgres, sessions_dat
 def test_execute_sql_w_json_bindings(not_emulator, sessions_database):
     _bind_test_helper(
         sessions_database,
+        database_dialect,
         spanner_v1.TypeCode.JSON,
         JSON_1,
         [JSON_1, JSON_2],
