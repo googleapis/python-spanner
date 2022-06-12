@@ -125,6 +125,11 @@ class Database(object):
         If a dict is provided, it must be of the same form as either of the protobuf
         messages :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
+    :type database_dialect:
+        :class:`~google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
+    :param database_dialect:
+        (Optional) database dialect for the database
+
     """
 
     _spanner_api = None

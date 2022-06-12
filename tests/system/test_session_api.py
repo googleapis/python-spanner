@@ -1983,7 +1983,7 @@ def test_execute_sql_w_numeric_bindings(not_emulator, not_postgres, sessions_dat
         )
 
 
-def test_execute_sql_w_json_bindings(not_emulator, sessions_database):
+def test_execute_sql_w_json_bindings(not_emulator, sessions_database, database_dialect):
     _bind_test_helper(
         sessions_database,
         database_dialect,
