@@ -319,7 +319,7 @@ class Database(object):
         See
         cloud.google.com/spanner/docs/data-definition-language
 
-        :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect
+        :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
         :returns: the dialect of the database
         """
         return self._database_dialect
