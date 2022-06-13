@@ -31,7 +31,7 @@ __protobuf__ = proto.module(
 
 class TransactionOptions(proto.Message):
     r"""Transactions
-    ============
+    ------------
 
     Each session can have at most one active transaction at a time (note
     that standalone reads and queries use a transaction internally and
@@ -41,8 +41,7 @@ class TransactionOptions(proto.Message):
     for each transaction.
 
     Transaction Modes
-    =================
-
+    -----------------
     Cloud Spanner supports three transaction modes:
 
     1. Locking read-write. This type of transaction is the only way to
