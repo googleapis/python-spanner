@@ -42,6 +42,7 @@ class TransactionOptions(proto.Message):
 
     Transaction Modes
     -----------------
+ 
     Cloud Spanner supports three transaction modes:
 
     1. Locking read-write. This type of transaction is the only way to
