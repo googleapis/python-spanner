@@ -142,7 +142,7 @@ class Database(object):
         pool=None,
         logger=None,
         encryption_config=None,
-        database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED
+        database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -395,7 +395,7 @@ class Database(object):
         db_name = self.database_id
         if "-" in db_name:
             if self._database_dialect == DatabaseDialect.POSTGRESQL:
-                db_name = f"\"{db_name}\""
+                db_name = f'"{db_name}"'
             else:
                 db_name = f"`{db_name}`"
         if type(self._encryption_config) == dict:

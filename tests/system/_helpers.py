@@ -55,8 +55,11 @@ EMULATOR_PROJECT = os.getenv(EMULATOR_PROJECT_ENVVAR, EMULATOR_PROJECT_DEFAULT)
 
 
 DDL_STATEMENTS = (
-    _fixtures.PG_DDL_STATEMENTS if DATABASE_DIALECT == "POSTGRESQL" else
-    (_fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS)
+    _fixtures.PG_DDL_STATEMENTS
+    if DATABASE_DIALECT == "POSTGRESQL"
+    else (
+        _fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS
+    )
 )
 
 retry_true = retry.RetryResult(operator.truth)

@@ -58,7 +58,9 @@ def test_list_databases(shared_instance, shared_database):
 def test_create_database(shared_instance, databases_to_delete, database_dialect):
     pool = spanner_v1.BurstyPool(labels={"testcase": "create_database"})
     temp_db_id = _helpers.unique_id("temp_db")
-    temp_db = shared_instance.database(temp_db_id, pool=pool, database_dialect=database_dialect)
+    temp_db = shared_instance.database(
+        temp_db_id, pool=pool, database_dialect=database_dialect
+    )
     operation = temp_db.create()
     databases_to_delete.append(temp_db)
 
@@ -182,7 +184,9 @@ def test_table_not_found(shared_instance):
         temp_db.create()
 
 
-def test_update_ddl_w_operation_id(shared_instance, databases_to_delete, database_dialect):
+def test_update_ddl_w_operation_id(
+    shared_instance, databases_to_delete, database_dialect
+):
     # We used to have:
     # @pytest.mark.skip(
     #    reason="'Database.update_ddl' has a flaky timeout.  See: "
@@ -190,7 +194,9 @@ def test_update_ddl_w_operation_id(shared_instance, databases_to_delete, databas
     # )
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl"})
     temp_db_id = _helpers.unique_id("update_ddl", separator="_")
-    temp_db = shared_instance.database(temp_db_id, pool=pool, database_dialect=database_dialect)
+    temp_db = shared_instance.database(
+        temp_db_id, pool=pool, database_dialect=database_dialect
+    )
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
     create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.

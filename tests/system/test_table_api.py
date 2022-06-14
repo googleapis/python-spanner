@@ -64,7 +64,9 @@ def test_table_schema(shared_database, database_dialect):
         ("date_value", spanner_v1.TypeCode.DATE),
         ("int_array", spanner_v1.TypeCode.ARRAY),
     ]
-    expected = expected[:-2] if database_dialect == DatabaseDialect.POSTGRESQL else expected
+    expected = (
+        expected[:-2] if database_dialect == DatabaseDialect.POSTGRESQL else expected
+    )
     found = {field.name: field.type_.code for field in schema}
 
     for field_name, type_code in expected:

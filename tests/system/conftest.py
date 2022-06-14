@@ -52,13 +52,18 @@ def not_emulator():
 @pytest.fixture(scope="session")
 def not_postgres(database_dialect):
     if database_dialect == DatabaseDialect.POSTGRESQL:
-        pytest.skip(f"{_helpers.DATABASE_DIALECT_ENVVAR} set to POSTGRES in environment.")
+        pytest.skip(
+            f"{_helpers.DATABASE_DIALECT_ENVVAR} set to POSTGRES in environment."
+        )
 
 
 @pytest.fixture(scope="session")
 def database_dialect():
-    return DatabaseDialect[_helpers.DATABASE_DIALECT] if _helpers.DATABASE_DIALECT else \
-        DatabaseDialect.GOOGLE_STANDARD_SQL
+    return (
+        DatabaseDialect[_helpers.DATABASE_DIALECT]
+        if _helpers.DATABASE_DIALECT
+        else DatabaseDialect.GOOGLE_STANDARD_SQL
+    )
 
 
 @pytest.fixture(scope="session")
@@ -165,7 +170,10 @@ def shared_database(shared_instance, database_operation_timeout, database_dialec
     database_name = _helpers.unique_id("test_database")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     database = shared_instance.database(
-        database_name, ddl_statements=_helpers.DDL_STATEMENTS, pool=pool, database_dialect=database_dialect
+        database_name,
+        ddl_statements=_helpers.DDL_STATEMENTS,
+        pool=pool,
+        database_dialect=database_dialect,
     )
     operation = database.create()
     operation.result(database_operation_timeout)  # raises on failure / timeout.

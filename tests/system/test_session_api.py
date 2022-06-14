@@ -85,7 +85,11 @@ LIVE_ALL_TYPES_COLUMNS = (
 
 EMULATOR_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:-4]
 # ToDo: Clean up generation of POSTGRES_ALL_TYPES_COLUMNS
-POSTGRES_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:1] + LIVE_ALL_TYPES_COLUMNS[1:7:2] + LIVE_ALL_TYPES_COLUMNS[9:17:2]
+POSTGRES_ALL_TYPES_COLUMNS = (
+    LIVE_ALL_TYPES_COLUMNS[:1]
+    + LIVE_ALL_TYPES_COLUMNS[1:7:2]
+    + LIVE_ALL_TYPES_COLUMNS[9:17:2]
+)
 
 AllTypesRowData = collections.namedtuple("AllTypesRowData", LIVE_ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in LIVE_ALL_TYPES_COLUMNS])
@@ -719,7 +723,9 @@ def test_transaction_execute_update_then_insert_commit(
     # [END spanner_test_dml_with_mutation]
 
 
-def test_transaction_batch_update_success(sessions_database, sessions_to_delete, database_dialect):
+def test_transaction_batch_update_success(
+    sessions_database, sessions_to_delete, database_dialect
+):
     # [START spanner_test_dml_with_mutation]
     # [START spanner_test_dml_update]
     sd = _sample_data
@@ -732,8 +738,16 @@ def test_transaction_batch_update_success(sessions_database, sessions_to_delete,
     with session.batch() as batch:
         batch.delete(sd.TABLE, sd.ALL)
 
-    keys = ['p1', 'p2'] if database_dialect == DatabaseDialect.POSTGRESQL else ["contact_id", "email"]
-    placeholders = ['$1', '$2'] if database_dialect == DatabaseDialect.POSTGRESQL else [f"@{key}" for key in keys]
+    keys = (
+        ["p1", "p2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else ["contact_id", "email"]
+    )
+    placeholders = (
+        ["$1", "$2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else [f"@{key}" for key in keys]
+    )
 
     insert_statement = list(_generate_insert_statements())[0]
     update_statement = (
@@ -769,9 +783,7 @@ def test_transaction_batch_update_success(sessions_database, sessions_to_delete,
 
 
 def test_transaction_batch_update_and_execute_dml(
-    sessions_database,
-    sessions_to_delete,
-    database_dialect
+    sessions_database, sessions_to_delete, database_dialect
 ):
     sd = _sample_data
     param_types = spanner_v1.param_types
@@ -783,8 +795,16 @@ def test_transaction_batch_update_and_execute_dml(
     with session.batch() as batch:
         batch.delete(sd.TABLE, sd.ALL)
 
-    keys = ["p1", "p2"] if database_dialect == DatabaseDialect.POSTGRESQL else ["contact_id", "email"]
-    placeholders = ["$1", "$2"] if database_dialect == DatabaseDialect.POSTGRESQL else [f"@{key}" for key in keys]
+    keys = (
+        ["p1", "p2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else ["contact_id", "email"]
+    )
+    placeholders = (
+        ["$1", "$2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else [f"@{key}" for key in keys]
+    )
 
     insert_statements = list(_generate_insert_statements())
     update_statements = [
@@ -820,7 +840,9 @@ def test_transaction_batch_update_and_execute_dml(
     sd._check_rows_data(rows, [])
 
 
-def test_transaction_batch_update_w_syntax_error(sessions_database, sessions_to_delete, database_dialect):
+def test_transaction_batch_update_w_syntax_error(
+    sessions_database, sessions_to_delete, database_dialect
+):
     from google.rpc import code_pb2
 
     sd = _sample_data
@@ -833,8 +855,16 @@ def test_transaction_batch_update_w_syntax_error(sessions_database, sessions_to_
     with session.batch() as batch:
         batch.delete(sd.TABLE, sd.ALL)
 
-    keys = ["p1", "p2"] if database_dialect == DatabaseDialect.POSTGRESQL else ["contact_id", "email"]
-    placeholders = ["$1", "$2"] if database_dialect == DatabaseDialect.POSTGRESQL else [f"@{key}" for key in keys]
+    keys = (
+        ["p1", "p2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else ["contact_id", "email"]
+    )
+    placeholders = (
+        ["$1", "$2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else [f"@{key}" for key in keys]
+    )
 
     insert_statement = list(_generate_insert_statements())[0]
     update_statement = (
@@ -877,10 +907,7 @@ def test_transaction_batch_update_wo_statements(sessions_database, sessions_to_d
     reason="trace requires OpenTelemetry",
 )
 def test_transaction_batch_update_w_parent_span(
-    sessions_database,
-    sessions_to_delete,
-    ot_exporter,
-    database_dialect    
+    sessions_database, sessions_to_delete, ot_exporter, database_dialect
 ):
     from opentelemetry import trace
 
@@ -895,8 +922,16 @@ def test_transaction_batch_update_w_parent_span(
     with session.batch() as batch:
         batch.delete(sd.TABLE, sd.ALL)
 
-    keys = ["p1", "p2"] if database_dialect == DatabaseDialect.POSTGRESQL else ["contact_id", "email"]
-    placeholders = ["$1", "$2"] if database_dialect == DatabaseDialect.POSTGRESQL else [f"@{key}" for key in keys]
+    keys = (
+        ["p1", "p2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else ["contact_id", "email"]
+    )
+    placeholders = (
+        ["$1", "$2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else [f"@{key}" for key in keys]
+    )
 
     insert_statement = list(_generate_insert_statements())[0]
     update_statement = (
@@ -958,8 +993,16 @@ def test_execute_partitioned_dml(sessions_database, database_dialect):
 
     sd._check_rows_data(before_pdml)
 
-    keys = ["p1", "p2"] if database_dialect == DatabaseDialect.POSTGRESQL else ["email", "target"]
-    placeholders = ["$1", "$2"] if database_dialect == DatabaseDialect.POSTGRESQL else [f"@{key}" for key in keys]
+    keys = (
+        ["p1", "p2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else ["email", "target"]
+    )
+    placeholders = (
+        ["$1", "$2"]
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else [f"@{key}" for key in keys]
+    )
     nonesuch = "nonesuch@example.com"
     target = "phred@example.com"
     update_statement = (
@@ -993,7 +1036,9 @@ def test_execute_partitioned_dml(sessions_database, database_dialect):
     # [END spanner_test_dml_partioned_dml_update]
 
 
-def _transaction_concurrency_helper(sessions_database, unit_of_work, pkey, database_dialect=None):
+def _transaction_concurrency_helper(
+    sessions_database, unit_of_work, pkey, database_dialect=None
+):
     initial_value = 123
     num_threads = 3  # conforms to equivalent Java systest.
 
@@ -1009,12 +1054,14 @@ def _transaction_concurrency_helper(sessions_database, unit_of_work, pkey, datab
     for _ in range(num_threads):
         txn_sessions.append(sessions_database)
 
-    args = (unit_of_work, pkey, database_dialect) if database_dialect else (unit_of_work, pkey)
+    args = (
+        (unit_of_work, pkey, database_dialect)
+        if database_dialect
+        else (unit_of_work, pkey)
+    )
 
     threads = [
-        threading.Thread(
-            target=txn_session.run_in_transaction, args=args
-        )
+        threading.Thread(target=txn_session.run_in_transaction, args=args)
         for txn_session in txn_sessions
     ]
 
@@ -1062,7 +1109,9 @@ def _query_w_concurrent_update(transaction, pkey, database_dialect):
 
 def test_transaction_query_w_concurrent_updates(sessions_database, database_dialect):
     pkey = "query_w_concurrent_updates"
-    _transaction_concurrency_helper(sessions_database, _query_w_concurrent_update, pkey, database_dialect)
+    _transaction_concurrency_helper(
+        sessions_database, _query_w_concurrent_update, pkey, database_dialect
+    )
 
 
 def test_transaction_read_w_abort(not_emulator, sessions_database):
@@ -1262,7 +1311,9 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
         sd._check_row_data(after, all_data_rows)
 
 
-def test_read_w_index(shared_instance, database_operation_timeout, databases_to_delete, database_dialect):
+def test_read_w_index(
+    shared_instance, database_operation_timeout, databases_to_delete, database_dialect
+):
     # Indexed reads cannot return non-indexed columns
     sd = _sample_data
     row_count = 2000
@@ -1275,7 +1326,7 @@ def test_read_w_index(shared_instance, database_operation_timeout, databases_to_
         _helpers.unique_id("test_read", separator="_"),
         ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
         pool=pool,
-        database_dialect=database_dialect
+        database_dialect=database_dialect,
     )
     operation = temp_db.create()
     databases_to_delete.append(temp_db)
@@ -1876,23 +1927,41 @@ def _bind_test_helper(
 
 def test_execute_sql_w_string_bindings(sessions_database, database_dialect):
     _bind_test_helper(
-        sessions_database, database_dialect, spanner_v1.param_types.STRING, "Phred", ["Phred", "Bharney"]
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.STRING,
+        "Phred",
+        ["Phred", "Bharney"],
     )
 
 
 def test_execute_sql_w_bool_bindings(sessions_database, database_dialect):
     _bind_test_helper(
-        sessions_database, database_dialect, spanner_v1.param_types.BOOL, True, [True, False, True]
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.BOOL,
+        True,
+        [True, False, True],
     )
 
 
 def test_execute_sql_w_int64_bindings(sessions_database, database_dialect):
-    _bind_test_helper(sessions_database, database_dialect, spanner_v1.param_types.INT64, 42, [123, 456, 789])
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.INT64,
+        42,
+        [123, 456, 789],
+    )
 
 
 def test_execute_sql_w_float64_bindings(sessions_database, database_dialect):
     _bind_test_helper(
-        sessions_database, database_dialect, spanner_v1.param_types.FLOAT64, 42.3, [12.3, 456.0, 7.89]
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.FLOAT64,
+        42.3,
+        [12.3, 456.0, 7.89],
     )
 
 
@@ -1961,10 +2030,18 @@ def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
 
 def test_execute_sql_w_date_bindings(sessions_database, not_postgres, database_dialect):
     dates = [SOME_DATE, SOME_DATE + datetime.timedelta(days=1)]
-    _bind_test_helper(sessions_database, database_dialect, spanner_v1.param_types.DATE, SOME_DATE, dates)
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.DATE,
+        SOME_DATE,
+        dates,
+    )
 
 
-def test_execute_sql_w_numeric_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
+def test_execute_sql_w_numeric_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
     if database_dialect == DatabaseDialect.POSTGRESQL:
         _bind_test_helper(
             sessions_database,

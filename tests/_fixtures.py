@@ -152,6 +152,4 @@ DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 EMULATOR_DDL_STATEMENTS = [
     stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
 ]
-PG_DDL_STATEMENTS = [
-    stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()
-]
+PG_DDL_STATEMENTS = [stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()]
