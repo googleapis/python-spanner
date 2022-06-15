@@ -34,6 +34,7 @@ from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
@@ -53,7 +54,6 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
 from google.cloud.spanner_v1.table import Table
-from google.cloud.spanner_v1.types import DatabaseDialect
 
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
