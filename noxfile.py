@@ -373,8 +373,6 @@ def prerelease_deps(session):
         # dependencies of google-auth
         "cryptography",
         "pyasn1",
-        "opentelemetry-api >= 1.1.0",
-        "opentelemetry-sdk >= 1.1.0",
         "opentelemetry-instrumentation >= 0.20b0, < 0.23dev"
     ]
 
