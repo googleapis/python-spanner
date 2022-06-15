@@ -373,6 +373,7 @@ def prerelease_deps(session):
         # dependencies of google-auth
         "cryptography",
         "pyasn1",
+        "opentelemetry-instrumentation >= 0.20b0, < 0.23dev"
     ]
 
     for dep in prerel_deps:
