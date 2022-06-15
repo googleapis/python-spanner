@@ -53,6 +53,7 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
 from google.cloud.spanner_v1.table import Table
+from google.cloud.spanner_v1.types import DatabaseDialect
 
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
