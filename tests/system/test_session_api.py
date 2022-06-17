@@ -2064,7 +2064,7 @@ def test_execute_sql_w_json_bindings(not_emulator, sessions_database, database_d
     _bind_test_helper(
         sessions_database,
         database_dialect,
-        spanner_v1.TypeCode.JSON,
+        spanner_v1.param_types.JSON,
         JSON_1,
         [JSON_1, JSON_2],
     )
