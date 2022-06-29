@@ -238,7 +238,8 @@ def install_systemtest_dependencies(session, *constraints):
 
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-def system(session):
+@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
+def system(session, database_dialect):
     """Run the system test suite."""
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
@@ -277,6 +278,7 @@ def system(session):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
             *session.posargs,
+            env={"SPANNER_DATABASE_DIALECT": database_dialect},
         )
     if system_test_folder_exists:
         session.run(
@@ -285,6 +287,7 @@ def system(session):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
             *session.posargs,
+            env={"SPANNER_DATABASE_DIALECT": database_dialect},
         )
 
 

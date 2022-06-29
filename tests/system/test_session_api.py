@@ -201,11 +201,11 @@ def sessions_database(shared_instance, database_operation_timeout, database_dial
     database_name = _helpers.unique_id("test_sessions", separator="_")
     pool = spanner_v1.BurstyPool(labels={"testcase": "session_api"})
 
-    if(database_dialect == DatabaseDialect.POSTGRESQL):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
         sessions_database = shared_instance.database(
-        database_name,
-        pool=pool,
-        database_dialect=database_dialect,
+            database_name,
+            pool=pool,
+            database_dialect=database_dialect,
         )
 
         operation = sessions_database.create()
@@ -213,12 +213,12 @@ def sessions_database(shared_instance, database_operation_timeout, database_dial
 
         operation = sessions_database.update_ddl(ddl_statements=_helpers.DDL_STATEMENTS)
         operation.result(database_operation_timeout)
-    
+
     else:
         sessions_database = shared_instance.database(
-        database_name,
-        ddl_statements=_helpers.DDL_STATEMENTS,
-        pool=pool,
+            database_name,
+            ddl_statements=_helpers.DDL_STATEMENTS,
+            pool=pool,
         )
 
         operation = sessions_database.create()
@@ -1339,19 +1339,21 @@ def test_read_w_index(
     extra_ddl = ["CREATE INDEX contacts_by_last_name ON contacts(last_name)"]
     pool = spanner_v1.BurstyPool(labels={"testcase": "read_w_index"})
 
-    if(database_dialect == DatabaseDialect.POSTGRESQL):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
         temp_db = shared_instance.database(
-        _helpers.unique_id("test_read", separator="_"),
-        pool=pool,
-        database_dialect=database_dialect,
-    )
+            _helpers.unique_id("test_read", separator="_"),
+            pool=pool,
+            database_dialect=database_dialect,
+        )
         operation = temp_db.create()
         operation.result(database_operation_timeout)
 
-        operation = temp_db.update_ddl(ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,)
+        operation = temp_db.update_ddl(
+            ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
+        )
         operation.result(database_operation_timeout)
 
-    else: 
+    else:
         temp_db = shared_instance.database(
             _helpers.unique_id("test_read", separator="_"),
             ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
@@ -2090,7 +2092,9 @@ def test_execute_sql_w_numeric_bindings(
         )
 
 
-def test_execute_sql_w_json_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
+def test_execute_sql_w_json_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
     _bind_test_helper(
         sessions_database,
         database_dialect,
