@@ -270,6 +270,10 @@ def system(session, database_dialect):
 
     install_systemtest_dependencies(session, "-c", constraints_path)
 
+    # If POSTGRESQL tests and Emulator, skip the tests
+    if(os.environ.get("SPANNER_EMULATOR_HOST")):
+        session.skip("Postgresql is not supported by Emulator yet.")
+        
     # Run py.test against the system tests.
     if system_test_exists:
         session.run(
