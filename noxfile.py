@@ -238,8 +238,7 @@ def install_systemtest_dependencies(session, *constraints):
 
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
-def system(session, database_dialect):
+def system(session):
     """Run the system test suite."""
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
@@ -247,6 +246,9 @@ def system(session, database_dialect):
     system_test_path = os.path.join("tests", "system.py")
     system_test_folder_path = os.path.join("tests", "system")
 
+    # If POSTGRESQL tests and Emulator, skip the tests
+    if os.environ.get("SPANNER_EMULATOR_HOST") and os.environ.get("SPANNER_DATABASE_DIALECT") == "POSTGRESQL":
+        session.skip("Postgresql is not supported by Emulator yet.")
     # Check the value of `RUN_SYSTEM_TESTS` env var. It defaults to true.
     if os.environ.get("RUN_SYSTEM_TESTS", "true") == "false":
         session.skip("RUN_SYSTEM_TESTS is set to false, skipping")
@@ -269,10 +271,6 @@ def system(session, database_dialect):
         session.skip("System tests were not found")
 
     install_systemtest_dependencies(session, "-c", constraints_path)
-
-    # If POSTGRESQL tests and Emulator, skip the tests
-    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
-        session.skip("Postgresql is not supported by Emulator yet.")
 
     # Run py.test against the system tests.
     if system_test_exists:

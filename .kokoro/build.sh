@@ -55,6 +55,8 @@ fi
 
 # If NOX_SESSION is set, it only runs the specified session,
 # otherwise run all the sessions.
+if [[ -n "${SPANNER_DATABASE_DIALECT:-}" ]]; then
+    export SPANNER_DATABASE_DIALECT = ${SPANNER_DATABASE_DIALECT:-}
 if [[ -n "${NOX_SESSION:-}" ]]; then
     python3 -m nox -s ${NOX_SESSION:-}
 else
