@@ -510,7 +510,7 @@ class InstanceAdminGrpcAsyncIOTransport(InstanceAdminTransport):
         successful.
 
         Authorization requires ``spanner.instances.update`` permission
-        on resource
+        on the resource
         [name][google.spanner.admin.instance.v1.Instance.name].
 
         Returns:
