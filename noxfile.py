@@ -257,6 +257,9 @@ def system(session, database_dialect):
         session.skip(
             "Credentials or emulator host must be set via environment variable"
         )
+    # If POSTGRESQL tests and Emulator, skip the tests
+    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
+        session.skip("Postgresql is not supported by Emulator yet.")
 
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
@@ -270,10 +273,6 @@ def system(session, database_dialect):
 
     install_systemtest_dependencies(session, "-c", constraints_path)
 
-    # If POSTGRESQL tests and Emulator, skip the tests
-    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
-        session.skip("Postgresql is not supported by Emulator yet.")
-
     # Run py.test against the system tests.
     if system_test_exists:
         session.run(
@@ -282,7 +281,10 @@ def system(session, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
             *session.posargs,
-            env={"SPANNER_DATABASE_DIALECT": database_dialect},
+            env={
+                "SPANNER_DATABASE_DIALECT": database_dialect,
+                "SKIP_BACKUP_TESTS": "true",
+            },
         )
     if system_test_folder_exists:
         session.run(
@@ -291,7 +293,10 @@ def system(session, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
             *session.posargs,
-            env={"SPANNER_DATABASE_DIALECT": database_dialect},
+            env={
+                "SPANNER_DATABASE_DIALECT": database_dialect,
+                "SKIP_BACKUP_TESTS": "true",
+            },
         )
 
 
