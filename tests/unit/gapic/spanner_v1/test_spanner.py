@@ -4034,7 +4034,6 @@ def test_spanner_transport_auth_adc(transport_class):
     [
         transports.SpannerGrpcTransport,
         transports.SpannerGrpcAsyncIOTransport,
-        transports.SpannerRestTransport,
     ],
 )
 def test_spanner_transport_auth_gdch_credentials(transport_class):

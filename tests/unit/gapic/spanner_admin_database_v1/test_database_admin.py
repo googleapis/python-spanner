@@ -6130,7 +6130,6 @@ def test_database_admin_transport_auth_adc(transport_class):
     [
         transports.DatabaseAdminGrpcTransport,
         transports.DatabaseAdminGrpcAsyncIOTransport,
-        transports.DatabaseAdminRestTransport,
     ],
 )
 def test_database_admin_transport_auth_gdch_credentials(transport_class):
