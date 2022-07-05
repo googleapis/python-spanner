@@ -61,6 +61,7 @@ class TypeAnnotationCode(proto.Enum):
     TYPE_ANNOTATION_CODE_UNSPECIFIED = 0
     # INT32 = 1 #unsupported
     PG_NUMERIC = 2
+    PG_JSONB = 3
 
 
 class Type(proto.Message):
