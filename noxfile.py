@@ -31,7 +31,7 @@ LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
 DEFAULT_PYTHON_VERSION = "3.8"
 
-UNIT_TEST_PYTHON_VERSIONS = ["3.6", "3.7", "3.8", "3.9", "3.10"]
+UNIT_TEST_PYTHON_VERSIONS = ["3.7", "3.8", "3.9", "3.10"]
 UNIT_TEST_STANDARD_DEPENDENCIES = [
     "mock",
     "asyncmock",
@@ -238,8 +238,7 @@ def install_systemtest_dependencies(session, *constraints):
 
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
-def system(session, database_dialect):
+def system(session):
     """Run the system test suite."""
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
@@ -257,9 +256,6 @@ def system(session, database_dialect):
         session.skip(
             "Credentials or emulator host must be set via environment variable"
         )
-    # If POSTGRESQL tests and Emulator, skip the tests
-    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
-        session.skip("Postgresql is not supported by Emulator yet.")
 
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
@@ -281,10 +277,6 @@ def system(session, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
             *session.posargs,
-            env={
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
-            },
         )
     if system_test_folder_exists:
         session.run(
@@ -293,10 +285,6 @@ def system(session, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
             *session.posargs,
-            env={
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
-            },
         )
 
 
@@ -374,28 +362,15 @@ def docfx(session):
 def prerelease_deps(session):
     """Run all tests with prerelease versions of dependencies installed."""
 
-    prerel_deps = [
-        "protobuf",
-        "googleapis-common-protos",
-        "google-auth",
-        "grpcio",
-        "grpcio-status",
-        "google-api-core",
-        "proto-plus",
-        # dependencies of google-auth
-        "cryptography",
-        "pyasn1",
-    ]
-
-    for dep in prerel_deps:
-        session.install("--pre", "--no-deps", "--upgrade", dep)
-
-    # Remaining dependencies
-    other_deps = ["requests"]
-    session.install(*other_deps)
-
+    # Install all dependencies
+    session.install("-e", ".[all, tests, tracing]")
     session.install(*UNIT_TEST_STANDARD_DEPENDENCIES)
-    session.install(*SYSTEM_TEST_STANDARD_DEPENDENCIES)
+    system_deps_all = (
+        SYSTEM_TEST_STANDARD_DEPENDENCIES
+        + SYSTEM_TEST_EXTERNAL_DEPENDENCIES
+        + SYSTEM_TEST_EXTRAS
+    )
+    session.install(*system_deps_all)
 
     # Because we test minimum dependency versions on the minimum Python
     # version, the first version we test with in the unit tests sessions has a
@@ -409,19 +384,44 @@ def prerelease_deps(session):
         constraints_text = constraints_file.read()
 
     # Ignore leading whitespace and comment lines.
-    deps = [
+    constraints_deps = [
         match.group(1)
         for match in re.finditer(
             r"^\s*(\S+)(?===\S+)", constraints_text, flags=re.MULTILINE
         )
     ]
 
-    # Don't overwrite prerelease packages.
-    deps = [dep for dep in deps if dep not in prerel_deps]
-    # We use --no-deps to ensure that pre-release versions aren't overwritten
-    # by the version ranges in setup.py.
-    session.install(*deps)
-    session.install("--no-deps", "-e", ".[all]")
+    session.install(*constraints_deps)
+
+    if os.path.exists("samples/snippets/requirements.txt"):
+        session.install("-r", "samples/snippets/requirements.txt")
+
+    if os.path.exists("samples/snippets/requirements-test.txt"):
+        session.install("-r", "samples/snippets/requirements-test.txt")
+
+    prerel_deps = [
+        "protobuf",
+        # dependency of grpc
+        "six",
+        "googleapis-common-protos",
+        "grpcio",
+        "grpcio-status",
+        "google-api-core",
+        "proto-plus",
+        "google-cloud-testutils",
+        # dependencies of google-cloud-testutils"
+        "click",
+    ]
+
+    for dep in prerel_deps:
+        session.install("--pre", "--no-deps", "--upgrade", dep)
+
+    # Remaining dependencies
+    other_deps = [
+        "requests",
+        "google-auth",
+    ]
+    session.install(*other_deps)
 
     # Print out prerelease package versions
     session.run(
@@ -430,5 +430,16 @@ def prerelease_deps(session):
     session.run("python", "-c", "import grpc; print(grpc.__version__)")
 
     session.run("py.test", "tests/unit")
-    session.run("py.test", "tests/system")
-    session.run("py.test", "samples/snippets")
+
+    system_test_path = os.path.join("tests", "system.py")
+    system_test_folder_path = os.path.join("tests", "system")
+
+    # Only run system tests if found.
+    if os.path.exists(system_test_path) or os.path.exists(system_test_folder_path):
+        session.run("py.test", "tests/system")
+
+    snippets_test_path = os.path.join("samples", "snippets")
+
+    # Only run samples tests if found.
+    if os.path.exists(snippets_test_path):
+        session.run("py.test", "samples/snippets")
