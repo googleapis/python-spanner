@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,7 +16,17 @@
 from collections import OrderedDict
 import functools
 import re
-from typing import Dict, AsyncIterable, Awaitable, Sequence, Tuple, Type, Union
+from typing import (
+    Dict,
+    Mapping,
+    Optional,
+    AsyncIterable,
+    Awaitable,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+)
 import pkg_resources
 
 from google.api_core.client_options import ClientOptions
@@ -110,6 +120,42 @@ class SpannerAsyncClient:
 
     from_service_account_json = from_service_account_file
 
+    @classmethod
+    def get_mtls_endpoint_and_cert_source(
+        cls, client_options: Optional[ClientOptions] = None
+    ):
+        """Return the API endpoint and client cert source for mutual TLS.
+
+        The client cert source is determined in the following order:
+        (1) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is not "true", the
+        client cert source is None.
+        (2) if `client_options.client_cert_source` is provided, use the provided one; if the
+        default client cert source exists, use the default one; otherwise the client cert
+        source is None.
+
+        The API endpoint is determined in the following order:
+        (1) if `client_options.api_endpoint` if provided, use the provided one.
+        (2) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is "always", use the
+        default mTLS endpoint; if the environment variabel is "never", use the default API
+        endpoint; otherwise if client cert source exists, use the default mTLS endpoint, otherwise
+        use the default API endpoint.
+
+        More details can be found at https://google.aip.dev/auth/4114.
+
+        Args:
+            client_options (google.api_core.client_options.ClientOptions): Custom options for the
+                client. Only the `api_endpoint` and `client_cert_source` properties may be used
+                in this method.
+
+        Returns:
+            Tuple[str, Callable[[], Tuple[bytes, bytes]]]: returns the API endpoint and the
+                client cert source to use.
+
+        Raises:
+            google.auth.exceptions.MutualTLSChannelError: If any errors happen.
+        """
+        return SpannerClient.get_mtls_endpoint_and_cert_source(client_options)  # type: ignore
+
     @property
     def transport(self) -> SpannerTransport:
         """Returns the transport used by the client instance.
@@ -199,6 +245,25 @@ class SpannerAsyncClient:
         Idle sessions can be kept alive by sending a trivial SQL query
         periodically, e.g., ``"SELECT 1"``.
 
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_create_session():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.CreateSessionRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                response = await client.create_session(request=request)
+
+                # Handle the response
+                print(response)
+
         Args:
             request (Union[google.cloud.spanner_v1.types.CreateSessionRequest, dict]):
                 The request object. The request for
@@ -221,7 +286,7 @@ class SpannerAsyncClient:
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -261,7 +326,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -280,6 +350,26 @@ class SpannerAsyncClient:
         This API can be used to initialize a session cache on
         the clients. See https://goo.gl/TgSFN2 for best
         practices on session cache management.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_batch_create_sessions():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.BatchCreateSessionsRequest(
+                    database="database_value",
+                    session_count=1420,
+                )
+
+                # Make the request
+                response = await client.batch_create_sessions(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.BatchCreateSessionsRequest, dict]):
@@ -317,7 +407,7 @@ class SpannerAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, session_count])
         if request is not None and has_flattened_params:
@@ -359,7 +449,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -376,6 +471,25 @@ class SpannerAsyncClient:
         r"""Gets a session. Returns ``NOT_FOUND`` if the session does not
         exist. This is mainly useful for determining whether a session
         is still alive.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_get_session():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.GetSessionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = await client.get_session(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.GetSessionRequest, dict]):
@@ -399,7 +513,7 @@ class SpannerAsyncClient:
                 A session in the Cloud Spanner API.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -439,7 +553,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -454,6 +573,26 @@ class SpannerAsyncClient:
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListSessionsAsyncPager:
         r"""Lists all sessions in a given database.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_list_sessions():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ListSessionsRequest(
+                    database="database_value",
+                )
+
+                # Make the request
+                page_result = client.list_sessions(request=request)
+
+                # Handle the response
+                async for response in page_result:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ListSessionsRequest, dict]):
@@ -482,7 +621,7 @@ class SpannerAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
@@ -522,12 +661,20 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # This method is paged; wrap the response in a pager, which provides
         # an `__aiter__` convenience method.
         response = pagers.ListSessionsAsyncPager(
-            method=rpc, request=request, response=response, metadata=metadata,
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
         )
 
         # Done; return the response.
@@ -545,6 +692,22 @@ class SpannerAsyncClient:
         r"""Ends a session, releasing server resources associated
         with it. This will asynchronously trigger cancellation
         of any operations that are running with this session.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_delete_session():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.DeleteSessionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                await client.delete_session(request=request)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.DeleteSessionRequest, dict]):
@@ -564,7 +727,7 @@ class SpannerAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
@@ -605,7 +768,10 @@ class SpannerAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def execute_sql(
@@ -630,6 +796,26 @@ class SpannerAsyncClient:
         calling
         [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql]
         instead.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_execute_sql():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ExecuteSqlRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                response = await client.execute_sql(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
@@ -675,7 +861,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -694,6 +885,27 @@ class SpannerAsyncClient:
         limit on the size of the returned result set. However, no
         individual row in the result set can exceed 100 MiB, and no
         column value can exceed 10 MiB.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_execute_streaming_sql():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ExecuteSqlRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                stream = await client.execute_streaming_sql(request=request)
+
+                # Handle the response
+                async for response in stream:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ExecuteSqlRequest, dict]):
@@ -733,7 +945,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -760,6 +977,30 @@ class SpannerAsyncClient:
 
         Execution stops after the first failed statement; the remaining
         statements are not executed.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_execute_batch_dml():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                statements = spanner_v1.Statement()
+                statements.sql = "sql_value"
+
+                request = spanner_v1.ExecuteBatchDmlRequest(
+                    session="session_value",
+                    statements=statements,
+                    seqno=550,
+                )
+
+                # Make the request
+                response = await client.execute_batch_dml(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ExecuteBatchDmlRequest, dict]):
@@ -841,7 +1082,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -869,6 +1115,27 @@ class SpannerAsyncClient:
         Larger result sets can be yielded in streaming fashion by
         calling [StreamingRead][google.spanner.v1.Spanner.StreamingRead]
         instead.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_read():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ReadRequest(
+                    session="session_value",
+                    table="table_value",
+                    columns=['columns_value_1', 'columns_value_2'],
+                )
+
+                # Make the request
+                response = await client.read(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
@@ -914,7 +1181,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -933,6 +1205,28 @@ class SpannerAsyncClient:
         size of the returned result set. However, no individual row in
         the result set can exceed 100 MiB, and no column value can
         exceed 10 MiB.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_streaming_read():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.ReadRequest(
+                    session="session_value",
+                    table="table_value",
+                    columns=['columns_value_1', 'columns_value_2'],
+                )
+
+                # Make the request
+                stream = await client.streaming_read(request=request)
+
+                # Handle the response
+                async for response in stream:
+                    print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.ReadRequest, dict]):
@@ -972,7 +1266,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -992,6 +1291,25 @@ class SpannerAsyncClient:
         [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
         [Commit][google.spanner.v1.Spanner.Commit] can begin a new
         transaction as a side-effect.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_begin_transaction():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.BeginTransactionRequest(
+                    session="session_value",
+                )
+
+                # Make the request
+                response = await client.begin_transaction(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.BeginTransactionRequest, dict]):
@@ -1022,7 +1340,7 @@ class SpannerAsyncClient:
                 A transaction.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, options])
         if request is not None and has_flattened_params:
@@ -1064,7 +1382,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1097,6 +1420,26 @@ class SpannerAsyncClient:
         track of the transaction outcome and we recommend that you
         perform another read from the database to see the state of
         things as they are now.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_commit():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.CommitRequest(
+                    transaction_id=b'transaction_id_blob',
+                    session="session_value",
+                )
+
+                # Make the request
+                response = await client.commit(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.CommitRequest, dict]):
@@ -1153,7 +1496,7 @@ class SpannerAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any(
             [session, transaction_id, mutations, single_use_transaction]
@@ -1201,7 +1544,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1226,6 +1574,23 @@ class SpannerAsyncClient:
         transaction, the transaction was already aborted, or the
         transaction is not found. ``Rollback`` never returns
         ``ABORTED``.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_rollback():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.RollbackRequest(
+                    session="session_value",
+                    transaction_id=b'transaction_id_blob',
+                )
+
+                # Make the request
+                await client.rollback(request=request)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.RollbackRequest, dict]):
@@ -1252,7 +1617,7 @@ class SpannerAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Sanity check: If we got a request object, we should *not* have
+        # Quick check: If we got a request object, we should *not* have
         # gotten any keyword arguments that map to the request.
         has_flattened_params = any([session, transaction_id])
         if request is not None and has_flattened_params:
@@ -1295,7 +1660,10 @@ class SpannerAsyncClient:
 
         # Send the request.
         await rpc(
-            request, retry=retry, timeout=timeout, metadata=metadata,
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
         )
 
     async def partition_query(
@@ -1320,6 +1688,26 @@ class SpannerAsyncClient:
         or becomes too old. When any of these happen, it is not possible
         to resume the query, and the whole operation must be restarted
         from the beginning.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_partition_query():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.PartitionQueryRequest(
+                    session="session_value",
+                    sql="sql_value",
+                )
+
+                # Make the request
+                response = await client.partition_query(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.PartitionQueryRequest, dict]):
@@ -1365,7 +1753,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1395,6 +1788,26 @@ class SpannerAsyncClient:
         or becomes too old. When any of these happen, it is not possible
         to resume the read, and the whole operation must be restarted
         from the beginning.
+
+        .. code-block:: python
+
+            from google.cloud import spanner_v1
+
+            async def sample_partition_read():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                request = spanner_v1.PartitionReadRequest(
+                    session="session_value",
+                    table="table_value",
+                )
+
+                # Make the request
+                response = await client.partition_read(request=request)
+
+                # Handle the response
+                print(response)
 
         Args:
             request (Union[google.cloud.spanner_v1.types.PartitionReadRequest, dict]):
@@ -1440,7 +1853,12 @@ class SpannerAsyncClient:
         )
 
         # Send the request.
-        response = await rpc(request, retry=retry, timeout=timeout, metadata=metadata,)
+        response = await rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
 
         # Done; return the response.
         return response
@@ -1454,7 +1872,9 @@ class SpannerAsyncClient:
 
 try:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution("google-cloud-spanner",).version,
+        gapic_version=pkg_resources.get_distribution(
+            "google-cloud-spanner",
+        ).version,
     )
 except pkg_resources.DistributionNotFound:
     DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()

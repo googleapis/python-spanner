@@ -17,6 +17,7 @@ import hashlib
 import pickle
 import pkg_resources
 import pytest
+import time
 
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
@@ -41,11 +42,13 @@ DDL_STATEMENTS = (
 
 
 @pytest.fixture(scope="session")
-def raw_database(shared_instance, database_operation_timeout):
+def raw_database(shared_instance, database_operation_timeout, not_postgres):
     databse_id = _helpers.unique_id("dbapi-txn")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     database = shared_instance.database(
-        databse_id, ddl_statements=DDL_STATEMENTS, pool=pool,
+        databse_id,
+        ddl_statements=DDL_STATEMENTS,
+        pool=pool,
     )
     op = database.create()
     op.result(database_operation_timeout)  # raises on failure / timeout.
@@ -285,7 +288,8 @@ VALUES (%s, %s, %s, %s)
     conn.commit()
 
     cursor.executemany(
-        """SELECT * FROM contacts WHERE contact_id = %s""", ((1,), (2,)),
+        """SELECT * FROM contacts WHERE contact_id = %s""",
+        ((1,), (2,)),
     )
     res = cursor.fetchall()
     conn.commit()
@@ -444,6 +448,7 @@ def test_staleness(shared_instance, dbapi_database):
     cursor = conn.cursor()
 
     before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+    time.sleep(0.25)
 
     cursor.execute(
         """

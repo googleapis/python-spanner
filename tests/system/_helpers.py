@@ -39,9 +39,15 @@ INSTANCE_OPERATION_TIMEOUT_IN_SECONDS = int(
 DATABASE_OPERATION_TIMEOUT_IN_SECONDS = int(
     os.getenv("SPANNER_DATABASE_OPERATION_TIMEOUT_IN_SECONDS", 120)
 )
+BACKUP_OPERATION_TIMEOUT_IN_SECONDS = int(
+    os.getenv("SPANNER_BACKUP_OPERATION_TIMEOUT_IN_SECONDS", 1200)
+)
 
 USE_EMULATOR_ENVVAR = "SPANNER_EMULATOR_HOST"
 USE_EMULATOR = os.getenv(USE_EMULATOR_ENVVAR) is not None
+
+DATABASE_DIALECT_ENVVAR = "SPANNER_DATABASE_DIALECT"
+DATABASE_DIALECT = os.getenv(DATABASE_DIALECT_ENVVAR)
 
 EMULATOR_PROJECT_ENVVAR = "GCLOUD_PROJECT"
 EMULATOR_PROJECT_DEFAULT = "emulator-test-project"
@@ -49,7 +55,11 @@ EMULATOR_PROJECT = os.getenv(EMULATOR_PROJECT_ENVVAR, EMULATOR_PROJECT_DEFAULT)
 
 
 DDL_STATEMENTS = (
-    _fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS
+    _fixtures.PG_DDL_STATEMENTS
+    if DATABASE_DIALECT == "POSTGRESQL"
+    else (
+        _fixtures.EMULATOR_DDL_STATEMENTS if USE_EMULATOR else _fixtures.DDL_STATEMENTS
+    )
 )
 
 retry_true = retry.RetryResult(operator.truth)
@@ -107,7 +117,7 @@ def scrub_instance_ignore_not_found(to_scrub):
 
 
 def cleanup_old_instances(spanner_client):
-    cutoff = int(time.time()) - 2 * 60 * 60  # two hour ago
+    cutoff = int(time.time()) - 3 * 60 * 60  # three hour ago
     instance_filter = "labels.python-spanner-systests:true"
 
     for instance_pb in spanner_client.list_instances(filter_=instance_filter):

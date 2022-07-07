@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -21,12 +21,17 @@ from google.protobuf import timestamp_pb2  # type: ignore
 
 __protobuf__ = proto.module(
     package="google.spanner.v1",
-    manifest={"TransactionOptions", "Transaction", "TransactionSelector",},
+    manifest={
+        "TransactionOptions",
+        "Transaction",
+        "TransactionSelector",
+    },
 )
 
 
 class TransactionOptions(proto.Message):
-    r"""Transactions:
+    r"""Transactions
+
     Each session can have at most one active transaction at a time (note
     that standalone reads and queries use a transaction internally and
     do count towards the one transaction limit). After the active
@@ -34,7 +39,8 @@ class TransactionOptions(proto.Message):
     the next transaction. It is not necessary to create a new session
     for each transaction.
 
-    Transaction Modes:
+    Transaction Modes
+
     Cloud Spanner supports three transaction modes:
 
     1. Locking read-write. This type of transaction is the only way to
@@ -66,7 +72,8 @@ class TransactionOptions(proto.Message):
     may, however, read/write data in different tables within that
     database.
 
-    Locking Read-Write Transactions:
+    Locking Read-Write Transactions
+
     Locking transactions may be used to atomically read-modify-write
     data anywhere in a database. This type of transaction is externally
     consistent.
@@ -88,7 +95,8 @@ class TransactionOptions(proto.Message):
     [Rollback][google.spanner.v1.Spanner.Rollback] request to abort the
     transaction.
 
-    Semantics:
+    Semantics
+
     Cloud Spanner can commit the transaction if all read locks it
     acquired are still valid at commit time, and it is able to acquire
     write locks for all writes. Cloud Spanner can abort the transaction
@@ -101,7 +109,8 @@ class TransactionOptions(proto.Message):
     to use Cloud Spanner locks for any sort of mutual exclusion other
     than between Cloud Spanner transactions themselves.
 
-    Retrying Aborted Transactions:
+    Retrying Aborted Transactions
+
     When a transaction aborts, the application can choose to retry the
     whole transaction again. To maximize the chances of successfully
     committing the retry, the client should execute the retry in the
@@ -109,14 +118,15 @@ class TransactionOptions(proto.Message):
     priority increases with each consecutive abort, meaning that each
     attempt has a slightly better chance of success than the previous.
 
-    Under some circumstances (e.g., many transactions attempting to
-    modify the same row(s)), a transaction can abort many times in a
+    Under some circumstances (for example, many transactions attempting
+    to modify the same row(s)), a transaction can abort many times in a
     short period before successfully committing. Thus, it is not a good
     idea to cap the number of retries a transaction can attempt;
-    instead, it is better to limit the total amount of wall time spent
+    instead, it is better to limit the total amount of time spent
     retrying.
 
-    Idle Transactions:
+    Idle Transactions
+
     A transaction is considered idle if it has no outstanding reads or
     SQL queries and has not started a read or SQL query within the last
     10 seconds. Idle transactions can be aborted by Cloud Spanner so
@@ -124,10 +134,11 @@ class TransactionOptions(proto.Message):
     commit will fail with error ``ABORTED``.
 
     If this behavior is undesirable, periodically executing a simple SQL
-    query in the transaction (e.g., ``SELECT 1``) prevents the
+    query in the transaction (for example, ``SELECT 1``) prevents the
     transaction from becoming idle.
 
-    Snapshot Read-Only Transactions:
+    Snapshot Read-Only Transactions
+
     Snapshot read-only transactions provides a simpler method than
     locking read-write transactions for doing several consistent reads.
     However, this type of transaction does not support writes.
@@ -164,7 +175,8 @@ class TransactionOptions(proto.Message):
 
     Each type of timestamp bound is discussed in detail below.
 
-    Strong:
+    Strong
+
     Strong reads are guaranteed to see the effects of all transactions
     that have committed before the start of the read. Furthermore, all
     rows yielded by a single read are consistent with each other -- if
@@ -180,7 +192,8 @@ class TransactionOptions(proto.Message):
     See
     [TransactionOptions.ReadOnly.strong][google.spanner.v1.TransactionOptions.ReadOnly.strong].
 
-    Exact Staleness:
+    Exact Staleness
+
     These timestamp bounds execute reads at a user-specified timestamp.
     Reads at a timestamp are guaranteed to see a consistent prefix of
     the global transaction history: they observe modifications done by
@@ -203,7 +216,8 @@ class TransactionOptions(proto.Message):
     and
     [TransactionOptions.ReadOnly.exact_staleness][google.spanner.v1.TransactionOptions.ReadOnly.exact_staleness].
 
-    Bounded Staleness:
+    Bounded Staleness
+
     Bounded staleness modes allow Cloud Spanner to pick the read
     timestamp, subject to a user-provided staleness bound. Cloud Spanner
     chooses the newest timestamp within the staleness bound that allows
@@ -234,7 +248,8 @@ class TransactionOptions(proto.Message):
     and
     [TransactionOptions.ReadOnly.min_read_timestamp][google.spanner.v1.TransactionOptions.ReadOnly.min_read_timestamp].
 
-    Old Read Timestamps and Garbage Collection:
+    Old Read Timestamps and Garbage Collection
+
     Cloud Spanner continuously garbage collects deleted and overwritten
     data in the background to reclaim storage space. This process is
     known as "version GC". By default, version GC reclaims versions
@@ -245,7 +260,8 @@ class TransactionOptions(proto.Message):
     SQL queries with too-old read timestamps fail with the error
     ``FAILED_PRECONDITION``.
 
-    Partitioned DML Transactions:
+    Partitioned DML Transactions
+
     Partitioned DML transactions are used to execute DML statements with
     a different execution strategy that provides different, and often
     better, scalability properties for large, table-wide operations than
@@ -345,8 +361,7 @@ class TransactionOptions(proto.Message):
         """
 
     class PartitionedDml(proto.Message):
-        r"""Message type to initiate a Partitioned DML transaction.
-        """
+        r"""Message type to initiate a Partitioned DML transaction."""
 
     class ReadOnly(proto.Message):
         r"""Message type to initiate a read-only transaction.
@@ -432,7 +447,11 @@ class TransactionOptions(proto.Message):
                 message that describes the transaction.
         """
 
-        strong = proto.Field(proto.BOOL, number=1, oneof="timestamp_bound",)
+        strong = proto.Field(
+            proto.BOOL,
+            number=1,
+            oneof="timestamp_bound",
+        )
         min_read_timestamp = proto.Field(
             proto.MESSAGE,
             number=2,
@@ -457,18 +476,33 @@ class TransactionOptions(proto.Message):
             oneof="timestamp_bound",
             message=duration_pb2.Duration,
         )
-        return_read_timestamp = proto.Field(proto.BOOL, number=6,)
+        return_read_timestamp = proto.Field(
+            proto.BOOL,
+            number=6,
+        )
 
-    read_write = proto.Field(proto.MESSAGE, number=1, oneof="mode", message=ReadWrite,)
-    partitioned_dml = proto.Field(
-        proto.MESSAGE, number=3, oneof="mode", message=PartitionedDml,
+    read_write = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        oneof="mode",
+        message=ReadWrite,
     )
-    read_only = proto.Field(proto.MESSAGE, number=2, oneof="mode", message=ReadOnly,)
+    partitioned_dml = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        oneof="mode",
+        message=PartitionedDml,
+    )
+    read_only = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        oneof="mode",
+        message=ReadOnly,
+    )
 
 
 class Transaction(proto.Message):
     r"""A transaction.
-
     Attributes:
         id (bytes):
             ``id`` may be used to identify the transaction in subsequent
@@ -488,9 +522,14 @@ class Transaction(proto.Message):
             nanoseconds. Example: ``"2014-10-02T15:01:23.045123456Z"``.
     """
 
-    id = proto.Field(proto.BYTES, number=1,)
+    id = proto.Field(
+        proto.BYTES,
+        number=1,
+    )
     read_timestamp = proto.Field(
-        proto.MESSAGE, number=2, message=timestamp_pb2.Timestamp,
+        proto.MESSAGE,
+        number=2,
+        message=timestamp_pb2.Timestamp,
     )
 
 
@@ -533,11 +572,21 @@ class TransactionSelector(proto.Message):
     """
 
     single_use = proto.Field(
-        proto.MESSAGE, number=1, oneof="selector", message="TransactionOptions",
+        proto.MESSAGE,
+        number=1,
+        oneof="selector",
+        message="TransactionOptions",
     )
-    id = proto.Field(proto.BYTES, number=2, oneof="selector",)
+    id = proto.Field(
+        proto.BYTES,
+        number=2,
+        oneof="selector",
+    )
     begin = proto.Field(
-        proto.MESSAGE, number=3, oneof="selector", message="TransactionOptions",
+        proto.MESSAGE,
+        number=3,
+        oneof="selector",
+        message="TransactionOptions",
     )
 
 

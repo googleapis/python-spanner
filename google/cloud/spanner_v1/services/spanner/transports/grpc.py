@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -164,8 +164,11 @@ class SpannerGrpcTransport(SpannerTransport):
         if not self._grpc_channel:
             self._grpc_channel = type(self).create_channel(
                 self._host,
+                # use the credentials which are saved
                 credentials=self._credentials,
-                credentials_file=credentials_file,
+                # Set ``credentials_file`` to ``None`` here as
+                # the credentials that we saved earlier should be used.
+                credentials_file=None,
                 scopes=self._scopes,
                 ssl_credentials=self._ssl_channel_credentials,
                 quota_project_id=quota_project_id,
@@ -227,8 +230,7 @@ class SpannerGrpcTransport(SpannerTransport):
 
     @property
     def grpc_channel(self) -> grpc.Channel:
-        """Return the channel designed to connect to this service.
-        """
+        """Return the channel designed to connect to this service."""
         return self._grpc_channel
 
     @property
@@ -751,6 +753,10 @@ class SpannerGrpcTransport(SpannerTransport):
 
     def close(self):
         self.grpc_channel.close()
+
+    @property
+    def kind(self) -> str:
+        return "grpc"
 
 
 __all__ = ("SpannerGrpcTransport",)

@@ -12,12 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import time
 
 import pytest
 
 from google.cloud import spanner_v1
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from . import _helpers
+from google.cloud.spanner_admin_database_v1.types.backup import (
+    CreateBackupEncryptionConfig,
+)
 
 
 @pytest.fixture(scope="function")
@@ -45,13 +50,39 @@ def not_emulator():
 
 
 @pytest.fixture(scope="session")
+def not_postgres(database_dialect):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        pytest.skip(
+            f"{_helpers.DATABASE_DIALECT_ENVVAR} set to POSTGRES in environment."
+        )
+
+
+@pytest.fixture(scope="session")
+def not_google_standard_sql(database_dialect):
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        pytest.skip(
+            f"{_helpers.DATABASE_DIALECT_ENVVAR} set to GOOGLE_STANDARD_SQL in environment."
+        )
+
+
+@pytest.fixture(scope="session")
+def database_dialect():
+    return (
+        DatabaseDialect[_helpers.DATABASE_DIALECT]
+        if _helpers.DATABASE_DIALECT
+        else DatabaseDialect.GOOGLE_STANDARD_SQL
+    )
+
+
+@pytest.fixture(scope="session")
 def spanner_client():
     if _helpers.USE_EMULATOR:
         from google.auth.credentials import AnonymousCredentials
 
         credentials = AnonymousCredentials()
         return spanner_v1.Client(
-            project=_helpers.EMULATOR_PROJECT, credentials=credentials,
+            project=_helpers.EMULATOR_PROJECT,
+            credentials=credentials,
         )
     else:
         return spanner_v1.Client()  # use google.auth.default credentials
@@ -65,6 +96,11 @@ def instance_operation_timeout():
 @pytest.fixture(scope="session")
 def database_operation_timeout():
     return _helpers.DATABASE_OPERATION_TIMEOUT_IN_SECONDS
+
+
+@pytest.fixture(scope="session")
+def backup_operation_timeout():
+    return _helpers.BACKUP_OPERATION_TIMEOUT_IN_SECONDS
 
 
 @pytest.fixture(scope="session")
@@ -93,7 +129,11 @@ def instance_config(instance_configs):
     if not instance_configs:
         raise ValueError("No instance configs found.")
 
-    yield instance_configs[0]
+    us_west1_config = [
+        config for config in instance_configs if config.display_name == "us-west1"
+    ]
+    config = us_west1_config[0] if len(us_west1_config) > 0 else instance_configs[0]
+    yield config
 
 
 @pytest.fixture(scope="session")
@@ -134,18 +174,58 @@ def shared_instance(
 
 
 @pytest.fixture(scope="session")
-def shared_database(shared_instance, database_operation_timeout):
+def shared_database(shared_instance, database_operation_timeout, database_dialect):
     database_name = _helpers.unique_id("test_database")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
-    database = shared_instance.database(
-        database_name, ddl_statements=_helpers.DDL_STATEMENTS, pool=pool
-    )
-    operation = database.create()
-    operation.result(database_operation_timeout)  # raises on failure / timeout.
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        database = shared_instance.database(
+            database_name,
+            pool=pool,
+            database_dialect=database_dialect,
+        )
+        operation = database.create()
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
+
+        operation = database.update_ddl(ddl_statements=_helpers.DDL_STATEMENTS)
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
+
+    else:
+        database = shared_instance.database(
+            database_name,
+            ddl_statements=_helpers.DDL_STATEMENTS,
+            pool=pool,
+            database_dialect=database_dialect,
+        )
+        operation = database.create()
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
 
     yield database
 
     database.drop()
+
+
+@pytest.fixture(scope="session")
+def shared_backup(shared_instance, shared_database, backup_operation_timeout):
+    backup_name = _helpers.unique_id("test_backup")
+    expire_time = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(
+        days=3
+    )
+    source_encryption_enum = CreateBackupEncryptionConfig.EncryptionType
+    source_encryption_config = CreateBackupEncryptionConfig(
+        encryption_type=source_encryption_enum.GOOGLE_DEFAULT_ENCRYPTION,
+    )
+    backup = shared_instance.backup(
+        backup_name,
+        database=shared_database,
+        expire_time=expire_time,
+        encryption_config=source_encryption_config,
+    )
+    operation = backup.create()
+    operation.result(backup_operation_timeout)  # raises on failure / timeout.
+
+    yield backup
+
+    backup.delete()
 
 
 @pytest.fixture(scope="function")

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2020 Google LLC
+# Copyright 2022 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,6 +90,7 @@ class DatabaseAdminTransport(abc.ABC):
             always_use_jwt_access (Optional[bool]): Whether self signed JWT should
                 be used for service account credentials.
         """
+
         # Save the hostname. Default to port 443 (HTTPS) if none is specified.
         if ":" not in host:
             host += ":443"
@@ -111,7 +112,6 @@ class DatabaseAdminTransport(abc.ABC):
             credentials, _ = google.auth.load_credentials_from_file(
                 credentials_file, **scopes_kwargs, quota_project_id=quota_project_id
             )
-
         elif credentials is None:
             credentials, _ = google.auth.default(
                 **scopes_kwargs, quota_project_id=quota_project_id
@@ -147,7 +147,9 @@ class DatabaseAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.create_database: gapic_v1.method.wrap_method(
-                self.create_database, default_timeout=3600.0, client_info=client_info,
+                self.create_database,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.get_database: gapic_v1.method.wrap_method(
                 self.get_database,
@@ -210,7 +212,9 @@ class DatabaseAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.set_iam_policy: gapic_v1.method.wrap_method(
-                self.set_iam_policy, default_timeout=30.0, client_info=client_info,
+                self.set_iam_policy,
+                default_timeout=30.0,
+                client_info=client_info,
             ),
             self.get_iam_policy: gapic_v1.method.wrap_method(
                 self.get_iam_policy,
@@ -233,7 +237,14 @@ class DatabaseAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.create_backup: gapic_v1.method.wrap_method(
-                self.create_backup, default_timeout=3600.0, client_info=client_info,
+                self.create_backup,
+                default_timeout=3600.0,
+                client_info=client_info,
+            ),
+            self.copy_backup: gapic_v1.method.wrap_method(
+                self.copy_backup,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.get_backup: gapic_v1.method.wrap_method(
                 self.get_backup,
@@ -296,7 +307,9 @@ class DatabaseAdminTransport(abc.ABC):
                 client_info=client_info,
             ),
             self.restore_database: gapic_v1.method.wrap_method(
-                self.restore_database, default_timeout=3600.0, client_info=client_info,
+                self.restore_database,
+                default_timeout=3600.0,
+                client_info=client_info,
             ),
             self.list_database_operations: gapic_v1.method.wrap_method(
                 self.list_database_operations,
@@ -333,9 +346,9 @@ class DatabaseAdminTransport(abc.ABC):
     def close(self):
         """Closes resources associated with the transport.
 
-       .. warning::
-            Only call this method if the transport is NOT shared
-            with other clients - this may cause errors in other clients!
+        .. warning::
+             Only call this method if the transport is NOT shared
+             with other clients - this may cause errors in other clients!
         """
         raise NotImplementedError()
 
@@ -446,6 +459,15 @@ class DatabaseAdminTransport(abc.ABC):
         raise NotImplementedError()
 
     @property
+    def copy_backup(
+        self,
+    ) -> Callable[
+        [backup.CopyBackupRequest],
+        Union[operations_pb2.Operation, Awaitable[operations_pb2.Operation]],
+    ]:
+        raise NotImplementedError()
+
+    @property
     def get_backup(
         self,
     ) -> Callable[
@@ -510,6 +532,10 @@ class DatabaseAdminTransport(abc.ABC):
             Awaitable[backup.ListBackupOperationsResponse],
         ],
     ]:
+        raise NotImplementedError()
+
+    @property
+    def kind(self) -> str:
         raise NotImplementedError()
 
 

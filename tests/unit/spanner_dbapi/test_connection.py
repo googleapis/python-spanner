@@ -134,7 +134,11 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction = mock.Mock()
 
         cursor = connection.cursor()
-        cursor._itr = mock.Mock(__next__=mock.Mock(side_effect=Aborted("Aborted"),))
+        cursor._itr = mock.Mock(
+            __next__=mock.Mock(
+                side_effect=Aborted("Aborted"),
+            )
+        )
 
         cursor.fetchone()
         cursor.fetchall()
@@ -388,13 +392,17 @@ class TestConnection(unittest.TestCase):
         """Check that Connection executed heterogenous insert statements."""
         from google.cloud.spanner_dbapi.checksum import ResultsChecksum
         from google.cloud.spanner_dbapi.cursor import Statement
+        from google.rpc.status_pb2 import Status
+        from google.rpc.code_pb2 import OK
 
         sql = "INSERT INTO T (f1, f2) VALUES (1, 2)"
         params = None
         param_types = None
 
         connection = self._make_connection()
-        connection.transaction_checkout = mock.Mock()
+        transaction = mock.MagicMock()
+        connection.transaction_checkout = mock.Mock(return_value=transaction)
+        transaction.batch_update = mock.Mock(return_value=(Status(code=OK), 1))
         statement = Statement(sql, params, param_types, ResultsChecksum(), True)
 
         connection.run_statement(statement, retried=True)
@@ -405,13 +413,17 @@ class TestConnection(unittest.TestCase):
         """Check that Connection executed homogeneous insert statements."""
         from google.cloud.spanner_dbapi.checksum import ResultsChecksum
         from google.cloud.spanner_dbapi.cursor import Statement
+        from google.rpc.status_pb2 import Status
+        from google.rpc.code_pb2 import OK
 
         sql = "INSERT INTO T (f1, f2) VALUES (%s, %s), (%s, %s)"
         params = ["a", "b", "c", "d"]
         param_types = {"f1": str, "f2": str}
 
         connection = self._make_connection()
-        connection.transaction_checkout = mock.Mock()
+        transaction = mock.MagicMock()
+        connection.transaction_checkout = mock.Mock(return_value=transaction)
+        transaction.batch_update = mock.Mock(return_value=(Status(code=OK), 1))
         statement = Statement(sql, params, param_types, ResultsChecksum(), True)
 
         connection.run_statement(statement, retried=True)
@@ -574,7 +586,10 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction()
 
         run_mock.assert_has_calls(
-            (mock.call(statement, retried=True), mock.call(statement, retried=True),)
+            (
+                mock.call(statement, retried=True),
+                mock.call(statement, retried=True),
+            )
         )
 
     def test_retry_transaction_raise_max_internal_retries(self):
@@ -631,7 +646,10 @@ class TestConnection(unittest.TestCase):
         connection.retry_transaction()
 
         run_mock.assert_has_calls(
-            (mock.call(statement, retried=True), mock.call(statement, retried=True),)
+            (
+                mock.call(statement, retried=True),
+                mock.call(statement, retried=True),
+            )
         )
 
     def test_retry_transaction_w_multiple_statement(self):
