@@ -3,7 +3,13 @@ Python Client for Cloud Spanner API
 
 |stable| |pypi| |versions|
 
-`Cloud Spanner API`_: 
+`Cloud Spanner API`_: is a fully managed, mission-critical, 
+relational database service that offers transactional consistency at global scale, 
+schemas, SQL (ANSI 2011 with extensions), and automatic, synchronous replication 
+for high availability.
+
+Be sure to activate the Cloud Spanner API on the Developer's Console to
+use Cloud Spanner from your project.
 
 - `Client Library Documentation`_
 - `Product Documentation`_
