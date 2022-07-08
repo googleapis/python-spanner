@@ -370,7 +370,6 @@ def docfx(session):
     )
 
 
-
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
 def prerelease_deps(session):
     """Run all tests with prerelease versions of dependencies installed."""
@@ -433,4 +432,3 @@ def prerelease_deps(session):
     session.run("py.test", "tests/unit")
     session.run("py.test", "tests/system")
     session.run("py.test", "samples/snippets")
-
