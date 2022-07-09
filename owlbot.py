@@ -148,6 +148,7 @@ s.move(
     excludes=[
         ".coveragerc",
         ".github/workflows",  # exclude gh actions as credentials are needed for tests
+        "README.rst",
     ],
 )
 
