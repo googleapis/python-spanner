@@ -30,6 +30,9 @@ class AbstractSessionPool(object):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     _database = None
@@ -156,6 +159,9 @@ class FixedSizePool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     DEFAULT_SIZE = 10
@@ -183,8 +189,7 @@ class FixedSizePool(AbstractSessionPool):
         self._database = database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
-        if self._database_role is None and self._database.database_role:
-            self._database_role = self._database.database_role
+        self._database_role = self._database_role or self._database.database_role
 
         while not self._sessions.full():
             resp = api.batch_create_sessions(
@@ -262,6 +267,9 @@ class BurstyPool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     def __init__(self, target_size=10, labels=None, database_role=None):
@@ -278,8 +286,7 @@ class BurstyPool(AbstractSessionPool):
                          when needed.
         """
         self._database = database
-        if self._database_role is None and self._database.database_role:
-            self._database_role = self._database.database_role
+        self._database_role = self._database_role or self._database.database_role
 
     def get(self):
         """Check a session out from the pool.
@@ -361,6 +368,9 @@ class PingingPool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     def __init__(
@@ -388,8 +398,7 @@ class PingingPool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         created_session_count = 0
-        if self._database_role is None and self._database.database_role:
-            self._database_role = self._database.database_role
+        self._database_role = self._database_role or self._database.database_role
 
         while created_session_count < self.size:
             resp = api.batch_create_sessions(
@@ -501,6 +510,9 @@ class TransactionPingingPool(PingingPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     def __init__(
@@ -531,8 +543,7 @@ class TransactionPingingPool(PingingPool):
                          when needed.
         """
         super(TransactionPingingPool, self).bind(database)
-        if self._database_role is None and self._database.database_role:
-            self._database_role = self._database.database_role
+        self._database_role = self._database_role or self._database.database_role
         self.begin_pending_transactions()
 
     def put(self, session):

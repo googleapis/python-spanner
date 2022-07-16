@@ -18,7 +18,9 @@ import uuid
 import pytest
 
 from google.api_core import exceptions
+from google.iam.v1 import policy_pb2
 from google.cloud import spanner_v1
+from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
 
@@ -157,6 +159,48 @@ def test_create_database_with_default_leader_success(
         )
         for result in results:
             assert result[0] == default_leader
+
+
+def test_iam_policy(not_emulator, shared_instance, databases_to_delete):
+    pool = spanner_v1.BurstyPool(labels={"testcase": "iam_policy"})
+    temp_db_id = _helpers.unique_id("iam_db", separator="_")
+    create_table = (
+        f"CREATE TABLE policy (\n"
+        f"    Id      STRING(36) NOT NULL,\n"
+        f"    Field1  STRING(36) NOT NULL\n"
+        f") PRIMARY KEY (Id)"
+    )
+    create_role = f"CREATE ROLE parent"
+
+    temp_db = shared_instance.database(
+        temp_db_id,
+        ddl_statements=[create_table, create_role],
+        pool=pool,
+    )
+    create_op = temp_db.create()
+    databases_to_delete.append(temp_db)
+    create_op.result(DBAPI_OPERATION_TIMEOUT)
+    policy = temp_db.get_iam_policy(3)
+
+    assert policy.version == 0
+    assert policy.etag == b"\x00 \x01"
+
+    new_binding = policy_pb2.Binding(
+        role="roles/spanner.fineGrainedAccessUser",
+        members=["user:asthamohta@google.com"],
+        condition=expr_pb2.Expr(
+            title="condition title",
+            expression=f'resource.name.endsWith("/databaseRoles/parent")',
+        ),
+    )
+
+    policy.version = 3
+    policy.bindings.append(new_binding)
+    temp_db.set_iam_policy(policy)
+
+    new_policy = temp_db.get_iam_policy(3)
+    assert new_policy.version == 3
+    assert new_policy.bindings == [new_binding]
 
 
 def test_table_not_found(shared_instance):
@@ -325,9 +369,7 @@ def test_create_role_grant_access_success(
     # Perform select with parent role on table contacts. Expect success.
     temp_db = shared_instance.database(temp_db_id, database_role=creator_role_parent)
     with temp_db.snapshot() as snapshot:
-        results = snapshot.execute_sql("SELECT * FROM contacts")
-        for _ in results:
-            pass
+        snapshot.execute_sql("SELECT * FROM contacts")
 
     ddl_remove_roles = [
         f"REVOKE SELECT ON TABLE contacts FROM ROLE {creator_role_parent}",

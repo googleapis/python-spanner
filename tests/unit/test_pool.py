@@ -865,7 +865,9 @@ class TestSessionCheckout(unittest.TestCase):
         checkout = self._make_one(pool, foo="bar", database_role="dummy-role")
         self.assertIs(checkout._pool, pool)
         self.assertIsNone(checkout._session)
-        self.assertEqual(checkout._kwargs, {"foo": "bar", "database_role": "dummy-role"})
+        self.assertEqual(
+            checkout._kwargs, {"foo": "bar", "database_role": "dummy-role"}
+        )
 
     def test_context_manager_wo_kwargs(self):
         session = object()

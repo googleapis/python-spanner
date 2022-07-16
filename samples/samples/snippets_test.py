@@ -114,7 +114,8 @@ def test_create_database_explicit(sample_instance, create_database_id):
 def test_create_instance_with_processing_units(capsys, lci_instance_id):
     processing_units = 500
     retry_429(snippets.create_instance_with_processing_units)(
-        lci_instance_id, processing_units,
+        lci_instance_id,
+        processing_units,
     )
     out, _ = capsys.readouterr()
     assert lci_instance_id in out
@@ -500,7 +501,8 @@ def test_create_table_with_datatypes(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(
-    name="insert_datatypes_data", depends=["create_table_with_datatypes"],
+    name="insert_datatypes_data",
+    depends=["create_table_with_datatypes"],
 )
 def test_insert_datatypes_data(capsys, instance_id, sample_database):
     snippets.insert_datatypes_data(instance_id, sample_database.database_id)
@@ -562,7 +564,8 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(
-    name="add_numeric_column", depends=["create_table_with_datatypes"],
+    name="add_numeric_column",
+    depends=["create_table_with_datatypes"],
 )
 def test_add_numeric_column(capsys, instance_id, sample_database):
     snippets.add_numeric_column(instance_id, sample_database.database_id)
@@ -585,7 +588,8 @@ def test_query_data_with_numeric_parameter(capsys, instance_id, sample_database)
 
 
 @pytest.mark.dependency(
-    name="add_json_column", depends=["create_table_with_datatypes"],
+    name="add_json_column",
+    depends=["create_table_with_datatypes"],
 )
 def test_add_json_column(capsys, instance_id, sample_database):
     snippets.add_json_column(instance_id, sample_database.database_id)
@@ -654,21 +658,36 @@ def test_set_request_tag(capsys, instance_id, sample_database):
     out, _ = capsys.readouterr()
     assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
 
-@pytest.mark.dependency(name="fine_grained_access_control_for_admin", depends=["insert_data"])
-def test_fine_grained_access_control_for_admin(capsys, instance_id, sample_database):
-    snippets.fine_grained_access_control_for_admin(instance_id, sample_database.database_id)
-    out, _ = capsys.readouterr()
-    assert "New role new_parent and new_child added and granted SELECT permissions" in out
-    assert "Revoked permissions and dropped role new_child" in out
 
-@pytest.mark.dependency(depends=["fine_grained_access_control_for_admin"])
-def test_fine_grained_access_control_for_user(capsys, instance_id, sample_database):
-    snippets.fine_grained_access_control_for_user(instance_id, sample_database.database_id)
+@pytest.mark.dependency(name="add_and_drop_database_roles", depends=["insert_data"])
+def test_add_and_drop_database_roles(capsys, instance_id, sample_database):
+    snippets.add_and_drop_database_roles(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+    assert "Created roles new_parent and new_child and granted privileges" in out
+    assert "Revoked privileges and dropped role new_child" in out
 
-@pytest.mark.dependency(depends=["fine_grained_access_control_for_admin"])
+
+@pytest.mark.dependency(depends=["add_and_drop_database_roles"])
+def test_read_data_with_database_role(capsys, instance_id, sample_database):
+    snippets.read_data_with_database_role(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "ingerId: 1, FirstName: Marc, LastName: Richards" in out
+
+
+@pytest.mark.dependency(depends=["add_and_drop_database_roles"])
 def test_list_database_roles(capsys, instance_id, sample_database):
     snippets.list_database_roles(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "new_parent" in out
+
+
+@pytest.mark.dependency(depends=["add_and_drop_database_roles"])
+def test_lenable_fine_grained_access(capsys, instance_id, sample_database):
+    iam_member = "user:asthamohta@google.com"
+    database_role = "new_parent"
+    title = "condition title"
+    snippets.enable_fine_grained_access(
+        instance_id, sample_database.database_id, iam_member, database_role, title
+    )
+    out, _ = capsys.readouterr()
+    assert "Enabled fine-grained access in IAM. New policy has version 3" in out

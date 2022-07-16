@@ -29,8 +29,9 @@ import logging
 import time
 
 from google.cloud import spanner
-from google.cloud.spanner_v1 import param_types
-from google.cloud import spanner_admin_database_v1
+from google.cloud.spanner_v1 import database, param_types
+from google.type import expr_pb2
+from google.iam.v1 import policy_pb2
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -350,11 +351,11 @@ def insert_data(instance_id, database_id):
             table="Singers",
             columns=("SingerId", "FirstName", "LastName"),
             values=[
-                (1, u"Marc", u"Richards"),
-                (2, u"Catalina", u"Smith"),
-                (3, u"Alice", u"Trentor"),
-                (4, u"Lea", u"Martin"),
-                (5, u"David", u"Lomond"),
+                (1, "Marc", "Richards"),
+                (2, "Catalina", "Smith"),
+                (3, "Alice", "Trentor"),
+                (4, "Lea", "Martin"),
+                (5, "David", "Lomond"),
             ],
         )
 
@@ -362,11 +363,11 @@ def insert_data(instance_id, database_id):
             table="Albums",
             columns=("SingerId", "AlbumId", "AlbumTitle"),
             values=[
-                (1, 1, u"Total Junk"),
-                (1, 2, u"Go, Go, Go"),
-                (2, 1, u"Green"),
-                (2, 2, u"Forever Hold Your Peace"),
-                (2, 3, u"Terrified"),
+                (1, 1, "Total Junk"),
+                (1, 2, "Go, Go, Go"),
+                (2, 1, "Green"),
+                (2, 2, "Forever Hold Your Peace"),
+                (2, 3, "Terrified"),
             ],
         )
 
@@ -422,7 +423,7 @@ def query_data(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
 
 # [END spanner_query_data]
@@ -442,7 +443,7 @@ def read_data(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
 
 # [END spanner_read_data]
@@ -468,7 +469,7 @@ def read_stale_data(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
 
 
 # [END spanner_read_stale_data]
@@ -494,7 +495,7 @@ def query_data_with_new_column(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
 
 
 # [END spanner_query_data_with_new_column]
@@ -559,7 +560,7 @@ def query_data_with_index(
         )
 
         for row in results:
-            print(u"AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(*row))
+            print("AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(*row))
 
 
 # [END spanner_query_data_with_index]
@@ -646,7 +647,7 @@ def read_data_with_storing_index(instance_id, database_id):
         )
 
         for row in results:
-            print(u"AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(*row))
+            print("AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(*row))
 
 
 # [END spanner_read_data_with_storing_index]
@@ -788,7 +789,7 @@ def read_only_transaction(instance_id, database_id):
 
         print("Results from first read:")
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
         # Perform another read using the `read` method. Even if the data
         # is updated in-between the reads, the snapshot ensures that both
@@ -800,7 +801,7 @@ def read_only_transaction(instance_id, database_id):
 
         print("Results from second read:")
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
 
 # [END spanner_read_only_transaction]
@@ -843,7 +844,7 @@ def create_table_with_timestamp(instance_id, database_id):
 
 # [START spanner_insert_data_with_timestamp_column]
 def insert_data_with_timestamp(instance_id, database_id):
-    """Inserts data with a COMMIT_TIMESTAMP field into a table. """
+    """Inserts data with a COMMIT_TIMESTAMP field into a table."""
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -869,8 +870,7 @@ def insert_data_with_timestamp(instance_id, database_id):
 
 # [START spanner_add_timestamp_column]
 def add_timestamp_column(instance_id, database_id):
-    """ Adds a new TIMESTAMP column to the Albums table in the example database.
-    """
+    """Adds a new TIMESTAMP column to the Albums table in the example database."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -959,7 +959,7 @@ def query_data_with_timestamp(instance_id, database_id):
         )
 
     for row in results:
-        print(u"SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
+        print("SingerId: {}, AlbumId: {}, MarketingBudget: {}".format(*row))
 
 
 # [END spanner_query_data_with_timestamp_column]
@@ -967,8 +967,7 @@ def query_data_with_timestamp(instance_id, database_id):
 
 # [START spanner_add_numeric_column]
 def add_numeric_column(instance_id, database_id):
-    """ Adds a new NUMERIC column to the Venues table in the example database.
-    """
+    """Adds a new NUMERIC column to the Venues table in the example database."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -1025,8 +1024,7 @@ def update_data_with_numeric(instance_id, database_id):
 
 # [START spanner_add_json_column]
 def add_json_column(instance_id, database_id):
-    """ Adds a new JSON column to the Venues table in the example database.
-    """
+    """Adds a new JSON column to the Venues table in the example database."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -1112,10 +1110,10 @@ def write_struct_data(instance_id, database_id):
             table="Singers",
             columns=("SingerId", "FirstName", "LastName"),
             values=[
-                (6, u"Elena", u"Campbell"),
-                (7, u"Gabriel", u"Wright"),
-                (8, u"Benjamin", u"Martinez"),
-                (9, u"Hannah", u"Harris"),
+                (6, "Elena", "Campbell"),
+                (7, "Gabriel", "Wright"),
+                (8, "Benjamin", "Martinez"),
+                (9, "Hannah", "Harris"),
             ],
         )
 
@@ -1126,7 +1124,7 @@ def write_struct_data(instance_id, database_id):
 
 
 def query_with_struct(instance_id, database_id):
-    """Query a table using STRUCT parameters. """
+    """Query a table using STRUCT parameters."""
     # [START spanner_create_struct_with_data]
     record_type = param_types.Struct(
         [
@@ -1151,12 +1149,12 @@ def query_with_struct(instance_id, database_id):
         )
 
     for row in results:
-        print(u"SingerId: {}".format(*row))
+        print("SingerId: {}".format(*row))
     # [END spanner_query_data_with_struct]
 
 
 def query_with_array_of_struct(instance_id, database_id):
-    """Query a table using an array of STRUCT parameters. """
+    """Query a table using an array of STRUCT parameters."""
     # [START spanner_create_user_defined_struct]
     name_type = param_types.Struct(
         [
@@ -1189,13 +1187,13 @@ def query_with_array_of_struct(instance_id, database_id):
         )
 
     for row in results:
-        print(u"SingerId: {}".format(*row))
+        print("SingerId: {}".format(*row))
     # [END spanner_query_data_with_array_of_struct]
 
 
 # [START spanner_field_access_on_struct_parameters]
 def query_struct_field(instance_id, database_id):
-    """Query a table using field access on a STRUCT parameter. """
+    """Query a table using field access on a STRUCT parameter."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -1215,7 +1213,7 @@ def query_struct_field(instance_id, database_id):
         )
 
     for row in results:
-        print(u"SingerId: {}".format(*row))
+        print("SingerId: {}".format(*row))
 
 
 # [END spanner_field_access_on_struct_parameters]
@@ -1223,7 +1221,7 @@ def query_struct_field(instance_id, database_id):
 
 # [START spanner_field_access_on_nested_struct_parameters]
 def query_nested_struct_field(instance_id, database_id):
-    """Query a table using nested field access on a STRUCT parameter. """
+    """Query a table using nested field access on a STRUCT parameter."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -1259,14 +1257,14 @@ def query_nested_struct_field(instance_id, database_id):
         )
 
     for row in results:
-        print(u"SingerId: {} SongName: {}".format(*row))
+        print("SingerId: {} SongName: {}".format(*row))
 
 
 # [END spanner_field_access_on_nested_struct_parameters]
 
 
 def insert_data_with_dml(instance_id, database_id):
-    """Inserts sample data into the given database using a DML statement. """
+    """Inserts sample data into the given database using a DML statement."""
     # [START spanner_dml_standard_insert]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1289,7 +1287,7 @@ def insert_data_with_dml(instance_id, database_id):
 
 # [START spanner_get_commit_stats]
 def log_commit_stats(instance_id, database_id):
-    """Inserts sample data using DML and displays the commit statistics. """
+    """Inserts sample data using DML and displays the commit statistics."""
     # By default, commit statistics are logged via stdout at level Info.
     # This sample uses a custom logger to access the commit statistics.
     class CommitStatsSampleLogger(logging.Logger):
@@ -1324,7 +1322,7 @@ def log_commit_stats(instance_id, database_id):
 
 
 def update_data_with_dml(instance_id, database_id):
-    """Updates sample data from the database using a DML statement. """
+    """Updates sample data from the database using a DML statement."""
     # [START spanner_dml_standard_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1347,7 +1345,7 @@ def update_data_with_dml(instance_id, database_id):
 
 
 def delete_data_with_dml(instance_id, database_id):
-    """Deletes sample data from the database using a DML statement. """
+    """Deletes sample data from the database using a DML statement."""
     # [START spanner_dml_standard_delete]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1368,7 +1366,7 @@ def delete_data_with_dml(instance_id, database_id):
 
 
 def update_data_with_dml_timestamp(instance_id, database_id):
-    """Updates data with Timestamp from the database using a DML statement. """
+    """Updates data with Timestamp from the database using a DML statement."""
     # [START spanner_dml_standard_update_with_timestamp]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1420,7 +1418,7 @@ def dml_write_read_transaction(instance_id, database_id):
 
 
 def update_data_with_dml_struct(instance_id, database_id):
-    """Updates data with a DML statement and STRUCT parameters. """
+    """Updates data with a DML statement and STRUCT parameters."""
     # [START spanner_dml_structs]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1452,7 +1450,7 @@ def update_data_with_dml_struct(instance_id, database_id):
 
 
 def insert_with_dml(instance_id, database_id):
-    """Inserts data with a DML statement into the database. """
+    """Inserts data with a DML statement into the database."""
     # [START spanner_dml_getting_started_insert]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1492,12 +1490,12 @@ def query_data_with_parameter(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, FirstName: {}, LastName: {}".format(*row))
+            print("SingerId: {}, FirstName: {}, LastName: {}".format(*row))
     # [END spanner_query_with_parameter]
 
 
 def write_with_dml_transaction(instance_id, database_id):
-    """ Transfers part of a marketing budget from one album to another. """
+    """Transfers part of a marketing budget from one album to another."""
     # [START spanner_dml_getting_started_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1560,7 +1558,7 @@ def write_with_dml_transaction(instance_id, database_id):
 
 
 def update_data_with_partitioned_dml(instance_id, database_id):
-    """ Update sample data with a partitioned DML statement. """
+    """Update sample data with a partitioned DML statement."""
     # [START spanner_dml_partitioned_update]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1578,7 +1576,7 @@ def update_data_with_partitioned_dml(instance_id, database_id):
 
 
 def delete_data_with_partitioned_dml(instance_id, database_id):
-    """ Delete sample data with a partitioned DML statement. """
+    """Delete sample data with a partitioned DML statement."""
     # [START spanner_dml_partitioned_delete]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1593,7 +1591,7 @@ def delete_data_with_partitioned_dml(instance_id, database_id):
 
 
 def update_with_batch_dml(instance_id, database_id):
-    """Updates sample data in the database using Batch DML. """
+    """Updates sample data in the database using Batch DML."""
     # [START spanner_dml_batch_update]
     from google.rpc.code_pb2 import OK
 
@@ -1632,7 +1630,7 @@ def update_with_batch_dml(instance_id, database_id):
 
 
 def create_table_with_datatypes(instance_id, database_id):
-    """Creates a table with supported dataypes. """
+    """Creates a table with supported dataypes."""
     # [START spanner_create_table_with_datatypes]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1669,7 +1667,7 @@ def create_table_with_datatypes(instance_id, database_id):
 
 
 def insert_datatypes_data(instance_id, database_id):
-    """Inserts data with supported datatypes into a table. """
+    """Inserts data with supported datatypes into a table."""
     # [START spanner_insert_datatypes_data]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1677,9 +1675,9 @@ def insert_datatypes_data(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    exampleBytes1 = base64.b64encode(u"Hello World 1".encode())
-    exampleBytes2 = base64.b64encode(u"Hello World 2".encode())
-    exampleBytes3 = base64.b64encode(u"Hello World 3".encode())
+    exampleBytes1 = base64.b64encode("Hello World 1".encode())
+    exampleBytes2 = base64.b64encode("Hello World 2".encode())
+    exampleBytes3 = base64.b64encode("Hello World 3".encode())
     available_dates1 = ["2020-12-01", "2020-12-02", "2020-12-03"]
     available_dates2 = ["2020-11-01", "2020-11-05", "2020-11-15"]
     available_dates3 = ["2020-10-01", "2020-10-07"]
@@ -1700,7 +1698,7 @@ def insert_datatypes_data(instance_id, database_id):
             values=[
                 (
                     4,
-                    u"Venue 4",
+                    "Venue 4",
                     exampleBytes1,
                     1800,
                     available_dates1,
@@ -1711,7 +1709,7 @@ def insert_datatypes_data(instance_id, database_id):
                 ),
                 (
                     19,
-                    u"Venue 19",
+                    "Venue 19",
                     exampleBytes2,
                     6300,
                     available_dates2,
@@ -1722,7 +1720,7 @@ def insert_datatypes_data(instance_id, database_id):
                 ),
                 (
                     42,
-                    u"Venue 42",
+                    "Venue 42",
                     exampleBytes3,
                     3000,
                     available_dates3,
@@ -1739,7 +1737,7 @@ def insert_datatypes_data(instance_id, database_id):
 
 
 def query_data_with_array(instance_id, database_id):
-    """Queries sample data using SQL with an ARRAY parameter. """
+    """Queries sample data using SQL with an ARRAY parameter."""
     # [START spanner_query_with_array_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1761,12 +1759,12 @@ def query_data_with_array(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, AvailableDate: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, AvailableDate: {}".format(*row))
     # [END spanner_query_with_array_parameter]
 
 
 def query_data_with_bool(instance_id, database_id):
-    """Queries sample data using SQL with a BOOL parameter. """
+    """Queries sample data using SQL with a BOOL parameter."""
     # [START spanner_query_with_bool_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1787,12 +1785,12 @@ def query_data_with_bool(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, OutdoorVenue: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, OutdoorVenue: {}".format(*row))
     # [END spanner_query_with_bool_parameter]
 
 
 def query_data_with_bytes(instance_id, database_id):
-    """Queries sample data using SQL with a BYTES parameter. """
+    """Queries sample data using SQL with a BYTES parameter."""
     # [START spanner_query_with_bytes_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1800,7 +1798,7 @@ def query_data_with_bytes(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    exampleBytes = base64.b64encode(u"Hello World 1".encode())
+    exampleBytes = base64.b64encode("Hello World 1".encode())
     param = {"venue_info": exampleBytes}
     param_type = {"venue_info": param_types.BYTES}
 
@@ -1812,12 +1810,12 @@ def query_data_with_bytes(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}".format(*row))
+            print("VenueId: {}, VenueName: {}".format(*row))
     # [END spanner_query_with_bytes_parameter]
 
 
 def query_data_with_date(instance_id, database_id):
-    """Queries sample data using SQL with a DATE parameter. """
+    """Queries sample data using SQL with a DATE parameter."""
     # [START spanner_query_with_date_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1838,12 +1836,12 @@ def query_data_with_date(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, LastContactDate: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, LastContactDate: {}".format(*row))
     # [END spanner_query_with_date_parameter]
 
 
 def query_data_with_float(instance_id, database_id):
-    """Queries sample data using SQL with a FLOAT64 parameter. """
+    """Queries sample data using SQL with a FLOAT64 parameter."""
     # [START spanner_query_with_float_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1864,12 +1862,12 @@ def query_data_with_float(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, PopularityScore: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, PopularityScore: {}".format(*row))
     # [END spanner_query_with_float_parameter]
 
 
 def query_data_with_int(instance_id, database_id):
-    """Queries sample data using SQL with a INT64 parameter. """
+    """Queries sample data using SQL with a INT64 parameter."""
     # [START spanner_query_with_int_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1890,12 +1888,12 @@ def query_data_with_int(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, Capacity: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, Capacity: {}".format(*row))
     # [END spanner_query_with_int_parameter]
 
 
 def query_data_with_string(instance_id, database_id):
-    """Queries sample data using SQL with a STRING parameter. """
+    """Queries sample data using SQL with a STRING parameter."""
     # [START spanner_query_with_string_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1915,12 +1913,12 @@ def query_data_with_string(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}".format(*row))
+            print("VenueId: {}, VenueName: {}".format(*row))
     # [END spanner_query_with_string_parameter]
 
 
 def query_data_with_numeric_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a NUMERIC parameter. """
+    """Queries sample data using SQL with a NUMERIC parameter."""
     # [START spanner_query_with_numeric_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1940,12 +1938,12 @@ def query_data_with_numeric_parameter(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, Revenue: {}".format(*row))
+            print("VenueId: {}, Revenue: {}".format(*row))
     # [END spanner_query_with_numeric_parameter]
 
 
 def query_data_with_json_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a JSON parameter. """
+    """Queries sample data using SQL with a JSON parameter."""
     # [START spanner_query_with_json_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1968,12 +1966,12 @@ def query_data_with_json_parameter(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueDetails: {}".format(*row))
+            print("VenueId: {}, VenueDetails: {}".format(*row))
     # [END spanner_query_with_json_parameter]
 
 
 def query_data_with_timestamp_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a TIMESTAMP parameter. """
+    """Queries sample data using SQL with a TIMESTAMP parameter."""
     # [START spanner_query_with_timestamp_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -2001,7 +1999,7 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
     # [END spanner_query_with_timestamp_parameter]
 
 
@@ -2024,7 +2022,7 @@ def query_data_with_query_options(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
     # [END spanner_query_with_query_options]
 
 
@@ -2036,7 +2034,7 @@ def create_client_with_query_options(instance_id, database_id):
     spanner_client = spanner.Client(
         query_options={
             "optimizer_version": "1",
-            "optimizer_statistics_package": "auto_20191128_14_47_22UTC",
+            "optimizer_statistics_package": "latest",
         }
     )
     instance = spanner_client.instance(instance_id)
@@ -2048,7 +2046,7 @@ def create_client_with_query_options(instance_id, database_id):
         )
 
         for row in results:
-            print(u"VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
+            print("VenueId: {}, VenueName: {}, LastUpdateTime: {}".format(*row))
     # [END spanner_create_client_with_query_options]
 
 
@@ -2112,14 +2110,14 @@ def set_request_tag(instance_id, database_id):
         )
 
         for row in results:
-            print(u"SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
+            print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
     # [END spanner_set_request_tag]
 
 
-def fine_grained_access_control_for_admin(instance_id, database_id):
+def add_and_drop_database_roles(instance_id, database_id):
     """Showcases how to manage a user defined database role."""
-    # [START fine_grained_access_control_for_admin]
+    # [START spanner_add_and_drop_database_roles]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
@@ -2133,45 +2131,47 @@ def fine_grained_access_control_for_admin(instance_id, database_id):
             "CREATE ROLE {}".format(role_parent),
             "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_parent),
             "CREATE ROLE {}".format(role_child),
-            "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_child),
+            "GRANT ROLE {} TO ROLE {}".format(role_parent, role_child),
         ]
     )
     operation.result(OPERATION_TIMEOUT_SECONDS)
-    print("New role {} and {} added and granted SELECT permissions".format(role_parent, role_child))
-    
+    print(
+        "Created roles {} and {} and granted privileges".format(role_parent, role_child)
+    )
+
     operation = database.update_ddl(
         [
-            "REVOKE SELECT ON TABLE Singers FROM ROLE {}".format(role_child),
-            "DROP ROLE {}".format(role_child)
+            "REVOKE ROLE {} FROM ROLE {}".format(role_parent, role_child),
+            "DROP ROLE {}".format(role_child),
         ]
     )
     operation.result(OPERATION_TIMEOUT_SECONDS)
-    print("Revoked permissions and dropped role {}".format(role_child))
+    print("Revoked privileges and dropped role {}".format(role_child))
 
-    # [END fine_grained_access_control_for_admin]
+    # [END spanner_add_and_drop_database_roles]
 
 
-def fine_grained_access_control_for_user(instance_id, database_id):
+def read_data_with_database_role(instance_id, database_id):
     """Showcases how a user defined database role is used by member."""
-    # [START fine_grained_access_control_for_user]
+    # [START spanner_read_data_with_database_role]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     role = "new_parent"
-    database = instance.database(database_id, creator_role=role)
+    database = instance.database(database_id, database_role=role)
 
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql("SELECT * FROM Singers")
-        for _ in results:
-            pass
+        for row in results:
+            print("SingerId: {}, FirstName: {}, LastName: {}".format(*row))
 
-    # [END fine_grained_access_control_for_admin]
+    # [END spanner_read_data_with_database_role]
 
 
 def list_database_roles(instance_id, database_id):
     """Showcases how to list Database Roles."""
-    # [START list_database_roles]
+    # [START spanner_list_database_roles]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
@@ -2179,10 +2179,53 @@ def list_database_roles(instance_id, database_id):
     database = instance.database(database_id)
 
     # List database roles.
-    print('Database Roles are:')
+    print("Database Roles are:")
     for role in database.list_database_roles():
         print(role.name.split("/")[-1])
-    # [END list_database_roles]
+    # [END spanner_list_database_roles]
+
+
+def enable_fine_grained_access(
+    instance_id,
+    database_id,
+    iam_member="user:alice@example.com",
+    database_role="new_parent",
+    title="condition title",
+):
+    """Showcases how to enable fine grained access control."""
+    # [START spanner_enable_fine_grained_access]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    # iam_member = "user:alice@example.com"
+    # database_role = "new_parent"
+    # title = "condition title"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    policy = database.get_iam_policy(3)
+    if policy.version < 3:
+        policy.version = 3
+
+    new_binding = policy_pb2.Binding(
+        role="roles/spanner.fineGrainedAccessUser",
+        members=[iam_member],
+        condition=expr_pb2.Expr(
+            title=title,
+            expression=f'resource.name.endsWith("/databaseRoles/{database_role}")',
+        ),
+    )
+
+    policy.version = 3
+    policy.bindings.append(new_binding)
+    database.set_iam_policy(policy)
+
+    new_policy = database.get_iam_policy(3)
+    print(
+        f"Enabled fine-grained access in IAM. New policy has version {new_policy.version}"
+    )
+    # [END spanner_enable_fine_grained_access]
+
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
@@ -2290,6 +2333,23 @@ if __name__ == "__main__":  # noqa: C901
         "create_client_with_query_options",
         help=create_client_with_query_options.__doc__,
     )
+    subparsers.add_parser(
+        "add_and_drop_database_roles", help=add_and_drop_database_roles.__doc__
+    )
+    subparsers.add_parser(
+        "read_data_with_database_role", help=read_data_with_database_role.__doc__
+    )
+    subparsers.add_parser("list_database_roles", help=list_database_roles.__doc__)
+    enable_fine_grained_access_parser = subparsers.add_parser(
+        "enable_fine_grained_access", help=enable_fine_grained_access.__doc__
+    )
+    enable_fine_grained_access_parser.add_argument(
+        "--iam_member", default="user:alice@example.com"
+    )
+    enable_fine_grained_access_parser.add_argument(
+        "--database_role", default="new_parent"
+    )
+    enable_fine_grained_access_parser.add_argument("--title", default="condition title")
 
     args = parser.parse_args()
 
@@ -2399,3 +2459,17 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_query_options(args.instance_id, args.database_id)
     elif args.command == "create_client_with_query_options":
         create_client_with_query_options(args.instance_id, args.database_id)
+    elif args.command == "add_and_drop_database_roles":
+        add_and_drop_database_roles(args.instance_id, args.database_id)
+    elif args.command == "read_data_with_database_role":
+        read_data_with_database_role(args.instance_id, args.database_id)
+    elif args.command == "list_database_roles":
+        list_database_roles(args.instance_id, args.database_id)
+    elif args.command == "enable_fine_grained_access":
+        enable_fine_grained_access(
+            args.instance_id,
+            args.database_id,
+            args.iam_member,
+            args.database_role,
+            args.title,
+        )

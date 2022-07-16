@@ -27,6 +27,8 @@ from google.api_core.retry import if_exception_type
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
+from google.iam.v1 import iam_policy_pb2
+from google.iam.v1 import options_pb2
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
@@ -305,7 +307,7 @@ class Database(object):
         """Database role used in sessions to connect to this database.
 
         :rtype: str
-        :returns: an str with the name of the database role.
+        :returns: a str with the name of the database role.
         """
         return self._database_role
 
@@ -580,7 +582,7 @@ class Database(object):
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
-        :type database_role: str or None
+        :type database_role: str
         :param database_role: (Optional) user-assigned database_role for the session.
 
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
@@ -826,6 +828,54 @@ class Database(object):
             results = snapshot.execute_sql(_LIST_TABLES_QUERY)
             for row in results:
                 yield self.table(row[0])
+
+    def get_iam_policy(self, policy_version=None):
+        """Gets the access control policy for a database resource.
+
+        :type policy_version: int
+        :param policy_version:
+            (Optional) the maximum policy version that will be
+            used to format the policy. Valid values are 0, 1 ,3.
+
+        :rtype: :class:`~google.iam.v1.policy_pb2.Policy`
+        :returns:
+            returns an Identity and Access Management (IAM) policy. It is used to
+            specify access control policies for Cloud Platform
+            resources.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = iam_policy_pb2.GetIamPolicyRequest(
+            resource=self.name,
+            options=options_pb2.GetPolicyOptions(
+                requested_policy_version=policy_version
+            ),
+        )
+        response = api.get_iam_policy(request=request, metadata=metadata)
+        return response
+
+    def set_iam_policy(self, policy):
+        """Sets the access control policy on a database resource.
+        Replaces any existing policy.
+
+        :type policy: :class:`~google.iam.v1.policy_pb2.Policy`
+        :param policy_version:
+            the complete policy to be applied to the resource.
+
+        :rtype: :class:`~google.iam.v1.policy_pb2.Policy`
+        :returns:
+            returns the new Identity and Access Management (IAM) policy.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = iam_policy_pb2.SetIamPolicyRequest(
+            resource=self.name,
+            policy=policy,
+        )
+        response = api.set_iam_policy(request=request, metadata=metadata)
+        return response
 
 
 class BatchCheckout(object):

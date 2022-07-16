@@ -52,6 +52,9 @@ class Session(object):
 
     :type labels: dict (str -> str)
     :param labels: (Optional) User-assigned labels for the session.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     _session_id = None
