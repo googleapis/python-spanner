@@ -29,8 +29,7 @@ version = "3.16.0"
 # 'Development Status :: 5 - Production/Stable'
 release_status = "Development Status :: 5 - Production/Stable"
 dependencies = [
-    "google-api-core[grpc] >= 2.8.0, <3.0.0dev",
-    # NOTE: Maintainers, please do not require google-cloud-core>=2.x.x
+    "google-api-core[grpc] >= 1.32.0, <3.0.0dev,!=2.0.*,!=2.1.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*",
     "google-cloud-core >= 1.4.1, < 3.0dev",
     "grpc-google-iam-v1 >= 0.12.4, <1.0.0dev",
     "proto-plus >= 1.15.0, <2.0.0dev, != 1.19.6",
