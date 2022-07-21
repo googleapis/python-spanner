@@ -117,6 +117,7 @@ class DatabaseAdminGrpcAsyncIOTransport(DatabaseAdminTransport):
         quota_project_id=None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
         always_use_jwt_access: Optional[bool] = False,
+        api_audience: Optional[str] = None,
     ) -> None:
         """Instantiate the transport.
 
@@ -213,6 +214,7 @@ class DatabaseAdminGrpcAsyncIOTransport(DatabaseAdminTransport):
             quota_project_id=quota_project_id,
             client_info=client_info,
             always_use_jwt_access=always_use_jwt_access,
+            api_audience=api_audience,
         )
 
         if not self._grpc_channel:
@@ -875,6 +877,35 @@ class DatabaseAdminGrpcAsyncIOTransport(DatabaseAdminTransport):
                 response_deserializer=backup.ListBackupOperationsResponse.deserialize,
             )
         return self._stubs["list_backup_operations"]
+
+    @property
+    def list_database_roles(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.ListDatabaseRolesRequest],
+        Awaitable[spanner_database_admin.ListDatabaseRolesResponse],
+    ]:
+        r"""Return a callable for the list database roles method over gRPC.
+
+        Lists Cloud Spanner database roles.
+
+        Returns:
+            Callable[[~.ListDatabaseRolesRequest],
+                    Awaitable[~.ListDatabaseRolesResponse]]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "list_database_roles" not in self._stubs:
+            self._stubs["list_database_roles"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabaseRoles",
+                request_serializer=spanner_database_admin.ListDatabaseRolesRequest.serialize,
+                response_deserializer=spanner_database_admin.ListDatabaseRolesResponse.deserialize,
+            )
+        return self._stubs["list_database_roles"]
 
     def close(self):
         return self.grpc_channel.close()
