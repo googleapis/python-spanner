@@ -24,32 +24,20 @@ from google.protobuf import struct_pb2  # type: ignore
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.rpc import status_pb2  # type: ignore
 
-
-__protobuf__ = proto.module(
-    package="google.spanner.v1",
-    manifest={
-        "CreateSessionRequest",
-        "BatchCreateSessionsRequest",
-        "BatchCreateSessionsResponse",
-        "Session",
-        "GetSessionRequest",
-        "ListSessionsRequest",
-        "ListSessionsResponse",
-        "DeleteSessionRequest",
-        "RequestOptions",
-        "ExecuteSqlRequest",
-        "ExecuteBatchDmlRequest",
-        "ExecuteBatchDmlResponse",
-        "PartitionOptions",
-        "PartitionQueryRequest",
-        "PartitionReadRequest",
-        "Partition",
-        "PartitionResponse",
-        "ReadRequest",
-        "BeginTransactionRequest",
-        "CommitRequest",
-        "RollbackRequest",
-    },
+__manifest__ = (
+    "CreateSessionRequest",
+    "BatchCreateSessionsRequest",
+    "GetSessionRequest",
+    "ListSessionsRequest",
+    "DeleteSessionRequest",
+    "ExecuteSqlRequest",
+    "ExecuteBatchDmlRequest",
+    "PartitionQueryRequest",
+    "PartitionReadRequest",
+    "ReadRequest",
+    "BeginTransactionRequest",
+    "CommitRequest",
+    "RollbackRequest",
 )
 
 
@@ -64,6 +52,7 @@ class CreateSessionRequest(proto.Message):
         session (google.cloud.spanner_v1.types.Session):
             Required. The session to create.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     database = proto.Field(
         proto.STRING,
@@ -96,6 +85,7 @@ class BatchCreateSessionsRequest(proto.Message):
             [session_count][google.spanner.v1.BatchCreateSessionsRequest.session_count]
             as necessary).
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     database = proto.Field(
         proto.STRING,
@@ -112,79 +102,6 @@ class BatchCreateSessionsRequest(proto.Message):
     )
 
 
-class BatchCreateSessionsResponse(proto.Message):
-    r"""The response for
-    [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
-
-    Attributes:
-        session (Sequence[google.cloud.spanner_v1.types.Session]):
-            The freshly created sessions.
-    """
-
-    session = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Session",
-    )
-
-
-class Session(proto.Message):
-    r"""A session in the Cloud Spanner API.
-
-    Attributes:
-        name (str):
-            Output only. The name of the session. This is
-            always system-assigned.
-        labels (Mapping[str, str]):
-            The labels for the session.
-
-            -  Label keys must be between 1 and 63 characters long and
-               must conform to the following regular expression:
-               ``[a-z]([-a-z0-9]*[a-z0-9])?``.
-            -  Label values must be between 0 and 63 characters long and
-               must conform to the regular expression
-               ``([a-z]([-a-z0-9]*[a-z0-9])?)?``.
-            -  No more than 64 labels can be associated with a given
-               session.
-
-            See https://goo.gl/xmQnxf for more information on and
-            examples of labels.
-        create_time (google.protobuf.timestamp_pb2.Timestamp):
-            Output only. The timestamp when the session
-            is created.
-        approximate_last_use_time (google.protobuf.timestamp_pb2.Timestamp):
-            Output only. The approximate timestamp when
-            the session is last used. It is typically
-            earlier than the actual last use time.
-        creator_role (str):
-            The database role which created this session.
-    """
-
-    name = proto.Field(
-        proto.STRING,
-        number=1,
-    )
-    labels = proto.MapField(
-        proto.STRING,
-        proto.STRING,
-        number=2,
-    )
-    create_time = proto.Field(
-        proto.MESSAGE,
-        number=3,
-        message=timestamp_pb2.Timestamp,
-    )
-    approximate_last_use_time = proto.Field(
-        proto.MESSAGE,
-        number=4,
-        message=timestamp_pb2.Timestamp,
-    )
-    creator_role = proto.Field(
-        proto.STRING,
-        number=5,
-    )
-
-
 class GetSessionRequest(proto.Message):
     r"""The request for [GetSession][google.spanner.v1.Spanner.GetSession].
 
@@ -193,6 +110,7 @@ class GetSessionRequest(proto.Message):
             Required. The name of the session to
             retrieve.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     name = proto.Field(
         proto.STRING,
@@ -230,6 +148,7 @@ class ListSessionsRequest(proto.Message):
             -  ``labels.env:dev`` --> The session has the label "env"
                and the value of the label contains the string "dev".
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     database = proto.Field(
         proto.STRING,
@@ -249,34 +168,6 @@ class ListSessionsRequest(proto.Message):
     )
 
 
-class ListSessionsResponse(proto.Message):
-    r"""The response for
-    [ListSessions][google.spanner.v1.Spanner.ListSessions].
-
-    Attributes:
-        sessions (Sequence[google.cloud.spanner_v1.types.Session]):
-            The list of requested sessions.
-        next_page_token (str):
-            ``next_page_token`` can be sent in a subsequent
-            [ListSessions][google.spanner.v1.Spanner.ListSessions] call
-            to fetch more of the matching sessions.
-    """
-
-    @property
-    def raw_page(self):
-        return self
-
-    sessions = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Session",
-    )
-    next_page_token = proto.Field(
-        proto.STRING,
-        number=2,
-    )
-
-
 class DeleteSessionRequest(proto.Message):
     r"""The request for
     [DeleteSession][google.spanner.v1.Spanner.DeleteSession].
@@ -285,80 +176,11 @@ class DeleteSessionRequest(proto.Message):
         name (str):
             Required. The name of the session to delete.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     name = proto.Field(
         proto.STRING,
         number=1,
-    )
-
-
-class RequestOptions(proto.Message):
-    r"""Common request options for various APIs.
-
-    Attributes:
-        priority (google.cloud.spanner_v1.types.RequestOptions.Priority):
-            Priority for the request.
-        request_tag (str):
-            A per-request tag which can be applied to queries or reads,
-            used for statistics collection. Both request_tag and
-            transaction_tag can be specified for a read or query that
-            belongs to a transaction. This field is ignored for requests
-            where it's not applicable (e.g. CommitRequest). Legal
-            characters for ``request_tag`` values are all printable
-            characters (ASCII 32 - 126) and the length of a request_tag
-            is limited to 50 characters. Values that exceed this limit
-            are truncated. Any leading underscore (_) characters will be
-            removed from the string.
-        transaction_tag (str):
-            A tag used for statistics collection about this transaction.
-            Both request_tag and transaction_tag can be specified for a
-            read or query that belongs to a transaction. The value of
-            transaction_tag should be the same for all requests
-            belonging to the same transaction. If this request doesn't
-            belong to any transaction, transaction_tag will be ignored.
-            Legal characters for ``transaction_tag`` values are all
-            printable characters (ASCII 32 - 126) and the length of a
-            transaction_tag is limited to 50 characters. Values that
-            exceed this limit are truncated. Any leading underscore (_)
-            characters will be removed from the string.
-    """
-
-    class Priority(proto.Enum):
-        r"""The relative priority for requests. Note that priority is not
-        applicable for
-        [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction].
-
-        The priority acts as a hint to the Cloud Spanner scheduler and does
-        not guarantee priority or order of execution. For example:
-
-        -  Some parts of a write operation always execute at
-           ``PRIORITY_HIGH``, regardless of the specified priority. This may
-           cause you to see an increase in high priority workload even when
-           executing a low priority request. This can also potentially cause
-           a priority inversion where a lower priority request will be
-           fulfilled ahead of a higher priority request.
-        -  If a transaction contains multiple operations with different
-           priorities, Cloud Spanner does not guarantee to process the
-           higher priority operations first. There may be other constraints
-           to satisfy, such as order of operations.
-        """
-        PRIORITY_UNSPECIFIED = 0
-        PRIORITY_LOW = 1
-        PRIORITY_MEDIUM = 2
-        PRIORITY_HIGH = 3
-
-    priority = proto.Field(
-        proto.ENUM,
-        number=1,
-        enum=Priority,
-    )
-    request_tag = proto.Field(
-        proto.STRING,
-        number=2,
-    )
-    transaction_tag = proto.Field(
-        proto.STRING,
-        number=3,
     )
 
 
@@ -460,9 +282,11 @@ class ExecuteSqlRequest(proto.Message):
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     class QueryMode(proto.Enum):
         r"""Mode in which the statement must be processed."""
+        __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
         NORMAL = 0
         PLAN = 1
         PROFILE = 2
@@ -524,6 +348,7 @@ class ExecuteSqlRequest(proto.Message):
                 statistics package or with a statistics package that allows
                 garbage collection fails with an ``INVALID_ARGUMENT`` error.
         """
+        __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
         optimizer_version = proto.Field(
             proto.STRING,
@@ -627,6 +452,7 @@ class ExecuteBatchDmlRequest(proto.Message):
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     class Statement(proto.Message):
         r"""A single DML statement.
@@ -664,6 +490,7 @@ class ExecuteBatchDmlRequest(proto.Message):
                 [Type][google.spanner.v1.Type] for more information about
                 SQL types.
         """
+        __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
         sql = proto.Field(
             proto.STRING,
@@ -703,108 +530,6 @@ class ExecuteBatchDmlRequest(proto.Message):
         proto.MESSAGE,
         number=5,
         message="RequestOptions",
-    )
-
-
-class ExecuteBatchDmlResponse(proto.Message):
-    r"""The response for
-    [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
-    Contains a list of [ResultSet][google.spanner.v1.ResultSet]
-    messages, one for each DML statement that has successfully executed,
-    in the same order as the statements in the request. If a statement
-    fails, the status in the response body identifies the cause of the
-    failure.
-
-    To check for DML statements that failed, use the following approach:
-
-    1. Check the status in the response message. The
-       [google.rpc.Code][google.rpc.Code] enum value ``OK`` indicates
-       that all statements were executed successfully.
-    2. If the status was not ``OK``, check the number of result sets in
-       the response. If the response contains ``N``
-       [ResultSet][google.spanner.v1.ResultSet] messages, then statement
-       ``N+1`` in the request failed.
-
-    Example 1:
-
-    -  Request: 5 DML statements, all executed successfully.
-    -  Response: 5 [ResultSet][google.spanner.v1.ResultSet] messages,
-       with the status ``OK``.
-
-    Example 2:
-
-    -  Request: 5 DML statements. The third statement has a syntax
-       error.
-    -  Response: 2 [ResultSet][google.spanner.v1.ResultSet] messages,
-       and a syntax error (``INVALID_ARGUMENT``) status. The number of
-       [ResultSet][google.spanner.v1.ResultSet] messages indicates that
-       the third statement failed, and the fourth and fifth statements
-       were not executed.
-
-    Attributes:
-        result_sets (Sequence[google.cloud.spanner_v1.types.ResultSet]):
-            One [ResultSet][google.spanner.v1.ResultSet] for each
-            statement in the request that ran successfully, in the same
-            order as the statements in the request. Each
-            [ResultSet][google.spanner.v1.ResultSet] does not contain
-            any rows. The
-            [ResultSetStats][google.spanner.v1.ResultSetStats] in each
-            [ResultSet][google.spanner.v1.ResultSet] contain the number
-            of rows modified by the statement.
-
-            Only the first [ResultSet][google.spanner.v1.ResultSet] in
-            the response contains valid
-            [ResultSetMetadata][google.spanner.v1.ResultSetMetadata].
-        status (google.rpc.status_pb2.Status):
-            If all DML statements are executed successfully, the status
-            is ``OK``. Otherwise, the error status of the first failed
-            statement.
-    """
-
-    result_sets = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message=result_set.ResultSet,
-    )
-    status = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=status_pb2.Status,
-    )
-
-
-class PartitionOptions(proto.Message):
-    r"""Options for a PartitionQueryRequest and
-    PartitionReadRequest.
-
-    Attributes:
-        partition_size_bytes (int):
-            **Note:** This hint is currently ignored by PartitionQuery
-            and PartitionRead requests.
-
-            The desired data size for each partition generated. The
-            default for this option is currently 1 GiB. This is only a
-            hint. The actual size of each partition may be smaller or
-            larger than this size request.
-        max_partitions (int):
-            **Note:** This hint is currently ignored by PartitionQuery
-            and PartitionRead requests.
-
-            The desired maximum number of partitions to return. For
-            example, this may be set to the number of workers available.
-            The default for this option is currently 10,000. The maximum
-            value is currently 200,000. This is only a hint. The actual
-            number of partitions returned may be smaller or larger than
-            this maximum count request.
-    """
-
-    partition_size_bytes = proto.Field(
-        proto.INT64,
-        number=1,
-    )
-    max_partitions = proto.Field(
-        proto.INT64,
-        number=2,
     )
 
 
@@ -866,6 +591,7 @@ class PartitionQueryRequest(proto.Message):
             Additional options that affect how many
             partitions are created.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -946,6 +672,7 @@ class PartitionReadRequest(proto.Message):
             Additional options that affect how many
             partitions are created.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -977,49 +704,6 @@ class PartitionReadRequest(proto.Message):
         proto.MESSAGE,
         number=9,
         message="PartitionOptions",
-    )
-
-
-class Partition(proto.Message):
-    r"""Information returned for each partition returned in a
-    PartitionResponse.
-
-    Attributes:
-        partition_token (bytes):
-            This token can be passed to Read,
-            StreamingRead, ExecuteSql, or
-            ExecuteStreamingSql requests to restrict the
-            results to those identified by this partition
-            token.
-    """
-
-    partition_token = proto.Field(
-        proto.BYTES,
-        number=1,
-    )
-
-
-class PartitionResponse(proto.Message):
-    r"""The response for
-    [PartitionQuery][google.spanner.v1.Spanner.PartitionQuery] or
-    [PartitionRead][google.spanner.v1.Spanner.PartitionRead]
-
-    Attributes:
-        partitions (Sequence[google.cloud.spanner_v1.types.Partition]):
-            Partitions created by this request.
-        transaction (google.cloud.spanner_v1.types.Transaction):
-            Transaction created by this request.
-    """
-
-    partitions = proto.RepeatedField(
-        proto.MESSAGE,
-        number=1,
-        message="Partition",
-    )
-    transaction = proto.Field(
-        proto.MESSAGE,
-        number=2,
-        message=gs_transaction.Transaction,
     )
 
 
@@ -1096,6 +780,7 @@ class ReadRequest(proto.Message):
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -1159,6 +844,7 @@ class BeginTransactionRequest(proto.Message):
             transaction, set it on the reads and writes that are part of
             this transaction instead.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -1219,6 +905,7 @@ class CommitRequest(proto.Message):
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -1261,6 +948,7 @@ class RollbackRequest(proto.Message):
         transaction_id (bytes):
             Required. The transaction to roll back.
     """
+    __module__ = __module__.rsplit(".", maxsplit=1)[0]  # type: ignore
 
     session = proto.Field(
         proto.STRING,
@@ -1272,4 +960,4 @@ class RollbackRequest(proto.Message):
     )
 
 
-__all__ = tuple(sorted(__protobuf__.manifest))
+__all__ = tuple(sorted(__manifest__))

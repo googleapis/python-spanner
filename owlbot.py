@@ -75,7 +75,7 @@ spanner_admin_database_default_version = "v1"
 for library in get_staging_dirs(spanner_default_version, "spanner"):
     # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
     s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        library / f"google/cloud/spanner_{library.name}/**/*.py",
         r""".
         Attributes:""",
         r""".\n
@@ -84,7 +84,7 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
 
     # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
     s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        library / f"google/cloud/spanner_{library.name}/**/*.py",
         r""".
     Attributes:""",
         r""".\n
@@ -93,14 +93,14 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
 
     # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
     s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        library / f"google/cloud/spanner_{library.name}/**/*.py",
         """\n    ==.*?==\n""",
         ":",
     )
 
     # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
     s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
+        library / f"google/cloud/spanner_{library.name}/**/*.py",
         """\n    --.*?--\n""",
         ":",
     )
