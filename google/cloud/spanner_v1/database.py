@@ -588,10 +588,9 @@ class Database(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: a session bound to this database.
         """
-        role = self._database_role
-        # If role is specified then that role is used instead.
-        if database_role:
-            role = database_role
+        # If role is specified in param, then that role is used
+        # instead.
+        role = database_role or self._database_role
         return Session(self, labels=labels, database_role=role)
 
     def snapshot(self, **kw):
