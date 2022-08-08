@@ -682,7 +682,7 @@ def test_list_database_roles(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(depends=["add_and_drop_database_roles"])
-def test_lenable_fine_grained_access(capsys, instance_id, sample_database):
+def test_enable_fine_grained_access(capsys, instance_id, sample_database):
     iam_member = "user:asthamohta@google.com"
     database_role = "new_parent"
     title = "condition title"
