@@ -35,7 +35,7 @@ dependencies = [
     "proto-plus >= 1.15.0, <2.0.0dev, != 1.19.6",
     "sqlparse >= 0.3.0",
     "packaging >= 14.3",
-    "protobuf >= 3.19.0, <4.0.0dev",
+    "protobuf >= 3.19.0, <5.0.0dev",
 ]
 extras = {
     "tracing": [
