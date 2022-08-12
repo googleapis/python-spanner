@@ -262,8 +262,13 @@ def system(session, database_dialect):""",
 )
 
 s.replace("noxfile.py",
+    """\*session.posargs\n        \)""",
+    """*session.posargs,\n        )"""
+)
+
+s.replace("noxfile.py",
     """system_test_path,
-            \*session.posargs""",
+            \*session.posargs,""",
     """system_test_path,
              *session.posargs,
             env={
@@ -274,13 +279,20 @@ s.replace("noxfile.py",
 
 s.replace("noxfile.py",
     """system_test_folder_path,
-            \*session.posargs""",
+            \*session.posargs,""",
     """system_test_folder_path,
              *session.posargs,
             env={
                 "SPANNER_DATABASE_DIALECT": database_dialect,
                 "SKIP_BACKUP_TESTS": "true",
             },"""
+)
+
+s.replace(
+    "noxfile.py",
+    """def prerelease_deps\(session\):""",
+    """@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
+def prerelease_deps(session, database_dialect):"""
 )
 
 s.replace(
