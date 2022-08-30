@@ -1088,6 +1088,7 @@ def update_data_with_json(instance_id, database_id):
                 ),
             ],
         )
+        
     print("Updated data.")
 
 
