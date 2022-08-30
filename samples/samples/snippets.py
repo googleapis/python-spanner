@@ -1088,16 +1088,6 @@ def update_data_with_json(instance_id, database_id):
                 ),
             ],
         )
-    import pdb
-
-    pdb.set_trace()
-    with database.snapshot() as snapshot:
-        results = snapshot.execute_sql(
-            "SELECT * FROM Venues",
-        )
-        for res in results:
-            print(res)
-
     print("Updated data.")
 
 
