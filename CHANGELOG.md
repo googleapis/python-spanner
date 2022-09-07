@@ -4,6 +4,73 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.20.0](https://github.com/googleapis/python-spanner/compare/v3.19.0...v3.20.0) (2022-08-30)
+
+
+### Features
+
+* Adds TypeAnnotationCode PG_JSONB ([#792](https://github.com/googleapis/python-spanner/issues/792)) ([6a661d4](https://github.com/googleapis/python-spanner/commit/6a661d4492bcb77abee60095ffc2cfdc06b48124))
+
+
+### Bug Fixes
+
+* if JsonObject serialized to None then return `null_value` instead of `string_value` ([#771](https://github.com/googleapis/python-spanner/issues/771)) ([82170b5](https://github.com/googleapis/python-spanner/commit/82170b521f0da1ba5aaf064ba9ee50c74fe21a86))
+
+## [3.19.0](https://github.com/googleapis/python-spanner/compare/v3.18.0...v3.19.0) (2022-08-17)
+
+
+### Features
+
+* support JSON object consisting of an array. ([#782](https://github.com/googleapis/python-spanner/issues/782)) ([92a3169](https://github.com/googleapis/python-spanner/commit/92a3169b59bae527d77ecc19f798998650ca4192))
+
+## [3.18.0](https://github.com/googleapis/python-spanner/compare/v3.17.0...v3.18.0) (2022-08-12)
+
+
+### Features
+
+* Add ListDatabaseRoles API to support role based access control ([#774](https://github.com/googleapis/python-spanner/issues/774)) ([3867882](https://github.com/googleapis/python-spanner/commit/3867882a14c9a2edeb4a47d5a77ec10b2e8e35da))
+
+
+### Bug Fixes
+
+* **deps:** allow protobuf < 5.0.0 ([eee5f31](https://github.com/googleapis/python-spanner/commit/eee5f31b2fe977d542c711831f4e6d06f743fab4))
+* **deps:** require proto-plus >= 1.22.0 ([eee5f31](https://github.com/googleapis/python-spanner/commit/eee5f31b2fe977d542c711831f4e6d06f743fab4))
+* target new spanner db admin service config ([8c73cb3](https://github.com/googleapis/python-spanner/commit/8c73cb3ff1093996dfd88a2361e7c73cad321fd6))
+
+## [3.17.0](https://github.com/googleapis/python-spanner/compare/v3.16.0...v3.17.0) (2022-07-19)
+
+
+### Features
+
+* add audience parameter ([60db146](https://github.com/googleapis/python-spanner/commit/60db146f71e4f7e28f23e63ae085a56d3b9b20ad))
+* add Session creator role ([60db146](https://github.com/googleapis/python-spanner/commit/60db146f71e4f7e28f23e63ae085a56d3b9b20ad))
+* Adding two new fields for Instance create_time and update_time ([60db146](https://github.com/googleapis/python-spanner/commit/60db146f71e4f7e28f23e63ae085a56d3b9b20ad))
+
+
+### Bug Fixes
+
+* **deps:** require google-api-core>=1.32.0,>=2.8.0 ([#739](https://github.com/googleapis/python-spanner/issues/739)) ([60db146](https://github.com/googleapis/python-spanner/commit/60db146f71e4f7e28f23e63ae085a56d3b9b20ad))
+
+
+### Documentation
+
+* clarify transaction semantics ([60db146](https://github.com/googleapis/python-spanner/commit/60db146f71e4f7e28f23e63ae085a56d3b9b20ad))
+
+## [3.16.0](https://github.com/googleapis/python-spanner/compare/v3.15.1...v3.16.0) (2022-07-11)
+
+
+### Features
+
+* Automated Release Blessing ([#767](https://github.com/googleapis/python-spanner/issues/767)) ([19caf44](https://github.com/googleapis/python-spanner/commit/19caf44489e0af915405466960cf83bea4d3a579))
+* python typing ([#646](https://github.com/googleapis/python-spanner/issues/646)) ([169019f](https://github.com/googleapis/python-spanner/commit/169019f283b4fc1f82be928de8e61477bd7f33ca))
+
+
+### Bug Fixes
+
+* [@421](https://github.com/421) ([#769](https://github.com/googleapis/python-spanner/issues/769)) ([58640a1](https://github.com/googleapis/python-spanner/commit/58640a1e013fb24dde403706ae32c851112128c9))
+* add pause for the staleness test ([#762](https://github.com/googleapis/python-spanner/issues/762)) ([bb7f1db](https://github.com/googleapis/python-spanner/commit/bb7f1db57a0d06800ff7c81336756676fc7ec109))
+* require python 3.7+ ([#768](https://github.com/googleapis/python-spanner/issues/768)) ([f2c273d](https://github.com/googleapis/python-spanner/commit/f2c273d592ddc7d2c5de5ee6284d3b4ecba8a3c1))
+
 ## [3.15.1](https://github.com/googleapis/python-spanner/compare/v3.15.0...v3.15.1) (2022-06-17)
 
 

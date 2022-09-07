@@ -97,19 +97,19 @@ def database_version_time(shared_database):
 def second_database(shared_instance, database_operation_timeout, database_dialect):
     database_name = _helpers.unique_id("test_database2")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
-    if(database_dialect == DatabaseDialect.POSTGRESQL):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
         database = shared_instance.database(
             database_name,
             pool=pool,
             database_dialect=database_dialect,
         )
         operation = database.create()
-        operation.result(database_operation_timeout) # raises on failure / timeout.
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
 
         operation = database.update_ddl(ddl_statements=_helpers.DDL_STATEMENTS)
-        operation.result(database_operation_timeout) # raises on failure / timeout.
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
 
-    else: 
+    else:
         database = shared_instance.database(
             database_name,
             ddl_statements=_helpers.DDL_STATEMENTS,
@@ -117,7 +117,7 @@ def second_database(shared_instance, database_operation_timeout, database_dialec
             database_dialect=database_dialect,
         )
         operation = database.create()
-        operation.result(database_operation_timeout) # raises on failure / timeout.
+        operation.result(database_operation_timeout)  # raises on failure / timeout.
 
     yield database
 

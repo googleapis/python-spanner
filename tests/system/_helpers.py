@@ -31,7 +31,7 @@ INSTANCE_ID_DEFAULT = "google-cloud-python-systest"
 INSTANCE_ID = os.environ.get(INSTANCE_ID_ENVVAR, INSTANCE_ID_DEFAULT)
 
 SKIP_BACKUP_TESTS_ENVVAR = "SKIP_BACKUP_TESTS"
-SKIP_BACKUP_TESTS = True  # os.getenv(SKIP_BACKUP_TESTS_ENVVAR) == True
+SKIP_BACKUP_TESTS = os.getenv(SKIP_BACKUP_TESTS_ENVVAR) is not None
 
 INSTANCE_OPERATION_TIMEOUT_IN_SECONDS = int(
     os.getenv("SPANNER_INSTANCE_OPERATION_TIMEOUT_IN_SECONDS", 560)
@@ -117,7 +117,7 @@ def scrub_instance_ignore_not_found(to_scrub):
 
 
 def cleanup_old_instances(spanner_client):
-    cutoff = int(time.time()) - 2 * 60 * 60  # two hour ago
+    cutoff = int(time.time()) - 3 * 60 * 60  # three hour ago
     instance_filter = "labels.python-spanner-systests:true"
 
     for instance_pb in spanner_client.list_instances(filter_=instance_filter):
