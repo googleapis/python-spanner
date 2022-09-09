@@ -1075,7 +1075,7 @@ def update_data_with_json(instance_id, database_id):
                         ]
                     ),
                 ),
-                (19, JsonObject({"rating": 9, "open": True})),
+                (19, JsonObject(rating=9, open=True)),
                 (
                     42,
                     JsonObject(
@@ -1088,7 +1088,7 @@ def update_data_with_json(instance_id, database_id):
                 ),
             ],
         )
-        
+
     print("Updated data.")
 
 
