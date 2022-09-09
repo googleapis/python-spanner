@@ -137,14 +137,21 @@ class Cursor(object):
 
     @property
     def rowcount(self):
-        """The number of rows updated by the last UPDATE, DELETE request's `execute()` call.
+        """The number of rows updated by the last INSERT, UPDATE, DELETE request's `execute()` call.
         For SELECT requests the rowcount returns -1.
 
         :rtype: int
-        :returns: The number of rows updated by the last UPDATE, DELETE request's .execute*() call.
+        :returns: The number of rows updated by the last INSERT, UPDATE, DELETE request's .execute*() call.
         """
 
-        return self._row_count
+        if self._row_count != _UNSET_COUNT or self._result_set is None:
+            return self._row_count
+
+        stats = getattr(self._result_set, "stats", None)
+        if stats is not None and "row_count_exact" in stats:
+            return stats.row_count_exact
+
+        return _UNSET_COUNT
 
     @check_not_closed
     def callproc(self, procname, args=None):
@@ -224,7 +231,9 @@ class Cursor(object):
         :type args: list
         :param args: Additional parameters to supplement the SQL query.
         """
+        self._itr = None
         self._result_set = None
+        self._row_count = _UNSET_COUNT
 
         try:
             if self.connection.read_only:
@@ -293,6 +302,10 @@ class Cursor(object):
         :param seq_of_params: Sequence of additional parameters to run
                               the query with.
         """
+        self._itr = None
+        self._result_set = None
+        self._row_count = _UNSET_COUNT
+
         class_ = parse_utils.classify_stmt(operation)
         if class_ == parse_utils.STMT_DDL:
             raise ProgrammingError(
@@ -316,6 +329,7 @@ class Cursor(object):
                 )
             else:
                 retried = False
+                total_row_count = 0
                 while True:
                     try:
                         transaction = self.connection.transaction_checkout()
@@ -330,12 +344,14 @@ class Cursor(object):
                         many_result_set.add_iter(res)
                         res_checksum.consume_result(res)
                         res_checksum.consume_result(status.code)
+                        total_row_count += sum([max(val, 0) for val in res])
 
                         if status.code == ABORTED:
                             self.connection._transaction = None
                             raise Aborted(status.message)
                         elif status.code != OK:
                             raise OperationalError(status.message)
+                        self._row_count = total_row_count
                         break
                     except Aborted:
                         self.connection.retry_transaction()
