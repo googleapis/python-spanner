@@ -47,7 +47,7 @@ from google.rpc.code_pb2 import ABORTED, OK
 _UNSET_COUNT = -1
 
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
-Statement = namedtuple("Statement", "sql, params, param_types, checksum, is_insert")
+Statement = namedtuple("Statement", "sql, params, param_types, checksum")
 
 
 def check_not_closed(function):
@@ -246,18 +246,14 @@ class Cursor(object):
             if class_ == parse_utils.STMT_UPDATING:
                 sql = parse_utils.ensure_where_clause(sql)
 
-            if class_ != parse_utils.STMT_INSERT:
-                sql, args = sql_pyformat_args_to_spanner(sql, args or None)
+            sql, args = sql_pyformat_args_to_spanner(sql, args or None)
 
             if not self.connection.autocommit:
                 statement = Statement(
                     sql,
                     args,
-                    get_param_types(args or None)
-                    if class_ != parse_utils.STMT_INSERT
-                    else {},
+                    get_param_types(args or None),
                     ResultsChecksum(),
-                    class_ == parse_utils.STMT_INSERT,
                 )
 
                 (
@@ -274,8 +270,6 @@ class Cursor(object):
 
             if class_ == parse_utils.STMT_NON_UPDATING:
                 self._handle_DQL(sql, args or None)
-            elif class_ == parse_utils.STMT_INSERT:
-                _helpers.handle_insert(self.connection, sql, args or None)
             else:
                 self.connection.database.run_in_transaction(
                     self._do_execute_update, sql, args or None

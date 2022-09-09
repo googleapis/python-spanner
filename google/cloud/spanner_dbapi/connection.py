@@ -23,7 +23,6 @@ from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1.session import _get_retry_delay
 from google.cloud.spanner_v1.snapshot import Snapshot
 
-from google.cloud.spanner_dbapi._helpers import _execute_insert_heterogenous
 from google.cloud.spanner_dbapi.checksum import _compare_checksums
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 from google.cloud.spanner_dbapi.cursor import Cursor
@@ -432,15 +431,6 @@ class Connection:
         transaction = self.transaction_checkout()
         if not retried:
             self._statements.append(statement)
-
-        if statement.is_insert:
-            _execute_insert_heterogenous(
-                transaction, ((statement.sql, statement.params),)
-            )
-            return (
-                iter(()),
-                ResultsChecksum() if retried else statement.checksum,
-            )
 
         return (
             transaction.execute_sql(

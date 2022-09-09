@@ -193,7 +193,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
-            return_value=parse_utils.STMT_INSERT,
+            return_value=parse_utils.STMT_UPDATING,
         ):
             with mock.patch(
                 "google.cloud.spanner_dbapi.connection.Connection.run_statement",
@@ -213,7 +213,7 @@ class TestCursor(unittest.TestCase):
 
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
-            side_effect=[parse_utils.STMT_DDL, parse_utils.STMT_INSERT],
+            side_effect=[parse_utils.STMT_DDL, parse_utils.STMT_UPDATING],
         ) as mock_classify_stmt:
             sql = "sql"
             with self.assertRaises(ValueError):
@@ -244,18 +244,6 @@ class TestCursor(unittest.TestCase):
                 sql = "sql"
                 cursor.execute(sql=sql)
                 mock_handle_ddl.assert_called_once_with(sql, None)
-
-        with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
-            return_value=parse_utils.STMT_INSERT,
-        ):
-            with mock.patch(
-                "google.cloud.spanner_dbapi._helpers.handle_insert",
-                return_value=parse_utils.STMT_INSERT,
-            ) as mock_handle_insert:
-                sql = "sql"
-                cursor.execute(sql=sql)
-                mock_handle_insert.assert_called_once_with(connection, sql, None)
 
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
@@ -900,7 +888,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -934,7 +922,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -990,7 +978,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -1023,7 +1011,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -1079,7 +1067,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
@@ -1113,7 +1101,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         cursor._checksum.consume_result(row)
 
-        statement = Statement("SELECT 1", [], {}, cursor._checksum, False)
+        statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
 
         with mock.patch(
