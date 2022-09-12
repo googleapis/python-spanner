@@ -552,3 +552,66 @@ def test_rowcount(shared_instance, dbapi_database, autocommit):
     conn.commit()
     cur.execute("DROP TABLE Singers")
     conn.commit()
+
+
+@pytest.mark.parametrize("autocommit", [False, True])
+def test_dml_returning_insert(shared_instance, dbapi_database, autocommit):
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = autocommit
+    cur = conn.cursor()
+    cur.execute(
+        """
+INSERT INTO contacts (contact_id, first_name, last_name, email)
+VALUES (1, 'first-name', 'last-name', 'test.email@example.com')
+THEN RETURN contact_id, first_name
+    """
+    )
+    assert cur.fetchone() == (1, "first-name")
+    assert cur.rowcount == 1
+    conn.commit()
+
+
+@pytest.mark.parametrize("autocommit", [False, True])
+def test_dml_returning_update(shared_instance, dbapi_database, autocommit):
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = autocommit
+    cur = conn.cursor()
+    cur.execute(
+        """
+INSERT INTO contacts (contact_id, first_name, last_name, email)
+VALUES (1, 'first-name', 'last-name', 'test.email@example.com')
+    """
+    )
+    assert cur.rowcount == 1
+    cur.execute(
+        """
+UPDATE contacts SET first_name = 'new-name' WHERE contact_id = 1
+THEN RETURN contact_id, first_name
+    """
+    )
+    assert cur.fetchone() == (1, "new-name")
+    assert cur.rowcount == 1
+    conn.commit()
+
+
+@pytest.mark.parametrize("autocommit", [False, True])
+def test_dml_returning_delete(shared_instance, dbapi_database, autocommit):
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = autocommit
+    cur = conn.cursor()
+    cur.execute(
+        """
+INSERT INTO contacts (contact_id, first_name, last_name, email)
+VALUES (1, 'first-name', 'last-name', 'test.email@example.com')
+    """
+    )
+    assert cur.rowcount == 1
+    cur.execute(
+        """
+DELETE FROM contacts WHERE contact_id = 1
+THEN RETURN contact_id, first_name
+    """
+    )
+    assert cur.fetchone() == (1, "first-name")
+    assert cur.rowcount == 1
+    conn.commit()

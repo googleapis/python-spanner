@@ -178,14 +178,11 @@ class Cursor(object):
         self._is_closed = True
 
     def _do_execute_update(self, transaction, sql, params):
-        result = transaction.execute_update(
+        self._result_set = transaction.execute_sql(
             sql, params=params, param_types=get_param_types(params)
         )
-        self._itr = None
-        if type(result) == int:
-            self._row_count = result
-
-        return result
+        self._itr = PeekIterator(self._result_set)
+        self._row_count = _UNSET_COUNT
 
     def _do_batch_update(self, transaction, statements, many_result_set):
         status, res = transaction.batch_update(statements)

@@ -97,28 +97,23 @@ class TestCursor(unittest.TestCase):
             cursor.execute("SELECT * FROM database")
 
     def test_do_execute_update(self):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
+        from google.cloud.spanner_v1 import ResultSetStats
 
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
         transaction = mock.MagicMock()
+        result_set = mock.MagicMock()
+        result_set.stats = ResultSetStats(row_count_exact=1234)
 
-        def run_helper(ret_value):
-            transaction.execute_update.return_value = ret_value
-            res = cursor._do_execute_update(
-                transaction=transaction,
-                sql="SELECT * WHERE true",
-                params={},
-            )
-            return res
+        transaction.execute_sql.return_value = result_set
+        cursor._do_execute_update(
+            transaction=transaction,
+            sql="SELECT * WHERE true",
+            params={},
+        )
 
-        expected = "good"
-        self.assertEqual(run_helper(expected), expected)
-        self.assertEqual(cursor._row_count, _UNSET_COUNT)
-
-        expected = 1234
-        self.assertEqual(run_helper(expected), expected)
-        self.assertEqual(cursor._row_count, expected)
+        self.assertEqual(cursor._result_set, result_set)
+        self.assertEqual(cursor.rowcount, 1234)
 
     def test_do_batch_update(self):
         from google.cloud.spanner_dbapi import connect
