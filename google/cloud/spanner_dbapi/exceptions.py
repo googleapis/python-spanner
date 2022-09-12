@@ -40,7 +40,11 @@ class Error(Exception):
         Returns:
             Union[str, None]: An optional string containing reason of the error.
         """
-        return self.__cause__.reason if self._is_error_cause_instance_of_google_api_exception() else None
+        return (
+            self.__cause__.reason
+            if self._is_error_cause_instance_of_google_api_exception()
+            else None
+        )
 
     @property
     def domain(self):
@@ -50,7 +54,11 @@ class Error(Exception):
         Returns:
             Union[str, None]: An optional string containing a logical grouping to which the "reason" belongs.
         """
-        return self.__cause__.domain if self._is_error_cause_instance_of_google_api_exception() else None
+        return (
+            self.__cause__.domain
+            if self._is_error_cause_instance_of_google_api_exception()
+            else None
+        )
 
     @property
     def metadata(self):
@@ -60,7 +68,11 @@ class Error(Exception):
         Returns:
             Union[Dict[str, str], None]: An optional object containing structured details about the error.
         """
-        return self.__cause__.metadata if self._is_error_cause_instance_of_google_api_exception() else None
+        return (
+            self.__cause__.metadata
+            if self._is_error_cause_instance_of_google_api_exception()
+            else None
+        )
 
     @property
     def details(self):
@@ -71,7 +83,11 @@ class Error(Exception):
         Returns:
             Sequence[Any]: A list of structured objects from error_details.proto
         """
-        return self.__cause__.details if self._is_error_cause_instance_of_google_api_exception() else None
+        return (
+            self.__cause__.details
+            if self._is_error_cause_instance_of_google_api_exception()
+            else None
+        )
 
 
 class InterfaceError(Error):
