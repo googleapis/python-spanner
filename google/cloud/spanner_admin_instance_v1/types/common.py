@@ -19,9 +19,9 @@ from google.protobuf import timestamp_pb2  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package='google.spanner.admin.instance.v1',
+    package="google.spanner.admin.instance.v1",
     manifest={
-        'OperationProgress',
+        "OperationProgress",
     },
 )
 
