@@ -36,7 +36,7 @@ class Error(Exception):
     def reason(self):
         """The reason of the error.
         Reference:
-            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+            https://cloud.google.com/apis/design/errors#error_info
         Returns:
             Union[str, None]: An optional string containing reason of the error.
         """
@@ -50,7 +50,7 @@ class Error(Exception):
     def domain(self):
         """The logical grouping to which the "reason" belongs.
         Reference:
-            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+            https://cloud.google.com/apis/design/errors#error_info
         Returns:
             Union[str, None]: An optional string containing a logical grouping to which the "reason" belongs.
         """
@@ -64,7 +64,7 @@ class Error(Exception):
     def metadata(self):
         """Additional structured details about this error.
         Reference:
-            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto#L112
+            https://cloud.google.com/apis/design/errors#error_info
         Returns:
             Union[Dict[str, str], None]: An optional object containing structured details about the error.
         """
@@ -78,8 +78,8 @@ class Error(Exception):
     def details(self):
         """Information contained in google.rpc.status.details.
         Reference:
-            https://github.com/googleapis/googleapis/blob/master/google/rpc/status.proto
-            https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto
+            https://cloud.google.com/apis/design/errors#error_model
+            https://cloud.google.com/apis/design/errors#error_details
         Returns:
             Sequence[Any]: A list of structured objects from error_details.proto
         """
