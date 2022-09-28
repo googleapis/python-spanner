@@ -29,8 +29,8 @@ import logging
 import time
 
 from google.cloud import spanner
-from google.cloud.spanner_v1 import param_types
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
+from google.cloud.spanner_v1 import param_types
 from google.protobuf import field_mask_pb2  # type: ignore
 
 OPERATION_TIMEOUT_SECONDS = 240
@@ -2117,6 +2117,7 @@ def set_request_tag(instance_id, database_id):
 
     # [END spanner_set_request_tag]
 
+
 # [START spanner_create_instance_config]
 def create_instance_config(user_config_name, base_config_id):
     """Creates the new user-managed instance configuration using base instance config."""
@@ -2152,6 +2153,7 @@ def create_instance_config(user_config_name, base_config_id):
 
     print("Created instance configuration {}".format(user_config_name))
 
+
 # [END spanner_create_instance_config]
 
 # [START spanner_update_instance_config]
@@ -2171,6 +2173,7 @@ def update_instance_config(user_config_name):
     operation.result(OPERATION_TIMEOUT_SECONDS)
     print("Updated instance configuration {}".format(user_config_name))
 
+
 # [END spanner_update_instance_config]
 
 # [START spanner_delete_instance_config]
@@ -2180,6 +2183,7 @@ def delete_instance_config(user_config_id):
     spanner_client.instance_admin_api.delete_instance_config(
         name=user_config_id)
     print("Instance config {} successfully deleted".format(user_config_id))
+
 
 # [END spanner_delete_instance_config]
 
@@ -2199,6 +2203,7 @@ def list_instance_config_operations():
                 metadata.instance_config.name, metadata.progress.progress_percent
             )
         )
+
 
 # [END spanner_list_instance_config_operations]
 

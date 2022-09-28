@@ -180,7 +180,7 @@ def test_update_instance_config(capsys, user_managed_instance_config_name):
 def test_delete_instance_config(capsys, user_managed_instance_config_name):
     spanner_client = spanner.Client()
     snippets.delete_instance_config("{}/instanceConfigs/{}".format(
-        spanner_client.project_name,user_managed_instance_config_name))
+        spanner_client.project_name, user_managed_instance_config_name))
     out, _ = capsys.readouterr()
     assert "successfully deleted" in out
 
