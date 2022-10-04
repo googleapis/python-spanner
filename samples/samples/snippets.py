@@ -626,7 +626,7 @@ def read_data_with_storing_index(instance_id, database_id):
     clause.
 
     The index must exist before running this sample. You can add the index
-    by running the `add_soring_index` sample or by running this DDL statement
+    by running the `add_scoring_index` sample or by running this DDL statement
     against your database:
 
         CREATE INDEX AlbumsByAlbumTitle2 ON Albums(AlbumTitle)
@@ -1275,7 +1275,7 @@ def insert_data_with_dml(instance_id, database_id):
 
     def insert_singers(transaction):
         row_ct = transaction.execute_update(
-            "INSERT Singers (SingerId, FirstName, LastName) "
+            "INSERT INTO Singers (SingerId, FirstName, LastName) "
             " VALUES (10, 'Virginia', 'Watson')"
         )
 
@@ -1401,7 +1401,7 @@ def dml_write_read_transaction(instance_id, database_id):
     def write_then_read(transaction):
         # Insert record.
         row_ct = transaction.execute_update(
-            "INSERT Singers (SingerId, FirstName, LastName) "
+            "INSERT INTO Singers (SingerId, FirstName, LastName) "
             " VALUES (11, 'Timothy', 'Campbell')"
         )
         print("{} record(s) inserted.".format(row_ct))
@@ -1460,7 +1460,7 @@ def insert_with_dml(instance_id, database_id):
 
     def insert_singers(transaction):
         row_ct = transaction.execute_update(
-            "INSERT Singers (SingerId, FirstName, LastName) VALUES "
+            "INSERT INTO Singers (SingerId, FirstName, LastName) VALUES "
             "(12, 'Melissa', 'Garcia'), "
             "(13, 'Russell', 'Morales'), "
             "(14, 'Jacqueline', 'Long'), "
@@ -1630,7 +1630,7 @@ def update_with_batch_dml(instance_id, database_id):
 
 
 def create_table_with_datatypes(instance_id, database_id):
-    """Creates a table with supported dataypes."""
+    """Creates a table with supported datatypes. """
     # [START spanner_create_table_with_datatypes]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"

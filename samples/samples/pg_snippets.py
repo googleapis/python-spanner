@@ -23,13 +23,10 @@ import argparse
 import base64
 import datetime
 import decimal
-import json
-import logging
 import time
 
 from google.cloud import spanner, spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
-from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
 from google.protobuf import field_mask_pb2  # type: ignore
 
