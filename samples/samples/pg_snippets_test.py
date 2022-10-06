@@ -16,7 +16,6 @@ import time
 import uuid
 
 from google.api_core import exceptions
-from google.cloud import spanner
 import pytest
 from test_utils.retry import RetryErrors
 
@@ -204,6 +203,7 @@ def test_add_index(capsys, instance_id, sample_database):
     snippets.add_index(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Added the AlbumsByAlbumTitle index" in out
+
 
 @pytest.mark.dependency(depends=["add_index"])
 def test_read_data_with_index(capsys, instance_id, sample_database):
@@ -397,23 +397,11 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
     assert "VenueId: 42, VenueName: Venue 42" in out
 
 
-@pytest.mark.dependency(
-    name="add_numeric_column",
-    depends=["create_table_with_datatypes"],
-)
-
-
 @pytest.mark.dependency(depends=["add_numeric_column"])
 def test_query_data_with_numeric_parameter(capsys, instance_id, sample_database):
     snippets.query_data_with_numeric_parameter(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "VenueId: 4, Revenue: 35000" in out
-
-
-@pytest.mark.dependency(
-    name="add_json_column",
-    depends=["create_table_with_datatypes"],
-)
 
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
