@@ -2245,9 +2245,9 @@ if __name__ == "__main__":  # noqa: C901
     )
     query_data_with_index_parser.add_argument("--start_title", default="Aardvark")
     query_data_with_index_parser.add_argument("--end_title", default="Goo")
-    subparsers.add_parser("read_data_with_index", help=insert_data.__doc__)
+    subparsers.add_parser("read_data_with_index", help=read_data_with_index.__doc__)
     subparsers.add_parser("add_storing_index", help=add_storing_index.__doc__)
-    subparsers.add_parser("read_data_with_storing_index", help=insert_data.__doc__)
+    subparsers.add_parser("read_data_with_storing_index", help=read_data_with_storing_index.__doc__)
     subparsers.add_parser(
         "create_table_with_timestamp", help=create_table_with_timestamp.__doc__
     )
