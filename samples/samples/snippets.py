@@ -31,8 +31,8 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
+from google.cloud.spanner_v1.data_types import JsonObject
 from google.protobuf import field_mask_pb2  # type: ignore
-
 OPERATION_TIMEOUT_SECONDS = 240
 
 
@@ -1069,17 +1069,17 @@ def update_data_with_json(instance_id, database_id):
             values=[
                 (
                     4,
-                    json.dumps(
+                    JsonObject(
                         [
-                            {"name": "room 1", "open": True},
-                            {"name": "room 2", "open": False},
+                            JsonObject({"name": "room 1", "open": True}),
+                            JsonObject({"name": "room 2", "open": False}),
                         ]
                     ),
                 ),
-                (19, json.dumps({"rating": 9, "open": True})),
+                (19, JsonObject(rating=9, open=True)),
                 (
                     42,
-                    json.dumps(
+                    JsonObject(
                         {
                             "name": None,
                             "open": {"Monday": True, "Tuesday": False},
