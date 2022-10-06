@@ -28,7 +28,6 @@ import time
 from google.cloud import spanner, spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import param_types
-from google.protobuf import field_mask_pb2  # type: ignore
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -1459,8 +1458,6 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_bool(args.instance_id, args.database_id)
     elif args.command == "query_data_with_bytes":
         query_data_with_bytes(args.instance_id, args.database_id)
-    elif args.command == "query_data_with_date":
-        query_data_with_date(args.instance_id, args.database_id)
     elif args.command == "query_data_with_float":
         query_data_with_float(args.instance_id, args.database_id)
     elif args.command == "query_data_with_int":
