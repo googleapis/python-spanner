@@ -1466,6 +1466,8 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_string(args.instance_id, args.database_id)
     elif args.command == "query_data_with_timestamp_parameter":
         query_data_with_timestamp_parameter(args.instance_id, args.database_id)
+    elif args.command == "query_data_with_timestamp_parameter":
+        query_data_with_numeric_parameter(args.instance_id, args.database_id)
     elif args.command == "query_data_with_query_options":
         query_data_with_query_options(args.instance_id, args.database_id)
     elif args.command == "create_client_with_query_options":
