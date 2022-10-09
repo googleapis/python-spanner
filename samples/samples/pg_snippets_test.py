@@ -16,6 +16,7 @@ import time
 import uuid
 
 from google.api_core import exceptions
+from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 import pytest
 from test_utils.retry import RetryErrors
 
@@ -49,6 +50,16 @@ def sample_name():
 
 
 @pytest.fixture(scope="module")
+def spanner_dialect():
+    """Spanner dialect to be used for this sample.
+
+    The dialect is used to initialize the dialect for the database.
+    It can either be GoogleStandardSql or PostgreSql.
+    """
+    return DatabaseDialect.POSTGRESQL
+
+
+@pytest.fixture(scope="module")
 def create_instance_id():
     """Id for the low-cost instance."""
     return f"create-instance-{uuid.uuid4().hex[:10]}"
@@ -79,7 +90,6 @@ def cmek_database_id():
 def default_leader_database_id():
     return f"leader_db_{uuid.uuid4().hex[:10]}"
 
-
 @pytest.fixture(scope="module")
 def database_ddl():
     """Sequence of DDL statements used to set up the database.
@@ -93,21 +103,6 @@ def database_ddl():
 def default_leader():
     """Default leader for multi-region instances."""
     return "us-east4"
-
-
-@pytest.fixture(scope="module")
-def user_managed_instance_config_name(spanner_client):
-    name = f"custom-python-samples-config-{uuid.uuid4().hex[:10]}"
-    yield name
-    snippets.delete_instance_config(
-        "{}/instanceConfigs/{}".format(spanner_client.project_name, name)
-    )
-    return
-
-
-@pytest.fixture(scope="module")
-def base_instance_config_id(spanner_client):
-    return "{}/instanceConfigs/{}".format(spanner_client.project_name, "nam7")
 
 
 def test_create_instance_explicit(spanner_client, create_instance_id):

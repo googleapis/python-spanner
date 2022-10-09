@@ -17,6 +17,7 @@ import uuid
 
 from google.api_core import exceptions
 from google.cloud import spanner
+from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 import pytest
 from test_utils.retry import RetryErrors
 
@@ -46,6 +47,16 @@ retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
 @pytest.fixture(scope="module")
 def sample_name():
     return "snippets"
+
+
+@pytest.fixture(scope="module")
+def spanner_dialect():
+    """Spanner dialect to be used for this sample.
+
+    The dialect is used to initialize the dialect for the database.
+    It can either be GoogleStandardSql or PostgreSql.
+    """
+    return DatabaseDialect.
 
 
 @pytest.fixture(scope="module")
