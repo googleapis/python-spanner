@@ -215,7 +215,8 @@ def read_data(instance_id, database_id):
     with database.snapshot() as snapshot:
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
-            table="Albums", columns=("SingerId", "AlbumId", "AlbumTitle"), keyset=keyset
+            table="Albums", columns=("SingerId", "AlbumId", "AlbumTitle"),
+            keyset=keyset
         )
 
         for row in results:
@@ -306,7 +307,8 @@ def read_write_transaction(instance_id, database_id):
         if second_album_budget < transfer_amount:
             # Raising an exception will automatically roll back the
             # transaction.
-            raise ValueError("The second album doesn't have enough funds to transfer")
+            raise ValueError(
+                "The second album doesn't have enough funds to transfer")
 
         # Read the first album's budget.
         first_album_keyset = spanner.KeySet(keys=[(1, 1)])
@@ -468,7 +470,8 @@ def read_data_with_storing_index(instance_id, database_id):
         )
 
         for row in results:
-            print("AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(*row))
+            print("AlbumId: {}, AlbumTitle: {}, " "MarketingBudget: {}".format(
+                *row))
 
 
 # [END spanner_postgresql_read_data_with_storing_index]
@@ -500,7 +503,8 @@ def read_only_transaction(instance_id, database_id):
         # return the same data.
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
-            table="Albums", columns=("SingerId", "AlbumId", "AlbumTitle"), keyset=keyset
+            table="Albums", columns=("SingerId", "AlbumId", "AlbumTitle"),
+            keyset=keyset
         )
 
         print("Results from second read:")
@@ -668,7 +672,8 @@ def update_data_with_timestamp(instance_id, database_id):
     with database.batch() as batch:
         batch.update(
             table="Albums",
-            columns=("SingerId", "AlbumId", "MarketingBudget", "LastUpdateTime"),
+            columns=(
+            "SingerId", "AlbumId", "MarketingBudget", "LastUpdateTime"),
             values=[
                 (1, 1, 1000000, spanner.COMMIT_TIMESTAMP),
                 (2, 2, 750000, spanner.COMMIT_TIMESTAMP),
@@ -690,7 +695,8 @@ def add_timestamp_column(instance_id, database_id):
     database = instance.database(database_id)
 
     operation = database.update_ddl(
-        ["ALTER TABLE Albums ADD COLUMN LastUpdateTime " "SPANNER.COMMIT_TIMESTAMP"]
+        [
+            "ALTER TABLE Albums ADD COLUMN LastUpdateTime " "SPANNER.COMMIT_TIMESTAMP"]
     )
 
     print("Waiting for operation to complete...")
@@ -785,7 +791,8 @@ def insert_data_with_timestamp(instance_id, database_id):
     with database.batch() as batch:
         batch.insert(
             table="Performances",
-            columns=("SingerId", "VenueId", "EventDate", "Revenue", "LastUpdateTime"),
+            columns=(
+            "SingerId", "VenueId", "EventDate", "Revenue", "LastUpdateTime"),
             values=[
                 (1, 4, "2017-10-05", 11000, spanner.COMMIT_TIMESTAMP),
                 (1, 19, "2017-11-02", 15000, spanner.COMMIT_TIMESTAMP),
@@ -921,7 +928,8 @@ def delete_data_with_partitioned_dml(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    row_ct = database.execute_partitioned_dml("DELETE FROM Singers WHERE SingerId > 10")
+    row_ct = database.execute_partitioned_dml(
+        "DELETE FROM Singers WHERE SingerId > 10")
 
     print("{} record(s) deleted.".format(row_ct))
     # [END spanner_postgresql_dml_partitioned_delete]
@@ -952,7 +960,8 @@ def update_with_batch_dml(instance_id, database_id):
     )
 
     def update_albums(transaction):
-        status, row_cts = transaction.batch_update([insert_statement, update_statement])
+        status, row_cts = transaction.batch_update(
+            [insert_statement, update_statement])
 
         if status.code != OK:
             # Do handling here.
@@ -960,7 +969,8 @@ def update_with_batch_dml(instance_id, database_id):
             # `commit` is called by `run_in_transaction`.
             return
 
-        print("Executed {} SQL statements using Batch DML.".format(len(row_cts)))
+        print(
+            "Executed {} SQL statements using Batch DML.".format(len(row_cts)))
 
     database.run_in_transaction(update_albums)
     # [END spanner_postgresql_dml_batch_update]
@@ -1139,7 +1149,8 @@ def query_data_with_float(instance_id, database_id):
         )
 
         for row in results:
-            print("VenueId: {}, VenueName: {}, PopularityScore: {}".format(*row))
+            print(
+                "VenueId: {}, VenueName: {}, PopularityScore: {}".format(*row))
     # [END spanner_postgresql_query_with_float_parameter]
 
 
@@ -1207,8 +1218,9 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     # Avoid time drift on the local machine.
     # https://github.com/GoogleCloudPlatform/python-docs-samples/issues/4197.
     example_timestamp = (
-        datetime.datetime.utcnow() + datetime.timedelta(days=1)
-    ).isoformat() + "Z"
+                            datetime.datetime.utcnow() + datetime.timedelta(
+                            days=1)
+                        ).isoformat() + "Z"
     # [START spanner_postgresql_query_with_timestamp_parameter]
     param = {"p1": example_timestamp}
     param_type = {"p1": param_types.TIMESTAMP}
@@ -1300,11 +1312,13 @@ def query_data_with_query_options(instance_id, database_id):
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
-        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     parser.add_argument("instance_id", help="Your Cloud Spanner instance ID.")
     parser.add_argument(
-        "--database-id", help="Your Cloud Spanner database ID.", default="example_db"
+        "--database-id", help="Your Cloud Spanner database ID.",
+        default="example_db"
     )
 
     subparsers = parser.add_subparsers(dest="command")
@@ -1320,28 +1334,36 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser(
         "query_data_with_new_column", help=query_data_with_new_column.__doc__
     )
-    subparsers.add_parser("read_write_transaction", help=read_write_transaction.__doc__)
-    subparsers.add_parser("read_only_transaction", help=read_only_transaction.__doc__)
+    subparsers.add_parser("read_write_transaction",
+                          help=read_write_transaction.__doc__)
+    subparsers.add_parser("read_only_transaction",
+                          help=read_only_transaction.__doc__)
     subparsers.add_parser("add_index", help=add_index.__doc__)
-    subparsers.add_parser("read_data_with_index", help=read_data_with_index.__doc__)
+    subparsers.add_parser("read_data_with_index",
+                          help=read_data_with_index.__doc__)
     subparsers.add_parser("add_storing_index", help=add_storing_index.__doc__)
-    subparsers.add_parser("read_data_with_storing_index", help=read_data_with_storing_index.__doc__)
+    subparsers.add_parser("read_data_with_storing_index",
+                          help=read_data_with_storing_index.__doc__)
     subparsers.add_parser(
         "create_table_with_timestamp", help=create_table_with_timestamp.__doc__
     )
     subparsers.add_parser(
         "insert_data_with_timestamp", help=insert_data_with_timestamp.__doc__
     )
-    subparsers.add_parser("add_timestamp_column", help=add_timestamp_column.__doc__)
+    subparsers.add_parser("add_timestamp_column",
+                          help=add_timestamp_column.__doc__)
     subparsers.add_parser(
         "update_data_with_timestamp", help=update_data_with_timestamp.__doc__
     )
     subparsers.add_parser(
         "query_data_with_timestamp", help=query_data_with_timestamp.__doc__
     )
-    subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
-    subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
-    subparsers.add_parser("delete_data_with_dml", help=delete_data_with_dml.__doc__)
+    subparsers.add_parser("insert_data_with_dml",
+                          help=insert_data_with_dml.__doc__)
+    subparsers.add_parser("update_data_with_dml",
+                          help=update_data_with_dml.__doc__)
+    subparsers.add_parser("delete_data_with_dml",
+                          help=delete_data_with_dml.__doc__)
     subparsers.add_parser(
         "dml_write_read_transaction", help=dml_write_read_transaction.__doc__
     )
@@ -1360,16 +1382,23 @@ if __name__ == "__main__":  # noqa: C901
         "delete_data_with_partitioned_dml",
         help=delete_data_with_partitioned_dml.__doc__,
     )
-    subparsers.add_parser("update_with_batch_dml", help=update_with_batch_dml.__doc__)
+    subparsers.add_parser("update_with_batch_dml",
+                          help=update_with_batch_dml.__doc__)
     subparsers.add_parser(
         "create_table_with_datatypes", help=create_table_with_datatypes.__doc__
     )
-    subparsers.add_parser("insert_datatypes_data", help=insert_datatypes_data.__doc__)
-    subparsers.add_parser("query_data_with_bool", help=query_data_with_bool.__doc__)
-    subparsers.add_parser("query_data_with_bytes", help=query_data_with_bytes.__doc__)
-    subparsers.add_parser("query_data_with_float", help=query_data_with_float.__doc__)
-    subparsers.add_parser("query_data_with_int", help=query_data_with_int.__doc__)
-    subparsers.add_parser("query_data_with_string", help=query_data_with_string.__doc__)
+    subparsers.add_parser("insert_datatypes_data",
+                          help=insert_datatypes_data.__doc__)
+    subparsers.add_parser("query_data_with_bool",
+                          help=query_data_with_bool.__doc__)
+    subparsers.add_parser("query_data_with_bytes",
+                          help=query_data_with_bytes.__doc__)
+    subparsers.add_parser("query_data_with_float",
+                          help=query_data_with_float.__doc__)
+    subparsers.add_parser("query_data_with_int",
+                          help=query_data_with_int.__doc__)
+    subparsers.add_parser("query_data_with_string",
+                          help=query_data_with_string.__doc__)
     subparsers.add_parser(
         "query_data_with_timestamp_parameter",
         help=query_data_with_timestamp_parameter.__doc__,
@@ -1379,7 +1408,8 @@ if __name__ == "__main__":  # noqa: C901
         help=query_data_with_numeric_parameter.__doc__,
     )
     subparsers.add_parser(
-        "query_data_with_query_options", help=query_data_with_query_options.__doc__
+        "query_data_with_query_options",
+        help=query_data_with_query_options.__doc__
     )
     subparsers.add_parser(
         "create_client_with_query_options",

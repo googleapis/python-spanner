@@ -90,6 +90,7 @@ def cmek_database_id():
 def default_leader_database_id():
     return f"leader_db_{uuid.uuid4().hex[:10]}"
 
+
 @pytest.fixture(scope="module")
 def database_ddl():
     """Sequence of DDL statements used to set up the database.
@@ -187,7 +188,8 @@ def test_read_write_transaction(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_column"])
 def test_query_data_with_new_column(capsys, instance_id, sample_database):
-    snippets.query_data_with_new_column(instance_id, sample_database.database_id)
+    snippets.query_data_with_new_column(instance_id,
+                                        sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "SingerId: 1, AlbumId: 1, MarketingBudget: 300000" in out
     assert "SingerId: 2, AlbumId: 2, MarketingBudget: 300000" in out
@@ -218,7 +220,8 @@ def test_add_storing_index(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_storing_index"])
 def test_read_data_with_storing_index(capsys, instance_id, sample_database):
-    snippets.read_data_with_storing_index(instance_id, sample_database.database_id)
+    snippets.read_data_with_storing_index(instance_id,
+                                          sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "300000" in out
 
@@ -240,7 +243,8 @@ def test_add_timestamp_column(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_timestamp_column"])
 def test_update_data_with_timestamp(capsys, instance_id, sample_database):
-    snippets.update_data_with_timestamp(instance_id, sample_database.database_id)
+    snippets.update_data_with_timestamp(instance_id,
+                                        sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Updated data" in out
 
@@ -255,14 +259,16 @@ def test_query_data_with_timestamp(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(name="create_table_with_timestamp")
 def test_create_table_with_timestamp(capsys, instance_id, sample_database):
-    snippets.create_table_with_timestamp(instance_id, sample_database.database_id)
+    snippets.create_table_with_timestamp(instance_id,
+                                         sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Created Performances table on database" in out
 
 
 @pytest.mark.dependency(depends=["create_table_with_datatypes"])
 def test_insert_data_with_timestamp(capsys, instance_id, sample_database):
-    snippets.insert_data_with_timestamp(instance_id, sample_database.database_id)
+    snippets.insert_data_with_timestamp(instance_id,
+                                        sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Inserted data." in out
 
@@ -290,7 +296,8 @@ def test_delete_data_with_dml(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(name="dml_write_read_transaction")
 def test_dml_write_read_transaction(capsys, instance_id, sample_database):
-    snippets.dml_write_read_transaction(instance_id, sample_database.database_id)
+    snippets.dml_write_read_transaction(instance_id,
+                                        sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "1 record(s) inserted." in out
     assert "FirstName: Timothy, LastName: Campbell" in out
@@ -312,21 +319,24 @@ def test_query_data_with_parameter(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_column"])
 def test_write_with_dml_transaction(capsys, instance_id, sample_database):
-    snippets.write_with_dml_transaction(instance_id, sample_database.database_id)
+    snippets.write_with_dml_transaction(instance_id,
+                                        sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Transferred 200000 from Album2's budget to Album1's" in out
 
 
 @pytest.mark.dependency(depends=["add_column"])
 def update_data_with_partitioned_dml(capsys, instance_id, sample_database):
-    snippets.update_data_with_partitioned_dml(instance_id, sample_database.database_id)
+    snippets.update_data_with_partitioned_dml(instance_id,
+                                              sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "3 record(s) updated" in out
 
 
 @pytest.mark.dependency(depends=["insert_with_dml"])
 def test_delete_data_with_partitioned_dml(capsys, instance_id, sample_database):
-    snippets.delete_data_with_partitioned_dml(instance_id, sample_database.database_id)
+    snippets.delete_data_with_partitioned_dml(instance_id,
+                                              sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "6 record(s) deleted" in out
 
@@ -340,7 +350,8 @@ def test_update_with_batch_dml(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(name="create_table_with_datatypes")
 def test_create_table_with_datatypes(capsys, instance_id, sample_database):
-    snippets.create_table_with_datatypes(instance_id, sample_database.database_id)
+    snippets.create_table_with_datatypes(instance_id,
+                                         sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Created Venues table on database" in out
 
@@ -393,14 +404,17 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(depends=["add_numeric_column"])
-def test_query_data_with_numeric_parameter(capsys, instance_id, sample_database):
-    snippets.query_data_with_numeric_parameter(instance_id, sample_database.database_id)
+def test_query_data_with_numeric_parameter(capsys, instance_id,
+    sample_database):
+    snippets.query_data_with_numeric_parameter(instance_id,
+                                               sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "VenueId: 4, Revenue: 35000" in out
 
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
-def test_query_data_with_timestamp_parameter(capsys, instance_id, sample_database):
+def test_query_data_with_timestamp_parameter(capsys, instance_id,
+    sample_database):
     snippets.query_data_with_timestamp_parameter(
         instance_id, sample_database.database_id
     )
@@ -412,7 +426,8 @@ def test_query_data_with_timestamp_parameter(capsys, instance_id, sample_databas
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_query_options(capsys, instance_id, sample_database):
-    snippets.query_data_with_query_options(instance_id, sample_database.database_id)
+    snippets.query_data_with_query_options(instance_id,
+                                           sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "VenueId: 4, VenueName: Venue 4, LastUpdateTime:" in out
     assert "VenueId: 19, VenueName: Venue 19, LastUpdateTime:" in out
@@ -421,7 +436,8 @@ def test_query_data_with_query_options(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_create_client_with_query_options(capsys, instance_id, sample_database):
-    snippets.create_client_with_query_options(instance_id, sample_database.database_id)
+    snippets.create_client_with_query_options(instance_id,
+                                              sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "VenueId: 4, VenueName: Venue 4, LastUpdateTime:" in out
     assert "VenueId: 19, VenueName: Venue 19, LastUpdateTime:" in out
