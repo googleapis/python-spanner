@@ -50,7 +50,7 @@ def sample_name():
 
 
 @pytest.fixture(scope="module")
-def spanner_dialect():
+def database_dialect():
     """Spanner dialect to be used for this sample.
 
     The dialect is used to initialize the dialect for the database.

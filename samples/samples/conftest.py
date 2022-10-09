@@ -42,14 +42,14 @@ def sample_name():
 
 
 @pytest.fixture(scope="module")
-def spanner_dialect():
-    """Spanner dialect to be used for this sample.
+def database_dialect():
+    """Database dialect to be used for this sample.
 
       The dialect is used to initialize the dialect for the database.
       It can either be GoogleStandardSql or PostgreSql.
       """
     raise NotImplementedError(
-      "Define 'spanner_dialect' fixture in sample test driver")
+      "Define 'database_dialect' fixture in sample test driver")
 
 
 @pytest.fixture(scope="session")

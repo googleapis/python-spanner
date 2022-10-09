@@ -50,7 +50,7 @@ def sample_name():
 
 
 @pytest.fixture(scope="module")
-def spanner_dialect():
+def database_dialect():
     """Spanner dialect to be used for this sample.
 
     The dialect is used to initialize the dialect for the database.
@@ -414,7 +414,7 @@ def test_query_data_with_numeric_parameter(capsys, instance_id,
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_timestamp_parameter(capsys, instance_id,
-  sample_database):
+                                             sample_database):
     snippets.query_data_with_timestamp_parameter(
       instance_id, sample_database.database_id
     )
