@@ -56,7 +56,7 @@ def spanner_dialect():
     The dialect is used to initialize the dialect for the database.
     It can either be GoogleStandardSql or PostgreSql.
     """
-    return DatabaseDialect.
+    return DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 @pytest.fixture(scope="module")
@@ -111,7 +111,7 @@ def user_managed_instance_config_name(spanner_client):
     name = f"custom-python-samples-config-{uuid.uuid4().hex[:10]}"
     yield name
     snippets.delete_instance_config(
-        "{}/instanceConfigs/{}".format(spanner_client.project_name, name)
+      "{}/instanceConfigs/{}".format(spanner_client.project_name, name)
     )
     return
 
@@ -140,8 +140,8 @@ def test_create_database_explicit(sample_instance, create_database_id):
 def test_create_instance_with_processing_units(capsys, lci_instance_id):
     processing_units = 500
     retry_429(snippets.create_instance_with_processing_units)(
-        lci_instance_id,
-        processing_units,
+      lci_instance_id,
+      processing_units,
     )
     out, _ = capsys.readouterr()
     assert lci_instance_id in out
@@ -152,10 +152,10 @@ def test_create_instance_with_processing_units(capsys, lci_instance_id):
 
 
 def test_create_database_with_encryption_config(
-    capsys, instance_id, cmek_database_id, kms_key_name
+  capsys, instance_id, cmek_database_id, kms_key_name
 ):
     snippets.create_database_with_encryption_key(
-        instance_id, cmek_database_id, kms_key_name
+      instance_id, cmek_database_id, kms_key_name
     )
     out, _ = capsys.readouterr()
     assert cmek_database_id in out
@@ -177,10 +177,10 @@ def test_list_instance_config(capsys):
 
 @pytest.mark.dependency(name="create_instance_config")
 def test_create_instance_config(
-    capsys, user_managed_instance_config_name, base_instance_config_id
+  capsys, user_managed_instance_config_name, base_instance_config_id
 ):
     snippets.create_instance_config(
-        user_managed_instance_config_name, base_instance_config_id
+      user_managed_instance_config_name, base_instance_config_id
     )
     out, _ = capsys.readouterr()
     assert "Created instance configuration" in out
@@ -197,9 +197,9 @@ def test_update_instance_config(capsys, user_managed_instance_config_name):
 def test_delete_instance_config(capsys, user_managed_instance_config_name):
     spanner_client = spanner.Client()
     snippets.delete_instance_config(
-        "{}/instanceConfigs/{}".format(
-            spanner_client.project_name, user_managed_instance_config_name
-        )
+      "{}/instanceConfigs/{}".format(
+        spanner_client.project_name, user_managed_instance_config_name
+      )
     )
     out, _ = capsys.readouterr()
     assert "successfully deleted" in out
@@ -218,15 +218,15 @@ def test_list_databases(capsys, instance_id):
 
 
 def test_create_database_with_default_leader(
-    capsys,
-    multi_region_instance,
-    multi_region_instance_id,
-    default_leader_database_id,
-    default_leader,
+  capsys,
+  multi_region_instance,
+  multi_region_instance_id,
+  default_leader_database_id,
+  default_leader,
 ):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.create_database_with_default_leader)(
-        multi_region_instance_id, default_leader_database_id, default_leader
+      multi_region_instance_id, default_leader_database_id, default_leader
     )
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
@@ -234,15 +234,15 @@ def test_create_database_with_default_leader(
 
 
 def test_update_database_with_default_leader(
-    capsys,
-    multi_region_instance,
-    multi_region_instance_id,
-    default_leader_database_id,
-    default_leader,
+  capsys,
+  multi_region_instance,
+  multi_region_instance_id,
+  default_leader_database_id,
+  default_leader,
 ):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
     retry_429(snippets.update_database_with_default_leader)(
-        multi_region_instance_id, default_leader_database_id, default_leader
+      multi_region_instance_id, default_leader_database_id, default_leader
     )
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
@@ -256,14 +256,14 @@ def test_get_database_ddl(capsys, instance_id, sample_database):
 
 
 def test_query_information_schema_database_options(
-    capsys,
-    multi_region_instance,
-    multi_region_instance_id,
-    default_leader_database_id,
-    default_leader,
+  capsys,
+  multi_region_instance,
+  multi_region_instance_id,
+  default_leader_database_id,
+  default_leader,
 ):
     snippets.query_information_schema_database_options(
-        multi_region_instance_id, default_leader_database_id
+      multi_region_instance_id, default_leader_database_id
     )
     out, _ = capsys.readouterr()
     assert default_leader in out
@@ -576,8 +576,8 @@ def test_create_table_with_datatypes(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(
-    name="insert_datatypes_data",
-    depends=["create_table_with_datatypes"],
+  name="insert_datatypes_data",
+  depends=["create_table_with_datatypes"],
 )
 def test_insert_datatypes_data(capsys, instance_id, sample_database):
     snippets.insert_datatypes_data(instance_id, sample_database.database_id)
@@ -639,8 +639,8 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(
-    name="add_numeric_column",
-    depends=["create_table_with_datatypes"],
+  name="add_numeric_column",
+  depends=["create_table_with_datatypes"],
 )
 def test_add_numeric_column(capsys, instance_id, sample_database):
     snippets.add_numeric_column(instance_id, sample_database.database_id)
@@ -657,7 +657,7 @@ def test_update_data_with_numeric(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_numeric_column"])
 def test_query_data_with_numeric_parameter(capsys, instance_id,
-    sample_database):
+  sample_database):
     snippets.query_data_with_numeric_parameter(instance_id,
                                                sample_database.database_id)
     out, _ = capsys.readouterr()
@@ -665,8 +665,8 @@ def test_query_data_with_numeric_parameter(capsys, instance_id,
 
 
 @pytest.mark.dependency(
-    name="add_json_column",
-    depends=["create_table_with_datatypes"],
+  name="add_json_column",
+  depends=["create_table_with_datatypes"],
 )
 def test_add_json_column(capsys, instance_id, sample_database):
     snippets.add_json_column(instance_id, sample_database.database_id)
@@ -691,9 +691,9 @@ def test_query_data_with_json_parameter(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_timestamp_parameter(capsys, instance_id,
-    sample_database):
+  sample_database):
     snippets.query_data_with_timestamp_parameter(
-        instance_id, sample_database.database_id
+      instance_id, sample_database.database_id
     )
     out, _ = capsys.readouterr()
     assert "VenueId: 4, VenueName: Venue 4, LastUpdateTime:" in out

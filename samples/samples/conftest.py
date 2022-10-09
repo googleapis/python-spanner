@@ -38,7 +38,7 @@ def sample_name():
       aid in debugging leaked instances.
       """
     raise NotImplementedError(
-        "Define 'sample_name' fixture in sample test driver")
+      "Define 'sample_name' fixture in sample test driver")
 
 
 @pytest.fixture(scope="module")
@@ -49,7 +49,7 @@ def spanner_dialect():
       It can either be GoogleStandardSql or PostgreSql.
       """
     raise NotImplementedError(
-        "Define 'spanner_dialect' fixture in sample test driver")
+      "Define 'spanner_dialect' fixture in sample test driver")
 
 
 @pytest.fixture(scope="session")
@@ -100,7 +100,7 @@ def multi_region_instance_id():
 @pytest.fixture(scope="module")
 def instance_config(spanner_client):
     return "{}/instanceConfigs/{}".format(
-        spanner_client.project_name, "regional-us-central1"
+      spanner_client.project_name, "regional-us-central1"
     )
 
 
@@ -111,20 +111,20 @@ def multi_region_instance_config(spanner_client):
 
 @pytest.fixture(scope="module")
 def sample_instance(
-    spanner_client,
-    cleanup_old_instances,
-    instance_id,
-    instance_config,
-    sample_name,
+  spanner_client,
+  cleanup_old_instances,
+  instance_id,
+  instance_config,
+  sample_name,
 ):
     sample_instance = spanner_client.instance(
-        instance_id,
-        instance_config,
-        labels={
-            "cloud_spanner_samples": "true",
-            "sample_name": sample_name,
-            "created": str(int(time.time())),
-        },
+      instance_id,
+      instance_config,
+      labels={
+        "cloud_spanner_samples": "true",
+        "sample_name": sample_name,
+        "created": str(int(time.time())),
+      },
     )
     op = retry_429(sample_instance.create)()
     op.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
@@ -146,20 +146,20 @@ def sample_instance(
 
 @pytest.fixture(scope="module")
 def multi_region_instance(
-    spanner_client,
-    cleanup_old_instances,
-    multi_region_instance_id,
-    multi_region_instance_config,
-    sample_name,
+  spanner_client,
+  cleanup_old_instances,
+  multi_region_instance_id,
+  multi_region_instance_config,
+  sample_name,
 ):
     multi_region_instance = spanner_client.instance(
-        multi_region_instance_id,
-        multi_region_instance_config,
-        labels={
-            "cloud_spanner_samples": "true",
-            "sample_name": sample_name,
-            "created": str(int(time.time())),
-        },
+      multi_region_instance_id,
+      multi_region_instance_config,
+      labels={
+        "cloud_spanner_samples": "true",
+        "sample_name": sample_name,
+        "created": str(int(time.time())),
+      },
     )
     op = retry_429(multi_region_instance.create)()
     op.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
@@ -199,22 +199,22 @@ def database_ddl():
 
 @pytest.fixture(scope="module")
 def sample_database(
-    sample_instance,
-    database_id,
-    database_ddl,
-    database_dialect):
+  sample_instance,
+  database_id,
+  database_ddl,
+  database_dialect):
     if database_dialect == DatabaseDialect.POSTGRESQL:
         sample_database = sample_instance.database(
-            database_id,
-            database_dialect=DatabaseDialect.POSTGRESQL,
+          database_id,
+          database_dialect=DatabaseDialect.POSTGRESQL,
         )
 
         if not sample_database.exists():
             sample_database.create()
 
         request = sample_instance.spanner_admin_database_v1.UpdateDatabaseDdlRequest(
-            database=sample_database.name,
-            statements=database_ddl,
+          database=sample_database.name,
+          statements=database_ddl,
         )
 
         sample_instance.database_admin_api.update_database_ddl(request)
@@ -223,8 +223,8 @@ def sample_database(
         sample_database.drop()
 
     sample_database = sample_instance.database(
-        database_id,
-        ddl_statements=database_ddl,
+      database_id,
+      ddl_statements=database_ddl,
     )
 
     if not sample_database.exists():
@@ -238,8 +238,8 @@ def sample_database(
 @pytest.fixture(scope="module")
 def kms_key_name(spanner_client):
     return "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}".format(
-        spanner_client.project,
-        "us-central1",
-        "spanner-test-keyring",
-        "spanner-test-cmek",
+      spanner_client.project,
+      "us-central1",
+      "spanner-test-keyring",
+      "spanner-test-cmek",
     )

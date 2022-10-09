@@ -357,8 +357,8 @@ def test_create_table_with_datatypes(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(
-    name="insert_datatypes_data",
-    depends=["create_table_with_datatypes"],
+  name="insert_datatypes_data",
+  depends=["create_table_with_datatypes"],
 )
 def test_insert_datatypes_data(capsys, instance_id, sample_database):
     snippets.insert_datatypes_data(instance_id, sample_database.database_id)
@@ -405,7 +405,7 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_numeric_column"])
 def test_query_data_with_numeric_parameter(capsys, instance_id,
-    sample_database):
+  sample_database):
     snippets.query_data_with_numeric_parameter(instance_id,
                                                sample_database.database_id)
     out, _ = capsys.readouterr()
@@ -414,9 +414,9 @@ def test_query_data_with_numeric_parameter(capsys, instance_id,
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_timestamp_parameter(capsys, instance_id,
-    sample_database):
+  sample_database):
     snippets.query_data_with_timestamp_parameter(
-        instance_id, sample_database.database_id
+      instance_id, sample_database.database_id
     )
     out, _ = capsys.readouterr()
     assert "VenueId: 4, VenueName: Venue 4, LastUpdateTime:" in out
