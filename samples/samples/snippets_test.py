@@ -657,7 +657,7 @@ def test_update_data_with_numeric(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_numeric_column"])
 def test_query_data_with_numeric_parameter(capsys, instance_id,
-  sample_database):
+                                           sample_database):
     snippets.query_data_with_numeric_parameter(instance_id,
                                                sample_database.database_id)
     out, _ = capsys.readouterr()
@@ -691,7 +691,7 @@ def test_query_data_with_json_parameter(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_timestamp_parameter(capsys, instance_id,
-  sample_database):
+                                             sample_database):
     snippets.query_data_with_timestamp_parameter(
       instance_id, sample_database.database_id
     )

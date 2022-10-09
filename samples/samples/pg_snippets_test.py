@@ -405,7 +405,7 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
 
 @pytest.mark.dependency(depends=["add_numeric_column"])
 def test_query_data_with_numeric_parameter(capsys, instance_id,
-  sample_database):
+                                           sample_database):
     snippets.query_data_with_numeric_parameter(instance_id,
                                                sample_database.database_id)
     out, _ = capsys.readouterr()

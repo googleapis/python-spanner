@@ -1217,10 +1217,8 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     # [END spanner_postgresql_query_with_timestamp_parameter]
     # Avoid time drift on the local machine.
     # https://github.com/GoogleCloudPlatform/python-docs-samples/issues/4197.
-    example_timestamp = (
-                          datetime.datetime.utcnow() + datetime.timedelta(
-                          days=1)
-                        ).isoformat() + "Z"
+    example_timestamp = (datetime.datetime.utcnow() + datetime.timedelta(days=1)
+                         ).isoformat() + "Z"
     # [START spanner_postgresql_query_with_timestamp_parameter]
     param = {"p1": example_timestamp}
     param_type = {"p1": param_types.TIMESTAMP}
