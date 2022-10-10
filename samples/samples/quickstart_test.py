@@ -22,16 +22,6 @@ def sample_name():
     return "quickstart"
 
 
-@pytest.fixture(scope="module")
-def database_dialect():
-    """Spanner dialect to be used for this sample.
-
-    The dialect is used to initialize the dialect for the database.
-    It can either be GoogleStandardSql or PostgreSql.
-    """
-    return DatabaseDialect.GOOGLE_STANDARD_SQL
-
-
 def test_quickstart(capsys, instance_id, sample_database):
     quickstart.run_quickstart(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()

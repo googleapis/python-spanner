@@ -50,8 +50,9 @@ def database_dialect():
       The dialect is used to initialize the dialect for the database.
       It can either be GoogleStandardSql or PostgreSql.
       """
-    raise NotImplementedError(
-      "Define 'database_dialect' fixture in sample test driver")
+    # By default, we consider GOOGLE_STANDARD_SQL dialect. Other specific tests
+    # can override this if required.
+    return DatabaseDialect.GOOGLE_STANDARD_SQL
 
 
 @pytest.fixture(scope="session")
