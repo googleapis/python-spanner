@@ -29,6 +29,8 @@ from test_utils import retry
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
+OPERATION_TIMEOUT_SECONDS = 120 # seconds
+
 retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
 
 
@@ -214,7 +216,8 @@ def sample_database(
         )
 
         if not sample_database.exists():
-            sample_database.create()
+            operation = sample_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
 
         request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
           database=sample_database.name,
@@ -223,8 +226,9 @@ def sample_database(
 
         operation =\
             spanner_client.database_admin_api.update_database_ddl(request)
+        operation.result(OPERATION_TIMEOUT_SECONDS)
 
-        yield operation, sample_database
+        yield sample_database
 
         sample_database.drop()
         return
@@ -235,7 +239,8 @@ def sample_database(
     )
 
     if not sample_database.exists():
-        sample_database.create()
+        operation = sample_database.create()
+        operation.result(OPERATION_TIMEOUT_SECONDS)
 
     yield sample_database
 
