@@ -36,7 +36,7 @@ CREATE_TABLE_ALBUMS = """\
 CREATE TABLE Albums (
     SingerId     BIGINT NOT NULL,
     AlbumId      BIGINT NOT NULL,
-    AlbumTitle   CHARACTER VARYING(MAX),
+    AlbumTitle   CHARACTER VARYING(1024),
     PRIMARY KEY (SingerId, AlbumId)
     ) INTERLEAVE IN PARENT Singers ON DELETE CASCADE
 """
