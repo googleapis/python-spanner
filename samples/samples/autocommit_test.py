@@ -16,6 +16,16 @@ def sample_name():
     return "autocommit"
 
 
+@pytest.fixture(scope="module")
+def database_dialect():
+    """Spanner dialect to be used for this sample.
+
+    The dialect is used to initialize the dialect for the database.
+    It can either be GoogleStandardSql or PostgreSql.
+    """
+    return DatabaseDialect.GOOGLE_STANDARD_SQL
+
+
 @RetryErrors(exception=Aborted, max_tries=2)
 def test_enable_autocommit_mode(capsys, instance_id, sample_database):
     # Delete table if it exists for retry attempts.

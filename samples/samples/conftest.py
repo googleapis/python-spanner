@@ -17,6 +17,8 @@ import time
 import uuid
 
 from google.api_core import exceptions
+
+from google.cloud import spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import backup
 from google.cloud.spanner_v1 import client
@@ -199,6 +201,7 @@ def database_ddl():
 
 @pytest.fixture(scope="module")
 def sample_database(
+  spanner_client,
   sample_instance,
   database_id,
   database_ddl,
@@ -212,15 +215,16 @@ def sample_database(
         if not sample_database.exists():
             sample_database.create()
 
-        request = sample_instance.spanner_admin_database_v1.UpdateDatabaseDdlRequest(
+        request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
           database=sample_database.name,
           statements=database_ddl,
         )
 
-        sample_instance.database_admin_api.update_database_ddl(request)
+        spanner_client.database_admin_api.update_database_ddl(request)
         yield sample_database
 
         sample_database.drop()
+        return
 
     sample_database = sample_instance.database(
       database_id,

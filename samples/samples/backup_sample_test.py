@@ -35,6 +35,16 @@ def unique_backup_id():
     return f"test-backup-{uuid.uuid4().hex[:10]}"
 
 
+@pytest.fixture(scope="module")
+def database_dialect():
+    """Spanner dialect to be used for this sample.
+
+    The dialect is used to initialize the dialect for the database.
+    It can either be GoogleStandardSql or PostgreSql.
+    """
+    return DatabaseDialect.GOOGLE_STANDARD_SQL
+
+
 RESTORE_DB_ID = unique_database_id()
 BACKUP_ID = unique_backup_id()
 CMEK_RESTORE_DB_ID = unique_database_id()
