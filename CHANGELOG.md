@@ -4,7 +4,7 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
-## [3.22.2](https://github.com/googleapis/python-spanner/compare/v3.22.1...v3.22.2) (2022-10-07)
+## [3.22.2](https://github.com/googleapis/python-spanner/compare/v3.22.1...v3.22.2) (2022-10-10)
 ￼
 ### Bug Fixes
 ￼
