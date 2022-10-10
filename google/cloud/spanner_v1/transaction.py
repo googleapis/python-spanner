@@ -61,9 +61,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :raises: :exc:`ValueError` if the object's state is invalid for making
                  API requests.
         """
-        if self._transaction_id is None:
-            raise ValueError("Transaction is not begun")
-
+        
         if self.committed is not None:
             raise ValueError("Transaction is already committed")
 
@@ -78,7 +76,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         :returns: a selector configured for read-write transaction semantics.
         """
         self._check_state()
-        return TransactionSelector(id=self._transaction_id)
+        
+        if self._transaction_id is None:
+            return TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+        else:
+            return TransactionSelector(id=self._transaction_id)
 
     def begin(self):
         """Begin a transaction on the database.
@@ -111,15 +113,17 @@ class Transaction(_SnapshotBase, _BatchBase):
     def rollback(self):
         """Roll back a transaction on the database."""
         self._check_state()
-        database = self._session._database
-        api = database.spanner_api
-        metadata = _metadata_with_prefix(database.name)
-        with trace_call("CloudSpanner.Rollback", self._session):
-            api.rollback(
-                session=self._session.name,
-                transaction_id=self._transaction_id,
-                metadata=metadata,
-            )
+
+        if self._transaction_id is not None:
+            database = self._session._database
+            api = database.spanner_api
+            metadata = _metadata_with_prefix(database.name)
+            with trace_call("CloudSpanner.Rollback", self._session):
+                api.rollback(
+                    session=self._session.name,
+                    transaction_id=self._transaction_id,
+                    metadata=metadata,
+                )
         self.rolled_back = True
         del self._session._transaction
 
@@ -142,6 +146,8 @@ class Transaction(_SnapshotBase, _BatchBase):
         :raises ValueError: if there are no mutations to commit.
         """
         self._check_state()
+        if self._transaction_id is None:
+            self.begin()
 
         database = self._session._database
         api = database.spanner_api
@@ -302,6 +308,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = api.execute_sql(
                 request=request, metadata=metadata, retry=retry, timeout=timeout
             )
+
+        if self._transaction_id is None and response.metadata.transaction is not None:
+            self._transaction_id = response.metadata.transaction.id
+
         return response.stats.row_count_exact
 
     def batch_update(self, statements, request_options=None):
@@ -378,11 +388,15 @@ class Transaction(_SnapshotBase, _BatchBase):
         row_counts = [
             result_set.stats.row_count_exact for result_set in response.result_sets
         ]
+
+        for result_set in response.result_sets:
+            if self._transaction_id is None and result_set.metadata.transaction is not None:
+                self._transaction_id = result_set.metadata.transaction.id
+        
         return response.status, row_counts
 
     def __enter__(self):
         """Begin ``with`` block."""
-        self.begin()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):

@@ -352,9 +352,7 @@ class Session(object):
                 txn.transaction_tag = transaction_tag
             else:
                 txn = self._transaction
-            if txn._transaction_id is None:
-                txn.begin()
-
+            
             try:
                 attempts += 1
                 return_value = func(txn, *args, **kw)

@@ -91,12 +91,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertTrue(transaction._multi_use)
         self.assertEqual(transaction._execute_sql_count, 0)
 
-    def test__check_state_not_begun(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        with self.assertRaises(ValueError):
-            transaction._check_state()
-
     def test__check_state_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -194,14 +188,6 @@ class TestTransaction(OpenTelemetryBase):
             "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
         )
 
-    def test_rollback_not_begun(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        with self.assertRaises(ValueError):
-            transaction.rollback()
-
-        self.assertNoSpans()
-
     def test_rollback_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -266,14 +252,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Rollback", attributes=TestTransaction.BASE_ATTRIBUTES
         )
-
-    def test_commit_not_begun(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        with self.assertRaises(ValueError):
-            transaction.commit()
-
-        self.assertNoSpans()
 
     def test_commit_already_committed(self):
         session = _Session()
@@ -839,11 +817,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(len(transaction._mutations), 1)
 
         self.assertEqual(api._committed, None)
-
-        session_id, txn_id, metadata = api._rolled_back
-        self.assertEqual(session_id, session.name)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
 
 
 class _Client(object):
