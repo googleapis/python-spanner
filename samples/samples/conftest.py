@@ -221,8 +221,10 @@ def sample_database(
           statements=database_ddl,
         )
 
-        spanner_client.database_admin_api.update_database_ddl(request)
-        yield sample_database
+        operation =\
+            spanner_client.database_admin_api.update_database_ddl(request)
+
+        yield operation, sample_database
 
         sample_database.drop()
         return
