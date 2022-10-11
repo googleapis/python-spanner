@@ -403,24 +403,14 @@ def test_query_data_with_string(capsys, instance_id, sample_database):
     assert "VenueId: 42, VenueName: Venue 42" in out
 
 
-@pytest.mark.dependency(
-  name="add_numeric_column",
-  depends=["create_table_with_datatypes"],
-)
-def test_add_numeric_column(capsys, instance_id, sample_database):
-    snippets.add_numeric_column(instance_id, sample_database.database_id)
-    out, _ = capsys.readouterr()
-    assert 'Altered table "Venues" on database ' in out
-
-
-@pytest.mark.dependency(depends=["add_numeric_column", "insert_datatypes_data"])
+@pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_update_data_with_numeric(capsys, instance_id, sample_database):
     snippets.update_data_with_numeric(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Updated data" in out
 
 
-@pytest.mark.dependency(depends=["add_numeric_column"])
+@pytest.mark.dependency(depends=["insert_datatypes_data"])
 def test_query_data_with_numeric_parameter(capsys, instance_id,
                                            sample_database):
     snippets.query_data_with_numeric_parameter(instance_id,

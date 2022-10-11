@@ -1236,29 +1236,6 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     # [END spanner_postgresql_query_with_timestamp_parameter]
 
 
-# [START spanner_postgresql_add_numeric_column]
-def add_numeric_column(instance_id, database_id):
-    """Adds a new NUMERIC column to the Venues table in the example database."""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-
-    database = instance.database(database_id)
-
-    operation = database.update_ddl(["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"])
-
-    print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    print(
-      'Altered table "Venues" on database {} on instance {}.'.format(
-        database_id, instance_id
-      )
-    )
-
-
-# [END spanner_postgresql_add_numeric_column]
-
-
 # [START spanner_postgresql_update_data_with_numeric_column]
 def update_data_with_numeric(instance_id, database_id):
     """Updates Venues tables in the database with the NUMERIC
@@ -1459,10 +1436,6 @@ if __name__ == "__main__":  # noqa: C901
       help=query_data_with_timestamp_parameter.__doc__,
     )
     subparsers.add_parser(
-      "add_numeric_column",
-      help=add_numeric_column.__doc__,
-    )
-    subparsers.add_parser(
       "update_data_with_numeric",
       help=update_data_with_numeric.__doc__,
     )
@@ -1559,8 +1532,6 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_string(args.instance_id, args.database_id)
     elif args.command == "query_data_with_timestamp_parameter":
         query_data_with_timestamp_parameter(args.instance_id, args.database_id)
-    elif args.command == "add_numeric_column":
-        add_numeric_column(args.instance_id, args.database_id)
     elif args.command == "update_data_with_numeric":
         update_data_with_numeric(args.instance_id, args.database_id)
     elif args.command == "query_data_with_numeric_parameter":
