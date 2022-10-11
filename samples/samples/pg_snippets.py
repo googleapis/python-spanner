@@ -696,7 +696,7 @@ def add_timestamp_column(instance_id, database_id):
 
     operation = database.update_ddl(
       [
-        "ALTER TABLE Albums ADD COLUMN LastUpdateTime " "SPANNER.COMMIT_TIMESTAMP"]
+        "ALTER TABLE Albums ADD COLUMN LastUpdateTime SPANNER.COMMIT_TIMESTAMP"]
     )
 
     print("Waiting for operation to complete...")
