@@ -1236,6 +1236,63 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     # [END spanner_postgresql_query_with_timestamp_parameter]
 
 
+# [START spanner_postgresql_add_numeric_column]
+def add_numeric_column(instance_id, database_id):
+    """Adds a new NUMERIC column to the Venues table in the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    operation = database.update_ddl(["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"])
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+      'Altered table "Venues" on database {} on instance {}.'.format(
+        database_id, instance_id
+      )
+    )
+
+
+# [END spanner_postgresql_add_numeric_column]
+
+
+# [START spanner_postgresql_update_data_with_numeric_column]
+def update_data_with_numeric(instance_id, database_id):
+    """Updates Venues tables in the database with the NUMERIC
+    column.
+
+    This updates the `Revenue` column which must be created before
+    running this sample. You can add the column by running the
+    `add_numeric_column` sample or by running this DDL statement
+     against your database:
+
+        ALTER TABLE Venues ADD COLUMN Revenue NUMERIC
+    """
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    with database.batch() as batch:
+        batch.update(
+          table="Venues",
+          columns=("VenueId", "Revenue"),
+          values=[
+            (4, decimal.Decimal("35000")),
+            (19, decimal.Decimal("104500")),
+            (42, decimal.Decimal("99999999999999999999999999999.99")),
+          ],
+        )
+
+    print("Updated data.")
+
+
+# [END spanner_postgresql_update_data_with_numeric_column]
+
+
 def query_data_with_numeric_parameter(instance_id, database_id):
     """Queries sample data using SQL with a NUMERIC parameter."""
     # [START spanner_postgresql_query_with_numeric_parameter]
@@ -1402,6 +1459,14 @@ if __name__ == "__main__":  # noqa: C901
       help=query_data_with_timestamp_parameter.__doc__,
     )
     subparsers.add_parser(
+      "add_numeric_column",
+      help=add_numeric_column.__doc__,
+    )
+    subparsers.add_parser(
+      "update_data_with_numeric",
+      help=update_data_with_numeric.__doc__,
+    )
+    subparsers.add_parser(
       "query_data_with_numeric_parameter",
       help=query_data_with_numeric_parameter.__doc__,
     )
@@ -1494,7 +1559,11 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_string(args.instance_id, args.database_id)
     elif args.command == "query_data_with_timestamp_parameter":
         query_data_with_timestamp_parameter(args.instance_id, args.database_id)
-    elif args.command == "query_data_with_timestamp_parameter":
+    elif args.command == "add_numeric_column":
+        add_numeric_column(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_numeric":
+        update_data_with_numeric(args.instance_id, args.database_id)
+    elif args.command == "query_data_with_numeric_parameter":
         query_data_with_numeric_parameter(args.instance_id, args.database_id)
     elif args.command == "query_data_with_query_options":
         query_data_with_query_options(args.instance_id, args.database_id)

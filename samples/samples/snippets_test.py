@@ -421,7 +421,7 @@ def test_create_table_with_timestamp(capsys, instance_id, sample_database):
     assert "Created Performances table on database" in out
 
 
-@pytest.mark.dependency(depends=["create_table_with_datatypes"])
+@pytest.mark.dependency(depends=["create_table_with_timestamp"])
 def test_insert_data_with_timestamp(capsys, instance_id, sample_database):
     snippets.insert_data_with_timestamp(instance_id,
                                         sample_database.database_id)
