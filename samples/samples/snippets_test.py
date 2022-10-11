@@ -23,11 +23,6 @@ from test_utils.retry import RetryErrors
 
 import snippets
 
-if pytest.__version__ < "3.0.0":
-    pytest.skip()
-else:
-    pytestmark = pytest.mark.skip
-
 CREATE_TABLE_SINGERS = """\
 CREATE TABLE Singers (
     SingerId     INT64 NOT NULL,

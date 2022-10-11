@@ -10,10 +10,6 @@ from test_utils.retry import RetryErrors
 
 import autocommit
 
-if pytest.__version__ < "3.0.0":
-    pytest.skip()
-else:
-    pytestmark = pytest.mark.skip
 
 @pytest.fixture(scope="module")
 def sample_name():
