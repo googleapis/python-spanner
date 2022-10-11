@@ -29,7 +29,7 @@ from test_utils import retry
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
-OPERATION_TIMEOUT_SECONDS = 120 # seconds
+OPERATION_TIMEOUT_SECONDS = 120  # seconds
 
 retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
 
