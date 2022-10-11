@@ -1281,7 +1281,7 @@ def query_data_with_numeric_parameter(instance_id, database_id):
 
     example_numeric = decimal.Decimal("300000")
     param = {"p1": example_numeric}
-    param_type = {"p1": param_types.NUMERIC}
+    param_type = {"p1": param_types.PG_NUMERIC}
 
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
