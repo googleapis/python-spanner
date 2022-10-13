@@ -236,7 +236,7 @@ if any of the records does not already exist.
 
 
 Connection API
------------
+--------------
 Connection API represents a wrap-around for Python Spanner API, written in accordance with PEP-249, and provides a simple way of communication with a Spanner database through connection objects:
 
 .. code:: python
