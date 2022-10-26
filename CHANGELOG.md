@@ -4,6 +4,32 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.22.1](https://github.com/googleapis/python-spanner/compare/v3.22.0...v3.22.1) (2022-10-04)
+
+
+### Bug Fixes
+
+* **deps:** Require protobuf >= 3.20.2 ([#830](https://github.com/googleapis/python-spanner/issues/830)) ([4d71563](https://github.com/googleapis/python-spanner/commit/4d7156376f4633de6c1a2bfd25ba97126386ebd0))
+
+
+### Documentation
+
+* **samples:** add samples for CMMR phase 2 ([4282340](https://github.com/googleapis/python-spanner/commit/4282340bc2c3a34496c59c33f5c64ff76dceda4c))
+
+## [3.22.0](https://github.com/googleapis/python-spanner/compare/v3.21.0...v3.22.0) (2022-09-26)
+
+
+### Features
+
+* Adding reason, domain, metadata & error_details fields in Custom Exceptions for additional info ([#804](https://github.com/googleapis/python-spanner/issues/804)) ([2a74060](https://github.com/googleapis/python-spanner/commit/2a740607a00cb622ac9ce4005c12afd52114b4a5))
+
+## [3.21.0](https://github.com/googleapis/python-spanner/compare/v3.20.0...v3.21.0) (2022-09-16)
+
+
+### Features
+
+* Add custom instance config operations ([#810](https://github.com/googleapis/python-spanner/issues/810)) ([f07333f](https://github.com/googleapis/python-spanner/commit/f07333fb7238e79b32f480a8c82c61fc2fb26dee))
+
 ## [3.20.0](https://github.com/googleapis/python-spanner/compare/v3.19.0...v3.20.0) (2022-08-30)
 
 

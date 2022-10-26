@@ -18,8 +18,8 @@ import os
 # try/except added for compatibility with python < 3.8
 try:
     from unittest import mock
-    from unittest.mock import AsyncMock
-except ImportError:
+    from unittest.mock import AsyncMock  # pragma: NO COVER
+except ImportError:  # pragma: NO COVER
     import mock
 
 import grpc
@@ -27,7 +27,7 @@ from grpc.experimental import aio
 import math
 import pytest
 from proto.marshal.rules.dates import DurationRule, TimestampRule
-
+from proto.marshal.rules import wrappers
 
 from google.api_core import client_options
 from google.api_core import exceptions as core_exceptions
@@ -2926,7 +2926,11 @@ def test_begin_transaction_flattened():
         # using the keyword arguments to the method.
         client.begin_transaction(
             session="session_value",
-            options=transaction.TransactionOptions(read_write=None),
+            options=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
         # Establish that the underlying call was made with the expected
@@ -2937,7 +2941,11 @@ def test_begin_transaction_flattened():
         mock_val = "session_value"
         assert arg == mock_val
         arg = args[0].options
-        mock_val = transaction.TransactionOptions(read_write=None)
+        mock_val = transaction.TransactionOptions(
+            read_write=transaction.TransactionOptions.ReadWrite(
+                read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+            )
+        )
         assert arg == mock_val
 
 
@@ -2952,7 +2960,11 @@ def test_begin_transaction_flattened_error():
         client.begin_transaction(
             spanner.BeginTransactionRequest(),
             session="session_value",
-            options=transaction.TransactionOptions(read_write=None),
+            options=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
 
@@ -2976,7 +2988,11 @@ async def test_begin_transaction_flattened_async():
         # using the keyword arguments to the method.
         response = await client.begin_transaction(
             session="session_value",
-            options=transaction.TransactionOptions(read_write=None),
+            options=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
         # Establish that the underlying call was made with the expected
@@ -2987,7 +3003,11 @@ async def test_begin_transaction_flattened_async():
         mock_val = "session_value"
         assert arg == mock_val
         arg = args[0].options
-        mock_val = transaction.TransactionOptions(read_write=None)
+        mock_val = transaction.TransactionOptions(
+            read_write=transaction.TransactionOptions.ReadWrite(
+                read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+            )
+        )
         assert arg == mock_val
 
 
@@ -3003,7 +3023,11 @@ async def test_begin_transaction_flattened_error_async():
         await client.begin_transaction(
             spanner.BeginTransactionRequest(),
             session="session_value",
-            options=transaction.TransactionOptions(read_write=None),
+            options=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
 
@@ -3168,7 +3192,11 @@ def test_commit_flattened():
             mutations=[
                 mutation.Mutation(insert=mutation.Mutation.Write(table="table_value"))
             ],
-            single_use_transaction=transaction.TransactionOptions(read_write=None),
+            single_use_transaction=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
         # Establish that the underlying call was made with the expected
@@ -3184,7 +3212,9 @@ def test_commit_flattened():
         ]
         assert arg == mock_val
         assert args[0].single_use_transaction == transaction.TransactionOptions(
-            read_write=None
+            read_write=transaction.TransactionOptions.ReadWrite(
+                read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+            )
         )
 
 
@@ -3203,7 +3233,11 @@ def test_commit_flattened_error():
             mutations=[
                 mutation.Mutation(insert=mutation.Mutation.Write(table="table_value"))
             ],
-            single_use_transaction=transaction.TransactionOptions(read_write=None),
+            single_use_transaction=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
 
@@ -3229,7 +3263,11 @@ async def test_commit_flattened_async():
             mutations=[
                 mutation.Mutation(insert=mutation.Mutation.Write(table="table_value"))
             ],
-            single_use_transaction=transaction.TransactionOptions(read_write=None),
+            single_use_transaction=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
         # Establish that the underlying call was made with the expected
@@ -3245,7 +3283,9 @@ async def test_commit_flattened_async():
         ]
         assert arg == mock_val
         assert args[0].single_use_transaction == transaction.TransactionOptions(
-            read_write=None
+            read_write=transaction.TransactionOptions.ReadWrite(
+                read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+            )
         )
 
 
@@ -3265,7 +3305,11 @@ async def test_commit_flattened_error_async():
             mutations=[
                 mutation.Mutation(insert=mutation.Mutation.Write(table="table_value"))
             ],
-            single_use_transaction=transaction.TransactionOptions(read_write=None),
+            single_use_transaction=transaction.TransactionOptions(
+                read_write=transaction.TransactionOptions.ReadWrite(
+                    read_lock_mode=transaction.TransactionOptions.ReadWrite.ReadLockMode.PESSIMISTIC
+                )
+            ),
         )
 
 

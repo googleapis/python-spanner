@@ -22,7 +22,7 @@ import setuptools
 
 name = "google-cloud-spanner"
 description = "Cloud Spanner API client library"
-version = "3.20.0"
+version = "3.22.1"
 # Should be one of:
 # 'Development Status :: 3 - Alpha'
 # 'Development Status :: 4 - Beta'
@@ -35,7 +35,7 @@ dependencies = [
     "proto-plus >= 1.22.0, <2.0.0dev",
     "sqlparse >= 0.3.0",
     "packaging >= 14.3",
-    "protobuf >= 3.19.0, <5.0.0dev",
+    "protobuf>=3.19.5,<5.0.0dev,!=3.20.0,!=3.20.1,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5",
 ]
 extras = {
     "tracing": [
