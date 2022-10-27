@@ -86,7 +86,9 @@ def spanner_client():
         )
     else:
         return spanner_v1.Client(
-            client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"}
+            client_options={
+                "api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"
+            }
         )  # use google.auth.default credentials
 
 

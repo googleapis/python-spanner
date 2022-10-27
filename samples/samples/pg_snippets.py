@@ -1417,7 +1417,7 @@ def update_data_with_jsonb(instance_id, database_id):
 
 
 def query_data_with_jsonb_parameter(instance_id, database_id):
-    """Queries sample data using SQL with a JSON parameter."""
+    """Queries sample data using SQL with a JSONB parameter."""
     # [START spanner_postgresql_jsonb_query_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -1534,6 +1534,18 @@ if __name__ == "__main__":  # noqa: C901
         "create_client_with_query_options",
         help=create_client_with_query_options.__doc__,
     )
+    subparsers.add_parser(
+        "add_jsonb_column",
+        help=add_jsonb_column.__doc__,
+    )
+    subparsers.add_parser(
+        "update_data_with_jsonb",
+        help=update_data_with_jsonb.__doc__,
+    )
+    subparsers.add_parser(
+        "query_data_with_jsonb_parameter",
+        help=query_data_with_jsonb_parameter.__doc__,
+    )
 
     args = parser.parse_args()
 
@@ -1623,3 +1635,9 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_query_options(args.instance_id, args.database_id)
     elif args.command == "create_client_with_query_options":
         create_client_with_query_options(args.instance_id, args.database_id)
+    elif args.command == "add_jsonb_column":
+        add_jsonb_column(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_jsonb":
+        update_data_with_jsonb(args.instance_id, args.database_id)
+    elif args.command == "query_data_with_jsonb_parameter":
+        query_data_with_jsonb_parameter(args.instance_id, args.database_id)
