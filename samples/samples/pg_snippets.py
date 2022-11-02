@@ -1376,10 +1376,9 @@ def update_data_with_jsonb(instance_id, database_id):
     database = instance.database(database_id)
     """
     PG JSONB takes the last value in the case of duplicate keys.
-    PG JSONB sorts first by key length and then lexicographically with
+    PG JSONB sorts first by key length and then lexicographically with      
     equivalent key length.
     """
-
     with database.batch() as batch:
         batch.update(
             table="Venues",
@@ -1391,7 +1390,7 @@ def update_data_with_jsonb(instance_id, database_id):
                         [
                             JsonObject({"name": None, "open": True}),
                             JsonObject(
-                                {"name": "room 2", "open": False}
+                                {"name": "room 2", "open": False, "name": "room 3"}
                             ),
                         ]
                     ),
