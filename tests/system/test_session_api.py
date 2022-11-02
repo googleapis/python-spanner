@@ -191,7 +191,7 @@ POSTGRES_ALL_TYPES_ROWDATA = (
 if _helpers.USE_EMULATOR:
     ALL_TYPES_COLUMNS = EMULATOR_ALL_TYPES_COLUMNS
     ALL_TYPES_ROWDATA = EMULATOR_ALL_TYPES_ROWDATA
-elif _helpers.DATABASE_DIALECT == 'POSTGRESQL':
+elif _helpers.DATABASE_DIALECT == "POSTGRESQL":
     ALL_TYPES_COLUMNS = POSTGRES_ALL_TYPES_COLUMNS
     ALL_TYPES_ROWDATA = POSTGRES_ALL_TYPES_ROWDATA
 else:
@@ -2106,7 +2106,10 @@ def test_execute_sql_w_json_bindings(
         [JSON_1, JSON_2],
     )
 
-def test_execute_sql_w_jsonb_bindings(not_emulator, not_google_standard_sql, sessions_database, database_dialect):
+
+def test_execute_sql_w_jsonb_bindings(
+    not_emulator, not_google_standard_sql, sessions_database, database_dialect
+):
     _bind_test_helper(
         sessions_database,
         database_dialect,
