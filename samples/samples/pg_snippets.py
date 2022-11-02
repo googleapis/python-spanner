@@ -28,6 +28,7 @@ import time
 from google.cloud import spanner, spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import param_types
+from google.cloud.spanner_v1.data_types import JsonObject
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -1342,6 +1343,112 @@ def query_data_with_query_options(instance_id, database_id):
     # [END spanner_postgresql_query_with_query_options]
 
 
+# [START spanner_postgresql_jsonb_add_column]
+def add_jsonb_column(instance_id, database_id):
+    """Adds a new JSONB column to the Venues table in the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    operation = database.update_ddl(
+        ["ALTER TABLE Venues ADD COLUMN VenueDetails JSONB"]
+    )
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Venues" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_postgresql_jsonb_add_column]
+
+
+# [START spanner_postgresql_jsonb_update_data]
+def update_data_with_jsonb(instance_id, database_id):
+    """Updates Venues tables in the database with the JSONB
+    column.
+    This updates the `VenueDetails` column which must be created before
+    running this sample. You can add the column by running the
+    `add_jsonb_column` sample or by running this DDL statement
+     against your database:
+        ALTER TABLE Venues ADD COLUMN VenueDetails JSONB
+    """
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+    """
+    PG JSONB takes the last value in the case of duplicate keys.
+    PG JSONB sorts first by key length and then lexicographically with
+    equivalent key length.
+    """
+
+    with database.batch() as batch:
+        batch.update(
+            table="Venues",
+            columns=("VenueId", "VenueDetails"),
+            values=[
+                (
+                    4,
+                    JsonObject(
+                        [
+                            JsonObject({"name": None, "open": True}),
+                            JsonObject(
+                                {"name": "room 2", "open": False}
+                            ),
+                        ]
+                    ),
+                ),
+                (19, JsonObject(rating=9, open=True)),
+                (
+                    42,
+                    JsonObject(
+                        {
+                            "name": None,
+                            "open": {"Monday": True, "Tuesday": False},
+                            "tags": ["large", "airy"],
+                        }
+                    ),
+                ),
+            ],
+        )
+
+    print("Updated data.")
+
+
+# [END spanner_postgresql_jsonb_update_data]
+
+
+def query_data_with_jsonb_parameter(instance_id, database_id):
+    """Queries sample data using SQL with a JSONB parameter."""
+    # [START spanner_postgresql_jsonb_query_parameter]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    param = {"p1": 2}
+    param_type = {"p1": param_types.INT64}
+
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql(
+            "SELECT venueid, venuedetails FROM Venues"
+            + " WHERE CAST(venuedetails ->> 'rating' AS INTEGER) > $1",
+            params=param,
+            param_types=param_type,
+        )
+
+        for row in results:
+            print("VenueId: {}, VenueDetails: {}".format(*row))
+    # [END spanner_postgresql_jsonb_query_parameter]
+
+
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
       description=__doc__,
@@ -1451,6 +1558,18 @@ if __name__ == "__main__":  # noqa: C901
       "create_client_with_query_options",
       help=create_client_with_query_options.__doc__,
     )
+    subparsers.add_parser(
+        "add_jsonb_column",
+        help=add_jsonb_column.__doc__,
+    )
+    subparsers.add_parser(
+        "update_data_with_jsonb",
+        help=update_data_with_jsonb.__doc__,
+    )
+    subparsers.add_parser(
+        "query_data_with_jsonb_parameter",
+        help=query_data_with_jsonb_parameter.__doc__,
+    )
 
     args = parser.parse_args()
 
@@ -1540,3 +1659,9 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_query_options(args.instance_id, args.database_id)
     elif args.command == "create_client_with_query_options":
         create_client_with_query_options(args.instance_id, args.database_id)
+    elif args.command == "add_jsonb_column":
+        add_jsonb_column(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_jsonb":
+        update_data_with_jsonb(args.instance_id, args.database_id)
+    elif args.command == "query_data_with_jsonb_parameter":
+        query_data_with_jsonb_parameter(args.instance_id, args.database_id)
