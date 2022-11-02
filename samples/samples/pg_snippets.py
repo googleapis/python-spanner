@@ -1345,7 +1345,21 @@ def query_data_with_query_options(instance_id, database_id):
 
 # [START spanner_postgresql_jsonb_add_column]
 def add_jsonb_column(instance_id, database_id):
-    """Adds a new JSONB column to the Venues table in the example database."""
+    """
+    Alters Venues tables in the database adding a JSONB column.
+    You can create the table by running the `create_table_with_datatypes`
+    sample or by running this DDL statement against your database:
+    CREATE TABLE Venues (
+      VenueId         BIGINT NOT NULL,
+      VenueName       character varying(100),
+      VenueInfo       BYTEA,
+      Capacity        BIGINT,
+      OutdoorVenue    BOOL,
+      PopularityScore FLOAT8,
+      Revenue         NUMERIC,
+      LastUpdateTime  SPANNER.COMMIT_TIMESTAMP NOT NULL,
+      PRIMARY KEY (VenueId))
+    """
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
