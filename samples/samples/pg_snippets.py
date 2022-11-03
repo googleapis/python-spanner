@@ -1396,11 +1396,11 @@ def update_data_with_jsonb(instance_id, database_id):
     """
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
-    
+
     """
     PG JSONB takes the last value in the case of duplicate keys.
     PG JSONB sorts first by key length and then lexicographically with
@@ -1447,7 +1447,7 @@ def query_data_with_jsonb_parameter(instance_id, database_id):
     """Queries sample data using SQL with a JSONB parameter."""
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -1465,8 +1465,8 @@ def query_data_with_jsonb_parameter(instance_id, database_id):
 
         for row in results:
             print("VenueId: {}, VenueDetails: {}".format(*row))
-   
-   
+
+
 # [END spanner_postgresql_jsonb_query_parameter]
 
 
