@@ -1437,10 +1437,9 @@ def update_data_with_jsonb(instance_id, database_id):
 
 # [END spanner_postgresql_jsonb_update_data]
 
-
+# [START spanner_postgresql_jsonb_query_parameter]
 def query_data_with_jsonb_parameter(instance_id, database_id):
     """Queries sample data using SQL with a JSONB parameter."""
-    # [START spanner_postgresql_jsonb_query_parameter]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
