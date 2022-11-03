@@ -1360,9 +1360,11 @@ def add_jsonb_column(instance_id, database_id):
       LastUpdateTime  SPANNER.COMMIT_TIMESTAMP NOT NULL,
       PRIMARY KEY (VenueId))
     """
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
-
     database = instance.database(database_id)
 
     operation = database.update_ddl(
@@ -1392,10 +1394,13 @@ def update_data_with_jsonb(instance_id, database_id):
      against your database:
         ALTER TABLE Venues ADD COLUMN VenueDetails JSONB
     """
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
-
     database = instance.database(database_id)
+    
     """
     PG JSONB takes the last value in the case of duplicate keys.
     PG JSONB sorts first by key length and then lexicographically with
@@ -1442,6 +1447,7 @@ def query_data_with_jsonb_parameter(instance_id, database_id):
     """Queries sample data using SQL with a JSONB parameter."""
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
+    
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
