@@ -1459,7 +1459,9 @@ def query_data_with_jsonb_parameter(instance_id, database_id):
 
         for row in results:
             print("VenueId: {}, VenueDetails: {}".format(*row))
-    # [END spanner_postgresql_jsonb_query_parameter]
+   
+   
+# [END spanner_postgresql_jsonb_query_parameter]
 
 
 if __name__ == "__main__":  # noqa: C901
