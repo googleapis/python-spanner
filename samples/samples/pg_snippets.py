@@ -1362,7 +1362,7 @@ def add_jsonb_column(instance_id, database_id):
     """
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
