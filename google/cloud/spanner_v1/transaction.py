@@ -13,7 +13,8 @@
 # limitations under the License.
 
 """Spanner read-write transaction support."""
-
+import functools
+import threading
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud.spanner_v1._helpers import (
@@ -48,6 +49,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     commit_stats = None
     _multi_use = True
     _execute_sql_count = 0
+    _lock = threading.Lock()
 
     def __init__(self, session):
         if session._transaction is not None:
@@ -81,6 +83,16 @@ class Transaction(_SnapshotBase, _BatchBase):
             return TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
         else:
             return TransactionSelector(id=self._transaction_id)
+
+    def _execute_request(
+        self, method, request, trace_name=None, session=None, attributes=None
+    ):
+        transaction = self._make_txn_selector()
+        request.transaction = transaction
+        with trace_call(trace_name, session, attributes):
+            response = method(request=request)
+        
+        return response
 
     def begin(self):
         """Begin a transaction on the database.
@@ -270,7 +282,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         params_pb = self._make_params_pb(params, param_types)
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
-        transaction = self._make_txn_selector()
+        
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -294,7 +306,6 @@ class Transaction(_SnapshotBase, _BatchBase):
         request = ExecuteSqlRequest(
             session=self._session.name,
             sql=dml,
-            transaction=transaction,
             params=params_pb,
             param_types=param_types,
             query_mode=query_mode,
@@ -302,15 +313,45 @@ class Transaction(_SnapshotBase, _BatchBase):
             seqno=seqno,
             request_options=request_options,
         )
-        with trace_call(
-            "CloudSpanner.ReadWriteTransaction", self._session, trace_attributes
-        ):
-            response = api.execute_sql(
-                request=request, metadata=metadata, retry=retry, timeout=timeout
-            )
 
-        if self._transaction_id is None and response.metadata.transaction is not None:
-            self._transaction_id = response.metadata.transaction.id
+        method = functools.partial(
+            api.execute_sql,
+            request=request,
+            metadata=metadata,
+            retry=retry,
+            timeout=timeout,
+        )
+
+        if self._transaction_id is None:
+            with self._lock:
+                if self._inline_begin_started is False:
+                    response = self._execute_request(
+                    method, 
+                    request, 
+                    "CloudSpanner.ReadWriteTransaction", 
+                    self._session, 
+                    trace_attributes
+                    )
+                    
+                    if self._transaction_id is None and response.metadata.transaction is not None:
+                        self._transaction_id = response.metadata.transaction.id
+                    self._inline_begin_started =  True
+                else:
+                    response = self._execute_request(
+                    method, 
+                    request, 
+                    "CloudSpanner.ReadWriteTransaction", 
+                    self._session, 
+                    trace_attributes
+                    )
+        else:
+            response = self._execute_request(
+                method, 
+                request, 
+                "CloudSpanner.ReadWriteTransaction", 
+                self._session, 
+                trace_attributes
+            )
 
         return response.stats.row_count_exact
 
@@ -378,21 +419,54 @@ class Transaction(_SnapshotBase, _BatchBase):
         }
         request = ExecuteBatchDmlRequest(
             session=self._session.name,
-            transaction=transaction,
             statements=parsed,
             seqno=seqno,
             request_options=request_options,
         )
-        with trace_call("CloudSpanner.DMLTransaction", self._session, trace_attributes):
-            response = api.execute_batch_dml(request=request, metadata=metadata)
+
+        method = functools.partial(
+            api.execute_batch_dml,
+            request=request,
+            metadata=metadata,
+        )
+
+        if self._transaction_id is None:
+            with self._lock:
+                if self._inline_begin_started is False:
+                    response = self._execute_request(
+                    method, 
+                    request, 
+                    "CloudSpanner.DMLTransaction", 
+                    self._session, 
+                    trace_attributes
+                    )
+                    
+                    for result_set in response.result_sets:
+                        if self._transaction_id is None and result_set.metadata.transaction is not None:
+                            self._transaction_id = result_set.metadata.transaction.id
+                     
+                    self._inline_begin_started =  True
+                else:
+                    response = self._execute_request(
+                    method, 
+                    request, 
+                    "CloudSpanner.DMLTransaction", 
+                    self._session, 
+                    trace_attributes
+                    )
+        else:
+            response = self._execute_request(
+                method, 
+                request, 
+                "CloudSpanner.DMLTransaction", 
+                self._session, 
+                trace_attributes
+            )
+
         row_counts = [
             result_set.stats.row_count_exact for result_set in response.result_sets
         ]
 
-        for result_set in response.result_sets:
-            if self._transaction_id is None and result_set.metadata.transaction is not None:
-                self._transaction_id = result_set.metadata.transaction.id
-        
         return response.status, row_counts
 
     def __enter__(self):

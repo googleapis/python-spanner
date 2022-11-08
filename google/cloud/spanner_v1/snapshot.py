@@ -106,6 +106,7 @@ class _SnapshotBase(_SessionWrapper):
     _transaction_id = None
     _read_request_count = 0
     _execute_sql_count = 0
+    _inline_begin_started = False
 
     def _make_txn_selector(self):
         """Helper for :meth:`read` / :meth:`execute_sql`.
