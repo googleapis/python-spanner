@@ -324,26 +324,15 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if self._transaction_id is None:
             with self._lock:
-                if self._inline_begin_started is False:
-                    response = self._execute_request(
-                    method, 
-                    request, 
-                    "CloudSpanner.ReadWriteTransaction", 
-                    self._session, 
-                    trace_attributes
-                    )
-                    
-                    if self._transaction_id is None and response.metadata.transaction is not None:
-                        self._transaction_id = response.metadata.transaction.id
-                    self._inline_begin_started =  True
-                else:
-                    response = self._execute_request(
-                    method, 
-                    request, 
-                    "CloudSpanner.ReadWriteTransaction", 
-                    self._session, 
-                    trace_attributes
-                    )
+                response = self._execute_request(
+                method, 
+                request, 
+                "CloudSpanner.ReadWriteTransaction", 
+                self._session, 
+                trace_attributes
+                )
+                if self._transaction_id is None and response.metadata.transaction is not None:
+                    self._transaction_id = response.metadata.transaction.id
         else:
             response = self._execute_request(
                 method, 
@@ -399,7 +388,6 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
-        transaction = self._make_txn_selector()
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -432,28 +420,17 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if self._transaction_id is None:
             with self._lock:
-                if self._inline_begin_started is False:
-                    response = self._execute_request(
-                    method, 
-                    request, 
-                    "CloudSpanner.DMLTransaction", 
-                    self._session, 
-                    trace_attributes
-                    )
-                    
-                    for result_set in response.result_sets:
-                        if self._transaction_id is None and result_set.metadata.transaction is not None:
-                            self._transaction_id = result_set.metadata.transaction.id
-                     
-                    self._inline_begin_started =  True
-                else:
-                    response = self._execute_request(
-                    method, 
-                    request, 
-                    "CloudSpanner.DMLTransaction", 
-                    self._session, 
-                    trace_attributes
-                    )
+                response = self._execute_request(
+                method, 
+                request, 
+                "CloudSpanner.DMLTransaction", 
+                self._session, 
+                trace_attributes
+                )
+                
+                for result_set in response.result_sets:
+                    if self._transaction_id is None and result_set.metadata.transaction is not None:
+                        self._transaction_id = result_set.metadata.transaction.id
         else:
             response = self._execute_request(
                 method, 

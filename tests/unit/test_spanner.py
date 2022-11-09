@@ -187,7 +187,6 @@ class TestTransaction(OpenTelemetryBase):
     def _execute_sql_helper(
         self,
         transaction,
-        database,
         api,
         count=0,
         partition=None,
@@ -256,6 +255,8 @@ class TestTransaction(OpenTelemetryBase):
                 expected_query_options, query_options
             )
 
+        expected_request_options = REQUEST_OPTIONS
+        expected_request_options.transaction_tag = None
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=SQL_QUERY_WITH_PARAM,
@@ -264,7 +265,7 @@ class TestTransaction(OpenTelemetryBase):
             param_types=PARAM_TYPES,
             query_mode=MODE,
             query_options=expected_query_options,
-            request_options=REQUEST_OPTIONS,
+            request_options=expected_request_options,
             partition_token=partition,
             seqno=sql_count,
         )
@@ -456,7 +457,7 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         api = database.spanner_api = self._make_spanner_api()
         transaction = self._make_one(session)
-        self._execute_sql_helper(transaction=transaction, database=database, api=api)
+        self._execute_sql_helper(transaction=transaction, api=api)
 
         api.execute_streaming_sql.assert_called_once_with(
             request=self._execute_sql_expected_request(database=database),
@@ -495,7 +496,7 @@ class TestTransaction(OpenTelemetryBase):
         session = _Session(database)
         api = database.spanner_api = self._make_spanner_api()
         transaction = self._make_one(session)
-        self._execute_sql_helper(transaction=transaction, database=database, api=api)
+        self._execute_sql_helper(transaction=transaction, api=api)
         api.execute_streaming_sql.assert_called_once_with(
             request=self._execute_sql_expected_request(database=database),
             retry=gapic_v1.method.DEFAULT,
@@ -524,7 +525,7 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
-        self._execute_sql_helper(transaction=transaction, database=database, api=api)
+        self._execute_sql_helper(transaction=transaction, api=api)
         api.execute_streaming_sql.assert_called_once_with(
             request=self._execute_sql_expected_request(database=database, begin=False),
             retry=gapic_v1.method.DEFAULT,
@@ -650,27 +651,80 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_update_helper(transaction=transaction, api=api)
 
+        begin_read_write = 0
+        for call in api.mock_calls:
+            if "read_write" in call.__str__():
+                begin_read_write+=1
+
+        self.assertEqual(begin_read_write, 1)
         api.execute_sql.assert_any_call(request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
             timeout=TIMEOUT,
             metadata=[("google-cloud-resource-prefix", database.name)])
 
-        api.streaming_read.assert_called_once_with(
+        api.streaming_read.assert_any_call(
             request=self._read_helper_expected_request(),
             metadata=[("google-cloud-resource-prefix", database.name)],
             retry=RETRY,
             timeout=TIMEOUT,
         )
 
-        api.streaming_read.assert_called_once_with(
+        api.streaming_read.assert_any_call(
             request=self._read_helper_expected_request(begin=False),
             metadata=[("google-cloud-resource-prefix", database.name)],
             retry=RETRY,
             timeout=TIMEOUT,
         )
 
+
         self.assertEqual(api.execute_sql.call_count, 1)
         self.assertEqual(api.streaming_read.call_count, 2)
+
+    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_query(self):
+        database = _Database()
+        api = database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
+        transaction = self._make_one(session)
+        threads = []
+        threads.append(threading.Thread(target=self._execute_sql_helper, kwargs={'transaction' : transaction, 'api' : api}))
+        threads.append(threading.Thread(target=self._execute_sql_helper, kwargs={'transaction' : transaction, 'api' : api}))
+        for thread in threads:
+            thread.start()
+
+        for thread in threads:
+            thread.join()
+
+        self._execute_update_helper(transaction=transaction, api=api)
+
+        begin_read_write = 0
+        for call in api.mock_calls:
+            if "read_write" in call.__str__():
+                begin_read_write+=1
+
+        self.assertEqual(begin_read_write, 1)
+        api.execute_sql.assert_any_call(
+            request=self._execute_update_expected_request(database, begin=False),
+            retry=RETRY,
+            timeout=TIMEOUT,
+            metadata=[("google-cloud-resource-prefix", database.name)])
+        
+        req = self._execute_sql_expected_request(database)
+        api.execute_streaming_sql.assert_any_call(
+            request=req,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+            retry=RETRY,
+            timeout=TIMEOUT,
+        )
+
+        api.execute_streaming_sql.assert_any_call(
+            request=self._execute_sql_expected_request(database, begin=False),
+            metadata=[("google-cloud-resource-prefix", database.name)],
+            retry=RETRY,
+            timeout=TIMEOUT,
+        )
+        
+        self.assertEqual(api.execute_sql.call_count, 1)
+        self.assertEqual(api.execute_streaming_sql.call_count, 2)
 
 class _Client(object):
     def __init__(self):
