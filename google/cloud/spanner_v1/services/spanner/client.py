@@ -16,7 +16,19 @@
 from collections import OrderedDict
 import os
 import re
-from typing import Dict, Mapping, Optional, Iterable, Sequence, Tuple, Type, Union, cast
+from typing import (
+    Dict,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Iterable,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 import pkg_resources
 
 from google.api_core import client_options as client_options_lib
@@ -62,7 +74,7 @@ class SpannerClientMeta(type):
 
     def get_transport_class(
         cls,
-        label: str = None,
+        label: Optional[str] = None,
     ) -> Type[SpannerTransport]:
         """Returns an appropriate transport class.
 
@@ -364,7 +376,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         self,
         *,
         credentials: Optional[ga_credentials.Credentials] = None,
-        transport: Union[str, SpannerTransport, None] = None,
+        transport: Optional[Union[str, SpannerTransport]] = None,
         client_options: Optional[Union[client_options_lib.ClientOptions, dict]] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
     ) -> None:
@@ -462,11 +474,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def create_session(
         self,
-        request: Union[spanner.CreateSessionRequest, dict] = None,
+        request: Optional[Union[spanner.CreateSessionRequest, dict]] = None,
         *,
-        database: str = None,
+        database: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
         r"""Creates a new session. A session can be used to perform
@@ -580,12 +592,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def batch_create_sessions(
         self,
-        request: Union[spanner.BatchCreateSessionsRequest, dict] = None,
+        request: Optional[Union[spanner.BatchCreateSessionsRequest, dict]] = None,
         *,
-        database: str = None,
-        session_count: int = None,
+        database: Optional[str] = None,
+        session_count: Optional[int] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.BatchCreateSessionsResponse:
         r"""Creates multiple new sessions.
@@ -701,11 +713,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def get_session(
         self,
-        request: Union[spanner.GetSessionRequest, dict] = None,
+        request: Optional[Union[spanner.GetSessionRequest, dict]] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
         r"""Gets a session. Returns ``NOT_FOUND`` if the session does not
@@ -803,11 +815,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def list_sessions(
         self,
-        request: Union[spanner.ListSessionsRequest, dict] = None,
+        request: Optional[Union[spanner.ListSessionsRequest, dict]] = None,
         *,
-        database: str = None,
+        database: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListSessionsPager:
         r"""Lists all sessions in a given database.
@@ -918,11 +930,11 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def delete_session(
         self,
-        request: Union[spanner.DeleteSessionRequest, dict] = None,
+        request: Optional[Union[spanner.DeleteSessionRequest, dict]] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Ends a session, releasing server resources associated
@@ -1010,10 +1022,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_sql(
         self,
-        request: Union[spanner.ExecuteSqlRequest, dict] = None,
+        request: Optional[Union[spanner.ExecuteSqlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
         r"""Executes an SQL statement, returning all results in a single
@@ -1106,10 +1118,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_streaming_sql(
         self,
-        request: Union[spanner.ExecuteSqlRequest, dict] = None,
+        request: Optional[Union[spanner.ExecuteSqlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
         r"""Like [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], except
@@ -1198,10 +1210,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def execute_batch_dml(
         self,
-        request: Union[spanner.ExecuteBatchDmlRequest, dict] = None,
+        request: Optional[Union[spanner.ExecuteBatchDmlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.ExecuteBatchDmlResponse:
         r"""Executes a batch of SQL DML statements. This method allows many
@@ -1334,10 +1346,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def read(
         self,
-        request: Union[spanner.ReadRequest, dict] = None,
+        request: Optional[Union[spanner.ReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
         r"""Reads rows from the database using key lookups and scans, as a
@@ -1432,10 +1444,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def streaming_read(
         self,
-        request: Union[spanner.ReadRequest, dict] = None,
+        request: Optional[Union[spanner.ReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
         r"""Like [Read][google.spanner.v1.Spanner.Read], except returns the
@@ -1525,12 +1537,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def begin_transaction(
         self,
-        request: Union[spanner.BeginTransactionRequest, dict] = None,
+        request: Optional[Union[spanner.BeginTransactionRequest, dict]] = None,
         *,
-        session: str = None,
-        options: transaction.TransactionOptions = None,
+        session: Optional[str] = None,
+        options: Optional[transaction.TransactionOptions] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> transaction.Transaction:
         r"""Begins a new transaction. This step can often be skipped:
@@ -1639,14 +1651,14 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def commit(
         self,
-        request: Union[spanner.CommitRequest, dict] = None,
+        request: Optional[Union[spanner.CommitRequest, dict]] = None,
         *,
-        session: str = None,
-        transaction_id: bytes = None,
-        mutations: Sequence[mutation.Mutation] = None,
-        single_use_transaction: transaction.TransactionOptions = None,
+        session: Optional[str] = None,
+        transaction_id: Optional[bytes] = None,
+        mutations: Optional[MutableSequence[mutation.Mutation]] = None,
+        single_use_transaction: Optional[transaction.TransactionOptions] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> commit_response.CommitResponse:
         r"""Commits a transaction. The request includes the mutations to be
@@ -1711,7 +1723,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 This corresponds to the ``transaction_id`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            mutations (Sequence[google.cloud.spanner_v1.types.Mutation]):
+            mutations (MutableSequence[google.cloud.spanner_v1.types.Mutation]):
                 The mutations to be executed when
                 this transaction commits. All mutations
                 are applied atomically, in the order
@@ -1799,12 +1811,12 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def rollback(
         self,
-        request: Union[spanner.RollbackRequest, dict] = None,
+        request: Optional[Union[spanner.RollbackRequest, dict]] = None,
         *,
-        session: str = None,
-        transaction_id: bytes = None,
+        session: Optional[str] = None,
+        transaction_id: Optional[bytes] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Rolls back a transaction, releasing any locks it holds. It is a
@@ -1909,10 +1921,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_query(
         self,
-        request: Union[spanner.PartitionQueryRequest, dict] = None,
+        request: Optional[Union[spanner.PartitionQueryRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
         r"""Creates a set of partition tokens that can be used to execute a
@@ -2005,10 +2017,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
     def partition_read(
         self,
-        request: Union[spanner.PartitionReadRequest, dict] = None,
+        request: Optional[Union[spanner.PartitionReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
         r"""Creates a set of partition tokens that can be used to execute a

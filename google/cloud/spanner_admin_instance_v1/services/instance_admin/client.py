@@ -16,7 +16,18 @@
 from collections import OrderedDict
 import os
 import re
-from typing import Dict, Mapping, Optional, Sequence, Tuple, Type, Union, cast
+from typing import (
+    Dict,
+    Mapping,
+    MutableMapping,
+    MutableSequence,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 import pkg_resources
 
 from google.api_core import client_options as client_options_lib
@@ -62,7 +73,7 @@ class InstanceAdminClientMeta(type):
 
     def get_transport_class(
         cls,
-        label: str = None,
+        label: Optional[str] = None,
     ) -> Type[InstanceAdminTransport]:
         """Returns an appropriate transport class.
 
@@ -373,7 +384,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         self,
         *,
         credentials: Optional[ga_credentials.Credentials] = None,
-        transport: Union[str, InstanceAdminTransport, None] = None,
+        transport: Optional[Union[str, InstanceAdminTransport]] = None,
         client_options: Optional[Union[client_options_lib.ClientOptions, dict]] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
     ) -> None:
@@ -471,11 +482,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def list_instance_configs(
         self,
-        request: Union[spanner_instance_admin.ListInstanceConfigsRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.ListInstanceConfigsRequest, dict]
+        ] = None,
         *,
-        parent: str = None,
+        parent: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstanceConfigsPager:
         r"""Lists the supported instance configurations for a
@@ -588,11 +601,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def get_instance_config(
         self,
-        request: Union[spanner_instance_admin.GetInstanceConfigRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.GetInstanceConfigRequest, dict]
+        ] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.InstanceConfig:
         r"""Gets information about a particular instance
@@ -694,13 +709,15 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def create_instance_config(
         self,
-        request: Union[spanner_instance_admin.CreateInstanceConfigRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.CreateInstanceConfigRequest, dict]
+        ] = None,
         *,
-        parent: str = None,
-        instance_config: spanner_instance_admin.InstanceConfig = None,
-        instance_config_id: str = None,
+        parent: Optional[str] = None,
+        instance_config: Optional[spanner_instance_admin.InstanceConfig] = None,
+        instance_config_id: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation.Operation:
         r"""Creates an instance config and begins preparing it to be used.
@@ -883,12 +900,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def update_instance_config(
         self,
-        request: Union[spanner_instance_admin.UpdateInstanceConfigRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.UpdateInstanceConfigRequest, dict]
+        ] = None,
         *,
-        instance_config: spanner_instance_admin.InstanceConfig = None,
-        update_mask: field_mask_pb2.FieldMask = None,
+        instance_config: Optional[spanner_instance_admin.InstanceConfig] = None,
+        update_mask: Optional[field_mask_pb2.FieldMask] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation.Operation:
         r"""Updates an instance config. The returned [long-running
@@ -1070,11 +1089,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def delete_instance_config(
         self,
-        request: Union[spanner_instance_admin.DeleteInstanceConfigRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.DeleteInstanceConfigRequest, dict]
+        ] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Deletes the instance config. Deletion is only allowed when no
@@ -1169,13 +1190,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def list_instance_config_operations(
         self,
-        request: Union[
-            spanner_instance_admin.ListInstanceConfigOperationsRequest, dict
+        request: Optional[
+            Union[spanner_instance_admin.ListInstanceConfigOperationsRequest, dict]
         ] = None,
         *,
-        parent: str = None,
+        parent: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstanceConfigOperationsPager:
         r"""Lists the user-managed instance config [long-running
@@ -1303,11 +1324,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def list_instances(
         self,
-        request: Union[spanner_instance_admin.ListInstancesRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.ListInstancesRequest, dict]
+        ] = None,
         *,
-        parent: str = None,
+        parent: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListInstancesPager:
         r"""Lists all instances in the given project.
@@ -1419,11 +1442,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def get_instance(
         self,
-        request: Union[spanner_instance_admin.GetInstanceRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.GetInstanceRequest, dict]
+        ] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner_instance_admin.Instance:
         r"""Gets information about a particular instance.
@@ -1522,13 +1547,15 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def create_instance(
         self,
-        request: Union[spanner_instance_admin.CreateInstanceRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.CreateInstanceRequest, dict]
+        ] = None,
         *,
-        parent: str = None,
-        instance_id: str = None,
-        instance: spanner_instance_admin.Instance = None,
+        parent: Optional[str] = None,
+        instance_id: Optional[str] = None,
+        instance: Optional[spanner_instance_admin.Instance] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation.Operation:
         r"""Creates an instance and begins preparing it to begin serving.
@@ -1706,12 +1733,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def update_instance(
         self,
-        request: Union[spanner_instance_admin.UpdateInstanceRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.UpdateInstanceRequest, dict]
+        ] = None,
         *,
-        instance: spanner_instance_admin.Instance = None,
-        field_mask: field_mask_pb2.FieldMask = None,
+        instance: Optional[spanner_instance_admin.Instance] = None,
+        field_mask: Optional[field_mask_pb2.FieldMask] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> operation.Operation:
         r"""Updates an instance, and begins allocating or releasing
@@ -1893,11 +1922,13 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def delete_instance(
         self,
-        request: Union[spanner_instance_admin.DeleteInstanceRequest, dict] = None,
+        request: Optional[
+            Union[spanner_instance_admin.DeleteInstanceRequest, dict]
+        ] = None,
         *,
-        name: str = None,
+        name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Deletes an instance.
@@ -1994,11 +2025,11 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def set_iam_policy(
         self,
-        request: Union[iam_policy_pb2.SetIamPolicyRequest, dict] = None,
+        request: Optional[Union[iam_policy_pb2.SetIamPolicyRequest, dict]] = None,
         *,
-        resource: str = None,
+        resource: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> policy_pb2.Policy:
         r"""Sets the access control policy on an instance resource. Replaces
@@ -2161,11 +2192,11 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def get_iam_policy(
         self,
-        request: Union[iam_policy_pb2.GetIamPolicyRequest, dict] = None,
+        request: Optional[Union[iam_policy_pb2.GetIamPolicyRequest, dict]] = None,
         *,
-        resource: str = None,
+        resource: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> policy_pb2.Policy:
         r"""Gets the access control policy for an instance resource. Returns
@@ -2329,12 +2360,12 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
     def test_iam_permissions(
         self,
-        request: Union[iam_policy_pb2.TestIamPermissionsRequest, dict] = None,
+        request: Optional[Union[iam_policy_pb2.TestIamPermissionsRequest, dict]] = None,
         *,
-        resource: str = None,
-        permissions: Sequence[str] = None,
+        resource: Optional[str] = None,
+        permissions: Optional[MutableSequence[str]] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: float = None,
+        timeout: Optional[float] = None,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> iam_policy_pb2.TestIamPermissionsResponse:
         r"""Returns permissions that the caller has on the specified
@@ -2386,7 +2417,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                 This corresponds to the ``resource`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            permissions (Sequence[str]):
+            permissions (MutableSequence[str]):
                 The set of permissions to check for the ``resource``.
                 Permissions with wildcards (such as '*' or 'storage.*')
                 are not allowed. For more information see `IAM
