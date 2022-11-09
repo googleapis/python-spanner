@@ -44,7 +44,6 @@ CODE_TO_DISPLAY_SIZE = {
     param_types.TIMESTAMP.code: 12,
 }
 
-
 class ColumnInfo:
     """Row column description object."""
 

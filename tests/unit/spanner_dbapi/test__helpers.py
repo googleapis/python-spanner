@@ -16,7 +16,6 @@
 
 import unittest
 
-
 class TestColumnInfo(unittest.TestCase):
     def test_ctor(self):
         from google.cloud.spanner_dbapi.cursor import ColumnInfo
