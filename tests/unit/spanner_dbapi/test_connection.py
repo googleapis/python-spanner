@@ -902,7 +902,7 @@ class TestConnection(unittest.TestCase):
         req_opts = RequestOptions(priority=priority)
 
         connection.run_statement(
-            Statement(sql, params, param_types, ResultsChecksum(), False)
+            Statement(sql, params, param_types, ResultsChecksum())
         )
 
         connection._transaction.execute_sql.assert_called_with(
@@ -912,7 +912,7 @@ class TestConnection(unittest.TestCase):
 
         # check that priority is applied for only one request
         connection.run_statement(
-            Statement(sql, params, param_types, ResultsChecksum(), False)
+            Statement(sql, params, param_types, ResultsChecksum())
         )
 
         connection._transaction.execute_sql.assert_called_with(
