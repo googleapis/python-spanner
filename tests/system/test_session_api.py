@@ -647,7 +647,8 @@ def _generate_insert_statement(row):
 
 
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def _generate_insert_returning_statement(row, database_dialect):
     table = _sample_data.TABLE
     column_list = ", ".join(_sample_data.COLUMNS)
@@ -761,7 +762,8 @@ def test_transaction_execute_update_then_insert_commit(
 
 @_helpers.retry_mabye_conflict
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_transaction_execute_sql_dml_returning(
     sessions_database, sessions_to_delete, database_dialect
 ):
@@ -791,7 +793,8 @@ def test_transaction_execute_sql_dml_returning(
 
 @_helpers.retry_mabye_conflict
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_transaction_execute_update_dml_returning(
     sessions_database, sessions_to_delete, database_dialect
 ):
@@ -818,7 +821,8 @@ def test_transaction_execute_update_dml_returning(
 
 @_helpers.retry_mabye_conflict
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_transaction_batch_update_dml_returning(
     sessions_database, sessions_to_delete, database_dialect
 ):
