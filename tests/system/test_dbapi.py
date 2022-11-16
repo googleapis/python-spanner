@@ -556,7 +556,8 @@ def test_rowcount(shared_instance, dbapi_database, autocommit):
 
 @pytest.mark.parametrize("autocommit", [False, True])
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_dml_returning_insert(shared_instance, dbapi_database, autocommit):
     conn = Connection(shared_instance, dbapi_database)
     conn.autocommit = autocommit
@@ -575,7 +576,8 @@ THEN RETURN contact_id, first_name
 
 @pytest.mark.parametrize("autocommit", [False, True])
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_dml_returning_update(shared_instance, dbapi_database, autocommit):
     conn = Connection(shared_instance, dbapi_database)
     conn.autocommit = autocommit
@@ -600,7 +602,8 @@ THEN RETURN contact_id, first_name
 
 @pytest.mark.parametrize("autocommit", [False, True])
 @pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning.")
+    _helpers.USE_EMULATOR, reason="Emulator does not support DML Returning."
+)
 def test_dml_returning_delete(shared_instance, dbapi_database, autocommit):
     conn = Connection(shared_instance, dbapi_database)
     conn.autocommit = autocommit
