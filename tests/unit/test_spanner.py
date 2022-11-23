@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from dataclasses import fields
 import threading
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
@@ -43,10 +42,9 @@ from google.cloud.spanner_v1._helpers import (
 
 import mock
 
-from google.api_core.retry import Retry
 from google.api_core import gapic_v1
 
-from tests._helpers import OpenTelemetryBase, StatusCode
+from tests._helpers import OpenTelemetryBase
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]

@@ -70,7 +70,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self, derived, restart, request, span_name=None, session=None, attributes=None
     ):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
-        from google.cloud.spanner_v1.snapshot import Snapshot
 
         return _restart_on_unavailable(
             derived, restart, request, span_name, session, attributes

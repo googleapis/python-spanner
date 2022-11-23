@@ -683,7 +683,6 @@ class TestSession(OpenTelemetryBase):
     def test_run_in_transaction_callback_raises_non_gax_error(self):
         from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
-            TransactionOptions,
         )
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -729,7 +728,6 @@ class TestSession(OpenTelemetryBase):
         from google.api_core.exceptions import Cancelled
         from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
-            TransactionOptions,
         )
         from google.cloud.spanner_v1.transaction import Transaction
 
