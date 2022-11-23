@@ -725,7 +725,6 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(args, ())
         self.assertEqual(kw, {})
 
-
     def test_run_in_transaction_callback_raises_non_abort_rpc_error(self):
         from google.api_core.exceptions import Cancelled
         from google.cloud.spanner_v1 import (

@@ -1088,11 +1088,10 @@ def test_transaction_batch_update_w_parent_span(
         session.run_in_transaction(unit_of_work)
 
     span_list = ot_exporter.get_finished_spans()
-    assert len(span_list) == 6
+    assert len(span_list) == 5
     expected_span_names = [
         "CloudSpanner.CreateSession",
         "CloudSpanner.Commit",
-        "CloudSpanner.BeginTransaction",
         "CloudSpanner.DMLTransaction",
         "CloudSpanner.Commit",
         "Test Span",

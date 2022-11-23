@@ -43,7 +43,14 @@ _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
 
 
 def _restart_on_unavailable(
-    self, method, request, trace_name=None, session=None, attributes=None, isPdml = False, transactionSelector = None
+    self,
+    method,
+    request,
+    trace_name=None,
+    session=None,
+    attributes=None,
+    isPdml=False,
+    transactionSelector=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -53,7 +60,7 @@ def _restart_on_unavailable(
     :type request: proto
     :param request: request proto to call the method with
     """
-    
+
     resume_token = b""
     item_buffer = []
     if isPdml is True:
@@ -235,7 +242,7 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         trace_attributes = {"table_id": table, "columns": columns}
-        
+
         if self._transaction_id is None:
             with self._lock:
                 iterator = _restart_on_unavailable(
@@ -260,7 +267,7 @@ class _SnapshotBase(_SessionWrapper):
                 self._session,
                 trace_attributes,
             )
-        
+
         self._read_request_count += 1
         if self._multi_use:
             return StreamedResultSet(iterator, source=self)
@@ -348,7 +355,7 @@ class _SnapshotBase(_SessionWrapper):
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
-        
+
         api = database.spanner_api
 
         # Query-level options have higher precedence than client-level and

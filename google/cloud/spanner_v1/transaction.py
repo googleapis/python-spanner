@@ -63,7 +63,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :raises: :exc:`ValueError` if the object's state is invalid for making
                  API requests.
         """
-        
+
         if self.committed is not None:
             raise ValueError("Transaction is already committed")
 
@@ -78,9 +78,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         :returns: a selector configured for read-write transaction semantics.
         """
         self._check_state()
-        
+
         if self._transaction_id is None:
-            return TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+            return TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
         else:
             return TransactionSelector(id=self._transaction_id)
 
@@ -91,7 +93,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         request.transaction = transaction
         with trace_call(trace_name, session, attributes):
             response = method(request=request)
-        
+
         return response
 
     def begin(self):
@@ -282,7 +284,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         params_pb = self._make_params_pb(params, param_types)
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
-        
+
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -325,21 +327,24 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self._transaction_id is None:
             with self._lock:
                 response = self._execute_request(
-                method, 
-                request, 
-                "CloudSpanner.ReadWriteTransaction", 
-                self._session, 
-                trace_attributes
+                    method,
+                    request,
+                    "CloudSpanner.ReadWriteTransaction",
+                    self._session,
+                    trace_attributes,
                 )
-                if self._transaction_id is None and response.metadata.transaction is not None:
+                if (
+                    self._transaction_id is None
+                    and response.metadata.transaction is not None
+                ):
                     self._transaction_id = response.metadata.transaction.id
         else:
             response = self._execute_request(
-                method, 
-                request, 
-                "CloudSpanner.ReadWriteTransaction", 
-                self._session, 
-                trace_attributes
+                method,
+                request,
+                "CloudSpanner.ReadWriteTransaction",
+                self._session,
+                trace_attributes,
             )
 
         return response.stats.row_count_exact
@@ -421,23 +426,26 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self._transaction_id is None:
             with self._lock:
                 response = self._execute_request(
-                method, 
-                request, 
-                "CloudSpanner.DMLTransaction", 
-                self._session, 
-                trace_attributes
+                    method,
+                    request,
+                    "CloudSpanner.DMLTransaction",
+                    self._session,
+                    trace_attributes,
                 )
-                
+
                 for result_set in response.result_sets:
-                    if self._transaction_id is None and result_set.metadata.transaction is not None:
+                    if (
+                        self._transaction_id is None
+                        and result_set.metadata.transaction is not None
+                    ):
                         self._transaction_id = result_set.metadata.transaction.id
         else:
             response = self._execute_request(
-                method, 
-                request, 
-                "CloudSpanner.DMLTransaction", 
-                self._session, 
-                trace_attributes
+                method,
+                request,
+                "CloudSpanner.DMLTransaction",
+                self._session,
+                trace_attributes,
             )
 
         row_counts = [

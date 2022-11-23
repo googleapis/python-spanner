@@ -574,7 +574,13 @@ class Database(object):
                     metadata=metadata,
                 )
 
-                iterator = _restart_on_unavailable(self = None, method = method, request= request, isPdml=True, transactionSelector=txn_selector)
+                iterator = _restart_on_unavailable(
+                    self=None,
+                    method=method,
+                    request=request,
+                    isPdml=True,
+                    transactionSelector=txn_selector,
+                )
 
                 result_set = StreamedResultSet(iterator)
                 list(result_set)  # consume all partials

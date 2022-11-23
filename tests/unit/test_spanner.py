@@ -31,7 +31,7 @@ from google.cloud.spanner_v1 import (
     TransactionSelector,
     ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
-    param_types
+    param_types,
 )
 from google.cloud.spanner_v1.types import transaction as transaction_type
 from google.cloud.spanner_v1.keyset import KeySet
@@ -73,8 +73,8 @@ KEYSET = KeySet(keys=KEYS)
 INDEX = "email-address-index"
 LIMIT = 20
 MODE = 2
-RETRY=gapic_v1.method.DEFAULT
-TIMEOUT=gapic_v1.method.DEFAULT
+RETRY = gapic_v1.method.DEFAULT
+TIMEOUT = gapic_v1.method.DEFAULT
 REQUEST_OPTIONS = RequestOptions()
 insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
 insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
@@ -87,6 +87,7 @@ dml_statements = [
     update_dml,
     delete_dml,
 ]
+
 
 class TestTransaction(OpenTelemetryBase):
 
@@ -121,7 +122,7 @@ class TestTransaction(OpenTelemetryBase):
         from google.cloud.spanner_v1 import SpannerClient
 
         return mock.create_autospec(SpannerClient, instance=True)
-    
+
     def _execute_update_helper(
         self,
         transaction,
@@ -130,13 +131,11 @@ class TestTransaction(OpenTelemetryBase):
         query_options=None,
     ):
         stats_pb = ResultSetStats(row_count_exact=1)
-        
-        transaction_pb = transaction_type.Transaction(
-            id = self.TRANSACTION_ID
-        )
+
+        transaction_pb = transaction_type.Transaction(id=self.TRANSACTION_ID)
         metadata_pb = ResultSetMetadata(transaction=transaction_pb)
         api.execute_sql.return_value = ResultSet(stats=stats_pb, metadata=metadata_pb)
-        
+
         transaction.transaction_tag = self.TRANSACTION_TAG
         transaction._execute_sql_count = count
 
@@ -152,9 +151,13 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(row_count, count + 1)
 
-    def _execute_update_expected_request(self, database, query_options=None, begin=True, count=0):
+    def _execute_update_expected_request(
+        self, database, query_options=None, begin=True, count=0
+    ):
         if begin is True:
-            expected_transaction = TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+            expected_transaction = TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
         else:
             expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
 
@@ -181,7 +184,7 @@ class TestTransaction(OpenTelemetryBase):
             request_options=expected_request_options,
             seqno=count,
         )
-        
+
         return expected_request
 
     def _execute_sql_helper(
@@ -202,10 +205,10 @@ class TestTransaction(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        transaction_pb = transaction_type.Transaction(
-            id = self.TRANSACTION_ID
+        transaction_pb = transaction_type.Transaction(id=self.TRANSACTION_ID)
+        metadata_pb = ResultSetMetadata(
+            row_type=struct_type_pb, transaction=transaction_pb
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb,transaction=transaction_pb)
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
@@ -219,7 +222,7 @@ class TestTransaction(OpenTelemetryBase):
         api.execute_streaming_sql.return_value = iterator
         transaction._execute_sql_count = sql_count
         transaction._read_request_count = count
-        
+
         result_set = transaction.execute_sql(
             SQL_QUERY_WITH_PARAM,
             PARAMS,
@@ -239,9 +242,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.stats, stats_pb)
         self.assertEqual(transaction._execute_sql_count, sql_count + 1)
 
-    def _execute_sql_expected_request(self, database, partition=None, query_options=None, begin=True, sql_count=0):
+    def _execute_sql_expected_request(
+        self, database, partition=None, query_options=None, begin=True, sql_count=0
+    ):
         if begin is True:
-            expected_transaction = TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+            expected_transaction = TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
         else:
             expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
 
@@ -269,7 +276,7 @@ class TestTransaction(OpenTelemetryBase):
             partition_token=partition,
             seqno=sql_count,
         )
-        
+
         return expected_request
 
     def _read_helper(
@@ -288,11 +295,11 @@ class TestTransaction(OpenTelemetryBase):
             ]
         )
 
-        transaction_pb = transaction_type.Transaction(
-            id = self.TRANSACTION_ID
+        transaction_pb = transaction_type.Transaction(id=self.TRANSACTION_ID)
+        metadata_pb = ResultSetMetadata(
+            row_type=struct_type_pb, transaction=transaction_pb
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb,transaction=transaction_pb)
-    
+
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
@@ -302,10 +309,10 @@ class TestTransaction(OpenTelemetryBase):
         ]
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
-        
+
         api.streaming_read.return_value = _MockIterator(*result_sets)
         transaction._read_request_count = count
-        
+
         if partition is not None:  # 'limit' and 'partition' incompatible
             result_set = transaction.read(
                 TABLE_NAME,
@@ -338,9 +345,11 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.stats, stats_pb)
 
     def _read_helper_expected_request(self, partition=None, begin=True, count=0):
-        
+
         if begin is True:
-            expected_transaction = TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+            expected_transaction = TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
         else:
             expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
 
@@ -364,10 +373,17 @@ class TestTransaction(OpenTelemetryBase):
             partition_token=partition,
             request_options=expected_request_options,
         )
-        
+
         return expected_request
 
-    def _batch_update_helper(self, transaction, database, api, error_after=None, count=0,):
+    def _batch_update_helper(
+        self,
+        transaction,
+        database,
+        api,
+        error_after=None,
+        count=0,
+    ):
         from google.rpc.status_pb2 import Status
 
         stats_pbs = [
@@ -381,11 +397,11 @@ class TestTransaction(OpenTelemetryBase):
         else:
             expected_status = Status(code=200)
         expected_row_counts = [stats.row_count_exact for stats in stats_pbs]
-        transaction_pb = transaction_type.Transaction(
-            id = self.TRANSACTION_ID
-        )
+        transaction_pb = transaction_type.Transaction(id=self.TRANSACTION_ID)
         metadata_pb = ResultSetMetadata(transaction=transaction_pb)
-        result_sets_pb = [ResultSet(stats=stats_pb, metadata= metadata_pb) for stats_pb in stats_pbs]
+        result_sets_pb = [
+            ResultSet(stats=stats_pb, metadata=metadata_pb) for stats_pb in stats_pbs
+        ]
 
         response = ExecuteBatchDmlResponse(
             status=expected_status,
@@ -406,10 +422,12 @@ class TestTransaction(OpenTelemetryBase):
 
     def _batch_update_expected_request(self, begin=True, count=0):
         if begin is True:
-            expected_transaction = TransactionSelector(begin=TransactionOptions(read_write=TransactionOptions.ReadWrite()))
+            expected_transaction = TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
         else:
             expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
-        
+
         expected_insert_params = Struct(
             fields={
                 key: _make_value_pb(value) for (key, value) in insert_params.items()
@@ -435,7 +453,7 @@ class TestTransaction(OpenTelemetryBase):
             seqno=count,
             request_options=expected_request_options,
         )
-        
+
         return expected_request
 
     def test_transaction_should_include_begin_with_first_update(self):
@@ -506,7 +524,9 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_update_helper(transaction=transaction, api=api)
         api.execute_sql.assert_called_once_with(
-            request=self._execute_update_expected_request(database=database, begin=False),
+            request=self._execute_update_expected_request(
+                database=database, begin=False
+            ),
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
             metadata=[("google-cloud-resource-prefix", database.name)],
@@ -551,7 +571,7 @@ class TestTransaction(OpenTelemetryBase):
             request=self._batch_update_expected_request(begin=False),
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
-        
+
     def test_transaction_should_use_transaction_id_returned_by_first_batch_update(self):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
@@ -570,14 +590,26 @@ class TestTransaction(OpenTelemetryBase):
             timeout=TIMEOUT,
         )
 
-    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_execute_update(self):
+    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_execute_update(
+        self,
+    ):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
         threads = []
-        threads.append(threading.Thread(target=self._execute_update_helper, kwargs={'transaction' : transaction, 'api' : api}))
-        threads.append(threading.Thread(target=self._execute_update_helper, kwargs={'transaction' : transaction, 'api' : api}))
+        threads.append(
+            threading.Thread(
+                target=self._execute_update_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
+        threads.append(
+            threading.Thread(
+                target=self._execute_update_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
         for thread in threads:
             thread.start()
 
@@ -586,31 +618,48 @@ class TestTransaction(OpenTelemetryBase):
 
         self._batch_update_helper(transaction=transaction, database=database, api=api)
 
-        api.execute_sql.assert_any_call(request=self._execute_update_expected_request(database),
+        api.execute_sql.assert_any_call(
+            request=self._execute_update_expected_request(database),
             retry=RETRY,
             timeout=TIMEOUT,
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
-        api.execute_sql.assert_any_call(request=self._execute_update_expected_request(database, begin=False),
+        api.execute_sql.assert_any_call(
+            request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
             timeout=TIMEOUT,
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         api.execute_batch_dml.assert_any_call(
             request=self._batch_update_expected_request(begin=False),
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         self.assertEqual(api.execute_sql.call_count, 2)
         self.assertEqual(api.execute_batch_dml.call_count, 1)
 
-    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_batch_update(self):
+    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_batch_update(
+        self,
+    ):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
         threads = []
-        threads.append(threading.Thread(target=self._batch_update_helper, kwargs={'transaction' : transaction, 'database' : database, 'api' : api}))
-        threads.append(threading.Thread(target=self._batch_update_helper, kwargs={'transaction' : transaction, 'database' : database, 'api' : api}))
+        threads.append(
+            threading.Thread(
+                target=self._batch_update_helper,
+                kwargs={"transaction": transaction, "database": database, "api": api},
+            )
+        )
+        threads.append(
+            threading.Thread(
+                target=self._batch_update_helper,
+                kwargs={"transaction": transaction, "database": database, "api": api},
+            )
+        )
         for thread in threads:
             thread.start()
 
@@ -619,30 +668,46 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_update_helper(transaction=transaction, api=api)
 
-        api.execute_sql.assert_any_call(request=self._execute_update_expected_request(database, begin=False),
+        api.execute_sql.assert_any_call(
+            request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
             timeout=TIMEOUT,
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         api.execute_batch_dml.assert_any_call(
             request=self._batch_update_expected_request(),
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         api.execute_batch_dml.assert_any_call(
             request=self._batch_update_expected_request(begin=False),
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         self.assertEqual(api.execute_sql.call_count, 1)
         self.assertEqual(api.execute_batch_dml.call_count, 2)
 
-    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(self):
+    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(
+        self,
+    ):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
         threads = []
-        threads.append(threading.Thread(target=self._read_helper, kwargs={'transaction' : transaction, 'api' : api}))
-        threads.append(threading.Thread(target=self._read_helper, kwargs={'transaction' : transaction, 'api' : api}))
+        threads.append(
+            threading.Thread(
+                target=self._read_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
+        threads.append(
+            threading.Thread(
+                target=self._read_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
         for thread in threads:
             thread.start()
 
@@ -654,13 +719,15 @@ class TestTransaction(OpenTelemetryBase):
         begin_read_write = 0
         for call in api.mock_calls:
             if "read_write" in call.__str__():
-                begin_read_write+=1
+                begin_read_write += 1
 
         self.assertEqual(begin_read_write, 1)
-        api.execute_sql.assert_any_call(request=self._execute_update_expected_request(database, begin=False),
+        api.execute_sql.assert_any_call(
+            request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
             timeout=TIMEOUT,
-            metadata=[("google-cloud-resource-prefix", database.name)])
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
 
         api.streaming_read.assert_any_call(
             request=self._read_helper_expected_request(),
@@ -676,18 +743,29 @@ class TestTransaction(OpenTelemetryBase):
             timeout=TIMEOUT,
         )
 
-
         self.assertEqual(api.execute_sql.call_count, 1)
         self.assertEqual(api.streaming_read.call_count, 2)
 
-    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_query(self):
+    def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_query(
+        self,
+    ):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
         threads = []
-        threads.append(threading.Thread(target=self._execute_sql_helper, kwargs={'transaction' : transaction, 'api' : api}))
-        threads.append(threading.Thread(target=self._execute_sql_helper, kwargs={'transaction' : transaction, 'api' : api}))
+        threads.append(
+            threading.Thread(
+                target=self._execute_sql_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
+        threads.append(
+            threading.Thread(
+                target=self._execute_sql_helper,
+                kwargs={"transaction": transaction, "api": api},
+            )
+        )
         for thread in threads:
             thread.start()
 
@@ -699,15 +777,16 @@ class TestTransaction(OpenTelemetryBase):
         begin_read_write = 0
         for call in api.mock_calls:
             if "read_write" in call.__str__():
-                begin_read_write+=1
+                begin_read_write += 1
 
         self.assertEqual(begin_read_write, 1)
         api.execute_sql.assert_any_call(
             request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
             timeout=TIMEOUT,
-            metadata=[("google-cloud-resource-prefix", database.name)])
-        
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
         req = self._execute_sql_expected_request(database)
         api.execute_streaming_sql.assert_any_call(
             request=req,
@@ -722,9 +801,10 @@ class TestTransaction(OpenTelemetryBase):
             retry=RETRY,
             timeout=TIMEOUT,
         )
-        
+
         self.assertEqual(api.execute_sql.call_count, 1)
         self.assertEqual(api.execute_streaming_sql.call_count, 2)
+
 
 class _Client(object):
     def __init__(self):
@@ -751,6 +831,7 @@ class _Session(object):
     def __init__(self, database=None, name=TestTransaction.SESSION_NAME):
         self._database = database
         self.name = name
+
 
 class _MockIterator(object):
     def __init__(self, *values, **kw):

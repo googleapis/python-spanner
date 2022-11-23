@@ -46,7 +46,8 @@ BASE_ATTRIBUTES = {
     "db.instance": "testing",
     "net.host.name": "spanner.googleapis.com",
 }
- 
+
+
 class Test_SnapshotBase(OpenTelemetryBase):
 
     PROJECT_ID = "project-id"
@@ -71,7 +72,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
         from google.cloud.spanner_v1.snapshot import Snapshot
 
-        return _restart_on_unavailable(derived, restart, request, span_name, session, attributes)
+        return _restart_on_unavailable(
+            derived, restart, request, span_name, session, attributes
+        )
 
     def _make_item(self, value, resume_token=b""):
         return mock.Mock(
@@ -366,7 +369,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             database.spanner_api = self._make_spanner_api()
             session = _Session(database)
             derived = self._makeDerived(session)
-            resumable = self._call_fut(derived, restart, request, name, _Session(_Database()))
+            resumable = self._call_fut(
+                derived, restart, request, name, _Session(_Database())
+            )
             self.assertEqual(list(resumable), list(FIRST + LAST))
             self.assertEqual(len(restart.mock_calls), 2)
             self.assertEqual(request.resume_token, RESUME_TOKEN)
