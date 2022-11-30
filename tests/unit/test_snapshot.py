@@ -291,6 +291,67 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
+    def test_iteration_w_raw_w_multiuse(self):
+        from google.cloud.spanner_v1 import (
+            ReadRequest,
+        )
+
+        FIRST = (
+            self._make_item(0),
+            self._make_item(1),
+        )
+        before = _MockIterator(*FIRST)
+        request = ReadRequest(transaction=None)
+        restart = mock.Mock(spec=[], return_value=before)
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
+        derived = self._makeDerived(session)
+        derived._multi_use = True
+        resumable = self._call_fut(derived, restart, request)
+        self.assertEqual(list(resumable), list(FIRST))
+        self.assertEqual(len(restart.mock_calls), 1)
+        begin = 0
+        for call in restart.mock_calls:
+            if "begin" in call.__str__():
+                begin += 1
+
+        self.assertEqual(begin, 1)
+        self.assertNoSpans()
+
+    def test_iteration_w_raw_raising_unavailable_w_multiuse(self):
+        from google.api_core.exceptions import ServiceUnavailable
+        from google.cloud.spanner_v1 import (
+            ReadRequest,
+        )
+
+        FIRST = (
+            self._make_item(0),
+            self._make_item(1),
+        )
+        SECOND = (self._make_item(2), self._make_item(3))
+        before = _MockIterator(
+            *FIRST, fail_after=True, error=ServiceUnavailable("testing")
+        )
+        after = _MockIterator(*SECOND)
+        request = ReadRequest(transaction=None)
+        restart = mock.Mock(spec=[], side_effect=[before, after])
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
+        derived = self._makeDerived(session)
+        derived._multi_use = True
+        resumable = self._call_fut(derived, restart, request)
+        self.assertEqual(list(resumable), list(SECOND))
+        self.assertEqual(len(restart.mock_calls), 2)
+        begin = 0
+        for call in restart.mock_calls:
+            if "begin" in call.__str__():
+                begin += 1
+
+        self.assertEqual(begin, 2)
+        self.assertNoSpans()
+
     def test_iteration_w_raw_raising_unavailable_after_token_w_multiuse(self):
         from google.api_core.exceptions import ServiceUnavailable
 
@@ -323,8 +384,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
-
+        transaction_id_selector = 0
         self.assertEqual(request.resume_token, RESUME_TOKEN)
+        for call in restart.mock_calls:
+            if 'id: "DEAFBEAD"' in call.__str__():
+                transaction_id_selector += 1
+        self.assertEqual(transaction_id_selector, 2)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_after_token(self):
