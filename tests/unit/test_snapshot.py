@@ -77,9 +77,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def _make_item(self, value, resume_token=b"", metadata=None):
         return mock.Mock(
-            value=value, resume_token=resume_token, metadata=metadata, spec=["value", "resume_token", "metadata"]
+            value=value,
+            resume_token=resume_token,
+            metadata=metadata,
+            spec=["value", "resume_token", "metadata"],
         )
-    
+
     def test_iteration_w_empty_raw(self):
         raw = _MockIterator()
         request = mock.Mock(test="test", spec=["test", "resume_token"])
@@ -291,7 +294,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
     def test_iteration_w_raw_raising_unavailable_after_token_w_multiuse(self):
         from google.api_core.exceptions import ServiceUnavailable
 
-        from google.cloud.spanner_v1 import (ResultSetMetadata)
+        from google.cloud.spanner_v1 import ResultSetMetadata
         from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
             ReadRequest,
@@ -299,7 +302,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         transaction_pb = TransactionPB(id=TXN_ID)
         metadata_pb = ResultSetMetadata(transaction=transaction_pb)
-        FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN, metadata=metadata_pb))
+        FIRST = (
+            self._make_item(0),
+            self._make_item(1, resume_token=RESUME_TOKEN, metadata=metadata_pb),
+        )
         SECOND = (self._make_item(2), self._make_item(3))
         before = _MockIterator(
             *FIRST, fail_after=True, error=ServiceUnavailable("testing")
@@ -312,12 +318,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        
+
         resumable = self._call_fut(derived, restart, request)
-       
+
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
-        
+
         self.assertEqual(request.resume_token, RESUME_TOKEN)
         self.assertNoSpans()
 
