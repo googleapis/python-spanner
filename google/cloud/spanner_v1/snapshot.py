@@ -78,7 +78,8 @@ def _restart_on_unavailable(
                 if item.resume_token:
                     resume_token = item.resume_token
                     if (
-                        self._transaction_id is None
+                        self is not None
+                        and self._transaction_id is None
                         and item.metadata is not None
                         and item.metadata.transaction is not None
                         and item.metadata.transaction.id is not None
