@@ -29,7 +29,8 @@ from typing import (
     Union,
     cast,
 )
-import pkg_resources
+
+from google.cloud.spanner_v1 import gapic_version as package_version
 
 from google.api_core import client_options as client_options_lib
 from google.api_core import exceptions as core_exceptions
@@ -478,7 +479,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         *,
         database: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
         r"""Creates a new session. A session can be used to perform
@@ -597,7 +598,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         database: Optional[str] = None,
         session_count: Optional[int] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.BatchCreateSessionsResponse:
         r"""Creates multiple new sessions.
@@ -717,7 +718,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         *,
         name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.Session:
         r"""Gets a session. Returns ``NOT_FOUND`` if the session does not
@@ -819,7 +820,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         *,
         database: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> pagers.ListSessionsPager:
         r"""Lists all sessions in a given database.
@@ -934,7 +935,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         *,
         name: Optional[str] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Ends a session, releasing server resources associated
@@ -1025,7 +1026,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.ExecuteSqlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
         r"""Executes an SQL statement, returning all results in a single
@@ -1121,7 +1122,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.ExecuteSqlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
         r"""Like [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql], except
@@ -1213,7 +1214,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.ExecuteBatchDmlRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.ExecuteBatchDmlResponse:
         r"""Executes a batch of SQL DML statements. This method allows many
@@ -1349,7 +1350,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.ReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> result_set.ResultSet:
         r"""Reads rows from the database using key lookups and scans, as a
@@ -1447,7 +1448,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.ReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> Iterable[result_set.PartialResultSet]:
         r"""Like [Read][google.spanner.v1.Spanner.Read], except returns the
@@ -1542,7 +1543,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         session: Optional[str] = None,
         options: Optional[transaction.TransactionOptions] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> transaction.Transaction:
         r"""Begins a new transaction. This step can often be skipped:
@@ -1658,7 +1659,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         mutations: Optional[MutableSequence[mutation.Mutation]] = None,
         single_use_transaction: Optional[transaction.TransactionOptions] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> commit_response.CommitResponse:
         r"""Commits a transaction. The request includes the mutations to be
@@ -1816,7 +1817,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         session: Optional[str] = None,
         transaction_id: Optional[bytes] = None,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> None:
         r"""Rolls back a transaction, releasing any locks it holds. It is a
@@ -1924,7 +1925,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.PartitionQueryRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
         r"""Creates a set of partition tokens that can be used to execute a
@@ -2020,7 +2021,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         request: Optional[Union[spanner.PartitionReadRequest, dict]] = None,
         *,
         retry: OptionalRetry = gapic_v1.method.DEFAULT,
-        timeout: Optional[float] = None,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.PartitionResponse:
         r"""Creates a set of partition tokens that can be used to execute a
@@ -2128,14 +2129,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
         self.transport.close()
 
 
-try:
-    DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
-        gapic_version=pkg_resources.get_distribution(
-            "google-cloud-spanner",
-        ).version,
-    )
-except pkg_resources.DistributionNotFound:
-    DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo()
+DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
+    gapic_version=package_version.__version__
+)
 
 
 __all__ = ("SpannerClient",)
