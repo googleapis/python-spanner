@@ -507,6 +507,26 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
+    def test_transaction_should_use_transaction_id_if_error_with_first_batch_update(self):
+        database = _Database()
+        session = _Session(database)
+        api = database.spanner_api = self._make_spanner_api()
+        transaction = self._make_one(session)
+        self._batch_update_helper(transaction=transaction, database=database, api=api, error_after=2)
+        api.execute_batch_dml.assert_called_once_with(
+            request=self._batch_update_expected_request(begin=True),
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+        self._execute_update_helper(transaction=transaction, api=api)
+        api.execute_sql.assert_called_once_with(
+            request=self._execute_update_expected_request(
+                database=database, begin=False
+            ),
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
     def test_transaction_should_use_transaction_id_returned_by_first_query(self):
         database = _Database()
         session = _Session(database)
