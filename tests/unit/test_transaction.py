@@ -188,6 +188,20 @@ class TestTransaction(OpenTelemetryBase):
             "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
         )
 
+    def test_rollback_not_begun(self):
+        database = _Database()
+        api = database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
+        transaction = self._make_one(session)
+
+        transaction.rollback()
+        self.assertTrue(transaction.rolled_back)
+
+        # Since there was no transaction to be rolled back, rollbacl rpc is not called.
+        api.rollback.assert_not_called()
+
+        self.assertNoSpans()
+
     def test_rollback_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -252,6 +266,14 @@ class TestTransaction(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Rollback", attributes=TestTransaction.BASE_ATTRIBUTES
         )
+
+    def test_commit_not_begun(self):
+        session = _Session()
+        transaction = self._make_one(session)
+        with self.assertRaises(ValueError):
+            transaction.commit()
+
+        self.assertNoSpans()
 
     def test_commit_already_committed(self):
         session = _Session()

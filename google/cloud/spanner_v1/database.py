@@ -575,11 +575,9 @@ class Database(object):
                 )
 
                 iterator = _restart_on_unavailable(
-                    self=None,
                     method=method,
                     request=request,
-                    isPdml=True,
-                    transactionSelector=txn_selector,
+                    transaction_selector=txn_selector,
                 )
 
                 result_set = StreamedResultSet(iterator)

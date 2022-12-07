@@ -723,6 +723,10 @@ class TestSession(OpenTelemetryBase):
         self.assertTrue(txn.rolled_back)
         self.assertEqual(args, ())
         self.assertEqual(kw, {})
+        # Transaction only has mutation operations.
+        # Exception was raised before commit, hence transaction did not begin.
+        # Therefore rollback was not called.
+        gax_api.rollback.assert_not_called()
 
     def test_run_in_transaction_callback_raises_non_abort_rpc_error(self):
         from google.api_core.exceptions import Cancelled
@@ -1121,6 +1125,8 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(kw, {})
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
+
+        # First call was aborted before commit operation, Therefore no begin rpc was made during first attempt.
         gax_api.begin_transaction.assert_called_once_with(
             session=self.SESSION_NAME,
             options=expected_options,

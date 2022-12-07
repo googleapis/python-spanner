@@ -48,23 +48,39 @@ BASE_ATTRIBUTES = {
 }
 
 
-class Test_SnapshotBase(OpenTelemetryBase):
-
-    PROJECT_ID = "project-id"
-    INSTANCE_ID = "instance-id"
-    INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
-    DATABASE_ID = "database-id"
-    DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
-    SESSION_ID = "session-id"
-    SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
-
+class Test_restart_on_unavailable(OpenTelemetryBase):
     def _getTargetClass(self):
         from google.cloud.spanner_v1.snapshot import _SnapshotBase
 
         return _SnapshotBase
 
-    def _make_one(self, session):
-        return self._getTargetClass()(session)
+    def _makeDerived(self, session):
+        class _Derived(self._getTargetClass()):
+
+            _transaction_id = None
+            _multi_use = False
+
+            def _make_txn_selector(self):
+                from google.cloud.spanner_v1 import (
+                    TransactionOptions,
+                    TransactionSelector,
+                )
+
+                if self._transaction_id:
+                    return TransactionSelector(id=self._transaction_id)
+                options = TransactionOptions(
+                    read_only=TransactionOptions.ReadOnly(strong=True)
+                )
+                if self._multi_use:
+                    return TransactionSelector(begin=options)
+                return TransactionSelector(single_use=options)
+
+        return _Derived(session)
+
+    def _make_spanner_api(self):
+        from google.cloud.spanner_v1 import SpannerClient
+
+        return mock.create_autospec(SpannerClient, instance=True)
 
     def _call_fut(
         self, derived, restart, request, span_name=None, session=None, attributes=None
@@ -72,7 +88,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 
         return _restart_on_unavailable(
-            derived, restart, request, span_name, session, attributes
+            restart, request, span_name, session, attributes, transaction=derived
         )
 
     def _make_item(self, value, resume_token=b"", metadata=None):
@@ -492,6 +508,25 @@ class Test_SnapshotBase(OpenTelemetryBase):
                         "net.host.name": "spanner.googleapis.com",
                     },
                 )
+
+
+class Test_SnapshotBase(OpenTelemetryBase):
+
+    PROJECT_ID = "project-id"
+    INSTANCE_ID = "instance-id"
+    INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
+    DATABASE_ID = "database-id"
+    DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
+    SESSION_ID = "session-id"
+    SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
+
+    def _getTargetClass(self):
+        from google.cloud.spanner_v1.snapshot import _SnapshotBase
+
+        return _SnapshotBase
+
+    def _make_one(self, session):
+        return self._getTargetClass()(session)
 
     def _makeDerived(self, session):
         class _Derived(self._getTargetClass()):

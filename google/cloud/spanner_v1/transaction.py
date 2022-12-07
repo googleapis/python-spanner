@@ -89,6 +89,14 @@ class Transaction(_SnapshotBase, _BatchBase):
     def _execute_request(
         self, method, request, trace_name=None, session=None, attributes=None
     ):
+        """Helper method to execute request after fetching transaction selector.
+
+        :type method: callable
+        :param method: function returning iterator
+
+        :type request: proto
+        :param request: request proto to call the method with
+        """
         transaction = self._make_txn_selector()
         request.transaction = transaction
         with trace_call(trace_name, session, attributes):
@@ -160,8 +168,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         :raises ValueError: if there are no mutations to commit.
         """
         self._check_state()
-        if self._transaction_id is None:
+        if self._transaction_id is None and len(self._mutations) > 0:
             self.begin()
+        elif self._transaction_id is None and len(self._mutations) is 0:
+            raise ValueError("Transaction is not begun")
 
         database = self._session._database
         api = database.spanner_api
@@ -284,7 +294,6 @@ class Transaction(_SnapshotBase, _BatchBase):
         params_pb = self._make_params_pb(params, param_types)
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
-
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -325,6 +334,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         )
 
         if self._transaction_id is None:
+            # lock is added to handle the inline begin for first rpc
             with self._lock:
                 response = self._execute_request(
                     method,
@@ -333,8 +343,11 @@ class Transaction(_SnapshotBase, _BatchBase):
                     self._session,
                     trace_attributes,
                 )
+                # Setting the transaction id because the transaction begin was inlined for first rpc.
                 if (
                     self._transaction_id is None
+                    and response is not None
+                    and response.metadata is not None
                     and response.metadata.transaction is not None
                 ):
                     self._transaction_id = response.metadata.transaction.id
@@ -424,6 +437,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         )
 
         if self._transaction_id is None:
+            # lock is added to handle the inline begin for first rpc
             with self._lock:
                 response = self._execute_request(
                     method,
@@ -432,13 +446,15 @@ class Transaction(_SnapshotBase, _BatchBase):
                     self._session,
                     trace_attributes,
                 )
-
+                # Setting the transaction id because the transaction begin was inlined for first rpc.
                 for result_set in response.result_sets:
                     if (
                         self._transaction_id is None
+                        and result_set.metadata is not None
                         and result_set.metadata.transaction is not None
                     ):
                         self._transaction_id = result_set.metadata.transaction.id
+                        break
         else:
             response = self._execute_request(
                 method,
