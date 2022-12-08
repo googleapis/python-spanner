@@ -1027,6 +1027,7 @@ def test_transaction_batch_update_wo_statements(sessions_database, sessions_to_d
     sessions_to_delete.append(session)
 
     with session.transaction() as transaction:
+        transaction.begin()
         with pytest.raises(exceptions.InvalidArgument):
             transaction.batch_update([])
 

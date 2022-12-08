@@ -170,7 +170,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._check_state()
         if self._transaction_id is None and len(self._mutations) > 0:
             self.begin()
-        elif self._transaction_id is None and len(self._mutations) is 0:
+        elif self._transaction_id is None and len(self._mutations) == 0:
             raise ValueError("Transaction is not begun")
 
         database = self._session._database
