@@ -19,7 +19,7 @@ import queue
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-
+from warnings import warn
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
 
@@ -447,6 +447,9 @@ class PingingPool(AbstractSessionPool):
 
 class TransactionPingingPool(PingingPool):
     """Concrete session pool implementation:
+    Deprecated: TransactionPingingPool no longer begins a transaction for each of its sessions at startup.
+    Hence the TransactionPingingPool is same as :class:`PingingPool` , and maybe removed in the future.
+
 
     In addition to the features of :class:`PingingPool`, this class
     creates and begins a transaction for each of its sessions at startup.
@@ -473,6 +476,12 @@ class TransactionPingingPool(PingingPool):
     """
 
     def __init__(self, size=10, default_timeout=10, ping_interval=3000, labels=None):
+        """This throws a deprecation warning on initialization."""
+        warn(
+            f"{self.__class__.__name__} is deprecated.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._pending_sessions = queue.Queue()
 
         super(TransactionPingingPool, self).__init__(
