@@ -59,6 +59,12 @@ def _restart_on_unavailable(
 
     :type request: proto
     :param request: request proto to call the method with
+
+    :type transaction: :class:`google.cloud.spanner_v1.snapshot._SnapshotBase`
+    :param transaction: Snapshot or Transaction class object based on the type of transaction
+
+    :type transaction_selector: :class:`transaction_pb2.TransactionSelector`
+    :param transaction_selector: Transaction selector object to be used in request if transaction is not passed
     """
 
     resume_token = b""

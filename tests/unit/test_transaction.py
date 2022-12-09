@@ -835,9 +835,9 @@ class TestTransaction(OpenTelemetryBase):
                 raise Exception("bail out")
 
         self.assertEqual(transaction.committed, None)
+        # Rollback rpc will not be called as there is no transaction id to be rolled back, rolled_back flag will be marked as true.
         self.assertTrue(transaction.rolled_back)
         self.assertEqual(len(transaction._mutations), 1)
-
         self.assertEqual(api._committed, None)
 
 
