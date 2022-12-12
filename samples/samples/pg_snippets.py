@@ -28,6 +28,7 @@ import time
 from google.cloud import spanner, spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import param_types
+from google.cloud.spanner_v1.data_types import JsonObject
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -94,6 +95,8 @@ def create_table_using_ddl(database_name):
   FirstName  character varying(1024),
   LastName   character varying(1024),
   SingerInfo bytea,
+  FullName   character varying(2048)
+    GENERATED ALWAYS AS (FirstName || ' ' || LastName) STORED,
   PRIMARY KEY (SingerId)
   )""",
         """CREATE TABLE Albums (
@@ -538,6 +541,38 @@ def insert_with_dml(instance_id, database_id):
     # [END spanner_postgresql_dml_getting_started_insert]
 
 
+def insert_with_dml_returning(instance_id, database_id):
+    """Inserts sample data into the given database using a DML statement having a RETURNING clause. """
+    # [START spanner_postgresql_dml_insert_returning]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # Insert records into the SINGERS table and returns the
+    # generated column FullName of the inserted records using
+    # 'RETURNING FullName'.
+    # It is also possible to return all columns of all the
+    # inserted records by using 'RETURNING *'.
+    def insert_singers(transaction):
+        results = transaction.execute_sql(
+            "INSERT INTO Singers (SingerId, FirstName, LastName) VALUES "
+            "(21, 'Luann', 'Chizoba'), "
+            "(22, 'Denis', 'Patricio'), "
+            "(23, 'Felxi', 'Ronan'), "
+            "(24, 'Dominik', 'Martyna') "
+            "RETURNING FullName"
+        )
+        for result in results:
+            print("FullName: {}".format(*result))
+        print("{} record(s) inserted.".format(results.stats.row_count_exact))
+
+    database.run_in_transaction(insert_singers)
+    # [END spanner_postgresql_dml_insert_returning]
+
+
 def query_data_with_parameter(instance_id, database_id):
     """Queries sample data from the database using SQL with a parameter."""
     # [START spanner_postgresql_query_with_parameter]
@@ -851,6 +886,37 @@ def update_data_with_dml(instance_id, database_id):
     # [END spanner_postgresql_dml_standard_update]
 
 
+def update_data_with_dml_returning(instance_id, database_id):
+    """Updates sample data from the database using a DML statement having a RETURNING clause."""
+    # [START spanner_postgresql_dml_update_returning]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # Update MarketingBudget column for records satisfying
+    # a particular condition and returns the modified
+    # MarketingBudget column of the updated records using
+    # 'RETURNING MarketingBudget'.
+    # It is also possible to return all columns of all the
+    # updated records by using 'RETURNING *'.
+    def update_albums(transaction):
+        results = transaction.execute_sql(
+            "UPDATE Albums "
+            "SET MarketingBudget = MarketingBudget * 2 "
+            "WHERE SingerId = 1 and AlbumId = 1 "
+            "RETURNING MarketingBudget"
+        )
+        for result in results:
+            print("MarketingBudget: {}".format(*result))
+        print("{} record(s) updated.".format(results.stats.row_count_exact))
+
+    database.run_in_transaction(update_albums)
+    # [END spanner_postgresql_dml_update_returning]
+
+
 def delete_data_with_dml(instance_id, database_id):
     """Deletes sample data from the database using a DML statement."""
     # [START spanner_postgresql_dml_standard_delete]
@@ -870,6 +936,35 @@ def delete_data_with_dml(instance_id, database_id):
 
     database.run_in_transaction(delete_singers)
     # [END spanner_postgresql_dml_standard_delete]
+
+
+def delete_data_with_dml_returning(instance_id, database_id):
+    """Deletes sample data from the database using a DML statement having a RETURNING clause. """
+    # [START spanner_postgresql_dml_delete_returning]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # Delete records from SINGERS table satisfying a
+    # particular condition and returns the SingerId
+    # and FullName column of the deleted records using
+    # 'RETURNING SingerId, FullName'.
+    # It is also possible to return all columns of all the
+    # deleted records by using 'RETURNING *'.
+    def delete_singers(transaction):
+        results = transaction.execute_sql(
+            "DELETE FROM Singers WHERE FirstName = 'David' "
+            "RETURNING SingerId, FullName"
+        )
+        for result in results:
+            print("SingerId: {}, FullName: {}".format(*result))
+        print("{} record(s) deleted.".format(results.stats.row_count_exact))
+
+    database.run_in_transaction(delete_singers)
+    # [END spanner_postgresql_dml_delete_returning]
 
 
 def dml_write_read_transaction(instance_id, database_id):
@@ -1342,6 +1437,133 @@ def query_data_with_query_options(instance_id, database_id):
     # [END spanner_postgresql_query_with_query_options]
 
 
+# [START spanner_postgresql_jsonb_add_column]
+def add_jsonb_column(instance_id, database_id):
+    """
+    Alters Venues tables in the database adding a JSONB column.
+    You can create the table by running the `create_table_with_datatypes`
+    sample or by running this DDL statement against your database:
+    CREATE TABLE Venues (
+      VenueId         BIGINT NOT NULL,
+      VenueName       character varying(100),
+      VenueInfo       BYTEA,
+      Capacity        BIGINT,
+      OutdoorVenue    BOOL,
+      PopularityScore FLOAT8,
+      Revenue         NUMERIC,
+      LastUpdateTime  SPANNER.COMMIT_TIMESTAMP NOT NULL,
+      PRIMARY KEY (VenueId))
+    """
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    operation = database.update_ddl(
+        ["ALTER TABLE Venues ADD COLUMN VenueDetails JSONB"]
+    )
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Venues" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_postgresql_jsonb_add_column]
+
+
+# [START spanner_postgresql_jsonb_update_data]
+def update_data_with_jsonb(instance_id, database_id):
+    """Updates Venues tables in the database with the JSONB
+    column.
+    This updates the `VenueDetails` column which must be created before
+    running this sample. You can add the column by running the
+    `add_jsonb_column` sample or by running this DDL statement
+     against your database:
+        ALTER TABLE Venues ADD COLUMN VenueDetails JSONB
+    """
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    """
+    PG JSONB takes the last value in the case of duplicate keys.
+    PG JSONB sorts first by key length and then lexicographically with
+    equivalent key length.
+    """
+
+    with database.batch() as batch:
+        batch.update(
+            table="Venues",
+            columns=("VenueId", "VenueDetails"),
+            values=[
+                (
+                    4,
+                    JsonObject(
+                        [
+                            JsonObject({"name": None, "open": True}),
+                            JsonObject(
+                                {"name": "room 2", "open": False}
+                            ),
+                        ]
+                    ),
+                ),
+                (19, JsonObject(rating=9, open=True)),
+                (
+                    42,
+                    JsonObject(
+                        {
+                            "name": None,
+                            "open": {"Monday": True, "Tuesday": False},
+                            "tags": ["large", "airy"],
+                        }
+                    ),
+                ),
+            ],
+        )
+
+    print("Updated data.")
+
+
+# [END spanner_postgresql_jsonb_update_data]
+
+# [START spanner_postgresql_jsonb_query_parameter]
+def query_data_with_jsonb_parameter(instance_id, database_id):
+    """Queries sample data using SQL with a JSONB parameter."""
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    param = {"p1": 2}
+    param_type = {"p1": param_types.INT64}
+
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql(
+            "SELECT venueid, venuedetails FROM Venues"
+            + " WHERE CAST(venuedetails ->> 'rating' AS INTEGER) > $1",
+            params=param,
+            param_types=param_type,
+        )
+
+        for row in results:
+            print("VenueId: {}, VenueDetails: {}".format(*row))
+
+
+# [END spanner_postgresql_jsonb_query_parameter]
+
+
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
       description=__doc__,
@@ -1394,12 +1616,17 @@ if __name__ == "__main__":  # noqa: C901
                           help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml",
                           help=update_data_with_dml.__doc__)
+    subparsers.add_parser("update_data_with_dml",
+                          help=update_data_with_dml_returning.__doc__)
     subparsers.add_parser("delete_data_with_dml",
                           help=delete_data_with_dml.__doc__)
+    subparsers.add_parser("delete_data_with_dml_returning",
+                          help=delete_data_with_dml_returning.__doc__)
     subparsers.add_parser(
       "dml_write_read_transaction", help=dml_write_read_transaction.__doc__
     )
     subparsers.add_parser("insert_with_dml", help=insert_with_dml.__doc__)
+    subparsers.add_parser("insert_with_dml_returning", help=insert_with_dml_returning.__doc__)
     subparsers.add_parser(
       "query_data_with_parameter", help=query_data_with_parameter.__doc__
     )
@@ -1500,12 +1727,18 @@ if __name__ == "__main__":  # noqa: C901
         insert_data_with_dml(args.instance_id, args.database_id)
     elif args.command == "update_data_with_dml":
         update_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_dml_returning":
+        update_data_with_dml_returning(args.instance_id, args.database_id)
     elif args.command == "delete_data_with_dml":
         delete_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "delete_data_with_dml_returning":
+        delete_data_with_dml_returning(args.instance_id, args.database_id)
     elif args.command == "dml_write_read_transaction":
         dml_write_read_transaction(args.instance_id, args.database_id)
     elif args.command == "insert_with_dml":
         insert_with_dml(args.instance_id, args.database_id)
+    elif args.command == "insert_with_dml_returning":
+        insert_with_dml_returning(args.instance_id, args.database_id)
     elif args.command == "query_data_with_parameter":
         query_data_with_parameter(args.instance_id, args.database_id)
     elif args.command == "write_with_dml_transaction":
