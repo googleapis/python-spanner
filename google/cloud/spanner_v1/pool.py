@@ -30,14 +30,18 @@ class AbstractSessionPool(object):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     _database = None
 
-    def __init__(self, labels=None):
+    def __init__(self, labels=None, database_role=None):
         if labels is None:
             labels = {}
         self._labels = labels
+        self._database_role = database_role
 
     @property
     def labels(self):
@@ -47,6 +51,15 @@ class AbstractSessionPool(object):
         :returns: labels assigned by the user
         """
         return self._labels
+
+    @property
+    def database_role(self):
+        """User-assigned database_role for sessions created by the pool.
+
+        :rtype: str
+        :returns: database_role assigned by the user
+        """
+        return self._database_role
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -104,9 +117,9 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: new session instance.
         """
-        if self.labels:
-            return self._database.session(labels=self.labels)
-        return self._database.session()
+        return self._database.session(
+            labels=self.labels, database_role=self.database_role
+        )
 
     def session(self, **kwargs):
         """Check out a session from the pool.
@@ -146,13 +159,22 @@ class FixedSizePool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     DEFAULT_SIZE = 10
     DEFAULT_TIMEOUT = 10
 
-    def __init__(self, size=DEFAULT_SIZE, default_timeout=DEFAULT_TIMEOUT, labels=None):
-        super(FixedSizePool, self).__init__(labels=labels)
+    def __init__(
+        self,
+        size=DEFAULT_SIZE,
+        default_timeout=DEFAULT_TIMEOUT,
+        labels=None,
+        database_role=None,
+    ):
+        super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
@@ -167,12 +189,14 @@ class FixedSizePool(AbstractSessionPool):
         self._database = database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        self._database_role = self._database_role or self._database.database_role
 
         while not self._sessions.full():
             resp = api.batch_create_sessions(
                 database=database.name,
                 session_count=self.size - self._sessions.qsize(),
                 metadata=metadata,
+                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -243,10 +267,13 @@ class BurstyPool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
-    def __init__(self, target_size=10, labels=None):
-        super(BurstyPool, self).__init__(labels=labels)
+    def __init__(self, target_size=10, labels=None, database_role=None):
+        super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
@@ -259,6 +286,7 @@ class BurstyPool(AbstractSessionPool):
                          when needed.
         """
         self._database = database
+        self._database_role = self._database_role or self._database.database_role
 
     def get(self):
         """Check a session out from the pool.
@@ -340,10 +368,20 @@ class PingingPool(AbstractSessionPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
-    def __init__(self, size=10, default_timeout=10, ping_interval=3000, labels=None):
-        super(PingingPool, self).__init__(labels=labels)
+    def __init__(
+        self,
+        size=10,
+        default_timeout=10,
+        ping_interval=3000,
+        labels=None,
+        database_role=None,
+    ):
+        super(PingingPool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)
@@ -360,12 +398,14 @@ class PingingPool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         created_session_count = 0
+        self._database_role = self._database_role or self._database.database_role
 
         while created_session_count < self.size:
             resp = api.batch_create_sessions(
                 database=database.name,
                 session_count=self.size - created_session_count,
                 metadata=metadata,
+                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -470,13 +510,27 @@ class TransactionPingingPool(PingingPool):
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
                     by the pool.
+
+    :type database_role: str
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
-    def __init__(self, size=10, default_timeout=10, ping_interval=3000, labels=None):
+    def __init__(
+        self,
+        size=10,
+        default_timeout=10,
+        ping_interval=3000,
+        labels=None,
+        database_role=None,
+    ):
         self._pending_sessions = queue.Queue()
 
         super(TransactionPingingPool, self).__init__(
-            size, default_timeout, ping_interval, labels=labels
+            size,
+            default_timeout,
+            ping_interval,
+            labels=labels,
+            database_role=database_role,
         )
 
         self.begin_pending_transactions()
@@ -489,6 +543,7 @@ class TransactionPingingPool(PingingPool):
                          when needed.
         """
         super(TransactionPingingPool, self).bind(database)
+        self._database_role = self._database_role or self._database.database_role
         self.begin_pending_transactions()
 
     def put(self, session):

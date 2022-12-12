@@ -27,11 +27,14 @@ from google.api_core.retry import if_exception_type
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
+from google.iam.v1 import iam_policy_pb2
+from google.iam.v1 import options_pb2
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
@@ -119,7 +122,8 @@ class Database(object):
         :class:`~google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
     :param database_dialect:
         (Optional) database dialect for the database
-
+    :type database_role: str or None
+    :param database_role: (Optional) user-assigned database_role for the session.
     """
 
     _spanner_api = None
@@ -133,6 +137,7 @@ class Database(object):
         logger=None,
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
+        database_role=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -149,9 +154,10 @@ class Database(object):
         self._logger = logger
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
+        self._database_role = database_role
 
         if pool is None:
-            pool = BurstyPool()
+            pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
         pool.bind(self)
@@ -315,6 +321,14 @@ class Database(object):
         return self._database_dialect
 
     @property
+    def database_role(self):
+        """User-assigned database_role for sessions created by the pool.
+        :rtype: str
+        :returns: a str with the name of the database role.
+        """
+        return self._database_role
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -466,9 +480,7 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         request = UpdateDatabaseDdlRequest(
-            database=self.name,
-            statements=ddl_statements,
-            operation_id=operation_id,
+            database=self.name, statements=ddl_statements, operation_id=operation_id,
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
@@ -571,8 +583,7 @@ class Database(object):
                     request_options=request_options,
                 )
                 method = functools.partial(
-                    api.execute_streaming_sql,
-                    metadata=metadata,
+                    api.execute_streaming_sql, metadata=metadata,
                 )
 
                 iterator = _restart_on_unavailable(method, request)
@@ -584,16 +595,22 @@ class Database(object):
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
-    def session(self, labels=None):
+    def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
 
+        :type database_role: str
+        :param database_role: (Optional) user-assigned database_role for the session.
+
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: a session bound to this database.
         """
-        return Session(self, labels=labels)
+        # If role is specified in param, then that role is used
+        # instead.
+        role = database_role or self._database_role
+        return Session(self, labels=labels, database_role=role)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.
@@ -722,10 +739,7 @@ class Database(object):
             backup=source.name,
             encryption_config=self._encryption_config or None,
         )
-        future = api.restore_database(
-            request=request,
-            metadata=metadata,
-        )
+        future = api.restore_database(request=request, metadata=metadata,)
         return future
 
     def is_ready(self):
@@ -772,6 +786,26 @@ class Database(object):
             filter_=database_filter, page_size=page_size
         )
 
+    def list_database_roles(self, page_size=None):
+        """Lists Cloud Spanner database roles.
+
+        :type page_size: int
+        :param page_size:
+            Optional. The maximum number of database roles in each page of results
+            from this request. Non-positive values are ignored. Defaults to a
+            sensible value set by the API.
+
+        :type: Iterable
+        :returns:
+            Iterable of :class:`~google.cloud.spanner_admin_database_v1.types.spanner_database_admin.DatabaseRole`
+            resources within the current database.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = ListDatabaseRolesRequest(parent=self.name, page_size=page_size,)
+        return api.list_database_roles(request=request, metadata=metadata)
+
     def table(self, table_id):
         """Factory to create a table object within this database.
 
@@ -810,6 +844,54 @@ class Database(object):
             results = snapshot.execute_sql(_LIST_TABLES_QUERY.format(where_clause))
             for row in results:
                 yield self.table(row[0])
+
+    def get_iam_policy(self, policy_version=None):
+        """Gets the access control policy for a database resource.
+
+        :type policy_version: int
+        :param policy_version:
+            (Optional) the maximum policy version that will be
+            used to format the policy. Valid values are 0, 1 ,3.
+
+        :rtype: :class:`~google.iam.v1.policy_pb2.Policy`
+        :returns:
+            returns an Identity and Access Management (IAM) policy. It is used to
+            specify access control policies for Cloud Platform
+            resources.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = iam_policy_pb2.GetIamPolicyRequest(
+            resource=self.name,
+            options=options_pb2.GetPolicyOptions(
+                requested_policy_version=policy_version
+            ),
+        )
+        response = api.get_iam_policy(request=request, metadata=metadata)
+        return response
+
+    def set_iam_policy(self, policy):
+        """Sets the access control policy on a database resource.
+        Replaces any existing policy.
+
+        :type policy: :class:`~google.iam.v1.policy_pb2.Policy`
+        :param policy_version:
+            the complete policy to be applied to the resource.
+
+        :rtype: :class:`~google.iam.v1.policy_pb2.Policy`
+        :returns:
+            returns the new Identity and Access Management (IAM) policy.
+        """
+        api = self._instance._client.database_admin_api
+        metadata = _metadata_with_prefix(self.name)
+
+        request = iam_policy_pb2.SetIamPolicyRequest(
+            resource=self.name,
+            policy=policy,
+        )
+        response = api.set_iam_policy(request=request, metadata=metadata)
+        return response
 
 
 class BatchCheckout(object):
@@ -1073,11 +1155,7 @@ class BatchSnapshot(object):
             yield {"partition": partition, "read": read_info.copy()}
 
     def process_read_batch(
-        self,
-        batch,
-        *,
-        retry=gapic_v1.method.DEFAULT,
-        timeout=gapic_v1.method.DEFAULT,
+        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned read.
 
@@ -1194,11 +1272,7 @@ class BatchSnapshot(object):
             yield {"partition": partition, "query": query_info}
 
     def process_query_batch(
-        self,
-        batch,
-        *,
-        retry=gapic_v1.method.DEFAULT,
-        timeout=gapic_v1.method.DEFAULT,
+        self, batch, *, retry=gapic_v1.method.DEFAULT, timeout=gapic_v1.method.DEFAULT,
     ):
         """Process a single, partitioned query.
 
