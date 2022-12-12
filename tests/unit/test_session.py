@@ -1126,7 +1126,7 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
 
-        # First call was aborted before commit operation, Therefore no begin rpc was made during first attempt.
+        # First call was aborted before commit operation, therefore no begin rpc was made during first attempt.
         gax_api.begin_transaction.assert_called_once_with(
             session=self.SESSION_NAME,
             options=expected_options,
