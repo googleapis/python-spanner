@@ -327,12 +327,10 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         resumable = self._call_fut(derived, restart, request)
         self.assertEqual(list(resumable), list(FIRST))
         self.assertEqual(len(restart.mock_calls), 1)
-        begin = 0
-        for call in restart.mock_calls:
-            if "begin" in call.__str__():
-                begin += 1
-
-        self.assertEqual(begin, 1)
+        begin_count = sum(
+            [1 for args in restart.call_args_list if "begin" in args.kwargs.__str__()]
+        )
+        self.assertEqual(begin_count, 1)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_w_multiuse(self):
@@ -360,12 +358,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         resumable = self._call_fut(derived, restart, request)
         self.assertEqual(list(resumable), list(SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
-        begin = 0
-        for call in restart.mock_calls:
-            if "begin" in call.__str__():
-                begin += 1
+        begin_count = sum(
+            [1 for args in restart.call_args_list if "begin" in args.kwargs.__str__()]
+        )
 
-        self.assertEqual(begin, 2)
+        # Since the transaction id was not set before the Unavailable error, the statement will be retried with inline begin.
+        self.assertEqual(begin_count, 2)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_after_token_w_multiuse(self):
@@ -400,12 +398,17 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
-        transaction_id_selector = 0
         self.assertEqual(request.resume_token, RESUME_TOKEN)
-        for call in restart.mock_calls:
-            if 'id: "DEAFBEAD"' in call.__str__():
-                transaction_id_selector += 1
-        self.assertEqual(transaction_id_selector, 2)
+        transaction_id_selector_count = sum(
+            [
+                1
+                for args in restart.call_args_list
+                if 'id: "DEAFBEAD"' in args.kwargs.__str__()
+            ]
+        )
+
+        # Statement will be retried with Transaction id.
+        self.assertEqual(transaction_id_selector_count, 2)
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_after_token(self):

@@ -738,12 +738,11 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_update_helper(transaction=transaction, api=api)
 
-        begin_read_write = 0
-        for call in api.mock_calls:
-            if "read_write" in call.__str__():
-                begin_read_write += 1
+        begin_read_write_count = sum(
+            [1 for call in api.mock_calls if "read_write" in call.kwargs.__str__()]
+        )
 
-        self.assertEqual(begin_read_write, 1)
+        self.assertEqual(begin_read_write_count, 1)
         api.execute_sql.assert_any_call(
             request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,
@@ -796,12 +795,11 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_update_helper(transaction=transaction, api=api)
 
-        begin_read_write = 0
-        for call in api.mock_calls:
-            if "read_write" in call.__str__():
-                begin_read_write += 1
+        begin_read_write_count = sum(
+            [1 for call in api.mock_calls if "read_write" in call.kwargs.__str__()]
+        )
 
-        self.assertEqual(begin_read_write, 1)
+        self.assertEqual(begin_read_write_count, 1)
         api.execute_sql.assert_any_call(
             request=self._execute_update_expected_request(database, begin=False),
             retry=RETRY,

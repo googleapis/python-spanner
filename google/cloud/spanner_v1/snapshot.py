@@ -64,7 +64,8 @@ def _restart_on_unavailable(
     :param transaction: Snapshot or Transaction class object based on the type of transaction
 
     :type transaction_selector: :class:`transaction_pb2.TransactionSelector`
-    :param transaction_selector: Transaction selector object to be used in request if transaction is not passed
+    :param transaction_selector: Transaction selector object to be used in request if transaction is not passed,
+    if both transaction_selector and transaction are passed, then transaction is given priority.
     """
 
     resume_token = b""
@@ -84,17 +85,17 @@ def _restart_on_unavailable(
         try:
             for item in iterator:
                 item_buffer.append(item)
+                # Setting the transaction id because the transaction begin was inlined for first rpc.
+                if (
+                    transaction is not None
+                    and transaction._transaction_id is None
+                    and item.metadata is not None
+                    and item.metadata.transaction is not None
+                    and item.metadata.transaction.id is not None
+                ):
+                    transaction._transaction_id = item.metadata.transaction.id
                 if item.resume_token:
                     resume_token = item.resume_token
-                    # Setting the transaction id because the transaction begin was inlined for first rpc.
-                    if (
-                        transaction is not None
-                        and transaction._transaction_id is None
-                        and item.metadata is not None
-                        and item.metadata.transaction is not None
-                        and item.metadata.transaction.id is not None
-                    ):
-                        transaction._transaction_id = item.metadata.transaction.id
                     break
         except ServiceUnavailable:
             del item_buffer[:]
