@@ -448,7 +448,7 @@ class PingingPool(AbstractSessionPool):
 class TransactionPingingPool(PingingPool):
     """Concrete session pool implementation:
     Deprecated: TransactionPingingPool no longer begins a transaction for each of its sessions at startup.
-    Hence the TransactionPingingPool is same as :class:`PingingPool` , and maybe removed in the future.
+    Hence the TransactionPingingPool is same as :class:`PingingPool` and maybe removed in the future.
 
 
     In addition to the features of :class:`PingingPool`, this class
