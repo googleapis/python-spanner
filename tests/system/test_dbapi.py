@@ -339,7 +339,7 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
         conn.commit()
     finally:
         # Delete table
-        table = dbapi_database.table('Singers')
+        table = dbapi_database.table("Singers")
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE Singers"])
             op.result()
@@ -387,10 +387,11 @@ def test_autocommit_with_json_data(shared_instance, dbapi_database):
         conn.close()
     finally:
         # Delete table
-        table = dbapi_database.table('JsonDetails')
+        table = dbapi_database.table("JsonDetails")
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE JsonDetails"])
             op.result()
+
 
 @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
 def test_json_array(shared_instance, dbapi_database):
@@ -422,10 +423,11 @@ def test_json_array(shared_instance, dbapi_database):
         conn.close()
     finally:
         # Delete table
-        table = dbapi_database.table('JsonDetails')
+        table = dbapi_database.table("JsonDetails")
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE JsonDetails"])
             op.result()
+
 
 def test_DDL_commit(shared_instance, dbapi_database):
     """Check that DDLs in commit mode are executed on calling `commit()`."""
@@ -453,7 +455,7 @@ def test_DDL_commit(shared_instance, dbapi_database):
         conn.commit()
     finally:
         # Delete table
-        table = dbapi_database.table('Singers')
+        table = dbapi_database.table("Singers")
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE Singers"])
             op.result()
@@ -549,7 +551,9 @@ def test_rowcount(shared_instance, dbapi_database, autocommit):
 
         # executemany sets rowcount to the total modified rows
         rows = [(i, f"Singer {i}") for i in range(100)]
-        cur.executemany("INSERT INTO Singers (SingerId, Name) VALUES (%s, %s)", rows[:98])
+        cur.executemany(
+            "INSERT INTO Singers (SingerId, Name) VALUES (%s, %s)", rows[:98]
+        )
         assert cur.rowcount == 98
 
         # execute with INSERT
@@ -582,7 +586,7 @@ def test_rowcount(shared_instance, dbapi_database, autocommit):
         conn.commit()
     finally:
         # Delete table
-        table = dbapi_database.table('Singers')
+        table = dbapi_database.table("Singers")
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE Singers"])
             op.result()
