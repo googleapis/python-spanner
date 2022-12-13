@@ -29,11 +29,8 @@ import logging
 import time
 
 from google.cloud import spanner
-from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
 from google.cloud.spanner_v1.data_types import JsonObject
-from google.protobuf import field_mask_pb2  # type: ignore
-from google.cloud import spanner_admin_database_v1
 from google.cloud.spanner_v1 import database, param_types
 from google.type import expr_pb2
 from google.iam.v1 import policy_pb2

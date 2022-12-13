@@ -166,7 +166,12 @@ def test_create_database_with_default_leader_success(
             assert result[0] == default_leader
 
 
-def test_iam_policy(not_emulator, shared_instance, databases_to_delete):
+def test_iam_policy(
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    not_postgres,
+):
     pool = spanner_v1.BurstyPool(labels={"testcase": "iam_policy"})
     temp_db_id = _helpers.unique_id("iam_db", separator="_")
     create_table = (
@@ -349,6 +354,7 @@ def test_create_role_grant_access_success(
     not_emulator,
     shared_instance,
     databases_to_delete,
+    not_postgres,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
@@ -397,6 +403,7 @@ def test_list_database_role_success(
     not_emulator,
     shared_instance,
     databases_to_delete,
+    not_postgres,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")

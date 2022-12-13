@@ -19,6 +19,8 @@ import queue
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1 import Session
+from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
@@ -190,13 +192,16 @@ class FixedSizePool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         self._database_role = self._database_role or self._database.database_role
+        request = BatchCreateSessionsRequest(
+            session_template=Session(creator_role=self.database_role),
+        )
 
         while not self._sessions.full():
             resp = api.batch_create_sessions(
+                request=request,
                 database=database.name,
                 session_count=self.size - self._sessions.qsize(),
                 metadata=metadata,
-                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()
@@ -400,12 +405,16 @@ class PingingPool(AbstractSessionPool):
         created_session_count = 0
         self._database_role = self._database_role or self._database.database_role
 
+        request = BatchCreateSessionsRequest(
+            session_template=Session(creator_role=self.database_role),
+        )
+
         while created_session_count < self.size:
             resp = api.batch_create_sessions(
+                request=request,
                 database=database.name,
                 session_count=self.size - created_session_count,
                 metadata=metadata,
-                creator_role=self.database_role,
             )
             for session_pb in resp.session:
                 session = self._new_session()

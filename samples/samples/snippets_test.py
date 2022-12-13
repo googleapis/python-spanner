@@ -781,15 +781,3 @@ def test_list_database_roles(capsys, instance_id, sample_database):
     snippets.list_database_roles(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "new_parent" in out
-
-
-@pytest.mark.dependency(depends=["add_and_drop_database_roles"])
-def test_enable_fine_grained_access(capsys, instance_id, sample_database):
-    iam_member = "user:asthamohta@google.com"
-    database_role = "new_parent"
-    title = "condition title"
-    snippets.enable_fine_grained_access(
-        instance_id, sample_database.database_id, iam_member, database_role, title
-    )
-    out, _ = capsys.readouterr()
-    assert "Enabled fine-grained access in IAM. New policy has version 3" in out

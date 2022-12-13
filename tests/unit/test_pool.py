@@ -958,25 +958,26 @@ class _Database(object):
         self._database_role = None
 
         def mock_batch_create_sessions(
+            request=None,
             database=None,
             session_count=10,
             timeout=10,
             metadata=[],
-            creator_role=None,
             labels={},
         ):
             from google.cloud.spanner_v1 import BatchCreateSessionsResponse
             from google.cloud.spanner_v1 import Session
 
+            database_role = request.session_template.creator_role if request else None
             if session_count < 2:
                 response = BatchCreateSessionsResponse(
-                    session=[Session(creator_role=creator_role, labels=labels)]
+                    session=[Session(creator_role=database_role, labels=labels)]
                 )
             else:
                 response = BatchCreateSessionsResponse(
                     session=[
-                        Session(creator_role=creator_role, labels=labels),
-                        Session(creator_role=creator_role, labels=labels),
+                        Session(creator_role=database_role, labels=labels),
+                        Session(creator_role=database_role, labels=labels),
                     ]
                 )
             return response
