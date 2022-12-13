@@ -175,12 +175,12 @@ def test_iam_policy(
     pool = spanner_v1.BurstyPool(labels={"testcase": "iam_policy"})
     temp_db_id = _helpers.unique_id("iam_db", separator="_")
     create_table = (
-        f"CREATE TABLE policy (\n"
-        f"    Id      STRING(36) NOT NULL,\n"
-        f"    Field1  STRING(36) NOT NULL\n"
-        f") PRIMARY KEY (Id)"
+        "CREATE TABLE policy (\n"
+        + "    Id      STRING(36) NOT NULL,\n"
+        + "    Field1  STRING(36) NOT NULL\n"
+        + ") PRIMARY KEY (Id)"
     )
-    create_role = f"CREATE ROLE parent"
+    create_role = "CREATE ROLE parent"
 
     temp_db = shared_instance.database(
         temp_db_id,
@@ -200,7 +200,7 @@ def test_iam_policy(
         members=["user:asthamohta@google.com"],
         condition=expr_pb2.Expr(
             title="condition title",
-            expression=f'resource.name.endsWith("/databaseRoles/parent")',
+            expression='resource.name.endsWith("/databaseRoles/parent")',
         ),
     )
 
