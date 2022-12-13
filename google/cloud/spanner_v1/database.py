@@ -32,9 +32,9 @@ from google.iam.v1 import options_pb2
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
+from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
-from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
