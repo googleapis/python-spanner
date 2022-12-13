@@ -18,9 +18,9 @@ import datetime
 import queue
 
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
+from google.cloud.spanner_v1 import Session
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
