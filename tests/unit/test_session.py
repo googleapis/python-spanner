@@ -800,7 +800,7 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(kw, {})
         # Transaction only has mutation operations.
         # Exception was raised before commit, hence transaction did not begin.
-        # Therefore rollback and begin transaction was not called.
+        # Therefore rollback and begin transaction were not called.
         gax_api.rollback.assert_not_called()
         gax_api.begin_transaction.assert_not_called()
 
