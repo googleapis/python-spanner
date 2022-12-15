@@ -2400,6 +2400,10 @@ def enable_fine_grained_access(
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
+    # The policy in the response from getDatabaseIAMPolicy might use the policy version
+    # that you specified, or it might use a lower policy version. For example, if you
+    # specify version 3, but the policy has no conditional role bindings, the response
+    # uses version 1. Valid values are 0, 1, and 3.
     policy = database.get_iam_policy(3)
     if policy.version < 3:
         policy.version = 3
