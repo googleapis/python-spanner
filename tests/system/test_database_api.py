@@ -95,7 +95,6 @@ def test_database_binding_of_fixed_size_pool(
     pool = FixedSizePool(
         size=1,
         default_timeout=500,
-        ping_interval=100,
         database_role="parent",
     )
     database = shared_instance.database(temp_db.name, pool=pool)
