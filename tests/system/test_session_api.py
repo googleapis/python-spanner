@@ -200,7 +200,7 @@ POSTGRES_ALL_TYPES_ROWDATA = (
     PostGresAllTypesRowData(pkey=302, bool_array=[True, False, None]),
     PostGresAllTypesRowData(pkey=303, bytes_array=[BYTES_1, BYTES_2, None]),
     PostGresAllTypesRowData(pkey=304, date_array=[SOME_DATE, SOME_DATE, None]),
-    PostGresAllTypesRowData(pkey=305, float_array=[3.1415926, 2.71828, None]),
+    PostGresAllTypesRowData(pkey=305, float_array=[3.1415926, -2.71828, None]),
     PostGresAllTypesRowData(pkey=306, string_array=["One", "Two", None]),
     PostGresAllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     PostGresAllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
