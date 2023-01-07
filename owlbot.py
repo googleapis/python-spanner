@@ -118,17 +118,27 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
 for library in get_staging_dirs(
     spanner_admin_instance_default_version, "spanner_admin_instance"
 ):
+    s.replace(
+        library / "google/cloud/spanner_admin_instance_v*/__init__.py",
+        "from google.cloud.spanner_admin_instance import gapic_version as package_version",
+        f"from google.cloud.spanner_admin_instance_{library.name} import gapic_version as package_version",
+    )
     s.move(
         library,
-        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst"],
+        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "**/gapic_version.py"],
     )
 
 for library in get_staging_dirs(
     spanner_admin_database_default_version, "spanner_admin_database"
 ):
+    s.replace(
+        library / "google/cloud/spanner_admin_database_v*/__init__.py",
+        "from google.cloud.spanner_admin_database import gapic_version as package_version",
+        f"from google.cloud.spanner_admin_database_{library.name} import gapic_version as package_version",
+    )
     s.move(
         library,
-        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst"],
+        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "**/gapic_version.py"],
     )
 
 s.remove_staging_dirs()
