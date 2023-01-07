@@ -473,11 +473,11 @@ def test_user_agent(shared_instance, dbapi_database):
     conn = connect(shared_instance.name, dbapi_database.name)
     assert (
         conn.instance._client._client_info.user_agent
-        == "gl-dbapi/" + package_version.version
+        == "gl-dbapi/" + package_version.__version__
     )
     assert (
         conn.instance._client._client_info.client_library_version
-        == package_version.version
+        == package_version.__version__
     )
 
 
