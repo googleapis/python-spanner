@@ -15,6 +15,7 @@
 """This script is used to synthesize generated parts of this library."""
 
 from pathlib import Path
+import shutil
 from typing import List, Optional
 
 import synthtool as s
@@ -72,38 +73,12 @@ spanner_default_version = "v1"
 spanner_admin_instance_default_version = "v1"
 spanner_admin_database_default_version = "v1"
 
+clean_up_generated_samples = True
+
 for library in get_staging_dirs(spanner_default_version, "spanner"):
-    # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
-    s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-        r""".
-        Attributes:""",
-        r""".\n
-        Attributes:""",
-    )
-
-    # Work around gapic generator bug https://github.com/googleapis/gapic-generator-python/issues/902
-    s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-        r""".
-    Attributes:""",
-        r""".\n
-    Attributes:""",
-    )
-
-    # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
-    s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-        """\n    ==.*?==\n""",
-        ":",
-    )
-
-    # Remove headings from docstring. Requested change upstream in cl/377290854 due to https://google.aip.dev/192#formatting.
-    s.replace(
-        library / f"google/cloud/spanner_{library.name}/types/transaction.py",
-        """\n    --.*?--\n""",
-        ":",
-    )
+    if clean_up_generated_samples:
+        shutil.rmtree("samples/generated_samples", ignore_errors=True)
+        clean_up_generated_samples = False
 
     s.move(
         library,
@@ -112,6 +87,8 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
             "*.*",
             "docs/index.rst",
             "google/cloud/spanner_v1/__init__.py",
+            "**/gapic_version.py",
+            "testing/constraints-3.7.txt",
         ],
     )
 
@@ -159,6 +136,7 @@ s.move(
         ".coveragerc",
         ".github/workflows",  # exclude gh actions as credentials are needed for tests
         "README.rst",
+        ".github/release-please.yml",
     ],
 )
 
@@ -176,7 +154,6 @@ export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
 # Update samples folder in CONTRIBUTING.rst
 s.replace("CONTRIBUTING.rst", "samples/snippets", "samples/samples")
 
-python.configure_previous_major_version_branches()
 # ----------------------------------------------------------------------------
 # Samples templates
 # ----------------------------------------------------------------------------
@@ -272,11 +249,6 @@ def system(session, database_dialect):""",
 )
 
 s.replace("noxfile.py",
-    """\*session.posargs\n        \)""",
-    """*session.posargs,\n        )"""
-)
-
-s.replace("noxfile.py",
     """system_test_path,
             \*session.posargs,""",
     """system_test_path,
@@ -303,18 +275,6 @@ s.replace(
     """def prerelease_deps\(session\):""",
     """@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
 def prerelease_deps(session, database_dialect):"""
-)
-
-s.replace(
-    "noxfile.py",
-    r"""# Install all test dependencies, then install this package into the
-    # virtualenv's dist-packages.
-    session.install\("mock", "pytest", "google-cloud-testutils", "-c", constraints_path\)
-    session.install\("-e", ".", "-c", constraints_path\)""",
-    """# Install all test dependencies, then install this package into the
-    # virtualenv's dist-packages.
-    session.install("mock", "pytest", "google-cloud-testutils", "-c", constraints_path)
-    session.install("-e", ".[tracing]", "-c", constraints_path)""",
 )
 
 s.shell.run(["nox", "-s", "blacken"], hide_output=False)

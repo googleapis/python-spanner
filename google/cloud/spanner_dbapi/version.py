@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pkg_resources
 import platform
+from google.cloud.spanner_v1 import gapic_version as package_version
 
 PY_VERSION = platform.python_version()
-VERSION = pkg_resources.get_distribution("google-cloud-spanner").version
+VERSION = package_version.__version__
 DEFAULT_USER_AGENT = "gl-dbapi/" + VERSION
