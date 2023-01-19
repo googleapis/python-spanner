@@ -1,2 +1,0 @@
-recursive-include google/cloud/spanner_admin_database *.py
-recursive-include google/cloud/spanner_admin_database_v1 *.py
