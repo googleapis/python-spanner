@@ -1101,6 +1101,7 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
+        databoost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1162,6 +1163,7 @@ class BatchSnapshot(object):
             "columns": columns,
             "keyset": keyset._to_dict(),
             "index": index,
+            "databoost_enabled": databoost_enabled,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1205,6 +1207,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
+        databoost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1272,7 +1275,10 @@ class BatchSnapshot(object):
             timeout=timeout,
         )
 
-        query_info = {"sql": sql}
+        query_info = {
+            "sql": sql,
+            "databoost_enabled": databoost_enabled,
+            }
         if params:
             query_info["params"] = params
             query_info["param_types"] = param_types

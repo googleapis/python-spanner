@@ -167,6 +167,7 @@ class _SnapshotBase(_SessionWrapper):
         limit=0,
         partition=None,
         request_options=None,
+        databoost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -247,6 +248,7 @@ class _SnapshotBase(_SessionWrapper):
             limit=limit,
             partition_token=partition,
             request_options=request_options,
+            serverless_analytics_enabled=databoost_enabled,
         )
         restart = functools.partial(
             api.streaming_read,
@@ -302,6 +304,7 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        databoost_enabled=False,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -400,6 +403,7 @@ class _SnapshotBase(_SessionWrapper):
             seqno=self._execute_sql_count,
             query_options=query_options,
             request_options=request_options,
+            serverless_analytics_enabled=databoost_enabled,
         )
         restart = functools.partial(
             api.execute_streaming_sql,
