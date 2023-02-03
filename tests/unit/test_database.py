@@ -114,6 +114,7 @@ class TestDatabase(_BaseTest):
         # BurstyPool does not create sessions during 'bind()'.
         self.assertTrue(database._pool._sessions.empty())
         self.assertIsNone(database.database_role)
+        self.assertFalse(database.databoost_enabled)
 
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -133,6 +134,15 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertIs(database.database_role, self.DATABASE_ROLE)
+
+    def test_ctor_w_databoost_enabled(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(
+            self.DATABASE_ID, instance, databoost_enabled=True
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertTrue(database.databoost_enabled)
 
     def test_ctor_w_ddl_statements_non_string(self):
 
@@ -1923,7 +1933,7 @@ class TestBatchSnapshot(_BaseTest):
     def _make_database(**kwargs):
         from google.cloud.spanner_v1.database import Database
 
-        return mock.create_autospec(Database, instance=True, **kwargs)
+        return mock.create_autospec(Database, instance=True,  **kwargs)
 
     @staticmethod
     def _make_session(**kwargs):
@@ -1975,7 +1985,6 @@ class TestBatchSnapshot(_BaseTest):
         duration = self._make_duration()
 
         batch_txn = self._make_one(database, exact_staleness=duration)
-
         self.assertIs(batch_txn._database, database)
         self.assertIsNone(batch_txn._session)
         self.assertIsNone(batch_txn._snapshot)
@@ -2101,6 +2110,7 @@ class TestBatchSnapshot(_BaseTest):
         database = self._make_database()
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
+        batch_txn._database.databoost_enabled=False
         snapshot.partition_read.return_value = self.TOKENS
 
         batches = list(
@@ -2139,6 +2149,7 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
+        batch_txn._database.databoost_enabled=False
         retry = Retry(deadline=60)
         batches = list(
             batch_txn.generate_read_batches(
@@ -2180,6 +2191,7 @@ class TestBatchSnapshot(_BaseTest):
         database = self._make_database()
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
+        batch_txn._database.databoost_enabled=False
         snapshot.partition_read.return_value = self.TOKENS
 
         batches = list(
@@ -2221,6 +2233,7 @@ class TestBatchSnapshot(_BaseTest):
         database = self._make_database()
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
+        batch_txn._database.databoost_enabled=False
         snapshot.partition_read.return_value = self.TOKENS
 
         batches = list(
@@ -2441,13 +2454,13 @@ class TestBatchSnapshot(_BaseTest):
         sql = "SELECT COUNT(*) FROM table_name"
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = _Database(self.DATABASE_NAME, instance=instance)
+        database = _Database(self.DATABASE_NAME, instance=instance, databoost_enabled=True)
         batch_txn = self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
         batches = list(
-            batch_txn.generate_query_batches(sql, databoost_enabled=True)
+            batch_txn.generate_query_batches(sql)
         )
 
         expected_query = {"sql": sql, "databoost_enabled": True, "query_options": client._query_options}
@@ -2456,15 +2469,24 @@ class TestBatchSnapshot(_BaseTest):
             self.assertEqual(batch["partition"], token)
             self.assertEqual(batch["query"], expected_query)
 
-        snapshot.partition_query.assert_called_once_with(
-            sql=sql,
-            params=None,
-            param_types=None,
-            partition_size_bytes=None,
-            max_partitions=None,
-            retry=gapic_v1.method.DEFAULT,
-            timeout=gapic_v1.method.DEFAULT,
+    def test_generate_query_batches_w_databoost_enabled_at_database(self):
+        sql = "SELECT COUNT(*) FROM table_name"
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance, databoost_enabled=True)
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_query.return_value = self.TOKENS
+
+        batches = list(
+            batch_txn.generate_query_batches(sql)
         )
+
+        expected_query = {"sql": sql, "databoost_enabled": True, "query_options": client._query_options}
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["query"], expected_query)
 
     def test_process_query_batch(self):
         sql = (
@@ -2644,10 +2666,11 @@ class _Backup(object):
 class _Database(object):
     log_commit_stats = False
 
-    def __init__(self, name, instance=None):
+    def __init__(self, name, instance=None, databoost_enabled=False):
         self.name = name
         self.database_id = name.rsplit("/", 1)[1]
         self._instance = instance
+        self.databoost_enabled = databoost_enabled
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)

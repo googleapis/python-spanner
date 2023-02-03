@@ -211,6 +211,14 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type databoost_enabled:
+        :param databoost_enabled:
+                (Optional) If this is for a partitioned query and this field is
+                set ``true``, the request will be executed via offline access.
+                If the field is set to ``true`` but the request does not set
+                ``partition_token``, the API will return an
+                ``INVALID_ARGUMENT`` error.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
@@ -223,6 +231,9 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Cannot re-use single-use snapshot.")
             if self._transaction_id is None and self._read_only:
                 raise ValueError("Transaction ID pending.")
+
+        if not partition and databoost_enabled:
+            raise InvalidArgument("'databoost_enable' should only be set for batch queries")
 
         database = self._session._database
         api = database.spanner_api
@@ -354,6 +365,14 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type databoost_enabled:
+        :param databoost_enabled:
+                (Optional) If this is for a partitioned query and this field is
+                set ``true``, the request will be executed via offline access.
+                If the field is set to ``true`` but the request does not set
+                ``partition_token``, the API will return an
+                ``INVALID_ARGUMENT`` error.
+
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
@@ -363,6 +382,9 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Cannot re-use single-use snapshot.")
             if self._transaction_id is None and self._read_only:
                 raise ValueError("Transaction ID pending.")
+
+        if not partition and databoost_enabled:
+            raise InvalidArgument("'databoost_enable' should only be set for batch queries")
 
         if params is not None:
             if param_types is None:

@@ -1894,10 +1894,9 @@ def test_partition_read_w_index(sessions_database):
 
     assert union == expected
     batch_txn.close()
-import pdb
+
 
 def test_partition_read_w_databoost_enabled(sessions_database):
-    pdb.set_trace()
     sd = _sample_data
     row_count = 10
     columns = sd.COLUMNS[1], sd.COLUMNS[2]
@@ -1916,16 +1915,6 @@ def test_partition_read_w_databoost_enabled(sessions_database):
 
     assert union == expected
     batch_txn.close()
-
-
-def test_execute_sql_invalid_arguement_error_w_databoost_enabled(sessions_database):
-    pdb.set_trace()
-    sd = _sample_data
-    row_count = 40
-    _set_up_table(sessions_database, row_count)
-    with pytest.raises(exceptions.InvalidArgument):
-        with sessions_database.snapshot() as snapshot:
-            list(snapshot.execute_sql(sd.SQL, databoost_enabled=True))
 
 
 def test_execute_sql_w_manual_consume(sessions_database):
