@@ -1182,7 +1182,9 @@ class BatchSnapshot(object):
             "columns": columns,
             "keyset": keyset._to_dict(),
             "index": index,
-            "databoost_enabled": databoost_enabled if databoost_enabled != None else self._database.databoost_enabled,
+            "databoost_enabled": databoost_enabled
+            if databoost_enabled != None
+            else self._database.databoost_enabled,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1272,7 +1274,7 @@ class BatchSnapshot(object):
                 (Optional) Query optimizer configuration to use for the given query.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.QueryOptions`
-        
+
         :type databoost_enabled:
         :param databoost_enabled:
                 (Optional) If this is for a partitioned query and this field is
@@ -1301,8 +1303,10 @@ class BatchSnapshot(object):
 
         query_info = {
             "sql": sql,
-            "databoost_enabled": databoost_enabled if databoost_enabled != None else self._database.databoost_enabled,
-            }
+            "databoost_enabled": databoost_enabled
+            if databoost_enabled != None
+            else self._database.databoost_enabled,
+        }
         if params:
             query_info["params"] = params
             query_info["param_types"] = param_types

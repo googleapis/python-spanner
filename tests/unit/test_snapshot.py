@@ -829,6 +829,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_execute_sql_w_databoost_enabled_invalid_error(self):
         from google.api_core.exceptions import InvalidArgument
+
         database = _Database()
         session = _Session(database)
         derived = self._makeDerived(session)

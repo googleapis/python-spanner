@@ -233,7 +233,9 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Transaction ID pending.")
 
         if not partition and databoost_enabled:
-            raise InvalidArgument("'databoost_enable' should only be set for batch queries")
+            raise InvalidArgument(
+                "'databoost_enable' should only be set for batch queries"
+            )
 
         database = self._session._database
         api = database.spanner_api
@@ -384,7 +386,9 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Transaction ID pending.")
 
         if not partition and databoost_enabled:
-            raise InvalidArgument("'databoost_enable' should only be set for batch queries")
+            raise InvalidArgument(
+                "'databoost_enable' should only be set for batch queries"
+            )
 
         if params is not None:
             if param_types is None:

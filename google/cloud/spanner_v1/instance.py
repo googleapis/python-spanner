@@ -432,7 +432,7 @@ class Instance(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
-        databoost_enabled=False
+        databoost_enabled=False,
     ):
         """Factory to create a database within this instance.
 
