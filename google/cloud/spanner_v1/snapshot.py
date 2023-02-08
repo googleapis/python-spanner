@@ -232,11 +232,6 @@ class _SnapshotBase(_SessionWrapper):
             if self._transaction_id is None and self._read_only:
                 raise ValueError("Transaction ID pending.")
 
-        if not partition and databoost_enabled:
-            raise InvalidArgument(
-                "'databoost_enable' should only be set for batch queries"
-            )
-
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
@@ -384,11 +379,6 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Cannot re-use single-use snapshot.")
             if self._transaction_id is None and self._read_only:
                 raise ValueError("Transaction ID pending.")
-
-        if not partition and databoost_enabled:
-            raise InvalidArgument(
-                "'databoost_enable' should only be set for batch queries"
-            )
 
         if params is not None:
             if param_types is None:

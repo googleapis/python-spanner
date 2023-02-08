@@ -1886,7 +1886,11 @@ def test_partition_read_w_index(sessions_database):
 
     batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
     batches = batch_txn.generate_read_batches(
-        sd.TABLE, columns, spanner_v1.KeySet(all_=True), index="name"
+        sd.TABLE,
+        columns,
+        spanner_v1.KeySet(all_=True),
+        index="name",
+        databoost_enabled=True,
     )
     for batch in batches:
         p_results_iter = batch_txn.process(batch)
@@ -1896,25 +1900,15 @@ def test_partition_read_w_index(sessions_database):
     batch_txn.close()
 
 
-def test_partition_read_w_databoost_enabled(sessions_database):
+def test_read_invalid_arguement_error_w_databoost_enabled(sessions_database):
     sd = _sample_data
-    row_count = 10
-    columns = sd.COLUMNS[1], sd.COLUMNS[2]
-    committed = _set_up_table(sessions_database, row_count)
+    row_count = 40
+    keyset = spanner_v1.KeySet(all_=True)
+    _set_up_table(sessions_database, row_count)
 
-    expected = [[row[1], row[2]] for row in _row_data(row_count)]
-    union = []
-
-    batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
-    batches = batch_txn.generate_read_batches(
-        sd.TABLE, columns, spanner_v1.KeySet(all_=True), databoost_enabled=True
-    )
-    for batch in batches:
-        p_results_iter = batch_txn.process(batch)
-        union.extend(list(p_results_iter))
-
-    assert union == expected
-    batch_txn.close()
+    with pytest.raises(exceptions.InvalidArgument):
+        with sessions_database.snapshot() as snapshot:
+            list(snapshot.read(sd.TABLE, sd.COLUMNS, keyset))
 
 
 def test_execute_sql_w_manual_consume(sessions_database):
@@ -2524,25 +2518,6 @@ def test_partition_query(sessions_database):
     all_data_rows = set(_row_data(row_count))
     union = set()
     batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
-    for batch in batch_txn.generate_query_batches(sql):
-        p_results_iter = batch_txn.process(batch)
-        # Lists aren't hashable so the results need to be converted
-        rows = [tuple(result) for result in p_results_iter]
-        union.update(set(rows))
-
-    assert union == all_data_rows
-    batch_txn.close()
-
-
-def test_partition_query_w_databoost_enabled(sessions_database):
-    pdb.set_trace()
-    row_count = 40
-    sql = f"SELECT * FROM {_sample_data.TABLE}"
-
-    # Paritioned query does not support ORDER BY
-    all_data_rows = set(_row_data(row_count))
-    union = set()
-    batch_txn = sessions_database.batch_snapshot()
     for batch in batch_txn.generate_query_batches(sql, databoost_enabled=True):
         p_results_iter = batch_txn.process(batch)
         # Lists aren't hashable so the results need to be converted
@@ -2551,6 +2526,16 @@ def test_partition_query_w_databoost_enabled(sessions_database):
 
     assert union == all_data_rows
     batch_txn.close()
+
+
+def test_execute_sql_invalid_arguement_error_w_databoost_enabled(sessions_database):
+    sd = _sample_data
+    row_count = 40
+    _set_up_table(sessions_database, row_count)
+
+    with pytest.raises(exceptions.InvalidArgument):
+        with sessions_database.snapshot() as snapshot:
+            list(snapshot.execute_sql(sd.SQL, databoost_enabled=True))
 
 
 class FauxCall:

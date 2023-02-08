@@ -594,18 +594,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
-    def test_read_w_databoost_enabled_invalid_error(self):
-        from google.cloud.spanner_v1.keyset import KeySet
-        from google.api_core.exceptions import InvalidArgument
-
-        keyset = KeySet(all_=True)
-        database = _Database()
-        session = _Session(database)
-        derived = self._makeDerived(session)
-
-        with self.assertRaises(InvalidArgument):
-            derived.read(TABLE_NAME, COLUMNS, keyset, databoost_enabled=True)
-
     def _read_helper(
         self,
         multi_use,
@@ -826,16 +814,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
-
-    def test_execute_sql_w_databoost_enabled_invalid_error(self):
-        from google.api_core.exceptions import InvalidArgument
-
-        database = _Database()
-        session = _Session(database)
-        derived = self._makeDerived(session)
-
-        with self.assertRaises(InvalidArgument):
-            derived.execute_sql(SQL_QUERY, databoost_enabled=True)
 
     def test_execute_sql_w_params_wo_param_types(self):
         database = _Database()

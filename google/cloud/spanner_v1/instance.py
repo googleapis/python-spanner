@@ -432,7 +432,6 @@ class Instance(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
-        databoost_enabled=False,
     ):
         """Factory to create a database within this instance.
 
@@ -480,7 +479,6 @@ class Instance(object):
             encryption_config=encryption_config,
             database_dialect=database_dialect,
             database_role=database_role,
-            databoost_enabled=databoost_enabled,
         )
 
     def list_databases(self, page_size=None):

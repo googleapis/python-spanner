@@ -124,9 +124,6 @@ class Database(object):
         (Optional) database dialect for the database
     :type database_role: str or None
     :param database_role: (Optional) user-assigned database_role for the session.
-    :type databoost_enabled: bool
-    :param databoost_enabled: (Optional) for batch partitioned query if this field is
-        set ``true``, the request will be executed via offline access.
     """
 
     _spanner_api = None
@@ -141,7 +138,6 @@ class Database(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
-        databoost_enabled=False,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -159,7 +155,6 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
-        self._databoost_enabled = databoost_enabled
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -332,15 +327,6 @@ class Database(object):
         :returns: a str with the name of the database role.
         """
         return self._database_role
-
-    @property
-    def databoost_enabled(self):
-        """(Optional) For batch partitioned query if this field is
-            set ``true``, the request will be executed via offline access.
-        :rtype: bool
-        :returns: a bool with the value if databoost is enabled.
-        """
-        return self._databoost_enabled
 
     @property
     def logger(self):
@@ -1115,7 +1101,7 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
-        databoost_enabled=None,
+        databoost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1182,9 +1168,7 @@ class BatchSnapshot(object):
             "columns": columns,
             "keyset": keyset._to_dict(),
             "index": index,
-            "databoost_enabled": databoost_enabled
-            if databoost_enabled != None
-            else self._database.databoost_enabled,
+            "databoost_enabled": databoost_enabled,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1228,7 +1212,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
-        databoost_enabled=None,
+        databoost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1303,9 +1287,7 @@ class BatchSnapshot(object):
 
         query_info = {
             "sql": sql,
-            "databoost_enabled": databoost_enabled
-            if databoost_enabled != None
-            else self._database.databoost_enabled,
+            "databoost_enabled": databoost_enabled,
         }
         if params:
             query_info["params"] = params

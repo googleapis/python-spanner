@@ -47,6 +47,9 @@ def run_batch_query(instance_id, database_id):
         table="Singers",
         columns=("SingerId", "FirstName", "LastName"),
         keyset=spanner.KeySet(all_=True),
+        # If this is for a partitioned query and this field is
+        # set ``true``, the request will be executed via offline access.
+        databoost_enabled=True,
     )
 
     # Create a pool of workers for the tasks
@@ -76,61 +79,6 @@ def process(snapshot, partition):
 # [END spanner_batch_client]
 
 
-# [START spanner_databoost_enabled_batch_client]
-def run_databoost_enabled_batch_query(instance_id, database_id):
-    """Runs an example batch query with enabled databoost_enabled option."""
-
-    # Expected Table Format:
-    # CREATE TABLE Singers (
-    #   SingerId   INT64 NOT NULL,
-    #   FirstName  STRING(1024),
-    #   LastName   STRING(1024),
-    #   SingerInfo BYTES(MAX),
-    # ) PRIMARY KEY (SingerId);
-
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    # Databoost Enabled option can be set for all of batch queries
-    # for that database. If this is for a partitioned query and this field
-    # is set ``true``, the request will be executed via offline access.
-    database = instance.database(database_id, databoost_enabled=True)
-
-    # When generating the partitions, databoost_enabled option can be passed.
-    snapshot = database.batch_snapshot()
-    partitions = snapshot.generate_read_batches(
-        table="Singers",
-        columns=("SingerId", "FirstName", "LastName"),
-        keyset=spanner.KeySet(all_=True),
-        databoost_enabled=True
-    )
-
-    # Create a pool of workers for the tasks
-    start = time.time()
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        futures = [executor.submit(process, snapshot, p) for p in partitions]
-
-        for future in concurrent.futures.as_completed(futures, timeout=3600):
-            finish, row_ct = future.result()
-            elapsed = finish - start
-            print("Completed {} rows in {} seconds".format(row_ct, elapsed))
-
-    # Clean up
-    snapshot.close()
-
-
-def process(snapshot, partition):
-    """Processes the requests of a query in an separate process."""
-    print("Started processing partition.")
-    row_ct = 0
-    for row in snapshot.process_read_batch(partition):
-        print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
-        row_ct += 1
-    return time.time(), row_ct
-
-
-# [END spanner_databoost_enabled_batch_client]
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -144,5 +92,3 @@ if __name__ == "__main__":
 
     if args.command == "run_batch_query":
         run_batch_query(args.instance_id, args.database_id)
-    elif args.command == "databoost_enabled_batch_query":
-        run_databoost_enabled_batch_query(args.instance_id, args.database_id)
