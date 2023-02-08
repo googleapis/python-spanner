@@ -187,7 +187,12 @@ class SpannerRestInterceptor:
 
 
     """
-    def pre_batch_create_sessions(self, request: spanner.BatchCreateSessionsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.BatchCreateSessionsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_batch_create_sessions(
+        self,
+        request: spanner.BatchCreateSessionsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner.BatchCreateSessionsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for batch_create_sessions
 
         Override in a subclass to manipulate the request or metadata
@@ -195,7 +200,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_batch_create_sessions(self, response: spanner.BatchCreateSessionsResponse) -> spanner.BatchCreateSessionsResponse:
+    def post_batch_create_sessions(
+        self, response: spanner.BatchCreateSessionsResponse
+    ) -> spanner.BatchCreateSessionsResponse:
         """Post-rpc interceptor for batch_create_sessions
 
         Override in a subclass to manipulate the response
@@ -203,7 +210,12 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_begin_transaction(self, request: spanner.BeginTransactionRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.BeginTransactionRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_begin_transaction(
+        self,
+        request: spanner.BeginTransactionRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner.BeginTransactionRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for begin_transaction
 
         Override in a subclass to manipulate the request or metadata
@@ -211,7 +223,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_begin_transaction(self, response: transaction.Transaction) -> transaction.Transaction:
+    def post_begin_transaction(
+        self, response: transaction.Transaction
+    ) -> transaction.Transaction:
         """Post-rpc interceptor for begin_transaction
 
         Override in a subclass to manipulate the response
@@ -219,7 +233,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_commit(self, request: spanner.CommitRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.CommitRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_commit(
+        self, request: spanner.CommitRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.CommitRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for commit
 
         Override in a subclass to manipulate the request or metadata
@@ -227,7 +244,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_commit(self, response: commit_response.CommitResponse) -> commit_response.CommitResponse:
+    def post_commit(
+        self, response: commit_response.CommitResponse
+    ) -> commit_response.CommitResponse:
         """Post-rpc interceptor for commit
 
         Override in a subclass to manipulate the response
@@ -235,7 +254,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_create_session(self, request: spanner.CreateSessionRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.CreateSessionRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_create_session(
+        self, request: spanner.CreateSessionRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.CreateSessionRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for create_session
 
         Override in a subclass to manipulate the request or metadata
@@ -251,7 +273,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_delete_session(self, request: spanner.DeleteSessionRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.DeleteSessionRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_delete_session(
+        self, request: spanner.DeleteSessionRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.DeleteSessionRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for delete_session
 
         Override in a subclass to manipulate the request or metadata
@@ -259,7 +284,11 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def pre_execute_batch_dml(self, request: spanner.ExecuteBatchDmlRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ExecuteBatchDmlRequest, Sequence[Tuple[str, str]]]:
+    def pre_execute_batch_dml(
+        self,
+        request: spanner.ExecuteBatchDmlRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner.ExecuteBatchDmlRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for execute_batch_dml
 
         Override in a subclass to manipulate the request or metadata
@@ -267,7 +296,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_execute_batch_dml(self, response: spanner.ExecuteBatchDmlResponse) -> spanner.ExecuteBatchDmlResponse:
+    def post_execute_batch_dml(
+        self, response: spanner.ExecuteBatchDmlResponse
+    ) -> spanner.ExecuteBatchDmlResponse:
         """Post-rpc interceptor for execute_batch_dml
 
         Override in a subclass to manipulate the response
@@ -275,7 +306,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_execute_sql(self, request: spanner.ExecuteSqlRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ExecuteSqlRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_execute_sql(
+        self, request: spanner.ExecuteSqlRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.ExecuteSqlRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for execute_sql
 
         Override in a subclass to manipulate the request or metadata
@@ -291,7 +325,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_execute_streaming_sql(self, request: spanner.ExecuteSqlRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ExecuteSqlRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_execute_streaming_sql(
+        self, request: spanner.ExecuteSqlRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.ExecuteSqlRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for execute_streaming_sql
 
         Override in a subclass to manipulate the request or metadata
@@ -299,7 +336,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_execute_streaming_sql(self, response: rest_streaming.ResponseIterator) -> rest_streaming.ResponseIterator:
+    def post_execute_streaming_sql(
+        self, response: rest_streaming.ResponseIterator
+    ) -> rest_streaming.ResponseIterator:
         """Post-rpc interceptor for execute_streaming_sql
 
         Override in a subclass to manipulate the response
@@ -307,7 +346,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_session(self, request: spanner.GetSessionRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.GetSessionRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_session(
+        self, request: spanner.GetSessionRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.GetSessionRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_session
 
         Override in a subclass to manipulate the request or metadata
@@ -323,7 +365,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_sessions(self, request: spanner.ListSessionsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ListSessionsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_sessions(
+        self, request: spanner.ListSessionsRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.ListSessionsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for list_sessions
 
         Override in a subclass to manipulate the request or metadata
@@ -331,7 +376,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_list_sessions(self, response: spanner.ListSessionsResponse) -> spanner.ListSessionsResponse:
+    def post_list_sessions(
+        self, response: spanner.ListSessionsResponse
+    ) -> spanner.ListSessionsResponse:
         """Post-rpc interceptor for list_sessions
 
         Override in a subclass to manipulate the response
@@ -339,7 +386,12 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_partition_query(self, request: spanner.PartitionQueryRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.PartitionQueryRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_partition_query(
+        self,
+        request: spanner.PartitionQueryRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner.PartitionQueryRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for partition_query
 
         Override in a subclass to manipulate the request or metadata
@@ -347,7 +399,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_partition_query(self, response: spanner.PartitionResponse) -> spanner.PartitionResponse:
+    def post_partition_query(
+        self, response: spanner.PartitionResponse
+    ) -> spanner.PartitionResponse:
         """Post-rpc interceptor for partition_query
 
         Override in a subclass to manipulate the response
@@ -355,7 +409,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_partition_read(self, request: spanner.PartitionReadRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.PartitionReadRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_partition_read(
+        self, request: spanner.PartitionReadRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.PartitionReadRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for partition_read
 
         Override in a subclass to manipulate the request or metadata
@@ -363,7 +420,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_partition_read(self, response: spanner.PartitionResponse) -> spanner.PartitionResponse:
+    def post_partition_read(
+        self, response: spanner.PartitionResponse
+    ) -> spanner.PartitionResponse:
         """Post-rpc interceptor for partition_read
 
         Override in a subclass to manipulate the response
@@ -371,7 +430,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_read(self, request: spanner.ReadRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ReadRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_read(
+        self, request: spanner.ReadRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.ReadRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for read
 
         Override in a subclass to manipulate the request or metadata
@@ -387,7 +449,10 @@ class SpannerRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_rollback(self, request: spanner.RollbackRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.RollbackRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_rollback(
+        self, request: spanner.RollbackRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.RollbackRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for rollback
 
         Override in a subclass to manipulate the request or metadata
@@ -395,7 +460,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def pre_streaming_read(self, request: spanner.ReadRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner.ReadRequest, Sequence[Tuple[str, str]]]:
+    def pre_streaming_read(
+        self, request: spanner.ReadRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[spanner.ReadRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for streaming_read
 
         Override in a subclass to manipulate the request or metadata
@@ -403,7 +470,9 @@ class SpannerRestInterceptor:
         """
         return request, metadata
 
-    def post_streaming_read(self, response: rest_streaming.ResponseIterator) -> rest_streaming.ResponseIterator:
+    def post_streaming_read(
+        self, response: rest_streaming.ResponseIterator
+    ) -> rest_streaming.ResponseIterator:
         """Post-rpc interceptor for streaming_read
 
         Override in a subclass to manipulate the response
@@ -435,20 +504,21 @@ class SpannerRestTransport(SpannerTransport):
 
     """
 
-    def __init__(self, *,
-            host: str = 'spanner.googleapis.com',
-            credentials: Optional[ga_credentials.Credentials] = None,
-            credentials_file: Optional[str] = None,
-            scopes: Optional[Sequence[str]] = None,
-            client_cert_source_for_mtls: Optional[Callable[[
-                ], Tuple[bytes, bytes]]] = None,
-            quota_project_id: Optional[str] = None,
-            client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
-            always_use_jwt_access: Optional[bool] = False,
-            url_scheme: str = 'https',
-            interceptor: Optional[SpannerRestInterceptor] = None,
-            api_audience: Optional[str] = None,
-            ) -> None:
+    def __init__(
+        self,
+        *,
+        host: str = "spanner.googleapis.com",
+        credentials: Optional[ga_credentials.Credentials] = None,
+        credentials_file: Optional[str] = None,
+        scopes: Optional[Sequence[str]] = None,
+        client_cert_source_for_mtls: Optional[Callable[[], Tuple[bytes, bytes]]] = None,
+        quota_project_id: Optional[str] = None,
+        client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
+        always_use_jwt_access: Optional[bool] = False,
+        url_scheme: str = "https",
+        interceptor: Optional[SpannerRestInterceptor] = None,
+        api_audience: Optional[str] = None,
+    ) -> None:
         """Instantiate the transport.
 
         Args:
@@ -487,7 +557,9 @@ class SpannerRestTransport(SpannerTransport):
         # credentials object
         maybe_url_match = re.match("^(?P<scheme>http(?:s)?://)?(?P<host>.*)$", host)
         if maybe_url_match is None:
-            raise ValueError(f"Unexpected hostname structure: {host}")  # pragma: NO COVER
+            raise ValueError(
+                f"Unexpected hostname structure: {host}"
+            )  # pragma: NO COVER
 
         url_match_items = maybe_url_match.groupdict()
 
@@ -498,10 +570,11 @@ class SpannerRestTransport(SpannerTransport):
             credentials=credentials,
             client_info=client_info,
             always_use_jwt_access=always_use_jwt_access,
-            api_audience=api_audience
+            api_audience=api_audience,
         )
         self._session = AuthorizedSession(
-            self._credentials, default_host=self.DEFAULT_HOST)
+            self._credentials, default_host=self.DEFAULT_HOST
+        )
         if client_cert_source_for_mtls:
             self._session.configure_mtls_channel(client_cert_source_for_mtls)
         self._interceptor = interceptor or SpannerRestInterceptor()
@@ -511,19 +584,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BatchCreateSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.BatchCreateSessionsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.BatchCreateSessionsResponse:
+        def __call__(
+            self,
+            request: spanner.BatchCreateSessionsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.BatchCreateSessionsResponse:
             r"""Call the batch create sessions method over HTTP.
 
             Args:
@@ -544,46 +622,51 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}/sessions:batchCreate',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}/sessions:batchCreate",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_batch_create_sessions(request, metadata)
+            request, metadata = self._interceptor.pre_batch_create_sessions(
+                request, metadata
+            )
             pb_request = spanner.BatchCreateSessionsRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -602,19 +685,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BeginTransaction")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.BeginTransactionRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> transaction.Transaction:
+        def __call__(
+            self,
+            request: spanner.BeginTransactionRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> transaction.Transaction:
             r"""Call the begin transaction method over HTTP.
 
             Args:
@@ -633,46 +721,51 @@ class SpannerRestTransport(SpannerTransport):
                     A transaction.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:beginTransaction',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:beginTransaction",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_begin_transaction(request, metadata)
+            request, metadata = self._interceptor.pre_begin_transaction(
+                request, metadata
+            )
             pb_request = spanner.BeginTransactionRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -691,19 +784,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Commit")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.CommitRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> commit_response.CommitResponse:
+        def __call__(
+            self,
+            request: spanner.CommitRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> commit_response.CommitResponse:
             r"""Call the commit method over HTTP.
 
             Args:
@@ -724,11 +822,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:commit',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:commit",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_commit(request, metadata)
             pb_request = spanner.CommitRequest.pb(request)
@@ -737,33 +836,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -782,19 +883,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("CreateSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.CreateSessionRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.Session:
+        def __call__(
+            self,
+            request: spanner.CreateSessionRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.Session:
             r"""Call the create session method over HTTP.
 
             Args:
@@ -813,11 +919,12 @@ class SpannerRestTransport(SpannerTransport):
                     A session in the Cloud Spanner API.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}/sessions',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}/sessions",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_create_session(request, metadata)
             pb_request = spanner.CreateSessionRequest.pb(request)
@@ -826,33 +933,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -871,19 +980,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("DeleteSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.DeleteSessionRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: spanner.DeleteSessionRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the delete session method over HTTP.
 
             Args:
@@ -898,37 +1012,40 @@ class SpannerRestTransport(SpannerTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/sessions/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/sessions/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_delete_session(request, metadata)
             pb_request = spanner.DeleteSessionRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -939,19 +1056,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteBatchDml")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ExecuteBatchDmlRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.ExecuteBatchDmlResponse:
+        def __call__(
+            self,
+            request: spanner.ExecuteBatchDmlRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.ExecuteBatchDmlResponse:
             r"""Call the execute batch dml method over HTTP.
 
             Args:
@@ -1008,46 +1130,51 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeBatchDml',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeBatchDml",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_execute_batch_dml(request, metadata)
+            request, metadata = self._interceptor.pre_execute_batch_dml(
+                request, metadata
+            )
             pb_request = spanner.ExecuteBatchDmlRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1066,19 +1193,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ExecuteSqlRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> result_set.ResultSet:
+        def __call__(
+            self,
+            request: spanner.ExecuteSqlRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> result_set.ResultSet:
             r"""Call the execute sql method over HTTP.
 
             Args:
@@ -1100,11 +1232,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeSql',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeSql",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_execute_sql(request, metadata)
             pb_request = spanner.ExecuteSqlRequest.pb(request)
@@ -1113,33 +1246,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1158,19 +1293,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteStreamingSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ExecuteSqlRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> rest_streaming.ResponseIterator:
+        def __call__(
+            self,
+            request: spanner.ExecuteSqlRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> rest_streaming.ResponseIterator:
             r"""Call the execute streaming sql method over HTTP.
 
             Args:
@@ -1195,46 +1335,51 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeStreamingSql',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:executeStreamingSql",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_execute_streaming_sql(request, metadata)
+            request, metadata = self._interceptor.pre_execute_streaming_sql(
+                request, metadata
+            )
             pb_request = spanner.ExecuteSqlRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1242,7 +1387,9 @@ class SpannerRestTransport(SpannerTransport):
                 raise core_exceptions.from_http_response(response)
 
             # Return the response
-            resp = rest_streaming.ResponseIterator(response, result_set.PartialResultSet)
+            resp = rest_streaming.ResponseIterator(
+                response, result_set.PartialResultSet
+            )
             resp = self._interceptor.post_execute_streaming_sql(resp)
             return resp
 
@@ -1250,19 +1397,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("GetSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.GetSessionRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.Session:
+        def __call__(
+            self,
+            request: spanner.GetSessionRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.Session:
             r"""Call the get session method over HTTP.
 
             Args:
@@ -1281,37 +1433,40 @@ class SpannerRestTransport(SpannerTransport):
                     A session in the Cloud Spanner API.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/sessions/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/sessions/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_get_session(request, metadata)
             pb_request = spanner.GetSessionRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1330,19 +1485,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ListSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ListSessionsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.ListSessionsResponse:
+        def __call__(
+            self,
+            request: spanner.ListSessionsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.ListSessionsResponse:
             r"""Call the list sessions method over HTTP.
 
             Args:
@@ -1363,37 +1523,40 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}/sessions',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}/sessions",
+                },
             ]
             request, metadata = self._interceptor.pre_list_sessions(request, metadata)
             pb_request = spanner.ListSessionsRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1412,19 +1575,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionQuery")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.PartitionQueryRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.PartitionResponse:
+        def __call__(
+            self,
+            request: spanner.PartitionQueryRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.PartitionResponse:
             r"""Call the partition query method over HTTP.
 
             Args:
@@ -1447,11 +1615,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionQuery',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionQuery",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_partition_query(request, metadata)
             pb_request = spanner.PartitionQueryRequest.pb(request)
@@ -1460,33 +1629,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1505,19 +1676,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.PartitionReadRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner.PartitionResponse:
+        def __call__(
+            self,
+            request: spanner.PartitionReadRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner.PartitionResponse:
             r"""Call the partition read method over HTTP.
 
             Args:
@@ -1540,11 +1716,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionRead',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:partitionRead",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_partition_read(request, metadata)
             pb_request = spanner.PartitionReadRequest.pb(request)
@@ -1553,33 +1730,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1598,19 +1777,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Read")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ReadRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> result_set.ResultSet:
+        def __call__(
+            self,
+            request: spanner.ReadRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> result_set.ResultSet:
             r"""Call the read method over HTTP.
 
             Args:
@@ -1632,11 +1816,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:read',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:read",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_read(request, metadata)
             pb_request = spanner.ReadRequest.pb(request)
@@ -1645,33 +1830,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1690,19 +1877,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Rollback")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.RollbackRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: spanner.RollbackRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the rollback method over HTTP.
 
             Args:
@@ -1717,11 +1909,12 @@ class SpannerRestTransport(SpannerTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:rollback',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:rollback",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_rollback(request, metadata)
             pb_request = spanner.RollbackRequest.pb(request)
@@ -1730,33 +1923,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1767,19 +1962,24 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("StreamingRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner.ReadRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> rest_streaming.ResponseIterator:
+        def __call__(
+            self,
+            request: spanner.ReadRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> rest_streaming.ResponseIterator:
             r"""Call the streaming read method over HTTP.
 
             Args:
@@ -1804,11 +2004,12 @@ class SpannerRestTransport(SpannerTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{session=projects/*/instances/*/databases/*/sessions/*}:streamingRead',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{session=projects/*/instances/*/databases/*/sessions/*}:streamingRead",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_streaming_read(request, metadata)
             pb_request = spanner.ReadRequest.pb(request)
@@ -1817,33 +2018,35 @@ class SpannerRestTransport(SpannerTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1851,129 +2054,127 @@ class SpannerRestTransport(SpannerTransport):
                 raise core_exceptions.from_http_response(response)
 
             # Return the response
-            resp = rest_streaming.ResponseIterator(response, result_set.PartialResultSet)
+            resp = rest_streaming.ResponseIterator(
+                response, result_set.PartialResultSet
+            )
             resp = self._interceptor.post_streaming_read(resp)
             return resp
 
     @property
-    def batch_create_sessions(self) -> Callable[
-            [spanner.BatchCreateSessionsRequest],
-            spanner.BatchCreateSessionsResponse]:
+    def batch_create_sessions(
+        self,
+    ) -> Callable[
+        [spanner.BatchCreateSessionsRequest], spanner.BatchCreateSessionsResponse
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._BatchCreateSessions(self._session, self._host, self._interceptor) # type: ignore
+        return self._BatchCreateSessions(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def begin_transaction(self) -> Callable[
-            [spanner.BeginTransactionRequest],
-            transaction.Transaction]:
+    def begin_transaction(
+        self,
+    ) -> Callable[[spanner.BeginTransactionRequest], transaction.Transaction]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._BeginTransaction(self._session, self._host, self._interceptor) # type: ignore
+        return self._BeginTransaction(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def commit(self) -> Callable[
-            [spanner.CommitRequest],
-            commit_response.CommitResponse]:
+    def commit(
+        self,
+    ) -> Callable[[spanner.CommitRequest], commit_response.CommitResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._Commit(self._session, self._host, self._interceptor) # type: ignore
+        return self._Commit(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def create_session(self) -> Callable[
-            [spanner.CreateSessionRequest],
-            spanner.Session]:
+    def create_session(
+        self,
+    ) -> Callable[[spanner.CreateSessionRequest], spanner.Session]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CreateSession(self._session, self._host, self._interceptor) # type: ignore
+        return self._CreateSession(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def delete_session(self) -> Callable[
-            [spanner.DeleteSessionRequest],
-            empty_pb2.Empty]:
+    def delete_session(
+        self,
+    ) -> Callable[[spanner.DeleteSessionRequest], empty_pb2.Empty]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._DeleteSession(self._session, self._host, self._interceptor) # type: ignore
+        return self._DeleteSession(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def execute_batch_dml(self) -> Callable[
-            [spanner.ExecuteBatchDmlRequest],
-            spanner.ExecuteBatchDmlResponse]:
+    def execute_batch_dml(
+        self,
+    ) -> Callable[[spanner.ExecuteBatchDmlRequest], spanner.ExecuteBatchDmlResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ExecuteBatchDml(self._session, self._host, self._interceptor) # type: ignore
+        return self._ExecuteBatchDml(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def execute_sql(self) -> Callable[
-            [spanner.ExecuteSqlRequest],
-            result_set.ResultSet]:
+    def execute_sql(
+        self,
+    ) -> Callable[[spanner.ExecuteSqlRequest], result_set.ResultSet]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ExecuteSql(self._session, self._host, self._interceptor) # type: ignore
+        return self._ExecuteSql(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def execute_streaming_sql(self) -> Callable[
-            [spanner.ExecuteSqlRequest],
-            result_set.PartialResultSet]:
+    def execute_streaming_sql(
+        self,
+    ) -> Callable[[spanner.ExecuteSqlRequest], result_set.PartialResultSet]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ExecuteStreamingSql(self._session, self._host, self._interceptor) # type: ignore
+        return self._ExecuteStreamingSql(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_session(self) -> Callable[
-            [spanner.GetSessionRequest],
-            spanner.Session]:
+    def get_session(self) -> Callable[[spanner.GetSessionRequest], spanner.Session]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetSession(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetSession(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_sessions(self) -> Callable[
-            [spanner.ListSessionsRequest],
-            spanner.ListSessionsResponse]:
+    def list_sessions(
+        self,
+    ) -> Callable[[spanner.ListSessionsRequest], spanner.ListSessionsResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListSessions(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListSessions(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def partition_query(self) -> Callable[
-            [spanner.PartitionQueryRequest],
-            spanner.PartitionResponse]:
+    def partition_query(
+        self,
+    ) -> Callable[[spanner.PartitionQueryRequest], spanner.PartitionResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._PartitionQuery(self._session, self._host, self._interceptor) # type: ignore
+        return self._PartitionQuery(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def partition_read(self) -> Callable[
-            [spanner.PartitionReadRequest],
-            spanner.PartitionResponse]:
+    def partition_read(
+        self,
+    ) -> Callable[[spanner.PartitionReadRequest], spanner.PartitionResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._PartitionRead(self._session, self._host, self._interceptor) # type: ignore
+        return self._PartitionRead(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def read(self) -> Callable[
-            [spanner.ReadRequest],
-            result_set.ResultSet]:
+    def read(self) -> Callable[[spanner.ReadRequest], result_set.ResultSet]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._Read(self._session, self._host, self._interceptor) # type: ignore
+        return self._Read(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def rollback(self) -> Callable[
-            [spanner.RollbackRequest],
-            empty_pb2.Empty]:
+    def rollback(self) -> Callable[[spanner.RollbackRequest], empty_pb2.Empty]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._Rollback(self._session, self._host, self._interceptor) # type: ignore
+        return self._Rollback(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def streaming_read(self) -> Callable[
-            [spanner.ReadRequest],
-            result_set.PartialResultSet]:
+    def streaming_read(
+        self,
+    ) -> Callable[[spanner.ReadRequest], result_set.PartialResultSet]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._StreamingRead(self._session, self._host, self._interceptor) # type: ignore
+        return self._StreamingRead(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
     def kind(self) -> str:
@@ -1983,6 +2184,4 @@ class SpannerRestTransport(SpannerTransport):
         self._session.close()
 
 
-__all__=(
-    'SpannerRestTransport',
-)
+__all__ = ("SpannerRestTransport",)

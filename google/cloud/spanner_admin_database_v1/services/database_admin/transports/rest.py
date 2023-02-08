@@ -49,7 +49,10 @@ from google.iam.v1 import policy_pb2  # type: ignore
 from google.longrunning import operations_pb2  # type: ignore
 from google.protobuf import empty_pb2  # type: ignore
 
-from .base import DatabaseAdminTransport, DEFAULT_CLIENT_INFO as BASE_DEFAULT_CLIENT_INFO
+from .base import (
+    DatabaseAdminTransport,
+    DEFAULT_CLIENT_INFO as BASE_DEFAULT_CLIENT_INFO,
+)
 
 
 DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
@@ -223,7 +226,10 @@ class DatabaseAdminRestInterceptor:
 
 
     """
-    def pre_copy_backup(self, request: backup.CopyBackupRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[backup.CopyBackupRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_copy_backup(
+        self, request: backup.CopyBackupRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[backup.CopyBackupRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for copy_backup
 
         Override in a subclass to manipulate the request or metadata
@@ -231,7 +237,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_copy_backup(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_copy_backup(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for copy_backup
 
         Override in a subclass to manipulate the response
@@ -239,7 +247,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_create_backup(self, request: gsad_backup.CreateBackupRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[gsad_backup.CreateBackupRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_create_backup(
+        self,
+        request: gsad_backup.CreateBackupRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[gsad_backup.CreateBackupRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for create_backup
 
         Override in a subclass to manipulate the request or metadata
@@ -247,7 +260,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_create_backup(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_create_backup(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_backup
 
         Override in a subclass to manipulate the response
@@ -255,7 +270,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_create_database(self, request: spanner_database_admin.CreateDatabaseRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.CreateDatabaseRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_create_database(
+        self,
+        request: spanner_database_admin.CreateDatabaseRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_database_admin.CreateDatabaseRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for create_database
 
         Override in a subclass to manipulate the request or metadata
@@ -263,7 +283,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_create_database(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_create_database(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_database
 
         Override in a subclass to manipulate the response
@@ -271,7 +293,10 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_delete_backup(self, request: backup.DeleteBackupRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[backup.DeleteBackupRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_delete_backup(
+        self, request: backup.DeleteBackupRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[backup.DeleteBackupRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for delete_backup
 
         Override in a subclass to manipulate the request or metadata
@@ -279,7 +304,11 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def pre_drop_database(self, request: spanner_database_admin.DropDatabaseRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.DropDatabaseRequest, Sequence[Tuple[str, str]]]:
+    def pre_drop_database(
+        self,
+        request: spanner_database_admin.DropDatabaseRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_database_admin.DropDatabaseRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for drop_database
 
         Override in a subclass to manipulate the request or metadata
@@ -287,7 +316,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def pre_get_backup(self, request: backup.GetBackupRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[backup.GetBackupRequest, Sequence[Tuple[str, str]]]:
+    def pre_get_backup(
+        self, request: backup.GetBackupRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[backup.GetBackupRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_backup
 
         Override in a subclass to manipulate the request or metadata
@@ -303,7 +334,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_database(self, request: spanner_database_admin.GetDatabaseRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.GetDatabaseRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_database(
+        self,
+        request: spanner_database_admin.GetDatabaseRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_database_admin.GetDatabaseRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_database
 
         Override in a subclass to manipulate the request or metadata
@@ -311,7 +347,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_get_database(self, response: spanner_database_admin.Database) -> spanner_database_admin.Database:
+    def post_get_database(
+        self, response: spanner_database_admin.Database
+    ) -> spanner_database_admin.Database:
         """Post-rpc interceptor for get_database
 
         Override in a subclass to manipulate the response
@@ -319,7 +357,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_database_ddl(self, request: spanner_database_admin.GetDatabaseDdlRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.GetDatabaseDdlRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_database_ddl(
+        self,
+        request: spanner_database_admin.GetDatabaseDdlRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_database_admin.GetDatabaseDdlRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_database_ddl
 
         Override in a subclass to manipulate the request or metadata
@@ -327,7 +370,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_get_database_ddl(self, response: spanner_database_admin.GetDatabaseDdlResponse) -> spanner_database_admin.GetDatabaseDdlResponse:
+    def post_get_database_ddl(
+        self, response: spanner_database_admin.GetDatabaseDdlResponse
+    ) -> spanner_database_admin.GetDatabaseDdlResponse:
         """Post-rpc interceptor for get_database_ddl
 
         Override in a subclass to manipulate the response
@@ -335,7 +380,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_iam_policy(self, request: iam_policy_pb2.GetIamPolicyRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.GetIamPolicyRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_iam_policy(
+        self,
+        request: iam_policy_pb2.GetIamPolicyRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.GetIamPolicyRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_iam_policy
 
         Override in a subclass to manipulate the request or metadata
@@ -351,7 +401,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_backup_operations(self, request: backup.ListBackupOperationsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[backup.ListBackupOperationsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_backup_operations(
+        self,
+        request: backup.ListBackupOperationsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[backup.ListBackupOperationsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for list_backup_operations
 
         Override in a subclass to manipulate the request or metadata
@@ -359,7 +414,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_backup_operations(self, response: backup.ListBackupOperationsResponse) -> backup.ListBackupOperationsResponse:
+    def post_list_backup_operations(
+        self, response: backup.ListBackupOperationsResponse
+    ) -> backup.ListBackupOperationsResponse:
         """Post-rpc interceptor for list_backup_operations
 
         Override in a subclass to manipulate the response
@@ -367,7 +424,10 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_backups(self, request: backup.ListBackupsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[backup.ListBackupsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_backups(
+        self, request: backup.ListBackupsRequest, metadata: Sequence[Tuple[str, str]]
+    ) -> Tuple[backup.ListBackupsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for list_backups
 
         Override in a subclass to manipulate the request or metadata
@@ -375,7 +435,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_backups(self, response: backup.ListBackupsResponse) -> backup.ListBackupsResponse:
+    def post_list_backups(
+        self, response: backup.ListBackupsResponse
+    ) -> backup.ListBackupsResponse:
         """Post-rpc interceptor for list_backups
 
         Override in a subclass to manipulate the response
@@ -383,7 +445,14 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_database_operations(self, request: spanner_database_admin.ListDatabaseOperationsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.ListDatabaseOperationsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_database_operations(
+        self,
+        request: spanner_database_admin.ListDatabaseOperationsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_database_admin.ListDatabaseOperationsRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for list_database_operations
 
         Override in a subclass to manipulate the request or metadata
@@ -391,7 +460,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_database_operations(self, response: spanner_database_admin.ListDatabaseOperationsResponse) -> spanner_database_admin.ListDatabaseOperationsResponse:
+    def post_list_database_operations(
+        self, response: spanner_database_admin.ListDatabaseOperationsResponse
+    ) -> spanner_database_admin.ListDatabaseOperationsResponse:
         """Post-rpc interceptor for list_database_operations
 
         Override in a subclass to manipulate the response
@@ -399,7 +470,14 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_database_roles(self, request: spanner_database_admin.ListDatabaseRolesRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.ListDatabaseRolesRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_database_roles(
+        self,
+        request: spanner_database_admin.ListDatabaseRolesRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_database_admin.ListDatabaseRolesRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for list_database_roles
 
         Override in a subclass to manipulate the request or metadata
@@ -407,7 +485,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_database_roles(self, response: spanner_database_admin.ListDatabaseRolesResponse) -> spanner_database_admin.ListDatabaseRolesResponse:
+    def post_list_database_roles(
+        self, response: spanner_database_admin.ListDatabaseRolesResponse
+    ) -> spanner_database_admin.ListDatabaseRolesResponse:
         """Post-rpc interceptor for list_database_roles
 
         Override in a subclass to manipulate the response
@@ -415,7 +495,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_databases(self, request: spanner_database_admin.ListDatabasesRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.ListDatabasesRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_databases(
+        self,
+        request: spanner_database_admin.ListDatabasesRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_database_admin.ListDatabasesRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for list_databases
 
         Override in a subclass to manipulate the request or metadata
@@ -423,7 +508,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_databases(self, response: spanner_database_admin.ListDatabasesResponse) -> spanner_database_admin.ListDatabasesResponse:
+    def post_list_databases(
+        self, response: spanner_database_admin.ListDatabasesResponse
+    ) -> spanner_database_admin.ListDatabasesResponse:
         """Post-rpc interceptor for list_databases
 
         Override in a subclass to manipulate the response
@@ -431,7 +518,14 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_restore_database(self, request: spanner_database_admin.RestoreDatabaseRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.RestoreDatabaseRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_restore_database(
+        self,
+        request: spanner_database_admin.RestoreDatabaseRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_database_admin.RestoreDatabaseRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for restore_database
 
         Override in a subclass to manipulate the request or metadata
@@ -439,7 +533,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_restore_database(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_restore_database(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for restore_database
 
         Override in a subclass to manipulate the response
@@ -447,7 +543,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_set_iam_policy(self, request: iam_policy_pb2.SetIamPolicyRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.SetIamPolicyRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_set_iam_policy(
+        self,
+        request: iam_policy_pb2.SetIamPolicyRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.SetIamPolicyRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for set_iam_policy
 
         Override in a subclass to manipulate the request or metadata
@@ -463,7 +564,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_test_iam_permissions(self, request: iam_policy_pb2.TestIamPermissionsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.TestIamPermissionsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_test_iam_permissions(
+        self,
+        request: iam_policy_pb2.TestIamPermissionsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.TestIamPermissionsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for test_iam_permissions
 
         Override in a subclass to manipulate the request or metadata
@@ -471,7 +577,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_test_iam_permissions(self, response: iam_policy_pb2.TestIamPermissionsResponse) -> iam_policy_pb2.TestIamPermissionsResponse:
+    def post_test_iam_permissions(
+        self, response: iam_policy_pb2.TestIamPermissionsResponse
+    ) -> iam_policy_pb2.TestIamPermissionsResponse:
         """Post-rpc interceptor for test_iam_permissions
 
         Override in a subclass to manipulate the response
@@ -479,7 +587,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_update_backup(self, request: gsad_backup.UpdateBackupRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[gsad_backup.UpdateBackupRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_update_backup(
+        self,
+        request: gsad_backup.UpdateBackupRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[gsad_backup.UpdateBackupRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for update_backup
 
         Override in a subclass to manipulate the request or metadata
@@ -495,7 +608,14 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_update_database_ddl(self, request: spanner_database_admin.UpdateDatabaseDdlRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_database_admin.UpdateDatabaseDdlRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_update_database_ddl(
+        self,
+        request: spanner_database_admin.UpdateDatabaseDdlRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_database_admin.UpdateDatabaseDdlRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for update_database_ddl
 
         Override in a subclass to manipulate the request or metadata
@@ -503,7 +623,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_update_database_ddl(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_update_database_ddl(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_database_ddl
 
         Override in a subclass to manipulate the response
@@ -512,7 +634,11 @@ class DatabaseAdminRestInterceptor:
         """
         return response
 
-    def pre_cancel_operation(self, request: operations_pb2.CancelOperationRequest, metadata: Sequence[Tuple[str, str]]) -> None:
+    def pre_cancel_operation(
+        self,
+        request: operations_pb2.CancelOperationRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> None:
         """Pre-rpc interceptor for cancel_operation
 
         Override in a subclass to manipulate the request or metadata
@@ -520,7 +646,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_cancel_operation(self, response: operations_pb2.CancelOperationRequest) -> None:
+    def post_cancel_operation(
+        self, response: operations_pb2.CancelOperationRequest
+    ) -> None:
         """Post-rpc interceptor for cancel_operation
 
         Override in a subclass to manipulate the response
@@ -528,7 +656,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_delete_operation(self, request: operations_pb2.DeleteOperationRequest, metadata: Sequence[Tuple[str, str]]) -> None:
+
+    def pre_delete_operation(
+        self,
+        request: operations_pb2.DeleteOperationRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> None:
         """Pre-rpc interceptor for delete_operation
 
         Override in a subclass to manipulate the request or metadata
@@ -536,7 +669,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_delete_operation(self, response: operations_pb2.DeleteOperationRequest) -> None:
+    def post_delete_operation(
+        self, response: operations_pb2.DeleteOperationRequest
+    ) -> None:
         """Post-rpc interceptor for delete_operation
 
         Override in a subclass to manipulate the response
@@ -544,7 +679,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_operation(self, request: operations_pb2.GetOperationRequest, metadata: Sequence[Tuple[str, str]]) -> operations_pb2.Operation:
+
+    def pre_get_operation(
+        self,
+        request: operations_pb2.GetOperationRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> operations_pb2.Operation:
         """Pre-rpc interceptor for get_operation
 
         Override in a subclass to manipulate the request or metadata
@@ -552,7 +692,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_get_operation(self, response: operations_pb2.GetOperationRequest) -> operations_pb2.Operation:
+    def post_get_operation(
+        self, response: operations_pb2.GetOperationRequest
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for get_operation
 
         Override in a subclass to manipulate the response
@@ -560,7 +702,12 @@ class DatabaseAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_operations(self, request: operations_pb2.ListOperationsRequest, metadata: Sequence[Tuple[str, str]]) -> operations_pb2.ListOperationsResponse:
+
+    def pre_list_operations(
+        self,
+        request: operations_pb2.ListOperationsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> operations_pb2.ListOperationsResponse:
         """Pre-rpc interceptor for list_operations
 
         Override in a subclass to manipulate the request or metadata
@@ -568,7 +715,9 @@ class DatabaseAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_operations(self, response: operations_pb2.ListOperationsRequest) -> operations_pb2.ListOperationsResponse:
+    def post_list_operations(
+        self, response: operations_pb2.ListOperationsRequest
+    ) -> operations_pb2.ListOperationsResponse:
         """Post-rpc interceptor for list_operations
 
         Override in a subclass to manipulate the response
@@ -605,20 +754,21 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
     """
 
-    def __init__(self, *,
-            host: str = 'spanner.googleapis.com',
-            credentials: Optional[ga_credentials.Credentials] = None,
-            credentials_file: Optional[str] = None,
-            scopes: Optional[Sequence[str]] = None,
-            client_cert_source_for_mtls: Optional[Callable[[
-                ], Tuple[bytes, bytes]]] = None,
-            quota_project_id: Optional[str] = None,
-            client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
-            always_use_jwt_access: Optional[bool] = False,
-            url_scheme: str = 'https',
-            interceptor: Optional[DatabaseAdminRestInterceptor] = None,
-            api_audience: Optional[str] = None,
-            ) -> None:
+    def __init__(
+        self,
+        *,
+        host: str = "spanner.googleapis.com",
+        credentials: Optional[ga_credentials.Credentials] = None,
+        credentials_file: Optional[str] = None,
+        scopes: Optional[Sequence[str]] = None,
+        client_cert_source_for_mtls: Optional[Callable[[], Tuple[bytes, bytes]]] = None,
+        quota_project_id: Optional[str] = None,
+        client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
+        always_use_jwt_access: Optional[bool] = False,
+        url_scheme: str = "https",
+        interceptor: Optional[DatabaseAdminRestInterceptor] = None,
+        api_audience: Optional[str] = None,
+    ) -> None:
         """Instantiate the transport.
 
         Args:
@@ -657,7 +807,9 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         # credentials object
         maybe_url_match = re.match("^(?P<scheme>http(?:s)?://)?(?P<host>.*)$", host)
         if maybe_url_match is None:
-            raise ValueError(f"Unexpected hostname structure: {host}")  # pragma: NO COVER
+            raise ValueError(
+                f"Unexpected hostname structure: {host}"
+            )  # pragma: NO COVER
 
         url_match_items = maybe_url_match.groupdict()
 
@@ -668,10 +820,11 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             credentials=credentials,
             client_info=client_info,
             always_use_jwt_access=always_use_jwt_access,
-            api_audience=api_audience
+            api_audience=api_audience,
         )
         self._session = AuthorizedSession(
-            self._credentials, default_host=self.DEFAULT_HOST)
+            self._credentials, default_host=self.DEFAULT_HOST
+        )
         self._operations_client: Optional[operations_v1.AbstractOperationsClient] = None
         if client_cert_source_for_mtls:
             self._session.configure_mtls_channel(client_cert_source_for_mtls)
@@ -688,89 +841,92 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         # Only create a new client if we do not already have one.
         if self._operations_client is None:
             http_options: Dict[str, List[Dict[str, str]]] = {
-                'google.longrunning.Operations.CancelOperation': [
+                "google.longrunning.Operations.CancelOperation": [
                     {
-                        'method': 'post',
-                        'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}:cancel',
+                        "method": "post",
+                        "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}:cancel",
                     },
                     {
-                        'method': 'post',
-                        'uri': '/v1/{name=projects/*/instances/*/operations/*}:cancel',
+                        "method": "post",
+                        "uri": "/v1/{name=projects/*/instances/*/operations/*}:cancel",
                     },
                     {
-                        'method': 'post',
-                        'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}:cancel',
+                        "method": "post",
+                        "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}:cancel",
                     },
                     {
-                        'method': 'post',
-                        'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}:cancel',
-                    },
-                ],
-                'google.longrunning.Operations.DeleteOperation': [
-                    {
-                        'method': 'delete',
-                        'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}',
-                    },
-                    {
-                        'method': 'delete',
-                        'uri': '/v1/{name=projects/*/instances/*/operations/*}',
-                    },
-                    {
-                        'method': 'delete',
-                        'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}',
-                    },
-                    {
-                        'method': 'delete',
-                        'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}',
+                        "method": "post",
+                        "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}:cancel",
                     },
                 ],
-                'google.longrunning.Operations.GetOperation': [
+                "google.longrunning.Operations.DeleteOperation": [
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}',
+                        "method": "delete",
+                        "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/operations/*}',
+                        "method": "delete",
+                        "uri": "/v1/{name=projects/*/instances/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}',
+                        "method": "delete",
+                        "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}',
+                        "method": "delete",
+                        "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}",
                     },
                 ],
-                'google.longrunning.Operations.ListOperations': [
+                "google.longrunning.Operations.GetOperation": [
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/databases/*/operations}',
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/operations}',
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instances/*/backups/*/operations}',
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}",
                     },
                     {
-                        'method': 'get',
-                        'uri': '/v1/{name=projects/*/instanceConfigs/*/operations}',
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}",
+                    },
+                ],
+                "google.longrunning.Operations.ListOperations": [
+                    {
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/databases/*/operations}",
+                    },
+                    {
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/operations}",
+                    },
+                    {
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instances/*/backups/*/operations}",
+                    },
+                    {
+                        "method": "get",
+                        "uri": "/v1/{name=projects/*/instanceConfigs/*/operations}",
                     },
                 ],
             }
 
             rest_transport = operations_v1.OperationsRestTransport(
-                    host=self._host,
-                    # use the credentials which are saved
-                    credentials=self._credentials,
-                    scopes=self._scopes,
-                    http_options=http_options,
-                    path_prefix="v1")
+                host=self._host,
+                # use the credentials which are saved
+                credentials=self._credentials,
+                scopes=self._scopes,
+                http_options=http_options,
+                path_prefix="v1",
+            )
 
-            self._operations_client = operations_v1.AbstractOperationsClient(transport=rest_transport)
+            self._operations_client = operations_v1.AbstractOperationsClient(
+                transport=rest_transport
+            )
 
         # Return the client from cache.
         return self._operations_client
@@ -779,19 +935,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("CopyBackup")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: backup.CopyBackupRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: backup.CopyBackupRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the copy backup method over HTTP.
 
             Args:
@@ -813,11 +974,12 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*/instances/*}/backups:copy',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*/instances/*}/backups:copy",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_copy_backup(request, metadata)
             pb_request = backup.CopyBackupRequest.pb(request)
@@ -826,33 +988,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -869,19 +1033,26 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("CreateBackup")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-            "backupId" : "",        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {
+            "backupId": "",
+        }
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: gsad_backup.CreateBackupRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: gsad_backup.CreateBackupRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the create backup method over HTTP.
 
             Args:
@@ -903,11 +1074,12 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*/instances/*}/backups',
-                'body': 'backup',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*/instances/*}/backups",
+                    "body": "backup",
+                },
             ]
             request, metadata = self._interceptor.pre_create_backup(request, metadata)
             pb_request = gsad_backup.CreateBackupRequest.pb(request)
@@ -916,33 +1088,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -959,19 +1133,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("CreateDatabase")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.CreateDatabaseRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_database_admin.CreateDatabaseRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the create database method over HTTP.
 
             Args:
@@ -993,11 +1172,12 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*/instances/*}/databases',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*/instances/*}/databases",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_create_database(request, metadata)
             pb_request = spanner_database_admin.CreateDatabaseRequest.pb(request)
@@ -1006,33 +1186,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1049,19 +1231,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("DeleteBackup")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: backup.DeleteBackupRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: backup.DeleteBackupRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the delete backup method over HTTP.
 
             Args:
@@ -1076,37 +1263,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_delete_backup(request, metadata)
             pb_request = backup.DeleteBackupRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1117,19 +1307,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("DropDatabase")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.DropDatabaseRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: spanner_database_admin.DropDatabaseRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the drop database method over HTTP.
 
             Args:
@@ -1144,37 +1339,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_drop_database(request, metadata)
             pb_request = spanner_database_admin.DropDatabaseRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1185,19 +1383,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("GetBackup")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: backup.GetBackupRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> backup.Backup:
+        def __call__(
+            self,
+            request: backup.GetBackupRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> backup.Backup:
             r"""Call the get backup method over HTTP.
 
             Args:
@@ -1216,37 +1419,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     A backup of a Cloud Spanner database.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_get_backup(request, metadata)
             pb_request = backup.GetBackupRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1265,19 +1471,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("GetDatabase")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.GetDatabaseRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_database_admin.Database:
+        def __call__(
+            self,
+            request: spanner_database_admin.GetDatabaseRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_database_admin.Database:
             r"""Call the get database method over HTTP.
 
             Args:
@@ -1296,37 +1507,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     A Cloud Spanner database.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_get_database(request, metadata)
             pb_request = spanner_database_admin.GetDatabaseRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1345,19 +1559,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("GetDatabaseDdl")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.GetDatabaseDdlRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_database_admin.GetDatabaseDdlResponse:
+        def __call__(
+            self,
+            request: spanner_database_admin.GetDatabaseDdlRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_database_admin.GetDatabaseDdlResponse:
             r"""Call the get database ddl method over HTTP.
 
             Args:
@@ -1378,37 +1597,42 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}/ddl',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}/ddl",
+                },
             ]
-            request, metadata = self._interceptor.pre_get_database_ddl(request, metadata)
+            request, metadata = self._interceptor.pre_get_database_ddl(
+                request, metadata
+            )
             pb_request = spanner_database_admin.GetDatabaseDdlRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1427,19 +1651,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("GetIamPolicy")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.GetIamPolicyRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> policy_pb2.Policy:
+        def __call__(
+            self,
+            request: iam_policy_pb2.GetIamPolicyRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> policy_pb2.Policy:
             r"""Call the get iam policy method over HTTP.
 
             Args:
@@ -1530,16 +1759,17 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/databases/*}:getIamPolicy',
-                'body': '*',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/backups/*}:getIamPolicy',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/databases/*}:getIamPolicy",
+                    "body": "*",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/backups/*}:getIamPolicy",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_get_iam_policy(request, metadata)
             pb_request = request
@@ -1548,33 +1778,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1593,19 +1825,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("ListBackupOperations")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: backup.ListBackupOperationsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> backup.ListBackupOperationsResponse:
+        def __call__(
+            self,
+            request: backup.ListBackupOperationsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> backup.ListBackupOperationsResponse:
             r"""Call the list backup operations method over HTTP.
 
             Args:
@@ -1626,37 +1863,42 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*/instances/*}/backupOperations',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*/instances/*}/backupOperations",
+                },
             ]
-            request, metadata = self._interceptor.pre_list_backup_operations(request, metadata)
+            request, metadata = self._interceptor.pre_list_backup_operations(
+                request, metadata
+            )
             pb_request = backup.ListBackupOperationsRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1675,19 +1917,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("ListBackups")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: backup.ListBackupsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> backup.ListBackupsResponse:
+        def __call__(
+            self,
+            request: backup.ListBackupsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> backup.ListBackupsResponse:
             r"""Call the list backups method over HTTP.
 
             Args:
@@ -1708,37 +1955,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*/instances/*}/backups',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*/instances/*}/backups",
+                },
             ]
             request, metadata = self._interceptor.pre_list_backups(request, metadata)
             pb_request = backup.ListBackupsRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1757,19 +2007,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("ListDatabaseOperations")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.ListDatabaseOperationsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_database_admin.ListDatabaseOperationsResponse:
+        def __call__(
+            self,
+            request: spanner_database_admin.ListDatabaseOperationsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_database_admin.ListDatabaseOperationsResponse:
             r"""Call the list database operations method over HTTP.
 
             Args:
@@ -1790,37 +2045,44 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*/instances/*}/databaseOperations',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*/instances/*}/databaseOperations",
+                },
             ]
-            request, metadata = self._interceptor.pre_list_database_operations(request, metadata)
-            pb_request = spanner_database_admin.ListDatabaseOperationsRequest.pb(request)
+            request, metadata = self._interceptor.pre_list_database_operations(
+                request, metadata
+            )
+            pb_request = spanner_database_admin.ListDatabaseOperationsRequest.pb(
+                request
+            )
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1839,19 +2101,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("ListDatabaseRoles")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.ListDatabaseRolesRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_database_admin.ListDatabaseRolesResponse:
+        def __call__(
+            self,
+            request: spanner_database_admin.ListDatabaseRolesRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_database_admin.ListDatabaseRolesResponse:
             r"""Call the list database roles method over HTTP.
 
             Args:
@@ -1872,37 +2139,42 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*/instances/*/databases/*}/databaseRoles',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*/instances/*/databases/*}/databaseRoles",
+                },
             ]
-            request, metadata = self._interceptor.pre_list_database_roles(request, metadata)
+            request, metadata = self._interceptor.pre_list_database_roles(
+                request, metadata
+            )
             pb_request = spanner_database_admin.ListDatabaseRolesRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1921,19 +2193,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("ListDatabases")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.ListDatabasesRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_database_admin.ListDatabasesResponse:
+        def __call__(
+            self,
+            request: spanner_database_admin.ListDatabasesRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_database_admin.ListDatabasesResponse:
             r"""Call the list databases method over HTTP.
 
             Args:
@@ -1954,37 +2231,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*/instances/*}/databases',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*/instances/*}/databases",
+                },
             ]
             request, metadata = self._interceptor.pre_list_databases(request, metadata)
             pb_request = spanner_database_admin.ListDatabasesRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2003,19 +2283,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("RestoreDatabase")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.RestoreDatabaseRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_database_admin.RestoreDatabaseRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the restore database method over HTTP.
 
             Args:
@@ -2037,46 +2322,51 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*/instances/*}/databases:restore',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*/instances/*}/databases:restore",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_restore_database(request, metadata)
+            request, metadata = self._interceptor.pre_restore_database(
+                request, metadata
+            )
             pb_request = spanner_database_admin.RestoreDatabaseRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2093,19 +2383,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("SetIamPolicy")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.SetIamPolicyRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> policy_pb2.Policy:
+        def __call__(
+            self,
+            request: iam_policy_pb2.SetIamPolicyRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> policy_pb2.Policy:
             r"""Call the set iam policy method over HTTP.
 
             Args:
@@ -2196,16 +2491,17 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/databases/*}:setIamPolicy',
-                'body': '*',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/backups/*}:setIamPolicy',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/databases/*}:setIamPolicy",
+                    "body": "*",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/backups/*}:setIamPolicy",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_set_iam_policy(request, metadata)
             pb_request = request
@@ -2214,33 +2510,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2259,19 +2557,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("TestIamPermissions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.TestIamPermissionsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> iam_policy_pb2.TestIamPermissionsResponse:
+        def __call__(
+            self,
+            request: iam_policy_pb2.TestIamPermissionsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> iam_policy_pb2.TestIamPermissionsResponse:
             r"""Call the test iam permissions method over HTTP.
 
             Args:
@@ -2288,56 +2591,61 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     Response message for ``TestIamPermissions`` method.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/databases/*}:testIamPermissions',
-                'body': '*',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/backups/*}:testIamPermissions',
-                'body': '*',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*/databases/*/databaseRoles/*}:testIamPermissions',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/databases/*}:testIamPermissions",
+                    "body": "*",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/backups/*}:testIamPermissions",
+                    "body": "*",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*/databases/*/databaseRoles/*}:testIamPermissions",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_test_iam_permissions(request, metadata)
+            request, metadata = self._interceptor.pre_test_iam_permissions(
+                request, metadata
+            )
             pb_request = request
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2356,19 +2664,26 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("UpdateBackup")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-            "updateMask" : {},        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {
+            "updateMask": {},
+        }
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: gsad_backup.UpdateBackupRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> gsad_backup.Backup:
+        def __call__(
+            self,
+            request: gsad_backup.UpdateBackupRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> gsad_backup.Backup:
             r"""Call the update backup method over HTTP.
 
             Args:
@@ -2387,11 +2702,12 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     A backup of a Cloud Spanner database.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'patch',
-                'uri': '/v1/{backup.name=projects/*/instances/*/backups/*}',
-                'body': 'backup',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "patch",
+                    "uri": "/v1/{backup.name=projects/*/instances/*/backups/*}",
+                    "body": "backup",
+                },
             ]
             request, metadata = self._interceptor.pre_update_backup(request, metadata)
             pb_request = gsad_backup.UpdateBackupRequest.pb(request)
@@ -2400,33 +2716,35 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2445,19 +2763,24 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         def __hash__(self):
             return hash("UpdateDatabaseDdl")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_database_admin.UpdateDatabaseDdlRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_database_admin.UpdateDatabaseDdlRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the update database ddl method over HTTP.
 
             Args:
@@ -2496,46 +2819,51 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'patch',
-                'uri': '/v1/{database=projects/*/instances/*/databases/*}/ddl',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "patch",
+                    "uri": "/v1/{database=projects/*/instances/*/databases/*}/ddl",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_update_database_ddl(request, metadata)
+            request, metadata = self._interceptor.pre_update_database_ddl(
+                request, metadata
+            )
             pb_request = spanner_database_admin.UpdateDatabaseDdlRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -2549,168 +2877,191 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             return resp
 
     @property
-    def copy_backup(self) -> Callable[
-            [backup.CopyBackupRequest],
-            operations_pb2.Operation]:
+    def copy_backup(
+        self,
+    ) -> Callable[[backup.CopyBackupRequest], operations_pb2.Operation]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CopyBackup(self._session, self._host, self._interceptor) # type: ignore
+        return self._CopyBackup(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def create_backup(self) -> Callable[
-            [gsad_backup.CreateBackupRequest],
-            operations_pb2.Operation]:
+    def create_backup(
+        self,
+    ) -> Callable[[gsad_backup.CreateBackupRequest], operations_pb2.Operation]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CreateBackup(self._session, self._host, self._interceptor) # type: ignore
+        return self._CreateBackup(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def create_database(self) -> Callable[
-            [spanner_database_admin.CreateDatabaseRequest],
-            operations_pb2.Operation]:
+    def create_database(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.CreateDatabaseRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CreateDatabase(self._session, self._host, self._interceptor) # type: ignore
+        return self._CreateDatabase(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def delete_backup(self) -> Callable[
-            [backup.DeleteBackupRequest],
-            empty_pb2.Empty]:
+    def delete_backup(self) -> Callable[[backup.DeleteBackupRequest], empty_pb2.Empty]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._DeleteBackup(self._session, self._host, self._interceptor) # type: ignore
+        return self._DeleteBackup(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def drop_database(self) -> Callable[
-            [spanner_database_admin.DropDatabaseRequest],
-            empty_pb2.Empty]:
+    def drop_database(
+        self,
+    ) -> Callable[[spanner_database_admin.DropDatabaseRequest], empty_pb2.Empty]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._DropDatabase(self._session, self._host, self._interceptor) # type: ignore
+        return self._DropDatabase(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_backup(self) -> Callable[
-            [backup.GetBackupRequest],
-            backup.Backup]:
+    def get_backup(self) -> Callable[[backup.GetBackupRequest], backup.Backup]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetBackup(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetBackup(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_database(self) -> Callable[
-            [spanner_database_admin.GetDatabaseRequest],
-            spanner_database_admin.Database]:
+    def get_database(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.GetDatabaseRequest], spanner_database_admin.Database
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetDatabase(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetDatabase(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_database_ddl(self) -> Callable[
-            [spanner_database_admin.GetDatabaseDdlRequest],
-            spanner_database_admin.GetDatabaseDdlResponse]:
+    def get_database_ddl(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.GetDatabaseDdlRequest],
+        spanner_database_admin.GetDatabaseDdlResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetDatabaseDdl(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetDatabaseDdl(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_iam_policy(self) -> Callable[
-            [iam_policy_pb2.GetIamPolicyRequest],
-            policy_pb2.Policy]:
+    def get_iam_policy(
+        self,
+    ) -> Callable[[iam_policy_pb2.GetIamPolicyRequest], policy_pb2.Policy]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetIamPolicy(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetIamPolicy(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_backup_operations(self) -> Callable[
-            [backup.ListBackupOperationsRequest],
-            backup.ListBackupOperationsResponse]:
+    def list_backup_operations(
+        self,
+    ) -> Callable[
+        [backup.ListBackupOperationsRequest], backup.ListBackupOperationsResponse
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListBackupOperations(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListBackupOperations(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_backups(self) -> Callable[
-            [backup.ListBackupsRequest],
-            backup.ListBackupsResponse]:
+    def list_backups(
+        self,
+    ) -> Callable[[backup.ListBackupsRequest], backup.ListBackupsResponse]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListBackups(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListBackups(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_database_operations(self) -> Callable[
-            [spanner_database_admin.ListDatabaseOperationsRequest],
-            spanner_database_admin.ListDatabaseOperationsResponse]:
+    def list_database_operations(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.ListDatabaseOperationsRequest],
+        spanner_database_admin.ListDatabaseOperationsResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListDatabaseOperations(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListDatabaseOperations(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_database_roles(self) -> Callable[
-            [spanner_database_admin.ListDatabaseRolesRequest],
-            spanner_database_admin.ListDatabaseRolesResponse]:
+    def list_database_roles(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.ListDatabaseRolesRequest],
+        spanner_database_admin.ListDatabaseRolesResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListDatabaseRoles(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListDatabaseRoles(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_databases(self) -> Callable[
-            [spanner_database_admin.ListDatabasesRequest],
-            spanner_database_admin.ListDatabasesResponse]:
+    def list_databases(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.ListDatabasesRequest],
+        spanner_database_admin.ListDatabasesResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListDatabases(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListDatabases(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def restore_database(self) -> Callable[
-            [spanner_database_admin.RestoreDatabaseRequest],
-            operations_pb2.Operation]:
+    def restore_database(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.RestoreDatabaseRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._RestoreDatabase(self._session, self._host, self._interceptor) # type: ignore
+        return self._RestoreDatabase(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def set_iam_policy(self) -> Callable[
-            [iam_policy_pb2.SetIamPolicyRequest],
-            policy_pb2.Policy]:
+    def set_iam_policy(
+        self,
+    ) -> Callable[[iam_policy_pb2.SetIamPolicyRequest], policy_pb2.Policy]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._SetIamPolicy(self._session, self._host, self._interceptor) # type: ignore
+        return self._SetIamPolicy(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def test_iam_permissions(self) -> Callable[
-            [iam_policy_pb2.TestIamPermissionsRequest],
-            iam_policy_pb2.TestIamPermissionsResponse]:
+    def test_iam_permissions(
+        self,
+    ) -> Callable[
+        [iam_policy_pb2.TestIamPermissionsRequest],
+        iam_policy_pb2.TestIamPermissionsResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._TestIamPermissions(self._session, self._host, self._interceptor) # type: ignore
+        return self._TestIamPermissions(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def update_backup(self) -> Callable[
-            [gsad_backup.UpdateBackupRequest],
-            gsad_backup.Backup]:
+    def update_backup(
+        self,
+    ) -> Callable[[gsad_backup.UpdateBackupRequest], gsad_backup.Backup]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._UpdateBackup(self._session, self._host, self._interceptor) # type: ignore
+        return self._UpdateBackup(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def update_database_ddl(self) -> Callable[
-            [spanner_database_admin.UpdateDatabaseDdlRequest],
-            operations_pb2.Operation]:
+    def update_database_ddl(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.UpdateDatabaseDdlRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._UpdateDatabaseDdl(self._session, self._host, self._interceptor) # type: ignore
+        return self._UpdateDatabaseDdl(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
     def cancel_operation(self):
-        return self._CancelOperation(self._session, self._host, self._interceptor) # type: ignore
+        return self._CancelOperation(self._session, self._host, self._interceptor)  # type: ignore
 
     class _CancelOperation(DatabaseAdminRestStub):
-        def __call__(self,
-            request: operations_pb2.CancelOperationRequest, *,
-            retry: OptionalRetry=gapic_v1.method.DEFAULT,
-            timeout: Optional[float]=None,
-            metadata: Sequence[Tuple[str, str]]=(),
-            ) -> None:
+        def __call__(
+            self,
+            request: operations_pb2.CancelOperationRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> None:
 
             r"""Call the cancel operation method over HTTP.
 
@@ -2724,38 +3075,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}:cancel',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{name=projects/*/instances/*/operations/*}:cancel',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}:cancel',
-            },
-{
-                'method': 'post',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}:cancel',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}:cancel",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{name=projects/*/instances/*/operations/*}:cancel",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}:cancel",
+                },
+                {
+                    "method": "post",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}:cancel",
+                },
             ]
 
-            request, metadata = self._interceptor.pre_cancel_operation(request, metadata)
+            request, metadata = self._interceptor.pre_cancel_operation(
+                request, metadata
+            )
             request_kwargs = json_format.MessageToDict(request)
-            transcoded_request = path_template.transcode(
-                http_options, **request_kwargs)
+            transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json.dumps(transcoded_request['query_params']))
+            query_params = json.loads(json.dumps(transcoded_request["query_params"]))
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
 
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
@@ -2773,15 +3126,17 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
     @property
     def delete_operation(self):
-        return self._DeleteOperation(self._session, self._host, self._interceptor) # type: ignore
+        return self._DeleteOperation(self._session, self._host, self._interceptor)  # type: ignore
 
     class _DeleteOperation(DatabaseAdminRestStub):
-        def __call__(self,
-            request: operations_pb2.DeleteOperationRequest, *,
-            retry: OptionalRetry=gapic_v1.method.DEFAULT,
-            timeout: Optional[float]=None,
-            metadata: Sequence[Tuple[str, str]]=(),
-            ) -> None:
+        def __call__(
+            self,
+            request: operations_pb2.DeleteOperationRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> None:
 
             r"""Call the delete operation method over HTTP.
 
@@ -2795,38 +3150,40 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}',
-            },
-{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*/operations/*}',
-            },
-{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}',
-            },
-{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}",
+                },
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*/operations/*}",
+                },
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}",
+                },
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}",
+                },
             ]
 
-            request, metadata = self._interceptor.pre_delete_operation(request, metadata)
+            request, metadata = self._interceptor.pre_delete_operation(
+                request, metadata
+            )
             request_kwargs = json_format.MessageToDict(request)
-            transcoded_request = path_template.transcode(
-                http_options, **request_kwargs)
+            transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json.dumps(transcoded_request['query_params']))
+            query_params = json.loads(json.dumps(transcoded_request["query_params"]))
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
 
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
@@ -2844,15 +3201,17 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
     @property
     def get_operation(self):
-        return self._GetOperation(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetOperation(self._session, self._host, self._interceptor)  # type: ignore
 
     class _GetOperation(DatabaseAdminRestStub):
-        def __call__(self,
-            request: operations_pb2.GetOperationRequest, *,
-            retry: OptionalRetry=gapic_v1.method.DEFAULT,
-            timeout: Optional[float]=None,
-            metadata: Sequence[Tuple[str, str]]=(),
-            ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: operations_pb2.GetOperationRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
 
             r"""Call the get operation method over HTTP.
 
@@ -2869,38 +3228,38 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                 operations_pb2.Operation: Response from GetOperation method.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/operations/*}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/operations/*}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*/operations/*}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*/operations/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/operations/*}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/operations/*}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*/operations/*}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*/operations/*}",
+                },
             ]
 
             request, metadata = self._interceptor.pre_get_operation(request, metadata)
             request_kwargs = json_format.MessageToDict(request)
-            transcoded_request = path_template.transcode(
-                http_options, **request_kwargs)
+            transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json.dumps(transcoded_request['query_params']))
+            query_params = json.loads(json.dumps(transcoded_request["query_params"]))
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
 
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
@@ -2921,15 +3280,17 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
 
     @property
     def list_operations(self):
-        return self._ListOperations(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListOperations(self._session, self._host, self._interceptor)  # type: ignore
 
     class _ListOperations(DatabaseAdminRestStub):
-        def __call__(self,
-            request: operations_pb2.ListOperationsRequest, *,
-            retry: OptionalRetry=gapic_v1.method.DEFAULT,
-            timeout: Optional[float]=None,
-            metadata: Sequence[Tuple[str, str]]=(),
-            ) -> operations_pb2.ListOperationsResponse:
+        def __call__(
+            self,
+            request: operations_pb2.ListOperationsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.ListOperationsResponse:
 
             r"""Call the list operations method over HTTP.
 
@@ -2946,38 +3307,38 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
                 operations_pb2.ListOperationsResponse: Response from ListOperations method.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/databases/*/operations}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/operations}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*/backups/*/operations}',
-            },
-{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*/operations}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/databases/*/operations}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/operations}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*/backups/*/operations}",
+                },
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*/operations}",
+                },
             ]
 
             request, metadata = self._interceptor.pre_list_operations(request, metadata)
             request_kwargs = json_format.MessageToDict(request)
-            transcoded_request = path_template.transcode(
-                http_options, **request_kwargs)
+            transcoded_request = path_template.transcode(http_options, **request_kwargs)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json.dumps(transcoded_request['query_params']))
+            query_params = json.loads(json.dumps(transcoded_request["query_params"]))
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
 
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
@@ -3004,6 +3365,4 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
         self._session.close()
 
 
-__all__=(
-    'DatabaseAdminRestTransport',
-)
+__all__ = ("DatabaseAdminRestTransport",)

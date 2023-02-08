@@ -46,7 +46,10 @@ from google.iam.v1 import policy_pb2  # type: ignore
 from google.longrunning import operations_pb2  # type: ignore
 from google.protobuf import empty_pb2  # type: ignore
 
-from .base import InstanceAdminTransport, DEFAULT_CLIENT_INFO as BASE_DEFAULT_CLIENT_INFO
+from .base import (
+    InstanceAdminTransport,
+    DEFAULT_CLIENT_INFO as BASE_DEFAULT_CLIENT_INFO,
+)
 
 
 DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
@@ -180,7 +183,12 @@ class InstanceAdminRestInterceptor:
 
 
     """
-    def pre_create_instance(self, request: spanner_instance_admin.CreateInstanceRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.CreateInstanceRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_create_instance(
+        self,
+        request: spanner_instance_admin.CreateInstanceRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_instance_admin.CreateInstanceRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for create_instance
 
         Override in a subclass to manipulate the request or metadata
@@ -188,7 +196,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_create_instance(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_create_instance(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_instance
 
         Override in a subclass to manipulate the response
@@ -196,7 +206,14 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_create_instance_config(self, request: spanner_instance_admin.CreateInstanceConfigRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.CreateInstanceConfigRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_create_instance_config(
+        self,
+        request: spanner_instance_admin.CreateInstanceConfigRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.CreateInstanceConfigRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for create_instance_config
 
         Override in a subclass to manipulate the request or metadata
@@ -204,7 +221,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_create_instance_config(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_create_instance_config(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_instance_config
 
         Override in a subclass to manipulate the response
@@ -212,7 +231,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_delete_instance(self, request: spanner_instance_admin.DeleteInstanceRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.DeleteInstanceRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_delete_instance(
+        self,
+        request: spanner_instance_admin.DeleteInstanceRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_instance_admin.DeleteInstanceRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for delete_instance
 
         Override in a subclass to manipulate the request or metadata
@@ -220,7 +244,13 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def pre_delete_instance_config(self, request: spanner_instance_admin.DeleteInstanceConfigRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.DeleteInstanceConfigRequest, Sequence[Tuple[str, str]]]:
+    def pre_delete_instance_config(
+        self,
+        request: spanner_instance_admin.DeleteInstanceConfigRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.DeleteInstanceConfigRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for delete_instance_config
 
         Override in a subclass to manipulate the request or metadata
@@ -228,7 +258,11 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def pre_get_iam_policy(self, request: iam_policy_pb2.GetIamPolicyRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.GetIamPolicyRequest, Sequence[Tuple[str, str]]]:
+    def pre_get_iam_policy(
+        self,
+        request: iam_policy_pb2.GetIamPolicyRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.GetIamPolicyRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_iam_policy
 
         Override in a subclass to manipulate the request or metadata
@@ -244,7 +278,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_instance(self, request: spanner_instance_admin.GetInstanceRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.GetInstanceRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_instance(
+        self,
+        request: spanner_instance_admin.GetInstanceRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_instance_admin.GetInstanceRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for get_instance
 
         Override in a subclass to manipulate the request or metadata
@@ -252,7 +291,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_get_instance(self, response: spanner_instance_admin.Instance) -> spanner_instance_admin.Instance:
+    def post_get_instance(
+        self, response: spanner_instance_admin.Instance
+    ) -> spanner_instance_admin.Instance:
         """Post-rpc interceptor for get_instance
 
         Override in a subclass to manipulate the response
@@ -260,7 +301,14 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_get_instance_config(self, request: spanner_instance_admin.GetInstanceConfigRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.GetInstanceConfigRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_get_instance_config(
+        self,
+        request: spanner_instance_admin.GetInstanceConfigRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.GetInstanceConfigRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for get_instance_config
 
         Override in a subclass to manipulate the request or metadata
@@ -268,7 +316,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_get_instance_config(self, response: spanner_instance_admin.InstanceConfig) -> spanner_instance_admin.InstanceConfig:
+    def post_get_instance_config(
+        self, response: spanner_instance_admin.InstanceConfig
+    ) -> spanner_instance_admin.InstanceConfig:
         """Post-rpc interceptor for get_instance_config
 
         Override in a subclass to manipulate the response
@@ -276,7 +326,15 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_instance_config_operations(self, request: spanner_instance_admin.ListInstanceConfigOperationsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.ListInstanceConfigOperationsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_instance_config_operations(
+        self,
+        request: spanner_instance_admin.ListInstanceConfigOperationsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstanceConfigOperationsRequest,
+        Sequence[Tuple[str, str]],
+    ]:
         """Pre-rpc interceptor for list_instance_config_operations
 
         Override in a subclass to manipulate the request or metadata
@@ -284,7 +342,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_instance_config_operations(self, response: spanner_instance_admin.ListInstanceConfigOperationsResponse) -> spanner_instance_admin.ListInstanceConfigOperationsResponse:
+    def post_list_instance_config_operations(
+        self, response: spanner_instance_admin.ListInstanceConfigOperationsResponse
+    ) -> spanner_instance_admin.ListInstanceConfigOperationsResponse:
         """Post-rpc interceptor for list_instance_config_operations
 
         Override in a subclass to manipulate the response
@@ -292,7 +352,14 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_instance_configs(self, request: spanner_instance_admin.ListInstanceConfigsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.ListInstanceConfigsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_instance_configs(
+        self,
+        request: spanner_instance_admin.ListInstanceConfigsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstanceConfigsRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for list_instance_configs
 
         Override in a subclass to manipulate the request or metadata
@@ -300,7 +367,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_instance_configs(self, response: spanner_instance_admin.ListInstanceConfigsResponse) -> spanner_instance_admin.ListInstanceConfigsResponse:
+    def post_list_instance_configs(
+        self, response: spanner_instance_admin.ListInstanceConfigsResponse
+    ) -> spanner_instance_admin.ListInstanceConfigsResponse:
         """Post-rpc interceptor for list_instance_configs
 
         Override in a subclass to manipulate the response
@@ -308,7 +377,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_list_instances(self, request: spanner_instance_admin.ListInstancesRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.ListInstancesRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_list_instances(
+        self,
+        request: spanner_instance_admin.ListInstancesRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_instance_admin.ListInstancesRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for list_instances
 
         Override in a subclass to manipulate the request or metadata
@@ -316,7 +390,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_list_instances(self, response: spanner_instance_admin.ListInstancesResponse) -> spanner_instance_admin.ListInstancesResponse:
+    def post_list_instances(
+        self, response: spanner_instance_admin.ListInstancesResponse
+    ) -> spanner_instance_admin.ListInstancesResponse:
         """Post-rpc interceptor for list_instances
 
         Override in a subclass to manipulate the response
@@ -324,7 +400,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_set_iam_policy(self, request: iam_policy_pb2.SetIamPolicyRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.SetIamPolicyRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_set_iam_policy(
+        self,
+        request: iam_policy_pb2.SetIamPolicyRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.SetIamPolicyRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for set_iam_policy
 
         Override in a subclass to manipulate the request or metadata
@@ -340,7 +421,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_test_iam_permissions(self, request: iam_policy_pb2.TestIamPermissionsRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[iam_policy_pb2.TestIamPermissionsRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_test_iam_permissions(
+        self,
+        request: iam_policy_pb2.TestIamPermissionsRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[iam_policy_pb2.TestIamPermissionsRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for test_iam_permissions
 
         Override in a subclass to manipulate the request or metadata
@@ -348,7 +434,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_test_iam_permissions(self, response: iam_policy_pb2.TestIamPermissionsResponse) -> iam_policy_pb2.TestIamPermissionsResponse:
+    def post_test_iam_permissions(
+        self, response: iam_policy_pb2.TestIamPermissionsResponse
+    ) -> iam_policy_pb2.TestIamPermissionsResponse:
         """Post-rpc interceptor for test_iam_permissions
 
         Override in a subclass to manipulate the response
@@ -356,7 +444,12 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_update_instance(self, request: spanner_instance_admin.UpdateInstanceRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.UpdateInstanceRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_update_instance(
+        self,
+        request: spanner_instance_admin.UpdateInstanceRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[spanner_instance_admin.UpdateInstanceRequest, Sequence[Tuple[str, str]]]:
         """Pre-rpc interceptor for update_instance
 
         Override in a subclass to manipulate the request or metadata
@@ -364,7 +457,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_update_instance(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_update_instance(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_instance
 
         Override in a subclass to manipulate the response
@@ -372,7 +467,14 @@ class InstanceAdminRestInterceptor:
         it is returned to user code.
         """
         return response
-    def pre_update_instance_config(self, request: spanner_instance_admin.UpdateInstanceConfigRequest, metadata: Sequence[Tuple[str, str]]) -> Tuple[spanner_instance_admin.UpdateInstanceConfigRequest, Sequence[Tuple[str, str]]]:
+
+    def pre_update_instance_config(
+        self,
+        request: spanner_instance_admin.UpdateInstanceConfigRequest,
+        metadata: Sequence[Tuple[str, str]],
+    ) -> Tuple[
+        spanner_instance_admin.UpdateInstanceConfigRequest, Sequence[Tuple[str, str]]
+    ]:
         """Pre-rpc interceptor for update_instance_config
 
         Override in a subclass to manipulate the request or metadata
@@ -380,7 +482,9 @@ class InstanceAdminRestInterceptor:
         """
         return request, metadata
 
-    def post_update_instance_config(self, response: operations_pb2.Operation) -> operations_pb2.Operation:
+    def post_update_instance_config(
+        self, response: operations_pb2.Operation
+    ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_instance_config
 
         Override in a subclass to manipulate the response
@@ -430,20 +534,21 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
     """
 
-    def __init__(self, *,
-            host: str = 'spanner.googleapis.com',
-            credentials: Optional[ga_credentials.Credentials] = None,
-            credentials_file: Optional[str] = None,
-            scopes: Optional[Sequence[str]] = None,
-            client_cert_source_for_mtls: Optional[Callable[[
-                ], Tuple[bytes, bytes]]] = None,
-            quota_project_id: Optional[str] = None,
-            client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
-            always_use_jwt_access: Optional[bool] = False,
-            url_scheme: str = 'https',
-            interceptor: Optional[InstanceAdminRestInterceptor] = None,
-            api_audience: Optional[str] = None,
-            ) -> None:
+    def __init__(
+        self,
+        *,
+        host: str = "spanner.googleapis.com",
+        credentials: Optional[ga_credentials.Credentials] = None,
+        credentials_file: Optional[str] = None,
+        scopes: Optional[Sequence[str]] = None,
+        client_cert_source_for_mtls: Optional[Callable[[], Tuple[bytes, bytes]]] = None,
+        quota_project_id: Optional[str] = None,
+        client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
+        always_use_jwt_access: Optional[bool] = False,
+        url_scheme: str = "https",
+        interceptor: Optional[InstanceAdminRestInterceptor] = None,
+        api_audience: Optional[str] = None,
+    ) -> None:
         """Instantiate the transport.
 
         Args:
@@ -482,7 +587,9 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         # credentials object
         maybe_url_match = re.match("^(?P<scheme>http(?:s)?://)?(?P<host>.*)$", host)
         if maybe_url_match is None:
-            raise ValueError(f"Unexpected hostname structure: {host}")  # pragma: NO COVER
+            raise ValueError(
+                f"Unexpected hostname structure: {host}"
+            )  # pragma: NO COVER
 
         url_match_items = maybe_url_match.groupdict()
 
@@ -493,10 +600,11 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             credentials=credentials,
             client_info=client_info,
             always_use_jwt_access=always_use_jwt_access,
-            api_audience=api_audience
+            api_audience=api_audience,
         )
         self._session = AuthorizedSession(
-            self._credentials, default_host=self.DEFAULT_HOST)
+            self._credentials, default_host=self.DEFAULT_HOST
+        )
         self._operations_client: Optional[operations_v1.AbstractOperationsClient] = None
         if client_cert_source_for_mtls:
             self._session.configure_mtls_channel(client_cert_source_for_mtls)
@@ -512,18 +620,20 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         """
         # Only create a new client if we do not already have one.
         if self._operations_client is None:
-            http_options: Dict[str, List[Dict[str, str]]] = {
-            }
+            http_options: Dict[str, List[Dict[str, str]]] = {}
 
             rest_transport = operations_v1.OperationsRestTransport(
-                    host=self._host,
-                    # use the credentials which are saved
-                    credentials=self._credentials,
-                    scopes=self._scopes,
-                    http_options=http_options,
-                    path_prefix="v1")
+                host=self._host,
+                # use the credentials which are saved
+                credentials=self._credentials,
+                scopes=self._scopes,
+                http_options=http_options,
+                path_prefix="v1",
+            )
 
-            self._operations_client = operations_v1.AbstractOperationsClient(transport=rest_transport)
+            self._operations_client = operations_v1.AbstractOperationsClient(
+                transport=rest_transport
+            )
 
         # Return the client from cache.
         return self._operations_client
@@ -532,19 +642,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("CreateInstance")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.CreateInstanceRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_instance_admin.CreateInstanceRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the create instance method over HTTP.
 
             Args:
@@ -566,11 +681,12 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*}/instances',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*}/instances",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_create_instance(request, metadata)
             pb_request = spanner_instance_admin.CreateInstanceRequest.pb(request)
@@ -579,33 +695,35 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -622,19 +740,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("CreateInstanceConfig")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.CreateInstanceConfigRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_instance_admin.CreateInstanceConfigRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the create instance config method over HTTP.
 
             Args:
@@ -656,46 +779,51 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{parent=projects/*}/instanceConfigs',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{parent=projects/*}/instanceConfigs",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_create_instance_config(request, metadata)
+            request, metadata = self._interceptor.pre_create_instance_config(
+                request, metadata
+            )
             pb_request = spanner_instance_admin.CreateInstanceConfigRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -712,19 +840,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("DeleteInstance")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.DeleteInstanceRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: spanner_instance_admin.DeleteInstanceRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the delete instance method over HTTP.
 
             Args:
@@ -739,37 +872,40 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instances/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instances/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_delete_instance(request, metadata)
             pb_request = spanner_instance_admin.DeleteInstanceRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -780,19 +916,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("DeleteInstanceConfig")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.DeleteInstanceConfigRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ):
+        def __call__(
+            self,
+            request: spanner_instance_admin.DeleteInstanceConfigRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ):
             r"""Call the delete instance config method over HTTP.
 
             Args:
@@ -807,37 +948,42 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
                     sent along with the request as metadata.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'delete',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "delete",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*}",
+                },
             ]
-            request, metadata = self._interceptor.pre_delete_instance_config(request, metadata)
+            request, metadata = self._interceptor.pre_delete_instance_config(
+                request, metadata
+            )
             pb_request = spanner_instance_admin.DeleteInstanceConfigRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -848,19 +994,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("GetIamPolicy")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.GetIamPolicyRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> policy_pb2.Policy:
+        def __call__(
+            self,
+            request: iam_policy_pb2.GetIamPolicyRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> policy_pb2.Policy:
             r"""Call the get iam policy method over HTTP.
 
             Args:
@@ -951,11 +1102,12 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*}:getIamPolicy',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*}:getIamPolicy",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_get_iam_policy(request, metadata)
             pb_request = request
@@ -964,33 +1116,35 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1009,19 +1163,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("GetInstance")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.GetInstanceRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_instance_admin.Instance:
+        def __call__(
+            self,
+            request: spanner_instance_admin.GetInstanceRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_instance_admin.Instance:
             r"""Call the get instance method over HTTP.
 
             Args:
@@ -1043,37 +1202,40 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instances/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instances/*}",
+                },
             ]
             request, metadata = self._interceptor.pre_get_instance(request, metadata)
             pb_request = spanner_instance_admin.GetInstanceRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1092,19 +1254,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("GetInstanceConfig")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.GetInstanceConfigRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_instance_admin.InstanceConfig:
+        def __call__(
+            self,
+            request: spanner_instance_admin.GetInstanceConfigRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_instance_admin.InstanceConfig:
             r"""Call the get instance config method over HTTP.
 
             Args:
@@ -1127,37 +1294,42 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{name=projects/*/instanceConfigs/*}',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{name=projects/*/instanceConfigs/*}",
+                },
             ]
-            request, metadata = self._interceptor.pre_get_instance_config(request, metadata)
+            request, metadata = self._interceptor.pre_get_instance_config(
+                request, metadata
+            )
             pb_request = spanner_instance_admin.GetInstanceConfigRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1176,71 +1348,83 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("ListInstanceConfigOperations")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.ListInstanceConfigOperationsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_instance_admin.ListInstanceConfigOperationsResponse:
+        def __call__(
+            self,
+            request: spanner_instance_admin.ListInstanceConfigOperationsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_instance_admin.ListInstanceConfigOperationsResponse:
             r"""Call the list instance config
-        operations method over HTTP.
+            operations method over HTTP.
 
-            Args:
-                request (~.spanner_instance_admin.ListInstanceConfigOperationsRequest):
-                    The request object. The request for
-                [ListInstanceConfigOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigOperations].
+                Args:
+                    request (~.spanner_instance_admin.ListInstanceConfigOperationsRequest):
+                        The request object. The request for
+                    [ListInstanceConfigOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigOperations].
 
-                retry (google.api_core.retry.Retry): Designation of what errors, if any,
-                    should be retried.
-                timeout (float): The timeout for this request.
-                metadata (Sequence[Tuple[str, str]]): Strings which should be
-                    sent along with the request as metadata.
+                    retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                        should be retried.
+                    timeout (float): The timeout for this request.
+                    metadata (Sequence[Tuple[str, str]]): Strings which should be
+                        sent along with the request as metadata.
 
-            Returns:
-                ~.spanner_instance_admin.ListInstanceConfigOperationsResponse:
-                    The response for
-                [ListInstanceConfigOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigOperations].
+                Returns:
+                    ~.spanner_instance_admin.ListInstanceConfigOperationsResponse:
+                        The response for
+                    [ListInstanceConfigOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstanceConfigOperations].
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*}/instanceConfigOperations',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*}/instanceConfigOperations",
+                },
             ]
-            request, metadata = self._interceptor.pre_list_instance_config_operations(request, metadata)
-            pb_request = spanner_instance_admin.ListInstanceConfigOperationsRequest.pb(request)
+            request, metadata = self._interceptor.pre_list_instance_config_operations(
+                request, metadata
+            )
+            pb_request = spanner_instance_admin.ListInstanceConfigOperationsRequest.pb(
+                request
+            )
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1249,7 +1433,9 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             # Return the response
             resp = spanner_instance_admin.ListInstanceConfigOperationsResponse()
-            pb_resp = spanner_instance_admin.ListInstanceConfigOperationsResponse.pb(resp)
+            pb_resp = spanner_instance_admin.ListInstanceConfigOperationsResponse.pb(
+                resp
+            )
 
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
             resp = self._interceptor.post_list_instance_config_operations(resp)
@@ -1259,19 +1445,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("ListInstanceConfigs")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.ListInstanceConfigsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_instance_admin.ListInstanceConfigsResponse:
+        def __call__(
+            self,
+            request: spanner_instance_admin.ListInstanceConfigsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_instance_admin.ListInstanceConfigsResponse:
             r"""Call the list instance configs method over HTTP.
 
             Args:
@@ -1292,37 +1483,42 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*}/instanceConfigs',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*}/instanceConfigs",
+                },
             ]
-            request, metadata = self._interceptor.pre_list_instance_configs(request, metadata)
+            request, metadata = self._interceptor.pre_list_instance_configs(
+                request, metadata
+            )
             pb_request = spanner_instance_admin.ListInstanceConfigsRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1341,19 +1537,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("ListInstances")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.ListInstancesRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> spanner_instance_admin.ListInstancesResponse:
+        def __call__(
+            self,
+            request: spanner_instance_admin.ListInstancesRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> spanner_instance_admin.ListInstancesResponse:
             r"""Call the list instances method over HTTP.
 
             Args:
@@ -1374,37 +1575,40 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'get',
-                'uri': '/v1/{parent=projects/*}/instances',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "get",
+                    "uri": "/v1/{parent=projects/*}/instances",
+                },
             ]
             request, metadata = self._interceptor.pre_list_instances(request, metadata)
             pb_request = spanner_instance_admin.ListInstancesRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
 
             # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True,
-            ))
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1423,19 +1627,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("SetIamPolicy")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.SetIamPolicyRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> policy_pb2.Policy:
+        def __call__(
+            self,
+            request: iam_policy_pb2.SetIamPolicyRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> policy_pb2.Policy:
             r"""Call the set iam policy method over HTTP.
 
             Args:
@@ -1526,11 +1735,12 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*}:setIamPolicy',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*}:setIamPolicy",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_set_iam_policy(request, metadata)
             pb_request = request
@@ -1539,33 +1749,35 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1584,19 +1796,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("TestIamPermissions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: iam_policy_pb2.TestIamPermissionsRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> iam_policy_pb2.TestIamPermissionsResponse:
+        def __call__(
+            self,
+            request: iam_policy_pb2.TestIamPermissionsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> iam_policy_pb2.TestIamPermissionsResponse:
             r"""Call the test iam permissions method over HTTP.
 
             Args:
@@ -1613,46 +1830,51 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
                     Response message for ``TestIamPermissions`` method.
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'post',
-                'uri': '/v1/{resource=projects/*/instances/*}:testIamPermissions',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "post",
+                    "uri": "/v1/{resource=projects/*/instances/*}:testIamPermissions",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_test_iam_permissions(request, metadata)
+            request, metadata = self._interceptor.pre_test_iam_permissions(
+                request, metadata
+            )
             pb_request = request
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1671,19 +1893,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("UpdateInstance")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.UpdateInstanceRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_instance_admin.UpdateInstanceRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the update instance method over HTTP.
 
             Args:
@@ -1705,11 +1932,12 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'patch',
-                'uri': '/v1/{instance.name=projects/*/instances/*}',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "patch",
+                    "uri": "/v1/{instance.name=projects/*/instances/*}",
+                    "body": "*",
+                },
             ]
             request, metadata = self._interceptor.pre_update_instance(request, metadata)
             pb_request = spanner_instance_admin.UpdateInstanceRequest.pb(request)
@@ -1718,33 +1946,35 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1761,19 +1991,24 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         def __hash__(self):
             return hash("UpdateInstanceConfig")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] =  {
-        }
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
-            return {k: v for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items() if k not in message_dict}
+            return {
+                k: v
+                for k, v in cls.__REQUIRED_FIELDS_DEFAULT_VALUES.items()
+                if k not in message_dict
+            }
 
-        def __call__(self,
-                request: spanner_instance_admin.UpdateInstanceConfigRequest, *,
-                retry: OptionalRetry=gapic_v1.method.DEFAULT,
-                timeout: Optional[float]=None,
-                metadata: Sequence[Tuple[str, str]]=(),
-                ) -> operations_pb2.Operation:
+        def __call__(
+            self,
+            request: spanner_instance_admin.UpdateInstanceConfigRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, str]] = (),
+        ) -> operations_pb2.Operation:
             r"""Call the update instance config method over HTTP.
 
             Args:
@@ -1795,46 +2030,51 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
 
             """
 
-            http_options: List[Dict[str, str]] = [{
-                'method': 'patch',
-                'uri': '/v1/{instance_config.name=projects/*/instanceConfigs/*}',
-                'body': '*',
-            },
+            http_options: List[Dict[str, str]] = [
+                {
+                    "method": "patch",
+                    "uri": "/v1/{instance_config.name=projects/*/instanceConfigs/*}",
+                    "body": "*",
+                },
             ]
-            request, metadata = self._interceptor.pre_update_instance_config(request, metadata)
+            request, metadata = self._interceptor.pre_update_instance_config(
+                request, metadata
+            )
             pb_request = spanner_instance_admin.UpdateInstanceConfigRequest.pb(request)
             transcoded_request = path_template.transcode(http_options, pb_request)
 
             # Jsonify the request body
 
             body = json_format.MessageToJson(
-                transcoded_request['body'],
-                including_default_value_fields=False,
-                use_integers_for_enums=True
-            )
-            uri = transcoded_request['uri']
-            method = transcoded_request['method']
-
-            # Jsonify the query params
-            query_params = json.loads(json_format.MessageToJson(
-                transcoded_request['query_params'],
+                transcoded_request["body"],
                 including_default_value_fields=False,
                 use_integers_for_enums=True,
-            ))
+            )
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+
+            # Jsonify the query params
+            query_params = json.loads(
+                json_format.MessageToJson(
+                    transcoded_request["query_params"],
+                    including_default_value_fields=False,
+                    use_integers_for_enums=True,
+                )
+            )
             query_params.update(self._get_unset_required_fields(query_params))
 
             query_params["$alt"] = "json;enum-encoding=int"
 
             # Send the request
             headers = dict(metadata)
-            headers['Content-Type'] = 'application/json'
+            headers["Content-Type"] = "application/json"
             response = getattr(self._session, method)(
                 "{host}{uri}".format(host=self._host, uri=uri),
                 timeout=timeout,
                 headers=headers,
                 params=rest_helpers.flatten_query_params(query_params, strict=True),
                 data=body,
-                )
+            )
 
             # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
             # subclass.
@@ -1848,116 +2088,143 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
             return resp
 
     @property
-    def create_instance(self) -> Callable[
-            [spanner_instance_admin.CreateInstanceRequest],
-            operations_pb2.Operation]:
+    def create_instance(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.CreateInstanceRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CreateInstance(self._session, self._host, self._interceptor) # type: ignore
+        return self._CreateInstance(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def create_instance_config(self) -> Callable[
-            [spanner_instance_admin.CreateInstanceConfigRequest],
-            operations_pb2.Operation]:
+    def create_instance_config(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.CreateInstanceConfigRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._CreateInstanceConfig(self._session, self._host, self._interceptor) # type: ignore
+        return self._CreateInstanceConfig(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def delete_instance(self) -> Callable[
-            [spanner_instance_admin.DeleteInstanceRequest],
-            empty_pb2.Empty]:
+    def delete_instance(
+        self,
+    ) -> Callable[[spanner_instance_admin.DeleteInstanceRequest], empty_pb2.Empty]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._DeleteInstance(self._session, self._host, self._interceptor) # type: ignore
+        return self._DeleteInstance(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def delete_instance_config(self) -> Callable[
-            [spanner_instance_admin.DeleteInstanceConfigRequest],
-            empty_pb2.Empty]:
+    def delete_instance_config(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.DeleteInstanceConfigRequest], empty_pb2.Empty
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._DeleteInstanceConfig(self._session, self._host, self._interceptor) # type: ignore
+        return self._DeleteInstanceConfig(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_iam_policy(self) -> Callable[
-            [iam_policy_pb2.GetIamPolicyRequest],
-            policy_pb2.Policy]:
+    def get_iam_policy(
+        self,
+    ) -> Callable[[iam_policy_pb2.GetIamPolicyRequest], policy_pb2.Policy]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetIamPolicy(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetIamPolicy(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_instance(self) -> Callable[
-            [spanner_instance_admin.GetInstanceRequest],
-            spanner_instance_admin.Instance]:
+    def get_instance(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.GetInstanceRequest], spanner_instance_admin.Instance
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetInstance(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetInstance(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def get_instance_config(self) -> Callable[
-            [spanner_instance_admin.GetInstanceConfigRequest],
-            spanner_instance_admin.InstanceConfig]:
+    def get_instance_config(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.GetInstanceConfigRequest],
+        spanner_instance_admin.InstanceConfig,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._GetInstanceConfig(self._session, self._host, self._interceptor) # type: ignore
+        return self._GetInstanceConfig(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_instance_config_operations(self) -> Callable[
-            [spanner_instance_admin.ListInstanceConfigOperationsRequest],
-            spanner_instance_admin.ListInstanceConfigOperationsResponse]:
+    def list_instance_config_operations(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.ListInstanceConfigOperationsRequest],
+        spanner_instance_admin.ListInstanceConfigOperationsResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListInstanceConfigOperations(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListInstanceConfigOperations(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_instance_configs(self) -> Callable[
-            [spanner_instance_admin.ListInstanceConfigsRequest],
-            spanner_instance_admin.ListInstanceConfigsResponse]:
+    def list_instance_configs(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.ListInstanceConfigsRequest],
+        spanner_instance_admin.ListInstanceConfigsResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListInstanceConfigs(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListInstanceConfigs(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def list_instances(self) -> Callable[
-            [spanner_instance_admin.ListInstancesRequest],
-            spanner_instance_admin.ListInstancesResponse]:
+    def list_instances(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.ListInstancesRequest],
+        spanner_instance_admin.ListInstancesResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._ListInstances(self._session, self._host, self._interceptor) # type: ignore
+        return self._ListInstances(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def set_iam_policy(self) -> Callable[
-            [iam_policy_pb2.SetIamPolicyRequest],
-            policy_pb2.Policy]:
+    def set_iam_policy(
+        self,
+    ) -> Callable[[iam_policy_pb2.SetIamPolicyRequest], policy_pb2.Policy]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._SetIamPolicy(self._session, self._host, self._interceptor) # type: ignore
+        return self._SetIamPolicy(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def test_iam_permissions(self) -> Callable[
-            [iam_policy_pb2.TestIamPermissionsRequest],
-            iam_policy_pb2.TestIamPermissionsResponse]:
+    def test_iam_permissions(
+        self,
+    ) -> Callable[
+        [iam_policy_pb2.TestIamPermissionsRequest],
+        iam_policy_pb2.TestIamPermissionsResponse,
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._TestIamPermissions(self._session, self._host, self._interceptor) # type: ignore
+        return self._TestIamPermissions(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def update_instance(self) -> Callable[
-            [spanner_instance_admin.UpdateInstanceRequest],
-            operations_pb2.Operation]:
+    def update_instance(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.UpdateInstanceRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._UpdateInstance(self._session, self._host, self._interceptor) # type: ignore
+        return self._UpdateInstance(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
-    def update_instance_config(self) -> Callable[
-            [spanner_instance_admin.UpdateInstanceConfigRequest],
-            operations_pb2.Operation]:
+    def update_instance_config(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.UpdateInstanceConfigRequest], operations_pb2.Operation
+    ]:
         # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
         # In C++ this would require a dynamic_cast
-        return self._UpdateInstanceConfig(self._session, self._host, self._interceptor) # type: ignore
+        return self._UpdateInstanceConfig(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
     def kind(self) -> str:
@@ -1967,6 +2234,4 @@ class InstanceAdminRestTransport(InstanceAdminTransport):
         self._session.close()
 
 
-__all__=(
-    'InstanceAdminRestTransport',
-)
+__all__ = ("InstanceAdminRestTransport",)
