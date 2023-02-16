@@ -44,7 +44,7 @@ from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import _metadata_with_prefix, _metadata_with_leader_aware_routing
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.pool import BurstyPool
@@ -155,6 +155,7 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
+        self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -564,7 +565,9 @@ class Database(object):
             partitioned_dml=TransactionOptions.PartitionedDml()
         )
 
-        metadata = _metadata_with_prefix(self.name)
+        metadata = _metadata_with_prefix(self.name) 
+        if self._route_to_leader_enabled:
+            metadata.append(_metadata_with_leader_aware_routing(self._route_to_leader_enabled))
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:

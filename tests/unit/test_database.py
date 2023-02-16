@@ -449,8 +449,9 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database1, database2)
 
     def test___eq__type_differ(self):
+        instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database1 = self._make_one(self.DATABASE_ID, None, pool=pool)
+        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool)
         database2 = object()
         self.assertNotEqual(database1, database2)
 
@@ -463,9 +464,10 @@ class TestDatabase(_BaseTest):
         self.assertFalse(comparison_val)
 
     def test___ne__(self):
+        instance1, instance2 = _Instance(self.INSTANCE_NAME+"1"), _Instance(self.INSTANCE_NAME+"2")
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one("database_id1", "instance1", pool=pool1)
-        database2 = self._make_one("database_id2", "instance2", pool=pool2)
+        database1 = self._make_one("database_id1", instance1, pool=pool1)
+        database2 = self._make_one("database_id2", instance2, pool=pool2)
         self.assertNotEqual(database1, database2)
 
     def test_create_grpc_error(self):
@@ -996,7 +998,7 @@ class TestDatabase(_BaseTest):
         api.begin_transaction.assert_called_with(
             session=session.name,
             options=txn_options,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[("google-cloud-resource-prefix", database.name), ("x-goog-spanner-route-to-leader", True)],
         )
         if retried:
             self.assertEqual(api.begin_transaction.call_count, 2)
@@ -1034,7 +1036,7 @@ class TestDatabase(_BaseTest):
 
         api.execute_streaming_sql.assert_any_call(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[("google-cloud-resource-prefix", database.name), ("x-goog-spanner-route-to-leader", True)],
         )
         if retried:
             expected_retry_transaction = TransactionSelector(
@@ -1051,7 +1053,7 @@ class TestDatabase(_BaseTest):
             )
             api.execute_streaming_sql.assert_called_with(
                 request=expected_request,
-                metadata=[("google-cloud-resource-prefix", database.name)],
+                metadata=[("google-cloud-resource-prefix", database.name), ("x-goog-spanner-route-to-leader", True)],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 2)
         else:
@@ -1182,7 +1184,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
 
         batch_txn = database.batch_snapshot()
         self.assertIsInstance(batch_txn, BatchSnapshot)
@@ -1193,7 +1196,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_read_timestamp(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         timestamp = self._make_timestamp()
 
         batch_txn = database.batch_snapshot(read_timestamp=timestamp)
@@ -1205,7 +1209,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_exact_staleness(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         duration = self._make_duration()
 
         batch_txn = database.batch_snapshot(exact_staleness=duration)
@@ -1662,7 +1667,7 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[("google-cloud-resource-prefix", database.name), ('x-goog-spanner-route-to-leader', True)],
         )
 
     def test_context_mgr_w_commit_stats_success(self):
@@ -1706,7 +1711,7 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[("google-cloud-resource-prefix", database.name), ('x-goog-spanner-route-to-leader', True)],
         )
 
         database.logger.info.assert_called_once_with(
@@ -1747,7 +1752,7 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[("google-cloud-resource-prefix", database.name), ('x-goog-spanner-route-to-leader', True)],
         )
 
         database.logger.info.assert_not_called()
@@ -1783,7 +1788,6 @@ class TestSnapshotCheckout(_BaseTest):
 
     def test_ctor_defaults(self):
         from google.cloud.spanner_v1.snapshot import Snapshot
-
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
         pool = database._pool = _Pool()
@@ -2551,10 +2555,11 @@ class _Client(object):
         self._client_info = mock.Mock()
         self._client_options = mock.Mock()
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.route_to_leader_enabled = True
 
 
 class _Instance(object):
-    def __init__(self, name, client=None, emulator_host=None):
+    def __init__(self, name, client= _Client(), emulator_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
@@ -2568,6 +2573,7 @@ class _Backup(object):
 
 class _Database(object):
     log_commit_stats = False
+    _route_to_leader_enabled = True
 
     def __init__(self, name, instance=None):
         self.name = name

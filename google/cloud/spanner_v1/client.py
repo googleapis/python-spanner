@@ -132,6 +132,7 @@ class Client(ClientWithProject):
         client_info=_CLIENT_INFO,
         client_options=None,
         query_options=None,
+        route_to_leader_enabled=True,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -170,6 +171,8 @@ class Client(ClientWithProject):
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
+
+        self._route_to_leader_enabled=route_to_leader_enabled
 
     @property
     def credentials(self):
@@ -241,6 +244,15 @@ class Client(ClientWithProject):
                     client_options=self._client_options,
                 )
         return self._database_admin_api
+
+    @property
+    def route_to_leader_enabled(self):
+        """Getter for if read-write requests will be routed to leader.
+
+        :rtype: boolean
+        :returns: If read-write requests will be routed to leader.
+        """
+        return self._route_to_leader_enabled
 
     def copy(self):
         """Make a copy of this client.
