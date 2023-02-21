@@ -20,7 +20,10 @@ import queue
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix, _metadata_with_leader_aware_routing
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+)
 from warnings import warn
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
@@ -192,7 +195,9 @@ class FixedSizePool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
-            metadata.append(_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         self._database_role = self._database_role or self._database.database_role
         request = BatchCreateSessionsRequest(
             database=database.name,
@@ -405,7 +410,9 @@ class PingingPool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
-            metadata.append(_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         created_session_count = 0
         self._database_role = self._database_role or self._database.database_role
 

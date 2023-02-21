@@ -46,7 +46,6 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_v1.client import Client
 
         # We don't need a real Client object to test the constructor
-        client = Client()
         instance = Instance(INSTANCE, client=Client)
         database = instance.database(DATABASE)
         return Connection(instance, database, **kwargs)

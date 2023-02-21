@@ -293,13 +293,14 @@ def _metadata_with_prefix(prefix, **kw):
     """
     return [("google-cloud-resource-prefix", prefix)]
 
+
 def _metadata_with_leader_aware_routing(value, **kw):
-   """Create RPC metadata containing a leader aware routing header
+    """Create RPC metadata containing a leader aware routing header
 
-   Args:
-       value (bool): header value
+    Args:
+        value (bool): header value
 
-   Returns:
-       List[Tuple[str, str]]: RPC metadata with leader aware routing header
-   """
-   return ("x-goog-spanner-route-to-leader", value)
+    Returns:
+        List[Tuple[str, str]]: RPC metadata with leader aware routing header
+    """
+    return ("x-goog-spanner-route-to-leader", str(value).lower())
