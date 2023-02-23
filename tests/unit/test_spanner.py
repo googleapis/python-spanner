@@ -28,6 +28,7 @@ from google.cloud.spanner_v1 import (
     StructType,
     TransactionOptions,
     TransactionSelector,
+    TransactionTypes,
     ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
     param_types,
@@ -74,6 +75,17 @@ MODE = 2
 RETRY = gapic_v1.method.DEFAULT
 TIMEOUT = gapic_v1.method.DEFAULT
 REQUEST_OPTIONS = RequestOptions()
+DIRECTED_READ_OPTIONS = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+                "type_": TransactionTypes.READ_ONLY,
+            },
+        ],
+        "auto_failover": True,
+    },
+}
 insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
 insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
 insert_param_types = {"pkey": param_types.INT64, "desc": param_types.STRING}
@@ -193,6 +205,7 @@ class TestTransaction(OpenTelemetryBase):
         partition=None,
         sql_count=0,
         query_options=None,
+        directed_read_options=None,
     ):
         VALUES = [["bharney", "rhubbyl", 31], ["phred", "phlyntstone", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
@@ -231,6 +244,7 @@ class TestTransaction(OpenTelemetryBase):
             partition=partition,
             retry=RETRY,
             timeout=TIMEOUT,
+            directed_read_options=directed_read_options,
         )
 
         self.assertEqual(transaction._read_request_count, count + 1)
@@ -261,7 +275,7 @@ class TestTransaction(OpenTelemetryBase):
             )
 
         expected_request_options = REQUEST_OPTIONS
-        expected_request_options.transaction_tag = None
+        expected_request_options.transaction_tag = self.TRANSACTION_TAG
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=SQL_QUERY_WITH_PARAM,
@@ -283,6 +297,7 @@ class TestTransaction(OpenTelemetryBase):
         api,
         count=0,
         partition=None,
+        directed_read_options=None,
     ):
         VALUES = [["bharney", 31], ["phred", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
@@ -321,6 +336,7 @@ class TestTransaction(OpenTelemetryBase):
                 retry=RETRY,
                 timeout=TIMEOUT,
                 request_options=REQUEST_OPTIONS,
+                directed_read_options=directed_read_options,
             )
         else:
             result_set = transaction.read(
@@ -332,6 +348,7 @@ class TestTransaction(OpenTelemetryBase):
                 retry=RETRY,
                 timeout=TIMEOUT,
                 request_options=REQUEST_OPTIONS,
+                directed_read_options=directed_read_options,
             )
 
         self.assertEqual(transaction._read_request_count, count + 1)
@@ -356,9 +373,8 @@ class TestTransaction(OpenTelemetryBase):
         else:
             expected_limit = LIMIT
 
-        # Transaction tag is ignored for read request.
         expected_request_options = REQUEST_OPTIONS
-        expected_request_options.transaction_tag = None
+        expected_request_options.transaction_tag = self.TRANSACTION_TAG
 
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
@@ -574,6 +590,28 @@ class TestTransaction(OpenTelemetryBase):
             timeout=gapic_v1.method.DEFAULT,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
+
+    def test_transaction_should_throw_error_w_directed_read_options(self):
+        from google.api_core.exceptions import BadRequest
+
+        database = _Database()
+        session = _Session(database)
+        api = database.spanner_api = self._make_spanner_api()
+        transaction = self._make_one(session)
+
+        with self.assertRaises(BadRequest):
+            self._execute_sql_helper(
+                transaction=transaction,
+                api=api,
+                directed_read_options=DIRECTED_READ_OPTIONS,
+            )
+
+        with self.assertRaises(BadRequest):
+            self._read_helper(
+                transaction=transaction,
+                api=api,
+                directed_read_options=DIRECTED_READ_OPTIONS,
+            )
 
     def test_transaction_should_use_transaction_id_returned_by_first_read(self):
         database = _Database()
@@ -831,6 +869,7 @@ class _Client(object):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.directed_read_options = None
 
 
 class _Instance(object):
@@ -842,6 +881,7 @@ class _Database(object):
     def __init__(self):
         self.name = "testing"
         self._instance = _Instance()
+        self._directed_read_options = None
 
 
 class _Session(object):

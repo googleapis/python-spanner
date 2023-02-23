@@ -155,6 +155,7 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
+        self._directed_read_options = self._instance._client.directed_read_options
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)

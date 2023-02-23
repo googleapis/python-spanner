@@ -28,6 +28,7 @@ from google.cloud.spanner_v1 import PartitionReadRequest
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 from google.api_core.exceptions import InvalidArgument
+from google.api_core.exceptions import BadRequest
 from google.api_core import gapic_v1
 from google.cloud.spanner_v1._helpers import _make_value_pb
 from google.cloud.spanner_v1._helpers import _merge_query_options
@@ -36,6 +37,7 @@ from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1._helpers import verify_directed_read_options
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
@@ -170,6 +172,7 @@ class _SnapshotBase(_SessionWrapper):
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        directed_read_options=None,
     ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
@@ -235,8 +238,19 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
+            if (
+                directed_read_options is None
+                and database._directed_read_options is not None
+            ):
+                directed_read_options = database._directed_read_options
         else:
-            request_options.transaction_tag = self.transaction_tag
+            if self.transaction_tag is not None:
+                request_options.transaction_tag = self.transaction_tag
+            if directed_read_options is not None:
+                raise BadRequest(
+                    "directed_read_options can't be set for readWrite transactions or partitioned dml requests"
+                )
+        verify_directed_read_options(directed_read_options)
 
         request = ReadRequest(
             session=self._session.name,
@@ -247,6 +261,7 @@ class _SnapshotBase(_SessionWrapper):
             limit=limit,
             partition_token=partition,
             request_options=request_options,
+            directed_read_options=directed_read_options,
         )
         restart = functools.partial(
             api.streaming_read,
@@ -302,6 +317,7 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        directed_read_options=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -387,8 +403,19 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
+            if (
+                directed_read_options is None
+                and database._directed_read_options is not None
+            ):
+                directed_read_options = database._directed_read_options
         else:
-            request_options.transaction_tag = self.transaction_tag
+            if self.transaction_tag is not None:
+                request_options.transaction_tag = self.transaction_tag
+            if directed_read_options is not None:
+                raise BadRequest(
+                    "directed_read_options can't be set for readWrite transactions or partitioned dml requests"
+                )
+        verify_directed_read_options(directed_read_options)
 
         request = ExecuteSqlRequest(
             session=self._session.name,
@@ -400,6 +427,7 @@ class _SnapshotBase(_SessionWrapper):
             seqno=self._execute_sql_count,
             query_options=query_options,
             request_options=request_options,
+            directed_read_options=directed_read_options,
         )
         restart = functools.partial(
             api.execute_streaming_sql,

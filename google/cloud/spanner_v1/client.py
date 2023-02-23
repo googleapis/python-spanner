@@ -47,6 +47,7 @@ from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import verify_directed_read_options
 from google.cloud.spanner_v1.instance import Instance
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
@@ -132,6 +133,7 @@ class Client(ClientWithProject):
         client_info=_CLIENT_INFO,
         client_options=None,
         query_options=None,
+        directed_read_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -170,6 +172,9 @@ class Client(ClientWithProject):
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
+
+        verify_directed_read_options(directed_read_options)
+        self._directed_read_options = directed_read_options
 
     @property
     def credentials(self):
@@ -241,6 +246,16 @@ class Client(ClientWithProject):
                     client_options=self._client_options,
                 )
         return self._database_admin_api
+
+    @property
+    def directed_read_options(self):
+        """Getter for client's credentials.
+
+        :rtype:
+            :class:`Credentials <google.auth.credentials.Credentials>`
+        :returns: The credentials stored on the client.
+        """
+        return self._directed_read_options
 
     def copy(self):
         """Make a copy of this client.
@@ -365,3 +380,6 @@ class Client(ClientWithProject):
             request=request, metadata=metadata
         )
         return page_iter
+
+    def set_directed_read_options(self, directed_read_options):
+        self._directed_read_options = directed_read_options

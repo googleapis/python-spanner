@@ -20,7 +20,7 @@ from google.api_core import gapic_v1
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 
-from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions, TransactionTypes
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -33,6 +33,17 @@ VALUES ("Phred", "Phlyntstone", @age)
 PARAMS = {"age": 30}
 PARAM_TYPES = {"age": INT64}
 MODE = 2  # PROFILE
+DIRECTED_READ_OPTIONS = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+                "type_": TransactionTypes.READ_ONLY,
+            },
+        ],
+        "auto_failover": True,
+    },
+}
 
 
 def _make_credentials():  # pragma: NO COVER
@@ -185,6 +196,16 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(database._encryption_config, encryption_config)
+
+    def test_ctor_w_directed_read_options(self):
+        client = _Client(directed_read_options=DIRECTED_READ_OPTIONS)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(
+            self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertEqual(database._directed_read_options, DIRECTED_READ_OPTIONS)
 
     def test_from_pb_bad_database_name(self):
         from google.cloud.spanner_admin_database_v1 import Database
@@ -449,8 +470,9 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database1, database2)
 
     def test___eq__type_differ(self):
+        instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database1 = self._make_one(self.DATABASE_ID, None, pool=pool)
+        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool)
         database2 = object()
         self.assertNotEqual(database1, database2)
 
@@ -463,9 +485,12 @@ class TestDatabase(_BaseTest):
         self.assertFalse(comparison_val)
 
     def test___ne__(self):
+        instance1, instance2 = _Instance(self.INSTANCE_NAME + "1"), _Instance(
+            self.INSTANCE_NAME + "2"
+        )
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one("database_id1", "instance1", pool=pool1)
-        database2 = self._make_one("database_id2", "instance2", pool=pool2)
+        database1 = self._make_one("database_id1", instance1, pool=pool1)
+        database2 = self._make_one("database_id2", instance2, pool=pool2)
         self.assertNotEqual(database1, database2)
 
     def test_create_grpc_error(self):
@@ -1182,7 +1207,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
 
         batch_txn = database.batch_snapshot()
         self.assertIsInstance(batch_txn, BatchSnapshot)
@@ -1193,7 +1219,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_read_timestamp(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         timestamp = self._make_timestamp()
 
         batch_txn = database.batch_snapshot(read_timestamp=timestamp)
@@ -1205,7 +1232,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_exact_staleness(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         duration = self._make_duration()
 
         batch_txn = database.batch_snapshot(exact_staleness=duration)
@@ -2541,7 +2569,7 @@ def _make_instance_api():
 
 
 class _Client(object):
-    def __init__(self, project=TestDatabase.PROJECT_ID):
+    def __init__(self, project=TestDatabase.PROJECT_ID, directed_read_options=None):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self.project = project
@@ -2551,10 +2579,11 @@ class _Client(object):
         self._client_info = mock.Mock()
         self._client_options = mock.Mock()
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.directed_read_options = directed_read_options
 
 
 class _Instance(object):
-    def __init__(self, name, client=None, emulator_host=None):
+    def __init__(self, name, client=_Client(), emulator_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
@@ -2576,6 +2605,7 @@ class _Database(object):
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
+        self._directed_read_options = None
 
 
 class _Pool(object):

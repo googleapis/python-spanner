@@ -38,6 +38,7 @@ from .types.spanner import BeginTransactionRequest
 from .types.spanner import CommitRequest
 from .types.spanner import CreateSessionRequest
 from .types.spanner import DeleteSessionRequest
+from .types.spanner import DirectedReadOptions
 from .types.spanner import ExecuteBatchDmlRequest
 from .types.spanner import ExecuteBatchDmlResponse
 from .types.spanner import ExecuteSqlRequest
@@ -77,7 +78,7 @@ COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
 This value can only be used for timestamp columns that have set the option
 ``(allow_commit_timestamp=true)`` in the schema.
 """
-
+TransactionTypes = DirectedReadOptions.ReplicaSelection.Type
 
 __all__ = (
     # google.cloud.spanner_v1
@@ -96,6 +97,7 @@ __all__ = (
     "TransactionPingingPool",
     # local
     "COMMIT_TIMESTAMP",
+    "TransactionTypes",
     # google.cloud.spanner_v1.types
     "BatchCreateSessionsRequest",
     "BatchCreateSessionsResponse",
@@ -104,6 +106,7 @@ __all__ = (
     "CommitResponse",
     "CreateSessionRequest",
     "DeleteSessionRequest",
+    "DirectedReadOptions",
     "ExecuteBatchDmlRequest",
     "ExecuteBatchDmlResponse",
     "ExecuteSqlRequest",

@@ -846,6 +846,7 @@ class _Client(object):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.directed_read_options = None
 
 
 class _Instance(object):
@@ -857,6 +858,7 @@ class _Database(object):
     def __init__(self):
         self.name = "testing"
         self._instance = _Instance()
+        self._directed_read_options = None
 
 
 class _Session(object):

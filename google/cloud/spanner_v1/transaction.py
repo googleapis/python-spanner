@@ -50,6 +50,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     _multi_use = True
     _execute_sql_count = 0
     _lock = threading.Lock()
+    _read_only = False
 
     def __init__(self, session):
         if session._transaction is not None:
