@@ -255,11 +255,12 @@ class Client(ClientWithProject):
 
     @property
     def directed_read_options(self):
-        """Getter for client's credentials.
+        """Getter for directed_read_options.
 
         :rtype:
-            :class:`Credentials <google.auth.credentials.Credentials>`
-        :returns: The credentials stored on the client.
+            :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+            or :class:`dict`
+        :returns: The directed_read_options for the client.
         """
         return self._directed_read_options
 
@@ -388,4 +389,11 @@ class Client(ClientWithProject):
         return page_iter
 
     def set_directed_read_options(self, directed_read_options):
+        """Sets directed_read_options for the client
+        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: Client options used to set the directed_read_options 
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+            or regions should be used for non-transactional reads or queries.
+        """
         self._directed_read_options = directed_read_options
