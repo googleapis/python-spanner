@@ -15,6 +15,65 @@
 
 import unittest
 
+DIRECTED_READ_INCORRECT_OPTIONS1 = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+            },
+        ],
+    },
+    "exclude_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-east1",
+            },
+        ],
+    },
+}
+DIRECTED_READ_INCORRECT_OPTIONS2 = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+            {
+                "location": "us-west1",
+            },
+        ],
+    },
+}
+
 
 class Test_merge_query_options(unittest.TestCase):
     def _callFUT(self, *args, **kw):
@@ -680,70 +739,14 @@ class Test_verify_directed_read_options(unittest.TestCase):
     def test_dict_include_exclude_replica_set_error(self):
         from google.api_core.exceptions import InvalidArgument
 
-        directed_read_options = {
-            "include_replicas": {
-                "replica_selections": [
-                    {
-                        "location": "us-west1",
-                    },
-                ],
-            },
-            "exclude_replicas": {
-                "replica_selections": [
-                    {
-                        "location": "us-east1",
-                    },
-                ],
-            },
-        }
+        directed_read_options = DIRECTED_READ_INCORRECT_OPTIONS1
         with self.assertRaises(InvalidArgument):
             self._call_fut(directed_read_options)
 
     def test_dict_greater_than_ten_replica_selections_error(self):
         from google.api_core.exceptions import InvalidArgument
 
-        directed_read_options = {
-            "include_replicas": {
-                "replica_selections": [
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                    {
-                        "location": "us-west1",
-                    },
-                ],
-            },
-        }
+        directed_read_options = DIRECTED_READ_INCORRECT_OPTIONS2
         with self.assertRaises(InvalidArgument):
             self._call_fut(directed_read_options)
 
@@ -751,24 +754,7 @@ class Test_verify_directed_read_options(unittest.TestCase):
         from google.api_core.exceptions import InvalidArgument
         from google.cloud.spanner_v1 import DirectedReadOptions
 
-        directed_read_options = DirectedReadOptions(
-            {
-                "include_replicas": {
-                    "replica_selections": [
-                        {
-                            "location": "us-west1",
-                        },
-                    ],
-                },
-                "exclude_replicas": {
-                    "replica_selections": [
-                        {
-                            "location": "us-east1",
-                        },
-                    ],
-                },
-            }
-        )
+        directed_read_options = DirectedReadOptions(DIRECTED_READ_INCORRECT_OPTIONS1)
         with self.assertRaises(InvalidArgument):
             self._call_fut(directed_read_options)
 
@@ -776,49 +762,6 @@ class Test_verify_directed_read_options(unittest.TestCase):
         from google.api_core.exceptions import InvalidArgument
         from google.cloud.spanner_v1 import DirectedReadOptions
 
-        directed_read_options = DirectedReadOptions(
-            {
-                "include_replicas": {
-                    "replica_selections": [
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                        {
-                            "location": "us-west1",
-                        },
-                    ],
-                },
-            }
-        )
+        directed_read_options = DirectedReadOptions(DIRECTED_READ_INCORRECT_OPTIONS2)
         with self.assertRaises(InvalidArgument):
             self._call_fut(directed_read_options)

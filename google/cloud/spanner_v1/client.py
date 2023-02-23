@@ -117,8 +117,8 @@ class Client(ClientWithProject):
 
     :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
         or :class:`dict`
-    :param directed_read_options: (Optional) Client options used to set the directed_read_options 
-        for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+    :param directed_read_options: (Optional) Client options used to set the directed_read_options
+        for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
         or regions should be used for non-transactional reads or queries.
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
@@ -392,8 +392,8 @@ class Client(ClientWithProject):
         """Sets directed_read_options for the client
         :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
-        :param directed_read_options: Client options used to set the directed_read_options 
-            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+        :param directed_read_options: Client options used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
             or regions should be used for non-transactional reads or queries.
         """
         self._directed_read_options = directed_read_options
