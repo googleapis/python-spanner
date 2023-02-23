@@ -229,8 +229,8 @@ class _SnapshotBase(_SessionWrapper):
 
         :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
-        :param directed_read_options: (Optional) Client options used to set the directed_read_options 
-            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+        :param directed_read_options: (Optional) Client options used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
             or regions should be used for non-transactional reads or queries.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
@@ -239,8 +239,10 @@ class _SnapshotBase(_SessionWrapper):
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
-        
+
         :raises InvalidArguement: if directed_read_options is incorrect.
+
+        :raises BadRequest: if directed_read_options are set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:
@@ -407,8 +409,8 @@ class _SnapshotBase(_SessionWrapper):
 
         :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
-        :param directed_read_options: (Optional) Client options used to set the directed_read_options 
-            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+        :param directed_read_options: (Optional) Client options used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
             or regions should be used for non-transactional reads or queries.
 
         :raises ValueError:
@@ -416,6 +418,8 @@ class _SnapshotBase(_SessionWrapper):
             already pending for multiple-use snapshots.
 
         :raises InvalidArguement: if directed_read_options is incorrect.
+
+        :raises BadRequest: if directed_read_options are set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:
