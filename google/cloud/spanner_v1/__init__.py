@@ -80,6 +80,7 @@ This value can only be used for timestamp columns that have set the option
 """
 TransactionTypes = DirectedReadOptions.ReplicaSelection.Type
 
+
 __all__ = (
     # google.cloud.spanner_v1
     "__version__",
