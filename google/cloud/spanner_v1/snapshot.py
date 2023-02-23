@@ -213,6 +213,12 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Client options used to set the directed_read_options 
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+            or regions should be used for non-transactional reads or queries.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
@@ -366,6 +372,12 @@ class _SnapshotBase(_SessionWrapper):
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Client options used to set the directed_read_options 
+            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas 
+            or regions should be used for non-transactional reads or queries.
 
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
