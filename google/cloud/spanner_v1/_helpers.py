@@ -28,6 +28,8 @@ from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
+from google.cloud.spanner_v1 import DirectedReadOptions
+from google.api_core.exceptions import InvalidArgument
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -358,3 +360,44 @@ def _metadata_with_leader_aware_routing(value, **kw):
         List[Tuple[str, str]]: RPC metadata with leader aware routing header
     """
     return ("x-goog-spanner-route-to-leader", str(value).lower())
+
+
+def verify_directed_read_options(directed_read_options):
+    if type(directed_read_options) == dict:
+        if (
+            "include_replicas" in directed_read_options.keys()
+            and "exclude_replicas" in directed_read_options.keys()
+        ):
+            raise InvalidArgument(
+                "Only one of include_replicas or exclude_replicas can be set"
+            )
+        if (
+            "include_replicas" in directed_read_options.keys()
+            and "replica_selections" in directed_read_options["include_replicas"].keys()
+            and len(directed_read_options["include_replicas"]["replica_selections"])
+            > 10
+        ) or (
+            "exclude_replicas" in directed_read_options.keys()
+            and "replica_selections" in directed_read_options["exclude_replicas"].keys()
+            and len(directed_read_options["exclude_replicas"]["replica_selections"])
+            > 10
+        ):
+            raise InvalidArgument("Maximum length of replica selection allowed is 10")
+    elif isinstance(directed_read_options, DirectedReadOptions):
+        if (
+            directed_read_options.include_replicas is not None
+            and directed_read_options.exclude_replicas is not None
+        ):
+            raise InvalidArgument(
+                "Only one of include_replicas or exclude_replicas can be set"
+            )
+        if (
+            directed_read_options.include_replicas is not None
+            and directed_read_options.include_replicas.replica_selections is not None
+            and len(directed_read_options.include_replicas.replica_selections) > 10
+        ) or (
+            directed_read_options.include_replicas is not None
+            and directed_read_options.exclude_replicas.replica_selections is not None
+            and len(directed_read_options.exclude_replicas.replica_selections) > 10
+        ):
+            raise InvalidArgument("Maximum length of replica selection allowed is 10")

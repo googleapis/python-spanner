@@ -761,3 +761,156 @@ class Test_metadata_with_leader_aware_routing(unittest.TestCase):
         self.assertEqual(
             metadata, ("x-goog-spanner-route-to-leader", str(value).lower())
         )
+
+
+class Test_verify_directed_read_options(unittest.TestCase):
+    def _call_fut(self, directed_read_options):
+        from google.cloud.spanner_v1._helpers import verify_directed_read_options
+
+        verify_directed_read_options(directed_read_options)
+
+    def test_dict_include_exclude_replica_set_error(self):
+        from google.api_core.exceptions import InvalidArgument
+
+        directed_read_options = {
+            "include_replicas": {
+                "replica_selections": [
+                    {
+                        "location": "us-west1",
+                    },
+                ],
+            },
+            "exclude_replicas": {
+                "replica_selections": [
+                    {
+                        "location": "us-east1",
+                    },
+                ],
+            },
+        }
+        with self.assertRaises(InvalidArgument):
+            self._call_fut(directed_read_options)
+
+    def test_dict_greater_than_ten_replica_selections_error(self):
+        from google.api_core.exceptions import InvalidArgument
+
+        directed_read_options = {
+            "include_replicas": {
+                "replica_selections": [
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                    {
+                        "location": "us-west1",
+                    },
+                ],
+            },
+        }
+        with self.assertRaises(InvalidArgument):
+            self._call_fut(directed_read_options)
+
+    def test_object_include_exclude_replica_set_error(self):
+        from google.api_core.exceptions import InvalidArgument
+        from google.cloud.spanner_v1 import DirectedReadOptions
+
+        directed_read_options = DirectedReadOptions(
+            {
+                "include_replicas": {
+                    "replica_selections": [
+                        {
+                            "location": "us-west1",
+                        },
+                    ],
+                },
+                "exclude_replicas": {
+                    "replica_selections": [
+                        {
+                            "location": "us-east1",
+                        },
+                    ],
+                },
+            }
+        )
+        with self.assertRaises(InvalidArgument):
+            self._call_fut(directed_read_options)
+
+    def test_dict_greater_than_ten_replica_selections_error(self):
+        from google.api_core.exceptions import InvalidArgument
+        from google.cloud.spanner_v1 import DirectedReadOptions
+
+        directed_read_options = DirectedReadOptions(
+            {
+                "include_replicas": {
+                    "replica_selections": [
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                        {
+                            "location": "us-west1",
+                        },
+                    ],
+                },
+            }
+        )
+        with self.assertRaises(InvalidArgument):
+            self._call_fut(directed_read_options)

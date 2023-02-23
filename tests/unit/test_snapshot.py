@@ -16,7 +16,7 @@
 from google.api_core import gapic_v1
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions, TransactionTypes
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
@@ -45,6 +45,26 @@ BASE_ATTRIBUTES = {
     "db.url": "spanner.googleapis.com",
     "db.instance": "testing",
     "net.host.name": "spanner.googleapis.com",
+}
+DIRECTED_READ_OPTIONS = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+                "type_": TransactionTypes.READ_ONLY,
+            },
+        ],
+        "auto_failover": True,
+    },
+}
+DIRECTED_READ_OPTIONS_FOR_CLIENT = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-east1",
+            },
+        ],
+    },
 }
 
 
@@ -603,6 +623,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         timeout=gapic_v1.method.DEFAULT,
         retry=gapic_v1.method.DEFAULT,
         request_options=None,
+        directed_read_options=None,
+        directed_read_options_at_client_level=None,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
@@ -642,7 +664,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         keyset = KeySet(keys=KEYS)
         INDEX = "email-address-index"
         LIMIT = 20
-        database = _Database()
+        database = _Database(
+            directed_read_options=directed_read_options_at_client_level
+        )
         api = database.spanner_api = self._make_spanner_api()
         api.streaming_read.return_value = _MockIterator(*result_sets)
         session = _Session(database)
@@ -667,6 +691,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 retry=retry,
                 timeout=timeout,
                 request_options=request_options,
+                directed_read_options=directed_read_options,
             )
         else:
             result_set = derived.read(
@@ -678,6 +703,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 retry=retry,
                 timeout=timeout,
                 request_options=request_options,
+                directed_read_options=directed_read_options,
             )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -712,6 +738,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
         expected_request_options = request_options
         expected_request_options.transaction_tag = None
 
+        expected_directed_read_options = (
+            directed_read_options
+            if directed_read_options is not None
+            else directed_read_options_at_client_level
+        )
+
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
             table=TABLE_NAME,
@@ -722,6 +754,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             limit=expected_limit,
             partition_token=partition,
             request_options=expected_request_options,
+            directed_read_options=expected_directed_read_options,
         )
         api.streaming_read.assert_called_once_with(
             request=expected_request,
@@ -797,6 +830,22 @@ class Test_SnapshotBase(OpenTelemetryBase):
             multi_use=True, first=False, retry=Retry(deadline=60), timeout=2.0
         )
 
+    def test_read_w_directed_read_options(self):
+        self._read_helper(multi_use=False, directed_read_options=DIRECTED_READ_OPTIONS)
+
+    def test_read_w_directed_read_options_at_client_level(self):
+        self._read_helper(
+            multi_use=False,
+            directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
+        )
+
+    def test_read_w_directed_read_options_override(self):
+        self._read_helper(
+            multi_use=False,
+            directed_read_options=DIRECTED_READ_OPTIONS,
+            directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
+        )
+
     def test_execute_sql_other_error(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -836,6 +885,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         request_options=None,
         timeout=gapic_v1.method.DEFAULT,
         retry=gapic_v1.method.DEFAULT,
+        directed_read_options=None,
+        directed_read_options_at_client_level=None,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
@@ -876,7 +927,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
         iterator = _MockIterator(*result_sets)
-        database = _Database()
+        database = _Database(
+            directed_read_options=directed_read_options_at_client_level
+        )
         api = database.spanner_api = self._make_spanner_api()
         api.execute_streaming_sql.return_value = iterator
         session = _Session(database)
@@ -902,6 +955,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             partition=partition,
             retry=retry,
             timeout=timeout,
+            directed_read_options=directed_read_options,
         )
 
         self.assertEqual(derived._read_request_count, count + 1)
@@ -942,6 +996,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
             expected_request_options = request_options
             expected_request_options.transaction_tag = None
 
+        expected_directed_read_options = (
+            directed_read_options
+            if directed_read_options is not None
+            else directed_read_options_at_client_level
+        )
+
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
             sql=SQL_QUERY_WITH_PARAM,
@@ -953,6 +1013,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             request_options=expected_request_options,
             partition_token=partition,
             seqno=sql_count,
+            directed_read_options=expected_directed_read_options,
         )
         api.execute_streaming_sql.assert_called_once_with(
             request=expected_request,
@@ -1038,6 +1099,24 @@ class Test_SnapshotBase(OpenTelemetryBase):
         request_options = {"incorrect_tag": "tag-1-1"}
         with self.assertRaises(ValueError):
             self._execute_sql_helper(multi_use=False, request_options=request_options)
+
+    def test_execute_sql_w_directed_read_options(self):
+        self._execute_sql_helper(
+            multi_use=False, directed_read_options=DIRECTED_READ_OPTIONS
+        )
+
+    def test_execute_sql_w_directed_read_options(self):
+        self._execute_sql_helper(
+            multi_use=False,
+            directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
+        )
+
+    def test_execute_sql_w_directed_read_options(self):
+        self._execute_sql_helper(
+            multi_use=False,
+            directed_read_options=DIRECTED_READ_OPTIONS,
+            directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
+        )
 
     def _partition_read_helper(
         self,
@@ -1747,10 +1826,11 @@ class _Instance(object):
 
 
 class _Database(object):
-    def __init__(self):
+    def __init__(self, directed_read_options=None):
         self.name = "testing"
         self._instance = _Instance()
         self._route_to_leader_enabled = True
+        self._directed_read_options = directed_read_options
 
 
 class _Session(object):

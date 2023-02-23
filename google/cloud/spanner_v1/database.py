@@ -166,6 +166,7 @@ class Database(object):
         self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
+        self._directed_read_options = self._instance._client.directed_read_options
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)

@@ -22,7 +22,7 @@ from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
 
-from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions, TransactionTypes
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -35,6 +35,17 @@ VALUES ("Phred", "Phlyntstone", @age)
 PARAMS = {"age": 30}
 PARAM_TYPES = {"age": INT64}
 MODE = 2  # PROFILE
+DIRECTED_READ_OPTIONS = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+                "type_": TransactionTypes.READ_ONLY,
+            },
+        ],
+        "auto_failover": True,
+    },
+}
 
 
 def _make_credentials():  # pragma: NO COVER
@@ -198,6 +209,16 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(database._encryption_config, encryption_config)
+
+    def test_ctor_w_directed_read_options(self):
+        client = _Client(directed_read_options=DIRECTED_READ_OPTIONS)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(
+            self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertEqual(database._directed_read_options, DIRECTED_READ_OPTIONS)
 
     def test_from_pb_bad_database_name(self):
         from google.cloud.spanner_admin_database_v1 import Database
@@ -2690,7 +2711,7 @@ def _make_instance_api():
 
 
 class _Client(object):
-    def __init__(self, project=TestDatabase.PROJECT_ID, route_to_leader_enabled=True):
+    def __init__(self, project=TestDatabase.PROJECT_ID, route_to_leader_enabled=True, directed_read_options=None):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self.project = project
@@ -2701,6 +2722,7 @@ class _Client(object):
         self._client_options = mock.Mock()
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.route_to_leader_enabled = route_to_leader_enabled
+        self.directed_read_options = directed_read_options
 
 
 class _Instance(object):
@@ -2727,6 +2749,7 @@ class _Database(object):
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
+        self._directed_read_options = None
 
 
 class _Pool(object):
