@@ -363,6 +363,13 @@ def _metadata_with_leader_aware_routing(value, **kw):
 
 
 def verify_directed_read_options(directed_read_options):
+    """Verifies if value of directed_read_options is correct.
+    :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+            or :class:`dict`
+    :param directed_read_options: directed_read_options for ReadRequests and ExecuteSqlRequests.
+
+    :raises InvalidArguement: if directed_read_options is incorrect.
+    """
     if type(directed_read_options) == dict:
         if (
             "include_replicas" in directed_read_options.keys()
