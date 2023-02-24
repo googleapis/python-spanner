@@ -30,7 +30,7 @@ from google.protobuf import json_format
 from requests import __version__ as requests_version
 import dataclasses
 import re
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import warnings
 
 try:
@@ -584,7 +584,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BatchCreateSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -685,7 +685,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BeginTransaction")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -784,7 +784,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Commit")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -883,7 +883,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("CreateSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -980,7 +980,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("DeleteSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1056,7 +1056,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteBatchDml")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1193,7 +1193,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1293,7 +1293,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteStreamingSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1397,7 +1397,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("GetSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1485,7 +1485,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ListSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1575,7 +1575,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionQuery")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1676,7 +1676,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1777,7 +1777,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Read")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1877,7 +1877,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Rollback")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1962,7 +1962,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("StreamingRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
