@@ -167,6 +167,7 @@ class _SnapshotBase(_SessionWrapper):
         limit=0,
         partition=None,
         request_options=None,
+        column_info=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -203,6 +204,9 @@ class _SnapshotBase(_SessionWrapper):
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
                 Please note, the `transactionTag` setting will be ignored for
                 snapshot as it's not supported for read-only transactions.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column info
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -271,9 +275,9 @@ class _SnapshotBase(_SessionWrapper):
                 )
                 self._read_request_count += 1
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self)
+                    return StreamedResultSet(iterator, source=self, column_info=column_info)
                 else:
-                    return StreamedResultSet(iterator)
+                    return StreamedResultSet(iterator, column_info=column_info)
         else:
             iterator = _restart_on_unavailable(
                 restart,
@@ -287,9 +291,9 @@ class _SnapshotBase(_SessionWrapper):
         self._read_request_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self)
+            return StreamedResultSet(iterator, source=self, column_info=column_info)
         else:
-            return StreamedResultSet(iterator)
+            return StreamedResultSet(iterator, column_info=column_info)
 
     def execute_sql(
         self,
@@ -300,6 +304,7 @@ class _SnapshotBase(_SessionWrapper):
         query_options=None,
         request_options=None,
         partition=None,
+        column_info=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
@@ -341,6 +346,9 @@ class _SnapshotBase(_SessionWrapper):
         :type partition: bytes
         :param partition: (Optional) one of the partition tokens returned
                           from :meth:`partition_query`.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column info
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -426,9 +434,9 @@ class _SnapshotBase(_SessionWrapper):
                 self._execute_sql_count += 1
 
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self)
+                    return StreamedResultSet(iterator, source=self, column_info=column_info)
                 else:
-                    return StreamedResultSet(iterator)
+                    return StreamedResultSet(iterator, column_info=column_info)
         else:
             iterator = _restart_on_unavailable(
                 restart,
@@ -443,9 +451,9 @@ class _SnapshotBase(_SessionWrapper):
         self._execute_sql_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self)
+            return StreamedResultSet(iterator, source=self, column_info=column_info)
         else:
-            return StreamedResultSet(iterator)
+            return StreamedResultSet(iterator, column_info=column_info)
 
     def partition_read(
         self,

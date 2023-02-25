@@ -15,6 +15,8 @@
 """Custom data types for spanner."""
 
 import json
+from google.protobuf.message import Message
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 
 class JsonObject(dict):
@@ -71,3 +73,90 @@ class JsonObject(dict):
             return json.dumps(self._array_value, sort_keys=True, separators=(",", ":"))
 
         return json.dumps(self, sort_keys=True, separators=(",", ":"))
+
+
+class ProtoDeserializer:
+    """
+    Provides functionality of deserializing valid string into
+    a Proto Message and valid int into a Proto Enum value.
+    """
+
+    @classmethod
+    def to_proto_message(cls, bytes_string, proto_message_object):
+        """parses serialized protocol buffer data into proto message.
+
+        Args:
+            bytes_string (str): string of bytes.
+            proto_message_object (Message): Message object for parsing
+
+        Returns:
+            Message: parses serialized protocol buffer data into this message.
+
+        Raises:
+            ValueError: if the input proto_message_object is not of type Message
+        """
+        if not isinstance(proto_message_object, Message):
+            raise ValueError("Input proto_message_object should be of type Message")
+
+        proto_message = proto_message_object.__deepcopy__()
+        proto_message.ParseFromString(bytes_string)
+        return proto_message
+
+    @classmethod
+    def to_proto_enum(cls, int_value, proto_enum_object):
+        """parses int value into string containing the name of an enum value.
+
+        Args:
+            int_value (int): integer value.
+            proto_enum_object (EnumTypeWrapper): Enum object.
+
+        Returns:
+            str: string containing the name of an enum value.
+
+        Raises:
+            ValueError: if the input proto_enum_object is not of type EnumTypeWrapper
+        """
+        if not isinstance(proto_enum_object, EnumTypeWrapper):
+            raise ValueError("Input proto_enum_object should be of type EnumTypeWrapper")
+
+        return proto_enum_object.Name(int_value)
+
+    @classmethod
+    def to_proto_message_list(cls, bytes_string_list, proto_message_object):
+        """parses list of serialized protocol buffer data into proto message list.
+
+        Args:
+            bytes_string_list (list[str]): list of string of bytes.
+            proto_message_object (Message): Message object for parsing
+
+        Returns:
+            list[Message]: parses list of serialized protocol buffer data into list of message.
+
+        Raises:
+            ValueError: if the input bytes_string_list is not of type list
+        """
+        if not isinstance(bytes_string_list, (list, tuple)):
+            raise ValueError("Expected input bytes_string_list to be a list of strings")
+
+        proto_message_list = [cls.to_proto_message(item, proto_message_object) for item in bytes_string_list]
+        return proto_message_list
+
+    @classmethod
+    def to_proto_enum_list(cls, int_list, proto_enum_object):
+        """parses int value list into list of enum values.
+
+        Args:
+            int_list (list[int]): list of integer value.
+            proto_enum_object (EnumTypeWrapper): Enum object.
+
+        Returns:
+            list[str]: list of strings containing the name of enum value.
+
+        Raises:
+            ValueError: if the input int_list is not of type list
+        """
+        if not isinstance(int_list, (list, tuple)):
+            raise ValueError("Expected input int_list to be a list of int")
+
+        proto_enum_list = [cls.to_proto_enum(item, proto_enum_object) for item in int_list]
+        return proto_enum_list
