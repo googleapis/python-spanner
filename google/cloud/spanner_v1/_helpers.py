@@ -17,9 +17,12 @@
 import datetime
 import decimal
 import math
+import base64
 
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
+from google.protobuf.message import Message
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 from google.api_core import datetime_helpers
 from google.cloud._helpers import _date_from_iso8601_date
@@ -170,6 +173,13 @@ def _make_value_pb(value):
             return Value(null_value="NULL_VALUE")
         else:
             return Value(string_value=value)
+    if isinstance(value, Message):
+        value = value.SerializeToString()
+        if value is None:
+            return Value(null_value="NULL_VALUE")
+        else:
+            b = base64.b64encode(value)
+            return Value(string_value=b)
 
     raise ValueError("Unknown type: %s" % (value,))
 
