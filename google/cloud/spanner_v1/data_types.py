@@ -15,6 +15,8 @@
 """Custom data types for spanner."""
 
 import json
+import types
+
 from google.protobuf.message import Message
 from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
@@ -95,6 +97,9 @@ class ProtoDeserializer:
         Raises:
             ValueError: if the input proto_message_object is not of type Message
         """
+        if isinstance(bytes_string, types.NoneType):
+            return None
+
         if not isinstance(proto_message_object, Message):
             raise ValueError("Input proto_message_object should be of type Message")
 
@@ -116,6 +121,9 @@ class ProtoDeserializer:
         Raises:
             ValueError: if the input proto_enum_object is not of type EnumTypeWrapper
         """
+        if isinstance(int_value, types.NoneType):
+            return None
+
         if not isinstance(proto_enum_object, EnumTypeWrapper):
             raise ValueError("Input proto_enum_object should be of type EnumTypeWrapper")
 
@@ -135,6 +143,9 @@ class ProtoDeserializer:
         Raises:
             ValueError: if the input bytes_string_list is not of type list
         """
+        if isinstance(bytes_string_list, types.NoneType):
+            return None
+
         if not isinstance(bytes_string_list, (list, tuple)):
             raise ValueError("Expected input bytes_string_list to be a list of strings")
 
@@ -155,6 +166,9 @@ class ProtoDeserializer:
         Raises:
             ValueError: if the input int_list is not of type list
         """
+        if isinstance(int_list, types.NoneType):
+            return None
+
         if not isinstance(int_list, (list, tuple)):
             raise ValueError("Expected input int_list to be a list of int")
 
