@@ -227,7 +227,7 @@ class TestClient(unittest.TestCase):
             expected_query_options=expected_query_options,
         )
 
-    def test_constructor_route_to_leader_diabled(self):
+    def test_constructor_route_to_leader_disbled(self):
         from google.cloud.spanner_v1 import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
