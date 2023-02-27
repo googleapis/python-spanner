@@ -253,7 +253,7 @@ class Client(ClientWithProject):
 
     @property
     def route_to_leader_enabled(self):
-        """Getter for if read-write requests will be routed to leader.
+        """Getter for if read-write or pdml requests will be routed to leader.
 
         :rtype: boolean
         :returns: If read-write requests will be routed to leader.
