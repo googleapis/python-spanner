@@ -250,12 +250,16 @@ def _parse_value_pb(value_pb, field_type, field_name, column_info=None):
         return DatetimeWithNanoseconds.from_rfc3339(value_pb.string_value)
     elif type_code == TypeCode.ARRAY:
         return [
-            _parse_value_pb(item_pb, field_type.array_element_type, field_name, column_info)
+            _parse_value_pb(
+                item_pb, field_type.array_element_type, field_name, column_info
+            )
             for item_pb in value_pb.list_value.values
         ]
     elif type_code == TypeCode.STRUCT:
         return [
-            _parse_value_pb(item_pb, field_type.struct_type.fields[i].type_, field_name, column_info)
+            _parse_value_pb(
+                item_pb, field_type.struct_type.fields[i].type_, field_name, column_info
+            )
             for (i, item_pb) in enumerate(value_pb.list_value.values)
         ]
     elif type_code == TypeCode.NUMERIC:
@@ -263,14 +267,14 @@ def _parse_value_pb(value_pb, field_type, field_name, column_info=None):
     elif type_code == TypeCode.JSON:
         return JsonObject.from_str(value_pb.string_value)
     elif type_code == TypeCode.PROTO:
-        string_value = base64.b64decode(value_pb.string_value)
+        bytes_value = base64.b64decode(value_pb.string_value)
         if column_info is not None and column_info.get(field_name) is not None:
             proto_message = column_info.get(field_name)
             if isinstance(proto_message, Message):
                 proto_message = proto_message.__deepcopy__()
-                proto_message.ParseFromString(string_value)
+                proto_message.ParseFromString(bytes_value)
                 return proto_message
-        return string_value
+        return bytes_value
     elif type_code == TypeCode.ENUM:
         int_value = int(value_pb.string_value)
         if column_info is not None and column_info.get(field_name) is not None:

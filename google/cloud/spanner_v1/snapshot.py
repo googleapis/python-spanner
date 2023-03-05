@@ -206,7 +206,7 @@ class _SnapshotBase(_SessionWrapper):
                 snapshot as it's not supported for read-only transactions.
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column info
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -275,7 +275,9 @@ class _SnapshotBase(_SessionWrapper):
                 )
                 self._read_request_count += 1
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self, column_info=column_info)
+                    return StreamedResultSet(
+                        iterator, source=self, column_info=column_info
+                    )
                 else:
                     return StreamedResultSet(iterator, column_info=column_info)
         else:
@@ -348,7 +350,7 @@ class _SnapshotBase(_SessionWrapper):
                           from :meth:`partition_query`.
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column info
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -434,7 +436,9 @@ class _SnapshotBase(_SessionWrapper):
                 self._execute_sql_count += 1
 
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self, column_info=column_info)
+                    return StreamedResultSet(
+                        iterator, source=self, column_info=column_info
+                    )
                 else:
                     return StreamedResultSet(iterator, column_info=column_info)
         else:

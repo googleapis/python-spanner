@@ -77,100 +77,107 @@ class JsonObject(dict):
         return json.dumps(self, sort_keys=True, separators=(",", ":"))
 
 
-class ProtoDeserializer:
+def __proto_message(bytes_val, proto_message_object):
+    """Helper for :func:`get_proto_message`.
+    parses serialized protocol buffer bytes data into proto message.
+
+    Args:
+        bytes_val (bytes): bytes object.
+        proto_message_object (Message): Message object for parsing
+
+    Returns:
+        Message: parses serialized protocol buffer data into this message.
+
+    Raises:
+        ValueError: if the input proto_message_object is not of type Message
     """
-    Provides functionality of deserializing valid string into
-    a Proto Message and valid int into a Proto Enum value.
+    if isinstance(bytes_val, types.NoneType):
+        return None
+
+    if not isinstance(bytes_val, bytes):
+        raise ValueError("Expected input bytes_val to be a string")
+
+    proto_message = proto_message_object.__deepcopy__()
+    proto_message.ParseFromString(bytes_val)
+    return proto_message
+
+
+def __proto_enum(int_val, proto_enum_object):
+    """Helper for :func:`get_proto_enum`.
+    parses int value into string containing the name of an enum value.
+
+    Args:
+        int_val (int): integer value.
+        proto_enum_object (EnumTypeWrapper): Enum object.
+
+    Returns:
+        str: string containing the name of an enum value.
+
+    Raises:
+        ValueError: if the input proto_enum_object is not of type EnumTypeWrapper
     """
+    if isinstance(int_val, types.NoneType):
+        return None
 
-    @classmethod
-    def to_proto_message(cls, bytes_string, proto_message_object):
-        """parses serialized protocol buffer data into proto message.
+    if not isinstance(int_val, int):
+        raise ValueError("Expected input int_val to be a integer")
 
-        Args:
-            bytes_string (str): string of bytes.
-            proto_message_object (Message): Message object for parsing
+    return proto_enum_object.Name(int_val)
 
-        Returns:
-            Message: parses serialized protocol buffer data into this message.
 
-        Raises:
-            ValueError: if the input proto_message_object is not of type Message
-        """
-        if isinstance(bytes_string, types.NoneType):
-            return None
+def get_proto_message(bytes_string, proto_message_object):
+    """parses serialized protocol buffer bytes' data or its list into proto message or list of proto message.
 
-        if not isinstance(proto_message_object, Message):
-            raise ValueError("Input proto_message_object should be of type Message")
+    Args:
+        bytes_string (bytes or list[bytes]): bytes object.
+        proto_message_object (Message): Message object for parsing
 
-        proto_message = proto_message_object.__deepcopy__()
-        proto_message.ParseFromString(bytes_string)
-        return proto_message
+    Returns:
+        Message or list[Message]: parses serialized protocol buffer data into this message.
 
-    @classmethod
-    def to_proto_enum(cls, int_value, proto_enum_object):
-        """parses int value into string containing the name of an enum value.
+    Raises:
+        ValueError: if the input proto_message_object is not of type Message
+    """
+    if isinstance(bytes_string, types.NoneType):
+        return None
 
-        Args:
-            int_value (int): integer value.
-            proto_enum_object (EnumTypeWrapper): Enum object.
+    if not isinstance(proto_message_object, Message):
+        raise ValueError("Input proto_message_object should be of type Message")
 
-        Returns:
-            str: string containing the name of an enum value.
+    if not isinstance(bytes_string, (bytes, list)):
+        raise ValueError(
+            "Expected input bytes_string to be a string or list of strings"
+        )
 
-        Raises:
-            ValueError: if the input proto_enum_object is not of type EnumTypeWrapper
-        """
-        if isinstance(int_value, types.NoneType):
-            return None
+    if isinstance(bytes_string, list):
+        return [__proto_message(item, proto_message_object) for item in bytes_string]
 
-        if not isinstance(proto_enum_object, EnumTypeWrapper):
-            raise ValueError("Input proto_enum_object should be of type EnumTypeWrapper")
+    return __proto_message(bytes_string, proto_message_object)
 
-        return proto_enum_object.Name(int_value)
 
-    @classmethod
-    def to_proto_message_list(cls, bytes_string_list, proto_message_object):
-        """parses list of serialized protocol buffer data into proto message list.
+def get_proto_enum(int_value, proto_enum_object):
+    """parses int or list of int values into enum or list of enum values.
 
-        Args:
-            bytes_string_list (list[str]): list of string of bytes.
-            proto_message_object (Message): Message object for parsing
+    Args:
+        int_value (int or list[int]): list of integer value.
+        proto_enum_object (EnumTypeWrapper): Enum object.
 
-        Returns:
-            list[Message]: parses list of serialized protocol buffer data into list of message.
+    Returns:
+        str or list[str]: list of strings containing the name of enum value.
 
-        Raises:
-            ValueError: if the input bytes_string_list is not of type list
-        """
-        if isinstance(bytes_string_list, types.NoneType):
-            return None
+    Raises:
+        ValueError: if the input int_list is not of type list
+    """
+    if isinstance(int_value, types.NoneType):
+        return None
 
-        if not isinstance(bytes_string_list, (list, tuple)):
-            raise ValueError("Expected input bytes_string_list to be a list of strings")
+    if not isinstance(proto_enum_object, EnumTypeWrapper):
+        raise ValueError("Input proto_enum_object should be of type EnumTypeWrapper")
 
-        proto_message_list = [cls.to_proto_message(item, proto_message_object) for item in bytes_string_list]
-        return proto_message_list
+    if not isinstance(int_value, (int, list)):
+        raise ValueError("Expected input int_value to be a integer or list of integers")
 
-    @classmethod
-    def to_proto_enum_list(cls, int_list, proto_enum_object):
-        """parses int value list into list of enum values.
+    if isinstance(int_value, list):
+        return [__proto_enum(item, proto_enum_object) for item in int_value]
 
-        Args:
-            int_list (list[int]): list of integer value.
-            proto_enum_object (EnumTypeWrapper): Enum object.
-
-        Returns:
-            list[str]: list of strings containing the name of enum value.
-
-        Raises:
-            ValueError: if the input int_list is not of type list
-        """
-        if isinstance(int_list, types.NoneType):
-            return None
-
-        if not isinstance(int_list, (list, tuple)):
-            raise ValueError("Expected input int_list to be a list of int")
-
-        proto_enum_list = [cls.to_proto_enum(item, proto_enum_object) for item in int_list]
-        return proto_enum_list
+    return __proto_enum(int_value, proto_enum_object)

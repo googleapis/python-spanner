@@ -104,7 +104,11 @@ class StreamedResultSet(object):
         width = len(field_types)
         index = len(self._current_row)
         for value in values:
-            self._current_row.append(_parse_value_pb(value, field_types[index], field_names[index], self._column_info))
+            self._current_row.append(
+                _parse_value_pb(
+                    value, field_types[index], field_names[index], self._column_info
+                )
+            )
             index += 1
             if index == width:
                 self._rows.append(self._current_row)

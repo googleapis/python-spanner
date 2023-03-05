@@ -86,7 +86,9 @@ def ProtoMessage(proto_message_object):
     """
     if not isinstance(proto_message_object, Message):
         raise ValueError("Expected input object of type Proto Message.")
-    return Type(code=TypeCode.PROTO, proto_type_fqn=proto_message_object.DESCRIPTOR.full_name)
+    return Type(
+        code=TypeCode.PROTO, proto_type_fqn=proto_message_object.DESCRIPTOR.full_name
+    )
 
 
 def ProtoEnum(proto_enum_object):
@@ -100,4 +102,6 @@ def ProtoEnum(proto_enum_object):
     """
     if not isinstance(proto_enum_object, EnumTypeWrapper):
         raise ValueError("Expected input object of type Proto Enum")
-    return Type(code=TypeCode.ENUM, proto_type_fqn=proto_enum_object.DESCRIPTOR.full_name)
+    return Type(
+        code=TypeCode.ENUM, proto_type_fqn=proto_enum_object.DESCRIPTOR.full_name
+    )
