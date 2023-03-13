@@ -25,7 +25,6 @@ from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
-from google.api_core.exceptions import FailedPrecondition
 
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
@@ -668,7 +667,7 @@ def test_insertion_in_referencing_table_fkdca(not_emulator, shared_database):
 
 
 def test_insertion_in_referencing_table_error_fkdca(not_emulator, shared_database):
-    with pytest.raises(FailedPrecondition):
+    with pytest.raises(exceptions.FailedPrecondition):
         with shared_database.batch() as batch:
             batch.insert(
                 table="ShoppingCarts",
