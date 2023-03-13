@@ -2500,7 +2500,7 @@ def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
 
 
 # [START spanner_drop_foreign_key_constraint_delete_cascade]
-def drop_foreign_key_contraint_delete_cascade(instance_id, database_id):
+def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
     """Creates a table with foreign key delete cascade action"""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
