@@ -21,12 +21,17 @@ from google.api_core import exceptions
 from google.iam.v1 import policy_pb2
 from google.cloud import spanner_v1
 from google.cloud.spanner_v1.pool import FixedSizePool, PingingPool
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
+from google.api_core.exceptions import FailedPrecondition
 
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
+FKDCA_CUSTOMERS_COLUMNS = ("CustomerId", "CustomerName")
+FKDCA_SHOPPING_CARTS_COLUMNS = ("CartId", "CustomerId", "CustomerName")
+ALL_KEYSET = spanner_v1.KeySet(all_=True)
 
 
 @pytest.fixture(scope="module")
@@ -562,3 +567,200 @@ def test_db_run_in_transaction_twice_4181(shared_database):
         rows = list(after.read(sd.COUNTERS_TABLE, sd.COUNTERS_COLUMNS, sd.ALL))
 
     assert len(rows) == 2
+
+
+def test_create_table_with_foreign_key_delete_cascade_action(
+    not_emulator, shared_instance, databases_to_delete, database_dialect
+):
+    fkadc_db_id = _helpers.unique_id("fkadc")
+
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        fkadc_database = shared_instance.database(
+            fkadc_db_id,
+            database_dialect=database_dialect,
+        )
+        operation = fkadc_database.create()
+        operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+        operation = fkadc_database.update_ddl(
+            ddl_statements=_helpers.FKADC_DDL_STATEMENTS
+        )
+        operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    else:
+        fkadc_database = shared_instance.database(
+            fkadc_db_id,
+            ddl_statements=_helpers.FKADC_DDL_STATEMENTS,
+            database_dialect=database_dialect,
+        )
+        operation = fkadc_database.create()
+        operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    databases_to_delete.append(fkadc_database)
+
+    fkadc_database.reload()
+    assert any(
+        "FKShoppingCartsCustomerId" in stmt for stmt in fkadc_database.ddl_statements
+    )
+
+
+def test_alter_table_with_foreign_key_delete_cascade_action(
+    not_emulator, shared_database, database_dialect
+):
+    constraint_name = (
+        '"FKShoppingCartsCustomerName"'
+        if database_dialect == DatabaseDialect.POSTGRESQL
+        else "FKShoppingCartsCustomerName"
+    )
+    ddl_statements_add_constraints = [
+        f"ALTER TABLE ShoppingCarts ADD CONSTRAINT {constraint_name}"
+        f" FOREIGN KEY (CustomerName) REFERENCES Customers(CustomerName) ON DELETE CASCADE"
+    ]
+
+    operation = shared_database.update_ddl(ddl_statements_add_constraints)
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    shared_database.reload()
+    assert any(
+        "FKShoppingCartsCustomerName" in stmt for stmt in shared_database.ddl_statements
+    )
+    ddl_statements_drop_constraints = [
+        "ALTER TABLE ShoppingCarts" " DROP CONSTRAINT FKShoppingCartsCustomerName"
+    ]
+
+    operation = shared_database.update_ddl(ddl_statements_drop_constraints)
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    shared_database.reload()
+    assert not any(
+        "FKShoppingCartsCustomerName" in stmt for stmt in shared_database.ddl_statements
+    )
+
+
+def test_insertion_in_referencing_table_fkdca(not_emulator, shared_database):
+    with shared_database.batch() as batch:
+        batch.insert(
+            table="Customers",
+            columns=FKDCA_CUSTOMERS_COLUMNS,
+            values=[
+                (1, "Marc"),
+                (2, "Catalina"),
+            ],
+        )
+
+    with shared_database.batch() as batch:
+        batch.insert(
+            table="ShoppingCarts",
+            columns=FKDCA_SHOPPING_CARTS_COLUMNS,
+            values=[
+                (1, 1, "Marc"),
+            ],
+        )
+
+    with shared_database.snapshot() as snapshot:
+        rows = list(
+            snapshot.read(
+                "ShoppingCarts", ("CartId", "CustomerId", "CustomerName"), ALL_KEYSET
+            )
+        )
+
+    assert len(rows) == 1
+
+
+def test_insertion_in_referencing_table_error_fkdca(not_emulator, shared_database):
+    with pytest.raises(FailedPrecondition):
+        with shared_database.batch() as batch:
+            batch.insert(
+                table="ShoppingCarts",
+                columns=FKDCA_SHOPPING_CARTS_COLUMNS,
+                values=[
+                    (4, 4, "Naina"),
+                ],
+            )
+
+
+def test_insertion_then_deletion_in_referenced_table_fkdca(
+    not_emulator, shared_database
+):
+    with shared_database.batch() as batch:
+        batch.insert(
+            table="Customers",
+            columns=FKDCA_CUSTOMERS_COLUMNS,
+            values=[
+                (3, "Sara"),
+            ],
+        )
+
+    with shared_database.batch() as batch:
+        batch.insert(
+            table="ShoppingCarts",
+            columns=FKDCA_SHOPPING_CARTS_COLUMNS,
+            values=[
+                (3, 3, "Sara"),
+            ],
+        )
+
+    with shared_database.snapshot() as snapshot:
+        rows = list(snapshot.read("ShoppingCarts", ["CartId"], ALL_KEYSET))
+
+    assert [3] in rows
+
+    with shared_database.batch() as batch:
+        batch.delete(table="Customers", keyset=spanner_v1.KeySet(keys=[[3]]))
+
+    with shared_database.snapshot() as snapshot:
+        rows = list(snapshot.read("ShoppingCarts", ["CartId"], ALL_KEYSET))
+
+    assert [3] not in rows
+
+
+def test_insert_then_delete_referenced_key_error_fkdca(not_emulator, shared_database):
+    with pytest.raises(exceptions.FailedPrecondition):
+        with shared_database.batch() as batch:
+            batch.insert(
+                table="Customers",
+                columns=FKDCA_CUSTOMERS_COLUMNS,
+                values=[
+                    (3, "Sara"),
+                ],
+            )
+            batch.delete(table="Customers", keyset=spanner_v1.KeySet(keys=[[3]]))
+
+
+def test_insert_referencing_key_then_delete_referenced_key_error_fkdca(
+    not_emulator, shared_database
+):
+    with shared_database.batch() as batch:
+        batch.insert(
+            table="Customers",
+            columns=FKDCA_CUSTOMERS_COLUMNS,
+            values=[
+                (4, "Huda"),
+            ],
+        )
+
+    with pytest.raises(exceptions.FailedPrecondition):
+        with shared_database.batch() as batch:
+            batch.insert(
+                table="ShoppingCarts",
+                columns=FKDCA_SHOPPING_CARTS_COLUMNS,
+                values=[
+                    (4, 4, "Huda"),
+                ],
+            )
+            batch.delete(table="Customers", keyset=spanner_v1.KeySet(keys=[[4]]))
+
+
+def test_information_schema_referential_constraints_fkdca(
+    not_emulator, shared_database
+):
+    with shared_database.snapshot() as snapshot:
+        rows = list(
+            snapshot.execute_sql(
+                "SELECT DELETE_RULE "
+                "FROM INFORMATION_SCHEMA.REFERENTIAL_CONSTRAINTS "
+                "WHERE CONSTRAINT_NAME = 'FKShoppingCartsCustomerId'"
+            )
+        )
+
+        assert any("CASCADE" in stmt for stmt in rows)
