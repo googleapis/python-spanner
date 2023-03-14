@@ -283,7 +283,7 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 # [START spanner_create_database_with_proto_descriptors]
 def create_database_with_proto_descriptors(instance_id, database_id):
     """Creates a database with proto descriptors and tables with proto columns for sample data."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
     # reads proto descriptor file as bytes
@@ -351,7 +351,7 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
 # [START spanner_update_database_with_proto_descriptors]
 def update_database_with_proto_descriptors(instance_id, database_id):
     """Updates a database with tables with a default leader."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
     database = instance.database(database_id)
@@ -391,7 +391,7 @@ def update_database_with_proto_descriptors(instance_id, database_id):
 # [START spanner_get_database_ddl]
 def get_database_ddl(instance_id, database_id):
     """Gets the database DDL statements."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
     ddl = spanner_client.database_admin_api.get_database_ddl(database=database.name)
@@ -2514,7 +2514,7 @@ def enable_fine_grained_access(
 # [START spanner_insert_proto_columns_data_with_dml]
 def insert_proto_columns_data_with_dml(instance_id, database_id):
     """Inserts sample proto column data into the given database using a DML statement."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
@@ -2561,7 +2561,7 @@ def insert_proto_columns_data(instance_id, database_id):
     The database and table must already exist and can be created using
     `create_database`.
     """
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
@@ -2594,7 +2594,7 @@ def insert_proto_columns_data(instance_id, database_id):
 # [START spanner_read_proto_columns_data]
 def read_proto_columns_data(instance_id, database_id):
     """Reads sample proto column data from the database."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
@@ -2621,7 +2621,7 @@ def read_proto_columns_data(instance_id, database_id):
 # [START spanner_read_proto_columns_data_using_helper_method]
 def read_proto_columns_data_using_helper_method(instance_id, database_id):
     """Reads sample proto column data from the database."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
@@ -2649,7 +2649,7 @@ def read_proto_columns_data_using_helper_method(instance_id, database_id):
 # [START spanner_query_proto_columns_data]
 def query_proto_columns_data(instance_id, database_id):
     """Queries sample proto column data from the database using SQL."""
-    spanner_client = spanner.Client(client_options={"api_endpoint": "staging-wrenchworks.sandbox.googleapis.com"})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
