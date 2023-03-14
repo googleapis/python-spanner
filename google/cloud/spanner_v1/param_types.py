@@ -82,7 +82,7 @@ def ProtoMessage(proto_message_object):
     :param proto_message_object: the proto message instance
 
     :rtype: :class:`type_pb2.Type`
-    :returns: the appropriate struct-type protobuf
+    :returns: the appropriate proto-message-type protobuf
     """
     if not isinstance(proto_message_object, Message):
         raise ValueError("Expected input object of type Proto Message.")
@@ -98,7 +98,7 @@ def ProtoEnum(proto_enum_object):
     :param proto_enum_object: the proto enum instance
 
     :rtype: :class:`type_pb2.Type`
-    :returns: the appropriate struct-type protobuf
+    :returns: the appropriate proto-enum-type protobuf
     """
     if not isinstance(proto_enum_object, EnumTypeWrapper):
         raise ValueError("Expected input object of type Proto Enum")
