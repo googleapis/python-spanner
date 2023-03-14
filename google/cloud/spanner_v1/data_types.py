@@ -77,7 +77,7 @@ class JsonObject(dict):
         return json.dumps(self, sort_keys=True, separators=(",", ":"))
 
 
-def __proto_message(bytes_val, proto_message_object):
+def _proto_message(bytes_val, proto_message_object):
     """Helper for :func:`get_proto_message`.
     parses serialized protocol buffer bytes data into proto message.
 
@@ -102,7 +102,7 @@ def __proto_message(bytes_val, proto_message_object):
     return proto_message
 
 
-def __proto_enum(int_val, proto_enum_object):
+def _proto_enum(int_val, proto_enum_object):
     """Helper for :func:`get_proto_enum`.
     parses int value into string containing the name of an enum value.
 
@@ -150,9 +150,9 @@ def get_proto_message(bytes_string, proto_message_object):
         )
 
     if isinstance(bytes_string, list):
-        return [__proto_message(item, proto_message_object) for item in bytes_string]
+        return [_proto_message(item, proto_message_object) for item in bytes_string]
 
-    return __proto_message(bytes_string, proto_message_object)
+    return _proto_message(bytes_string, proto_message_object)
 
 
 def get_proto_enum(int_value, proto_enum_object):
@@ -178,6 +178,6 @@ def get_proto_enum(int_value, proto_enum_object):
         raise ValueError("Expected input int_value to be a integer or list of integers")
 
     if isinstance(int_value, list):
-        return [__proto_enum(item, proto_enum_object) for item in int_value]
+        return [_proto_enum(item, proto_enum_object) for item in int_value]
 
-    return __proto_enum(int_value, proto_enum_object)
+    return _proto_enum(int_value, proto_enum_object)

@@ -178,8 +178,7 @@ def _make_value_pb(value):
         if value is None:
             return Value(null_value="NULL_VALUE")
         else:
-            b = base64.b64encode(value)
-            return Value(string_value=b)
+            return Value(string_value=base64.b64encode(value))
 
     raise ValueError("Unknown type: %s" % (value,))
 
@@ -221,7 +220,7 @@ def _parse_value_pb(value_pb, field_type, field_name, column_info=None):
     :param field_name: column name
 
     :type column_info: dict
-    :param column_info: dict of column name and column information
+    :param column_info: (Optional) dict of column name and column information
 
     :rtype: varies on field_type
     :returns: value extracted from value_pb
