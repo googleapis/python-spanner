@@ -562,3 +562,37 @@ def test_db_run_in_transaction_twice_4181(shared_database):
         rows = list(after.read(sd.COUNTERS_TABLE, sd.COUNTERS_COLUMNS, sd.ALL))
 
     assert len(rows) == 2
+
+def test_update_database(
+    not_emulator,
+    shared_database,
+    shared_instance,
+    database_operation_timeout
+):
+    old_protection = shared_database.drop_protection_enabled
+    new_protection = True
+    shared_database.drop_protection_enabled = new_protection
+    operation = shared_database.update()
+
+    # We want to make sure the operation completes.
+    operation.result(database_operation_timeout)  # raises on failure / timeout.
+
+    # Create a new database instance and reload it.
+    database_alt = shared_instance.database(shared_database.name.split("/")[-1])
+    assert database_alt.drop_protection_enabled != new_protection
+
+    database_alt.reload()
+    assert database_alt.drop_protection_enabled == new_protection
+
+    with pytest.raises(exceptions.FailedPrecondition,
+                       match='`enable_drop_protection` setting'):
+        database_alt.drop()
+
+    with pytest.raises(exceptions.FailedPrecondition,
+                       match='drop protection enabled'):
+        shared_instance.delete()
+
+    # Make sure to put the database back the way it was for the
+    # other test cases.
+    shared_database.drop_protection_enabled = old_protection
+    shared_database.update()

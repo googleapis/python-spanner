@@ -29,6 +29,7 @@ from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
 from google.iam.v1 import iam_policy_pb2
 from google.iam.v1 import options_pb2
+from google.protobuf.field_mask_pb2 import FieldMask
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
@@ -124,6 +125,9 @@ class Database(object):
         (Optional) database dialect for the database
     :type database_role: str or None
     :param database_role: (Optional) user-assigned database_role for the session.
+    :type drop_protection_enabled: boolean
+    :param drop_protection_enabled: (Optional) Represents whether the database
+        has drop protection enabled or not.
     """
 
     _spanner_api = None
@@ -138,6 +142,7 @@ class Database(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
+        drop_protection_enabled=False,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -155,6 +160,8 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
+        self.drop_protection_enabled = drop_protection_enabled
+        self._reconciling = False
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -329,6 +336,15 @@ class Database(object):
         return self._database_role
 
     @property
+    def reconciling(self):
+        """Whether the database is currently reconciling.
+
+        :rtype: boolean
+        :returns: a boolean representing whether the database is reconciling
+        """
+        return self._reconciling
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -457,6 +473,7 @@ class Database(object):
         self._encryption_info = response.encryption_info
         self._default_leader = response.default_leader
         self._database_dialect = response.database_dialect
+        self.drop_protection_enabled = response.enable_drop_protection
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
@@ -486,6 +503,42 @@ class Database(object):
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
+        return future
+
+    def update(self):
+        """Update this database.
+
+        See
+        TODO: insert documentation once ready
+
+        .. note::
+
+            Updates the `drop_protection_enabled` field. To change this value
+            before updating, set it via
+
+            .. code:: python
+
+                database.drop_protection_enabled = True
+
+           before calling :meth:`update`.
+
+        :rtype: :class:`google.api_core.operation.Operation`
+        :returns: an operation instance
+        :raises NotFound: if the database does not exist
+        """
+        api = self._instance._client.database_admin_api
+        database_pb = DatabasePB(
+            name=self.name, enable_drop_protection=self.drop_protection_enabled
+        )
+
+        # Only support updating drop protection for now.
+        field_mask = FieldMask(paths=["enable_drop_protection"])
+        metadata = _metadata_with_prefix(self.name)
+
+        future = api.update_database(
+            database=database_pb, update_mask=field_mask, metadata=metadata
+        )
+
         return future
 
     def drop(self):

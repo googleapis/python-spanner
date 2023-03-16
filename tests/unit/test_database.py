@@ -17,8 +17,10 @@ import unittest
 
 import mock
 from google.api_core import gapic_v1
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
+from google.protobuf.field_mask_pb2 import FieldMask
 
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -874,6 +876,33 @@ class TestDatabase(_BaseTest):
 
         api.update_database_ddl.assert_called_once_with(
             request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_update_success(self):
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.update_database.return_value = op_future
+
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(
+            self.DATABASE_ID, instance, drop_protection_enabled=True, pool=pool
+        )
+
+        future = database.update()
+
+        self.assertIs(future, op_future)
+
+        expected_database = DatabasePB(name=database.name,
+                                       enable_drop_protection=True)
+
+        field_mask = FieldMask(paths=["enable_drop_protection"])
+
+        api.update_database.assert_called_once_with(
+            database=expected_database,
+            update_mask=field_mask,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
