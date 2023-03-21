@@ -196,6 +196,43 @@ def create_database(instance_id, database_id):
 # [END spanner_create_database]
 
 
+# [START spanner_update_database_drop_protection]
+def update_database_drop_protection(instance_id, database_id):
+    """Updates the drop protection setting for a database by first enabling and then disabling it."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    db = instance.database(database_id)
+    db.drop_protection_enabled = True
+
+    operation = db.update()
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Drop protection for database {} updated to {}".format(
+            db.name, db.drop_protection_enabled
+        )
+    )
+
+    db.drop_protection_enabled = False
+
+    operation = db.update()
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Drop protection for database {} updated to {}".format(
+            db.name, db.drop_protection_enabled
+        )
+    )
+
+
+# [END spanner_update_database_drop_protection]
+
+
 # [START spanner_create_database_with_encryption_key]
 def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
     """Creates a database with tables using a Customer Managed Encryption Key (CMEK)."""
