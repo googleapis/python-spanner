@@ -167,10 +167,10 @@ class _SnapshotBase(_SessionWrapper):
         limit=0,
         partition=None,
         request_options=None,
-        column_info=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        column_info=None,
     ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
@@ -205,14 +205,14 @@ class _SnapshotBase(_SessionWrapper):
                 Please note, the `transactionTag` setting will be ignored for
                 snapshot as it's not supported for read-only transactions.
 
-        :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
-
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -306,9 +306,9 @@ class _SnapshotBase(_SessionWrapper):
         query_options=None,
         request_options=None,
         partition=None,
-        column_info=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        column_info=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -349,9 +349,6 @@ class _SnapshotBase(_SessionWrapper):
         :param partition: (Optional) one of the partition tokens returned
                           from :meth:`partition_query`.
 
-        :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
-
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
@@ -360,6 +357,9 @@ class _SnapshotBase(_SessionWrapper):
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is

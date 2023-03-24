@@ -250,9 +250,9 @@ class Session(object):
         query_mode=None,
         query_options=None,
         request_options=None,
-        column_info=None,
         retry=method.DEFAULT,
         timeout=method.DEFAULT,
+        column_info=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -286,14 +286,14 @@ class Session(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
-        :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
-
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
