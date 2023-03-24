@@ -644,9 +644,9 @@ class TestSession(OpenTelemetryBase):
             None,
             query_options=None,
             request_options=None,
-            column_info=None,
             timeout=google.api_core.gapic_v1.method.DEFAULT,
             retry=google.api_core.gapic_v1.method.DEFAULT,
+            column_info=None,
         )
 
     def test_execute_sql_non_default_retry(self):
@@ -675,9 +675,9 @@ class TestSession(OpenTelemetryBase):
             "PLAN",
             query_options=None,
             request_options=None,
-            column_info=None,
             timeout=None,
             retry=None,
+            column_info=None,
         )
 
     def test_execute_sql_explicit(self):
@@ -704,9 +704,9 @@ class TestSession(OpenTelemetryBase):
             "PLAN",
             query_options=None,
             request_options=None,
-            column_info=None,
             timeout=google.api_core.gapic_v1.method.DEFAULT,
             retry=google.api_core.gapic_v1.method.DEFAULT,
+            column_info=None,
         )
 
     def test_batch_not_created(self):
