@@ -2566,13 +2566,13 @@ def insert_proto_columns_data(instance_id, database_id):
     database = instance.database(database_id)
 
     singer_info = singer_pb2.SingerInfo()
-    singer_info.singer_id = 1
-    singer_info.birth_date = "January"
-    singer_info.nationality = "Country1"
-    singer_info.genre = singer_pb2.Genre.ROCK
+    singer_info.singer_id = 2
+    singer_info.birth_date = "February"
+    singer_info.nationality = "Country2"
+    singer_info.genre = singer_pb2.Genre.FOLK
 
     singer_info_array = [singer_info]
-    singer_genre_array = [singer_pb2.Genre.ROCK]
+    singer_genre_array = [singer_pb2.Genre.FOLK]
 
     with database.batch() as batch:
         batch.insert(
