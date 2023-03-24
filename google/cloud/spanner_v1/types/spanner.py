@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
+
 from typing import MutableMapping, MutableSequence
 
 import proto  # type: ignore
@@ -474,9 +476,11 @@ class ExecuteSqlRequest(proto.Message):
             given query.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
-        databoost_enabled (bool):
+        data_boost_enabled (bool):
             If this is for a partitioned query and this field is set to
-            ``true``, the request will be executed via offline access.
+            ``true``, the request will be executed via Spanner
+            independent compute resources.
+
             If the field is set to ``true`` but the request does not set
             ``partition_token``, the API will return an
             ``INVALID_ARGUMENT`` error.
@@ -619,9 +623,9 @@ class ExecuteSqlRequest(proto.Message):
         number=11,
         message="RequestOptions",
     )
-    serverless_analytics_enabled: bool = proto.Field(
+    data_boost_enabled: bool = proto.Field(
         proto.BOOL,
-        number=14,
+        number=16,
     )
 
 
@@ -1133,9 +1137,11 @@ class ReadRequest(proto.Message):
             create this partition_token.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
-        databoost_enabled (bool):
+        data_boost_enabled (bool):
             If this is for a partitioned read and this field is set to
-            ``true``, the request will be executed via offline access.
+            ``true``, the request will be executed via Spanner
+            independent compute resources.
+
             If the field is set to ``true`` but the request does not set
             ``partition_token``, the API will return an
             ``INVALID_ARGUMENT`` error.
@@ -1184,9 +1190,9 @@ class ReadRequest(proto.Message):
         number=11,
         message="RequestOptions",
     )
-    serverless_analytics_enabled: bool = proto.Field(
+    data_boost_enabled: bool = proto.Field(
         proto.BOOL,
-        number=13,
+        number=15,
     )
 
 
