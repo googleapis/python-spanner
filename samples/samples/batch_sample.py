@@ -47,9 +47,10 @@ def run_batch_query(instance_id, database_id):
         table="Singers",
         columns=("SingerId", "FirstName", "LastName"),
         keyset=spanner.KeySet(all_=True),
-        # If this is for a partitioned query and this field is
-        # set ``true``, the request will be executed via offline access.
-        databoost_enabled=True,
+        # A Partition object is serializable and can be used from a different process.
+        # DataBoost option is an optional parameter which can also be used for partition read
+        # and query to execute the request via spanner independent compute resources.
+        data_boost_enable=True,
     )
 
     # Create a pool of workers for the tasks

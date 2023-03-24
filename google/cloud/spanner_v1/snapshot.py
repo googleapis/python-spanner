@@ -167,7 +167,7 @@ class _SnapshotBase(_SessionWrapper):
         limit=0,
         partition=None,
         request_options=None,
-        databoost_enabled=False,
+        data_boost_enable=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -211,8 +211,8 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
-        :type databoost_enabled:
-        :param databoost_enabled:
+        :type data_boost_enable:
+        :param data_boost_enable:
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
                 If the field is set to ``true`` but the request does not set
@@ -256,7 +256,7 @@ class _SnapshotBase(_SessionWrapper):
             limit=limit,
             partition_token=partition,
             request_options=request_options,
-            serverless_analytics_enabled=databoost_enabled,
+            data_boost_enable=data_boost_enable,
         )
         restart = functools.partial(
             api.streaming_read,
@@ -312,7 +312,7 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
-        databoost_enabled=False,
+        data_boost_enable=False,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -362,8 +362,8 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
-        :type databoost_enabled:
-        :param databoost_enabled:
+        :type data_boost_enable:
+        :param data_boost_enable:
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
                 If the field is set to ``true`` but the request does not set
@@ -419,7 +419,7 @@ class _SnapshotBase(_SessionWrapper):
             seqno=self._execute_sql_count,
             query_options=query_options,
             request_options=request_options,
-            serverless_analytics_enabled=databoost_enabled,
+            data_boost_enable=data_boost_enable,
         )
         restart = functools.partial(
             api.execute_streaming_sql,

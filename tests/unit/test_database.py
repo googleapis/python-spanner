@@ -2114,7 +2114,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": "",
-            "databoost_enabled": False,
+            "data_boost_enable": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2156,7 +2156,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": "",
-            "databoost_enabled": False,
+            "data_boost_enable": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2197,7 +2197,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": self.INDEX,
-            "databoost_enabled": False,
+            "data_boost_enable": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2215,8 +2215,8 @@ class TestBatchSnapshot(_BaseTest):
             timeout=gapic_v1.method.DEFAULT,
         )
 
-    def test_generate_read_batches_w_databoost_enabled(self):
-        databoost_enabled = True
+    def test_generate_read_batches_w_data_boost_enable(self):
+        data_boost_enable = True
         keyset = self._make_keyset()
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -2229,7 +2229,7 @@ class TestBatchSnapshot(_BaseTest):
                 self.COLUMNS,
                 keyset,
                 index=self.INDEX,
-                databoost_enabled=databoost_enabled,
+                data_boost_enable=data_boost_enable,
             )
         )
 
@@ -2238,7 +2238,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": self.INDEX,
-            "databoost_enabled": True,
+            "data_boost_enable": True,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2334,7 +2334,7 @@ class TestBatchSnapshot(_BaseTest):
 
         expected_query = {
             "sql": sql,
-            "databoost_enabled": False,
+            "data_boost_enable": False,
             "query_options": client._query_options,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
@@ -2374,7 +2374,7 @@ class TestBatchSnapshot(_BaseTest):
 
         expected_query = {
             "sql": sql,
-            "databoost_enabled": False,
+            "data_boost_enable": False,
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
@@ -2421,7 +2421,7 @@ class TestBatchSnapshot(_BaseTest):
 
         expected_query = {
             "sql": sql,
-            "databoost_enabled": False,
+            "data_boost_enable": False,
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
@@ -2441,7 +2441,7 @@ class TestBatchSnapshot(_BaseTest):
             timeout=2.0,
         )
 
-    def test_generate_query_batches_w_databoost_enabled(self):
+    def test_generate_query_batches_w_data_boost_enable(self):
         sql = "SELECT COUNT(*) FROM table_name"
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -2450,11 +2450,11 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
-        batches = list(batch_txn.generate_query_batches(sql, databoost_enabled=True))
+        batches = list(batch_txn.generate_query_batches(sql, data_boost_enable=True))
 
         expected_query = {
             "sql": sql,
-            "databoost_enabled": True,
+            "data_boost_enable": True,
             "query_options": client._query_options,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
