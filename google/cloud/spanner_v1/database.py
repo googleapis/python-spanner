@@ -124,6 +124,9 @@ class Database(object):
         (Optional) database dialect for the database
     :type database_role: str or None
     :param database_role: (Optional) user-assigned database_role for the session.
+    :type proto_descriptors: bytes
+    :param proto_descriptors: (Optional) Proto descriptors used by CREATE/ALTER PROTO BUNDLE
+                              statements in 'ddl_statements' above.
     """
 
     _spanner_api = None
@@ -138,6 +141,7 @@ class Database(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
+        proto_descriptors=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -155,6 +159,7 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
+        self._proto_descriptors = proto_descriptors
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -329,6 +334,14 @@ class Database(object):
         return self._database_role
 
     @property
+    def proto_descriptors(self):
+        """Proto Descriptors for this database.
+        :rtype: bytes
+        :returns: bytes representing the proto descriptors for this database
+        """
+        return self._proto_descriptors
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -411,6 +424,7 @@ class Database(object):
             extra_statements=list(self._ddl_statements),
             encryption_config=self._encryption_config,
             database_dialect=self._database_dialect,
+            proto_descriptors=self._proto_descriptors,
         )
         future = api.create_database(request=request, metadata=metadata)
         return future
@@ -447,6 +461,7 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
         response = api.get_database_ddl(database=self.name, metadata=metadata)
         self._ddl_statements = tuple(response.statements)
+        self._proto_descriptors = response.proto_descriptors
         response = api.get_database(name=self.name, metadata=metadata)
         self._state = DatabasePB.State(response.state)
         self._create_time = response.create_time
@@ -458,7 +473,7 @@ class Database(object):
         self._default_leader = response.default_leader
         self._database_dialect = response.database_dialect
 
-    def update_ddl(self, ddl_statements, operation_id=""):
+    def update_ddl(self, ddl_statements, operation_id="", proto_descriptors=None):
         """Update DDL for this database.
 
         Apply any configured schema from :attr:`ddl_statements`.
@@ -470,6 +485,8 @@ class Database(object):
         :param ddl_statements: a list of DDL statements to use on this database
         :type operation_id: str
         :param operation_id: (optional) a string ID for the long-running operation
+        :type proto_descriptors: bytes
+        :param proto_descriptors: (optional) Proto descriptors used by CREATE/ALTER PROTO BUNDLE statements
 
         :rtype: :class:`google.api_core.operation.Operation`
         :returns: an operation instance
@@ -483,6 +500,7 @@ class Database(object):
             database=self.name,
             statements=ddl_statements,
             operation_id=operation_id,
+            proto_descriptors=proto_descriptors,
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)

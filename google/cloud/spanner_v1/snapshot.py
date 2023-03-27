@@ -170,6 +170,7 @@ class _SnapshotBase(_SessionWrapper):
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        column_info=None,
     ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
@@ -209,6 +210,9 @@ class _SnapshotBase(_SessionWrapper):
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -271,9 +275,11 @@ class _SnapshotBase(_SessionWrapper):
                 )
                 self._read_request_count += 1
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self)
+                    return StreamedResultSet(
+                        iterator, source=self, column_info=column_info
+                    )
                 else:
-                    return StreamedResultSet(iterator)
+                    return StreamedResultSet(iterator, column_info=column_info)
         else:
             iterator = _restart_on_unavailable(
                 restart,
@@ -287,9 +293,9 @@ class _SnapshotBase(_SessionWrapper):
         self._read_request_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self)
+            return StreamedResultSet(iterator, source=self, column_info=column_info)
         else:
-            return StreamedResultSet(iterator)
+            return StreamedResultSet(iterator, column_info=column_info)
 
     def execute_sql(
         self,
@@ -302,6 +308,7 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        column_info=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -350,6 +357,9 @@ class _SnapshotBase(_SessionWrapper):
 
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
+
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information
 
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
@@ -426,9 +436,11 @@ class _SnapshotBase(_SessionWrapper):
                 self._execute_sql_count += 1
 
                 if self._multi_use:
-                    return StreamedResultSet(iterator, source=self)
+                    return StreamedResultSet(
+                        iterator, source=self, column_info=column_info
+                    )
                 else:
-                    return StreamedResultSet(iterator)
+                    return StreamedResultSet(iterator, column_info=column_info)
         else:
             iterator = _restart_on_unavailable(
                 restart,
@@ -443,9 +455,9 @@ class _SnapshotBase(_SessionWrapper):
         self._execute_sql_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self)
+            return StreamedResultSet(iterator, source=self, column_info=column_info)
         else:
-            return StreamedResultSet(iterator)
+            return StreamedResultSet(iterator, column_info=column_info)
 
     def partition_read(
         self,

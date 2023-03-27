@@ -105,6 +105,8 @@ class TypeCode(proto.Enum):
     STRUCT = 9
     NUMERIC = 10
     JSON = 11
+    PROTO = 13
+    ENUM = 14
 
 
 class TypeAnnotationCode(proto.Enum):
@@ -170,6 +172,11 @@ class Type(proto.Message):
             typically is not needed to process the content of a value
             (it doesn't affect serialization) and clients can ignore it
             on the read path.
+        proto_type_fqn (str):
+            If [code][] == [PROTO][TypeCode.PROTO] or [code][] ==
+            [ENUM][TypeCode.ENUM], then ``proto_type_fqn`` is the fully
+            qualified name of the proto type representing the proto/enum
+            definition.
     """
 
     code: "TypeCode" = proto.Field(
@@ -191,6 +198,10 @@ class Type(proto.Message):
         proto.ENUM,
         number=4,
         enum="TypeAnnotationCode",
+    )
+    proto_type_fqn: str = proto.Field(
+        proto.STRING,
+        number=5,
     )
 
 
