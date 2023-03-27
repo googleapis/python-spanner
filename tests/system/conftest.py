@@ -73,6 +73,15 @@ def database_dialect():
         else DatabaseDialect.GOOGLE_STANDARD_SQL
     )
 
+#TODO: Check how to read through relative paths in python
+@pytest.fixture(scope="session")
+def proto_descriptor_file():
+    return open(
+        "/Users/sriharshach/GitHub/Python/python-spanner/samples/samples/testdata/descriptors.pb",
+        "rb",
+    ).read()
+    # return open("../../samples/samples/testdata/descriptors.pb", "rb").read()
+
 
 @pytest.fixture(scope="session")
 def spanner_client():
@@ -177,7 +186,9 @@ def shared_instance(
 
 
 @pytest.fixture(scope="session")
-def shared_database(shared_instance, database_operation_timeout, database_dialect):
+def shared_database(
+    shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
+):
     database_name = _helpers.unique_id("test_database")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     if database_dialect == DatabaseDialect.POSTGRESQL:
@@ -198,6 +209,7 @@ def shared_database(shared_instance, database_operation_timeout, database_dialec
             ddl_statements=_helpers.DDL_STATEMENTS,
             pool=pool,
             database_dialect=database_dialect,
+            proto_descriptors=proto_descriptor_file,
         )
         operation = database.create()
         operation.result(database_operation_timeout)  # raises on failure / timeout.

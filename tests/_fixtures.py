@@ -68,6 +68,29 @@ CREATE TABLE users_history (
      email STRING(MAX),
      deleted BOOL NOT NULL )
      PRIMARY KEY(id, commit_ts DESC);
+CREATE PROTO BUNDLE (
+    spanner.examples.music.SingerInfo,
+    spanner.examples.music.Genre,
+    );
+CREATE TABLE Types (
+    RowID		INT64 NOT NULL,
+    Int64a		INT64,
+    Bytes		BYTES(MAX),
+    Int64Array	ARRAY<INT64>,
+    BytesArray	ARRAY<BYTES(MAX)>,
+    ProtoMessage    spanner.examples.music.SingerInfo,
+    ProtoEnum   spanner.examples.music.Genre,
+    ProtoMessageArray   ARRAY<spanner.examples.music.SingerInfo>,
+    ProtoEnumArray  ARRAY<spanner.examples.music.Genre>, ) 
+    PRIMARY KEY (RowID);
+CREATE TABLE Singers (
+     SingerId   INT64 NOT NULL,
+     FirstName  STRING(1024),
+     LastName   STRING(1024),
+     SingerInfo spanner.examples.music.SingerInfo,
+     SingerGenre spanner.examples.music.Genre, )
+     PRIMARY KEY (SingerId);
+CREATE INDEX SingerByGenre ON Singers(SingerGenre) STORING (FirstName, LastName);
 """
 
 EMULATOR_DDL = """\
@@ -159,8 +182,25 @@ CREATE TABLE string_plus_array_of_string (
 CREATE INDEX name ON contacts(first_name, last_name);
 """
 
+PROTO_COLUMNS_DDL = """\
+CREATE PROTO BUNDLE (
+    spanner.examples.music.SingerInfo,
+    spanner.examples.music.Genre,
+    );
+CREATE TABLE Singers (
+     SingerId   INT64 NOT NULL,
+     FirstName  STRING(1024),
+     LastName   STRING(1024),
+     SingerInfo spanner.examples.music.SingerInfo,
+     SingerGenre spanner.examples.music.Genre, )
+     PRIMARY KEY (SingerId);
+"""
+
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 EMULATOR_DDL_STATEMENTS = [
     stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
 ]
 PG_DDL_STATEMENTS = [stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()]
+PROTO_COLUMNS_DDL_STATEMENTS = [
+    stmt.strip() for stmt in PROTO_COLUMNS_DDL.split(";") if stmt.strip()
+]
