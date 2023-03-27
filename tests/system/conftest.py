@@ -206,9 +206,10 @@ def shared_database(
         operation.result(database_operation_timeout)  # raises on failure / timeout.
 
     else:
+        ddl_statements = _helpers.DDL_STATEMENTS + _helpers.PROTO_COLUMNS_DDL_STATEMENTS
         database = shared_instance.database(
             database_name,
-            ddl_statements=_helpers.DDL_STATEMENTS,
+            ddl_statements=ddl_statements,
             pool=pool,
             database_dialect=database_dialect,
             proto_descriptors=proto_descriptor_file,
