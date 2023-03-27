@@ -116,7 +116,10 @@ def multi_region_instance_config(spanner_client):
 
 @pytest.fixture(scope="module")
 def proto_descriptor_file():
-    return open("../../samples/samples/testdata/descriptors.pb", 'rb').read()
+    import os
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
+    return open(filename, 'rb').read()
 
 
 @pytest.fixture(scope="module")

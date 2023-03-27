@@ -184,8 +184,8 @@ def test_create_database_with_encryption_config(
     assert kms_key_name in out
 
 
-def test_create_database_with_proto_descriptors(capsys, instance_id, database_id):
-    snippets.create_database_with_proto_descriptors(instance_id, database_id)
+def test_create_database_with_proto_descriptor(capsys, instance_id, database_id):
+    snippets.create_database_with_proto_descriptor(instance_id, database_id)
     out, _ = capsys.readouterr()
     assert database_id in out
     assert instance_id in out
@@ -810,8 +810,8 @@ def test_list_database_roles(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(name="insert_proto_columns_data_dml")
-def test_insert_proto_columns_data_with_dml(capsys, instance_id, sample_database):
-    snippets.insert_proto_columns_data_with_dml(instance_id, sample_database.database_id)
+def test_insert_proto_columns_data_using_dml(capsys, instance_id, sample_database):
+    snippets.insert_proto_columns_data_using_dml(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "record(s) inserted" in out
 
@@ -824,8 +824,8 @@ def test_insert_proto_columns_data(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(depends=["insert_proto_columns_data_dml, insert_proto_columns_data"])
-def test_query_proto_columns_data(capsys, instance_id, sample_database):
-    snippets.query_proto_columns_data(instance_id, sample_database.database_id)
+def test_read_proto_columns_data_using_dml(capsys, instance_id, sample_database):
+    snippets.read_proto_columns_data_using_dml(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
 
     assert "SingerId: 1, FirstName: Virginia, LastName: Watson" in out
