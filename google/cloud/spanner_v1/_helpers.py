@@ -268,9 +268,9 @@ def _parse_value_pb(value_pb, field_type, field_name, column_info=None):
     elif type_code == TypeCode.PROTO:
         bytes_value = base64.b64decode(value_pb.string_value)
         if column_info is not None and column_info.get(field_name) is not None:
-            proto_message = column_info.get(field_name)
-            if isinstance(proto_message, Message):
-                proto_message = proto_message.__deepcopy__()
+            default_proto_message = column_info.get(field_name)
+            if isinstance(default_proto_message, Message):
+                proto_message = type(default_proto_message)()
                 proto_message.ParseFromString(bytes_value)
                 return proto_message
         return bytes_value
