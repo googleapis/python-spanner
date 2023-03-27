@@ -650,7 +650,7 @@ class Test_parse_value_pb(unittest.TestCase):
         VALUE = singer_pb2.SingerInfo()
         field_type = Type(code=TypeCode.PROTO)
         field_name = "proto_message_column"
-        value_pb = Value(string_value=base64.b64encode(singer_info.SerializeToString()))
+        value_pb = Value(string_value=base64.b64encode(VALUE.SerializeToString()))
         column_info = {"proto_message_column": singer_pb2.SingerInfo()}
 
         self.assertEqual(

@@ -73,14 +73,16 @@ def database_dialect():
         else DatabaseDialect.GOOGLE_STANDARD_SQL
     )
 
-#TODO: Check how to read through relative paths in python
+
 @pytest.fixture(scope="session")
 def proto_descriptor_file():
+    import os
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
     return open(
-        "/Users/sriharshach/GitHub/Python/python-spanner/samples/samples/testdata/descriptors.pb",
+        filename,
         "rb",
     ).read()
-    # return open("../../samples/samples/testdata/descriptors.pb", "rb").read()
 
 
 @pytest.fixture(scope="session")
