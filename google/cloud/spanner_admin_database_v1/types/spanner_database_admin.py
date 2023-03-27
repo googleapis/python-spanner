@@ -331,6 +331,11 @@ class CreateDatabaseRequest(proto.Message):
         database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
             Optional. The dialect of the Cloud Spanner
             Database.
+        proto_descriptors (bytes):
+            Proto descriptors used by CREATE/ALTER PROTO BUNDLE
+            statements in 'extra_statements' above. Contains a
+            protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
     """
 
     parent: str = proto.Field(
@@ -354,6 +359,10 @@ class CreateDatabaseRequest(proto.Message):
         proto.ENUM,
         number=5,
         enum=common.DatabaseDialect,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=6,
     )
 
 
@@ -435,6 +444,10 @@ class UpdateDatabaseDdlRequest(proto.Message):
             underscore. If the named operation already exists,
             [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl]
             returns ``ALREADY_EXISTS``.
+        proto_descriptors (bytes):
+            Proto descriptors used by CREATE/ALTER PROTO BUNDLE
+            statements. Contains a protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
     """
 
     database: str = proto.Field(
@@ -448,6 +461,10 @@ class UpdateDatabaseDdlRequest(proto.Message):
     operation_id: str = proto.Field(
         proto.STRING,
         number=3,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=4,
     )
 
 
@@ -549,11 +566,19 @@ class GetDatabaseDdlResponse(proto.Message):
             A list of formatted DDL statements defining
             the schema of the database specified in the
             request.
+        proto_descriptors (bytes):
+            Proto descriptors stored in the database. Contains a
+            protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
     """
 
     statements: MutableSequence[str] = proto.RepeatedField(
         proto.STRING,
         number=1,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=2,
     )
 
 
