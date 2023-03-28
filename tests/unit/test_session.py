@@ -614,7 +614,11 @@ class TestSession(OpenTelemetryBase):
         self.assertIs(found, snapshot().read.return_value)
 
         snapshot().read.assert_called_once_with(
-            TABLE_NAME, COLUMNS, KEYSET, INDEX, LIMIT,
+            TABLE_NAME,
+            COLUMNS,
+            KEYSET,
+            INDEX,
+            LIMIT,
             column_info=None,
         )
 

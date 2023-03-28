@@ -77,6 +77,7 @@ def database_dialect():
 @pytest.fixture(scope="session")
 def proto_descriptor_file():
     import os
+
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
     return open(

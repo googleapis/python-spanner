@@ -105,4 +105,3 @@ class Test_ProtoEnumParamType(unittest.TestCase):
         found = param_types.ProtoEnum(singer_genre)
 
         self.assertEqual(found, expected)
-

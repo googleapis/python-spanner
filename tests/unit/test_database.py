@@ -189,9 +189,7 @@ class TestDatabase(_BaseTest):
     def test_ctor_w_proto_descriptors(self):
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(
-            self.DATABASE_ID, instance, proto_descriptors=b""
-        )
+        database = self._make_one(self.DATABASE_ID, instance, proto_descriptors=b"")
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(database._proto_descriptors, b"")
@@ -365,7 +363,9 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool, proto_descriptors=b"")
+        database = self._make_one(
+            self.DATABASE_ID, instance, pool=pool, proto_descriptors=b""
+        )
         self.assertEqual(database.proto_descriptors, b"")
 
     def test_spanner_api_property_w_scopeless_creds(self):

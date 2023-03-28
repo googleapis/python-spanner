@@ -566,11 +566,11 @@ def test_db_run_in_transaction_twice_4181(shared_database):
 
 
 def test_create_table_with_proto_columns(
-        not_emulator,
-        not_postgres,
-        shared_instance,
-        databases_to_delete,
-        proto_descriptor_file,
+    not_emulator,
+    not_postgres,
+    shared_instance,
+    databases_to_delete,
+    proto_descriptor_file,
 ):
     proto_cols_db_id = _helpers.unique_id("proto-columns")
 
@@ -688,7 +688,7 @@ def test_compatibility_of_proto_columns(not_emulator, not_postgres, shared_datab
 
 
 def test_proto_columns_dml_parameterized_queries_pk_indexes(
-        not_emulator, not_postgres, shared_database
+    not_emulator, not_postgres, shared_database
 ):
     def _unit_of_work(transaction):
         singer1_proto_enum = singer_pb2.Genre.ROCK
