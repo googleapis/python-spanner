@@ -45,13 +45,13 @@ INTERLEAVE IN PARENT Singers ON DELETE CASCADE
 """
 
 CREATE_TABLE_SINGERS_PROTO = """\
-CREATE TABLE SingersProto (
-SingerId   INT64 NOT NULL,
-FirstName  STRING(1024),
-LastName   STRING(1024),
-SingerInfo spanner.examples.music.SingerInfo,
-SingerGenre spanner.examples.music.Genre,
-SingerInfoArray ARRAY<spanner.examples.music.SingerInfo>,
+CREATE TABLE Singers (
+SingerId         INT64 NOT NULL,
+FirstName        STRING(1024),
+LastName         STRING(1024),
+SingerInfo       spanner.examples.music.SingerInfo,
+SingerGenre      spanner.examples.music.Genre,
+SingerInfoArray  ARRAY<spanner.examples.music.SingerInfo>,
 SingerGenreArray ARRAY<spanner.examples.music.Genre>,
 ) PRIMARY KEY (SingerId)
 """
@@ -119,12 +119,16 @@ def database_ddl():
 
     Sample testcase modules can override as needed.
     """
-    return [
-        CREATE_TABLE_SINGERS,
-        CREATE_TABLE_ALBUMS,
-        CREATE_PROTO_BUNDLE,
-        CREATE_TABLE_SINGERS_PROTO,
-    ]
+    return [CREATE_TABLE_SINGERS, CREATE_TABLE_ALBUMS]
+
+
+@pytest.fixture(scope="module")
+def database_ddl_for_proto_columns():
+    """Sequence of DDL statements used to set up the database for proto columns.
+
+    Sample testcase modules can override as needed.
+    """
+    return [CREATE_PROTO_BUNDLE, CREATE_TABLE_SINGERS_PROTO]
 
 
 @pytest.fixture(scope="module")
@@ -815,17 +819,17 @@ def test_list_database_roles(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(name="insert_proto_columns_data_dml")
-def test_insert_proto_columns_data_using_dml(capsys, instance_id, sample_database):
+def test_insert_proto_columns_data_using_dml(capsys, instance_id, sample_database_for_proto_columns):
     snippets.insert_proto_columns_data_using_dml(
-        instance_id, sample_database.database_id
+        instance_id, sample_database_for_proto_columns.database_id
     )
     out, _ = capsys.readouterr()
     assert "record(s) inserted" in out
 
 
 @pytest.mark.dependency(name="insert_proto_columns_data")
-def test_insert_proto_columns_data(capsys, instance_id, sample_database):
-    snippets.insert_proto_columns_data(instance_id, sample_database.database_id)
+def test_insert_proto_columns_data(capsys, instance_id, sample_database_for_proto_columns):
+    snippets.insert_proto_columns_data(instance_id, sample_database_for_proto_columns.database_id)
     out, _ = capsys.readouterr()
     assert "Inserted data" in out
 
@@ -833,8 +837,8 @@ def test_insert_proto_columns_data(capsys, instance_id, sample_database):
 @pytest.mark.dependency(
     depends=["insert_proto_columns_data_dml, insert_proto_columns_data"]
 )
-def test_read_proto_columns_data_using_dml(capsys, instance_id, sample_database):
-    snippets.read_proto_columns_data_using_dml(instance_id, sample_database.database_id)
+def test_read_proto_columns_data_using_dml(capsys, instance_id, sample_database_for_proto_columns):
+    snippets.read_proto_columns_data_using_dml(instance_id, sample_database_for_proto_columns.database_id)
     out, _ = capsys.readouterr()
 
     assert "SingerId: 1, FirstName: Virginia, LastName: Watson" in out
@@ -845,8 +849,8 @@ def test_read_proto_columns_data_using_dml(capsys, instance_id, sample_database)
 @pytest.mark.dependency(
     depends=["insert_proto_columns_data_dml, insert_proto_columns_data"]
 )
-def test_read_proto_columns_data(capsys, instance_id, sample_database):
-    snippets.read_proto_columns_data(instance_id, sample_database.database_id)
+def test_read_proto_columns_data(capsys, instance_id, sample_database_for_proto_columns):
+    snippets.read_proto_columns_data(instance_id, sample_database_for_proto_columns.database_id)
     out, _ = capsys.readouterr()
 
     assert "SingerId: 1, FirstName: Virginia, LastName: Watson" in out
@@ -858,10 +862,10 @@ def test_read_proto_columns_data(capsys, instance_id, sample_database):
     depends=["insert_proto_columns_data_dml, insert_proto_columns_data"]
 )
 def test_read_proto_columns_data_using_helper_method(
-    capsys, instance_id, sample_database
+    capsys, instance_id, sample_database_for_proto_columns
 ):
     snippets.read_proto_columns_data_using_helper_method(
-        instance_id, sample_database.database_id
+        instance_id, sample_database_for_proto_columns.database_id
     )
     out, _ = capsys.readouterr()
 

@@ -215,13 +215,11 @@ def database_ddl():
 
 @pytest.fixture(scope="module")
 def sample_database(
-    spanner_client,
-    sample_instance,
-    database_id,
-    database_ddl,
-    database_dialect,
-    proto_descriptor_file,
-):
+  spanner_client,
+  sample_instance,
+  database_id,
+  database_ddl,
+  database_dialect):
     if database_dialect == DatabaseDialect.POSTGRESQL:
         sample_database = sample_instance.database(
           database_id,
@@ -247,9 +245,8 @@ def sample_database(
         return
 
     sample_database = sample_instance.database(
-        database_id,
-        ddl_statements=database_ddl,
-        proto_descriptors=proto_descriptor_file,
+      database_id,
+      ddl_statements=database_ddl,
     )
 
     if not sample_database.exists():
@@ -259,6 +256,31 @@ def sample_database(
     yield sample_database
 
     sample_database.drop()
+
+
+@pytest.fixture(scope="module")
+def sample_database_for_proto_columns(
+        spanner_client,
+        sample_instance,
+        database_id,
+        database_ddl_for_proto_columns,
+        database_dialect,
+        proto_descriptor_file,
+):
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        sample_database = sample_instance.database(
+            database_id,
+            ddl_statements=database_ddl_for_proto_columns,
+            proto_descriptors=proto_descriptor_file,
+        )
+
+        if not sample_database.exists():
+            operation = sample_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
+
+        yield sample_database
+
+        sample_database.drop()
 
 
 @pytest.fixture(scope="module")
