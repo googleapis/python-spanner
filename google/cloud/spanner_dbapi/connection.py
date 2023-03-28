@@ -532,7 +532,7 @@ def connect(
 
     :type client: Concrete subclass of
                   :class:`~google.cloud.spanner_v1.Client`.
-    :param user_agent: (Optional) Custom user provided Client Object
+    :param client: (Optional) Custom user provided Client Object
 
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
     :returns: Connection object associated with the given Google Cloud Spanner
