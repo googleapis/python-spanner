@@ -28,6 +28,10 @@ CREATE TABLE contact_phones (
     phone_number STRING(1024) )
     PRIMARY KEY (contact_id, phone_type),
     INTERLEAVE IN PARENT contacts ON DELETE CASCADE;
+CREATE PROTO BUNDLE (
+    spanner.examples.music.SingerInfo,
+    spanner.examples.music.Genre,
+    );
 CREATE TABLE all_types (
     pkey INT64 NOT NULL,
     int_value INT64,
@@ -48,6 +52,10 @@ CREATE TABLE all_types (
     numeric_array ARRAY<NUMERIC>,
     json_value JSON,
     json_array ARRAY<JSON>,
+    proto_message_value spanner.examples.music.SingerInfo,
+    proto_message_array ARRAY<spanner.examples.music.SingerInfo>,
+    proto_enum_value spanner.examples.music.Genre,
+    proto_enum_array ARRAY<spanner.examples.music.Genre>,
     )
     PRIMARY KEY (pkey);
 CREATE TABLE counters (
@@ -164,17 +172,6 @@ CREATE PROTO BUNDLE (
     spanner.examples.music.SingerInfo,
     spanner.examples.music.Genre,
     );
-CREATE TABLE Types (
-    RowID		INT64 NOT NULL,
-    Int64a		INT64,
-    Bytes		BYTES(MAX),
-    Int64Array	ARRAY<INT64>,
-    BytesArray	ARRAY<BYTES(MAX)>,
-    ProtoMessage    spanner.examples.music.SingerInfo,
-    ProtoEnum   spanner.examples.music.Genre,
-    ProtoMessageArray   ARRAY<spanner.examples.music.SingerInfo>,
-    ProtoEnumArray  ARRAY<spanner.examples.music.Genre>, ) 
-    PRIMARY KEY (RowID);
 CREATE TABLE Singers (
      SingerId   INT64 NOT NULL,
      FirstName  STRING(1024),
