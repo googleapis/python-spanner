@@ -31,7 +31,11 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
-from google.cloud.spanner_v1.data_types import JsonObject, get_proto_message, get_proto_enum
+from google.cloud.spanner_v1.data_types import (
+    JsonObject,
+    get_proto_message,
+    get_proto_enum,
+)
 from google.iam.v1 import policy_pb2
 from google.protobuf import field_mask_pb2  # type: ignore
 from google.type import expr_pb2
@@ -284,6 +288,7 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 def create_database_with_proto_descriptor(instance_id, database_id):
     """Creates a database with proto descriptors and tables with proto columns for sample data."""
     import os
+
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
 
@@ -291,7 +296,7 @@ def create_database_with_proto_descriptor(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
 
     # reads proto descriptor file as bytes
-    proto_descriptor_file = open(filename, 'rb').read()
+    proto_descriptor_file = open(filename, "rb").read()
 
     database = instance.database(
         database_id,
@@ -310,7 +315,7 @@ def create_database_with_proto_descriptor(instance_id, database_id):
             SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file
+        proto_descriptors=proto_descriptor_file,
     )
 
     operation = database.create()
@@ -318,7 +323,11 @@ def create_database_with_proto_descriptor(instance_id, database_id):
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Created database {} with proto descriptors on instance {}".format(database_id, instance_id))
+    print(
+        "Created database {} with proto descriptors on instance {}".format(
+            database_id, instance_id
+        )
+    )
 
 
 # [END spanner_create_database_with_proto_descriptor]
@@ -356,6 +365,7 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
 def update_database_with_proto_descriptor(instance_id, database_id):
     """Updates a database with tables with a default leader."""
     import os
+
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
 
@@ -363,7 +373,7 @@ def update_database_with_proto_descriptor(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
 
     database = instance.database(database_id)
-    proto_descriptor_file = open(filename, 'rb').read()
+    proto_descriptor_file = open(filename, "rb").read()
 
     operation = database.update_ddl(
         [
@@ -381,18 +391,14 @@ def update_database_with_proto_descriptor(instance_id, database_id):
             SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file
+        proto_descriptors=proto_descriptor_file,
     )
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
     database.reload()
 
-    print(
-        "Database {} updated with proto descriptors".format(
-            database.name
-        )
-    )
+    print("Database {} updated with proto descriptors".format(database.name))
 
 
 # [END spanner_update_database_with_proto_descriptor]
@@ -2543,10 +2549,25 @@ def insert_proto_columns_data(instance_id, database_id):
     with database.batch() as batch:
         batch.insert(
             table="Singers",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray",
-                     "SingerGenreArray"),
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
             values=[
-                (2, "Marc", "Richards", singer_info, singer_pb2.Genre.ROCK, singer_info_array, singer_genre_array),
+                (
+                    2,
+                    "Marc",
+                    "Richards",
+                    singer_info,
+                    singer_pb2.Genre.ROCK,
+                    singer_info_array,
+                    singer_genre_array,
+                ),
                 (3, "Catalina", "Smith", None, None, None, None),
             ],
         )
@@ -2582,14 +2603,18 @@ def insert_proto_columns_data_using_dml(instance_id, database_id):
                 "singerInfo": singer_info,
                 "singerGenre": singer_pb2.Genre.ROCK,
                 "singerInfoArray": singer_info_array,
-                "singerGenreArray": singer_genre_array
+                "singerGenreArray": singer_genre_array,
             },
             param_types={
                 "singerInfo": param_types.ProtoMessage(singer_info),
                 "singerGenre": param_types.ProtoEnum(singer_pb2.Genre),
-                "singerInfoArray": param_types.Array(param_types.ProtoMessage(singer_info)),
-                "singerGenreArray": param_types.Array(param_types.ProtoEnum(singer_pb2.Genre))
-            }
+                "singerInfoArray": param_types.Array(
+                    param_types.ProtoMessage(singer_info)
+                ),
+                "singerGenreArray": param_types.Array(
+                    param_types.ProtoEnum(singer_pb2.Genre)
+                ),
+            },
         )
 
         print("{} record(s) inserted.".format(row_ct))
@@ -2611,17 +2636,29 @@ def read_proto_columns_data(instance_id, database_id):
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
             table="Singers",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray", "SingerGenreArray"),
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
             keyset=keyset,
-            column_info={"SingerInfo": singer_pb2.SingerInfo(),
-                         "SingerGenre": singer_pb2.Genre,
-                         "SingerInfoArray": singer_pb2.SingerInfo(),
-                         "SingerGenreArray": singer_pb2.Genre},
+            column_info={
+                "SingerInfo": singer_pb2.SingerInfo(),
+                "SingerGenre": singer_pb2.Genre,
+                "SingerInfoArray": singer_pb2.SingerInfo(),
+                "SingerGenreArray": singer_pb2.Genre,
+            },
         )
 
         for row in results:
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(*row))
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(*row)
+            )
 
 
 # [END spanner_read_proto_columns_data]
@@ -2637,15 +2674,19 @@ def read_proto_columns_data_using_dml(instance_id, database_id):
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT SingerId, FirstName, LastName, SingerInfo, SingerGenre, SingerInfoArray, SingerGenreArray FROM Singers",
-            column_info={"SingerInfo": singer_pb2.SingerInfo(),
-                         "SingerGenre": singer_pb2.Genre,
-                         "SingerInfoArray": singer_pb2.SingerInfo(),
-                         "SingerGenreArray": singer_pb2.Genre},
+            column_info={
+                "SingerInfo": singer_pb2.SingerInfo(),
+                "SingerGenre": singer_pb2.Genre,
+                "SingerInfoArray": singer_pb2.SingerInfo(),
+                "SingerGenreArray": singer_pb2.Genre,
+            },
         )
 
         for row in results:
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(*row))
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(*row)
+            )
 
 
 # [END spanner_read_proto_columns_data_using_dml]
@@ -2661,7 +2702,15 @@ def read_proto_columns_data_using_helper_method(instance_id, database_id):
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
             table="Singers",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray", "SingerGenreArray"),
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
             keyset=keyset,
         )
 
@@ -2670,9 +2719,18 @@ def read_proto_columns_data_using_helper_method(instance_id, database_id):
             singer_genre_proto_enum = get_proto_enum(row[4], singer_pb2.Genre)
             singer_info_list = get_proto_message(row[5], singer_pb2.SingerInfo())
             singer_genre_list = get_proto_enum(row[6], singer_pb2.Genre)
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(row[0], row[1], row[2], singer_info_proto_msg, singer_genre_proto_enum,
-                                                singer_info_list, singer_genre_list))
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(
+                    row[0],
+                    row[1],
+                    row[2],
+                    singer_info_proto_msg,
+                    singer_genre_proto_enum,
+                    singer_info_list,
+                    singer_genre_list,
+                )
+            )
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -2792,14 +2850,28 @@ if __name__ == "__main__":  # noqa: C901
         "read_data_with_database_role", help=read_data_with_database_role.__doc__
     )
     subparsers.add_parser("list_database_roles", help=list_database_roles.__doc__)
-    subparsers.add_parser("create_database_with_proto_descriptor", help=create_database_with_proto_descriptor.__doc__)
-    subparsers.add_parser("insert_proto_columns_data_using_dml", help=insert_proto_columns_data_using_dml.__doc__)
-    subparsers.add_parser("insert_proto_columns_data", help=insert_proto_columns_data.__doc__)
-    subparsers.add_parser("read_proto_columns_data", help=read_proto_columns_data.__doc__)
     subparsers.add_parser(
-        "read_proto_columns_data_using_helper_method", help=read_proto_columns_data_using_helper_method.__doc__
+        "create_database_with_proto_descriptor",
+        help=create_database_with_proto_descriptor.__doc__,
     )
-    subparsers.add_parser("read_proto_columns_data_using_dml", help=read_proto_columns_data_using_dml.__doc__)
+    subparsers.add_parser(
+        "insert_proto_columns_data_using_dml",
+        help=insert_proto_columns_data_using_dml.__doc__,
+    )
+    subparsers.add_parser(
+        "insert_proto_columns_data", help=insert_proto_columns_data.__doc__
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data", help=read_proto_columns_data.__doc__
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data_using_helper_method",
+        help=read_proto_columns_data_using_helper_method.__doc__,
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data_using_dml",
+        help=read_proto_columns_data_using_dml.__doc__,
+    )
     enable_fine_grained_access_parser = subparsers.add_parser(
         "enable_fine_grained_access", help=enable_fine_grained_access.__doc__
     )

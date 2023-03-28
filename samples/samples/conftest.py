@@ -117,9 +117,10 @@ def multi_region_instance_config(spanner_client):
 @pytest.fixture(scope="module")
 def proto_descriptor_file():
     import os
+
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
-    return open(filename, 'rb').read()
+    return open(filename, "rb").read()
 
 
 @pytest.fixture(scope="module")
@@ -212,12 +213,13 @@ def database_ddl():
 
 @pytest.fixture(scope="module")
 def sample_database(
-  spanner_client,
-  sample_instance,
-  database_id,
-  database_ddl,
-  database_dialect,
-  proto_descriptor_file):
+    spanner_client,
+    sample_instance,
+    database_id,
+    database_ddl,
+    database_dialect,
+    proto_descriptor_file,
+):
     if database_dialect == DatabaseDialect.POSTGRESQL:
         sample_database = sample_instance.database(
           database_id,
@@ -243,9 +245,9 @@ def sample_database(
         return
 
     sample_database = sample_instance.database(
-      database_id,
-      ddl_statements=database_ddl,
-      proto_descriptors=proto_descriptor_file
+        database_id,
+        ddl_statements=database_ddl,
+        proto_descriptors=proto_descriptor_file,
     )
 
     if not sample_database.exists():
