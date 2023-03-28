@@ -120,7 +120,9 @@ def proto_descriptor_file():
 
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
-    return open(filename, "rb").read()
+    file = open(filename, "rb")
+    yield file.read()
+    file.close()
 
 
 @pytest.fixture(scope="module")

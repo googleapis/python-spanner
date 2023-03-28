@@ -296,7 +296,8 @@ def create_database_with_proto_descriptor(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
 
     # reads proto descriptor file as bytes
-    proto_descriptor_file = open(filename, "rb").read()
+    proto_descriptor_file = open(filename, "rb")
+    proto_descriptor = proto_descriptor_file.read()
 
     database = instance.database(
         database_id,
@@ -315,13 +316,14 @@ def create_database_with_proto_descriptor(instance_id, database_id):
             SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file,
+        proto_descriptors=proto_descriptor,
     )
 
     operation = database.create()
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
+    proto_descriptor_file.close()
 
     print(
         "Created database {} with proto descriptors on instance {}".format(
@@ -373,7 +375,8 @@ def update_database_with_proto_descriptor(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
 
     database = instance.database(database_id)
-    proto_descriptor_file = open(filename, "rb").read()
+    proto_descriptor_file = open(filename, "rb")
+    proto_descriptor = proto_descriptor_file.read()
 
     operation = database.update_ddl(
         [
@@ -391,10 +394,11 @@ def update_database_with_proto_descriptor(instance_id, database_id):
             SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file,
+        proto_descriptors=proto_descriptor,
     )
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
+    proto_descriptor_file.close()
 
     database.reload()
 
