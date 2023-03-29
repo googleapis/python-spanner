@@ -58,12 +58,8 @@ JSON_1 = JsonObject(
 JSON_2 = JsonObject(
     {"sample_object": {"name": "Anamika", "id": 2635}},
 )
-SINGER_INFO = singer_pb2.SingerInfo()
-SINGER_GENRE = singer_pb2.Genre.ROCK
-SINGER_INFO.singer_id = 1
-SINGER_INFO.birth_date = "January"
-SINGER_INFO.nationality = "Country1"
-SINGER_INFO.genre = SINGER_GENRE
+SINGER_INFO = _sample_data.SINGER_INFO_1
+SINGER_GENRE = _sample_data.SINGER_GENRE_1
 
 COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
@@ -2519,11 +2515,7 @@ def test_execute_sql_w_query_param_struct(sessions_database, not_postgres):
 
 
 def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
-    singer_info = singer_pb2.SingerInfo()
-    singer_info.singer_id = 1
-    singer_info.birth_date = "January"
-    singer_info.nationality = "Country1"
-    singer_info.genre = singer_pb2.Genre.ROCK
+    singer_info = _sample_data.SINGER_INFO_1
     singer_info_bytes = base64.b64encode(singer_info.SerializeToString())
 
     _bind_test_helper(
@@ -2560,7 +2552,7 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
 
 
 def test_execute_sql_w_proto_enum_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
-    singer_genre = singer_pb2.Genre.ROCK
+    singer_genre = _sample_data.SINGER_GENRE_1
 
     _bind_test_helper(
         sessions_database,
