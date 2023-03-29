@@ -2049,11 +2049,15 @@ def _bind_test_helper(
     expected_array_value=None,
     recurse_into_lists=True,
     column_info=None,
+    expected_single_value=None
 ):
     database.snapshot(multi_use=True)
 
     key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "v"
     placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
+
+    if expected_single_value is None:
+        expected_single_value = single_value
 
     # Bind a non-null <type_name>
     _check_sql_results(
@@ -2061,7 +2065,7 @@ def _bind_test_helper(
         sql=f"SELECT {placeholder} as column",
         params={key: single_value},
         param_types={key: param_type},
-        expected=[(single_value,)],
+        expected=[(expected_single_value,)],
         order=False,
         recurse_into_lists=recurse_into_lists,
         column_info=column_info,
@@ -2494,6 +2498,7 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
     singer_info.birth_date = "January"
     singer_info.nationality = "Country1"
     singer_info.genre = singer_pb2.Genre.ROCK
+    singer_info_bytes = base64.b64encode(singer_info.SerializeToString())
 
     _bind_test_helper(
         sessions_database,
@@ -2504,6 +2509,29 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
         column_info={'column': singer_pb2.SingerInfo()}
     )
 
+    # Tests compatibility between proto message and bytes column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoMessage(singer_info),
+        singer_info_bytes,
+        [singer_info_bytes, None],
+        expected_single_value=singer_info,
+        expected_array_value=[singer_info, None],
+        column_info={'column': singer_pb2.SingerInfo()},
+    )
+
+    # Tests compatibility between proto message and bytes column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.BYTES,
+        singer_info,
+        [singer_info, None],
+        expected_single_value=singer_info_bytes,
+        expected_array_value=[singer_info_bytes, None],
+    )
+
 
 def test_execute_sql_w_proto_enum_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
     singer_genre = singer_pb2.Genre.ROCK
@@ -2512,6 +2540,27 @@ def test_execute_sql_w_proto_enum_bindings(not_emulator, not_postgres, sessions_
         sessions_database,
         database_dialect,
         spanner_v1.param_types.ProtoEnum(singer_pb2.Genre),
+        singer_genre,
+        [singer_genre, None],
+    )
+
+    # Tests compatibility between proto enum and int64 column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoEnum(singer_pb2.Genre),
+        3,
+        [3, None],
+        expected_single_value='ROCK',
+        expected_array_value=['ROCK', None],
+        column_info={'column': singer_pb2.Genre},
+    )
+
+    # Tests compatibility between proto enum and int64 column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.INT64,
         singer_genre,
         [singer_genre, None],
     )
