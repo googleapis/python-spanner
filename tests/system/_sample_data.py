@@ -34,7 +34,13 @@ COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
 
 SINGERS_PROTO_TABLE = "singers"
-SINGERS_PROTO_COLUMNS = ("singer_id", "first_name", "last_name", "singer_info", "singer_genre")
+SINGERS_PROTO_COLUMNS = (
+    "singer_id",
+    "first_name",
+    "last_name",
+    "singer_info",
+    "singer_genre",
+)
 SINGER_INFO_1 = singer_pb2.SingerInfo()
 SINGER_GENRE_1 = singer_pb2.Genre.ROCK
 SINGER_INFO_1.singer_id = 1

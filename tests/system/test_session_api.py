@@ -241,7 +241,9 @@ COLUMN_INFO = {
 
 
 @pytest.fixture(scope="session")
-def sessions_database(shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file):
+def sessions_database(
+    shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
+):
     database_name = _helpers.unique_id("test_sessions", separator="_")
     pool = spanner_v1.BurstyPool(labels={"testcase": "session_api"})
 
@@ -478,7 +480,11 @@ def test_batch_insert_then_read_all_datatypes(sessions_database):
         batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
 
     with sessions_database.snapshot(read_timestamp=batch.committed) as snapshot:
-        rows = list(snapshot.read(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, sd.ALL, column_info=COLUMN_INFO))
+        rows = list(
+            snapshot.read(
+                ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, sd.ALL, column_info=COLUMN_INFO
+            )
+        )
 
     sd._check_rows_data(rows, expected=ALL_TYPES_ROWDATA)
 
@@ -1340,7 +1346,9 @@ def _set_up_proto_table(database):
 
     def _unit_of_work(transaction):
         transaction.delete(sd.SINGERS_PROTO_TABLE, sd.ALL)
-        transaction.insert(sd.SINGERS_PROTO_TABLE, sd.SINGERS_PROTO_COLUMNS, sd.SINGERS_PROTO_ROW_DATA)
+        transaction.insert(
+            sd.SINGERS_PROTO_TABLE, sd.SINGERS_PROTO_COLUMNS, sd.SINGERS_PROTO_ROW_DATA
+        )
 
     committed = database.run_in_transaction(_unit_of_work)
 
@@ -1496,7 +1504,11 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
 
 
 def test_read_w_index(
-    shared_instance, database_operation_timeout, databases_to_delete, database_dialect, proto_descriptor_file
+    shared_instance,
+    database_operation_timeout,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     # Indexed reads cannot return non-indexed columns
     sd = _sample_data
@@ -1524,10 +1536,12 @@ def test_read_w_index(
     else:
         temp_db = shared_instance.database(
             _helpers.unique_id("test_read", separator="_"),
-            ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
+            ddl_statements=_helpers.DDL_STATEMENTS
+            + extra_ddl
+            + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
             pool=pool,
             database_dialect=database_dialect,
-            proto_descriptors=proto_descriptor_file
+            proto_descriptors=proto_descriptor_file,
         )
         operation = temp_db.create()
         operation.result(database_operation_timeout)  # raises on failure / timeout.
@@ -1546,11 +1560,20 @@ def test_read_w_index(
     # Test indexes on proto column types
     if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
         # Indexed reads cannot return non-indexed columns
-        my_columns = sd.SINGERS_PROTO_COLUMNS[0], sd.SINGERS_PROTO_COLUMNS[1], sd.SINGERS_PROTO_COLUMNS[4]
+        my_columns = (
+            sd.SINGERS_PROTO_COLUMNS[0],
+            sd.SINGERS_PROTO_COLUMNS[1],
+            sd.SINGERS_PROTO_COLUMNS[4],
+        )
         committed = _set_up_proto_table(temp_db)
         with temp_db.snapshot(read_timestamp=committed) as snapshot:
             rows = list(
-                snapshot.read(sd.SINGERS_PROTO_TABLE, my_columns, spanner_v1.KeySet(keys=[[singer_pb2.Genre.ROCK]]), index="SingerByGenre")
+                snapshot.read(
+                    sd.SINGERS_PROTO_TABLE,
+                    my_columns,
+                    spanner_v1.KeySet(keys=[[singer_pb2.Genre.ROCK]]),
+                    index="SingerByGenre",
+                )
             )
         row = sd.SINGERS_PROTO_ROW_DATA[0]
         expected = list([(row[0], row[1], row[4])])
@@ -1974,7 +1997,11 @@ def _check_sql_results(
         sql += " ORDER BY pkey"
 
     with database.snapshot() as snapshot:
-        rows = list(snapshot.execute_sql(sql, params=params, param_types=param_types, column_info=column_info))
+        rows = list(
+            snapshot.execute_sql(
+                sql, params=params, param_types=param_types, column_info=column_info
+            )
+        )
 
     _sample_data._check_rows_data(
         rows, expected=expected, recurse_into_lists=recurse_into_lists
@@ -2071,7 +2098,7 @@ def _bind_test_helper(
     expected_array_value=None,
     recurse_into_lists=True,
     column_info=None,
-    expected_single_value=None
+    expected_single_value=None,
 ):
     database.snapshot(multi_use=True)
 
@@ -2514,7 +2541,9 @@ def test_execute_sql_w_query_param_struct(sessions_database, not_postgres):
     )
 
 
-def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
+def test_execute_sql_w_proto_message_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
     singer_info = _sample_data.SINGER_INFO_1
     singer_info_bytes = base64.b64encode(singer_info.SerializeToString())
 
@@ -2524,7 +2553,7 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
         spanner_v1.param_types.ProtoMessage(singer_info),
         singer_info,
         [singer_info, None],
-        column_info={'column': singer_pb2.SingerInfo()}
+        column_info={"column": singer_pb2.SingerInfo()},
     )
 
     # Tests compatibility between proto message and bytes column types
@@ -2536,7 +2565,7 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
         [singer_info_bytes, None],
         expected_single_value=singer_info,
         expected_array_value=[singer_info, None],
-        column_info={'column': singer_pb2.SingerInfo()},
+        column_info={"column": singer_pb2.SingerInfo()},
     )
 
     # Tests compatibility between proto message and bytes column types
@@ -2551,7 +2580,9 @@ def test_execute_sql_w_proto_message_bindings(not_emulator, not_postgres, sessio
     )
 
 
-def test_execute_sql_w_proto_enum_bindings(not_emulator, not_postgres, sessions_database, database_dialect):
+def test_execute_sql_w_proto_enum_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
     singer_genre = _sample_data.SINGER_GENRE_1
 
     _bind_test_helper(
@@ -2569,9 +2600,9 @@ def test_execute_sql_w_proto_enum_bindings(not_emulator, not_postgres, sessions_
         spanner_v1.param_types.ProtoEnum(singer_pb2.Genre),
         3,
         [3, None],
-        expected_single_value='ROCK',
-        expected_array_value=['ROCK', None],
-        column_info={'column': singer_pb2.Genre},
+        expected_single_value="ROCK",
+        expected_array_value=["ROCK", None],
+        column_info={"column": singer_pb2.Genre},
     )
 
     # Tests compatibility between proto enum and int64 column types

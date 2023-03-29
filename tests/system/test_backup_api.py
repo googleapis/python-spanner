@@ -94,7 +94,9 @@ def database_version_time(shared_database):
 
 
 @pytest.fixture(scope="session")
-def second_database(shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file):
+def second_database(
+    shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
+):
     database_name = _helpers.unique_id("test_database2")
     pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     if database_dialect == DatabaseDialect.POSTGRESQL:
