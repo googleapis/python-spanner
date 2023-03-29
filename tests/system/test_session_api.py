@@ -1338,6 +1338,19 @@ def _set_up_table(database, row_count):
     return committed
 
 
+def _set_up_proto_table(database):
+
+    sd = _sample_data
+
+    def _unit_of_work(transaction):
+        transaction.delete(sd.SINGERS_PROTO_TABLE, sd.ALL)
+        transaction.insert(sd.SINGERS_PROTO_TABLE, sd.SINGERS_PROTO_COLUMNS, sd.SINGERS_PROTO_ROW_DATA)
+
+    committed = database.run_in_transaction(_unit_of_work)
+
+    return committed
+
+
 def test_read_with_single_keys_index(sessions_database):
     # [START spanner_test_single_key_index_read]
     sd = _sample_data
@@ -1515,7 +1528,7 @@ def test_read_w_index(
     else:
         temp_db = shared_instance.database(
             _helpers.unique_id("test_read", separator="_"),
-            ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
+            ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
             pool=pool,
             database_dialect=database_dialect,
             proto_descriptors=proto_descriptor_file
@@ -1533,6 +1546,19 @@ def test_read_w_index(
 
     expected = list(reversed([(row[0], row[2]) for row in _row_data(row_count)]))
     sd._check_rows_data(rows, expected)
+
+    # Test indexes on proto column types
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        # Indexed reads cannot return non-indexed columns
+        my_columns = sd.SINGERS_PROTO_COLUMNS[0], sd.SINGERS_PROTO_COLUMNS[1], sd.SINGERS_PROTO_COLUMNS[4]
+        committed = _set_up_proto_table(temp_db)
+        with temp_db.snapshot(read_timestamp=committed) as snapshot:
+            rows = list(
+                snapshot.read(sd.SINGERS_PROTO_TABLE, my_columns, spanner_v1.KeySet(keys=[[singer_pb2.Genre.ROCK]]), index="SingerByGenre")
+            )
+        row = sd.SINGERS_PROTO_ROW_DATA[0]
+        expected = list([(row[0], row[1], row[4])])
+        sd._check_rows_data(rows, expected)
 
 
 def test_read_w_single_key(sessions_database):

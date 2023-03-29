@@ -168,14 +168,14 @@ CREATE INDEX name ON contacts(first_name, last_name);
 """
 
 PROTO_COLUMNS_DDL = """\
-CREATE TABLE Singers (
-     SingerId   INT64 NOT NULL,
-     FirstName  STRING(1024),
-     LastName   STRING(1024),
-     SingerInfo spanner.examples.music.SingerInfo,
-     SingerGenre spanner.examples.music.Genre, )
-     PRIMARY KEY (SingerId);
-CREATE INDEX SingerByGenre ON Singers(SingerGenre) STORING (FirstName, LastName);
+CREATE TABLE singers (
+     singer_id   INT64 NOT NULL,
+     first_name  STRING(1024),
+     last_name   STRING(1024),
+     singer_info spanner.examples.music.SingerInfo,
+     singer_genre spanner.examples.music.Genre, )
+     PRIMARY KEY (singer_id);
+CREATE INDEX SingerByGenre ON singers(singer_genre) STORING (first_name, last_name);
 """
 
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
