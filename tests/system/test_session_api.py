@@ -1487,7 +1487,7 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
 
 
 def test_read_w_index(
-    shared_instance, database_operation_timeout, databases_to_delete, database_dialect
+    shared_instance, database_operation_timeout, databases_to_delete, database_dialect, proto_descriptor_file
 ):
     # Indexed reads cannot return non-indexed columns
     sd = _sample_data
@@ -1518,6 +1518,7 @@ def test_read_w_index(
             ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
             pool=pool,
             database_dialect=database_dialect,
+            proto_descriptors=proto_descriptor_file
         )
         operation = temp_db.create()
         operation.result(database_operation_timeout)  # raises on failure / timeout.

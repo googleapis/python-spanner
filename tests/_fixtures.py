@@ -168,10 +168,6 @@ CREATE INDEX name ON contacts(first_name, last_name);
 """
 
 PROTO_COLUMNS_DDL = """\
-CREATE PROTO BUNDLE (
-    spanner.examples.music.SingerInfo,
-    spanner.examples.music.Genre,
-    );
 CREATE TABLE Singers (
      SingerId   INT64 NOT NULL,
      FirstName  STRING(1024),
