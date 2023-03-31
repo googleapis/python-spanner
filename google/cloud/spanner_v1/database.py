@@ -1101,7 +1101,7 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
-        data_boost_enable=False,
+        data_boost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1136,8 +1136,8 @@ class BatchSnapshot(object):
             service uses this as a hint, the actual number of partitions may
             differ.
 
-        :type data_boost_enable:
-        :param data_boost_enable:
+        :type data_boost_enabled:
+        :param data_boost_enabled:
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
 
@@ -1168,7 +1168,7 @@ class BatchSnapshot(object):
             "columns": columns,
             "keyset": keyset._to_dict(),
             "index": index,
-            "data_boost_enable": data_boost_enable,
+            "data_boost_enabled": data_boost_enabled,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1212,7 +1212,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
-        data_boost_enable=False,
+        data_boost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1259,8 +1259,8 @@ class BatchSnapshot(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
-        :type data_boost_enable:
-        :param data_boost_enable:
+        :type data_boost_enabled:
+        :param data_boost_enabled:
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
 
@@ -1287,7 +1287,7 @@ class BatchSnapshot(object):
 
         query_info = {
             "sql": sql,
-            "data_boost_enable": data_boost_enable,
+            "data_boost_enabled": data_boost_enabled,
         }
         if params:
             query_info["params"] = params
