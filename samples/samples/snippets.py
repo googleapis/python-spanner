@@ -2668,8 +2668,8 @@ def read_proto_columns_data(instance_id, database_id):
 # [END spanner_read_proto_columns_data]
 
 
-# [START spanner_read_proto_columns_data_using_dml]
-def read_proto_columns_data_using_dml(instance_id, database_id):
+# [START spanner_read_proto_columns_data_using_dql]
+def read_proto_columns_data_using_dql(instance_id, database_id):
     """Queries sample proto column data from the database using SQL."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -2693,7 +2693,7 @@ def read_proto_columns_data_using_dml(instance_id, database_id):
             )
 
 
-# [END spanner_read_proto_columns_data_using_dml]
+# [END spanner_read_proto_columns_data_using_dql]
 
 
 def read_proto_columns_data_using_helper_method(instance_id, database_id):
@@ -2873,8 +2873,8 @@ if __name__ == "__main__":  # noqa: C901
         help=read_proto_columns_data_using_helper_method.__doc__,
     )
     subparsers.add_parser(
-        "read_proto_columns_data_using_dml",
-        help=read_proto_columns_data_using_dml.__doc__,
+        "read_proto_columns_data_using_dql",
+        help=read_proto_columns_data_using_dql.__doc__,
     )
     enable_fine_grained_access_parser = subparsers.add_parser(
         "enable_fine_grained_access", help=enable_fine_grained_access.__doc__
@@ -3027,5 +3027,5 @@ if __name__ == "__main__":  # noqa: C901
         read_proto_columns_data(args.instance_id, args.database_id)
     elif args.command == "read_proto_columns_data_using_helper_method":
         read_proto_columns_data_using_helper_method(args.instance_id, args.database_id)
-    elif args.command == "read_proto_columns_data_using_dml":
-        read_proto_columns_data_using_dml(args.instance_id, args.database_id)
+    elif args.command == "read_proto_columns_data_using_dql":
+        read_proto_columns_data_using_dql(args.instance_id, args.database_id)

@@ -846,8 +846,8 @@ def test_insert_proto_columns_data(capsys, instance_id, sample_database_for_prot
 @pytest.mark.dependency(
     depends=["insert_proto_columns_data_dml, insert_proto_columns_data"]
 )
-def test_read_proto_columns_data_using_dml(capsys, instance_id, sample_database_for_proto_columns):
-    snippets.read_proto_columns_data_using_dml(instance_id, sample_database_for_proto_columns.database_id)
+def test_read_proto_columns_data_using_dql(capsys, instance_id, sample_database_for_proto_columns):
+    snippets.read_proto_columns_data_using_dql(instance_id, sample_database_for_proto_columns.database_id)
     out, _ = capsys.readouterr()
 
     assert "SingerId: 1, FirstName: Virginia, LastName: Watson" in out
