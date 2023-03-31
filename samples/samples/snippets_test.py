@@ -819,7 +819,8 @@ def test_list_database_roles(capsys, instance_id, sample_database):
 
 
 def test_update_database_with_proto_descriptor(capsys, sample_instance, create_database_id):
-    snippets.create_database(sample_instance.instance_id, create_database_id)
+    # We have to create a new database here as proto samples also have Singers table and this will clash.
+    sample_instance.database(create_database_id).create().result(240)
     snippets.update_database_with_proto_descriptor(sample_instance.instance_id, create_database_id)
     out, _ = capsys.readouterr()
     assert "updated with proto descriptors" in out
