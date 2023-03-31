@@ -818,6 +818,15 @@ def test_list_database_roles(capsys, instance_id, sample_database):
     assert "new_parent" in out
 
 
+def test_update_database_with_proto_descriptor(capsys, sample_instance, create_database_id):
+    snippets.create_database(sample_instance.instance_id, create_database_id)
+    snippets.update_database_with_proto_descriptor(sample_instance.instance_id, create_database_id)
+    out, _ = capsys.readouterr()
+    assert "updated with proto descriptors" in out
+    database = sample_instance.database(create_database_id)
+    database.drop()
+
+
 @pytest.mark.dependency(name="insert_proto_columns_data_dml")
 def test_insert_proto_columns_data_using_dml(capsys, instance_id, sample_database_for_proto_columns):
     snippets.insert_proto_columns_data_using_dml(
