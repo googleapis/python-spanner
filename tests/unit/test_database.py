@@ -2216,7 +2216,7 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     def test_generate_read_batches_w_data_boost_enabled(self):
-        data_boost_enabled= True
+        data_boost_enabled = True
         keyset = self._make_keyset()
         database = self._make_database()
         batch_txn = self._make_one(database)
