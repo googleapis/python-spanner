@@ -31,7 +31,11 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
-from google.cloud.spanner_v1.data_types import JsonObject, get_proto_message, get_proto_enum
+from google.cloud.spanner_v1.data_types import (
+    JsonObject,
+    get_proto_message,
+    get_proto_enum,
+)
 from google.iam.v1 import policy_pb2
 from google.protobuf import field_mask_pb2  # type: ignore
 from google.type import expr_pb2
@@ -280,14 +284,20 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 # [END spanner_create_database_with_default_leader]
 
 
-# [START spanner_create_database_with_proto_descriptors]
-def create_database_with_proto_descriptors(instance_id, database_id):
+# [START spanner_create_database_with_proto_descriptor]
+def create_database_with_proto_descriptor(instance_id, database_id):
     """Creates a database with proto descriptors and tables with proto columns for sample data."""
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
     # reads proto descriptor file as bytes
-    proto_descriptor_file = open("testdata/descriptors.pb", 'rb').read()
+    proto_descriptor_file = open(filename, "rb")
+    proto_descriptor = proto_descriptor_file.read()
 
     database = instance.database(
         database_id,
@@ -296,7 +306,7 @@ def create_database_with_proto_descriptors(instance_id, database_id):
             spanner.examples.music.SingerInfo,
             spanner.examples.music.Genre,
             )""",
-            """CREATE TABLE SingersProto (
+            """CREATE TABLE Singers (
             SingerId   INT64 NOT NULL,
             FirstName  STRING(1024),
             LastName   STRING(1024),
@@ -306,18 +316,23 @@ def create_database_with_proto_descriptors(instance_id, database_id):
             SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file
+        proto_descriptors=proto_descriptor,
     )
 
     operation = database.create()
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
+    proto_descriptor_file.close()
 
-    print("Created database {} with proto descriptors on instance {}".format(database_id, instance_id))
+    print(
+        "Created database {} with proto descriptors on instance {}".format(
+            database_id, instance_id
+        )
+    )
 
 
-# [END spanner_create_database_with_proto_descriptors]
+# [END spanner_create_database_with_proto_descriptor]
 
 
 # [START spanner_update_database_with_default_leader]
@@ -348,14 +363,20 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
 # [END spanner_update_database_with_default_leader]
 
 
-# [START spanner_update_database_with_proto_descriptors]
-def update_database_with_proto_descriptors(instance_id, database_id):
+# [START spanner_update_database_with_proto_descriptor]
+def update_database_with_proto_descriptor(instance_id, database_id):
     """Updates a database with tables with a default leader."""
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
     database = instance.database(database_id)
-    proto_descriptor_file = open("testdata/descriptors.pb", 'rb').read()
+    proto_descriptor_file = open(filename, "rb")
+    proto_descriptor = proto_descriptor_file.read()
 
     operation = database.update_ddl(
         [
@@ -363,29 +384,28 @@ def update_database_with_proto_descriptors(instance_id, database_id):
             spanner.examples.music.SingerInfo,
             spanner.examples.music.Genre,
             )""",
-            """CREATE TABLE SingersProto (
+            """CREATE TABLE Singers (
             SingerId   INT64 NOT NULL,
             FirstName  STRING(1024),
             LastName   STRING(1024),
             SingerInfo spanner.examples.music.SingerInfo,
             SingerGenre spanner.examples.music.Genre,
+            SingerInfoArray ARRAY<spanner.examples.music.SingerInfo>,
+            SingerGenreArray ARRAY<spanner.examples.music.Genre>,
             ) PRIMARY KEY (SingerId)""",
         ],
-        proto_descriptors=proto_descriptor_file
+        proto_descriptors=proto_descriptor,
     )
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
+    proto_descriptor_file.close()
 
     database.reload()
 
-    print(
-        "Database {} updated with proto descriptors".format(
-            database.name
-        )
-    )
+    print("Database {} updated with proto descriptors".format(database.name))
 
 
-# [END spanner_update_database_with_proto_descriptors]
+# [END spanner_update_database_with_proto_descriptor]
 
 
 # [START spanner_get_database_ddl]
@@ -398,7 +418,6 @@ def get_database_ddl(instance_id, database_id):
     print("Retrieved database DDL for {}".format(database_id))
     for statement in ddl.statements:
         print(statement)
-    print(ddl.proto_descriptors)
 
 
 # [END spanner_get_database_ddl]
@@ -2511,8 +2530,60 @@ def enable_fine_grained_access(
     # [END spanner_enable_fine_grained_access]
 
 
-# [START spanner_insert_proto_columns_data_with_dml]
-def insert_proto_columns_data_with_dml(instance_id, database_id):
+# [START spanner_insert_proto_columns_data]
+def insert_proto_columns_data(instance_id, database_id):
+    """Inserts sample proto column data into the given database.
+
+    The database and table must already exist and can be created using
+    `create_database`.
+    """
+    spanner_client = spanner.Client(client_options={'api_endpoint':'staging-wrenchworks.sandbox.googleapis.com'})
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    singer_info = singer_pb2.SingerInfo()
+    singer_info.singer_id = 2
+    singer_info.birth_date = "February"
+    singer_info.nationality = "Country2"
+    singer_info.genre = singer_pb2.Genre.FOLK
+
+    singer_info_array = [singer_info]
+    singer_genre_array = [singer_pb2.Genre.FOLK]
+
+    with database.batch() as batch:
+        batch.insert(
+            table="Singers",
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
+            values=[
+                (
+                    2,
+                    "Marc",
+                    "Richards",
+                    singer_info,
+                    singer_pb2.Genre.ROCK,
+                    singer_info_array,
+                    singer_genre_array,
+                ),
+                (3, "Catalina", "Smith", None, None, None, None),
+            ],
+        )
+
+    print("Inserted data.")
+
+
+# [END spanner_insert_proto_columns_data]
+
+
+# [START spanner_insert_proto_columns_data_using_dml]
+def insert_proto_columns_data_using_dml(instance_id, database_id):
     """Inserts sample proto column data into the given database using a DML statement."""
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -2529,21 +2600,25 @@ def insert_proto_columns_data_with_dml(instance_id, database_id):
 
     def insert_singers_with_proto_column(transaction):
         row_ct = transaction.execute_update(
-            "INSERT INTO SingersProto (SingerId, FirstName, LastName, SingerInfo, SingerGenre, SingerInfoArray,"
+            "INSERT INTO Singers (SingerId, FirstName, LastName, SingerInfo, SingerGenre, SingerInfoArray,"
             " SingerGenreArray) "
             " VALUES (1, 'Virginia', 'Watson', @singerInfo, @singerGenre, @singerInfoArray, @singerGenreArray)",
             params={
                 "singerInfo": singer_info,
                 "singerGenre": singer_pb2.Genre.ROCK,
                 "singerInfoArray": singer_info_array,
-                "singerGenreArray": singer_genre_array
+                "singerGenreArray": singer_genre_array,
             },
             param_types={
                 "singerInfo": param_types.ProtoMessage(singer_info),
                 "singerGenre": param_types.ProtoEnum(singer_pb2.Genre),
-                "singerInfoArray": param_types.Array(param_types.ProtoMessage(singer_info)),
-                "singerGenreArray": param_types.Array(param_types.ProtoEnum(singer_pb2.Genre))
-            }
+                "singerInfoArray": param_types.Array(
+                    param_types.ProtoMessage(singer_info)
+                ),
+                "singerGenreArray": param_types.Array(
+                    param_types.ProtoEnum(singer_pb2.Genre)
+                ),
+            },
         )
 
         print("{} record(s) inserted.".format(row_ct))
@@ -2551,44 +2626,7 @@ def insert_proto_columns_data_with_dml(instance_id, database_id):
     database.run_in_transaction(insert_singers_with_proto_column)
 
 
-# [END spanner_insert_proto_columns_data_with_dml]
-
-
-# [START spanner_insert_proto_columns_data]
-def insert_proto_columns_data(instance_id, database_id):
-    """Inserts sample proto column data into the given database.
-
-    The database and table must already exist and can be created using
-    `create_database`.
-    """
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
-
-    singer_info = singer_pb2.SingerInfo()
-    singer_info.singer_id = 2
-    singer_info.birth_date = "February"
-    singer_info.nationality = "Country2"
-    singer_info.genre = singer_pb2.Genre.FOLK
-
-    singer_info_array = [singer_info]
-    singer_genre_array = [singer_pb2.Genre.FOLK]
-
-    with database.batch() as batch:
-        batch.insert(
-            table="SingersProto",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray",
-                     "SingerGenreArray"),
-            values=[
-                (2, "Marc", "Richards", singer_info, singer_pb2.Genre.ROCK, singer_info_array, singer_genre_array),
-                (3, "Catalina", "Smith", None, None, None, None),
-            ],
-        )
-
-    print("Inserted data.")
-
-
-# [END spanner_insert_proto_columns_data]
+# [END spanner_insert_proto_columns_data_using_dml]
 
 
 # [START spanner_read_proto_columns_data]
@@ -2601,24 +2639,63 @@ def read_proto_columns_data(instance_id, database_id):
     with database.snapshot() as snapshot:
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
-            table="SingersProto",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray", "SingerGenreArray"),
+            table="Singers",
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
             keyset=keyset,
-            column_info={"SingerInfo": singer_pb2.SingerInfo(),
-                         "SingerGenre": singer_pb2.Genre,
-                         "SingerInfoArray": singer_pb2.SingerInfo(),
-                         "SingerGenreArray": singer_pb2.Genre},
+            column_info={
+                "SingerInfo": singer_pb2.SingerInfo(),
+                "SingerGenre": singer_pb2.Genre,
+                "SingerInfoArray": singer_pb2.SingerInfo(),
+                "SingerGenreArray": singer_pb2.Genre,
+            },
         )
 
         for row in results:
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(*row))
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(*row)
+            )
 
 
 # [END spanner_read_proto_columns_data]
 
 
-# [START spanner_read_proto_columns_data_using_helper_method]
+# [START spanner_read_proto_columns_data_using_dql]
+def read_proto_columns_data_using_dql(instance_id, database_id):
+    """Queries sample proto column data from the database using SQL."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    with database.snapshot() as snapshot:
+        results = snapshot.execute_sql(
+            "SELECT SingerId, FirstName, LastName, SingerInfo, SingerGenre, SingerInfoArray, SingerGenreArray FROM Singers",
+            column_info={
+                "SingerInfo": singer_pb2.SingerInfo(),
+                "SingerGenre": singer_pb2.Genre,
+                "SingerInfoArray": singer_pb2.SingerInfo(),
+                "SingerGenreArray": singer_pb2.Genre,
+            },
+        )
+
+        for row in results:
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(*row)
+            )
+
+
+# [END spanner_read_proto_columns_data_using_dql]
+
+
 def read_proto_columns_data_using_helper_method(instance_id, database_id):
     """Reads sample proto column data from the database."""
     spanner_client = spanner.Client()
@@ -2628,8 +2705,16 @@ def read_proto_columns_data_using_helper_method(instance_id, database_id):
     with database.snapshot() as snapshot:
         keyset = spanner.KeySet(all_=True)
         results = snapshot.read(
-            table="SingersProto",
-            columns=("SingerId", "FirstName", "LastName", "SingerInfo", "SingerGenre", "SingerInfoArray", "SingerGenreArray"),
+            table="Singers",
+            columns=(
+                "SingerId",
+                "FirstName",
+                "LastName",
+                "SingerInfo",
+                "SingerGenre",
+                "SingerInfoArray",
+                "SingerGenreArray",
+            ),
             keyset=keyset,
         )
 
@@ -2638,36 +2723,18 @@ def read_proto_columns_data_using_helper_method(instance_id, database_id):
             singer_genre_proto_enum = get_proto_enum(row[4], singer_pb2.Genre)
             singer_info_list = get_proto_message(row[5], singer_pb2.SingerInfo())
             singer_genre_list = get_proto_enum(row[6], singer_pb2.Genre)
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(row[0], row[1], row[2], singer_info_proto_msg, singer_genre_proto_enum,
-                                                singer_info_list, singer_genre_list))
-
-
-# [END spanner_read_proto_columns_data_using_helper_method]
-
-
-# [START spanner_query_proto_columns_data]
-def query_proto_columns_data(instance_id, database_id):
-    """Queries sample proto column data from the database using SQL."""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
-
-    with database.snapshot() as snapshot:
-        results = snapshot.execute_sql(
-            "SELECT SingerId, FirstName, LastName, SingerInfo, SingerGenre, SingerInfoArray, SingerGenreArray FROM SingersProto",
-            column_info={"SingerInfo": singer_pb2.SingerInfo(),
-                         "SingerGenre": singer_pb2.Genre,
-                         "SingerInfoArray": singer_pb2.SingerInfo(),
-                         "SingerGenreArray": singer_pb2.Genre},
-        )
-
-        for row in results:
-            print("SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, , SingerInfoArray: {}, "
-                  "SingerGenreArray: {}".format(*row))
-
-
-# [END spanner_query_proto_columns_data]
+            print(
+                "SingerId: {}, FirstName: {}, LastName: {}, SingerInfo: {}, SingerGenre: {}, SingerInfoArray: {}, "
+                "SingerGenreArray: {}".format(
+                    row[0],
+                    row[1],
+                    row[2],
+                    singer_info_proto_msg,
+                    singer_genre_proto_enum,
+                    singer_info_list,
+                    singer_genre_list,
+                )
+            )
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -2682,7 +2749,6 @@ if __name__ == "__main__":  # noqa: C901
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("create_instance", help=create_instance.__doc__)
     subparsers.add_parser("create_database", help=create_database.__doc__)
-    subparsers.add_parser("create_database_with_proto_descriptors", help=create_database_with_proto_descriptors.__doc__)
     subparsers.add_parser("get_database_ddl", help=get_database_ddl.__doc__)
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("delete_data", help=delete_data.__doc__)
@@ -2788,13 +2854,28 @@ if __name__ == "__main__":  # noqa: C901
         "read_data_with_database_role", help=read_data_with_database_role.__doc__
     )
     subparsers.add_parser("list_database_roles", help=list_database_roles.__doc__)
-    subparsers.add_parser("insert_proto_columns_data_with_dml", help=insert_proto_columns_data_with_dml.__doc__)
-    subparsers.add_parser("insert_proto_columns_data", help=insert_proto_columns_data.__doc__)
-    subparsers.add_parser("read_proto_columns_data", help=read_proto_columns_data.__doc__)
     subparsers.add_parser(
-        "read_proto_columns_data_using_helper_method", help=read_proto_columns_data_using_helper_method.__doc__
+        "create_database_with_proto_descriptor",
+        help=create_database_with_proto_descriptor.__doc__,
     )
-    subparsers.add_parser("query_proto_columns_data", help=query_proto_columns_data.__doc__)
+    subparsers.add_parser(
+        "insert_proto_columns_data_using_dml",
+        help=insert_proto_columns_data_using_dml.__doc__,
+    )
+    subparsers.add_parser(
+        "insert_proto_columns_data", help=insert_proto_columns_data.__doc__
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data", help=read_proto_columns_data.__doc__
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data_using_helper_method",
+        help=read_proto_columns_data_using_helper_method.__doc__,
+    )
+    subparsers.add_parser(
+        "read_proto_columns_data_using_dql",
+        help=read_proto_columns_data_using_dql.__doc__,
+    )
     enable_fine_grained_access_parser = subparsers.add_parser(
         "enable_fine_grained_access", help=enable_fine_grained_access.__doc__
     )
@@ -2812,8 +2893,6 @@ if __name__ == "__main__":  # noqa: C901
         create_instance(args.instance_id)
     elif args.command == "create_database":
         create_database(args.instance_id, args.database_id)
-    elif args.command == "create_database_with_proto_descriptors":
-        create_database_with_proto_descriptors(args.instance_id, args.database_id)
     elif args.command == "get_database_ddl":
         get_database_ddl(args.instance_id, args.database_id)
     elif args.command == "insert_data":
@@ -2938,13 +3017,15 @@ if __name__ == "__main__":  # noqa: C901
             args.database_role,
             args.title,
         )
-    elif args.command == "insert_proto_columns_data_with_dml":
-        insert_proto_columns_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "create_database_with_proto_descriptor":
+        create_database_with_proto_descriptor(args.instance_id, args.database_id)
+    elif args.command == "insert_proto_columns_data_using_dml":
+        insert_proto_columns_data_using_dml(args.instance_id, args.database_id)
     elif args.command == "insert_proto_columns_data":
         insert_proto_columns_data(args.instance_id, args.database_id)
     elif args.command == "read_proto_columns_data":
         read_proto_columns_data(args.instance_id, args.database_id)
     elif args.command == "read_proto_columns_data_using_helper_method":
         read_proto_columns_data_using_helper_method(args.instance_id, args.database_id)
-    elif args.command == "query_proto_columns_data":
-        query_proto_columns_data(args.instance_id, args.database_id)
+    elif args.command == "read_proto_columns_data_using_dql":
+        read_proto_columns_data_using_dql(args.instance_id, args.database_id)

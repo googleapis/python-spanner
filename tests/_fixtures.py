@@ -28,6 +28,10 @@ CREATE TABLE contact_phones (
     phone_number STRING(1024) )
     PRIMARY KEY (contact_id, phone_type),
     INTERLEAVE IN PARENT contacts ON DELETE CASCADE;
+CREATE PROTO BUNDLE (
+    spanner.examples.music.SingerInfo,
+    spanner.examples.music.Genre,
+    );
 CREATE TABLE all_types (
     pkey INT64 NOT NULL,
     int_value INT64,
@@ -48,6 +52,10 @@ CREATE TABLE all_types (
     numeric_array ARRAY<NUMERIC>,
     json_value JSON,
     json_array ARRAY<JSON>,
+    proto_message_value spanner.examples.music.SingerInfo,
+    proto_message_array ARRAY<spanner.examples.music.SingerInfo>,
+    proto_enum_value spanner.examples.music.Genre,
+    proto_enum_array ARRAY<spanner.examples.music.Genre>,
     )
     PRIMARY KEY (pkey);
 CREATE TABLE counters (
@@ -159,8 +167,22 @@ CREATE TABLE string_plus_array_of_string (
 CREATE INDEX name ON contacts(first_name, last_name);
 """
 
+PROTO_COLUMNS_DDL = """\
+CREATE TABLE singers (
+     singer_id   INT64 NOT NULL,
+     first_name  STRING(1024),
+     last_name   STRING(1024),
+     singer_info spanner.examples.music.SingerInfo,
+     singer_genre spanner.examples.music.Genre, )
+     PRIMARY KEY (singer_id);
+CREATE INDEX SingerByGenre ON singers(singer_genre) STORING (first_name, last_name);
+"""
+
 DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 EMULATOR_DDL_STATEMENTS = [
     stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
 ]
 PG_DDL_STATEMENTS = [stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()]
+PROTO_COLUMNS_DDL_STATEMENTS = [
+    stmt.strip() for stmt in PROTO_COLUMNS_DDL.split(";") if stmt.strip()
+]

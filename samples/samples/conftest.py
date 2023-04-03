@@ -116,7 +116,13 @@ def multi_region_instance_config(spanner_client):
 
 @pytest.fixture(scope="module")
 def proto_descriptor_file():
-    return open("../../samples/samples/testdata/descriptors.pb", 'rb').read()
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
+    file = open(filename, "rb")
+    yield file.read()
+    file.close()
 
 
 @pytest.fixture(scope="module")
@@ -213,8 +219,7 @@ def sample_database(
   sample_instance,
   database_id,
   database_ddl,
-  database_dialect,
-  proto_descriptor_file):
+  database_dialect):
     if database_dialect == DatabaseDialect.POSTGRESQL:
         sample_database = sample_instance.database(
           database_id,
@@ -242,7 +247,6 @@ def sample_database(
     sample_database = sample_instance.database(
       database_id,
       ddl_statements=database_ddl,
-      proto_descriptors=proto_descriptor_file
     )
 
     if not sample_database.exists():
@@ -252,6 +256,31 @@ def sample_database(
     yield sample_database
 
     sample_database.drop()
+
+
+@pytest.fixture(scope="module")
+def sample_database_for_proto_columns(
+        spanner_client,
+        sample_instance,
+        database_id,
+        database_ddl_for_proto_columns,
+        database_dialect,
+        proto_descriptor_file,
+):
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        sample_database = sample_instance.database(
+            database_id,
+            ddl_statements=database_ddl_for_proto_columns,
+            proto_descriptors=proto_descriptor_file,
+        )
+
+        if not sample_database.exists():
+            operation = sample_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
+
+        yield sample_database
+
+        sample_database.drop()
 
 
 @pytest.fixture(scope="module")
