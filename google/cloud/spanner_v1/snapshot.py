@@ -213,7 +213,7 @@ class _SnapshotBase(_SessionWrapper):
 
         :type data_boost_enabled:
         :param data_boost_enabled:
-                (Optional) If this is for a partitioned query and this field is
+                (Optional) If this is for a partitioned read and this field is
                 set ``true``, the request will be executed via offline access.
                 If the field is set to ``true`` but the request does not set
                 ``partition_token``, the API will return an
