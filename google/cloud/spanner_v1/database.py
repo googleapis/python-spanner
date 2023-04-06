@@ -1138,7 +1138,7 @@ class BatchSnapshot(object):
 
         :type data_boost_enabled:
         :param data_boost_enabled:
-                (Optional) If this is for a partitioned query and this field is
+                (Optional) If this is for a partitioned read and this field is
                 set ``true``, the request will be executed via offline access.
 
         :type retry: :class:`~google.api_core.retry.Retry`
