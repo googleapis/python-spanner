@@ -888,15 +888,14 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         database = self._make_one(
-            self.DATABASE_ID, instance, drop_protection_enabled=True, pool=pool
+            self.DATABASE_ID, instance, enable_drop_protection=True, pool=pool
         )
 
-        future = database.update()
+        future = database.update(["enable_drop_protection"])
 
         self.assertIs(future, op_future)
 
-        expected_database = DatabasePB(name=database.name,
-                                       enable_drop_protection=True)
+        expected_database = DatabasePB(name=database.name, enable_drop_protection=True)
 
         field_mask = FieldMask(paths=["enable_drop_protection"])
 
