@@ -564,7 +564,7 @@ def test_db_run_in_transaction_twice_4181(shared_database):
     assert len(rows) == 2
 
 
-def test_update_database(
+def test_update_database_success(
     not_emulator, shared_database, shared_instance, database_operation_timeout
 ):
     old_protection = shared_database.enable_drop_protection
@@ -592,3 +592,12 @@ def test_update_database(
     # other test cases.
     shared_database.enable_drop_protection = old_protection
     shared_database.update(["enable_drop_protection"])
+
+def test_update_database_invalid(
+    not_emulator, shared_database
+):
+    shared_database.enable_drop_protection = True
+
+    # Empty `fields` is not supported.
+    with pytest.raises(exceptions.InvalidArgument):
+        shared_database.update([])
