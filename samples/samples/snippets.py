@@ -203,15 +203,15 @@ def update_database(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
 
     db = instance.database(database_id)
-    db.drop_protection_enabled = True
+    db.enable_drop_protection = True
 
-    operation = db.update()
+    operation = db.update(["enable_drop_protection"])
 
     print("Waiting for update operation for {} to complete...".format(
-      db.database_id))
+      db.name))
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Updated database {}.".format(db.database_id))
+    print("Updated database {}.".format(db.name))
 
 
 # [END spanner_update_database]

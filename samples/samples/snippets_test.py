@@ -159,11 +159,11 @@ def test_update_database(capsys, instance_id, sample_database):
         instance_id, sample_database.database_id
     )
     out, _ = capsys.readouterr()
-    assert "Updated database {}.".format(sample_database.database_id) in out
+    assert "Updated database {}.".format(sample_database.name) in out
 
     # Cleanup
-    sample_database.drop_protection_enabled = False
-    op = sample_database.update()
+    sample_database.enable_drop_protection = False
+    op = sample_database.update(["enable_drop_protection"])
     op.result()
 
 
