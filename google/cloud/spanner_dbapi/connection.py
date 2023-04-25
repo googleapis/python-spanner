@@ -83,7 +83,7 @@ class Connection:
         should end a that a new one should be started when the next statement is executed.
     """
 
-    def __init__(self, instance, database=None, read_only=False):
+    def __init__(self, instance, database, read_only=False):
         self._instance = instance
         self._database = database
         self._ddl_statements = []
@@ -242,8 +242,6 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.session.Session`
         :returns: Cloud Spanner session object ready to use.
         """
-        if self.database is None:
-            raise ValueError("Database needs to be passed for this operation")
         if not self._session:
             self._session = self.database._pool.get()
 
@@ -254,8 +252,6 @@ class Connection:
 
         The session will be returned into the sessions pool.
         """
-        if self.database is None:
-            raise ValueError("Database needs to be passed for this operation")
         self.database._pool.put(self._session)
         self._session = None
 
@@ -372,7 +368,7 @@ class Connection:
         if self.inside_transaction:
             self._transaction.rollback()
 
-        if self._own_pool and self.database:
+        if self._own_pool:
             self.database._pool.clear()
 
         self.is_closed = True
@@ -382,8 +378,6 @@ class Connection:
 
         This method is non-operational in autocommit mode.
         """
-        if self.database is None:
-            raise ValueError("Database needs to be passed for this operation")
         self._snapshot = None
 
         if self._autocommit:
@@ -426,8 +420,6 @@ class Connection:
 
     @check_not_closed
     def run_prior_DDL_statements(self):
-        if self.database is None:
-            raise ValueError("Database needs to be passed for this operation")
         if self._ddl_statements:
             ddl_statements = self._ddl_statements
             self._ddl_statements = []
@@ -482,8 +474,6 @@ class Connection:
         :raises: :class:`google.cloud.exceptions.NotFound`: if the linked instance
                   or database doesn't exist.
         """
-        if self.database is None:
-            raise ValueError("Database needs to be passed for this operation")
         with self.database.snapshot() as snapshot:
             result = list(snapshot.execute_sql("SELECT 1"))
             if result != [[1]]:
@@ -502,7 +492,7 @@ class Connection:
 
 def connect(
     instance_id,
-    database_id=None,
+    database_id,
     project=None,
     credentials=None,
     pool=None,
@@ -515,7 +505,7 @@ def connect(
     :param instance_id: The ID of the instance to connect to.
 
     :type database_id: str
-    :param database_id: (Optional) The ID of the database to connect to.
+    :param database_id: The ID of the database to connect to.
 
     :type project: str
     :param project: (Optional) The ID of the project which owns the
@@ -567,9 +557,7 @@ def connect(
             raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(
-        instance, instance.database(database_id, pool=pool) if database_id else None
-    )
+    conn = Connection(instance, instance.database(database_id, pool=pool))
     if pool is not None:
         conn._own_pool = False
 
