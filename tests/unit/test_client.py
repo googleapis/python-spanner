@@ -113,7 +113,7 @@ class TestClient(unittest.TestCase):
         if route_to_leader_enabled is not None:
             self.assertEqual(client.route_to_leader_enabled, route_to_leader_enabled)
         else:
-            self.assertTrue(client.route_to_leader_enabled)
+            self.assertFalse(client.route_to_leader_enabled)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     @mock.patch("warnings.warn")
