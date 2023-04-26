@@ -4,6 +4,49 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.32.0](https://github.com/googleapis/python-spanner/compare/v3.31.0...v3.32.0) (2023-04-25)
+
+
+### Features
+
+* Enable instance-level connection ([#931](https://github.com/googleapis/python-spanner/issues/931)) ([d6963e2](https://github.com/googleapis/python-spanner/commit/d6963e2142d880e94c6f3e9eb27ed1ac310bd1d0))
+
+## [3.31.0](https://github.com/googleapis/python-spanner/compare/v3.30.0...v3.31.0) (2023-04-12)
+
+
+### Features
+
+* Add databoost enabled property for batch transactions  ([#892](https://github.com/googleapis/python-spanner/issues/892)) ([ffb3915](https://github.com/googleapis/python-spanner/commit/ffb39158be5a551b698739c003ee6125a11c1c7a))
+
+
+### Bug Fixes
+
+* Set databoost false ([#928](https://github.com/googleapis/python-spanner/issues/928)) ([c9ed9d2](https://github.com/googleapis/python-spanner/commit/c9ed9d24d19594dfff57c979fa3bf68d84bbc3b5))
+
+## [3.30.0](https://github.com/googleapis/python-spanner/compare/v3.29.0...v3.30.0) (2023-03-28)
+
+
+### Features
+
+* Pass custom Client object to dbapi ([#911](https://github.com/googleapis/python-spanner/issues/911)) ([52b1a0a](https://github.com/googleapis/python-spanner/commit/52b1a0af0103a5b91aa5bf9ea1138319bdb90d79))
+
+## [3.29.0](https://github.com/googleapis/python-spanner/compare/v3.28.0...v3.29.0) (2023-03-23)
+
+
+### Features
+
+* Adding new fields for Serverless analytics ([#906](https://github.com/googleapis/python-spanner/issues/906)) ([2a5a636](https://github.com/googleapis/python-spanner/commit/2a5a636fc296ad0a7f86ace6a5f361db1e2ee26d))
+
+
+### Bug Fixes
+
+* Correcting the proto field Id for field data_boost_enabled ([#915](https://github.com/googleapis/python-spanner/issues/915)) ([428aa1e](https://github.com/googleapis/python-spanner/commit/428aa1e5e4458649033a5566dc3017d2fadbd2a0))
+
+
+### Documentation
+
+* Fix formatting of request arg in docstring ([#918](https://github.com/googleapis/python-spanner/issues/918)) ([c022bf8](https://github.com/googleapis/python-spanner/commit/c022bf859a3ace60c0a9ddb86896bc83f85e327f))
+
 ## [3.28.0](https://github.com/googleapis/python-spanner/compare/v3.27.1...v3.28.0) (2023-02-28)
 
 
