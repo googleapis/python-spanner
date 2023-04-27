@@ -1603,6 +1603,25 @@ class TestSnapshot(OpenTelemetryBase):
             attributes=BASE_ATTRIBUTES,
         )
 
+    def test_begin_w_retry(self):
+        from google.cloud.spanner_v1 import (
+            Transaction as TransactionPB,
+        )
+        from google.api_core.exceptions import InternalServerError
+
+        database = _Database()
+        api = database.spanner_api = self._make_spanner_api()
+        database.spanner_api.begin_transaction.side_effect = [
+            InternalServerError("Received unexpected EOS on DATA frame from server"),
+            TransactionPB(id=TXN_ID),
+        ]
+        timestamp = self._makeTimestamp()
+        session = _Session(database)
+        snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
+
+        snapshot.begin()
+        self.assertEqual(api.begin_transaction.call_count, 2)
+
     def test_begin_ok_exact_staleness(self):
         from google.protobuf.duration_pb2 import Duration
         from google.cloud.spanner_v1 import (

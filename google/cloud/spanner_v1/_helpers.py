@@ -299,9 +299,7 @@ def _retry(
     func,
     retry_count=5,
     delay=2,
-    allowed_exceptions={
-        Exception: None,
-    },
+    allowed_exceptions=None,
 ):
     """
     Retry a function with a specified number of retries, delay between retries, and list of allowed exceptions.
@@ -315,15 +313,22 @@ def _retry(
     Returns:
         The result of the function if it is successful, or raises the last exception if all retries fail.
     """
-    for retries in range(retry_count):
+    retries = 0
+    while retries <= retry_count:
         try:
             result = func()
         except Exception as exc:
-            if exc in allowed_exceptions and retries < retry_count:
-                if allowed_exceptions[exc] is not None:
-                    allowed_exceptions[exc](exc)
+            if (
+                allowed_exceptions is None or exc.__class__ in allowed_exceptions
+            ) and retries < retry_count:
+                if (
+                    allowed_exceptions is not None
+                    and allowed_exceptions[exc.__class__] is not None
+                ):
+                    allowed_exceptions[exc.__class__](exc)
                 time.sleep(delay)
                 delay = delay * 2
+                retries = retries + 1
             else:
                 raise exc
         else:
@@ -341,4 +346,4 @@ def _check_rst_stream_error(exc):
         ),
     )
     if not resumable_error:
-        raise exc
+        raise

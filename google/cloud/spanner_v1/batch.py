@@ -184,7 +184,7 @@ class Batch(_BatchBase):
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             method = functools.partial(
-                api.api.commit,
+                api.commit,
                 request=request,
                 metadata=metadata,
             )
