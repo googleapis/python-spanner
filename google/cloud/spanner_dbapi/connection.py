@@ -547,27 +547,16 @@ def connect(
 
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
-        (Optional) Default False. Set route_to_leader_enabled as False to
-        Disable leader aware routing. Disabling leader aware routing would
-        route all requests in RW/PDML transactions to any region.
+        (Optional) Default False. Set route_to_leader_enabled as True to
+                   Enable leader aware routing. Enabling leader aware routing
+                   would route all requests in RW/PDML transactions to the
+                   leader region.
 
 
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
-    client_info = ClientInfo(
-        user_agent=user_agent or DEFAULT_USER_AGENT,
-        python_version=PY_VERSION,
-        client_library_version=spanner.__version__,
-    )
-
-    if isinstance(credentials, str):
-        client = spanner.Client.from_service_account_json(
-            credentials,
-            project=project,
-            client_info=client_info,
-            route_to_leader_enabled=route_to_leader_enabled,
     if client is None:
         client_info = ClientInfo(
             user_agent=user_agent or DEFAULT_USER_AGENT,
@@ -576,19 +565,19 @@ def connect(
         )
         if isinstance(credentials, str):
             client = spanner.Client.from_service_account_json(
-                credentials, project=project, client_info=client_info
+                credentials,
+                project=project,
+                client_info=client_info,
+                route_to_leader_enabled=False,
             )
         else:
             client = spanner.Client(
-                project=project, credentials=credentials, client_info=client_info
+                project=project,
+                credentials=credentials,
+                client_info=client_info,
+                route_to_leader_enabled=False,
             )
     else:
-        client = spanner.Client(
-            project=project,
-            credentials=credentials,
-            client_info=client_info,
-            route_to_leader_enabled=route_to_leader_enabled,
-        )
         if project is not None and client.project != project:
             raise ValueError("project in url does not match client object project")
 

@@ -116,9 +116,10 @@ class Client(ClientWithProject):
 
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
-        (Optional) Default False. Set route_to_leader_enabled as False to
-        Disable leader aware routing. Disabling leader aware routing would
-        route all requests in RW/PDML transactions to any region.
+        (Optional) Default False. Set route_to_leader_enabled as True to
+                   Enable leader aware routing. Enabling leader aware routing
+                   would route all requests in RW/PDML transactions to the
+                   leader region.
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
