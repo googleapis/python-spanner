@@ -20,6 +20,7 @@ import grpc
 import logging
 import re
 import threading
+import logging
 
 import google.auth.credentials
 from google.api_core.retry import Retry
@@ -137,7 +138,9 @@ class Database(object):
         instance,
         ddl_statements=(),
         pool=None,
+        logging_enabled=False,
         logger=None,
+        close_inactive_transactions=True,
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
@@ -154,7 +157,9 @@ class Database(object):
         self._encryption_info = None
         self._default_leader = None
         self.log_commit_stats = False
+        self._logging_enabled = logging_enabled
         self._logger = logger
+        self._close_inactive_transactions = close_inactive_transactions
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
@@ -331,12 +336,20 @@ class Database(object):
         :returns: a str with the name of the database role.
         """
         return self._database_role
+    
+    @property
+    def logging_enabled(self):
+        """Test if logging is enabled. Default: False.
+        :rtype: bool
+        :returns: True if logging is enabled, else False.
+        """
+        return self._logging_enabled
 
     @property
     def logger(self):
         """Logger used by the database.
 
-        The default logger will log commit stats at the log level INFO using
+        The default logger will log at the log level INFO using
         `sys.stderr`.
 
         :rtype: :class:`logging.Logger` or `None`
@@ -351,6 +364,14 @@ class Database(object):
             self._logger.addHandler(ch)
         return self._logger
 
+    @property
+    def close_inactive_transactions(self):
+        """Test if closing inactive transactions is enabled. Default: True.
+        :rtype: bool
+        :returns: True if closing inactive transactions is enabled, else False.
+        """
+        return self._close_inactive_transactions
+    
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
@@ -575,7 +596,7 @@ class Database(object):
             )
 
         def execute_pdml():
-            with SessionCheckout(self._pool) as session:
+            with SessionCheckout(self._pool, isLongRunning=True) as session:
 
                 txn = api.begin_transaction(
                     session=session.name, options=txn_options, metadata=metadata
@@ -966,6 +987,7 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
+            logging.debug("Session details {}".format(self._session.checkout_time))
             self._database._pool.put(self._session)
 
 

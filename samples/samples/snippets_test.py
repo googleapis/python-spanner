@@ -392,6 +392,12 @@ def test_read_only_transaction(capsys, instance_id, sample_database):
     # Snippet does two reads, so entry should be listed twice
     assert out.count("SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk") == 2
 
+def test_jsonTest(capsys):
+    snippets.jsonTest()
+    out, _ = capsys.readouterr()
+    # Snippet does two reads, so entry should be listed twice
+    #assert out.count("SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk") == 2
+
 
 @pytest.mark.dependency(name="add_timestamp_column", depends=["insert_data"])
 def test_add_timestamp_column(capsys, instance_id, sample_database):

@@ -15,6 +15,7 @@
 
 from functools import total_ordering
 import unittest
+from time import sleep
 
 import mock
 
@@ -131,6 +132,19 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertIsNone(checkout._session)
         self.assertEqual(checkout._kwargs, {"foo": "bar"})
 
+    def test_startCleaningLongRunningSessions(self):
+        pool = self._make_one()
+        import pdb
+        pdb.set_trace()
+        pool.startCleaningLongRunningSessions()
+        self.assertEqual(pool._cleanup_task_ongoing, True)
+        sleep(20)
+        pdb.set_trace()
+
+    def test_stopCleaningLongRunningSessions(self):
+        pool = self._make_one
+        pool.stopCleaningLongRunningSessions()
+        self.assertTrue(pool._stop_cleanup_transactions_event.is_set())
 
 class TestFixedSizePool(unittest.TestCase):
     def _getTargetClass(self):
@@ -778,7 +792,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         database = _Database("name")
         session = _Session(database)
         txn = session.transaction()
-
+        pool.bind(database)
         pool.put(session)
 
         self.assertEqual(len(session_queue._items), 1)
@@ -792,8 +806,10 @@ class TestTransactionPingingPool(unittest.TestCase):
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
         pending = pool._pending_sessions = _Queue()
+        
         database = _Database("name")
         session = _Session(database)
+        database._sessions.extend([session])
         committed = session.transaction()
         committed.committed = True
 
@@ -958,6 +974,8 @@ class _Database(object):
         self._database_role = None
         self.database_id = name
         self._route_to_leader_enabled = True
+        self.close_inactive_transactions = True
+        self.logging_enabled = False
 
         def mock_batch_create_sessions(
             request=None,

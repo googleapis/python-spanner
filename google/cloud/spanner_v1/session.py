@@ -94,6 +94,38 @@ class Session(object):
         :returns: the labels dict (empty if no labels were assigned.
         """
         return self._labels
+   
+    @property
+    def checkout_time(self):
+        """Get Check out time for session
+        :rtype: time
+        :returns: the checkedout time for a session if assigned.
+        """
+        return self._checkout_time
+    
+    @checkout_time.setter
+    def checkout_time(self, value):
+        """Set Check out time for session
+        :type value: time
+        :param value: Checkout time
+        """
+        self._checkout_time = value
+
+    @property
+    def long_running(self):
+        """Test if the session is used for long running transaction.
+        :rtype: bool
+        :returns: True if session is long running, else False.
+        """
+        return self._long_running
+    
+    @long_running.setter
+    def long_running(self, value):
+        """Sets if the session is used for long running transaction.
+        :type value: bool
+        :param value: bool
+        """
+        self._long_running = value
 
     @property
     def name(self):

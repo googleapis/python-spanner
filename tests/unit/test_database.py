@@ -2703,7 +2703,7 @@ class _Pool(object):
     def bind(self, database):
         self._bound = database
 
-    def get(self):
+    def get(self, isLongRunning=False):
         session, self._session = self._session, None
         return session
 
