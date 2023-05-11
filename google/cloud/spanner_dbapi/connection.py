@@ -508,7 +508,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
-    route_to_leader_enabled=False,
+    route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -547,7 +547,7 @@ def connect(
 
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
-        (Optional) Default False. Set route_to_leader_enabled as True to
+        (Optional) Default True. Set route_to_leader_enabled as True to
                    Enable leader aware routing. Enabling leader aware routing
                    would route all requests in RW/PDML transactions to the
                    leader region.
@@ -568,14 +568,14 @@ def connect(
                 credentials,
                 project=project,
                 client_info=client_info,
-                route_to_leader_enabled=False,
+                route_to_leader_enabled=True,
             )
         else:
             client = spanner.Client(
                 project=project,
                 credentials=credentials,
                 client_info=client_info,
-                route_to_leader_enabled=False,
+                route_to_leader_enabled=True,
             )
     else:
         if project is not None and client.project != project:
