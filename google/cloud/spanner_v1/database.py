@@ -488,6 +488,7 @@ class Database(object):
         self._default_leader = response.default_leader
         self._database_dialect = response.database_dialect
         self._enable_drop_protection = response.enable_drop_protection
+        self._reconciling = response.reconciling
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.

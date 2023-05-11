@@ -747,6 +747,8 @@ class TestDatabase(_BaseTest):
             encryption_config=encryption_config,
             encryption_info=encryption_info,
             default_leader=default_leader,
+            reconciling=True,
+            enable_drop_protection=True
         )
         api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -763,6 +765,8 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._encryption_config, encryption_config)
         self.assertEqual(database._encryption_info, encryption_info)
         self.assertEqual(database._default_leader, default_leader)
+        self.assertEqual(database._reconciling, True)
+        self.assertEqual(database._enable_drop_protection, True)
 
         api.get_database_ddl.assert_called_once_with(
             database=self.DATABASE_NAME,
