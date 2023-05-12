@@ -18,6 +18,7 @@ import datetime
 import mock
 import unittest
 import warnings
+import pytest
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -43,9 +44,10 @@ class TestConnection(unittest.TestCase):
     def _make_connection(self, **kwargs):
         from google.cloud.spanner_dbapi import Connection
         from google.cloud.spanner_v1.instance import Instance
+        from google.cloud.spanner_v1.client import Client
 
         # We don't need a real Client object to test the constructor
-        instance = Instance(INSTANCE, client=None)
+        instance = Instance(INSTANCE, client=Client)
         database = instance.database(DATABASE)
         return Connection(instance, database, **kwargs)
 
@@ -168,6 +170,14 @@ class TestConnection(unittest.TestCase):
         connection._session_checkout()
         self.assertEqual(connection._session, "db_session")
 
+    def test__session_checkout_database_error(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE)
+
+        with pytest.raises(ValueError):
+            connection._session_checkout()
+
     @mock.patch("google.cloud.spanner_v1.database.Database")
     def test__release_session(self, mock_database):
         from google.cloud.spanner_dbapi import Connection
@@ -180,6 +190,13 @@ class TestConnection(unittest.TestCase):
         connection._release_session()
         pool.put.assert_called_once_with("session")
         self.assertIsNone(connection._session)
+
+    def test__release_session_database_error(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE)
+        with pytest.raises(ValueError):
+            connection._release_session()
 
     def test_transaction_checkout(self):
         from google.cloud.spanner_dbapi import Connection
@@ -293,6 +310,14 @@ class TestConnection(unittest.TestCase):
             AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2
         )
 
+    def test_commit_database_error(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE)
+
+        with pytest.raises(ValueError):
+            connection.commit()
+
     @mock.patch.object(warnings, "warn")
     def test_rollback(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
@@ -344,6 +369,13 @@ class TestConnection(unittest.TestCase):
         connection.is_closed = True
 
         with self.assertRaises(InterfaceError):
+            connection.run_prior_DDL_statements()
+
+    def test_run_prior_DDL_statements_database_error(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE)
+        with pytest.raises(ValueError):
             connection.run_prior_DDL_statements()
 
     def test_as_context_manager(self):
@@ -765,6 +797,14 @@ class TestConnection(unittest.TestCase):
 
         snapshot_obj.execute_sql.assert_called_once_with("SELECT 1")
 
+    def test_validate_database_error(self):
+        from google.cloud.spanner_dbapi import Connection
+
+        connection = Connection(INSTANCE)
+
+        with pytest.raises(ValueError):
+            connection.validate()
+
     def test_validate_closed(self):
         from google.cloud.spanner_dbapi.exceptions import InterfaceError
 
@@ -915,7 +955,56 @@ class TestConnection(unittest.TestCase):
             sql, params, param_types=param_types, request_options=None
         )
 
+    def test_custom_client_connection(self):
+        from google.cloud.spanner_dbapi import connect
+
+        client = _Client()
+        connection = connect("test-instance", "test-database", client=client)
+        self.assertTrue(connection.instance._client == client)
+
+    def test_invalid_custom_client_connection(self):
+        from google.cloud.spanner_dbapi import connect
+
+        client = _Client()
+        with pytest.raises(ValueError):
+            connect(
+                "test-instance",
+                "test-database",
+                project="invalid_project",
+                client=client,
+            )
+
+    def test_connection_wo_database(self):
+        from google.cloud.spanner_dbapi import connect
+
+        connection = connect("test-instance")
+        self.assertTrue(connection.database is None)
+
 
 def exit_ctx_func(self, exc_type, exc_value, traceback):
     """Context __exit__ method mock."""
     pass
+
+
+class _Client(object):
+    def __init__(self, project="project_id"):
+        self.project = project
+        self.project_name = "projects/" + self.project
+
+    def instance(self, instance_id="instance_id"):
+        return _Instance(name=instance_id, client=self)
+
+
+class _Instance(object):
+    def __init__(self, name="instance_id", client=None):
+        self.name = name
+        self._client = client
+
+    def database(self, database_id="database_id", pool=None):
+        return _Database(database_id, pool)
+
+
+class _Database(object):
+    def __init__(self, database_id="database_id", pool=None):
+        self.name = database_id
+        self.pool = pool
