@@ -114,6 +114,7 @@ class TestDatabase(_BaseTest):
         # BurstyPool does not create sessions during 'bind()'.
         self.assertTrue(database._pool._sessions.empty())
         self.assertIsNone(database.database_role)
+        self.assertTrue(database._route_to_leader_enabled, True)
 
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -133,6 +134,16 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertIs(database.database_role, self.DATABASE_ROLE)
+
+    def test_ctor_w_route_to_leader_disbled(self):
+        client = _Client(route_to_leader_enabled=False)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(
+            self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertFalse(database._route_to_leader_enabled)
 
     def test_ctor_w_ddl_statements_non_string(self):
 
@@ -449,8 +460,9 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database1, database2)
 
     def test___eq__type_differ(self):
+        instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database1 = self._make_one(self.DATABASE_ID, None, pool=pool)
+        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool)
         database2 = object()
         self.assertNotEqual(database1, database2)
 
@@ -463,9 +475,12 @@ class TestDatabase(_BaseTest):
         self.assertFalse(comparison_val)
 
     def test___ne__(self):
+        instance1, instance2 = _Instance(self.INSTANCE_NAME + "1"), _Instance(
+            self.INSTANCE_NAME + "2"
+        )
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one("database_id1", "instance1", pool=pool1)
-        database2 = self._make_one("database_id2", "instance2", pool=pool2)
+        database1 = self._make_one("database_id1", instance1, pool=pool1)
+        database2 = self._make_one("database_id2", instance2, pool=pool2)
         self.assertNotEqual(database1, database2)
 
     def test_create_grpc_error(self):
@@ -996,7 +1011,10 @@ class TestDatabase(_BaseTest):
         api.begin_transaction.assert_called_with(
             session=session.name,
             options=txn_options,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
         if retried:
             self.assertEqual(api.begin_transaction.call_count, 2)
@@ -1034,7 +1052,10 @@ class TestDatabase(_BaseTest):
 
         api.execute_streaming_sql.assert_any_call(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
         if retried:
             expected_retry_transaction = TransactionSelector(
@@ -1051,7 +1072,10 @@ class TestDatabase(_BaseTest):
             )
             api.execute_streaming_sql.assert_called_with(
                 request=expected_request,
-                metadata=[("google-cloud-resource-prefix", database.name)],
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                ],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 2)
         else:
@@ -1182,7 +1206,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
 
         batch_txn = database.batch_snapshot()
         self.assertIsInstance(batch_txn, BatchSnapshot)
@@ -1193,7 +1218,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_read_timestamp(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         timestamp = self._make_timestamp()
 
         batch_txn = database.batch_snapshot(read_timestamp=timestamp)
@@ -1205,7 +1231,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_exact_staleness(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         duration = self._make_duration()
 
         batch_txn = database.batch_snapshot(exact_staleness=duration)
@@ -1662,7 +1689,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
     def test_context_mgr_w_commit_stats_success(self):
@@ -1706,7 +1736,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         database.logger.info.assert_called_once_with(
@@ -1747,7 +1780,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         database.logger.info.assert_not_called()
@@ -2114,6 +2150,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": "",
+            "data_boost_enabled": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2155,6 +2192,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": "",
+            "data_boost_enabled": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2195,6 +2233,7 @@ class TestBatchSnapshot(_BaseTest):
             "columns": self.COLUMNS,
             "keyset": {"all": True},
             "index": self.INDEX,
+            "data_boost_enabled": False,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2207,6 +2246,47 @@ class TestBatchSnapshot(_BaseTest):
             keyset=keyset,
             index=self.INDEX,
             partition_size_bytes=size,
+            max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+        )
+
+    def test_generate_read_batches_w_data_boost_enabled(self):
+        data_boost_enabled = True
+        keyset = self._make_keyset()
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_read.return_value = self.TOKENS
+
+        batches = list(
+            batch_txn.generate_read_batches(
+                self.TABLE,
+                self.COLUMNS,
+                keyset,
+                index=self.INDEX,
+                data_boost_enabled=data_boost_enabled,
+            )
+        )
+
+        expected_read = {
+            "table": self.TABLE,
+            "columns": self.COLUMNS,
+            "keyset": {"all": True},
+            "index": self.INDEX,
+            "data_boost_enabled": True,
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["read"], expected_read)
+
+        snapshot.partition_read.assert_called_once_with(
+            table=self.TABLE,
+            columns=self.COLUMNS,
+            keyset=keyset,
+            index=self.INDEX,
+            partition_size_bytes=None,
             max_partitions=None,
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
@@ -2288,7 +2368,11 @@ class TestBatchSnapshot(_BaseTest):
             batch_txn.generate_query_batches(sql, max_partitions=max_partitions)
         )
 
-        expected_query = {"sql": sql, "query_options": client._query_options}
+        expected_query = {
+            "sql": sql,
+            "data_boost_enabled": False,
+            "query_options": client._query_options,
+        }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
             self.assertEqual(batch["partition"], token)
@@ -2326,6 +2410,7 @@ class TestBatchSnapshot(_BaseTest):
 
         expected_query = {
             "sql": sql,
+            "data_boost_enabled": False,
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
@@ -2372,6 +2457,7 @@ class TestBatchSnapshot(_BaseTest):
 
         expected_query = {
             "sql": sql,
+            "data_boost_enabled": False,
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
@@ -2389,6 +2475,37 @@ class TestBatchSnapshot(_BaseTest):
             max_partitions=None,
             retry=retry,
             timeout=2.0,
+        )
+
+    def test_generate_query_batches_w_data_boost_enabled(self):
+        sql = "SELECT COUNT(*) FROM table_name"
+        client = _Client(self.PROJECT_ID)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = _Database(self.DATABASE_NAME, instance=instance)
+        batch_txn = self._make_one(database)
+        snapshot = batch_txn._snapshot = self._make_snapshot()
+        snapshot.partition_query.return_value = self.TOKENS
+
+        batches = list(batch_txn.generate_query_batches(sql, data_boost_enabled=True))
+
+        expected_query = {
+            "sql": sql,
+            "data_boost_enabled": True,
+            "query_options": client._query_options,
+        }
+        self.assertEqual(len(batches), len(self.TOKENS))
+        for batch, token in zip(batches, self.TOKENS):
+            self.assertEqual(batch["partition"], token)
+            self.assertEqual(batch["query"], expected_query)
+
+        snapshot.partition_query.assert_called_once_with(
+            sql=sql,
+            params=None,
+            param_types=None,
+            partition_size_bytes=None,
+            max_partitions=None,
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
     def test_process_query_batch(self):
@@ -2541,7 +2658,7 @@ def _make_instance_api():
 
 
 class _Client(object):
-    def __init__(self, project=TestDatabase.PROJECT_ID):
+    def __init__(self, project=TestDatabase.PROJECT_ID, route_to_leader_enabled=True):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self.project = project
@@ -2551,10 +2668,11 @@ class _Client(object):
         self._client_info = mock.Mock()
         self._client_options = mock.Mock()
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.route_to_leader_enabled = route_to_leader_enabled
 
 
 class _Instance(object):
-    def __init__(self, name, client=None, emulator_host=None):
+    def __init__(self, name, client=_Client(), emulator_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
@@ -2568,6 +2686,7 @@ class _Backup(object):
 
 class _Database(object):
     log_commit_stats = False
+    _route_to_leader_enabled = True
 
     def __init__(self, name, instance=None):
         self.name = name
