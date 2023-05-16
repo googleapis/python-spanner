@@ -593,9 +593,8 @@ def test_update_database_success(
     shared_database.enable_drop_protection = old_protection
     shared_database.update(["enable_drop_protection"])
 
-def test_update_database_invalid(
-    not_emulator, shared_database
-):
+
+def test_update_database_invalid(not_emulator, shared_database):
     shared_database.enable_drop_protection = True
 
     # Empty `fields` is not supported.

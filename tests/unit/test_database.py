@@ -763,7 +763,7 @@ class TestDatabase(_BaseTest):
             encryption_info=encryption_info,
             default_leader=default_leader,
             reconciling=True,
-            enable_drop_protection=True
+            enable_drop_protection=True,
         )
         api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
