@@ -358,4 +358,3 @@ def _metadata_with_leader_aware_routing(value, **kw):
         List[Tuple[str, str]]: RPC metadata with leader aware routing header
     """
     return ("x-goog-spanner-route-to-leader", str(value).lower())
-

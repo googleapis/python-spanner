@@ -672,7 +672,6 @@ class Test_metadata_with_prefix(unittest.TestCase):
         self.assertEqual(metadata, [("google-cloud-resource-prefix", prefix)])
 
 
-
 class Test_retry(unittest.TestCase):
     class test_class:
         def test_fxn(self):
@@ -748,6 +747,7 @@ class Test_retry(unittest.TestCase):
         )
 
         self.assertEqual(test_api.test_fxn.call_count, 3)
+
 
 class Test_metadata_with_leader_aware_routing(unittest.TestCase):
     def _call_fut(self, *args, **kw):
