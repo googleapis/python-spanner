@@ -4,6 +4,32 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.35.0](https://github.com/googleapis/python-spanner/compare/v3.34.0...v3.35.0) (2023-05-16)
+
+
+### Features
+
+* Add support for updateDatabase in Cloud Spanner ([#914](https://github.com/googleapis/python-spanner/issues/914)) ([6c7ad29](https://github.com/googleapis/python-spanner/commit/6c7ad2921d2bf886b538f7e24e86397c188620c8))
+
+## [3.34.0](https://github.com/googleapis/python-spanner/compare/v3.33.0...v3.34.0) (2023-05-16)
+
+
+### Features
+
+* Add support for UpdateDatabase in Cloud Spanner ([#941](https://github.com/googleapis/python-spanner/issues/941)) ([38fb890](https://github.com/googleapis/python-spanner/commit/38fb890e34762f104ca97e612e62d4f59e752133))
+
+
+### Bug Fixes
+
+* Upgrade version of sqlparse ([#943](https://github.com/googleapis/python-spanner/issues/943)) ([df57ce6](https://github.com/googleapis/python-spanner/commit/df57ce6f00b6a992024c9f1bd6948905ae1e5cf4))
+
+## [3.33.0](https://github.com/googleapis/python-spanner/compare/v3.32.0...v3.33.0) (2023-04-27)
+
+
+### Features
+
+* Leader Aware Routing ([#899](https://github.com/googleapis/python-spanner/issues/899)) ([f9fefad](https://github.com/googleapis/python-spanner/commit/f9fefad6ee2e16804d109d8bfbb613062f57ea65))
+
 ## [3.32.0](https://github.com/googleapis/python-spanner/compare/v3.31.0...v3.32.0) (2023-04-25)
 
 

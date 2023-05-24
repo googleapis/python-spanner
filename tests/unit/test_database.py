@@ -17,8 +17,10 @@ import unittest
 
 import mock
 from google.api_core import gapic_v1
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
+from google.protobuf.field_mask_pb2 import FieldMask
 
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -114,6 +116,7 @@ class TestDatabase(_BaseTest):
         # BurstyPool does not create sessions during 'bind()'.
         self.assertTrue(database._pool._sessions.empty())
         self.assertIsNone(database.database_role)
+        self.assertTrue(database._route_to_leader_enabled, True)
 
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -133,6 +136,16 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertIs(database.database_role, self.DATABASE_ROLE)
+
+    def test_ctor_w_route_to_leader_disbled(self):
+        client = _Client(route_to_leader_enabled=False)
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(
+            self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertFalse(database._route_to_leader_enabled)
 
     def test_ctor_w_ddl_statements_non_string(self):
 
@@ -449,8 +462,9 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database1, database2)
 
     def test___eq__type_differ(self):
+        instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database1 = self._make_one(self.DATABASE_ID, None, pool=pool)
+        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool)
         database2 = object()
         self.assertNotEqual(database1, database2)
 
@@ -463,9 +477,12 @@ class TestDatabase(_BaseTest):
         self.assertFalse(comparison_val)
 
     def test___ne__(self):
+        instance1, instance2 = _Instance(self.INSTANCE_NAME + "1"), _Instance(
+            self.INSTANCE_NAME + "2"
+        )
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one("database_id1", "instance1", pool=pool1)
-        database2 = self._make_one("database_id2", "instance2", pool=pool2)
+        database1 = self._make_one("database_id1", instance1, pool=pool1)
+        database2 = self._make_one("database_id2", instance2, pool=pool2)
         self.assertNotEqual(database1, database2)
 
     def test_create_grpc_error(self):
@@ -745,6 +762,8 @@ class TestDatabase(_BaseTest):
             encryption_config=encryption_config,
             encryption_info=encryption_info,
             default_leader=default_leader,
+            reconciling=True,
+            enable_drop_protection=True,
         )
         api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -761,6 +780,8 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._encryption_config, encryption_config)
         self.assertEqual(database._encryption_info, encryption_info)
         self.assertEqual(database._default_leader, default_leader)
+        self.assertEqual(database._reconciling, True)
+        self.assertEqual(database._enable_drop_protection, True)
 
         api.get_database_ddl.assert_called_once_with(
             database=self.DATABASE_NAME,
@@ -874,6 +895,32 @@ class TestDatabase(_BaseTest):
 
         api.update_database_ddl.assert_called_once_with(
             request=expected_request,
+            metadata=[("google-cloud-resource-prefix", database.name)],
+        )
+
+    def test_update_success(self):
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.update_database.return_value = op_future
+
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = _Pool()
+        database = self._make_one(
+            self.DATABASE_ID, instance, enable_drop_protection=True, pool=pool
+        )
+
+        future = database.update(["enable_drop_protection"])
+
+        self.assertIs(future, op_future)
+
+        expected_database = DatabasePB(name=database.name, enable_drop_protection=True)
+
+        field_mask = FieldMask(paths=["enable_drop_protection"])
+
+        api.update_database.assert_called_once_with(
+            database=expected_database,
+            update_mask=field_mask,
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
@@ -996,7 +1043,10 @@ class TestDatabase(_BaseTest):
         api.begin_transaction.assert_called_with(
             session=session.name,
             options=txn_options,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
         if retried:
             self.assertEqual(api.begin_transaction.call_count, 2)
@@ -1034,7 +1084,10 @@ class TestDatabase(_BaseTest):
 
         api.execute_streaming_sql.assert_any_call(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
         if retried:
             expected_retry_transaction = TransactionSelector(
@@ -1051,7 +1104,10 @@ class TestDatabase(_BaseTest):
             )
             api.execute_streaming_sql.assert_called_with(
                 request=expected_request,
-                metadata=[("google-cloud-resource-prefix", database.name)],
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                ],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 2)
         else:
@@ -1182,7 +1238,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
 
         batch_txn = database.batch_snapshot()
         self.assertIsInstance(batch_txn, BatchSnapshot)
@@ -1193,7 +1250,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_read_timestamp(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         timestamp = self._make_timestamp()
 
         batch_txn = database.batch_snapshot(read_timestamp=timestamp)
@@ -1205,7 +1263,8 @@ class TestDatabase(_BaseTest):
     def test_batch_snapshot_w_exact_staleness(self):
         from google.cloud.spanner_v1.database import BatchSnapshot
 
-        database = self._make_one(self.DATABASE_ID, instance=object(), pool=_Pool())
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
         duration = self._make_duration()
 
         batch_txn = database.batch_snapshot(exact_staleness=duration)
@@ -1662,7 +1721,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
     def test_context_mgr_w_commit_stats_success(self):
@@ -1706,7 +1768,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         database.logger.info.assert_called_once_with(
@@ -1747,7 +1812,10 @@ class TestBatchCheckout(_BaseTest):
         )
         api.commit.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         database.logger.info.assert_not_called()
@@ -2622,7 +2690,7 @@ def _make_instance_api():
 
 
 class _Client(object):
-    def __init__(self, project=TestDatabase.PROJECT_ID):
+    def __init__(self, project=TestDatabase.PROJECT_ID, route_to_leader_enabled=True):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self.project = project
@@ -2632,10 +2700,11 @@ class _Client(object):
         self._client_info = mock.Mock()
         self._client_options = mock.Mock()
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.route_to_leader_enabled = route_to_leader_enabled
 
 
 class _Instance(object):
-    def __init__(self, name, client=None, emulator_host=None):
+    def __init__(self, name, client=_Client(), emulator_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
@@ -2649,6 +2718,7 @@ class _Backup(object):
 
 class _Database(object):
     log_commit_stats = False
+    _route_to_leader_enabled = True
 
     def __init__(self, name, instance=None):
         self.name = name

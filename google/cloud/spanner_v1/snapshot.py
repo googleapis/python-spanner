@@ -31,7 +31,10 @@ from google.api_core.exceptions import InvalidArgument
 from google.api_core import gapic_v1
 from google.cloud.spanner_v1._helpers import _make_value_pb
 from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+)
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
@@ -237,6 +240,10 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
 
         if request_options is None:
             request_options = RequestOptions()
@@ -246,7 +253,7 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        else:
+        elif self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
 
         request = ReadRequest(
@@ -393,6 +400,10 @@ class _SnapshotBase(_SessionWrapper):
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
 
         api = database.spanner_api
 
@@ -408,7 +419,7 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        else:
+        elif self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
 
         request = ExecuteSqlRequest(
@@ -529,6 +540,10 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         transaction = self._make_txn_selector()
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
@@ -628,6 +643,10 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         transaction = self._make_txn_selector()
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
@@ -778,6 +797,10 @@ class Snapshot(_SnapshotBase):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                (_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
+            )
         txn_selector = self._make_txn_selector()
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             method = functools.partial(

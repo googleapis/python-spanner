@@ -346,3 +346,16 @@ def _check_rst_stream_error(exc):
     )
     if not resumable_error:
         raise
+
+
+def _metadata_with_leader_aware_routing(value, **kw):
+    """Create RPC metadata containing a leader aware routing header
+
+    Args:
+        value (bool): header value
+
+    Returns:
+        List[Tuple[str, str]]: RPC metadata with leader aware routing header
+    """
+    return ("x-goog-spanner-route-to-leader", str(value).lower())
+
