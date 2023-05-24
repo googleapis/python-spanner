@@ -700,7 +700,7 @@ class Test_retry(unittest.TestCase):
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
-            InternalServerError("testing"),
+            NotFound("testing"),
             InternalServerError("testing"),
             True,
         ]
@@ -710,6 +710,8 @@ class Test_retry(unittest.TestCase):
                 functools.partial(test_api.test_fxn),
                 allowed_exceptions={NotFound: None},
             )
+
+        self.assertEqual(test_api.test_fxn.call_count, 2)
 
     def test_retry_count(self):
         from google.api_core.exceptions import InternalServerError
@@ -724,6 +726,8 @@ class Test_retry(unittest.TestCase):
 
         with self.assertRaises(InternalServerError):
             _retry(functools.partial(test_api.test_fxn), retry_count=1)
+
+        self.assertEqual(test_api.test_fxn.call_count, 2)
 
     def test_check_rst_stream_error(self):
         from google.api_core.exceptions import InternalServerError

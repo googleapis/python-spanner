@@ -309,6 +309,7 @@ def _retry(
         retry_count: The maximum number of times to retry the function.
         delay: The delay in seconds between retries.
         allowed_exceptions: A tuple of exceptions that are allowed to occur without triggering a retry.
+                            Passing allowed_exceptions as None will lead to retrying for all exceptions.
 
     Returns:
         The result of the function if it is successful, or raises the last exception if all retries fail.
@@ -316,7 +317,7 @@ def _retry(
     retries = 0
     while retries <= retry_count:
         try:
-            result = func()
+            return func()
         except Exception as exc:
             if (
                 allowed_exceptions is None or exc.__class__ in allowed_exceptions
@@ -331,8 +332,6 @@ def _retry(
                 retries = retries + 1
             else:
                 raise exc
-        else:
-            return result
 
 
 def _check_rst_stream_error(exc):

@@ -1152,6 +1152,40 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
+    def test_partition_read_w_retry(self):
+        from google.cloud.spanner_v1.keyset import KeySet
+        from google.api_core.exceptions import InternalServerError
+        from google.cloud.spanner_v1 import Partition
+        from google.cloud.spanner_v1 import PartitionResponse
+        from google.cloud.spanner_v1 import Transaction
+
+        keyset = KeySet(all_=True)
+        database = _Database()
+        api = database.spanner_api = self._make_spanner_api()
+        new_txn_id = b"ABECAB91"
+        token_1 = b"FACE0FFF"
+        token_2 = b"BADE8CAF"
+        response = PartitionResponse(
+            partitions=[
+                Partition(partition_token=token_1),
+                Partition(partition_token=token_2),
+            ],
+            transaction=Transaction(id=new_txn_id),
+        )
+        database.spanner_api.partition_read.side_effect = [
+            InternalServerError("Received unexpected EOS on DATA frame from server"),
+            response,
+        ]
+
+        session = _Session(database)
+        derived = self._makeDerived(session)
+        derived._multi_use = True
+        derived._transaction_id = TXN_ID
+
+        list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
+
+        self.assertEqual(api.partition_read.call_count, 2)
+
     def test_partition_read_ok_w_index_no_options(self):
         self._partition_read_helper(multi_use=True, w_txn=True, index="index")
 
