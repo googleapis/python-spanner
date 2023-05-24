@@ -22,6 +22,8 @@ from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _retry,
+    _check_rst_stream_error,
 )
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
@@ -33,8 +35,6 @@ from google.cloud.spanner_v1.batch import _BatchBase
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
-from google.cloud.spanner_v1._helpers import _retry
-from google.cloud.spanner_v1._helpers import _check_rst_stream_error
 from google.api_core.exceptions import InternalServerError
 
 

@@ -29,15 +29,15 @@ from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 from google.api_core.exceptions import InvalidArgument
 from google.api_core import gapic_v1
-from google.cloud.spanner_v1._helpers import _make_value_pb
-from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    _make_value_pb,
+    _merge_query_options,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _retry,
+    _check_rst_stream_error,
+    _SessionWrapper,
 )
-from google.cloud.spanner_v1._helpers import _SessionWrapper
-from google.cloud.spanner_v1._helpers import _retry
-from google.cloud.spanner_v1._helpers import _check_rst_stream_error
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
