@@ -413,12 +413,11 @@ def test_create_role_grant_access_success(
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
     temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
     create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
     # Create role and grant select permission on table contacts for parent role.
     if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
         ddl_statements = _helpers.DDL_STATEMENTS + [
@@ -468,15 +467,13 @@ def test_create_role_grant_access_success(
 
 
 def test_list_database_role_success(
-    not_emulator,
-    shared_instance,
-    databases_to_delete,
+    not_emulator, shared_instance, databases_to_delete, database_dialect
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
     temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
