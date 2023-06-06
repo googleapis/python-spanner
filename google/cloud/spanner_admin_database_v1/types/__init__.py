@@ -41,6 +41,7 @@ from .spanner_database_admin import (
     CreateDatabaseRequest,
     Database,
     DatabaseRole,
+    DdlStatementActionInfo,
     DropDatabaseRequest,
     GetDatabaseDdlRequest,
     GetDatabaseDdlResponse,
@@ -58,6 +59,8 @@ from .spanner_database_admin import (
     RestoreInfo,
     UpdateDatabaseDdlMetadata,
     UpdateDatabaseDdlRequest,
+    UpdateDatabaseMetadata,
+    UpdateDatabaseRequest,
     RestoreSourceType,
 )
 
@@ -85,6 +88,7 @@ __all__ = (
     "CreateDatabaseRequest",
     "Database",
     "DatabaseRole",
+    "DdlStatementActionInfo",
     "DropDatabaseRequest",
     "GetDatabaseDdlRequest",
     "GetDatabaseDdlResponse",
@@ -102,5 +106,7 @@ __all__ = (
     "RestoreInfo",
     "UpdateDatabaseDdlMetadata",
     "UpdateDatabaseDdlRequest",
+    "UpdateDatabaseMetadata",
+    "UpdateDatabaseRequest",
     "RestoreSourceType",
 )

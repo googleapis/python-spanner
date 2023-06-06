@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Context manager for Cloud Spanner batched writes."""
+import functools
 
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import Mutation
@@ -20,9 +21,15 @@ from google.cloud.spanner_v1 import TransactionOptions
 
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._helpers import _make_list_value_pbs
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+)
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1._helpers import _retry
+from google.cloud.spanner_v1._helpers import _check_rst_stream_error
+from google.api_core.exceptions import InternalServerError
 
 
 class _BatchBase(_SessionWrapper):
@@ -159,6 +166,10 @@ class Batch(_BatchBase):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         trace_attributes = {"num_mutations": len(self._mutations)}
 
@@ -179,9 +190,14 @@ class Batch(_BatchBase):
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
-            response = api.commit(
+            method = functools.partial(
+                api.commit,
                 request=request,
                 metadata=metadata,
+            )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
