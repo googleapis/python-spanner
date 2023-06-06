@@ -44,6 +44,7 @@ from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
 from .types.spanner_database_admin import DatabaseRole
+from .types.spanner_database_admin import DdlStatementActionInfo
 from .types.spanner_database_admin import DropDatabaseRequest
 from .types.spanner_database_admin import GetDatabaseDdlRequest
 from .types.spanner_database_admin import GetDatabaseDdlResponse
@@ -61,6 +62,8 @@ from .types.spanner_database_admin import RestoreDatabaseRequest
 from .types.spanner_database_admin import RestoreInfo
 from .types.spanner_database_admin import UpdateDatabaseDdlMetadata
 from .types.spanner_database_admin import UpdateDatabaseDdlRequest
+from .types.spanner_database_admin import UpdateDatabaseMetadata
+from .types.spanner_database_admin import UpdateDatabaseRequest
 from .types.spanner_database_admin import RestoreSourceType
 
 __all__ = (
@@ -79,6 +82,7 @@ __all__ = (
     "DatabaseAdminClient",
     "DatabaseDialect",
     "DatabaseRole",
+    "DdlStatementActionInfo",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",
@@ -107,4 +111,6 @@ __all__ = (
     "UpdateBackupRequest",
     "UpdateDatabaseDdlMetadata",
     "UpdateDatabaseDdlRequest",
+    "UpdateDatabaseMetadata",
+    "UpdateDatabaseRequest",
 )
