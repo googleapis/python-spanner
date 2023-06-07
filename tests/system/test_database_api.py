@@ -24,6 +24,7 @@ from google.cloud.spanner_v1.pool import FixedSizePool, PingingPool
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
@@ -226,7 +227,6 @@ def test_iam_policy(
     not_emulator,
     shared_instance,
     databases_to_delete,
-    not_postgres,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "iam_policy"})
     temp_db_id = _helpers.unique_id("iam_db", separator="_")
@@ -407,27 +407,31 @@ def test_update_ddl_w_default_leader_success(
 
 
 def test_create_role_grant_access_success(
-    not_emulator,
-    shared_instance,
-    databases_to_delete,
-    not_postgres,
+    not_emulator, shared_instance, databases_to_delete, database_dialect
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
     temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
     create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
     # Create role and grant select permission on table contacts for parent role.
-    ddl_statements = _helpers.DDL_STATEMENTS + [
-        f"CREATE ROLE {creator_role_parent}",
-        f"CREATE ROLE {creator_role_orphan}",
-        f"GRANT SELECT ON TABLE contacts TO ROLE {creator_role_parent}",
-    ]
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        ddl_statements = _helpers.DDL_STATEMENTS + [
+            f"CREATE ROLE {creator_role_parent}",
+            f"CREATE ROLE {creator_role_orphan}",
+            f"GRANT SELECT ON TABLE contacts TO ROLE {creator_role_parent}",
+        ]
+    elif database_dialect == DatabaseDialect.POSTGRESQL:
+        ddl_statements = _helpers.DDL_STATEMENTS + [
+            f"CREATE ROLE {creator_role_parent}",
+            f"CREATE ROLE {creator_role_orphan}",
+            f"GRANT SELECT ON TABLE contacts TO {creator_role_parent}",
+        ]
+
     operation = temp_db.update_ddl(ddl_statements)
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
@@ -445,27 +449,31 @@ def test_create_role_grant_access_success(
     with temp_db.snapshot() as snapshot:
         snapshot.execute_sql("SELECT * FROM contacts")
 
-    ddl_remove_roles = [
-        f"REVOKE SELECT ON TABLE contacts FROM ROLE {creator_role_parent}",
-        f"DROP ROLE {creator_role_parent}",
-        f"DROP ROLE {creator_role_orphan}",
-    ]
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        ddl_remove_roles = [
+            f"REVOKE SELECT ON TABLE contacts FROM ROLE {creator_role_parent}",
+            f"DROP ROLE {creator_role_parent}",
+            f"DROP ROLE {creator_role_orphan}",
+        ]
+    elif database_dialect == DatabaseDialect.POSTGRESQL:
+        ddl_remove_roles = [
+            f"REVOKE SELECT ON TABLE contacts FROM {creator_role_parent}",
+            f"DROP ROLE {creator_role_parent}",
+            f"DROP ROLE {creator_role_orphan}",
+        ]
     # Revoke permission and Delete roles.
     operation = temp_db.update_ddl(ddl_remove_roles)
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
 
 def test_list_database_role_success(
-    not_emulator,
-    shared_instance,
-    databases_to_delete,
-    not_postgres,
+    not_emulator, shared_instance, databases_to_delete, database_dialect
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
     temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
@@ -562,3 +570,41 @@ def test_db_run_in_transaction_twice_4181(shared_database):
         rows = list(after.read(sd.COUNTERS_TABLE, sd.COUNTERS_COLUMNS, sd.ALL))
 
     assert len(rows) == 2
+
+
+def test_update_database_success(
+    not_emulator, shared_database, shared_instance, database_operation_timeout
+):
+    old_protection = shared_database.enable_drop_protection
+    new_protection = True
+    shared_database.enable_drop_protection = new_protection
+    operation = shared_database.update(["enable_drop_protection"])
+
+    # We want to make sure the operation completes.
+    operation.result(database_operation_timeout)  # raises on failure / timeout.
+
+    # Create a new database instance and reload it.
+    database_alt = shared_instance.database(shared_database.name.split("/")[-1])
+    assert database_alt.enable_drop_protection != new_protection
+
+    database_alt.reload()
+    assert database_alt.enable_drop_protection == new_protection
+
+    with pytest.raises(exceptions.FailedPrecondition):
+        database_alt.drop()
+
+    with pytest.raises(exceptions.FailedPrecondition):
+        shared_instance.delete()
+
+    # Make sure to put the database back the way it was for the
+    # other test cases.
+    shared_database.enable_drop_protection = old_protection
+    shared_database.update(["enable_drop_protection"])
+
+
+def test_update_database_invalid(not_emulator, shared_database):
+    shared_database.enable_drop_protection = True
+
+    # Empty `fields` is not supported.
+    with pytest.raises(exceptions.InvalidArgument):
+        shared_database.update([])
