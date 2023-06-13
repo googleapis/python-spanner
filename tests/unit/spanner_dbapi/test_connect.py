@@ -53,7 +53,7 @@ class Test_connect(unittest.TestCase):
         client.instance.assert_called_once_with(INSTANCE)
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=None)
+        instance.database.assert_called_once_with(DATABASE, pool=None, logging_enabled=False, close_inactive_transactions=False)
         # Datbase constructs its own pool
         self.assertIsNotNone(connection.database._pool)
         self.assertTrue(connection.instance._client.route_to_leader_enabled)
@@ -96,7 +96,7 @@ class Test_connect(unittest.TestCase):
         client.instance.assert_called_once_with(INSTANCE)
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=pool)
+        instance.database.assert_called_once_with(DATABASE, pool=pool, logging_enabled=False, close_inactive_transactions=False)
 
     def test_w_credential_file_path(self, mock_client):
         from google.cloud.spanner_dbapi import connect

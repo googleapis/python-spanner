@@ -20,7 +20,6 @@ import grpc
 import logging
 import re
 import threading
-import logging
 
 import google.auth.credentials
 from google.api_core.retry import Retry
@@ -142,7 +141,7 @@ class Database(object):
         instance,
         ddl_statements=(),
         pool=None,
-        logging_enabled=False,
+        logging_enabled=True,
         logger=None,
         close_inactive_transactions=True,
         encryption_config=None,
@@ -1059,7 +1058,6 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            logging.debug("Session details {}".format(self._session.checkout_time))
             self._database._pool.put(self._session)
 
 

@@ -829,29 +829,7 @@ def read_only_transaction(instance_id, database_id):
         for row in results:
             print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
 
-def jsonTest():
-    print("jsontest")
-    import pdb
-    pdb.set_trace()
-    print(184.909685677713)
-    print(184.90968567771299)
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance("surbhi-testing")
-    database = instance.database("test-db")
-    with database.snapshot(multi_use=True) as snapshot:
-        # Read using SQL.
-        results = snapshot.execute_sql(
-            "select PARSE_JSON('{\"bob\": 184.909685677713}', wide_number_mode=>'round')"
-        )
-        
-        for row in results:
-            print(row)
-    # def update_albums(transaction):
-    #     # Read the second album budget.
-    #     second_album_result = transaction.execute_update(
-    #         "select PARSE_JSON('{'bob': 184.909685677713}', wide_number_mode=>'round') as json_data"
-    #     )
-    # database.run_in_transaction(update_albums)
+
 # [END spanner_read_only_transaction]
 
 
@@ -2495,7 +2473,6 @@ if __name__ == "__main__":  # noqa: C901
     )
     subparsers.add_parser("read_write_transaction", help=read_write_transaction.__doc__)
     subparsers.add_parser("read_only_transaction", help=read_only_transaction.__doc__)
-    subparsers.add_parser("jsonTest", help=jsonTest.__doc__)
     subparsers.add_parser("add_index", help=add_index.__doc__)
     query_data_with_index_parser = subparsers.add_parser(
         "query_data_with_index", help=query_data_with_index.__doc__
@@ -2625,8 +2602,6 @@ if __name__ == "__main__":  # noqa: C901
         read_write_transaction(args.instance_id, args.database_id)
     elif args.command == "read_only_transaction":
         read_only_transaction(args.instance_id, args.database_id)
-    elif args.command == "jsonTest":
-        jsonTest()
     elif args.command == "add_index":
         add_index(args.instance_id, args.database_id)
     elif args.command == "query_data_with_index":

@@ -151,31 +151,44 @@ class AbstractSessionPool(object):
     def startCleaningLongRunningSessions(self):
         if not AbstractSessionPool._cleanup_task_ongoing_event.is_set() and not AbstractSessionPool._cleanup_task_ongoing:
             AbstractSessionPool._cleanup_task_ongoing_event.set()
-            background = threading.Thread(target=self.deleteLongRunningTransactions, args=(120,), daemon=True, name='recycle-sessions')
+            background = threading.Thread(target=self.deleteLongRunningTransactions, args=(120, 3600,), daemon=True, name='recycle-sessions')
             background.start()
 
     def stopCleaningLongRunningSessions(self):
         AbstractSessionPool._cleanup_task_ongoing_event.clear()
+        AbstractSessionPool._cleanup_task_ongoing = False
 
-    def deleteLongRunningTransactions(self, interval_sec):
+    def deleteLongRunningTransactions(self, interval_sec, timeout_sec):
+        long_running_transaction_timer = time.time()
+        transactions_closed = 0
         while AbstractSessionPool._cleanup_task_ongoing_event.is_set():
+            if (time.time() - long_running_transaction_timer >= timeout_sec) and transactions_closed == 0:
+                break
             AbstractSessionPool._cleanup_task_ongoing = True
-            logging.debug("delete long running started")
             start = time.time()
             sessions_to_delete = (session for session in self._borrowed_sessions
                       if (datetime.datetime.utcnow() - session.checkout_time > datetime.timedelta(minutes=60))
                       and not session.long_running)
             for session in sessions_to_delete:
-                if self._database.logging_enabled:
-                    self._database.logger.warn("Removing long runinng sess")
                 if self._database.close_inactive_transactions:
+                    if self._database.logging_enabled:
+                        self._database.logger.warn('Long running transaction! Transaction has been closed as it was running for ' +
+              'more than 60 minutes. For long running transactions use batch or partitioned transactions.')
+                    if session._transaction is not None:
+                        session._transaction._session = None
+                    transactions_closed += 1
                     self.put(session)
+                elif self._database.logging_enabled:
+                    if not session.transaction_logged:
+                        self._database.logger.warn('Transaction has been running for longer than 60 minutes and might be causing a leak. ' +
+                  'Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions.')
+                        session.transaction_logged = True 
             
             elapsed_time = time.time() - start
             if interval_sec - elapsed_time > 0:
                 time.sleep(interval_sec - elapsed_time)
-        logging.debug("setting flag as False")
         AbstractSessionPool._cleanup_task_ongoing = False
+        AbstractSessionPool._cleanup_task_ongoing_event.clear()
 
 class FixedSizePool(AbstractSessionPool):
     """Concrete session pool implementation:
@@ -221,6 +234,7 @@ class FixedSizePool(AbstractSessionPool):
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
+        self._borrowed_sessions = []
     def bind(self, database):
         """Associate the pool with a database.
 
@@ -274,6 +288,7 @@ class FixedSizePool(AbstractSessionPool):
 
         session.checkout_time = datetime.datetime.utcnow()
         session.long_running = isLongRunning
+        session.transaction_logged = False
         self._borrowed_sessions.append(session)
         if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.size >= 0.95 :
             self.startCleaningLongRunningSessions()
@@ -336,6 +351,7 @@ class BurstyPool(AbstractSessionPool):
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
+        self._borrowed_sessions = []
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -365,11 +381,10 @@ class BurstyPool(AbstractSessionPool):
                 session.create()
         session.checkout_time = datetime.datetime.utcnow()
         session.long_running = isLongRunning
+        session.transaction_logged = False
         self._borrowed_sessions.append(session)
-        if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.target_size >= 0.55 :
+        if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.target_size >= 0.95 :
             self.startCleaningLongRunningSessions()
-            if self._database.logging_enabled:
-                print("log")
         return session
 
     def put(self, session):
@@ -456,6 +471,7 @@ class PingingPool(AbstractSessionPool):
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)
         self._sessions = queue.PriorityQueue(size)
+        self._borrowed_sessions = []
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -517,11 +533,10 @@ class PingingPool(AbstractSessionPool):
 
         session.checkout_time = datetime.datetime.utcnow()
         session.long_running = isLongRunning
+        session.transaction_logged = False
         self._borrowed_sessions.append(session)
         if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.size >= 0.95 :
             self.startCleaningLongRunningSessions()
-            if self._database.logging_enabled:
-                print("log")
         return session
 
     def put(self, session):
@@ -623,6 +638,7 @@ class TransactionPingingPool(PingingPool):
             stacklevel=2,
         )
         self._pending_sessions = queue.Queue()
+        self._borrowed_sessions = []
 
         super(TransactionPingingPool, self).__init__(
             size,

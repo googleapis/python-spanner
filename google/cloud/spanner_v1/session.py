@@ -128,6 +128,22 @@ class Session(object):
         self._long_running = value
 
     @property
+    def transaction_logged(self):
+        """Test if the session is already logged for long running transaction.
+        :rtype: bool
+        :returns: True if session is already logged for long running, else False.
+        """
+        return self._transaction_logged
+    
+    @transaction_logged.setter
+    def transaction_logged(self, value):
+        """Sets if the session is already logged for long running transaction.
+        :type value: bool
+        :param value: bool
+        """
+        self._transaction_logged = value
+
+    @property
     def name(self):
         """Session name used in requests.
 

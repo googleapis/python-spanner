@@ -117,6 +117,8 @@ class TestDatabase(_BaseTest):
         self.assertTrue(database._pool._sessions.empty())
         self.assertIsNone(database.database_role)
         self.assertTrue(database._route_to_leader_enabled, True)
+        self.assertTrue(database._logging_enabled)
+        self.assertFalse(database._close_inactive_transactions)
 
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -146,6 +148,42 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertFalse(database._route_to_leader_enabled)
+
+    def test_ctor_w_logger_enabled(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(
+            self.DATABASE_ID, instance, logging_enabled=True
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertIs(database.logging_enabled, True)
+
+    def test_ctor_w_logger_disabled(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(
+            self.DATABASE_ID, instance, logging_enabled=False
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertIs(database.logging_enabled, False)
+
+    def test_ctor_w_close_inactive_transactions_enabled(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(
+            self.DATABASE_ID, instance, close_inactive_transactions=True
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertIs(database.close_inactive_transactions, True)
+
+    def test_ctor_w_close_inactive_transactions_disabled(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(
+            self.DATABASE_ID, instance, close_inactive_transactions=False
+        )
+        self.assertEqual(database.database_id, self.DATABASE_ID)
+        self.assertIs(database._instance, instance)
+        self.assertIs(database.close_inactive_transactions, False)
 
     def test_ctor_w_ddl_statements_non_string(self):
 
@@ -1201,6 +1239,20 @@ class TestDatabase(_BaseTest):
         self.assertIsInstance(checkout, SnapshotCheckout)
         self.assertIs(checkout._database, database)
         self.assertEqual(checkout._kw, {})
+
+    def test_snapshot_longrunningvalue(self):
+        from google.cloud.spanner_v1.snapshot import Snapshot
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        pool = mock.Mock()
+        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        with database.snapshot() as checkout:
+            self.assertIsInstance(checkout, Snapshot)
+        
+        self.assertEqual(pool.get.call_count, 1)
+        # get method of pool is passed without any param, that means longrunning param is false
+        pool.get.assert_called_once_with()
 
     def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
@@ -2737,6 +2789,7 @@ class _Pool(object):
 
     def get(self, isLongRunning=False):
         session, self._session = self._session, None
+        session.long_running = isLongRunning
         return session
 
     def put(self, session):

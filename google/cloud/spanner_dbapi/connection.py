@@ -583,7 +583,7 @@ def connect(
 
     instance = client.instance(instance_id)
     conn = Connection(
-        instance, instance.database(database_id, pool=pool) if database_id else None
+        instance, instance.database(database_id, pool=pool, logging_enabled=False, close_inactive_transactions=False) if database_id else None
     )
     if pool is not None:
         conn._own_pool = False
