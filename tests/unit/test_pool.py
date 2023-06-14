@@ -19,6 +19,10 @@ from time import sleep
 import threading
 import mock
 import datetime
+from google.cloud.spanner_v1._helpers import (
+    DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC,
+    DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC
+)
 
 def _make_database(name="name"):
     from google.cloud.spanner_v1.database import Database
@@ -133,6 +137,8 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertEqual(checkout._kwargs, {"foo": "bar"})
 
     @mock.patch('threading.Thread')
+    @mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC', 5)
+    @mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC', 10)
     def test_startCleaningLongRunningSessions_success(self, mock_thread_class):
         mock_thread = mock.MagicMock()
         mock_thread.start = mock.MagicMock()
@@ -148,7 +154,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         # A new thread should have been created to start the task
         threading.Thread.assert_called_once_with(
             target=pool.deleteLongRunningTransactions,
-            args=(120, 3600),
+            args=(DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC, DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC),
             daemon=True,
             name='recycle-sessions'
         )
@@ -1064,7 +1070,8 @@ class TestSessionCheckout(unittest.TestCase):
         )
 
     def test_context_manager_wo_kwargs(self):
-        session = object()
+        database = _Database("name")
+        session = _Session(database)
         pool = _Pool(session)
         checkout = self._make_one(pool)
 
@@ -1080,7 +1087,8 @@ class TestSessionCheckout(unittest.TestCase):
         self.assertEqual(pool._got, {})
 
     def test_context_manager_w_kwargs(self):
-        session = object()
+        database = _Database("name")
+        session = _Session(database)
         pool = _Pool(session)
         checkout = self._make_one(pool, foo="bar")
 

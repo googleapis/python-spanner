@@ -152,6 +152,10 @@ class _SnapshotBase(_SessionWrapper):
     _execute_sql_count = 0
     _lock = threading.Lock()
 
+    def _check_session_state(self):
+        if self._session is None:
+            raise ValueError("Transaction has been closed as it was running for more than 60 minutes")
+
     def _make_txn_selector(self):
         """Helper for :meth:`read` / :meth:`execute_sql`.
 
@@ -231,6 +235,9 @@ class _SnapshotBase(_SessionWrapper):
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
         """
+        
+        self._check_session_state()
+        
         if self._read_request_count > 0:
             if not self._multi_use:
                 raise ValueError("Cannot re-use single-use snapshot.")
@@ -383,6 +390,7 @@ class _SnapshotBase(_SessionWrapper):
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
         """
+        self._check_session_state()
         if self._read_request_count > 0:
             if not self._multi_use:
                 raise ValueError("Cannot re-use single-use snapshot.")
@@ -531,6 +539,7 @@ class _SnapshotBase(_SessionWrapper):
             for single-use snapshots, or if a transaction ID is
             already associated with the snapshot.
         """
+        self._check_session_state()
         if not self._multi_use:
             raise ValueError("Cannot use single-use snapshot.")
 
@@ -625,6 +634,7 @@ class _SnapshotBase(_SessionWrapper):
             for single-use snapshots, or if a transaction ID is
             already associated with the snapshot.
         """
+        self._check_session_state()
         if not self._multi_use:
             raise ValueError("Cannot use single-use snapshot.")
 
@@ -793,6 +803,8 @@ class Snapshot(_SnapshotBase):
 
         if self._read_request_count > 0:
             raise ValueError("Read-only transaction already pending")
+        
+        self._check_session_state()
 
         database = self._session._database
         api = database.spanner_api

@@ -38,6 +38,10 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
     + "numeric has a whole component with precision {}"
 )
 
+# Constants
+DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC = 120
+DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC = 3600
+
 
 def _try_to_coerce_bytes(bytestring):
     """Try to coerce a byte string into the right thing based on Python

@@ -1028,7 +1028,7 @@ class BatchCheckout(object):
 
     def __init__(self, database, request_options=None):
         self._database = database
-        self._session = self._batch = None
+        self._batch = None
         if request_options is None:
             self._request_options = RequestOptions()
         elif type(request_options) == dict:
@@ -1038,11 +1038,12 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
-        batch = self._batch = Batch(session)
+        session = self._database._pool.get()
+        self._batch = Batch(session)
+        session._batch = self._batch
         if self._request_options.transaction_tag:
-            batch.transaction_tag = self._request_options.transaction_tag
-        return batch
+            self._batch.transaction_tag = self._request_options.transaction_tag
+        return self._batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
@@ -1058,7 +1059,8 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            self._database._pool.put(self._session)
+            if self._batch._session is not None:
+                self._database._pool.put(self._batch._session)
 
 
 class SnapshotCheckout(object):
@@ -1081,23 +1083,27 @@ class SnapshotCheckout(object):
 
     def __init__(self, database, **kw):
         self._database = database
-        self._session = None
+        self._snapshot = None
         self._kw = kw
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
-        return Snapshot(session, **self._kw)
+        session = self._database._pool.get()
+        self._snapshot = Snapshot(session, **self._kw)
+        session._snapshot = self._snapshot
+        return self._snapshot
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
-        self._database._pool.put(self._session)
+        # self._snapshot._session is None that means session has been returned by background task
+        if self._snapshot._session is not None:
+            if isinstance(exc_val, NotFound):
+                # If NotFound exception occurs inside the with block
+                # then we validate if the session still exists.
+                if not self._snapshot._session.exists():
+                    self._snapshot._session = self._database._pool._new_session()
+                    self._snapshot._session.create()
+            self._database._pool.put(self._snapshot._session)
 
 
 class BatchSnapshot(object):

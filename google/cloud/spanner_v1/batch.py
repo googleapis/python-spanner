@@ -144,6 +144,8 @@ class Batch(_BatchBase):
         """
         if self.committed is not None:
             raise ValueError("Batch already committed")
+        if self._session is None:
+            raise ValueError("Transaction has been closed as it was running for more than 60 minutes")
 
     def commit(self, return_commit_stats=False, request_options=None):
         """Commit mutations to the database.

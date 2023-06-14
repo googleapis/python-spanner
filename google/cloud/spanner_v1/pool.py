@@ -25,6 +25,8 @@ from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC,
+    DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC
 )
 from warnings import warn
 import logging
@@ -151,7 +153,7 @@ class AbstractSessionPool(object):
     def startCleaningLongRunningSessions(self):
         if not AbstractSessionPool._cleanup_task_ongoing_event.is_set() and not AbstractSessionPool._cleanup_task_ongoing:
             AbstractSessionPool._cleanup_task_ongoing_event.set()
-            background = threading.Thread(target=self.deleteLongRunningTransactions, args=(120, 3600,), daemon=True, name='recycle-sessions')
+            background = threading.Thread(target=self.deleteLongRunningTransactions, args=(DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC, DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC,), daemon=True, name='recycle-sessions')
             background.start()
 
     def stopCleaningLongRunningSessions(self):
@@ -176,6 +178,10 @@ class AbstractSessionPool(object):
               'more than 60 minutes. For long running transactions use batch or partitioned transactions.')
                     if session._transaction is not None:
                         session._transaction._session = None
+                    if session._batch is not None:
+                        session._batch._session = None
+                    if session._snapshot is not None:
+                        session._snapshpt._session = None
                     transactions_closed += 1
                     self.put(session)
                 elif self._database.logging_enabled:
@@ -713,4 +719,5 @@ class SessionCheckout(object):
         return self._session
 
     def __exit__(self, *ignored):
-        self._pool.put(self._session)
+        if not (self._session._transaction is not None and self._session._transaction._session is None):
+            self._pool.put(self._session)
