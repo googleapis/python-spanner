@@ -25,8 +25,6 @@ from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
-    DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC,
-    DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC
 )
 from warnings import warn
 import logging
@@ -151,8 +149,14 @@ class AbstractSessionPool(object):
         return SessionCheckout(self, **kwargs)
 
     def startCleaningLongRunningSessions(self):
+        from google.cloud.spanner_v1._helpers import (
+            DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC,
+            DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC
+        )
         if not AbstractSessionPool._cleanup_task_ongoing_event.is_set() and not AbstractSessionPool._cleanup_task_ongoing:
             AbstractSessionPool._cleanup_task_ongoing_event.set()
+            if self._database.logging_enabled:
+                self._database.logger.info('95%% of the session pool is exhausted')
             background = threading.Thread(target=self.deleteLongRunningTransactions, args=(DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC, DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC,), daemon=True, name='recycle-sessions')
             background.start()
 
@@ -164,13 +168,15 @@ class AbstractSessionPool(object):
         long_running_transaction_timer = time.time()
         transactions_closed = 0
         while AbstractSessionPool._cleanup_task_ongoing_event.is_set():
-            if (time.time() - long_running_transaction_timer >= timeout_sec) and transactions_closed == 0:
+            is_timeout_reached_and_no_transaction_closed = (time.time() - long_running_transaction_timer >= timeout_sec + interval_sec) and transactions_closed == 0
+            if is_timeout_reached_and_no_transaction_closed:
                 break
+            
             AbstractSessionPool._cleanup_task_ongoing = True
             start = time.time()
-            sessions_to_delete = (session for session in self._borrowed_sessions
-                      if (datetime.datetime.utcnow() - session.checkout_time > datetime.timedelta(minutes=60))
-                      and not session.long_running)
+            sessions_to_delete = list(filter(lambda session : (datetime.datetime.utcnow() - session.checkout_time > datetime.timedelta(seconds=timeout_sec))
+                      and not session.long_running, self._borrowed_sessions))
+            
             for session in sessions_to_delete:
                 if self._database.close_inactive_transactions:
                     if self._database.logging_enabled:
@@ -298,6 +304,9 @@ class FixedSizePool(AbstractSessionPool):
         self._borrowed_sessions.append(session)
         if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.size >= 0.95 :
             self.startCleaningLongRunningSessions()
+        
+        if self._database.logging_enabled and len(self._borrowed_sessions)/self.size == 1:
+                self._database.logger.warn('100%% of the session pool is exhausted')
         return session
 
     def put(self, session):
@@ -391,6 +400,8 @@ class BurstyPool(AbstractSessionPool):
         self._borrowed_sessions.append(session)
         if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.target_size >= 0.95 :
             self.startCleaningLongRunningSessions()
+        if self._database.logging_enabled and len(self._borrowed_sessions)/self.target_size == 1:
+                self._database.logger.warn('100%% of the session pool is exhausted')
         return session
 
     def put(self, session):
@@ -543,6 +554,8 @@ class PingingPool(AbstractSessionPool):
         self._borrowed_sessions.append(session)
         if (self._database.close_inactive_transactions or self._database.logging_enabled) and len(self._borrowed_sessions)/self.size >= 0.95 :
             self.startCleaningLongRunningSessions()
+        if self._database.logging_enabled and len(self._borrowed_sessions)/self.size == 1:
+                self._database.logger.warn('100%% of the session pool is exhausted')
         return session
 
     def put(self, session):

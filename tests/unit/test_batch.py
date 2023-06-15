@@ -192,6 +192,14 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
         self.assertNoSpans()
 
+    def test_commit_should_throw_error_for_recycled_session(self):
+        session = _Session()
+        batch = self._make_one(session)
+        batch._session = None
+        with self.assertRaises(Exception) as cm:
+            batch.commit()
+        self.assertEqual(str(cm.exception), "Transaction has been closed as it was running for more than 60 minutes")
+
     def test_commit_grpc_error(self):
         from google.api_core.exceptions import Unknown
         from google.cloud.spanner_v1.keyset import KeySet

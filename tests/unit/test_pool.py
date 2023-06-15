@@ -137,29 +137,31 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertEqual(checkout._kwargs, {"foo": "bar"})
 
     @mock.patch('threading.Thread')
-    @mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC', 5)
-    @mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC', 10)
     def test_startCleaningLongRunningSessions_success(self, mock_thread_class):
         mock_thread = mock.MagicMock()
         mock_thread.start = mock.MagicMock()
         mock_thread_class.return_value = mock_thread
 
         pool = self._make_one()
+        pool._database = mock.MagicMock()
         pool._cleanup_task_ongoing_event.clear()
-        pool.startCleaningLongRunningSessions()
+        with mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC', new=5), \
+             mock.patch('google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC', new=10):
+            pool.startCleaningLongRunningSessions()
 
-        # The event should be set, indicating the task is now ongoing
-        self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
+            # The event should be set, indicating the task is now ongoing
+            self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
 
-        # A new thread should have been created to start the task
-        threading.Thread.assert_called_once_with(
-            target=pool.deleteLongRunningTransactions,
-            args=(DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC, DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC),
-            daemon=True,
-            name='recycle-sessions'
-        )
-        mock_thread.start.assert_called_once()
-        pool.stopCleaningLongRunningSessions()
+            # A new thread should have been created to start the task
+            threading.Thread.assert_called_once_with(
+                target=pool.deleteLongRunningTransactions,
+                args=(5, 10),
+                daemon=True,
+                name='recycle-sessions'
+            )
+            mock_thread.start.assert_called_once()
+            pool.stopCleaningLongRunningSessions()
+            self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
     
     def test_stopCleaningLongRunningSessions(self):
         pool = self._make_one()
@@ -249,6 +251,21 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertFalse(session.transaction_logged)
         self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
+    def test_deleteLongRunningTransactions_close_if_no_transaction_is_released(self):
+        pool = self._setup_session_leak(False, True)
+        # Create a session that needs to be closed
+        session = mock.MagicMock()
+        session.transaction_logged = True
+        session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=61)
+        session.long_running = False
+        pool._borrowed_sessions = [session]
+        pool._cleanup_task_ongoing_event.set()
+        # Call deleteLongRunningTransactions
+        pool.deleteLongRunningTransactions(2, 2)
+
+        # Assert that background task was closed as there was no transaction to close.
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
 
 class TestFixedSizePool(unittest.TestCase):
     def _getTargetClass(self):
@@ -315,6 +332,8 @@ class TestFixedSizePool(unittest.TestCase):
             self.assertIs(session, SESSIONS[i])
             self.assertTrue(session._exists_checked)
             self.assertFalse(pool._sessions.full())
+        #Stop Long running session
+        pool.stopCleaningLongRunningSessions()
 
     def test_get_expired(self):
         pool = self._make_one(size=4)
@@ -330,8 +349,9 @@ class TestFixedSizePool(unittest.TestCase):
         session.create.assert_called()
         self.assertTrue(SESSIONS[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
+        pool.stopCleaningLongRunningSessions()
 
-    def test_get_longrunning_defaults(self):
+    def test_get_trigger_longrunning_and_set_defaults(self):
         pool = self._make_one(size=2)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 3
@@ -474,7 +494,7 @@ class TestBurstyPool(unittest.TestCase):
         session.create.assert_called()
         self.assertTrue(pool._sessions.empty())
 
-    def test_get_longrunning_defaults(self):
+    def test_get_trigger_longrunning_and_set_defaults(self):
         pool = self._make_one(target_size=2)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 3
@@ -645,7 +665,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertFalse(session._exists_checked)
         self.assertFalse(pool._sessions.full())
 
-    def test_get_longrunning_defaults(self):
+    def test_get_trigger_longrunning_and_set_defaults(self):
         pool = self._make_one(size=2)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 3
@@ -1162,6 +1182,9 @@ class _Database(object):
         self._route_to_leader_enabled = True
         self.close_inactive_transactions = True
         self.logging_enabled = True
+        self._logger = mock.MagicMock()
+        self._logger.info = mock.MagicMock()
+        self._logger.warn = mock.MagicMock()
 
         def mock_batch_create_sessions(
             request=None,
@@ -1199,6 +1222,10 @@ class _Database(object):
         :returns: an str with the name of the database role.
         """
         return self._database_role
+    
+    @property
+    def logger(self):
+        return self._logger
 
     def session(self, **kwargs):
         # always return first session in the list

@@ -430,7 +430,7 @@ class Instance(object):
         pool=None,
         logging_enabled=True,
         logger=None,
-        close_inactive_transactions=True,
+        close_inactive_transactions=False,
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
