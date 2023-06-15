@@ -189,6 +189,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         pool._database.close_inactive_transactions = close_inactive_transactions
         pool._borrowed_sessions = []
         pool._database.logger.warn = mock.MagicMock()
+        pool._format_trace = mock.MagicMock()
         return pool
 
     def test_deleteLongRunningTransactions_noSessionsToDelete(self):
