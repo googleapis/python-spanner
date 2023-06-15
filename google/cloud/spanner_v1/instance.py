@@ -449,11 +449,19 @@ class Instance(object):
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
 
+        :type logging_enabled: boolean
+        :param logging_enabled: (Optional) Represents whether the database
+                        has logging enabled or not. Default is True
+
         :type logger: :class:`logging.Logger`
         :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                        is `True` to log commit statistics. If not passed, a logger
                        will be created when needed that will log the commit statistics
                        to stdout.
+
+        :type close_inactive_transactions: boolean
+        :param close_inactive_transactions: (Optional) Represents whether the database
+                        has close inactive transactions enabled or not. Default is False
 
         :type encryption_config:
             :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`

@@ -99,23 +99,19 @@ class Session(object):
 
     @property
     def checkout_time(self):
-        """Get Check out time for session
+        """Check out time for the session.
         :rtype: time
-        :returns: the checkedout time for a session if assigned.
+        :returns: the checked out time for a session.
         """
         return self._checkout_time
 
     @checkout_time.setter
     def checkout_time(self, value):
-        """Set Check out time for session
-        :type value: time
-        :param value: Checkout time
-        """
         self._checkout_time = value
 
     @property
     def long_running(self):
-        """Test if the session is used for long running transaction.
+        """Whether the session is used for long running transaction.
         :rtype: bool
         :returns: True if session is long running, else False.
         """
@@ -123,15 +119,11 @@ class Session(object):
 
     @long_running.setter
     def long_running(self, value):
-        """Sets if the session is used for long running transaction.
-        :type value: bool
-        :param value: bool
-        """
         self._long_running = value
 
     @property
     def transaction_logged(self):
-        """Test if the session is already logged for long running transaction.
+        """Whether the session is already logged for long running transaction.
         :rtype: bool
         :returns: True if session is already logged for long running, else False.
         """
@@ -139,10 +131,6 @@ class Session(object):
 
     @transaction_logged.setter
     def transaction_logged(self, value):
-        """Sets if the session is already logged for long running transaction.
-        :type value: bool
-        :param value: bool
-        """
         self._transaction_logged = value
 
     @property

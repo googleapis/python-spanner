@@ -108,11 +108,20 @@ class Database(object):
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
 
+    :type logging_enabled: boolean
+    :parama logging_enabled: (Optional) Represents whether the database
+                    has logging enabled or not. Default is True
+
     :type logger: :class:`logging.Logger`
     :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                    is `True` to log commit statistics. If not passed, a logger
                    will be created when needed that will log the commit statistics
                    to stdout.
+
+    :type close_inactive_transactions: boolean
+    :param close_inactive_transactions: (Optional) Represents whether the database
+                    has close inactive transactions enabled or not. Default is False
+
     :type encryption_config:
         :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
@@ -345,7 +354,7 @@ class Database(object):
 
     @property
     def logging_enabled(self):
-        """Test if logging is enabled. Default: False.
+        """Whether the database has logging enabled. Default: True.
         :rtype: bool
         :returns: True if logging is enabled, else False.
         """
@@ -395,7 +404,7 @@ class Database(object):
 
     @property
     def close_inactive_transactions(self):
-        """Test if closing inactive transactions is enabled. Default: True.
+        """Whether the database has has closing inactive transactions enabled. Default: False.
         :rtype: bool
         :returns: True if closing inactive transactions is enabled, else False.
         """
