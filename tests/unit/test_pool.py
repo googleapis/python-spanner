@@ -15,6 +15,8 @@
 
 from functools import total_ordering
 import unittest
+import random
+import string
 from time import sleep
 import threading
 import mock
@@ -205,6 +207,8 @@ class TestAbstractSessionPool(unittest.TestCase):
         session.transaction_logged = False
         session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=61)
         session.long_running = False
+        session._session_id = 'session_id'
+        pool._traces['session_id'] = 'trace'
         pool._borrowed_sessions = [session]
         pool._cleanup_task_ongoing_event.set()
         # Call deleteLongRunningTransactions
@@ -222,6 +226,8 @@ class TestAbstractSessionPool(unittest.TestCase):
         session.transaction_logged = False
         session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=61)
         session.long_running = False
+        session._session_id = 'session_id'
+        pool._traces['session_id'] = 'trace'
         pool._borrowed_sessions = [session]
         pool._cleanup_task_ongoing_event.set()
         # Call deleteLongRunningTransactions
@@ -240,6 +246,8 @@ class TestAbstractSessionPool(unittest.TestCase):
         session.transaction_logged = False
         session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=61)
         session.long_running = False
+        session._session_id = 'session_id'
+        pool._traces['session_id'] = 'trace'
         pool._borrowed_sessions = [session]
         pool._cleanup_task_ongoing_event.set()
         # Call deleteLongRunningTransactions
@@ -258,6 +266,8 @@ class TestAbstractSessionPool(unittest.TestCase):
         session.transaction_logged = True
         session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(minutes=61)
         session.long_running = False
+        session._session_id = 'session_id'
+        pool._traces['session_id'] = 'trace'
         pool._borrowed_sessions = [session]
         pool._cleanup_task_ongoing_event.set()
         # Call deleteLongRunningTransactions
@@ -1146,6 +1156,7 @@ class _Session(object):
         self.create = mock.Mock()
         self._deleted = False
         self._transaction = transaction
+        self._session_id = ''.join(random.choices(string.ascii_letters, k=10))
 
     def __lt__(self, other):
         return id(self) < id(other)

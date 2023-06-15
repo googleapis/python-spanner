@@ -470,6 +470,7 @@ class TestConnection(unittest.TestCase):
         """
         connection = self._make_connection()
         connection._transaction = mock.Mock(rolled_back=False, committed=False)
+        connection._session = mock.MagicMock()
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
@@ -486,6 +487,7 @@ class TestConnection(unittest.TestCase):
         """
         connection = self._make_connection()
         connection._transaction = mock.Mock()
+        connection._session = mock.MagicMock()
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
