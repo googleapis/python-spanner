@@ -822,9 +822,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         with self.assertRaises(Exception) as cm:
             list(derived.execute_sql(SQL_QUERY))
-        
-        self.assertEqual(str(cm.exception), "Transaction has been closed as it was running for more than 60 minutes")
 
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes",
+        )
 
     def test_execute_sql_w_params_wo_param_types(self):
         database = _Database()
@@ -1165,9 +1167,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
         )
-    
+
     def test_partition_read_should_throw_error_for_recycled_session(self):
         from google.cloud.spanner_v1.keyset import KeySet
+
         keyset = KeySet(all_=True)
         session = _Session()
         derived = self._makeDerived(session)
@@ -1175,8 +1178,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         with self.assertRaises(Exception) as cm:
             list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
-        
-        self.assertEqual(str(cm.exception), "Transaction has been closed as it was running for more than 60 minutes")
+
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes",
+        )
 
     def test_partition_read_w_retry(self):
         from google.cloud.spanner_v1.keyset import KeySet
@@ -1344,8 +1350,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         with self.assertRaises(Exception) as cm:
             list(derived.partition_query(SQL_QUERY))
-        
-        self.assertEqual(str(cm.exception), "Transaction has been closed as it was running for more than 60 minutes")
+
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes",
+        )
 
     def test_partition_query_w_params_wo_param_types(self):
         database = _Database()

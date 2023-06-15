@@ -2516,31 +2516,44 @@ def test_partition_query(sessions_database, not_emulator):
     assert union == all_data_rows
     batch_txn.close()
 
-def test_should_close_inactive_transactions(not_emulator, not_postgres, shared_instance, database_operation_timeout, databases_to_delete):
+
+def test_should_close_inactive_transactions(
+    not_emulator,
+    not_postgres,
+    shared_instance,
+    database_operation_timeout,
+    databases_to_delete,
+):
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_INTERVAL_SEC = 2
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_TIMEOUT_SEC = 5
     database_name = _helpers.unique_id("test_longrunning", separator="_")
     pool = spanner_v1.BurstyPool(target_size=1)
-    
+
     temp_db = shared_instance.database(
         database_name,
         ddl_statements=_helpers.DDL_STATEMENTS,
         pool=pool,
         close_inactive_transactions=True,
-        logging_enabled=True
+        logging_enabled=True,
     )
 
     operation = temp_db.create()
     operation.result(database_operation_timeout)
-    
+
     databases_to_delete.append(temp_db)
+
     def long_operation(transaction):
         transaction.execute_sql("SELECT 1")
         time.sleep(20)
         transaction.execute_sql("SELECT 1")
+
     with pytest.raises(Exception) as exc:
         temp_db.run_in_transaction(long_operation)
-    assert exc.value.args[0] == "Transaction has been closed as it was running for more than 60 minutes"
+    assert (
+        exc.value.args[0]
+        == "Transaction has been closed as it was running for more than 60 minutes"
+    )
+
 
 class FauxCall:
     def __init__(self, code, details="FauxCall"):

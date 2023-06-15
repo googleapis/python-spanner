@@ -151,18 +151,14 @@ class TestDatabase(_BaseTest):
 
     def test_ctor_w_logger_enabled(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(
-            self.DATABASE_ID, instance, logging_enabled=True
-        )
+        database = self._make_one(self.DATABASE_ID, instance, logging_enabled=True)
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertIs(database.logging_enabled, True)
 
     def test_ctor_w_logger_disabled(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(
-            self.DATABASE_ID, instance, logging_enabled=False
-        )
+        database = self._make_one(self.DATABASE_ID, instance, logging_enabled=False)
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertIs(database.logging_enabled, False)
@@ -1249,7 +1245,7 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
         with database.snapshot() as checkout:
             self.assertIsInstance(checkout, Snapshot)
-        
+
         self.assertEqual(pool.get.call_count, 1)
         # get method of pool is passed without any param, that means longrunning param is false
         pool.get.assert_called_once_with()

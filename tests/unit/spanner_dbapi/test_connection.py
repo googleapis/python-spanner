@@ -1002,12 +1002,26 @@ class _Instance(object):
         self.name = name
         self._client = client
 
-    def database(self, database_id="database_id", pool=None, logging_enabled=False, close_inactive_transactions=False):
-        return _Database(database_id, pool, logging_enabled=False, close_inactive_transactions=False)
+    def database(
+        self,
+        database_id="database_id",
+        pool=None,
+        logging_enabled=False,
+        close_inactive_transactions=False,
+    ):
+        return _Database(
+            database_id, pool, logging_enabled=False, close_inactive_transactions=False
+        )
 
 
 class _Database(object):
-    def __init__(self, database_id="database_id", pool=None, logging_enabled=False, close_inactive_transactions=False):
+    def __init__(
+        self,
+        database_id="database_id",
+        pool=None,
+        logging_enabled=False,
+        close_inactive_transactions=False,
+    ):
         self.name = database_id
         self.pool = pool
         self.logging_enabled = logging_enabled

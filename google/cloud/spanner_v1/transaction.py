@@ -64,8 +64,10 @@ class Transaction(_SnapshotBase, _BatchBase):
 
     def _check_session_state(self):
         if self._session is None:
-            raise ValueError("Transaction has been closed as it was running for more than 60 minutes")
-        
+            raise ValueError(
+                "Transaction has been closed as it was running for more than 60 minutes"
+            )
+
     def _check_state(self):
         """Helper for :meth:`commit` et al.
 

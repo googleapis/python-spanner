@@ -342,7 +342,7 @@ class Database(object):
         :returns: a str with the name of the database role.
         """
         return self._database_role
-    
+
     @property
     def logging_enabled(self):
         """Test if logging is enabled. Default: False.
@@ -400,7 +400,7 @@ class Database(object):
         :returns: True if closing inactive transactions is enabled, else False.
         """
         return self._close_inactive_transactions
-    
+
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
