@@ -848,3 +848,4 @@ class SessionCheckout(object):
             and self._session._transaction._session is None
         ):
             self._pool.put(self._session)
+        self._session._transaction = None
