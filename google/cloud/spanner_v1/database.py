@@ -1037,7 +1037,7 @@ class BatchCheckout(object):
 
     def __init__(self, database, request_options=None):
         self._database = database
-        self._batch = None
+        self._session = self._batch = None
         if request_options is None:
             self._request_options = RequestOptions()
         elif type(request_options) == dict:
@@ -1047,12 +1047,12 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._database._pool.get()
-        self._batch = Batch(session)
-        session._batch = self._batch
+        session = self._session = self._database._pool.get()
+        batch = self._batch = Batch(session)
+        self._session._transaction = self._batch
         if self._request_options.transaction_tag:
-            self._batch.transaction_tag = self._request_options.transaction_tag
-        return self._batch
+            batch.transaction_tag = self._request_options.transaction_tag
+        return batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
@@ -1068,7 +1068,7 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            if self._batch._session is not None:
+            if self._session._transaction is not None:
                 self._database._pool.put(self._batch._session)
 
 
@@ -1092,14 +1092,15 @@ class SnapshotCheckout(object):
 
     def __init__(self, database, **kw):
         self._database = database
+        self._session = None
         self._snapshot = None
         self._kw = kw
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._database._pool.get()
+        session = self._session = self._database._pool.get()
         self._snapshot = Snapshot(session, **self._kw)
-        session._snapshot = self._snapshot
+        self._session._transaction = self._snapshot
         return self._snapshot
 
     def __exit__(self, exc_type, exc_val, exc_tb):

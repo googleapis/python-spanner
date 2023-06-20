@@ -62,8 +62,6 @@ class Session(object):
 
     _session_id = None
     _transaction = None
-    _batch = None
-    _snapshot = None
 
     def __init__(self, database, labels=None, database_role=None):
         self._database = database
