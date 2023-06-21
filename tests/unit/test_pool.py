@@ -506,8 +506,10 @@ class TestFixedSizePool(unittest.TestCase):
         for session in SESSIONS:
             session.create.assert_not_called()
 
+        pool._cleanup_task_ongoing_event.set()
         pool.clear()
 
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         for session in SESSIONS:
             self.assertTrue(session._deleted)
 
@@ -647,9 +649,10 @@ class TestBurstyPool(unittest.TestCase):
         pool.bind(database)
         previous = _Session(database)
         pool.put(previous)
-
+        pool._cleanup_task_ongoing_event.set()
+        
         pool.clear()
-
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         self.assertTrue(previous._deleted)
 
 
@@ -869,9 +872,11 @@ class TestPingingPool(unittest.TestCase):
         self.assertEqual(api.batch_create_sessions.call_count, 5)
         for session in SESSIONS:
             session.create.assert_not_called()
+        pool._cleanup_task_ongoing_event.set()
 
         pool.clear()
 
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         for session in SESSIONS:
             self.assertTrue(session._deleted)
 
