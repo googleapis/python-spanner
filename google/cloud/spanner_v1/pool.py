@@ -404,8 +404,9 @@ class FixedSizePool(AbstractSessionPool):
             self.stopCleaningLongRunningSessions()
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
 
+        self.stopCleaningLongRunningSessions()
         while True:
             try:
                 session = self._sessions.get(block=False)
@@ -518,7 +519,9 @@ class BurstyPool(AbstractSessionPool):
                 pass
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
+
+        self.stopCleaningLongRunningSessions()
 
         while True:
             try:
@@ -679,7 +682,10 @@ class PingingPool(AbstractSessionPool):
             self.stopCleaningLongRunningSessions()
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
+
+        self.stopCleaningLongRunningSessions()
+
         while True:
             try:
                 _, session = self._sessions.get(block=False)

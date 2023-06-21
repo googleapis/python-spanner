@@ -2517,15 +2517,17 @@ def test_partition_query(sessions_database, not_emulator):
     batch_txn.close()
 
 
-def test_should_close_inactive_transactions_with_bursty_pool(
+def test_should_close_inactive_transactions_with_bursty_pool_and_transaction(
     not_emulator,
     not_postgres,
     shared_instance,
     database_operation_timeout,
     databases_to_delete,
 ):
+    # Overriding the frequency and threshold to smaller value to simulate the behavior.
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC = 2
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC = 5
+
     database_name = _helpers.unique_id("test_longrunning", separator="_")
     pool = spanner_v1.BurstyPool(target_size=1)
 
@@ -2544,7 +2546,7 @@ def test_should_close_inactive_transactions_with_bursty_pool(
 
     def long_operation(transaction):
         transaction.execute_sql("SELECT 1")
-        time.sleep(60)
+        time.sleep(10)
         transaction.execute_sql("SELECT 1")
 
     with pytest.raises(Exception) as exc:
@@ -2555,22 +2557,22 @@ def test_should_close_inactive_transactions_with_bursty_pool(
     )
 
 
-def test_should_close_inactive_transactions_with_fixedsize_pool(
+def test_should_close_inactive_transactions_with_fixedsize_pool_and_snapshot(
     not_emulator,
     not_postgres,
     shared_instance,
     database_operation_timeout,
     databases_to_delete,
 ):
+    # Overriding the frequency and threshold to smaller value to simulate the behavior.
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC = 2
     spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC = 5
+
     database_name = _helpers.unique_id("test_longrunning", separator="_")
     pool = spanner_v1.FixedSizePool(size=1, default_timeout=500)
 
     temp_db = shared_instance.database(
         database_name,
-        close_inactive_transactions=True,
-        logging_enabled=True,
     )
 
     create_operation = temp_db.create()
@@ -2579,13 +2581,70 @@ def test_should_close_inactive_transactions_with_fixedsize_pool(
     operation = temp_db.update_ddl(_helpers.DDL_STATEMENTS)
     operation.result(database_operation_timeout)
 
-    database = shared_instance.database(database_name, pool=pool)
+    database = shared_instance.database(
+        database_name,
+        pool=pool,
+        close_inactive_transactions=True,
+        logging_enabled=True,
+    )
 
     with pytest.raises(Exception) as exc:
         with database.snapshot(multi_use=True) as snapshot:
             snapshot.execute_sql("SELECT 1")
-            time.sleep(60)
+            time.sleep(10)
             snapshot.execute_sql("SELECT 1")
+
+    assert (
+        exc.value.args[0]
+        == "Transaction has been closed as it was running for more than 60 minutes"
+    )
+
+
+def test_should_close_inactive_transactions_with_pinging_pool_and_batch(
+    not_emulator,
+    not_postgres,
+    shared_instance,
+    database_operation_timeout,
+    databases_to_delete,
+):
+    # Overriding the frequency and threshold to smaller value to simulate the behavior.
+    spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC = 2
+    spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC = 5
+
+    database_name = _helpers.unique_id("test_longrunning", separator="_")
+    pool = spanner_v1.PingingPool(size=1, default_timeout=500)
+
+    temp_db = shared_instance.database(
+        database_name,
+    )
+
+    create_operation = temp_db.create()
+    create_operation.result(database_operation_timeout)
+    databases_to_delete.append(temp_db)
+    operation = temp_db.update_ddl(_helpers.DDL_STATEMENTS)
+    operation.result(database_operation_timeout)
+
+    database = shared_instance.database(
+        database_name,
+        pool=pool,
+        close_inactive_transactions=True,
+        logging_enabled=True,
+    )
+
+    table = "contacts"
+    columns = ["contact_id", "first_name", "last_name", "email"]
+    rowdata1 = [
+        (1, "Alex", "Alex", "testemail@email.com"),
+    ]
+    rowdata2 = [
+        (2, "Alexander", "Alexander", "testemail@email.com"),
+    ]
+
+    with pytest.raises(Exception) as exc:
+        with database.batch() as batch:
+            batch.insert(table, columns, rowdata1)
+            batch.insert(table, columns, rowdata2)
+            time.sleep(10)
 
     assert (
         exc.value.args[0]
