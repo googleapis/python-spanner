@@ -373,12 +373,9 @@ class FixedSizePool(AbstractSessionPool):
             self._database.close_inactive_transactions or self._database.logging_enabled
         ) and len(self._borrowed_sessions) / self.size >= 0.95:
             self.startCleaningLongRunningSessions()
-        
+
         # Log a warning message if Session pool is exhausted.
-        if (
-            self._database.logging_enabled
-            and len(self._borrowed_sessions) == self.size
-        ):
+        if self._database.logging_enabled and len(self._borrowed_sessions) == self.size:
             self._database.logger.warning("100% of the session pool is exhausted")
 
         return session
@@ -483,7 +480,7 @@ class BurstyPool(AbstractSessionPool):
             self._database.close_inactive_transactions or self._database.logging_enabled
         ) and len(self._borrowed_sessions) / self.target_size >= 0.95:
             self.startCleaningLongRunningSessions()
-        
+
         # Log a warning message if Session pool is exhausted.
         if (
             self._database.logging_enabled
@@ -654,12 +651,9 @@ class PingingPool(AbstractSessionPool):
             self._database.close_inactive_transactions or self._database.logging_enabled
         ) and len(self._borrowed_sessions) / self.size >= 0.95:
             self.startCleaningLongRunningSessions()
-        
+
         # Log a warning message if Session pool is exhausted.
-        if (
-            self._database.logging_enabled
-            and len(self._borrowed_sessions) == self.size
-        ):
+        if self._database.logging_enabled and len(self._borrowed_sessions) == self.size:
             self._database.logger.warning("100% of the session pool is exhausted")
         return session
 

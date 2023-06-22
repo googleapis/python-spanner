@@ -650,7 +650,7 @@ class TestBurstyPool(unittest.TestCase):
         previous = _Session(database)
         pool.put(previous)
         pool._cleanup_task_ongoing_event.set()
-        
+
         pool.clear()
         self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         self.assertTrue(previous._deleted)
