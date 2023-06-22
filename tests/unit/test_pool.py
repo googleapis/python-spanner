@@ -166,51 +166,62 @@ class TestAbstractSessionPool(unittest.TestCase):
             pool.stopCleaningLongRunningSessions()
             self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
-    # @mock.patch("threading.Thread")
-    # def test_startCleaningLongRunningSessions_should_trigger_background_task_once(self, mock_thread_class):
-    #     mock_thread = mock.MagicMock()
-    #     mock_thread.start = mock.MagicMock()
-    #     mock_thread_class.return_value = mock_thread
+    @mock.patch("threading.Thread")
+    def test_startCleaningLongRunningSessions_should_trigger_background_task_once(
+        self, mock_thread_class
+    ):
+        mock_thread = mock.MagicMock()
+        mock_thread.start = mock.MagicMock()
+        mock_thread_class.return_value = mock_thread
 
-    #     pool = self._make_one()
-    #     pool._database = mock.MagicMock()
-    #     pool._cleanup_task_ongoing_event.clear()
-    #     with mock.patch(
-    #         "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
-    #         new=5,
-    #     ), mock.patch(
-    #         "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC",
-    #         new=10,
-    #     ):
-    #         pool.startCleaningLongRunningSessions()
-    #         threads = []
-    #         threads.append(
-    #             threading.Thread(
-    #                 target=pool.startCleaningLongRunningSessions,
-    #             )
-    #         )
-    #         threads.append(
-    #             threading.Thread(
-    #                 target=pool.startCleaningLongRunningSessions,
-    #             )
-    #         )
-    #         for thread in threads:
-    #             thread.start()
+        pool = self._make_one()
+        pool._database = mock.MagicMock()
+        pool._cleanup_task_ongoing_event.clear()
+        with mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
+            new=5,
+        ), mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC",
+            new=10,
+        ):
+            pool.startCleaningLongRunningSessions()
 
-    #         for thread in threads:
-    #             thread.join()
+            # Calling start and stop background task multiple times. Background should get trigerred only once.
+            threads = []
+            threads.append(
+                threading.Thread(
+                    target=pool.startCleaningLongRunningSessions,
+                )
+            )
+            threads.append(
+                threading.Thread(
+                    target=pool.stopCleaningLongRunningSessions,
+                )
+            )
+            threads.append(
+                threading.Thread(
+                    target=pool.startCleaningLongRunningSessions,
+                )
+            )
+            for thread in threads:
+                thread.start()
 
-    #         # A new thread should have been created to start the task
-    #         threading.Thread.assert_called_once_with(
-    #             target=pool.deleteLongRunningTransactions,
-    #             args=(5, 10),
-    #             daemon=True,
-    #             name="recycle-sessions",
-    #         )
+            for thread in threads:
+                thread.join()
 
-    #     mock_thread.start.assert_called_once()
-    #     pool.stopCleaningLongRunningSessions()
-    #     self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+            # A new thread should have been created to start the task
+            deleteLongRunningTransactions_calls = sum(
+                [
+                    1
+                    for call in threading.Thread.mock_calls
+                    if "deleteLongRunningTransactions" in call.kwargs.__str__()
+                ]
+            )
+
+            self.assertEqual(deleteLongRunningTransactions_calls, 1)
+
+        pool.stopCleaningLongRunningSessions()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
     def test_stopCleaningLongRunningSessions(self):
         pool = self._make_one()
