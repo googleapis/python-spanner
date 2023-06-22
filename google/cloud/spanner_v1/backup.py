@@ -294,9 +294,6 @@ class Backup(object):
         metadata = _metadata_with_prefix(self.name)
 
         if self._source_backup:
-            if not self._expire_time:
-                raise ValueError("expire_time not set")
-
             request = CopyBackupRequest(
                 parent=self._instance.name,
                 backup_id=self.backup_id,
