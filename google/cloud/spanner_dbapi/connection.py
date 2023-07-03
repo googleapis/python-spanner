@@ -83,7 +83,7 @@ class Connection:
         should end a that a new one should be started when the next statement is executed.
     """
 
-    def __init__(self, instance, database, read_only=False):
+    def __init__(self, instance, database=None, read_only=False):
         self._instance = instance
         self._database = database
         self._ddl_statements = []
@@ -242,6 +242,8 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.session.Session`
         :returns: Cloud Spanner session object ready to use.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         if not self._session:
             self._session = self.database._pool.get()
 
@@ -252,6 +254,8 @@ class Connection:
 
         The session will be returned into the sessions pool.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         self.database._pool.put(self._session)
         self._session = None
 
@@ -368,7 +372,7 @@ class Connection:
         if self.inside_transaction:
             self._transaction.rollback()
 
-        if self._own_pool:
+        if self._own_pool and self.database:
             self.database._pool.clear()
 
         self.is_closed = True
@@ -378,6 +382,8 @@ class Connection:
 
         This method is non-operational in autocommit mode.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         self._snapshot = None
 
         if self._autocommit:
@@ -420,6 +426,8 @@ class Connection:
 
     @check_not_closed
     def run_prior_DDL_statements(self):
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         if self._ddl_statements:
             ddl_statements = self._ddl_statements
             self._ddl_statements = []
@@ -474,6 +482,8 @@ class Connection:
         :raises: :class:`google.cloud.exceptions.NotFound`: if the linked instance
                   or database doesn't exist.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         with self.database.snapshot() as snapshot:
             result = list(snapshot.execute_sql("SELECT 1"))
             if result != [[1]]:
@@ -492,11 +502,13 @@ class Connection:
 
 def connect(
     instance_id,
-    database_id,
+    database_id=None,
     project=None,
     credentials=None,
     pool=None,
     user_agent=None,
+    client=None,
+    route_to_leader_enabled=False,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -504,7 +516,7 @@ def connect(
     :param instance_id: The ID of the instance to connect to.
 
     :type database_id: str
-    :param database_id: The ID of the database to connect to.
+    :param database_id: (Optional) The ID of the database to connect to.
 
     :type project: str
     :param project: (Optional) The ID of the project which owns the
@@ -529,28 +541,50 @@ def connect(
     :param user_agent: (Optional) User agent to be used with this connection's
                        requests.
 
+    :type client: Concrete subclass of
+                  :class:`~google.cloud.spanner_v1.Client`.
+    :param client: (Optional) Custom user provided Client Object
+
+    :type route_to_leader_enabled: boolean
+    :param route_to_leader_enabled:
+        (Optional) Default False. Set route_to_leader_enabled as True to
+                   Enable leader aware routing. Enabling leader aware routing
+                   would route all requests in RW/PDML transactions to the
+                   leader region.
+
+
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
-
-    client_info = ClientInfo(
-        user_agent=user_agent or DEFAULT_USER_AGENT,
-        python_version=PY_VERSION,
-        client_library_version=spanner.__version__,
-    )
-
-    if isinstance(credentials, str):
-        client = spanner.Client.from_service_account_json(
-            credentials, project=project, client_info=client_info
+    if client is None:
+        client_info = ClientInfo(
+            user_agent=user_agent or DEFAULT_USER_AGENT,
+            python_version=PY_VERSION,
+            client_library_version=spanner.__version__,
         )
+        if isinstance(credentials, str):
+            client = spanner.Client.from_service_account_json(
+                credentials,
+                project=project,
+                client_info=client_info,
+                route_to_leader_enabled=False,
+            )
+        else:
+            client = spanner.Client(
+                project=project,
+                credentials=credentials,
+                client_info=client_info,
+                route_to_leader_enabled=False,
+            )
     else:
-        client = spanner.Client(
-            project=project, credentials=credentials, client_info=client_info
-        )
+        if project is not None and client.project != project:
+            raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(instance, instance.database(database_id, pool=pool))
+    conn = Connection(
+        instance, instance.database(database_id, pool=pool) if database_id else None
+    )
     if pool is not None:
         conn._own_pool = False
 
