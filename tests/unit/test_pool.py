@@ -220,7 +220,10 @@ class TestAbstractSessionPool(unittest.TestCase):
             )
 
             self.assertEqual(deleteLongRunningTransactions_calls, 1)
-            self.assertEqual(pool._database.logger.info.mock_calls[0].args[0].__str__(), "95.0% of the session pool is exhausted")
+            self.assertEqual(
+                pool._database.logger.info.mock_calls[0].args[0].__str__(),
+                "95.0% of the session pool is exhausted",
+            )
 
         pool.stopCleaningLongRunningSessions()
         self.assertFalse(pool._cleanup_task_ongoing_event.is_set())

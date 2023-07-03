@@ -216,9 +216,9 @@ class AbstractSessionPool(object):
             sessions_to_delete = [
                 session
                 for session in self._borrowed_sessions
-                if (datetime.datetime.utcnow() - session.checkout_time)
+                if not session.long_running
+                and (datetime.datetime.utcnow() - session.checkout_time)
                 > datetime.timedelta(seconds=longRunningTransactionThreshold_sec)
-                and not session.long_running
             ]
 
             for session in sessions_to_delete:
@@ -236,9 +236,9 @@ class AbstractSessionPool(object):
         AbstractSessionPool._cleanup_task_ongoing_event.clear()
 
     def _close_long_running_transactions(self, session):
-        """Helper method to recycle session for background task.
+        """Helper method to close long running transactions.
         :rtype: :bool
-        :returns: True if session is closed else False.
+        :returns: True if transaction is closed else False.
         """
         session_recycled = False
         session_trace = self._traces[session._session_id]

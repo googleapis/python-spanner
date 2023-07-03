@@ -1168,7 +1168,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
-    def test_partition_read_should_throw_error_for_recycled_session(self):
+    def test_partition_read_should_throw_error_is_session_is_none(self):
         from google.cloud.spanner_v1.keyset import KeySet
 
         keyset = KeySet(all_=True)
@@ -1343,7 +1343,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
-    def test_partition_query_should_throw_error_for_recycled_session(self):
+    def test_partition_query_should_throw_error_if_session_is_none(self):
         session = _Session()
         derived = self._makeDerived(session)
         derived._session = None
