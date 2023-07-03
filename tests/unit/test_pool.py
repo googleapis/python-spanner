@@ -176,6 +176,7 @@ class TestAbstractSessionPool(unittest.TestCase):
 
         pool = self._make_one()
         pool._database = mock.MagicMock()
+        pool._database.logging_enabled = True
         pool._cleanup_task_ongoing_event.clear()
         with mock.patch(
             "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
@@ -219,6 +220,7 @@ class TestAbstractSessionPool(unittest.TestCase):
             )
 
             self.assertEqual(deleteLongRunningTransactions_calls, 1)
+            self.assertEqual(pool._database.logger.info.mock_calls[0].args[0].__str__(), "95.0% of the session pool is exhausted")
 
         pool.stopCleaningLongRunningSessions()
         self.assertFalse(pool._cleanup_task_ongoing_event.is_set())

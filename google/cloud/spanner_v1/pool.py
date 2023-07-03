@@ -49,6 +49,7 @@ class AbstractSessionPool(object):
 
     _cleanup_task_ongoing_event = threading.Event()
     _cleanup_task_ongoing = False
+    _used_sessions_ratio_threshold = 0.95
 
     def __init__(self, labels=None, database_role=None):
         if labels is None:
@@ -170,7 +171,9 @@ class AbstractSessionPool(object):
         ):
             AbstractSessionPool._cleanup_task_ongoing_event.set()
             if self._database.logging_enabled:
-                self._database.logger.info("95% of the session pool is exhausted")
+                self._database.logger.info(
+                    f"{self._used_sessions_ratio_threshold * 100}% of the session pool is exhausted"
+                )
             background = threading.Thread(
                 target=self.deleteLongRunningTransactions,
                 args=(
@@ -219,7 +222,9 @@ class AbstractSessionPool(object):
             ]
 
             for session in sessions_to_delete:
-                transactions_closed += int(self._recycle_session(session))
+                transactions_closed += int(
+                    self._close_long_running_transactions(session)
+                )
 
             # Calculate and sleep for the time remaining until the next iteration based on the interval.
             iteration_elapsed = time.time() - iteration_start
@@ -230,7 +235,7 @@ class AbstractSessionPool(object):
         AbstractSessionPool._cleanup_task_ongoing = False
         AbstractSessionPool._cleanup_task_ongoing_event.clear()
 
-    def _recycle_session(self, session):
+    def _close_long_running_transactions(self, session):
         """Helper method to recycle session for background task.
         :rtype: :bool
         :returns: True if session is closed else False.
@@ -368,10 +373,12 @@ class FixedSizePool(AbstractSessionPool):
         # Set session properties.
         self._set_session_properties(session, isLongRunning)
 
-        # Start background task for handling long-running transactions if 95% of sessions are checked out.
+        # Start background task for handling long-running transactions if used session threshold has reached.
         if (
             self._database.close_inactive_transactions or self._database.logging_enabled
-        ) and len(self._borrowed_sessions) / self.size >= 0.95:
+        ) and len(
+            self._borrowed_sessions
+        ) / self.size >= self._used_sessions_ratio_threshold:
             self.startCleaningLongRunningSessions()
 
         # Log a warning message if Session pool is exhausted.
@@ -395,10 +402,12 @@ class FixedSizePool(AbstractSessionPool):
         self._sessions.put_nowait(session)
         self._traces.pop(session._session_id, None)
 
-        # Stop background task for handling long running transactions if less than 95% of sessions are checked out."
+        # Stop background task for handling long running transactions if used sessions are less the threshold"
         if (
             self._database.close_inactive_transactions or self._database.logging_enabled
-        ) and len(self._borrowed_sessions) / self.size < 0.95:
+        ) and len(
+            self._borrowed_sessions
+        ) / self.size < self._used_sessions_ratio_threshold:
             self.stopCleaningLongRunningSessions()
 
     def clear(self):
@@ -475,10 +484,12 @@ class BurstyPool(AbstractSessionPool):
         # Set session properties.
         self._set_session_properties(session, isLongRunning)
 
-        # Start background task for handling long-running transactions if 95% of sessions are checked out.
+        # Start background task for handling long-running transactions if used sessions threshold has reached.
         if (
             self._database.close_inactive_transactions or self._database.logging_enabled
-        ) and len(self._borrowed_sessions) / self.target_size >= 0.95:
+        ) and len(
+            self._borrowed_sessions
+        ) / self.target_size >= self._used_sessions_ratio_threshold:
             self.startCleaningLongRunningSessions()
 
         # Log a warning message if Session pool is exhausted.
@@ -505,11 +516,13 @@ class BurstyPool(AbstractSessionPool):
             self._sessions.put_nowait(session)
             self._traces.pop(session._session_id, None)
 
-            # Stop background task for handling long running transactions if less than 95% of sessions are checked out."
+            # Stop background task for handling long running transactions if used sessions are less then threshold."
             if (
                 self._database.close_inactive_transactions
                 or self._database.logging_enabled
-            ) and len(self._borrowed_sessions) / self.target_size < 0.95:
+            ) and len(
+                self._borrowed_sessions
+            ) / self.target_size < self._used_sessions_ratio_threshold:
                 self.stopCleaningLongRunningSessions()
         except queue.Full:
             try:
@@ -646,10 +659,12 @@ class PingingPool(AbstractSessionPool):
         # Set session properties.
         self._set_session_properties(session, isLongRunning)
 
-        # Start background task for handling long-running transactions if 95% of sessions are checked out.
+        # Start background task for handling long-running transactions if used sessions threshold has reached.
         if (
             self._database.close_inactive_transactions or self._database.logging_enabled
-        ) and len(self._borrowed_sessions) / self.size >= 0.95:
+        ) and len(
+            self._borrowed_sessions
+        ) / self.size >= self._used_sessions_ratio_threshold:
             self.startCleaningLongRunningSessions()
 
         # Log a warning message if Session pool is exhausted.
@@ -672,10 +687,12 @@ class PingingPool(AbstractSessionPool):
         self._sessions.put_nowait((_NOW() + self._delta, session))
         self._traces.pop(session._session_id, None)
 
-        # Stop background task for handling long running transactions if less than 95% of sessions are checked out."
+        # Stop background task for handling long running transactions if used sessions are less then the threshold"
         if (
             self._database.close_inactive_transactions or self._database.logging_enabled
-        ) and len(self._borrowed_sessions) / self.size < 0.95:
+        ) and len(
+            self._borrowed_sessions
+        ) / self.size < self._used_sessions_ratio_threshold:
             self.stopCleaningLongRunningSessions()
 
     def clear(self):
@@ -809,11 +826,13 @@ class TransactionPingingPool(PingingPool):
             self._pending_sessions.put(session)
             self._traces.pop(session._session_id, None)
 
-            # Stop background task for handling long running transactions if less than 95% of sessions are checked out."
+            # Stop background task for handling long running transactions if used sessions are less then threshold."
             if (
                 self._database.close_inactive_transactions
                 or self._database.logging_enabled
-            ) and len(self._borrowed_sessions) / self.size < 0.95:
+            ) and len(
+                self._borrowed_sessions
+            ) / self.size < self._used_sessions_ratio_threshold:
                 self.stopCleaningLongRunningSessions()
         else:
             super(TransactionPingingPool, self).put(session)

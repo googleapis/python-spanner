@@ -109,7 +109,7 @@ class Database(object):
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
 
     :type logging_enabled: boolean
-    :parama logging_enabled: (Optional) Represents whether the database
+    :param logging_enabled: (Optional) Represents whether the database
                     has logging enabled or not. Default is True
 
     :type logger: :class:`logging.Logger`
@@ -1049,7 +1049,7 @@ class BatchCheckout(object):
         """Begin ``with`` block."""
         session = self._session = self._database._pool.get()
         batch = self._batch = Batch(session)
-        self._session._transaction = self._batch
+        self._session._transaction = batch
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
         return batch
