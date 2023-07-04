@@ -428,7 +428,6 @@ class Instance(object):
         database_id,
         ddl_statements=(),
         pool=None,
-        logging_enabled=True,
         logger=None,
         close_inactive_transactions=False,
         encryption_config=None,
@@ -448,10 +447,6 @@ class Instance(object):
         :type pool: concrete subclass of
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
         :param pool: (Optional) session pool to be used by database.
-
-        :type logging_enabled: boolean
-        :param logging_enabled: (Optional) Represents whether the database
-                        has logging enabled or not. Default is True
 
         :type logger: :class:`logging.Logger`
         :param logger: (Optional) a custom logger that is used if `log_commit_stats`
@@ -490,7 +485,6 @@ class Instance(object):
             self,
             ddl_statements=ddl_statements,
             pool=pool,
-            logging_enabled=logging_enabled,
             logger=logger,
             close_inactive_transactions=close_inactive_transactions,
             encryption_config=encryption_config,

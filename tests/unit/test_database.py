@@ -117,7 +117,6 @@ class TestDatabase(_BaseTest):
         self.assertTrue(database._pool._sessions.empty())
         self.assertIsNone(database.database_role)
         self.assertTrue(database._route_to_leader_enabled, True)
-        self.assertTrue(database._logging_enabled)
         self.assertFalse(database._close_inactive_transactions)
 
     def test_ctor_w_explicit_pool(self):
@@ -148,20 +147,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertFalse(database._route_to_leader_enabled)
-
-    def test_ctor_w_logger_enabled(self):
-        instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance, logging_enabled=True)
-        self.assertEqual(database.database_id, self.DATABASE_ID)
-        self.assertIs(database._instance, instance)
-        self.assertIs(database.logging_enabled, True)
-
-    def test_ctor_w_logger_disabled(self):
-        instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance, logging_enabled=False)
-        self.assertEqual(database.database_id, self.DATABASE_ID)
-        self.assertIs(database._instance, instance)
-        self.assertIs(database.logging_enabled, False)
 
     def test_ctor_w_close_inactive_transactions_enabled(self):
         instance = _Instance(self.INSTANCE_NAME)

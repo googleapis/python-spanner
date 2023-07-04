@@ -108,10 +108,6 @@ class Database(object):
                  passed, the database will construct an instance of
                  :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
 
-    :type logging_enabled: boolean
-    :param logging_enabled: (Optional) Represents whether the database
-                    has logging enabled or not. Default is True
-
     :type logger: :class:`logging.Logger`
     :param logger: (Optional) a custom logger that is used if `log_commit_stats`
                    is `True` to log commit statistics. If not passed, a logger
@@ -150,7 +146,6 @@ class Database(object):
         instance,
         ddl_statements=(),
         pool=None,
-        logging_enabled=True,
         logger=None,
         close_inactive_transactions=False,
         encryption_config=None,
@@ -170,7 +165,6 @@ class Database(object):
         self._encryption_info = None
         self._default_leader = None
         self.log_commit_stats = False
-        self._logging_enabled = logging_enabled
         self._logger = logger
         self._close_inactive_transactions = close_inactive_transactions
         self._encryption_config = encryption_config
@@ -351,14 +345,6 @@ class Database(object):
         :returns: a str with the name of the database role.
         """
         return self._database_role
-
-    @property
-    def logging_enabled(self):
-        """Whether the database has logging enabled. Default: True.
-        :rtype: bool
-        :returns: True if logging is enabled, else False.
-        """
-        return self._logging_enabled
 
     @property
     def reconciling(self):

@@ -48,14 +48,18 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
-        pool = self._make_one(labels=labels, database_role=database_role)
+        pool = self._make_one(
+            labels=labels, database_role=database_role, logging_enabled=False
+        )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_bind_abstract(self):
         pool = self._make_one()
@@ -176,7 +180,6 @@ class TestAbstractSessionPool(unittest.TestCase):
 
         pool = self._make_one()
         pool._database = mock.MagicMock()
-        pool._database.logging_enabled = True
         pool._cleanup_task_ongoing_event.clear()
         with mock.patch(
             "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
@@ -247,7 +250,7 @@ class TestAbstractSessionPool(unittest.TestCase):
 
         pool.put.side_effect = put_side_effect
 
-        pool._database.logging_enabled = logging_enabled
+        pool.logging_enabled = logging_enabled
         pool._cleanup_task_ongoing_event.set()
         pool._database.close_inactive_transactions = close_inactive_transactions
         pool._borrowed_sessions = []
@@ -366,12 +369,17 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
         pool = self._make_one(
-            size=4, default_timeout=30, labels=labels, database_role=database_role
+            size=4,
+            default_timeout=30,
+            labels=labels,
+            database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -379,6 +387,7 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_bind(self):
         database_role = "dummy-role"
@@ -546,16 +555,23 @@ class TestBurstyPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
-        pool = self._make_one(target_size=4, labels=labels, database_role=database_role)
+        pool = self._make_one(
+            target_size=4,
+            labels=labels,
+            database_role=database_role,
+            logging_enabled=False,
+        )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.target_size, 4)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -690,6 +706,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
@@ -700,6 +717,7 @@ class TestPingingPool(unittest.TestCase):
             ping_interval=1800,
             labels=labels,
             database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -708,6 +726,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -967,6 +986,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
@@ -977,6 +997,7 @@ class TestTransactionPingingPool(unittest.TestCase):
             ping_interval=1800,
             labels=labels,
             database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -986,6 +1007,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -1269,7 +1291,6 @@ class _Database(object):
         self.database_id = name
         self._route_to_leader_enabled = True
         self.close_inactive_transactions = True
-        self.logging_enabled = True
         self._logger = mock.MagicMock()
         self._logger.info = mock.MagicMock()
         self._logger.warning = mock.MagicMock()

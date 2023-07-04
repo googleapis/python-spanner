@@ -56,7 +56,6 @@ class Test_connect(unittest.TestCase):
         instance.database.assert_called_once_with(
             DATABASE,
             pool=None,
-            logging_enabled=False,
             close_inactive_transactions=False,
         )
         # Datbase constructs its own pool
@@ -104,7 +103,6 @@ class Test_connect(unittest.TestCase):
         instance.database.assert_called_once_with(
             DATABASE,
             pool=pool,
-            logging_enabled=False,
             close_inactive_transactions=False,
         )
 

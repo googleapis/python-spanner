@@ -2536,7 +2536,6 @@ def test_should_close_inactive_transactions_with_bursty_pool_and_transaction(
         ddl_statements=_helpers.DDL_STATEMENTS,
         pool=pool,
         close_inactive_transactions=True,
-        logging_enabled=True,
     )
 
     operation = temp_db.create()
@@ -2585,7 +2584,6 @@ def test_should_close_inactive_transactions_with_fixedsize_pool_and_snapshot(
         database_name,
         pool=pool,
         close_inactive_transactions=True,
-        logging_enabled=True,
     )
 
     with pytest.raises(Exception) as exc:
@@ -2628,7 +2626,6 @@ def test_should_close_inactive_transactions_with_pinging_pool_and_batch(
         database_name,
         pool=pool,
         close_inactive_transactions=True,
-        logging_enabled=True,
     )
 
     table = "contacts"

@@ -582,17 +582,18 @@ def connect(
             raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(
-        instance,
-        instance.database(
+
+    if database_id:
+        database = instance.database(
             database_id,
             pool=pool,
-            logging_enabled=False,
             close_inactive_transactions=False,
         )
-        if database_id
-        else None,
-    )
+        database._pool.logging_enabled = False
+    else:
+        database = None
+
+    conn = Connection(instance, database)
     if pool is not None:
         conn._own_pool = False
 

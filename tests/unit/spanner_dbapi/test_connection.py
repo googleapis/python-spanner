@@ -19,6 +19,7 @@ import mock
 import unittest
 import warnings
 import pytest
+from google.cloud.spanner_v1 import BurstyPool
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -1023,6 +1024,9 @@ class _Database(object):
         close_inactive_transactions=False,
     ):
         self.name = database_id
-        self.pool = pool
+        if pool is None:
+            pool = BurstyPool()
+
+        self._pool = pool
         self.logging_enabled = logging_enabled
         self.close_inactive_transactions = close_inactive_transactions
