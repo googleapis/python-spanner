@@ -281,7 +281,7 @@ class AbstractSessionPool(object):
             if not session.transaction_logged:
                 self._database.logger.warning(
                     "Transaction has been running for longer than 60 minutes and might be causing a leak. "
-                    + "Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions. "
+                    + "Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions or use batch or partitioned transactions for long running operations."
                     + session_trace
                 )
                 session.transaction_logged = True

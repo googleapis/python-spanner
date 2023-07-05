@@ -115,8 +115,8 @@ class Database(object):
                    to stdout.
 
     :type close_inactive_transactions: boolean
-    :param close_inactive_transactions: (Optional) Represents whether the database
-                    has close inactive transactions enabled or not. Default is False
+    :param close_inactive_transactions: (Optional) If set to True, the database will automatically close inactive transactions that have been running for longer than 60 minutes which may cause session leaks.
+                    By default, this is set to False.
 
     :type encryption_config:
         :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
