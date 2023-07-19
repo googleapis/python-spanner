@@ -391,7 +391,7 @@ class _SnapshotBase(_SessionWrapper):
 
         if params is not None:
             if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
+                param_types = {}
             params_pb = Struct(
                 fields={key: _make_value_pb(value) for key, value in params.items()}
             )
@@ -633,7 +633,7 @@ class _SnapshotBase(_SessionWrapper):
 
         if params is not None:
             if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
+                param_types = {}
             params_pb = Struct(
                 fields={key: _make_value_pb(value) for (key, value) in params.items()}
             )

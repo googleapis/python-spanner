@@ -629,7 +629,7 @@ class Database(object):
             from google.cloud.spanner_v1.transaction import Transaction
 
             if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
+                param_types = {}
             params_pb = Transaction._make_params_pb(params, param_types)
         else:
             params_pb = {}
