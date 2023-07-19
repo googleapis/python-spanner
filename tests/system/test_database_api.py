@@ -25,7 +25,6 @@ from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
