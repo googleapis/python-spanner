@@ -813,6 +813,6 @@ def test_alter_table_with_foreign_key_delete_cascade(capsys, instance_id, sample
 
 @pytest.mark.dependency(depends=["alter_table_with_foreign_key_delete_cascade"])
 def test_drop_foreign_key_contraint_delete_cascade(capsys, instance_id, sample_database):
-    snippets.drop_foreign_key_contraint_delete_cascade(instance_id, sample_database.database_id)
+    snippets.drop_foreign_key_constraint_delete_cascade(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Altered ShoppingCarts table to drop FKShoppingCartsCustomerName" in out
