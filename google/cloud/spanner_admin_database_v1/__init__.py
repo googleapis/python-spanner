@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
 from .types.spanner_database_admin import DatabaseRole
+from .types.spanner_database_admin import DdlStatementActionInfo
 from .types.spanner_database_admin import DropDatabaseRequest
 from .types.spanner_database_admin import GetDatabaseDdlRequest
 from .types.spanner_database_admin import GetDatabaseDdlResponse
@@ -81,6 +82,7 @@ __all__ = (
     "DatabaseAdminClient",
     "DatabaseDialect",
     "DatabaseRole",
+    "DdlStatementActionInfo",
     "DeleteBackupRequest",
     "DropDatabaseRequest",
     "EncryptionConfig",
