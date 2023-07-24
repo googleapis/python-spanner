@@ -78,7 +78,6 @@ class TestClient(unittest.TestCase):
             )
         else:
             expected_client_options = client_options
-
         if route_to_leader_enabled is not None:
             kwargs["route_to_leader_enabled"] = route_to_leader_enabled
 
