@@ -2,7 +2,8 @@ ARG VARIANT="3.8"
 FROM mcr.microsoft.com/devcontainers/python:${VARIANT}
 
 #install nox
-RUN python3 -m pip install --upgrade --quiet nox
+COPY requirements.txt /requirements.txt
+RUN python3 -m pip install --upgrade --quiet --require-hashes -r requirements.txt
 
 # install gh
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg \
