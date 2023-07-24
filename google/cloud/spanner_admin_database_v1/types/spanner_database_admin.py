@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -342,8 +342,10 @@ class CreateDatabaseRequest(proto.Message):
             inside the newly created database. Statements
             can create tables, indexes, etc. These
             statements execute atomically with the creation
-            of the database: if there is an error in any
-            statement, the database is not created.
+            of the database:
+
+            if there is an error in any statement, the
+            database is not created.
         encryption_config (google.cloud.spanner_admin_database_v1.types.EncryptionConfig):
             Optional. The encryption configuration for
             the database. If this field is not specified,
