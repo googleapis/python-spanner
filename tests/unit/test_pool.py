@@ -147,6 +147,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         pool = self._make_one()
         pool._database = mock.MagicMock()
         pool._cleanup_task_ongoing_event.clear()
+        pool._cleanup_task_ongoing = False
         with mock.patch(
             "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
             new=5,

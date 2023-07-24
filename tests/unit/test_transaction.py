@@ -314,7 +314,7 @@ class TestTransaction(OpenTelemetryBase):
             transaction.commit()
         self.assertEqual(
             str(cm.exception),
-            "Transaction has been closed as it was running for more than 60 minutes",
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def test_commit_already_committed(self):
@@ -686,7 +686,7 @@ class TestTransaction(OpenTelemetryBase):
             transaction.batch_update(statements=[DML_QUERY])
         self.assertEqual(
             str(cm.exception),
-            "Transaction has been closed as it was running for more than 60 minutes",
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def _batch_update_helper(self, error_after=None, count=0, request_options=None):

@@ -25,6 +25,7 @@ from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    LONG_RUNNING_TRANSACTION_ERR_MSG,
 )
 from warnings import warn
 
@@ -263,9 +264,7 @@ class AbstractSessionPool(object):
             if self.logging_enabled:
                 # Log a warning for a long-running transaction that has been closed
                 self._database.logger.warning(
-                    "Long running transaction! Transaction has been closed as it was running for "
-                    + "more than 60 minutes. For long running transactions use batch or partitioned transactions. "
-                    + session_trace
+                    LONG_RUNNING_TRANSACTION_ERR_MSG + session_trace
                 )
 
             # Set the session as None for associated transaction object

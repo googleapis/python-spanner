@@ -825,7 +825,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(
             str(cm.exception),
-            "Transaction has been closed as it was running for more than 60 minutes",
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def test_execute_sql_w_params_wo_param_types(self):
@@ -1181,7 +1181,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(
             str(cm.exception),
-            "Transaction has been closed as it was running for more than 60 minutes",
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def test_partition_read_w_retry(self):
@@ -1353,7 +1353,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(
             str(cm.exception),
-            "Transaction has been closed as it was running for more than 60 minutes",
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def test_partition_query_w_params_wo_param_types(self):

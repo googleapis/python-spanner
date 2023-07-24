@@ -24,6 +24,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _retry,
     _check_rst_stream_error,
+    LONG_RUNNING_TRANSACTION_ERR_MSG,
 )
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
@@ -64,9 +65,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
     def _check_session_state(self):
         if self._session is None:
-            raise ValueError(
-                "Transaction has been closed as it was running for more than 60 minutes"
-            )
+            raise ValueError(LONG_RUNNING_TRANSACTION_ERR_MSG)
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.

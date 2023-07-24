@@ -29,6 +29,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
+from google.cloud.spanner_v1._helpers import LONG_RUNNING_TRANSACTION_ERR_MSG
 from google.api_core.exceptions import InternalServerError
 
 
@@ -145,9 +146,7 @@ class Batch(_BatchBase):
         if self.committed is not None:
             raise ValueError("Batch already committed")
         if self._session is None:
-            raise ValueError(
-                "Transaction has been closed as it was running for more than 60 minutes"
-            )
+            raise ValueError(LONG_RUNNING_TRANSACTION_ERR_MSG)
 
     def commit(self, return_commit_stats=False, request_options=None):
         """Commit mutations to the database.

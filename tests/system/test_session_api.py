@@ -2552,7 +2552,7 @@ def test_should_close_inactive_transactions_with_bursty_pool_and_transaction(
         temp_db.run_in_transaction(long_operation)
     assert (
         exc.value.args[0]
-        == "Transaction has been closed as it was running for more than 60 minutes"
+        == "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML."
     )
 
 
@@ -2594,7 +2594,7 @@ def test_should_close_inactive_transactions_with_fixedsize_pool_and_snapshot(
 
     assert (
         exc.value.args[0]
-        == "Transaction has been closed as it was running for more than 60 minutes"
+        == "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML."
     )
 
 
@@ -2645,7 +2645,7 @@ def test_should_close_inactive_transactions_with_pinging_pool_and_batch(
 
     assert (
         exc.value.args[0]
-        == "Transaction has been closed as it was running for more than 60 minutes"
+        == "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML."
     )
 
 

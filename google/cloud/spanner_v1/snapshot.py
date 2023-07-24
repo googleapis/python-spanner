@@ -37,6 +37,7 @@ from google.cloud.spanner_v1._helpers import (
     _retry,
     _check_rst_stream_error,
     _SessionWrapper,
+    LONG_RUNNING_TRANSACTION_ERR_MSG,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -154,9 +155,7 @@ class _SnapshotBase(_SessionWrapper):
 
     def _check_session_state(self):
         if self._session is None:
-            raise ValueError(
-                "Transaction has been closed as it was running for more than 60 minutes"
-            )
+            raise ValueError(LONG_RUNNING_TRANSACTION_ERR_MSG)
 
     def _make_txn_selector(self):
         """Helper for :meth:`read` / :meth:`execute_sql`.
