@@ -117,7 +117,7 @@ class Client(ClientWithProject):
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
         (Optional) Default False. Set route_to_leader_enabled as True to
-                   Enable leader aware routing. Enabling leader aware routing
+                   enable leader aware routing. Enabling leader aware routing
                    would route all requests in RW/PDML transactions to the
                    leader region.
 
