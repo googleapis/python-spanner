@@ -190,39 +190,3 @@ EMULATOR_DDL_STATEMENTS = [
     stmt.strip() for stmt in EMULATOR_DDL.split(";") if stmt.strip()
 ]
 PG_DDL_STATEMENTS = [stmt.strip() for stmt in PG_DDL.split(";") if stmt.strip()]
-
-FKDAC_DDL = """\
-CREATE TABLE Customers_ (
-    CustomerId INT64 NOT NULL,
-    CustomerName STRING(62) NOT NULL,
-    ) PRIMARY KEY (CustomerId);
-
-    CREATE TABLE ShoppingCarts_ (
-    CartId INT64 NOT NULL,
-    CustomerId INT64 NOT NULL,
-    CustomerName STRING(62) NOT NULL,
-    CONSTRAINT FKShoppingCartsCustomerId FOREIGN KEY (CustomerId)
-    REFERENCES Customers_ (CustomerId) ON DELETE CASCADE
-    ) PRIMARY KEY (CartId);
-"""
-
-PG_FKDAC_DDL = """\
-CREATE TABLE Customers_ (
-    CustomerId BIGINT,
-    CustomerName VARCHAR(62) NOT NULL,
-    PRIMARY KEY (CustomerId));
-
-    CREATE TABLE ShoppingCarts_ (
-    CartId BIGINT,
-    CustomerId BIGINT NOT NULL,
-    CustomerName VARCHAR(62) NOT NULL,
-    CONSTRAINT "FKShoppingCartsCustomerId" FOREIGN KEY (CustomerId)
-    REFERENCES Customers_ (CustomerId) ON DELETE CASCADE,
-    PRIMARY KEY (CartId)
-    );
-"""
-
-FKDAC_DDL_STATEMENTS = [stmt.strip() for stmt in FKDAC_DDL.split(";") if stmt.strip()]
-PG_FKDAC_DDL_STATEMENTS = [
-    stmt.strip() for stmt in PG_FKDAC_DDL.split(";") if stmt.strip()
-]

@@ -65,12 +65,6 @@ DDL_STATEMENTS = (
     )
 )
 
-FKADC_DDL_STATEMENTS = (
-    _fixtures.PG_FKDAC_DDL_STATEMENTS
-    if DATABASE_DIALECT == "POSTGRESQL"
-    else _fixtures.FKDAC_DDL_STATEMENTS
-)
-
 retry_true = retry.RetryResult(operator.truth)
 retry_false = retry.RetryResult(operator.not_)
 
