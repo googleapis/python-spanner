@@ -154,6 +154,19 @@ def test_create_instance_with_processing_units(capsys, lci_instance_id):
     retry_429(instance.delete)()
 
 
+def test_update_database(capsys, instance_id, sample_database):
+    snippets.update_database(
+        instance_id, sample_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "Updated database {}.".format(sample_database.name) in out
+
+    # Cleanup
+    sample_database.enable_drop_protection = False
+    op = sample_database.update(["enable_drop_protection"])
+    op.result()
+
+
 def test_create_database_with_encryption_config(
     capsys, instance_id, cmek_database_id, kms_key_name
 ):
@@ -762,6 +775,28 @@ def test_list_database_roles(capsys, instance_id, sample_database):
     snippets.list_database_roles(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "new_parent" in out
+
+
+@pytest.mark.dependency(name="create_table_with_foreign_key_delete_cascade")
+def test_create_table_with_foreign_key_delete_cascade(capsys, instance_id, sample_database):
+    snippets.create_table_with_foreign_key_delete_cascade(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId" in out
+
+
+@pytest.mark.dependency(name="alter_table_with_foreign_key_delete_cascade",
+                        depends=["create_table_with_foreign_key_delete_cascade"])
+def test_alter_table_with_foreign_key_delete_cascade(capsys, instance_id, sample_database):
+    snippets.alter_table_with_foreign_key_delete_cascade(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Altered ShoppingCarts table with FKShoppingCartsCustomerName" in out
+
+
+@pytest.mark.dependency(depends=["alter_table_with_foreign_key_delete_cascade"])
+def test_drop_foreign_key_contraint_delete_cascade(capsys, instance_id, sample_database):
+    snippets.drop_foreign_key_constraint_delete_cascade(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Altered ShoppingCarts table to drop FKShoppingCartsCustomerName" in out
 
 
 def test_create_sequence(capsys, instance_id, sample_database):
