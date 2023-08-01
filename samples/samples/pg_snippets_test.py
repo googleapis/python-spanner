@@ -504,7 +504,7 @@ def test_alter_sequence(capsys, instance_id, sample_database):
     assert "Inserted customer record with Customer Id:" in out
 
 
-@pytest.mark.dependency(depends=["create_sequence"])
+@pytest.mark.dependency(depends=["alter_sequence"])
 def test_drop_sequence(capsys, instance_id, sample_database):
     snippets.drop_sequence(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()

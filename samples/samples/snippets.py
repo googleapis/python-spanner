@@ -2789,6 +2789,10 @@ if __name__ == "__main__":  # noqa: C901
         "read_data_with_database_role", help=read_data_with_database_role.__doc__
     )
     subparsers.add_parser("list_database_roles", help=list_database_roles.__doc__)
+    subparsers.add_parser("create_sequence", help=create_sequence.__doc__)
+    subparsers.add_parser("alter_sequence", help=alter_sequence.__doc__)
+    subparsers.add_parser("drop_sequence", help=drop_sequence.__doc__)
+
     enable_fine_grained_access_parser = subparsers.add_parser(
         "enable_fine_grained_access", help=enable_fine_grained_access.__doc__
     )

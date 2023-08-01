@@ -1768,6 +1768,9 @@ if __name__ == "__main__":  # noqa: C901
         "create_client_with_query_options",
         help=create_client_with_query_options.__doc__,
     )
+    subparsers.add_parser("create_sequence", help=create_sequence.__doc__)
+    subparsers.add_parser("alter_sequence", help=alter_sequence.__doc__)
+    subparsers.add_parser("drop_sequence", help=drop_sequence.__doc__)
 
     args = parser.parse_args()
 
