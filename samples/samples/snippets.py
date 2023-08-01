@@ -2560,7 +2560,7 @@ def create_sequence(instance_id, database_id):
         [
             "CREATE SEQUENCE Seq OPTIONS (sequence_kind = 'bit_reversed_positive')",
             """CREATE TABLE Customers (
-            CustomerId     INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE('Seq')),
+            CustomerId     INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE(Sequence Seq)),
             CustomerName      STRING(1024)
             ) PRIMARY KEY (CustomerId)""",
         ]
