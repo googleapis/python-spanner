@@ -194,7 +194,7 @@ def database_id():
 
 @pytest.fixture(scope="module")
 def bit_reverse_sequence_database_id():
-    """Id for the database used in samples.
+    """Id for the database used in bit reverse sequence samples.
 
     Sample testcase modules can override as needed.
     """
