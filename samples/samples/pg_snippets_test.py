@@ -481,8 +481,8 @@ def test_query_data_with_jsonb_parameter(capsys, instance_id, sample_database):
     assert "VenueId: 19, VenueDetails: {'open': True, 'rating': 9}" in out
 
 
-def test_create_sequence(capsys, instance_id, sample_database):
-    snippets.create_sequence(instance_id, sample_database.database_id)
+def test_create_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    snippets.create_sequence(instance_id, bit_reverse_sequence_database.database_id)
     out, _ = capsys.readouterr()
     assert (
         "Created Seq sequence and Customers table, where the key column CustomerId uses the sequence as a default value on database"
@@ -493,8 +493,8 @@ def test_create_sequence(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(depends=["create_sequence"])
-def test_alter_sequence(capsys, instance_id, sample_database):
-    snippets.alter_sequence(instance_id, sample_database.database_id)
+def test_alter_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    snippets.alter_sequence(instance_id, bit_reverse_sequence_database.database_id)
     out, _ = capsys.readouterr()
     assert (
         "Altered Seq sequence to skip an inclusive range between 1000 and 5000000 on database"
@@ -505,8 +505,8 @@ def test_alter_sequence(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(depends=["alter_sequence"])
-def test_drop_sequence(capsys, instance_id, sample_database):
-    snippets.drop_sequence(instance_id, sample_database.database_id)
+def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    snippets.drop_sequence(instance_id, bit_reverse_sequence_database.database_id)
     out, _ = capsys.readouterr()
     assert (
         "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"

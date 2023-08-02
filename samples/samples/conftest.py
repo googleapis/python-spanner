@@ -192,6 +192,14 @@ def database_id():
       """
     return "my-database-id"
 
+@pytest.fixture(scope="module")
+def bit_reverse_sequence_database_id():
+    """Id for the database used in samples.
+
+      Sample testcase modules can override as needed.
+      """
+    return "bit-reverse-sequence-database-id"
+
 
 @pytest.fixture(scope="module")
 def database_ddl():
@@ -245,6 +253,37 @@ def sample_database(
     yield sample_database
 
     sample_database.drop()
+
+@pytest.fixture(scope="module")
+def bit_reverse_sequence_database(
+  spanner_client,
+  sample_instance,
+  bit_reverse_sequence_database_id,
+  database_dialect):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        bit_reverse_sequence_database = sample_instance.database(
+          bit_reverse_sequence_database_id,
+          database_dialect=DatabaseDialect.POSTGRESQL,
+        )
+
+        if not bit_reverse_sequence_database.exists():
+            operation = bit_reverse_sequence_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
+
+        yield bit_reverse_sequence_database
+
+        bit_reverse_sequence_database.drop()
+        return
+
+    bit_reverse_sequence_database = sample_instance.database(bit_reverse_sequence_database_id)
+
+    if not bit_reverse_sequence_database.exists():
+        operation = bit_reverse_sequence_database.create()
+        operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    yield bit_reverse_sequence_database
+
+    bit_reverse_sequence_database.drop()
 
 
 @pytest.fixture(scope="module")
