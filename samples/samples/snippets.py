@@ -208,8 +208,7 @@ def update_database(instance_id, database_id):
 
     operation = db.update(["enable_drop_protection"])
 
-    print("Waiting for update operation for {} to complete...".format(
-      db.name))
+    print("Waiting for update operation for {} to complete...".format(db.name))
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print("Updated database {}.".format(db.name))
@@ -2472,7 +2471,7 @@ def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
                CONSTRAINT FKShoppingCartsCustomerId FOREIGN KEY (CustomerId)
                REFERENCES Customers (CustomerId) ON DELETE CASCADE
                ) PRIMARY KEY (CartId)
-            """
+            """,
         ]
     )
 
@@ -2482,7 +2481,7 @@ def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
     print(
         """Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId
            foreign key constraint on database {} on instance {}""".format(
-           database_id, instance_id
+            database_id, instance_id
         )
     )
 
@@ -2513,7 +2512,7 @@ def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
     print(
         """Altered ShoppingCarts table with FKShoppingCartsCustomerName
            foreign key constraint on database {} on instance {}""".format(
-           database_id, instance_id
+            database_id, instance_id
         )
     )
 
@@ -2541,7 +2540,7 @@ def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
     print(
         """Altered ShoppingCarts table to drop FKShoppingCartsCustomerName
            foreign key constraint on database {} on instance {}""".format(
-           database_id, instance_id
+            database_id, instance_id
         )
     )
 

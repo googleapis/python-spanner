@@ -155,9 +155,7 @@ def test_create_instance_with_processing_units(capsys, lci_instance_id):
 
 
 def test_update_database(capsys, instance_id, sample_database):
-    snippets.update_database(
-        instance_id, sample_database.database_id
-    )
+    snippets.update_database(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Updated database {}.".format(sample_database.name) in out
 
@@ -778,23 +776,40 @@ def test_list_database_roles(capsys, instance_id, sample_database):
 
 
 @pytest.mark.dependency(name="create_table_with_foreign_key_delete_cascade")
-def test_create_table_with_foreign_key_delete_cascade(capsys, instance_id, sample_database):
-    snippets.create_table_with_foreign_key_delete_cascade(instance_id, sample_database.database_id)
+def test_create_table_with_foreign_key_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    snippets.create_table_with_foreign_key_delete_cascade(
+        instance_id, sample_database.database_id
+    )
     out, _ = capsys.readouterr()
-    assert "Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId" in out
+    assert (
+        "Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId"
+        in out
+    )
 
 
-@pytest.mark.dependency(name="alter_table_with_foreign_key_delete_cascade",
-                        depends=["create_table_with_foreign_key_delete_cascade"])
-def test_alter_table_with_foreign_key_delete_cascade(capsys, instance_id, sample_database):
-    snippets.alter_table_with_foreign_key_delete_cascade(instance_id, sample_database.database_id)
+@pytest.mark.dependency(
+    name="alter_table_with_foreign_key_delete_cascade",
+    depends=["create_table_with_foreign_key_delete_cascade"],
+)
+def test_alter_table_with_foreign_key_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    snippets.alter_table_with_foreign_key_delete_cascade(
+        instance_id, sample_database.database_id
+    )
     out, _ = capsys.readouterr()
     assert "Altered ShoppingCarts table with FKShoppingCartsCustomerName" in out
 
 
 @pytest.mark.dependency(depends=["alter_table_with_foreign_key_delete_cascade"])
-def test_drop_foreign_key_contraint_delete_cascade(capsys, instance_id, sample_database):
-    snippets.drop_foreign_key_constraint_delete_cascade(instance_id, sample_database.database_id)
+def test_drop_foreign_key_contraint_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    snippets.drop_foreign_key_constraint_delete_cascade(
+        instance_id, sample_database.database_id
+    )
     out, _ = capsys.readouterr()
     assert "Altered ShoppingCarts table to drop FKShoppingCartsCustomerName" in out
 
