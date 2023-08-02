@@ -221,7 +221,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         if self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
@@ -363,7 +363,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
@@ -474,7 +474,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
