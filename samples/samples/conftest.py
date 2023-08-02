@@ -198,7 +198,7 @@ def bit_reverse_sequence_database_id():
 
     Sample testcase modules can override as needed.
     """
-    return "bit-reverse-sequence-database-id"
+    return "sequence-database-id"
 
 
 @pytest.fixture(scope="module")
