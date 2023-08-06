@@ -29,12 +29,11 @@ jobs:
     - name: Run unit tests
       env:
         COVERAGE_FILE: .coverage-${{ matrix.python }}
-      run: |
-        nox -s unit-${{ matrix.python }}
-      env:
         SPANNER_EMULATOR_HOST: localhost:9010
         GOOGLE_CLOUD_PROJECT: emulator-test-project
         GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE: true
+      run: |
+        nox -s unit-${{ matrix.python }}
     - name: Upload coverage results
       uses: actions/upload-artifact@v3
       with:
