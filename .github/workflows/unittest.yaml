@@ -6,6 +6,12 @@ name: unittest
 jobs:
   unit:
     runs-on: ubuntu-latest
+    services:
+      emulator:
+        image: gcr.io/cloud-spanner-emulator/emulator:latest
+        ports:
+          - 9010:9010
+          - 9020:9020
     strategy:
       matrix:
         python: ['3.7', '3.8', '3.9', '3.10', '3.11']
@@ -25,6 +31,10 @@ jobs:
         COVERAGE_FILE: .coverage-${{ matrix.python }}
       run: |
         nox -s unit-${{ matrix.python }}
+      env:
+        SPANNER_EMULATOR_HOST: localhost:9010
+        GOOGLE_CLOUD_PROJECT: emulator-test-project
+        GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE: true
     - name: Upload coverage results
       uses: actions/upload-artifact@v3
       with:
