@@ -508,7 +508,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
-    route_to_leader_enabled=False,
+    route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -557,6 +557,8 @@ def connect(
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
+    import pdb
+    pdb.set_trace()
     if client is None:
         client_info = ClientInfo(
             user_agent=user_agent or DEFAULT_USER_AGENT,
@@ -568,14 +570,14 @@ def connect(
                 credentials,
                 project=project,
                 client_info=client_info,
-                route_to_leader_enabled=False,
+                route_to_leader_enabled=route_to_leader_enabled,
             )
         else:
             client = spanner.Client(
                 project=project,
                 credentials=credentials,
                 client_info=client_info,
-                route_to_leader_enabled=False,
+                route_to_leader_enabled=route_to_leader_enabled,
             )
     else:
         if project is not None and client.project != project:
