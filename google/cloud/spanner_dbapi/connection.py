@@ -508,7 +508,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
-    route_to_leader_enabled=True,
+    route_to_leader_enabled=False,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
