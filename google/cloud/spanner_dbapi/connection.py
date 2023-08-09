@@ -556,8 +556,6 @@ def connect(
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
-    import pdb
-    pdb.set_trace()
     if client is None:
         client_info = ClientInfo(
             user_agent=user_agent or DEFAULT_USER_AGENT,
