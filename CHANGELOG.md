@@ -4,6 +4,49 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.40.0](https://github.com/googleapis/python-spanner/compare/v3.39.0...v3.40.0) (2023-08-04)
+
+
+### Features
+
+* Enable leader aware routing by default. This update contains performance optimisations that will reduce the latency of read/write transactions that originate from a region other than the default leader region. ([e8dbfe7](https://github.com/googleapis/python-spanner/commit/e8dbfe709d72a04038e05166adbad275642f1f22))
+
+## [3.39.0](https://github.com/googleapis/python-spanner/compare/v3.38.0...v3.39.0) (2023-08-02)
+
+
+### Features
+
+* Foreign key on delete cascade action testing and samples ([#910](https://github.com/googleapis/python-spanner/issues/910)) ([681c8ee](https://github.com/googleapis/python-spanner/commit/681c8eead40582addf75e02c159ea1ff9d6de85e))
+
+
+### Documentation
+
+* Minor formatting ([#991](https://github.com/googleapis/python-spanner/issues/991)) ([60efc42](https://github.com/googleapis/python-spanner/commit/60efc426cf26c4863d81743a5545c5f296308815))
+
+## [3.38.0](https://github.com/googleapis/python-spanner/compare/v3.37.0...v3.38.0) (2023-07-21)
+
+
+### Features
+
+* Set LAR as False ([#980](https://github.com/googleapis/python-spanner/issues/980)) ([75e8a59](https://github.com/googleapis/python-spanner/commit/75e8a59ff5d7f15088b9c4ba5961345746e35bcc))
+
+## [3.37.0](https://github.com/googleapis/python-spanner/compare/v3.36.0...v3.37.0) (2023-07-21)
+
+
+### Features
+
+* Enable leader aware routing by default. This update contains performance optimisations that will reduce the latency of read/write transactions that originate from a region other than the default leader region. ([402b101](https://github.com/googleapis/python-spanner/commit/402b1015a58f0982d5e3f9699297db82d3cdd7b2))
+
+
+### Bug Fixes
+
+* Add async context manager return types ([#967](https://github.com/googleapis/python-spanner/issues/967)) ([7e2e712](https://github.com/googleapis/python-spanner/commit/7e2e712f9ee1e8643c5c59dbd1d15b13b3c0f3ea))
+
+
+### Documentation
+
+* Fix documentation structure ([#949](https://github.com/googleapis/python-spanner/issues/949)) ([b73e47b](https://github.com/googleapis/python-spanner/commit/b73e47bb43f5767957685400c7876d6a8b7489a3))
+
 ## [3.36.0](https://github.com/googleapis/python-spanner/compare/v3.35.1...v3.36.0) (2023-06-06)
 
 

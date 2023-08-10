@@ -59,7 +59,7 @@ class TestClient(unittest.TestCase):
         client_options=None,
         query_options=None,
         expected_query_options=None,
-        route_to_leader_enabled=None,
+        route_to_leader_enabled=True,
     ):
         import google.api_core.client_options
         from google.cloud.spanner_v1 import client as MUT
@@ -72,13 +72,12 @@ class TestClient(unittest.TestCase):
             expected_client_info = MUT._CLIENT_INFO
 
         kwargs["client_options"] = client_options
-        if type(client_options) == dict:
+        if type(client_options) is dict:
             expected_client_options = google.api_core.client_options.from_dict(
                 client_options
             )
         else:
             expected_client_options = client_options
-
         if route_to_leader_enabled is not None:
             kwargs["route_to_leader_enabled"] = route_to_leader_enabled
 
