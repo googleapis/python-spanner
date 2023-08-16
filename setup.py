@@ -69,37 +69,6 @@ packages = [
 namespaces = ["google"]
 if "google.cloud" in packages:
     namespaces.append("google.cloud")
-print(
-    [name,
-    version,
-    description,
-    readme,
-    "Google LLC",
-    "googleapis-packages@google.com",
-    "Apache 2.0",
-    url,
-    [
-        release_status,
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: Apache Software License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Operating System :: OS Independent",
-        "Topic :: Internet",
-    ],
-   "Posix; MacOS X; Windows",
-   packages,
-    namespaces,
-    dependencies,
-    extras,
-    ">=3.7",
-    True,
-    False]
-)
 setuptools.setup(
     name=name,
     version=version,
