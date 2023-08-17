@@ -390,8 +390,6 @@ class _SnapshotBase(_SessionWrapper):
                 raise ValueError("Transaction ID pending.")
 
         if params is not None:
-            if param_types is None:
-                param_types = {}
             params_pb = Struct(
                 fields={key: _make_value_pb(value) for key, value in params.items()}
             )
@@ -632,8 +630,6 @@ class _SnapshotBase(_SessionWrapper):
             raise ValueError("Transaction not started.")
 
         if params is not None:
-            if param_types is None:
-                param_types = {}
             params_pb = Struct(
                 fields={key: _make_value_pb(value) for (key, value) in params.items()}
             )

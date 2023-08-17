@@ -1922,8 +1922,8 @@ def _check_sql_results(
     database,
     sql,
     params,
-    param_types,
-    expected,
+    param_types=None,
+    expected=None,
     order=True,
     recurse_into_lists=True,
 ):
@@ -2027,6 +2027,7 @@ def _bind_test_helper(
     array_value,
     expected_array_value=None,
     recurse_into_lists=True,
+    test_untyped_param=False,
 ):
     database.snapshot(multi_use=True)
 
@@ -2096,6 +2097,17 @@ def _bind_test_helper(
         recurse_into_lists=recurse_into_lists,
     )
 
+    # Bind without paramtype of <type_name>
+    if test_untyped_param:
+        _check_sql_results(
+            database,
+            sql=f"SELECT {placeholder}",
+            params={key: single_value},
+            expected=[(single_value,)],
+            order=False,
+            recurse_into_lists=recurse_into_lists,
+        )
+
 
 def test_execute_sql_w_string_bindings(sessions_database, database_dialect):
     _bind_test_helper(
@@ -2104,6 +2116,7 @@ def test_execute_sql_w_string_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.STRING,
         "Phred",
         ["Phred", "Bharney"],
+        test_untyped_param=True,
     )
 
 
@@ -2114,6 +2127,7 @@ def test_execute_sql_w_bool_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.BOOL,
         True,
         [True, False, True],
+        test_untyped_param=True,
     )
 
 
@@ -2124,6 +2138,7 @@ def test_execute_sql_w_int64_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.INT64,
         42,
         [123, 456, 789],
+        test_untyped_param=True,
     )
 
 
@@ -2134,6 +2149,7 @@ def test_execute_sql_w_float64_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.FLOAT64,
         42.3,
         [12.3, 456.0, 7.89],
+        test_untyped_param=True,
     )
 
 
@@ -2171,6 +2187,7 @@ def test_execute_sql_w_bytes_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.BYTES,
         b"DEADBEEF",
         [b"FACEDACE", b"DEADBEEF"],
+        test_untyped_param=True,
     )
 
 
@@ -2197,6 +2214,7 @@ def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
         timestamps,
         expected_timestamps,
         recurse_into_lists=False,
+        test_untyped_param=True,
     )
 
 
@@ -2208,6 +2226,7 @@ def test_execute_sql_w_date_bindings(sessions_database, not_postgres, database_d
         spanner_v1.param_types.DATE,
         SOME_DATE,
         dates,
+        test_untyped_param=True,
     )
 
 
@@ -2221,6 +2240,7 @@ def test_execute_sql_w_numeric_bindings(
             spanner_v1.param_types.PG_NUMERIC,
             NUMERIC_1,
             [NUMERIC_1, NUMERIC_2],
+            test_untyped_param=True,
         )
     else:
         _bind_test_helper(
@@ -2229,6 +2249,7 @@ def test_execute_sql_w_numeric_bindings(
             spanner_v1.param_types.NUMERIC,
             NUMERIC_1,
             [NUMERIC_1, NUMERIC_2],
+            test_untyped_param=True,
         )
 
 
