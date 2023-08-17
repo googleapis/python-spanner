@@ -503,7 +503,7 @@ def test_batch_insert_then_read_wo_param_types(
             zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)
         ):
             placeholder = (
-                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@value"
+                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else "@value"
             )
             sql = (
                 "SELECT * FROM "
