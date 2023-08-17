@@ -189,12 +189,20 @@ class StreamedResultSet(object):
             raise ValueError("Expected one result; got more.")
         except StopIteration:
             return answer
-        
+
     def fetch_as_dictionary_list(self):
         rows = []
         for row in self:
-            rows.append({column: value for column, value in zip([column.name for column in self._metadata.row_type.fields], row)})
+            rows.append(
+                {
+                    column: value
+                    for column, value in zip(
+                        [column.name for column in self._metadata.row_type.fields], row
+                    )
+                }
+            )
         return rows
+
 
 class Unmergeable(ValueError):
     """Unable to merge two values.
