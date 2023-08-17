@@ -90,6 +90,8 @@ POSTGRES_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:17] + (
     "jsonb_array",
 )
 
+QUERY_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[1:17:2]
+
 AllTypesRowData = collections.namedtuple("AllTypesRowData", LIVE_ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in LIVE_ALL_TYPES_COLUMNS])
 EmulatorAllTypesRowData = collections.namedtuple(
@@ -209,6 +211,17 @@ POSTGRES_ALL_TYPES_ROWDATA = (
     PostGresAllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     PostGresAllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
     PostGresAllTypesRowData(pkey=309, jsonb_array=[JSON_1, JSON_2, None]),
+)
+
+QUERY_ALL_TYPES_DATA = (
+    123,
+    False,
+    BYTES_1,
+    SOME_DATE,
+    1.4142136,
+    "VALUE",
+    SOME_TIME,
+    NUMERIC_1,
 )
 
 if _helpers.USE_EMULATOR:
@@ -474,6 +487,22 @@ def test_batch_insert_or_update_then_query(sessions_database):
         rows = list(snapshot.execute_sql(sd.SQL))
 
     sd._check_rows_data(rows)
+
+
+def test_batch_insert_then_read_wo_param_types(sessions_database, database_dialect, not_emulator):
+    sd = _sample_data
+
+    with sessions_database.batch() as batch:
+        batch.delete(ALL_TYPES_TABLE, sd.ALL)
+        batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
+
+    with sessions_database.snapshot(multi_use=True) as snapshot:
+        for column_type, value in list(zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)):
+            placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@value"
+            sql = 'SELECT * FROM `' + ALL_TYPES_TABLE + '` WHERE ' + column_type + ' = ' + placeholder
+            param = {"p1": value} if database_dialect == DatabaseDialect.POSTGRESQL else  {"value": value}
+            rows = list(snapshot.execute_sql(sql,params=param))
+            assert len(rows) == 1
 
 
 def test_batch_insert_w_commit_timestamp(sessions_database, not_postgres):
@@ -2027,7 +2056,6 @@ def _bind_test_helper(
     array_value,
     expected_array_value=None,
     recurse_into_lists=True,
-    test_untyped_param=False,
 ):
     database.snapshot(multi_use=True)
 
@@ -2097,17 +2125,6 @@ def _bind_test_helper(
         recurse_into_lists=recurse_into_lists,
     )
 
-    # Bind without paramtype of <type_name>
-    if test_untyped_param:
-        _check_sql_results(
-            database,
-            sql=f"SELECT {placeholder}",
-            params={key: single_value},
-            expected=[(single_value,)],
-            order=False,
-            recurse_into_lists=recurse_into_lists,
-        )
-
 
 def test_execute_sql_w_string_bindings(sessions_database, database_dialect):
     _bind_test_helper(
@@ -2116,7 +2133,6 @@ def test_execute_sql_w_string_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.STRING,
         "Phred",
         ["Phred", "Bharney"],
-        test_untyped_param=True,
     )
 
 
@@ -2127,7 +2143,6 @@ def test_execute_sql_w_bool_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.BOOL,
         True,
         [True, False, True],
-        test_untyped_param=True,
     )
 
 
@@ -2138,7 +2153,6 @@ def test_execute_sql_w_int64_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.INT64,
         42,
         [123, 456, 789],
-        test_untyped_param=True,
     )
 
 
@@ -2149,7 +2163,6 @@ def test_execute_sql_w_float64_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.FLOAT64,
         42.3,
         [12.3, 456.0, 7.89],
-        test_untyped_param=True,
     )
 
 
@@ -2187,7 +2200,6 @@ def test_execute_sql_w_bytes_bindings(sessions_database, database_dialect):
         spanner_v1.param_types.BYTES,
         b"DEADBEEF",
         [b"FACEDACE", b"DEADBEEF"],
-        test_untyped_param=True,
     )
 
 
@@ -2214,7 +2226,6 @@ def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
         timestamps,
         expected_timestamps,
         recurse_into_lists=False,
-        test_untyped_param=True,
     )
 
 
@@ -2226,7 +2237,6 @@ def test_execute_sql_w_date_bindings(sessions_database, not_postgres, database_d
         spanner_v1.param_types.DATE,
         SOME_DATE,
         dates,
-        test_untyped_param=True,
     )
 
 
@@ -2240,7 +2250,6 @@ def test_execute_sql_w_numeric_bindings(
             spanner_v1.param_types.PG_NUMERIC,
             NUMERIC_1,
             [NUMERIC_1, NUMERIC_2],
-            test_untyped_param=True,
         )
     else:
         _bind_test_helper(
@@ -2249,7 +2258,6 @@ def test_execute_sql_w_numeric_bindings(
             spanner_v1.param_types.NUMERIC,
             NUMERIC_1,
             [NUMERIC_1, NUMERIC_2],
-            test_untyped_param=True,
         )
 
 
