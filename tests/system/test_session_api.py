@@ -499,7 +499,7 @@ def test_batch_insert_then_read_wo_param_types(sessions_database, database_diale
     with sessions_database.snapshot(multi_use=True) as snapshot:
         for column_type, value in list(zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)):
             placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@value"
-            sql = 'SELECT * FROM `' + ALL_TYPES_TABLE + '` WHERE ' + column_type + ' = ' + placeholder
+            sql = 'SELECT * FROM ' + ALL_TYPES_TABLE + ' WHERE ' + column_type + ' = ' + placeholder
             param = {"p1": value} if database_dialect == DatabaseDialect.POSTGRESQL else  {"value": value}
             rows = list(snapshot.execute_sql(sql,params=param))
             assert len(rows) == 1
