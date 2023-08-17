@@ -489,7 +489,9 @@ def test_batch_insert_or_update_then_query(sessions_database):
     sd._check_rows_data(rows)
 
 
-def test_batch_insert_then_read_wo_param_types(sessions_database, database_dialect, not_emulator):
+def test_batch_insert_then_read_wo_param_types(
+    sessions_database, database_dialect, not_emulator
+):
     sd = _sample_data
 
     with sessions_database.batch() as batch:
@@ -497,11 +499,26 @@ def test_batch_insert_then_read_wo_param_types(sessions_database, database_diale
         batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
 
     with sessions_database.snapshot(multi_use=True) as snapshot:
-        for column_type, value in list(zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)):
-            placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@value"
-            sql = 'SELECT * FROM ' + ALL_TYPES_TABLE + ' WHERE ' + column_type + ' = ' + placeholder
-            param = {"p1": value} if database_dialect == DatabaseDialect.POSTGRESQL else  {"value": value}
-            rows = list(snapshot.execute_sql(sql,params=param))
+        for column_type, value in list(
+            zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)
+        ):
+            placeholder = (
+                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@value"
+            )
+            sql = (
+                "SELECT * FROM "
+                + ALL_TYPES_TABLE
+                + " WHERE "
+                + column_type
+                + " = "
+                + placeholder
+            )
+            param = (
+                {"p1": value}
+                if database_dialect == DatabaseDialect.POSTGRESQL
+                else {"value": value}
+            )
+            rows = list(snapshot.execute_sql(sql, params=param))
             assert len(rows) == 1
 
 
