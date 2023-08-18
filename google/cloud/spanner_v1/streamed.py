@@ -190,7 +190,15 @@ class StreamedResultSet(object):
         except StopIteration:
             return answer
 
-    def fetch_as_dictionary_list(self):
+    def to_dict_list(self):
+        """Return the result of a query as a list of dictionaries.
+        In each dictionary the key is the column name and the value is the
+        value of the that column in a given row.
+
+        :rtype:
+           :class:`list of dict`
+        :returns: result rows as a list of dictionaries
+        """
         rows = []
         for row in self:
             rows.append(

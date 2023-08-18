@@ -1918,13 +1918,13 @@ def test_execute_sql_w_manual_consume(sessions_database):
     assert streamed._pending_chunk is None
 
 
-def test_execute_sql_w_fetch_as_dictionary_list(sessions_database):
+def test_execute_sql_w_to_dict_list(sessions_database):
     sd = _sample_data
     row_count = 40
     _set_up_table(sessions_database, row_count)
 
     with sessions_database.snapshot() as snapshot:
-        rows = snapshot.execute_sql(sd.SQL).fetch_as_dictionary_list()
+        rows = snapshot.execute_sql(sd.SQL).to_dict_list()
         all_data_rows = list(_row_data(row_count))
         row_data = [list(row.values()) for row in rows]
         sd._check_row_data(row_data, all_data_rows)
