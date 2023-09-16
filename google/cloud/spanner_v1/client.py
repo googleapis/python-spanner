@@ -191,7 +191,6 @@ class Client(ClientWithProject):
         verify_directed_read_options(directed_read_options)
         self._directed_read_options = directed_read_options
 
-
     @property
     def credentials(self):
         """Getter for client's credentials.
@@ -409,7 +408,7 @@ class Client(ClientWithProject):
 
     def set_directed_read_options(self, directed_read_options):
         """Sets directed_read_options for the client
-        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: Client options used to set the directed_read_options
             for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas

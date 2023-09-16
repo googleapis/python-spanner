@@ -2711,7 +2711,12 @@ def _make_instance_api():
 
 
 class _Client(object):
-    def __init__(self, project=TestDatabase.PROJECT_ID, route_to_leader_enabled=True, directed_read_options=None):
+    def __init__(
+        self,
+        project=TestDatabase.PROJECT_ID,
+        route_to_leader_enabled=True,
+        directed_read_options=None,
+    ):
 
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
