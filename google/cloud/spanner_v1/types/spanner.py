@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
+
 from typing import MutableMapping, MutableSequence
 
 import proto  # type: ignore
@@ -382,6 +384,7 @@ class DirectedReadOptions(proto.Message):
     r"""The DirectedReadOptions can be used to indicate which
     replicas or regions should be used for non-transactional reads
     or queries.
+
     Not all requests can be sent to non-leader replicas. In
     particular, some requests such as reads within read-write
     transactions must be sent to a designated leader replica. These
@@ -535,6 +538,7 @@ class ExecuteSqlRequest(proto.Message):
             should be performed.
         transaction (google.cloud.spanner_v1.types.TransactionSelector):
             The transaction to use.
+
             For queries, if none is provided, the default is
             a temporary read-only transaction with strong
             concurrency.
@@ -544,6 +548,7 @@ class ExecuteSqlRequest(proto.Message):
             single-use transactions are not supported.  The
             caller must either supply an existing
             transaction ID or begin a new transaction.
+
             Partitioned DML requires an existing Partitioned
             DML transaction ID.
         sql (str):
@@ -614,6 +619,7 @@ class ExecuteSqlRequest(proto.Message):
             sequence number, the transaction may be aborted.
             Replays of previously handled requests will
             yield the same response as the first execution.
+
             Required for DML statements. Ignored for
             queries.
         query_options (google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions):
@@ -623,6 +629,14 @@ class ExecuteSqlRequest(proto.Message):
             Common options for this request.
         directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
             Directed read options for this request.
+        data_boost_enabled (bool):
+            If this is for a partitioned query and this field is set to
+            ``true``, the request will be executed via Spanner
+            independent compute resources.
+
+            If the field is set to ``true`` but the request does not set
+            ``partition_token``, the API will return an
+            ``INVALID_ARGUMENT`` error.
     """
 
     class QueryMode(proto.Enum):
@@ -766,6 +780,10 @@ class ExecuteSqlRequest(proto.Message):
         proto.MESSAGE,
         number=15,
         message="DirectedReadOptions",
+    )
+    data_boost_enabled: bool = proto.Field(
+        proto.BOOL,
+        number=16,
     )
 
 
@@ -1279,6 +1297,14 @@ class ReadRequest(proto.Message):
             Common options for this request.
         directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
             Directed read options for this request.
+        data_boost_enabled (bool):
+            If this is for a partitioned read and this field is set to
+            ``true``, the request will be executed via Spanner
+            independent compute resources.
+
+            If the field is set to ``true`` but the request does not set
+            ``partition_token``, the API will return an
+            ``INVALID_ARGUMENT`` error.
     """
 
     session: str = proto.Field(
@@ -1328,6 +1354,10 @@ class ReadRequest(proto.Message):
         proto.MESSAGE,
         number=14,
         message="DirectedReadOptions",
+    )
+    data_boost_enabled: bool = proto.Field(
+        proto.BOOL,
+        number=15,
     )
 
 

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -939,6 +939,178 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         # Done; return the response.
         return response
 
+    def update_database(
+        self,
+        request: Optional[
+            Union[spanner_database_admin.UpdateDatabaseRequest, dict]
+        ] = None,
+        *,
+        database: Optional[spanner_database_admin.Database] = None,
+        update_mask: Optional[field_mask_pb2.FieldMask] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> operation.Operation:
+        r"""Updates a Cloud Spanner database. The returned [long-running
+        operation][google.longrunning.Operation] can be used to track
+        the progress of updating the database. If the named database
+        does not exist, returns ``NOT_FOUND``.
+
+        While the operation is pending:
+
+        -  The database's
+           [reconciling][google.spanner.admin.database.v1.Database.reconciling]
+           field is set to true.
+        -  Cancelling the operation is best-effort. If the cancellation
+           succeeds, the operation metadata's
+           [cancel_time][google.spanner.admin.database.v1.UpdateDatabaseMetadata.cancel_time]
+           is set, the updates are reverted, and the operation
+           terminates with a ``CANCELLED`` status.
+        -  New UpdateDatabase requests will return a
+           ``FAILED_PRECONDITION`` error until the pending operation is
+           done (returns successfully or with error).
+        -  Reading the database via the API continues to give the
+           pre-request values.
+
+        Upon completion of the returned operation:
+
+        -  The new values are in effect and readable via the API.
+        -  The database's
+           [reconciling][google.spanner.admin.database.v1.Database.reconciling]
+           field becomes false.
+
+        The returned [long-running
+        operation][google.longrunning.Operation] will have a name of the
+        format
+        ``projects/<project>/instances/<instance>/databases/<database>/operations/<operation_id>``
+        and can be used to track the database modification. The
+        [metadata][google.longrunning.Operation.metadata] field type is
+        [UpdateDatabaseMetadata][google.spanner.admin.database.v1.UpdateDatabaseMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is [Database][google.spanner.admin.database.v1.Database], if
+        successful.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_database_v1
+
+            def sample_update_database():
+                # Create a client
+                client = spanner_admin_database_v1.DatabaseAdminClient()
+
+                # Initialize request argument(s)
+                database = spanner_admin_database_v1.Database()
+                database.name = "name_value"
+
+                request = spanner_admin_database_v1.UpdateDatabaseRequest(
+                    database=database,
+                )
+
+                # Make the request
+                operation = client.update_database(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_database_v1.types.UpdateDatabaseRequest, dict]):
+                The request object. The request for
+                [UpdateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase].
+            database (google.cloud.spanner_admin_database_v1.types.Database):
+                Required. The database to update. The ``name`` field of
+                the database is of the form
+                ``projects/<project>/instances/<instance>/databases/<database>``.
+
+                This corresponds to the ``database`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            update_mask (google.protobuf.field_mask_pb2.FieldMask):
+                Required. The list of fields to update. Currently, only
+                ``enable_drop_protection`` field can be updated.
+
+                This corresponds to the ``update_mask`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.api_core.operation.Operation:
+                An object representing a long-running operation.
+
+                The result type for the operation will be
+                :class:`google.cloud.spanner_admin_database_v1.types.Database`
+                A Cloud Spanner database.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([database, update_mask])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_database_admin.UpdateDatabaseRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(request, spanner_database_admin.UpdateDatabaseRequest):
+            request = spanner_database_admin.UpdateDatabaseRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if database is not None:
+                request.database = database
+            if update_mask is not None:
+                request.update_mask = update_mask
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[self._transport.update_database]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata(
+                (("database.name", request.database.name),)
+            ),
+        )
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Wrap the response in an operation future.
+        response = operation.from_gapic(
+            response,
+            self._transport.operations_client,
+            spanner_database_admin.Database,
+            metadata_type=spanner_database_admin.UpdateDatabaseMetadata,
+        )
+
+        # Done; return the response.
+        return response
+
     def update_database_ddl(
         self,
         request: Optional[
@@ -994,19 +1166,19 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         Args:
             request (Union[google.cloud.spanner_admin_database_v1.types.UpdateDatabaseDdlRequest, dict]):
-                The request object. Enqueues the given DDL statements to
-                be applied, in order but not necessarily all at once, to
-                the database schema at some point (or points) in the
-                future. The server checks that the statements are
-                executable (syntactically valid, name tables that exist,
-                etc.) before enqueueing them, but they may still fail
-                upon
+                The request object. Enqueues the given DDL statements to be applied, in
+                order but not necessarily all at once, to the database
+                schema at some point (or points) in the future. The
+                server checks that the statements are executable
+                (syntactically valid, name tables that exist, etc.)
+                before enqueueing them, but they may still fail upon
                 later execution (e.g., if a statement from another batch
                 of statements is applied first and it conflicts in some
                 way, or if there is some data-related problem like a
-                `NULL` value in a column to which `NOT NULL` would be
-                added). If a statement fails, all subsequent statements
-                in the batch are automatically cancelled.
+                ``NULL`` value in a column to which ``NOT NULL`` would
+                be added). If a statement fails, all subsequent
+                statements in the batch are automatically cancelled.
+
                 Each batch of statements is assigned a name which can be
                 used with the
                 [Operations][google.longrunning.Operations] API to
@@ -1348,12 +1520,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.SetIamPolicyRequest, dict]):
-                The request object. Request message for `SetIamPolicy`
-                method.
+                The request object. Request message for ``SetIamPolicy`` method.
             resource (str):
                 REQUIRED: The resource for which the
-                policy is being specified. See the
-                operation documentation for the
+                policy is being specified.
+                See the operation documentation for the
                 appropriate value for this field.
 
                 This corresponds to the ``resource`` field
@@ -1388,42 +1559,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
                    **JSON example:**
 
-                      {
-                         "bindings": [
-                            {
-                               "role":
-                               "roles/resourcemanager.organizationAdmin",
-                               "members": [ "user:mike@example.com",
-                               "group:admins@example.com",
-                               "domain:google.com",
-                               "serviceAccount:my-project-id@appspot.gserviceaccount.com"
-                               ]
-
-                            }, { "role":
-                            "roles/resourcemanager.organizationViewer",
-                            "members": [ "user:eve@example.com" ],
-                            "condition": { "title": "expirable access",
-                            "description": "Does not grant access after
-                            Sep 2020", "expression": "request.time <
-                            timestamp('2020-10-01T00:00:00.000Z')", } }
-
-                         ], "etag": "BwWWja0YfJA=", "version": 3
-
-                      }
+                   :literal:`\`     {       "bindings": [         {           "role": "roles/resourcemanager.organizationAdmin",           "members": [             "user:mike@example.com",             "group:admins@example.com",             "domain:google.com",             "serviceAccount:my-project-id@appspot.gserviceaccount.com"           ]         },         {           "role": "roles/resourcemanager.organizationViewer",           "members": [             "user:eve@example.com"           ],           "condition": {             "title": "expirable access",             "description": "Does not grant access after Sep 2020",             "expression": "request.time <             timestamp('2020-10-01T00:00:00.000Z')",           }         }       ],       "etag": "BwWWja0YfJA=",       "version": 3     }`\ \`
 
                    **YAML example:**
 
-                      bindings: - members: - user:\ mike@example.com -
-                      group:\ admins@example.com - domain:google.com -
-                      serviceAccount:\ my-project-id@appspot.gserviceaccount.com
-                      role: roles/resourcemanager.organizationAdmin -
-                      members: - user:\ eve@example.com role:
-                      roles/resourcemanager.organizationViewer
-                      condition: title: expirable access description:
-                      Does not grant access after Sep 2020 expression:
-                      request.time <
-                      timestamp('2020-10-01T00:00:00.000Z') etag:
-                      BwWWja0YfJA= version: 3
+                   :literal:`\`     bindings:     - members:       - user:mike@example.com       - group:admins@example.com       - domain:google.com       - serviceAccount:my-project-id@appspot.gserviceaccount.com       role: roles/resourcemanager.organizationAdmin     - members:       - user:eve@example.com       role: roles/resourcemanager.organizationViewer       condition:         title: expirable access         description: Does not grant access after Sep 2020         expression: request.time < timestamp('2020-10-01T00:00:00.000Z')     etag: BwWWja0YfJA=     version: 3`\ \`
 
                    For a description of IAM and its features, see the
                    [IAM
@@ -1520,12 +1660,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.GetIamPolicyRequest, dict]):
-                The request object. Request message for `GetIamPolicy`
-                method.
+                The request object. Request message for ``GetIamPolicy`` method.
             resource (str):
                 REQUIRED: The resource for which the
-                policy is being requested. See the
-                operation documentation for the
+                policy is being requested.
+                See the operation documentation for the
                 appropriate value for this field.
 
                 This corresponds to the ``resource`` field
@@ -1560,42 +1699,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
                    **JSON example:**
 
-                      {
-                         "bindings": [
-                            {
-                               "role":
-                               "roles/resourcemanager.organizationAdmin",
-                               "members": [ "user:mike@example.com",
-                               "group:admins@example.com",
-                               "domain:google.com",
-                               "serviceAccount:my-project-id@appspot.gserviceaccount.com"
-                               ]
-
-                            }, { "role":
-                            "roles/resourcemanager.organizationViewer",
-                            "members": [ "user:eve@example.com" ],
-                            "condition": { "title": "expirable access",
-                            "description": "Does not grant access after
-                            Sep 2020", "expression": "request.time <
-                            timestamp('2020-10-01T00:00:00.000Z')", } }
-
-                         ], "etag": "BwWWja0YfJA=", "version": 3
-
-                      }
+                   :literal:`\`     {       "bindings": [         {           "role": "roles/resourcemanager.organizationAdmin",           "members": [             "user:mike@example.com",             "group:admins@example.com",             "domain:google.com",             "serviceAccount:my-project-id@appspot.gserviceaccount.com"           ]         },         {           "role": "roles/resourcemanager.organizationViewer",           "members": [             "user:eve@example.com"           ],           "condition": {             "title": "expirable access",             "description": "Does not grant access after Sep 2020",             "expression": "request.time <             timestamp('2020-10-01T00:00:00.000Z')",           }         }       ],       "etag": "BwWWja0YfJA=",       "version": 3     }`\ \`
 
                    **YAML example:**
 
-                      bindings: - members: - user:\ mike@example.com -
-                      group:\ admins@example.com - domain:google.com -
-                      serviceAccount:\ my-project-id@appspot.gserviceaccount.com
-                      role: roles/resourcemanager.organizationAdmin -
-                      members: - user:\ eve@example.com role:
-                      roles/resourcemanager.organizationViewer
-                      condition: title: expirable access description:
-                      Does not grant access after Sep 2020 expression:
-                      request.time <
-                      timestamp('2020-10-01T00:00:00.000Z') etag:
-                      BwWWja0YfJA= version: 3
+                   :literal:`\`     bindings:     - members:       - user:mike@example.com       - group:admins@example.com       - domain:google.com       - serviceAccount:my-project-id@appspot.gserviceaccount.com       role: roles/resourcemanager.organizationAdmin     - members:       - user:eve@example.com       role: roles/resourcemanager.organizationViewer       condition:         title: expirable access         description: Does not grant access after Sep 2020         expression: request.time < timestamp('2020-10-01T00:00:00.000Z')     etag: BwWWja0YfJA=     version: 3`\ \`
 
                    For a description of IAM and its features, see the
                    [IAM
@@ -1694,12 +1802,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         Args:
             request (Union[google.iam.v1.iam_policy_pb2.TestIamPermissionsRequest, dict]):
-                The request object. Request message for
-                `TestIamPermissions` method.
+                The request object. Request message for ``TestIamPermissions`` method.
             resource (str):
                 REQUIRED: The resource for which the
-                policy detail is being requested. See
-                the operation documentation for the
+                policy detail is being requested.
+                See the operation documentation for the
                 appropriate value for this field.
 
                 This corresponds to the ``resource`` field

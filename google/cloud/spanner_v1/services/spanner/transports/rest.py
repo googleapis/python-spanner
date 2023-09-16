@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ from google.protobuf import json_format
 from requests import __version__ as requests_version
 import dataclasses
 import re
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import warnings
 
 try:
@@ -493,6 +493,7 @@ class SpannerRestTransport(SpannerTransport):
     """REST backend transport for Spanner.
 
     Cloud Spanner API
+
     The Cloud Spanner API can be used to manage sessions and execute
     transactions on data stored in Cloud Spanner databases.
 
@@ -584,7 +585,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BatchCreateSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -608,7 +609,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.BatchCreateSessionsRequest):
                     The request object. The request for
                 [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -685,7 +685,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("BeginTransaction")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -709,7 +709,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.BeginTransactionRequest):
                     The request object. The request for
                 [BeginTransaction][google.spanner.v1.Spanner.BeginTransaction].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -784,7 +783,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Commit")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -808,7 +807,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.CommitRequest):
                     The request object. The request for
                 [Commit][google.spanner.v1.Spanner.Commit].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -883,7 +881,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("CreateSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -907,7 +905,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.CreateSessionRequest):
                     The request object. The request for
                 [CreateSession][google.spanner.v1.Spanner.CreateSession].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -980,7 +977,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("DeleteSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1004,7 +1001,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.DeleteSessionRequest):
                     The request object. The request for
                 [DeleteSession][google.spanner.v1.Spanner.DeleteSession].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1056,7 +1052,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteBatchDml")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1080,7 +1076,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.ExecuteBatchDmlRequest):
                     The request object. The request for
                 [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1193,7 +1188,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1218,7 +1213,6 @@ class SpannerRestTransport(SpannerTransport):
                     The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1293,7 +1287,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ExecuteStreamingSql")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1318,7 +1312,6 @@ class SpannerRestTransport(SpannerTransport):
                     The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1397,7 +1390,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("GetSession")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1421,7 +1414,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.GetSessionRequest):
                     The request object. The request for
                 [GetSession][google.spanner.v1.Spanner.GetSession].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1485,7 +1477,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("ListSessions")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1509,7 +1501,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.ListSessionsRequest):
                     The request object. The request for
                 [ListSessions][google.spanner.v1.Spanner.ListSessions].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1575,7 +1566,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionQuery")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1599,7 +1590,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.PartitionQueryRequest):
                     The request object. The request for
                 [PartitionQuery][google.spanner.v1.Spanner.PartitionQuery]
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1676,7 +1666,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("PartitionRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1700,7 +1690,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.PartitionReadRequest):
                     The request object. The request for
                 [PartitionRead][google.spanner.v1.Spanner.PartitionRead]
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1777,7 +1766,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Read")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1802,7 +1791,6 @@ class SpannerRestTransport(SpannerTransport):
                     The request object. The request for [Read][google.spanner.v1.Spanner.Read]
                 and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1877,7 +1865,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("Rollback")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1901,7 +1889,6 @@ class SpannerRestTransport(SpannerTransport):
                 request (~.spanner.RollbackRequest):
                     The request object. The request for
                 [Rollback][google.spanner.v1.Spanner.Rollback].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1962,7 +1949,7 @@ class SpannerRestTransport(SpannerTransport):
         def __hash__(self):
             return hash("StreamingRead")
 
-        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, str] = {}
+        __REQUIRED_FIELDS_DEFAULT_VALUES: Dict[str, Any] = {}
 
         @classmethod
         def _get_unset_required_fields(cls, message_dict):
@@ -1987,7 +1974,6 @@ class SpannerRestTransport(SpannerTransport):
                     The request object. The request for [Read][google.spanner.v1.Spanner.Read]
                 and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
-
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.

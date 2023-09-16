@@ -29,6 +29,7 @@ from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
 from google.iam.v1 import iam_policy_pb2
 from google.iam.v1 import options_pb2
+from google.protobuf.field_mask_pb2 import FieldMask
 
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
@@ -44,7 +45,10 @@ from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+)
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.pool import BurstyPool
@@ -124,6 +128,9 @@ class Database(object):
         (Optional) database dialect for the database
     :type database_role: str or None
     :param database_role: (Optional) user-assigned database_role for the session.
+    :type enable_drop_protection: boolean
+    :param enable_drop_protection: (Optional) Represents whether the database
+        has drop protection enabled or not.
     """
 
     _spanner_api = None
@@ -138,6 +145,7 @@ class Database(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
+        enable_drop_protection=False,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -155,6 +163,9 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
+        self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
+        self._enable_drop_protection = enable_drop_protection
+        self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
 
         if pool is None:
@@ -330,6 +341,29 @@ class Database(object):
         return self._database_role
 
     @property
+    def reconciling(self):
+        """Whether the database is currently reconciling.
+
+        :rtype: boolean
+        :returns: a boolean representing whether the database is reconciling
+        """
+        return self._reconciling
+
+    @property
+    def enable_drop_protection(self):
+        """Whether the database has drop protection enabled.
+
+        :rtype: boolean
+        :returns: a boolean representing whether the database has drop
+            protection enabled
+        """
+        return self._enable_drop_protection
+
+    @enable_drop_protection.setter
+    def enable_drop_protection(self, value):
+        self._enable_drop_protection = value
+
+    @property
     def logger(self):
         """Logger used by the database.
 
@@ -403,7 +437,7 @@ class Database(object):
                 db_name = f'"{db_name}"'
             else:
                 db_name = f"`{db_name}`"
-        if type(self._encryption_config) == dict:
+        if type(self._encryption_config) is dict:
             self._encryption_config = EncryptionConfig(**self._encryption_config)
 
         request = CreateDatabaseRequest(
@@ -458,6 +492,8 @@ class Database(object):
         self._encryption_info = response.encryption_info
         self._default_leader = response.default_leader
         self._database_dialect = response.database_dialect
+        self._enable_drop_protection = response.enable_drop_protection
+        self._reconciling = response.reconciling
 
     def update_ddl(self, ddl_statements, operation_id=""):
         """Update DDL for this database.
@@ -465,7 +501,7 @@ class Database(object):
         Apply any configured schema from :attr:`ddl_statements`.
 
         See
-        https://cloud.google.com/spanner/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase
+        https://cloud.google.com/spanner/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl
 
         :type ddl_statements: Sequence[str]
         :param ddl_statements: a list of DDL statements to use on this database
@@ -487,6 +523,46 @@ class Database(object):
         )
 
         future = api.update_database_ddl(request=request, metadata=metadata)
+        return future
+
+    def update(self, fields):
+        """Update this database.
+
+        See
+        https://cloud.google.com/spanner/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase
+
+        .. note::
+
+            Updates the specified fields of a Cloud Spanner database. Currently,
+            only the `enable_drop_protection` field supports updates. To change
+            this value before updating, set it via
+
+            .. code:: python
+
+                database.enable_drop_protection = True
+
+           before calling :meth:`update`.
+
+        :type fields: Sequence[str]
+        :param fields: a list of fields to update
+
+        :rtype: :class:`google.api_core.operation.Operation`
+        :returns: an operation instance
+        :raises NotFound: if the database does not exist
+        """
+        api = self._instance._client.database_admin_api
+        database_pb = DatabasePB(
+            name=self.name, enable_drop_protection=self._enable_drop_protection
+        )
+
+        # Only support updating drop protection for now.
+        field_mask = FieldMask(paths=fields)
+        metadata = _metadata_with_prefix(self.name)
+
+        future = api.update_database(
+            database=database_pb, update_mask=field_mask, metadata=metadata
+        )
+
         return future
 
     def drop(self):
@@ -546,7 +622,7 @@ class Database(object):
         )
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = None
 
@@ -566,6 +642,10 @@ class Database(object):
         )
 
         metadata = _metadata_with_prefix(self.name)
+        if self._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
+            )
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
@@ -727,7 +807,7 @@ class Database(object):
         """
         if source is None:
             raise ValueError("Restore source not specified")
-        if type(self._encryption_config) == dict:
+        if type(self._encryption_config) is dict:
             self._encryption_config = RestoreDatabaseEncryptionConfig(
                 **self._encryption_config
             )
@@ -932,7 +1012,7 @@ class BatchCheckout(object):
         self._session = self._batch = None
         if request_options is None:
             self._request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             self._request_options = RequestOptions(request_options)
         else:
             self._request_options = request_options
@@ -1102,6 +1182,7 @@ class BatchSnapshot(object):
         index="",
         partition_size_bytes=None,
         max_partitions=None,
+        data_boost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1136,6 +1217,11 @@ class BatchSnapshot(object):
             service uses this as a hint, the actual number of partitions may
             differ.
 
+        :type data_boost_enabled:
+        :param data_boost_enabled:
+                (Optional) If this is for a partitioned read and this field is
+                set ``true``, the request will be executed via offline access.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1163,6 +1249,7 @@ class BatchSnapshot(object):
             "columns": columns,
             "keyset": keyset._to_dict(),
             "index": index,
+            "data_boost_enabled": data_boost_enabled,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1206,6 +1293,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
+        data_boost_enabled=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1252,6 +1340,11 @@ class BatchSnapshot(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
+        :type data_boost_enabled:
+        :param data_boost_enabled:
+                (Optional) If this is for a partitioned query and this field is
+                set ``true``, the request will be executed via offline access.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1273,7 +1366,10 @@ class BatchSnapshot(object):
             timeout=timeout,
         )
 
-        query_info = {"sql": sql}
+        query_info = {
+            "sql": sql,
+            "data_boost_enabled": data_boost_enabled,
+        }
         if params:
             query_info["params"] = params
             query_info["param_types"] = param_types

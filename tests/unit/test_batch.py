@@ -239,7 +239,13 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
         self.assertTrue(type(single_use_txn).pb(single_use_txn).HasField("read_write"))
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
         self.assertEqual(request_options, RequestOptions())
 
         self.assertSpanAttributes(
@@ -267,7 +273,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(committed, now)
         self.assertEqual(batch.committed, committed)
 
-        if type(request_options) == dict:
+        if type(request_options) is dict:
             expected_request_options = RequestOptions(request_options)
         else:
             expected_request_options = request_options
@@ -285,7 +291,13 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
         self.assertTrue(type(single_use_txn).pb(single_use_txn).HasField("read_write"))
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
         self.assertEqual(actual_request_options, expected_request_options)
 
         self.assertSpanAttributes(
@@ -362,7 +374,13 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
         self.assertTrue(type(single_use_txn).pb(single_use_txn).HasField("read_write"))
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
         self.assertEqual(request_options, RequestOptions())
 
         self.assertSpanAttributes(
@@ -404,6 +422,7 @@ class _Session(object):
 
 class _Database(object):
     name = "testing"
+    _route_to_leader_enabled = True
 
 
 class _FauxSpannerAPI:

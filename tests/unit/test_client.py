@@ -71,6 +71,7 @@ class TestClient(unittest.TestCase):
         client_options=None,
         query_options=None,
         expected_query_options=None,
+        route_to_leader_enabled=True,
         directed_read_options=None,
     ):
         import google.api_core.client_options
@@ -84,12 +85,14 @@ class TestClient(unittest.TestCase):
             expected_client_info = MUT._CLIENT_INFO
 
         kwargs["client_options"] = client_options
-        if type(client_options) == dict:
+        if type(client_options) is dict:
             expected_client_options = google.api_core.client_options.from_dict(
                 client_options
             )
         else:
             expected_client_options = client_options
+        if route_to_leader_enabled is not None:
+            kwargs["route_to_leader_enabled"] = route_to_leader_enabled
 
         client = self._make_one(
             project=self.PROJECT,
@@ -120,6 +123,10 @@ class TestClient(unittest.TestCase):
             )
         if expected_query_options is not None:
             self.assertEqual(client._query_options, expected_query_options)
+        if route_to_leader_enabled is not None:
+            self.assertEqual(client.route_to_leader_enabled, route_to_leader_enabled)
+        else:
+            self.assertFalse(client.route_to_leader_enabled)
         if directed_read_options is not None:
             self.assertEqual(client.directed_read_options, directed_read_options)
 
@@ -233,6 +240,15 @@ class TestClient(unittest.TestCase):
             creds,
             query_options=query_options,
             expected_query_options=expected_query_options,
+        )
+
+    def test_constructor_route_to_leader_disbled(self):
+        from google.cloud.spanner_v1 import client as MUT
+
+        expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
+        creds = _make_credentials()
+        self._constructor_test_helper(
+            expected_scopes, creds, route_to_leader_enabled=False
         )
 
     def test_constructor_w_directed_read_options(self):

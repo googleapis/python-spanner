@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
+
 from typing import MutableMapping, MutableSequence
 
 import proto  # type: ignore
@@ -20,6 +22,7 @@ import proto  # type: ignore
 from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import common
 from google.longrunning import operations_pb2  # type: ignore
+from google.protobuf import field_mask_pb2  # type: ignore
 from google.protobuf import timestamp_pb2  # type: ignore
 
 
@@ -34,7 +37,10 @@ __protobuf__ = proto.module(
         "CreateDatabaseRequest",
         "CreateDatabaseMetadata",
         "GetDatabaseRequest",
+        "UpdateDatabaseRequest",
+        "UpdateDatabaseMetadata",
         "UpdateDatabaseDdlRequest",
+        "DdlStatementActionInfo",
         "UpdateDatabaseDdlMetadata",
         "DropDatabaseRequest",
         "GetDatabaseDdlRequest",
@@ -158,6 +164,13 @@ class Database(proto.Message):
         database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
             Output only. The dialect of the Cloud Spanner
             Database.
+        enable_drop_protection (bool):
+            Whether drop protection is enabled for this
+            database. Defaults to false, if not set.
+        reconciling (bool):
+            Output only. If true, the database is being
+            updated. If false, there are no ongoing update
+            operations for the database.
     """
 
     class State(proto.Enum):
@@ -235,6 +248,14 @@ class Database(proto.Message):
         proto.ENUM,
         number=10,
         enum=common.DatabaseDialect,
+    )
+    enable_drop_protection: bool = proto.Field(
+        proto.BOOL,
+        number=11,
+    )
+    reconciling: bool = proto.Field(
+        proto.BOOL,
+        number=12,
     )
 
 
@@ -321,8 +342,10 @@ class CreateDatabaseRequest(proto.Message):
             inside the newly created database. Statements
             can create tables, indexes, etc. These
             statements execute atomically with the creation
-            of the database: if there is an error in any
-            statement, the database is not created.
+            of the database:
+
+            if there is an error in any statement, the
+            database is not created.
         encryption_config (google.cloud.spanner_admin_database_v1.types.EncryptionConfig):
             Optional. The encryption configuration for
             the database. If this field is not specified,
@@ -389,6 +412,68 @@ class GetDatabaseRequest(proto.Message):
     )
 
 
+class UpdateDatabaseRequest(proto.Message):
+    r"""The request for
+    [UpdateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase].
+
+    Attributes:
+        database (google.cloud.spanner_admin_database_v1.types.Database):
+            Required. The database to update. The ``name`` field of the
+            database is of the form
+            ``projects/<project>/instances/<instance>/databases/<database>``.
+        update_mask (google.protobuf.field_mask_pb2.FieldMask):
+            Required. The list of fields to update. Currently, only
+            ``enable_drop_protection`` field can be updated.
+    """
+
+    database: "Database" = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        message="Database",
+    )
+    update_mask: field_mask_pb2.FieldMask = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=field_mask_pb2.FieldMask,
+    )
+
+
+class UpdateDatabaseMetadata(proto.Message):
+    r"""Metadata type for the operation returned by
+    [UpdateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase].
+
+    Attributes:
+        request (google.cloud.spanner_admin_database_v1.types.UpdateDatabaseRequest):
+            The request for
+            [UpdateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase].
+        progress (google.cloud.spanner_admin_database_v1.types.OperationProgress):
+            The progress of the
+            [UpdateDatabase][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabase]
+            operation.
+        cancel_time (google.protobuf.timestamp_pb2.Timestamp):
+            The time at which this operation was
+            cancelled. If set, this operation is in the
+            process of undoing itself (which is
+            best-effort).
+    """
+
+    request: "UpdateDatabaseRequest" = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        message="UpdateDatabaseRequest",
+    )
+    progress: common.OperationProgress = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        message=common.OperationProgress,
+    )
+    cancel_time: timestamp_pb2.Timestamp = proto.Field(
+        proto.MESSAGE,
+        number=3,
+        message=timestamp_pb2.Timestamp,
+    )
+
+
 class UpdateDatabaseDdlRequest(proto.Message):
     r"""Enqueues the given DDL statements to be applied, in order but not
     necessarily all at once, to the database schema at some point (or
@@ -451,6 +536,46 @@ class UpdateDatabaseDdlRequest(proto.Message):
     )
 
 
+class DdlStatementActionInfo(proto.Message):
+    r"""Action information extracted from a DDL statement. This proto is
+    used to display the brief info of the DDL statement for the
+    operation
+    [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl].
+
+    Attributes:
+        action (str):
+            The action for the DDL statement, e.g.
+            CREATE, ALTER, DROP, GRANT, etc. This field is a
+            non-empty string.
+        entity_type (str):
+            The entity type for the DDL statement, e.g. TABLE, INDEX,
+            VIEW, etc. This field can be empty string for some DDL
+            statement, e.g. for statement "ANALYZE", ``entity_type`` =
+            "".
+        entity_names (MutableSequence[str]):
+            The entity name(s) being operated on the DDL statement. E.g.
+
+            1. For statement "CREATE TABLE t1(...)", ``entity_names`` =
+               ["t1"].
+            2. For statement "GRANT ROLE r1, r2 ...", ``entity_names`` =
+               ["r1", "r2"].
+            3. For statement "ANALYZE", ``entity_names`` = [].
+    """
+
+    action: str = proto.Field(
+        proto.STRING,
+        number=1,
+    )
+    entity_type: str = proto.Field(
+        proto.STRING,
+        number=2,
+    )
+    entity_names: MutableSequence[str] = proto.RepeatedField(
+        proto.STRING,
+        number=3,
+    )
+
+
 class UpdateDatabaseDdlMetadata(proto.Message):
     r"""Metadata type for the operation returned by
     [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl].
@@ -468,20 +593,22 @@ class UpdateDatabaseDdlMetadata(proto.Message):
             commit timestamp for the statement ``statements[i]``.
         throttled (bool):
             Output only. When true, indicates that the
-            operation is throttled e.g due to resource
+            operation is throttled e.g. due to resource
             constraints. When resources become available the
             operation will resume and this field will be
             false again.
         progress (MutableSequence[google.cloud.spanner_admin_database_v1.types.OperationProgress]):
             The progress of the
             [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl]
-            operations. Currently, only index creation statements will
-            have a continuously updating progress. For non-index
-            creation statements, ``progress[i]`` will have start time
-            and end time populated with commit timestamp of operation,
-            as well as a progress of 100% once the operation has
-            completed. ``progress[i]`` is the operation progress for
-            ``statements[i]``.
+            operations. All DDL statements will have continuously
+            updating progress, and ``progress[i]`` is the operation
+            progress for ``statements[i]``. Also, ``progress[i]`` will
+            have start time and end time populated with commit timestamp
+            of operation, as well as a progress of 100% once the
+            operation has completed.
+        actions (MutableSequence[google.cloud.spanner_admin_database_v1.types.DdlStatementActionInfo]):
+            The brief action info for the DDL statements. ``actions[i]``
+            is the brief info for ``statements[i]``.
     """
 
     database: str = proto.Field(
@@ -505,6 +632,11 @@ class UpdateDatabaseDdlMetadata(proto.Message):
         proto.MESSAGE,
         number=5,
         message=common.OperationProgress,
+    )
+    actions: MutableSequence["DdlStatementActionInfo"] = proto.RepeatedField(
+        proto.MESSAGE,
+        number=6,
+        message="DdlStatementActionInfo",
     )
 
 
