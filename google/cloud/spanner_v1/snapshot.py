@@ -255,7 +255,7 @@ class _SnapshotBase(_SessionWrapper):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
         if self._read_only:
@@ -423,7 +423,7 @@ class _SnapshotBase(_SessionWrapper):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
