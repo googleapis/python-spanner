@@ -118,6 +118,8 @@ end = time.time()
 
 # Print the total execution time
 print("total time taken by the execution: ", end-start)
+
+#Writing transaction time to an output file
 for t in transaction_time:
     with open ('output.txt', 'a') as file:  
         file.write(str(t)+"\n")
