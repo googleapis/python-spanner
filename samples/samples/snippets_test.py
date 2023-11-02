@@ -294,7 +294,7 @@ def test_insert_data(capsys, instance_id, sample_database):
 def test_batch_write(capsys, instance_id, sample_database):
     snippets.batch_write(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "Inserted data" in out
+    assert "could not be applied with error" not in out
 
 
 @pytest.mark.dependency(depends=["insert_data"])

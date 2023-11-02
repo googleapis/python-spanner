@@ -403,13 +403,15 @@ def insert_data(instance_id, database_id):
 # [END spanner_insert_data]
 
 
-# [START spanner_batch_write]
+# [START spanner_batch_write_at_least_once]
 def batch_write(instance_id, database_id):
     """Inserts sample data into the given database via BatchWrite API.
 
     The database and table must already exist and can be created using
     `create_database`.
     """
+    from google.rpc.code_pb2 import OK
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -429,7 +431,7 @@ def batch_write(instance_id, database_id):
             table="Singers",
             columns=("SingerId", "FirstName", "LastName"),
             values=[
-                (17, "Marc", "Richards"),
+                (17, "Marc", ""),
                 (18, "Catalina", "Smith"),
             ],
         )
@@ -443,12 +445,21 @@ def batch_write(instance_id, database_id):
         )
 
         for response in groups.batch_write():
-            print(response)
+            if response.status.code == OK:
+                print(
+                    "Mutation group indexes {} have been applied with commit timestamp {}".format(
+                        response.indexes, response.commit_timestamp
+                    )
+                )
+            else:
+                print(
+                    "Mutation group indexes {} could not be applied with error {}".format(
+                        response.indexes, response.status
+                    )
+                )
 
-    print("Inserted data.")
 
-
-# [END spanner_batch_write]
+# [END spanner_batch_write_at_least_once]
 
 
 # [START spanner_delete_data]
