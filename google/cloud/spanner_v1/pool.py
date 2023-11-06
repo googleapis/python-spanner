@@ -259,32 +259,32 @@ class AbstractSessionPool(object):
         :returns: True if transaction is closed else False.
         """
         session_recycled = False
-        session_trace = self._traces[session._session_id]
-        if self._database.close_inactive_transactions:
-            if self.logging_enabled:
-                # Log a warning for a long-running transaction that has been closed
-                self._database.logger.warning(
-                    LONG_RUNNING_TRANSACTION_ERR_MSG + session_trace
-                )
+        if session._session_id in self._traces:
+            session_trace = self._traces[session._session_id]
+            if self._database.close_inactive_transactions:
+                if self.logging_enabled:
+                    # Log a warning for a long-running transaction that has been closed
+                    self._database.logger.warning(
+                        LONG_RUNNING_TRANSACTION_ERR_MSG + session_trace
+                    )
 
-            # Set the session as None for associated transaction object
-            if session._transaction is not None:
-                session._transaction._session = None
+                # Set the session as None for associated transaction object
+                if session._transaction is not None:
+                    session._transaction._session = None
 
-            # Increment the count of closed transactions and return the session to the pool
-            session_recycled = True
-            self.put(session)
-        elif self.logging_enabled:
-            # Log a warning for a potentially leaking long-running transaction.
-            # Only log the warning if it hasn't been logged already.
-            if not session.transaction_logged:
-                self._database.logger.warning(
-                    "Transaction has been running for longer than 60 minutes and might be causing a leak. "
-                    + "Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions or use batch or partitioned transactions for long running operations."
-                    + session_trace
-                )
-                session.transaction_logged = True
-
+                # Increment the count of closed transactions and return the session to the pool
+                session_recycled = True
+                self.put(session)
+            elif self.logging_enabled:
+                # Log a warning for a potentially leaking long-running transaction.
+                # Only log the warning if it hasn't been logged already.
+                if not session.transaction_logged:
+                    self._database.logger.warning(
+                        "Transaction has been running for longer than 60 minutes and might be causing a leak. "
+                        + "Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions or use batch or partitioned transactions for long running operations."
+                        + session_trace
+                    )
+                    session.transaction_logged = True
         return session_recycled
 
 
