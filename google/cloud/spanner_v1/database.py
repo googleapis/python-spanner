@@ -663,7 +663,6 @@ class Database(object):
 
         def execute_pdml():
             with SessionCheckout(self._pool, isLongRunning=True) as session:
-
                 txn = api.begin_transaction(
                     session=session.name, options=txn_options, metadata=metadata
                 )
