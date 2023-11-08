@@ -344,6 +344,43 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
             op.result()
 
 
+def test_ddl_executemany(shared_instance, dbapi_database):
+    """Check that DDLs in autocommit mode are immediately executed."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    want_row = (
+        1,
+        "first-name",
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE Singers (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+    """
+    )
+    cur.executemany(
+        """
+INSERT INTO Singers (SingerId, Name)
+VALUES (%s, %s)
+""",
+        [want_row],
+    )
+    conn.commit()
+
+    # read the resulting data from the database
+    cur.execute("SELECT * FROM Singers")
+    got_rows = cur.fetchall()
+    conn.commit()
+
+    assert got_rows == [want_row]
+
+    cur.close()
+    conn.close()
+
+
 @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
 def test_autocommit_with_json_data(shared_instance, dbapi_database):
     """

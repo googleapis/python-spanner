@@ -317,6 +317,10 @@ class Cursor(object):
 
         many_result_set = StreamedManyResultSets()
 
+        # For every operation, we've got to ensure that any prior DDL
+        # statements were run.
+        self.connection.run_prior_DDL_statements()
+
         if class_ in (parse_utils.STMT_INSERT, parse_utils.STMT_UPDATING):
             statements = []
 
