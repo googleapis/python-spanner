@@ -379,10 +379,11 @@ def test_ddl_executemany_autocommit_true(shared_instance, dbapi_database):
                 SingerId     INT64 NOT NULL,
                 Name    STRING(1024),
             ) PRIMARY KEY (SingerId)
-        """
+        """,
+            [],
         )
     table = dbapi_database.table("DdlExecuteManyAutocommit")
-    assert table.exists() is True
+    assert table.exists() is False
 
     cur.close()
     conn.close()
