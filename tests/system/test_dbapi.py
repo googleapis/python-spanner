@@ -27,7 +27,6 @@ from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
 from . import _helpers
 
-
 DATABASE_NAME = "dbapi-txn"
 
 DDL_STATEMENTS = (
@@ -344,48 +343,130 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
             op.result()
 
 
-def test_ddl_executemany(shared_instance, dbapi_database):
-    """Check that DDLs in autocommit mode are immediately executed."""
+def test_ddl_execute_autocommit_true(shared_instance, dbapi_database):
+    """Check that DDL statement in autocommit mode results in successful
+    DDL statement execution for execute method."""
 
-    try:
-        conn = Connection(shared_instance, dbapi_database)
-        want_row = (
-            1,
-            "first-name",
-        )
-        cur = conn.cursor()
-        cur.execute(
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecuteAutocommit (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+    """
+    )
+    table = dbapi_database.table("DdlExecuteAutocommit")
+    assert table.exists() is True
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany_autocommit_true(shared_instance, dbapi_database):
+    """Check that DDL statement in autocommit mode results in exception for
+    executemany method ."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+    cur = conn.cursor()
+    with pytest.raises(ProgrammingError):
+        cur.executemany(
             """
-            CREATE TABLE Singers (
+            CREATE TABLE DdlExecuteManyAutocommit (
                 SingerId     INT64 NOT NULL,
                 Name    STRING(1024),
             ) PRIMARY KEY (SingerId)
         """
         )
-        cur.executemany(
-            """
-    INSERT INTO Singers (SingerId, Name)
-    VALUES (%s, %s)
-    """,
-            [want_row],
-        )
-        conn.commit()
+    table = dbapi_database.table("DdlExecuteManyAutocommit")
+    assert table.exists() is True
 
-        # read the resulting data from the database
-        cur.execute("SELECT * FROM Singers")
-        got_rows = cur.fetchall()
+    cur.close()
+    conn.close()
 
-        assert got_rows == [want_row]
 
-        cur.close()
-        conn.close()
+def test_ddl_execute(shared_instance, dbapi_database):
+    """Check that DDL statement followed by non-DDL execute statement in
+    non autocommit mode results in successful DDL statement execution."""
 
-    finally:
-        # Delete table
-        table = dbapi_database.table("Singers")
-        if table.exists():
-            op = dbapi_database.update_ddl(["DROP TABLE Singers"])
-            op.result()
+    conn = Connection(shared_instance, dbapi_database)
+    want_row = (
+        1,
+        "first-name",
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecute (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+    """
+    )
+    table = dbapi_database.table("DdlExecute")
+    assert table.exists() is False
+
+    cur.execute(
+        """
+INSERT INTO DdlExecute (SingerId, Name)
+VALUES (1, "first-name")
+"""
+    )
+    assert table.exists() is True
+    conn.commit()
+
+    # read the resulting data from the database
+    cur.execute("SELECT * FROM DdlExecute")
+    got_rows = cur.fetchall()
+
+    assert got_rows == [want_row]
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany(shared_instance, dbapi_database):
+    """Check that DDL statement followed by non-DDL executemany statement in
+    non autocommit mode results in successful DDL statement execution."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    want_row = (
+        1,
+        "first-name",
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecuteMany (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+    """
+    )
+    table = dbapi_database.table("DdlExecuteMany")
+    assert table.exists() is False
+
+    cur.executemany(
+        """
+INSERT INTO DdlExecuteMany (SingerId, Name)
+VALUES (%s, %s)
+""",
+        [want_row],
+    )
+    assert table.exists() is True
+    conn.commit()
+
+    # read the resulting data from the database
+    cur.execute("SELECT * FROM DdlExecuteMany")
+    got_rows = cur.fetchall()
+
+    assert got_rows == [want_row]
+
+    cur.close()
+    conn.close()
 
 
 @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
