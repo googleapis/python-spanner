@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,15 +19,20 @@ from typing import Dict, Type
 from .base import DatabaseAdminTransport
 from .grpc import DatabaseAdminGrpcTransport
 from .grpc_asyncio import DatabaseAdminGrpcAsyncIOTransport
+from .rest import DatabaseAdminRestTransport
+from .rest import DatabaseAdminRestInterceptor
 
 
 # Compile a registry of transports.
 _transport_registry = OrderedDict()  # type: Dict[str, Type[DatabaseAdminTransport]]
 _transport_registry["grpc"] = DatabaseAdminGrpcTransport
 _transport_registry["grpc_asyncio"] = DatabaseAdminGrpcAsyncIOTransport
+_transport_registry["rest"] = DatabaseAdminRestTransport
 
 __all__ = (
     "DatabaseAdminTransport",
     "DatabaseAdminGrpcTransport",
     "DatabaseAdminGrpcAsyncIOTransport",
+    "DatabaseAdminRestTransport",
+    "DatabaseAdminRestInterceptor",
 )

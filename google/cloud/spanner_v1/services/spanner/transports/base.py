@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -322,6 +322,11 @@ class SpannerTransport(abc.ABC):
                 default_timeout=30.0,
                 client_info=client_info,
             ),
+            self.batch_write: gapic_v1.method.wrap_method(
+                self.batch_write,
+                default_timeout=3600.0,
+                client_info=client_info,
+            ),
         }
 
     def close(self):
@@ -470,6 +475,15 @@ class SpannerTransport(abc.ABC):
     ) -> Callable[
         [spanner.PartitionReadRequest],
         Union[spanner.PartitionResponse, Awaitable[spanner.PartitionResponse]],
+    ]:
+        raise NotImplementedError()
+
+    @property
+    def batch_write(
+        self,
+    ) -> Callable[
+        [spanner.BatchWriteRequest],
+        Union[spanner.BatchWriteResponse, Awaitable[spanner.BatchWriteResponse]],
     ]:
         raise NotImplementedError()
 

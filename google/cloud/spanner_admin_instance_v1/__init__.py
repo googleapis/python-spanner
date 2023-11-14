@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ from .services.instance_admin import InstanceAdminClient
 from .services.instance_admin import InstanceAdminAsyncClient
 
 from .types.common import OperationProgress
+from .types.spanner_instance_admin import AutoscalingConfig
 from .types.spanner_instance_admin import CreateInstanceConfigMetadata
 from .types.spanner_instance_admin import CreateInstanceConfigRequest
 from .types.spanner_instance_admin import CreateInstanceMetadata
@@ -46,6 +47,7 @@ from .types.spanner_instance_admin import UpdateInstanceRequest
 
 __all__ = (
     "InstanceAdminAsyncClient",
+    "AutoscalingConfig",
     "CreateInstanceConfigMetadata",
     "CreateInstanceConfigRequest",
     "CreateInstanceMetadata",
