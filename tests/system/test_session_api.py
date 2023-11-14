@@ -2348,7 +2348,7 @@ def test_execute_sql_w_jsonb_bindings(
     )
 
 
-def test_execute_sql_w_jsonb_bindings(
+def test_execute_sql_w_oid_bindings(
     not_emulator, not_google_standard_sql, sessions_database, database_dialect
 ):
     _bind_test_helper(
