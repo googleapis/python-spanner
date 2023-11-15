@@ -356,7 +356,7 @@ def test_ddl_execute_autocommit_true(shared_instance, dbapi_database):
             SingerId     INT64 NOT NULL,
             Name    STRING(1024),
         ) PRIMARY KEY (SingerId)
-    """
+        """
     )
     table = dbapi_database.table("DdlExecuteAutocommit")
     assert table.exists() is True
@@ -379,7 +379,30 @@ def test_ddl_executemany_autocommit_true(shared_instance, dbapi_database):
                 SingerId     INT64 NOT NULL,
                 Name    STRING(1024),
             ) PRIMARY KEY (SingerId)
-        """,
+            """,
+            [],
+        )
+    table = dbapi_database.table("DdlExecuteManyAutocommit")
+    assert table.exists() is False
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany_autocommit_false(shared_instance, dbapi_database):
+    """Check that DDL statement in non-autocommit mode results in exception for
+    executemany method ."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    cur = conn.cursor()
+    with pytest.raises(ProgrammingError):
+        cur.executemany(
+            """
+            CREATE TABLE DdlExecuteManyAutocommit (
+                SingerId     INT64 NOT NULL,
+                Name    STRING(1024),
+            ) PRIMARY KEY (SingerId)
+            """,
             [],
         )
     table = dbapi_database.table("DdlExecuteManyAutocommit")
@@ -405,16 +428,16 @@ def test_ddl_execute(shared_instance, dbapi_database):
             SingerId     INT64 NOT NULL,
             Name    STRING(1024),
         ) PRIMARY KEY (SingerId)
-    """
+        """
     )
     table = dbapi_database.table("DdlExecute")
     assert table.exists() is False
 
     cur.execute(
         """
-INSERT INTO DdlExecute (SingerId, Name)
-VALUES (1, "first-name")
-"""
+        INSERT INTO DdlExecute (SingerId, Name)
+        VALUES (1, "first-name")
+        """
     )
     assert table.exists() is True
     conn.commit()
@@ -445,16 +468,16 @@ def test_ddl_executemany(shared_instance, dbapi_database):
             SingerId     INT64 NOT NULL,
             Name    STRING(1024),
         ) PRIMARY KEY (SingerId)
-    """
+        """
     )
     table = dbapi_database.table("DdlExecuteMany")
     assert table.exists() is False
 
     cur.executemany(
         """
-INSERT INTO DdlExecuteMany (SingerId, Name)
-VALUES (%s, %s)
-""",
+        INSERT INTO DdlExecuteMany (SingerId, Name)
+        VALUES (%s, %s)
+        """,
         [want_row],
     )
     assert table.exists() is True
