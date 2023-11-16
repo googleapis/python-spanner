@@ -43,9 +43,9 @@ class _BatchBase(_SessionWrapper):
     transaction_tag = None
     _read_only = False
 
-    def __init__(self, session, mutations=None):
+    def __init__(self, session, mutations=[]):
         super(_BatchBase, self).__init__(session)
-        self._mutations = [] if mutations is None else mutations
+        self._mutations = mutations
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.
@@ -229,6 +229,15 @@ class MutationGroups(_SessionWrapper):
         super(MutationGroups, self).__init__(session)
         self._mutation_groups = []
 
+    def _check_state(self):
+        """Checks if the object's state is valid for making API requests.
+
+        :raises: :exc:`ValueError` if the object's state is invalid for making
+                 API requests.
+        """
+        if self.committed is not None:
+            raise ValueError("MutationGroups already committed")
+
     def group(self):
         """Returns a new mutation_group to which mutations can be added."""
         mutation_group = BatchWriteRequest.MutationGroup()
@@ -248,8 +257,7 @@ class MutationGroups(_SessionWrapper):
         :rtype: :class:`Iterable[google.cloud.spanner_v1.types.BatchWriteResponse]`
         :returns: a sequence of responses for each batch.
         """
-        if self.committed is not None:
-            raise ValueError("MutationGroups already committed")
+        self._check_state()
 
         database = self._session._database
         api = database.spanner_api
