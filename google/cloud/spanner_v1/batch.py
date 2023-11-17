@@ -37,7 +37,10 @@ class _BatchBase(_SessionWrapper):
     """Accumulate mutations for transmission during :meth:`commit`.
 
     :type session: :class:`~google.cloud.spanner_v1.session.Session`
-    :param session: the session used to perform the commit
+    :param session: The session used to perform the commit.
+
+    :type mutations: list
+    :param mutations: The list into which mutations are to be accumulated.
     """
 
     transaction_tag = None
@@ -216,8 +219,25 @@ class Batch(_BatchBase):
             self.commit()
 
 
+class MutationGroup(_BatchBase):
+    """A container for mutations.
+
+    Clients should use :class:`~google.cloud.spanner_v1.MutationGroups` to
+    obtain instances instead of directly creating instances.
+
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :param session: The session used to perform the commit.
+
+    :type mutations: list
+    :param mutations: The list into which mutations are to be accumulated.
+    """
+
+    def __init__(self, session, mutations):
+        super(MutationGroup, self).__init__(session, mutations)
+
+
 class MutationGroups(_SessionWrapper):
-    """Accumulate mutations for transmission during :meth:`batch_write`.
+    """Accumulate mutation groups for transmission during :meth:`batch_write`.
 
     :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
@@ -239,10 +259,10 @@ class MutationGroups(_SessionWrapper):
             raise ValueError("MutationGroups already committed")
 
     def group(self):
-        """Returns a new mutation_group to which mutations can be added."""
+        """Returns a new `MutationGroup` to which mutations can be added."""
         mutation_group = BatchWriteRequest.MutationGroup()
         self._mutation_groups.append(mutation_group)
-        return _BatchBase(self._session, mutation_group.mutations)
+        return MutationGroup(self._session, mutation_group.mutations)
 
     def batch_write(self, request_options=None):
         """Executes batch_write.
