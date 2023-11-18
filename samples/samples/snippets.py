@@ -107,6 +107,52 @@ def create_instance_with_processing_units(instance_id, processing_units):
 # [END spanner_create_instance_with_processing_units]
 
 
+# [START spanner_create_instance_with_autoscaling_config]
+def create_instance_with_autoscaling_config(instance_id):
+    """Creates an instance."""
+    spanner_client = spanner.Client()
+
+    config_name = "{}/instanceConfigs/regional-us-west1".format(
+        spanner_client.project_name
+    )
+
+    autoscaling_config = spanner_instance_admin.AutoscalingConfig(
+        autoscaling_limits=spanner_instance_admin.AutoscalingConfig.AutoscalingLimits(
+            min_nodes=1,
+            max_nodes=2,
+        ),
+        autoscaling_targets=spanner_instance_admin.AutoscalingConfig.AutoscalingTargets(
+            high_priority_cpu_utilization_percent=65,
+            storage_utilization_percent=95,
+        ),
+    )
+
+    instance = spanner_client.instance(
+        instance_id,
+        configuration_name=config_name,
+        display_name="Autoscaling config instance.",
+        labels={
+            "cloud_spanner_samples": "true",
+            "sample_name": "snippets-create_instance_with_autoscaling_config",
+            "created": str(int(time.time())),
+        },
+        autoscaling_config=autoscaling_config,
+    )
+
+    operation = instance.create()
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print(
+        "Created instance {} with {} autoscaling config".format(
+            instance_id, instance.autoscaling_config
+        )
+    )
+
+
+# [END spanner_create_instance_with_autoscaling_config]
+
+
 # [START spanner_get_instance_config]
 def get_instance_config(instance_config):
     """Gets the leader options for the instance configuration."""

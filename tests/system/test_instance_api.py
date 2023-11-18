@@ -140,3 +140,49 @@ def test_update_instance(
     # other test cases.
     shared_instance.display_name = old_display_name
     shared_instance.update()
+
+
+def test_create_instance_with_autoscaling_config(
+    not_emulator,
+    if_create_instance,
+    spanner_client,
+    instance_config,
+    instances_to_delete,
+    instance_operation_timeout,
+):
+    from google.cloud.spanner_admin_instance_v1 import (
+        AutoscalingConfig as AutoscalingConfigPB,
+    )
+
+    autoscaling_config = AutoscalingConfigPB(
+        autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+            min_nodes=1,
+            max_nodes=2,
+        ),
+        autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+            high_priority_cpu_utilization_percent=65,
+            storage_utilization_percent=95,
+        ),
+    )
+
+    alt_instance_id = _helpers.unique_id("wpn")
+    instance = spanner_client.instance(
+        instance_id=alt_instance_id,
+        configuration_name=instance_config.name,
+        autoscaling_config=autoscaling_config,
+    )
+    operation = instance.create()
+    # Make sure this instance gets deleted after the test case.
+    instances_to_delete.append(instance)
+
+    # We want to make sure the operation completes.
+    operation.result(instance_operation_timeout)  # raises on failure / timeout.
+
+    # Create a new instance instance and make sure it is the same.
+    instance_alt = spanner_client.instance(alt_instance_id, instance_config.name)
+    instance_alt.reload()
+
+    assert instance == instance_alt
+    assert instance.display_name == instance_alt.display_name
+    pdb.set_trace()
+    assert instance.autoscaling_config == instance_alt.autoscaling_config

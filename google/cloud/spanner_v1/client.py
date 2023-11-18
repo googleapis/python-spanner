@@ -309,6 +309,7 @@ class Client(ClientWithProject):
         node_count=None,
         labels=None,
         processing_units=None,
+        autoscaling_config=None,
     ):
         """Factory to create a instance associated with this client.
 
@@ -352,6 +353,7 @@ class Client(ClientWithProject):
             self._emulator_host,
             labels,
             processing_units,
+            autoscaling_config,
         )
 
     def list_instances(self, filter_="", page_size=None):

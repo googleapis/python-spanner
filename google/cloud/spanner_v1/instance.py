@@ -122,6 +122,7 @@ class Instance(object):
         emulator_host=None,
         labels=None,
         processing_units=None,
+        autoscaling_config=None,
     ):
         self.instance_id = instance_id
         self._client = client
@@ -131,20 +132,28 @@ class Instance(object):
                 raise InvalidArgument(
                     "Only one of node count and processing units can be set."
                 )
-        if node_count is None and processing_units is None:
+        if (
+            node_count is None
+            and processing_units is None
+            and autoscaling_config is None
+        ):
             self._node_count = DEFAULT_NODE_COUNT
             self._processing_units = DEFAULT_NODE_COUNT * PROCESSING_UNITS_PER_NODE
         elif node_count is not None:
             self._node_count = node_count
             self._processing_units = node_count * PROCESSING_UNITS_PER_NODE
-        else:
+        elif processing_units is not None:
             self._processing_units = processing_units
             self._node_count = processing_units // PROCESSING_UNITS_PER_NODE
+        else:
+            self._node_count = None
+            self._processing_units = None
         self.display_name = display_name or instance_id
         self.emulator_host = emulator_host
         if labels is None:
             labels = {}
         self.labels = labels
+        self._autoscaling_config = autoscaling_config
 
     def _update_from_pb(self, instance_pb):
         """Refresh self from the server-provided protobuf.
@@ -158,6 +167,7 @@ class Instance(object):
         self._node_count = instance_pb.node_count
         self._processing_units = instance_pb.processing_units
         self.labels = instance_pb.labels
+        self._autoscaling_config = instance_pb.autoscaling_config
 
     @classmethod
     def from_pb(cls, instance_pb, client):
@@ -250,6 +260,14 @@ class Instance(object):
         self._node_count = value
         self._processing_units = value * PROCESSING_UNITS_PER_NODE
 
+    @property
+    def autoscaling_config(self):
+        return self._autoscaling_config
+
+    @autoscaling_config.setter
+    def autoscaling_config(self, value):
+        self._autoscaling_config = value
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
@@ -281,6 +299,7 @@ class Instance(object):
             node_count=self._node_count,
             processing_units=self._processing_units,
             display_name=self.display_name,
+            autoscaling_config=self._autoscaling_config,
         )
 
     def create(self):
@@ -313,6 +332,7 @@ class Instance(object):
             display_name=self.display_name,
             processing_units=self._processing_units,
             labels=self.labels,
+            autoscaling_config=self._autoscaling_config,
         )
         metadata = _metadata_with_prefix(self.name)
 

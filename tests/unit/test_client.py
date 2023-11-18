@@ -587,11 +587,24 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
         from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
+        from google.cloud.spanner_admin_instance_v1 import (
+            AutoscalingConfig as AutoscalingConfigPB,
+        )
 
         api = InstanceAdminClient(credentials=mock.Mock())
         credentials = _make_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         client._instance_admin_api = api
+        autoscaling_config = AutoscalingConfigPB(
+            autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+                min_nodes=1,
+                max_nodes=2,
+            ),
+            autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+                high_priority_cpu_utilization_percent=65,
+                storage_utilization_percent=95,
+            ),
+        )
 
         instance_pbs = ListInstancesResponse(
             instances=[
@@ -601,7 +614,11 @@ class TestClient(unittest.TestCase):
                     display_name=self.DISPLAY_NAME,
                     node_count=self.NODE_COUNT,
                     processing_units=self.PROCESSING_UNITS,
-                )
+                ),
+                InstancePB(
+                    name=self.INSTANCE_NAME,
+                    autoscaling_config=autoscaling_config,
+                ),
             ]
         )
 
@@ -619,6 +636,11 @@ class TestClient(unittest.TestCase):
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)
         self.assertEqual(instance.node_count, self.NODE_COUNT)
         self.assertEqual(instance.processing_units, self.PROCESSING_UNITS)
+
+        instance1 = instances[1]
+        self.assertIsInstance(instance1, InstancePB)
+        self.assertEqual(instance.name, self.INSTANCE_NAME)
+        self.assertEqual(instance1.autoscaling_config, autoscaling_config)
 
         expected_metadata = (
             ("google-cloud-resource-prefix", client.project_name),

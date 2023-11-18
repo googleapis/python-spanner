@@ -59,6 +59,7 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(instance.node_count, DEFAULT_NODE_COUNT)
         self.assertEqual(instance.display_name, self.INSTANCE_ID)
         self.assertEqual(instance.labels, {})
+        self.assertEqual(instance.autoscaling_config, None)
 
     def test_constructor_non_default(self):
         DISPLAY_NAME = "display_name"
@@ -291,6 +292,49 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(instance.labels, self.LABELS)
         self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
 
+    def test_create_with_autoscaling_config(self):
+        from google.cloud.spanner_admin_instance_v1 import (
+            AutoscalingConfig as AutoscalingConfigPB,
+        )
+
+        op_future = _FauxOperationFuture()
+        client = _Client(self.PROJECT)
+        autoscaling_config = AutoscalingConfigPB(
+            autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+                min_nodes=1,
+                max_nodes=2,
+            ),
+            autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+                high_priority_cpu_utilization_percent=65,
+                storage_utilization_percent=95,
+            ),
+        )
+        api = client.instance_admin_api = _FauxInstanceAdminAPI(
+            _create_instance_response=op_future
+        )
+        instance = self._make_one(
+            self.INSTANCE_ID,
+            client,
+            configuration_name=self.CONFIG_NAME,
+            display_name=self.DISPLAY_NAME,
+            labels=self.LABELS,
+            autoscaling_config=autoscaling_config,
+        )
+
+        future = instance.create()
+
+        self.assertIs(future, op_future)
+
+        (parent, instance_id, instance, metadata) = api._created_instance
+        self.assertEqual(parent, self.PARENT)
+        self.assertEqual(instance_id, self.INSTANCE_ID)
+        self.assertEqual(instance.name, self.INSTANCE_NAME)
+        self.assertEqual(instance.config, self.CONFIG_NAME)
+        self.assertEqual(instance.display_name, self.DISPLAY_NAME)
+        self.assertEqual(instance.labels, self.LABELS)
+        self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
+        self.assertEqual(instance.autoscaling_config, autoscaling_config)
+
     def test_exists_instance_grpc_error(self):
         from google.api_core.exceptions import Unknown
 
@@ -385,6 +429,46 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(instance.node_count, self.NODE_COUNT)
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)
         self.assertEqual(instance.labels, self.LABELS)
+
+        name, metadata = api._got_instance
+        self.assertEqual(name, self.INSTANCE_NAME)
+        self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
+
+    def test_reload_with_autoscaling_config(self):
+        from google.cloud.spanner_admin_instance_v1 import Instance
+        from google.cloud.spanner_admin_instance_v1 import (
+            AutoscalingConfig as AutoscalingConfigPB,
+        )
+
+        autoscaling_config = AutoscalingConfigPB(
+            autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+                min_nodes=1,
+                max_nodes=2,
+            ),
+            autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+                high_priority_cpu_utilization_percent=65,
+                storage_utilization_percent=95,
+            ),
+        )
+        client = _Client(self.PROJECT)
+        instance_pb = Instance(
+            name=self.INSTANCE_NAME,
+            config=self.CONFIG_NAME,
+            display_name=self.DISPLAY_NAME,
+            labels=self.LABELS,
+            autoscaling_config=autoscaling_config,
+        )
+        api = client.instance_admin_api = _FauxInstanceAdminAPI(
+            _get_instance_response=instance_pb
+        )
+        instance = self._make_one(self.INSTANCE_ID, client)
+
+        instance.reload()
+
+        self.assertEqual(instance.configuration_name, self.CONFIG_NAME)
+        self.assertEqual(instance.display_name, self.DISPLAY_NAME)
+        self.assertEqual(instance.labels, self.LABELS)
+        self.assertEqual(instance.autoscaling_config, autoscaling_config)
 
         name, metadata = api._got_instance
         self.assertEqual(name, self.INSTANCE_NAME)
