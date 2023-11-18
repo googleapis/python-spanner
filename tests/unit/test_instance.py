@@ -38,7 +38,13 @@ class TestInstance(unittest.TestCase):
     DATABASE_ID = "database_id"
     DATABASE_NAME = "%s/databases/%s" % (INSTANCE_NAME, DATABASE_ID)
     LABELS = {"test": "true"}
-    FIELD_MASK = ["config", "display_name", "processing_units", "labels"]
+    FIELD_MASK = [
+        "config",
+        "display_name",
+        "processing_units",
+        "labels",
+        "autoscaling_config",
+    ]
 
     def _getTargetClass(self):
         from google.cloud.spanner_v1.instance import Instance
@@ -558,13 +564,57 @@ class TestInstance(unittest.TestCase):
 
         instance, field_mask, metadata = api._updated_instance
         self.assertEqual(
-            field_mask.paths, ["config", "display_name", "processing_units", "labels"]
+            field_mask.paths,
+            [
+                "config",
+                "display_name",
+                "processing_units",
+                "labels",
+                "autoscaling_config",
+            ],
         )
         self.assertEqual(instance.name, self.INSTANCE_NAME)
         self.assertEqual(instance.config, self.CONFIG_NAME)
         self.assertEqual(instance.display_name, self.DISPLAY_NAME)
         self.assertEqual(instance.processing_units, self.PROCESSING_UNITS)
         self.assertEqual(instance.labels, self.LABELS)
+        self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
+
+    def test_update_success_with_autoscaling_config(self):
+        from google.cloud.spanner_admin_instance_v1 import (
+            AutoscalingConfig as AutoscalingConfigPB,
+        )
+
+        autoscaling_config = AutoscalingConfigPB(
+            autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+                min_nodes=1,
+                max_nodes=2,
+            ),
+            autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+                high_priority_cpu_utilization_percent=65,
+                storage_utilization_percent=95,
+            ),
+        )
+
+        op_future = _FauxOperationFuture()
+        client = _Client(self.PROJECT)
+        api = client.instance_admin_api = _FauxInstanceAdminAPI(
+            _update_instance_response=op_future
+        )
+        instance = self._make_one(
+            self.INSTANCE_ID,
+            client,
+            autoscaling_config=autoscaling_config,
+        )
+
+        future = instance.update(fields=["autoscaling_config"])
+
+        self.assertIs(future, op_future)
+
+        instance, field_mask, metadata = api._updated_instance
+        self.assertEqual(field_mask.paths, ["autoscaling_config"])
+        self.assertEqual(instance.name, self.INSTANCE_NAME)
+        self.assertEqual(instance.autoscaling_config, autoscaling_config)
         self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
 
     def test_delete_grpc_error(self):

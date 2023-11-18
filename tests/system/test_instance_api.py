@@ -185,3 +185,50 @@ def test_create_instance_with_autoscaling_config(
     assert instance == instance_alt
     assert instance.display_name == instance_alt.display_name
     assert instance.autoscaling_config == instance_alt.autoscaling_config
+
+
+def test_update_instance_with_autoscaling_config(
+    not_emulator,
+    spanner_client,
+    shared_instance,
+    shared_instance_id,
+    instance_operation_timeout,
+):
+    from google.cloud.spanner_admin_instance_v1 import (
+        AutoscalingConfig as AutoscalingConfigPB,
+    )
+
+    autoscaling_config = AutoscalingConfigPB(
+        autoscaling_limits=AutoscalingConfigPB.AutoscalingLimits(
+            min_nodes=1,
+            max_nodes=2,
+        ),
+        autoscaling_targets=AutoscalingConfigPB.AutoscalingTargets(
+            high_priority_cpu_utilization_percent=65,
+            storage_utilization_percent=95,
+        ),
+    )
+    assert shared_instance.autoscaling_config != autoscaling_config
+
+    old_node_count = shared_instance.node_count
+    shared_instance.autoscaling_config = autoscaling_config
+    # Update only the autoscaling_config field. This is to ensure that
+    # node_count or processing_unit field is not considered during update,
+    # which might otherwise throw an error.
+    operation = shared_instance.update(fields=["autoscaling_config"])
+
+    # We want to make sure the operation completes.
+    operation.result(instance_operation_timeout)  # raises on failure / timeout.
+
+    # Create a new instance instance and reload it.
+    instance_alt = spanner_client.instance(shared_instance_id, None)
+    assert instance_alt.autoscaling_config != autoscaling_config
+
+    instance_alt.reload()
+    assert instance_alt.autoscaling_config == autoscaling_config
+
+    # Make sure to put the instance back the way it was for the
+    # other test cases.
+    shared_instance.node_count = old_node_count
+    shared_instance.autoscaling_config = None
+    shared_instance.update()

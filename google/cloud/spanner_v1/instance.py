@@ -379,7 +379,7 @@ class Instance(object):
 
         self._update_from_pb(instance_pb)
 
-    def update(self):
+    def update(self, fields=None):
         """Update this instance.
 
         See
@@ -397,6 +397,10 @@ class Instance(object):
 
            before calling :meth:`update`.
 
+        :type fields: Sequence[str]
+        :param fields: a list of fields to update. Ex: ["config", "display_name",
+        "processing_units", "labels","autoscaling_config"]
+
         :rtype: :class:`google.api_core.operation.Operation`
         :returns: an operation instance
         :raises NotFound: if the instance does not exist
@@ -409,12 +413,21 @@ class Instance(object):
             node_count=self._node_count,
             processing_units=self._processing_units,
             labels=self.labels,
+            autoscaling_config=self._autoscaling_config,
         )
+        # default field paths to update
+        paths = [
+            "config",
+            "display_name",
+            "processing_units",
+            "labels",
+            "autoscaling_config",
+        ]
+        if fields is not None:
+            paths = fields
 
         # Always update only processing_units, not nodes
-        field_mask = FieldMask(
-            paths=["config", "display_name", "processing_units", "labels"]
-        )
+        field_mask = FieldMask(paths=paths)
         metadata = _metadata_with_prefix(self.name)
 
         future = api.update_instance(
