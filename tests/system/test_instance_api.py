@@ -184,5 +184,4 @@ def test_create_instance_with_autoscaling_config(
 
     assert instance == instance_alt
     assert instance.display_name == instance_alt.display_name
-    pdb.set_trace()
     assert instance.autoscaling_config == instance_alt.autoscaling_config
