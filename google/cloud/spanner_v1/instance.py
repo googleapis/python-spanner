@@ -398,8 +398,7 @@ class Instance(object):
            before calling :meth:`update`.
 
         :type fields: Sequence[str]
-        :param fields: a list of fields to update. Ex: ["config", "display_name",
-        "processing_units", "labels","autoscaling_config"]
+        :param fields: a list of fields to update. Ex: ["autoscaling_config"]
 
         :rtype: :class:`google.api_core.operation.Operation`
         :returns: an operation instance
