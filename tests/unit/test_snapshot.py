@@ -76,7 +76,6 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def _makeDerived(self, session):
         class _Derived(self._getTargetClass()):
-
             _transaction_id = None
             _multi_use = False
 
@@ -534,7 +533,6 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
-
     PROJECT_ID = "project-id"
     INSTANCE_ID = "instance-id"
     INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
@@ -553,7 +551,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def _makeDerived(self, session):
         class _Derived(self._getTargetClass()):
-
             _transaction_id = None
             _multi_use = False
 
@@ -1437,7 +1434,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
 
 class TestSnapshot(OpenTelemetryBase):
-
     PROJECT_ID = "project-id"
     INSTANCE_ID = "instance-id"
     INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
