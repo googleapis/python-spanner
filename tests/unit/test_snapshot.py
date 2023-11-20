@@ -1102,13 +1102,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
             multi_use=False, directed_read_options=DIRECTED_READ_OPTIONS
         )
 
-    def test_execute_sql_w_directed_read_options(self):
+    def test_execute_sql_w_directed_read_options_at_client_level(self):
         self._execute_sql_helper(
             multi_use=False,
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
 
-    def test_execute_sql_w_directed_read_options(self):
+    def test_execute_sql_w_directed_read_options_override(self):
         self._execute_sql_helper(
             multi_use=False,
             directed_read_options=DIRECTED_READ_OPTIONS,

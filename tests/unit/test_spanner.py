@@ -254,7 +254,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._execute_sql_count, sql_count + 1)
 
     def _execute_sql_expected_request(
-        self, database, partition=None, query_options=None, begin=True, sql_count=0
+        self,
+        database,
+        partition=None,
+        query_options=None,
+        begin=True,
+        sql_count=0,
+        directed_read_options=None,
     ):
         if begin is True:
             expected_transaction = TransactionSelector(
@@ -287,6 +293,7 @@ class TestTransaction(OpenTelemetryBase):
             request_options=expected_request_options,
             partition_token=partition,
             seqno=sql_count,
+            directed_read_options=directed_read_options,
         )
 
         return expected_request
@@ -359,7 +366,9 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
 
-    def _read_helper_expected_request(self, partition=None, begin=True, count=0):
+    def _read_helper_expected_request(
+        self, partition=None, begin=True, count=0, directed_read_options=None
+    ):
         if begin is True:
             expected_transaction = TransactionSelector(
                 begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
@@ -385,6 +394,7 @@ class TestTransaction(OpenTelemetryBase):
             limit=expected_limit,
             partition_token=partition,
             request_options=expected_request_options,
+            directed_read_options=directed_read_options,
         )
 
         return expected_request
@@ -621,26 +631,42 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_transaction_should_throw_error_w_directed_read_options(self):
-        from google.api_core.exceptions import BadRequest
-
         database = _Database()
         session = _Session(database)
         api = database.spanner_api = self._make_spanner_api()
         transaction = self._make_one(session)
 
-        with self.assertRaises(BadRequest):
-            self._execute_sql_helper(
-                transaction=transaction,
-                api=api,
-                directed_read_options=DIRECTED_READ_OPTIONS,
-            )
+        self._execute_sql_helper(
+            transaction=transaction,
+            api=api,
+            directed_read_options=DIRECTED_READ_OPTIONS,
+        )
+        api.execute_streaming_sql.assert_called_once_with(
+            request=self._execute_sql_expected_request(
+                database=database, directed_read_options=DIRECTED_READ_OPTIONS
+            ),
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+            ],
+        )
 
-        with self.assertRaises(BadRequest):
-            self._read_helper(
-                transaction=transaction,
-                api=api,
-                directed_read_options=DIRECTED_READ_OPTIONS,
-            )
+        self._read_helper(
+            transaction=transaction,
+            api=api,
+            directed_read_options=DIRECTED_READ_OPTIONS,
+        )
+        api.streaming_read.assert_called_once_with(
+            request=self._read_helper_expected_request(
+                directed_read_options=DIRECTED_READ_OPTIONS
+            ),
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+            ],
+            retry=RETRY,
+            timeout=TIMEOUT,
+        )
 
     def test_transaction_should_use_transaction_id_returned_by_first_read(self):
         database = _Database()
