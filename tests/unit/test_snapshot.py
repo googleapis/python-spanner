@@ -54,7 +54,7 @@ DIRECTED_READ_OPTIONS = {
                 "type_": TransactionTypes.READ_ONLY,
             },
         ],
-        "auto_failover": True,
+        "auto_failover_disabled": True,
     },
 }
 DIRECTED_READ_OPTIONS_FOR_CLIENT = {

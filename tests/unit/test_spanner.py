@@ -83,7 +83,7 @@ DIRECTED_READ_OPTIONS = {
                 "type_": TransactionTypes.READ_ONLY,
             },
         ],
-        "auto_failover": True,
+        "auto_failover_disabled": True,
     },
 }
 insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"

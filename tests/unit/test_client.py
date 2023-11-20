@@ -49,7 +49,7 @@ class TestClient(unittest.TestCase):
                     "type_": TransactionTypes.READ_ONLY,
                 },
             ],
-            "auto_failover": True,
+            "auto_failover_disabled": True,
         },
     }
 

@@ -2686,7 +2686,7 @@ def directed_read_options(
     * `location:us-east1 type:READ_ONLY` --> The "READ_ONLY" type replica(s)
                               in location "us-east1" will be used to process
                               the request.
-    include_replicas also contains an option for auto_failover which when set
+    include_replicas also contains an option for auto_failover_disabled which when set
     Spanner will not route requests to a replica outside the
     include_replicas list when all the specified replicas are unavailable
     or unhealthy. The default value is `false`
@@ -2720,7 +2720,7 @@ def directed_read_options(
                     "type_": TransactionTypes.READ_ONLY,
                 },
             ],
-            "auto_failover": True,
+            "auto_failover_disabled": True,
         },
     }
 
