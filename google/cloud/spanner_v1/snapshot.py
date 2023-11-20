@@ -42,7 +42,6 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1._helpers import verify_directed_read_options
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
@@ -266,21 +265,13 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        elif self.transaction_tag is not None:
-            request_options.transaction_tag = self.transaction_tag
             if (
                 directed_read_options is None
                 and database._directed_read_options is not None
             ):
                 directed_read_options = database._directed_read_options
-        else:
-            if self.transaction_tag is not None:
-                request_options.transaction_tag = self.transaction_tag
-            if directed_read_options is not None:
-                raise BadRequest(
-                    "directed_read_options can't be set for readWrite transactions or partitioned dml requests"
-                )
-        verify_directed_read_options(directed_read_options)
+        elif self.transaction_tag is not None:
+            request_options.transaction_tag = self.transaction_tag
 
         request = ReadRequest(
             session=self._session.name,
@@ -457,21 +448,13 @@ class _SnapshotBase(_SessionWrapper):
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        elif self.transaction_tag is not None:
-            request_options.transaction_tag = self.transaction_tag
             if (
                 directed_read_options is None
                 and database._directed_read_options is not None
             ):
                 directed_read_options = database._directed_read_options
-        else:
-            if self.transaction_tag is not None:
-                request_options.transaction_tag = self.transaction_tag
-            if directed_read_options is not None:
-                raise BadRequest(
-                    "directed_read_options can't be set for readWrite transactions or partitioned dml requests"
-                )
-        verify_directed_read_options(directed_read_options)
+        elif self.transaction_tag is not None:
+            request_options.transaction_tag = self.transaction_tag
 
         request = ExecuteSqlRequest(
             session=self._session.name,

@@ -1960,7 +1960,7 @@ def test_execute_sql_w_directed_read_options(sessions_database, not_postgres):
 
     assert len(list(streamed)) == 3000
 
-    
+
 def test_execute_sql_w_to_dict_list(sessions_database):
     sd = _sample_data
     row_count = 40

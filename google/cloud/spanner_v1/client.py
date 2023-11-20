@@ -47,7 +47,6 @@ from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1._helpers import verify_directed_read_options
 from google.cloud.spanner_v1.instance import Instance
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
@@ -187,7 +186,6 @@ class Client(ClientWithProject):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
 
         self._route_to_leader_enabled = route_to_leader_enabled
-        verify_directed_read_options(directed_read_options)
         self._directed_read_options = directed_read_options
 
     @property
@@ -270,7 +268,7 @@ class Client(ClientWithProject):
         """
         return self._route_to_leader_enabled
 
-
+    @property
     def directed_read_options(self):
         """Getter for directed_read_options.
 
@@ -405,7 +403,8 @@ class Client(ClientWithProject):
         )
         return page_iter
 
-    def set_directed_read_options(self, directed_read_options):
+    @directed_read_options.setter
+    def directed_read_options(self, directed_read_options):
         """Sets directed_read_options for the client
         :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`

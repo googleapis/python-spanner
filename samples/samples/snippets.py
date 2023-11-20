@@ -2875,9 +2875,7 @@ if __name__ == "__main__":  # noqa: C901
         "--database_role", default="new_parent"
     )
     enable_fine_grained_access_parser.add_argument("--title", default="condition title")
-    subparsers.add_parser(
-        "directed_read_options", help=directed_read_options.__doc__
-    )
+    subparsers.add_parser("directed_read_options", help=directed_read_options.__doc__)
 
     args = parser.parse_args()
 
