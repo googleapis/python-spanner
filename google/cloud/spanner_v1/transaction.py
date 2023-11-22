@@ -36,6 +36,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
+from google.protobuf.duration_pb2 import Duration
 
 
 class Transaction(_SnapshotBase, _BatchBase):
@@ -180,7 +181,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self, return_commit_stats=False, request_options=None):
+    def commit(self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
@@ -193,6 +194,10 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+        :param max_commit_delay_ms:
+                (Optional) The amount of latency this request is willing to incur
+                in order to improve throughput.
+                :class:`~google.cloud.spanner_v1.types.MaxCommitDelay`.
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
@@ -223,11 +228,16 @@ class Transaction(_SnapshotBase, _BatchBase):
         # Request tags are not supported for commit requests.
         request_options.request_tag = None
 
+        Duration max_commit_delay = None
+        if max_commit_delay_ms is not None:
+            max_commit_delay.nanos = 1000000 * [max_commit_delay_ms]
+
         request = CommitRequest(
             session=self._session.name,
             mutations=self._mutations,
             transaction_id=self._transaction_id,
             return_commit_stats=return_commit_stats,
+            max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
