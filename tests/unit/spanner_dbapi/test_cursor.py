@@ -195,7 +195,7 @@ class TestCursor(unittest.TestCase):
         cursor._checksum = ResultsChecksum()
         sql = "INSERT INTO django_migrations (app, name, applied) VALUES (%s, %s, %s)"
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             return_value=ParsedStatement(StatementType.UPDATE, sql),
         ):
             with mock.patch(
@@ -212,7 +212,7 @@ class TestCursor(unittest.TestCase):
 
         sql = "sql"
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=[
                 ParsedStatement(StatementType.DDL, sql),
                 ParsedStatement(StatementType.UPDATE, sql),
@@ -225,7 +225,7 @@ class TestCursor(unittest.TestCase):
             self.assertEqual(cursor.connection._ddl_statements, [])
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             return_value=ParsedStatement(StatementType.DDL, sql),
         ) as mock_classify_stmt:
             sql = "sql"
@@ -235,7 +235,7 @@ class TestCursor(unittest.TestCase):
             self.assertEqual(cursor.connection._ddl_statements, [sql])
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             return_value=ParsedStatement(StatementType.QUERY, sql),
         ):
             with mock.patch(
@@ -248,7 +248,7 @@ class TestCursor(unittest.TestCase):
                 mock_handle_ddl.assert_called_once_with(sql, None)
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             return_value=ParsedStatement(StatementType.UPDATE, sql),
         ):
             cursor.connection._database = mock_db = mock.MagicMock()
@@ -266,21 +266,21 @@ class TestCursor(unittest.TestCase):
         cursor = self._make_one(connection)
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=exceptions.AlreadyExists("message"),
         ):
             with self.assertRaises(IntegrityError):
                 cursor.execute(sql="sql")
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=exceptions.FailedPrecondition("message"),
         ):
             with self.assertRaises(IntegrityError):
                 cursor.execute(sql="sql")
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=exceptions.OutOfRange("message"),
         ):
             with self.assertRaises(IntegrityError):
@@ -294,7 +294,7 @@ class TestCursor(unittest.TestCase):
         cursor = self._make_one(connection)
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=exceptions.InvalidArgument("message"),
         ):
             with self.assertRaises(ProgrammingError):
@@ -308,7 +308,7 @@ class TestCursor(unittest.TestCase):
         cursor = self._make_one(connection)
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.parse_utils.classify_stmt",
+            "google.cloud.spanner_dbapi.parse_utils._classify_stmt",
             side_effect=exceptions.InternalServerError("message"),
         ):
             with self.assertRaises(OperationalError):
