@@ -630,7 +630,7 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
-    def test_transaction_should_throw_error_w_directed_read_options(self):
+    def test_transaction_w_directed_read_options(self):
         database = _Database()
         session = _Session(database)
         api = database.spanner_api = self._make_spanner_api()
@@ -645,11 +645,12 @@ class TestTransaction(OpenTelemetryBase):
             request=self._execute_sql_expected_request(
                 database=database, directed_read_options=DIRECTED_READ_OPTIONS
             ),
-            retry=gapic_v1.method.DEFAULT,
-            timeout=gapic_v1.method.DEFAULT,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
             ],
+            retry=gapic_v1.method.DEFAULT,
+            timeout=gapic_v1.method.DEFAULT,
         )
 
         self._read_helper(
@@ -663,6 +664,7 @@ class TestTransaction(OpenTelemetryBase):
             ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
