@@ -19,8 +19,6 @@ import decimal
 import re
 
 import sqlparse
-import warnings
-import functools
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1 import JsonObject
 from . import client_side_statement_parser
