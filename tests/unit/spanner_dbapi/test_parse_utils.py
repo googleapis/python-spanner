@@ -25,7 +25,7 @@ class TestParseUtils(unittest.TestCase):
     skip_message = "Subtests are not supported in Python 2"
 
     def test_classify_stmt(self):
-        from google.cloud.spanner_dbapi.parse_utils import classify_stmt
+        from google.cloud.spanner_dbapi.parse_utils import _classify_stmt
 
         cases = (
             ("SELECT 1", StatementType.QUERY),
@@ -65,7 +65,7 @@ class TestParseUtils(unittest.TestCase):
         )
 
         for query, want_class in cases:
-            self.assertEqual(classify_stmt(query).statement_type, want_class)
+            self.assertEqual(_classify_stmt(query).statement_type, want_class)
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):

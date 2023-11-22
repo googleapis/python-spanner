@@ -27,13 +27,12 @@ from google.api_core.exceptions import OutOfRange
 
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
-from google.cloud.spanner_dbapi.client_side_statement_executor import StatementExecutor
 from google.cloud.spanner_dbapi.exceptions import IntegrityError
 from google.cloud.spanner_dbapi.exceptions import InterfaceError
 from google.cloud.spanner_dbapi.exceptions import OperationalError
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 
-from google.cloud.spanner_dbapi import _helpers
+from google.cloud.spanner_dbapi import _helpers, client_side_statement_executor
 from google.cloud.spanner_dbapi._helpers import ColumnInfo
 from google.cloud.spanner_dbapi._helpers import CODE_TO_DISPLAY_SIZE
 
@@ -87,7 +86,6 @@ class Cursor(object):
         self._row_count = _UNSET_COUNT
         self.lastrowid = None
         self.connection = connection
-        self.client_side_statement_executor = StatementExecutor(connection)
         self._is_closed = False
         # the currently running SQL statement results checksum
         self._checksum = None
@@ -213,7 +211,7 @@ class Cursor(object):
         for ddl in sqlparse.split(sql):
             if ddl:
                 ddl = ddl.rstrip(";")
-                if parse_utils.classify_stmt(ddl).statement_type != StatementType.DDL:
+                if parse_utils._classify_stmt(ddl).statement_type != StatementType.DDL:
                     raise ValueError("Only DDL statements may be batched.")
 
                 statements.append(ddl)
@@ -242,10 +240,11 @@ class Cursor(object):
                 self._handle_DQL(sql, args or None)
                 return
 
-            parsed_statement = parse_utils.classify_stmt(sql)
+            parsed_statement = parse_utils._classify_stmt(sql)
             if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
-                self.client_side_statement_executor.execute(parsed_statement)
-                return
+                return client_side_statement_executor.execute(
+                    self.connection, parsed_statement
+                )
             if parsed_statement.statement_type == StatementType.DDL:
                 self._batch_DDLs(sql)
                 if self.connection.autocommit:
@@ -315,7 +314,7 @@ class Cursor(object):
         self._result_set = None
         self._row_count = _UNSET_COUNT
 
-        parsed_statement = parse_utils.classify_stmt(operation)
+        parsed_statement = parse_utils._classify_stmt(operation)
         if parsed_statement.statement_type == StatementType.DDL:
             raise ProgrammingError(
                 "Executing DDL statements with executemany() method is not allowed."
@@ -326,7 +325,9 @@ class Cursor(object):
         self.connection.run_prior_DDL_statements()
         if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
             raise ProgrammingError(
-                "Executing ClientSide statements with executemany() method is not allowed."
+                "Executing the following operation: "
+                + operation
+                + ", with executemany() method is not allowed."
             )
 
         many_result_set = StreamedManyResultSets()

@@ -19,9 +19,12 @@ import decimal
 import re
 
 import sqlparse
+import warnings
+import functools
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1 import JsonObject
 from . import client_side_statement_parser
+from deprecated import deprecated
 
 from .exceptions import Error
 from .parsed_statement import ParsedStatement, StatementType
@@ -141,6 +144,11 @@ SPANNER_RESERVED_KEYWORDS = {
     "WITHIN",
 }
 
+STMT_DDL = "DDL"
+STMT_NON_UPDATING = "NON_UPDATING"
+STMT_UPDATING = "UPDATING"
+STMT_INSERT = "INSERT"
+
 # Heuristic for identifying statements that don't need to be run as updates.
 RE_NON_UPDATE = re.compile(r"^\W*(SELECT)", re.IGNORECASE)
 
@@ -171,7 +179,35 @@ RE_VALUES_PYFORMAT = re.compile(
 RE_PYFORMAT = re.compile(r"(%s|%\([^\(\)]+\)s)+", re.DOTALL)
 
 
+@deprecated(reason="This method is deprecated. Use _classify_stmt method")
 def classify_stmt(query):
+    """Determine SQL query type.
+    :type query: str
+    :param query: A SQL query.
+    :rtype: str
+    :returns: The query type name.
+    """
+    # sqlparse will strip Cloud Spanner comments,
+    # still, special commenting styles, like
+    # PostgreSQL dollar quoted comments are not
+    # supported and will not be stripped.
+    query = sqlparse.format(query, strip_comments=True).strip()
+
+    if RE_DDL.match(query):
+        return STMT_DDL
+
+    if RE_IS_INSERT.match(query):
+        return STMT_INSERT
+
+    if RE_NON_UPDATE.match(query) or RE_WITH.match(query):
+        # As of 13-March-2020, Cloud Spanner only supports WITH for DQL
+        # statements and doesn't yet support WITH for DML statements.
+        return STMT_NON_UPDATING
+
+    return STMT_UPDATING
+
+
+def _classify_stmt(query):
     """Determine SQL query type.
 
     :type query: str

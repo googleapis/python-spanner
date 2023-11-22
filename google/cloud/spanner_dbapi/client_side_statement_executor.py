@@ -17,18 +17,11 @@ from google.cloud.spanner_dbapi.parsed_statement import (
 )
 
 
-class StatementExecutor(object):
-    def __init__(self, connection):
-        self.connection = connection
+def execute(connection, parsed_statement: ParsedStatement):
+    """Executes the client side statements by calling the relevant method
 
-    def execute(self, parsed_statement: ParsedStatement):
-        """Executes the client side statements by calling the relevant method
-
-        :type parsed_statement: ParsedStatement
-        :param parsed_statement: parsed_statement based on the sql query
-        """
-        if (
-            parsed_statement.client_side_statement_type
-            == ClientSideStatementType.COMMIT
-        ):
-            self.connection.commit()
+    :type parsed_statement: ParsedStatement
+    :param parsed_statement: parsed_statement based on the sql query
+    """
+    if parsed_statement.client_side_statement_type == ClientSideStatementType.COMMIT:
+        return connection.commit()

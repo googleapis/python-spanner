@@ -338,6 +338,20 @@ class TestCursor(unittest.TestCase):
         with self.assertRaises(ProgrammingError):
             cursor.executemany("""DROP DATABASE database_name""", ())
 
+    def test_executemany_client_statement(self):
+        from google.cloud.spanner_dbapi import connect, ProgrammingError
+
+        connection = connect("test-instance", "test-database")
+
+        cursor = connection.cursor()
+
+        with self.assertRaises(ProgrammingError) as error:
+            cursor.executemany("""COMMIT TRANSACTION""", ())
+        self.assertEqual(
+            str(error.exception),
+            "Executing the following operation: COMMIT TRANSACTION, with executemany() method is not allowed.",
+        )
+
     @mock.patch("google.cloud.spanner_v1.Client")
     def test_executemany(self, mock_client):
         from google.cloud.spanner_dbapi import connect
