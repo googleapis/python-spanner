@@ -211,7 +211,10 @@ class Cursor(object):
         for ddl in sqlparse.split(sql):
             if ddl:
                 ddl = ddl.rstrip(";")
-                if parse_utils.classify_statement(ddl).statement_type != StatementType.DDL:
+                if (
+                    parse_utils.classify_statement(ddl).statement_type
+                    != StatementType.DDL
+                ):
                     raise ValueError("Only DDL statements may be batched.")
 
                 statements.append(ddl)
