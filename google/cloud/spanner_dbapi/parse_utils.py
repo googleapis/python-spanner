@@ -205,8 +205,10 @@ def classify_stmt(query):
     return STMT_UPDATING
 
 
-def _classify_stmt(query):
+def classify_statement(query):
     """Determine SQL query type.
+
+    It is an internal method that can make backwards-incompatible changes.
 
     :type query: str
     :param query: A SQL query.

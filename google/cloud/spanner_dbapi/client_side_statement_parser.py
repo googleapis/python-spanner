@@ -1,4 +1,4 @@
-# Copyright 20203 Google LLC All rights reserved.
+# Copyright 2023 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,12 +22,12 @@ from google.cloud.spanner_dbapi.parsed_statement import (
 
 RE_COMMIT = re.compile(r"^\s*(COMMIT)(TRANSACTION)?", re.IGNORECASE)
 
-RE_BEGIN = re.compile(r"^\s*(BEGIN|START)(TRANSACTION)?", re.IGNORECASE)
-
 
 def parse_stmt(query):
     """Parses the sql query to check if it matches with any of the client side
         statement regex.
+
+    It is an internal method that can make backwards-incompatible changes.
 
     :type query: str
     :param query: sql query
@@ -38,9 +38,5 @@ def parse_stmt(query):
     if RE_COMMIT.match(query):
         return ParsedStatement(
             StatementType.CLIENT_SIDE, query, ClientSideStatementType.COMMIT
-        )
-    if RE_BEGIN.match(query):
-        return ParsedStatement(
-            StatementType.CLIENT_SIDE, query, ClientSideStatementType.BEGIN
         )
     return None

@@ -1,4 +1,4 @@
-# Copyright 20203 Google LLC All rights reserved.
+# Copyright 2023 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ from google.cloud.spanner_dbapi.parsed_statement import (
 
 
 def execute(connection, parsed_statement: ParsedStatement):
-    """Executes the client side statements by calling the relevant method
+    """Executes the client side statements by calling the relevant method.
+
+    It is an internal method that can make backwards-incompatible changes.
 
     :type parsed_statement: ParsedStatement
     :param parsed_statement: parsed_statement based on the sql query

@@ -211,7 +211,7 @@ class Cursor(object):
         for ddl in sqlparse.split(sql):
             if ddl:
                 ddl = ddl.rstrip(";")
-                if parse_utils._classify_stmt(ddl).statement_type != StatementType.DDL:
+                if parse_utils.classify_statement(ddl).statement_type != StatementType.DDL:
                     raise ValueError("Only DDL statements may be batched.")
 
                 statements.append(ddl)
@@ -240,7 +240,7 @@ class Cursor(object):
                 self._handle_DQL(sql, args or None)
                 return
 
-            parsed_statement = parse_utils._classify_stmt(sql)
+            parsed_statement = parse_utils.classify_statement(sql)
             if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
                 return client_side_statement_executor.execute(
                     self.connection, parsed_statement
@@ -314,21 +314,22 @@ class Cursor(object):
         self._result_set = None
         self._row_count = _UNSET_COUNT
 
-        parsed_statement = parse_utils._classify_stmt(operation)
+        parsed_statement = parse_utils.classify_statement(operation)
         if parsed_statement.statement_type == StatementType.DDL:
             raise ProgrammingError(
                 "Executing DDL statements with executemany() method is not allowed."
             )
 
-        # For every operation, we've got to ensure that any prior DDL
-        # statements were run.
-        self.connection.run_prior_DDL_statements()
         if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
             raise ProgrammingError(
                 "Executing the following operation: "
                 + operation
                 + ", with executemany() method is not allowed."
             )
+
+        # For every operation, we've got to ensure that any prior DDL
+        # statements were run.
+        self.connection.run_prior_DDL_statements()
 
         many_result_set = StreamedManyResultSets()
 
