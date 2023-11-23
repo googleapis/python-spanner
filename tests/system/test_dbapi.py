@@ -22,7 +22,7 @@ from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
 
 from google.cloud.spanner_dbapi.connection import Connection, connect
-from google.cloud.spanner_dbapi.exceptions import ProgrammingError
+from google.cloud.spanner_dbapi.exceptions import ProgrammingError, OperationalError
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
 from . import _helpers
@@ -80,32 +80,28 @@ class TestDbApi:
             self._cursor.close()
             self._conn.close()
 
-    @pytest.fixture
-    def execute_common_statements(self):
+    def _execute_common_statements(self, cursor):
         # execute several DML statements within one transaction
-        self._cursor.execute(
+        cursor.execute(
             """
                 INSERT INTO contacts (contact_id, first_name, last_name, email)
                 VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
                 """
         )
-        self._cursor.execute(
+        cursor.execute(
             """
                 UPDATE contacts
                 SET first_name = 'updated-first-name'
                 WHERE first_name = 'first-name'
                 """
         )
-        self._cursor.execute(
+        cursor.execute(
             """
                 UPDATE contacts
                 SET email = 'test.email_updated@domen.ru'
                 WHERE email = 'test.email@domen.ru'
                 """
         )
-
-    @pytest.fixture
-    def updated_row(self, execute_common_statements):
         return (
             1,
             "updated-first-name",
@@ -113,9 +109,14 @@ class TestDbApi:
             "test.email_updated@domen.ru",
         )
 
-    def test_commit(self, updated_row):
+    @pytest.mark.parametrize("client_side", [False, True])
+    def test_commit(self, client_side):
         """Test committing a transaction with several statements."""
-        self._conn.commit()
+        updated_row = self._execute_common_statements(self._cursor)
+        if client_side:
+            self._cursor.execute("""COMMIT""")
+        else:
+            self._conn.commit()
 
         # read the resulting data from the database
         self._cursor.execute("SELECT * FROM contacts")
@@ -124,18 +125,80 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    def test_commit_client_side(self, updated_row):
-        """Test committing a transaction with several statements."""
-        self._cursor.execute("""COMMIT""")
+    @pytest.mark.noautofixt
+    def test_begin_client_side(self, shared_instance, dbapi_database):
+        """Test beginning a transaction using client side statement,
+        where connection is in autocommit mode."""
 
-        # read the resulting data from the database
+        conn1 = Connection(shared_instance, dbapi_database)
+        conn1.autocommit = True
+        cursor1 = conn1.cursor()
+        cursor1.execute("begin transaction")
+        updated_row = self._execute_common_statements(cursor1)
+
+        # As the connection conn1 is not committed a new connection wont see its results
+        conn2 = Connection(shared_instance, dbapi_database)
+        cursor2 = conn2.cursor()
+        cursor2.execute("SELECT * FROM contacts")
+        conn2.commit()
+        got_rows = cursor2.fetchall()
+        assert got_rows != [updated_row]
+
+        assert conn1._transaction_begin_marked is True
+        conn1.commit()
+        assert conn1._transaction_begin_marked is False
+
+        # As the connection conn1 is committed a new connection should see its results
+        conn3 = Connection(shared_instance, dbapi_database)
+        cursor3 = conn3.cursor()
+        cursor3.execute("SELECT * FROM contacts")
+        conn3.commit()
+        got_rows = cursor3.fetchall()
+        assert got_rows == [updated_row]
+
+        conn1.close()
+        conn2.close()
+        conn3.close()
+        cursor1.close()
+        cursor2.close()
+        cursor3.close()
+
+    def test_begin_success_post_commit(self):
+        """Test beginning a new transaction post commiting an existing transaction
+        is possible on a connection, when connection is in autocommit mode."""
+        want_row = (2, "first-name", "last-name", "test.email@domen.ru")
+        self._conn.autocommit = True
+        self._cursor.execute("begin transaction")
+        self._cursor.execute(
+            """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+        self._conn.commit()
+
+        self._cursor.execute("begin transaction")
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
         self._conn.commit()
+        assert got_rows == [want_row]
 
-        assert got_rows == [updated_row]
+    def test_begin_error_before_commit(self):
+        """Test beginning a new transaction before commiting an existing transaction is not possible on a connection, when connection is in autocommit mode."""
+        self._conn.autocommit = True
+        self._cursor.execute("begin transaction")
+        self._cursor.execute(
+            """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
 
-    def test_rollback(self):
+        with pytest.raises(OperationalError):
+            self._cursor.execute("begin transaction")
+
+    @pytest.mark.parametrize("client_side", [False, True])
+    def test_rollback(self, client_side):
         """Test rollbacking a transaction with several statements."""
         want_row = (2, "first-name", "last-name", "test.email@domen.ru")
 
@@ -162,7 +225,11 @@ class TestDbApi:
     WHERE email = 'test.email@domen.ru'
     """
         )
-        self._conn.rollback()
+
+        if client_side:
+            self._cursor.execute("ROLLBACK")
+        else:
+            self._conn.rollback()
 
         # read the resulting data from the database
         self._cursor.execute("SELECT * FROM contacts")

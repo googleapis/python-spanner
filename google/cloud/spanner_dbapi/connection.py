@@ -34,7 +34,9 @@ from google.cloud.spanner_dbapi.version import PY_VERSION
 from google.rpc.code_pb2 import ABORTED
 
 
-AUTOCOMMIT_MODE_WARNING = "This method is non-operational in autocommit mode"
+TRANSACTION_NOT_BEGUN_WARNING = (
+    "This method is non-operational as transaction has not begun"
+)
 MAX_INTERNAL_RETRIES = 50
 
 
@@ -104,6 +106,7 @@ class Connection:
         self._read_only = read_only
         self._staleness = None
         self.request_priority = None
+        self._transaction_begin_marked = False
 
     @property
     def autocommit(self):
@@ -141,13 +144,22 @@ class Connection:
         """Flag: transaction is started.
 
         Returns:
-            bool: True if transaction begun, False otherwise.
+            bool: True if transaction started, False otherwise.
         """
         return (
             self._transaction
             and not self._transaction.committed
             and not self._transaction.rolled_back
         )
+
+    @property
+    def transaction_begun(self):
+        """Flag: transaction has begun
+
+        Returns:
+            bool: True if transaction begun, False otherwise.
+        """
+        return (not self._autocommit) or self._transaction_begin_marked
 
     @property
     def instance(self):
@@ -333,12 +345,10 @@ class Connection:
         Begin a new transaction, if there is no transaction in
         this connection yet. Return the begun one otherwise.
 
-        The method is non operational in autocommit mode.
-
         :rtype: :class:`google.cloud.spanner_v1.transaction.Transaction`
         :returns: A Cloud Spanner transaction object, ready to use.
         """
-        if not self.autocommit:
+        if self.transaction_begun:
             if not self.inside_transaction:
                 self._transaction = self._session_checkout().transaction()
                 self._transaction.begin()
@@ -354,7 +364,7 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
-        if self.read_only and not self.autocommit:
+        if self.read_only and self.transaction_begun:
             if not self._snapshot:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
@@ -377,6 +387,22 @@ class Connection:
 
         self.is_closed = True
 
+    @check_not_closed
+    def begin(self):
+        """
+        Marks the transaction as started.
+
+        :raises: :class:`InterfaceError`: if this connection is closed.
+        :raises: :class:`OperationalError`: if there is an existing transaction that has begin or is running
+        """
+        if self._transaction_begin_marked:
+            raise OperationalError("A transaction has already begun")
+        if self.inside_transaction:
+            raise OperationalError(
+                "Beginning a new transaction is not allowed when a transaction is already running"
+            )
+        self._transaction_begin_marked = True
+
     def commit(self):
         """Commits any pending transaction to the database.
 
@@ -386,8 +412,8 @@ class Connection:
             raise ValueError("Database needs to be passed for this operation")
         self._snapshot = None
 
-        if self._autocommit:
-            warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
+        if not self.transaction_begun:
+            warnings.warn(TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2)
             return
 
         self.run_prior_DDL_statements()
@@ -398,6 +424,7 @@ class Connection:
 
                 self._release_session()
                 self._statements = []
+                self._transaction_begin_marked = False
             except Aborted:
                 self.retry_transaction()
                 self.commit()
@@ -410,14 +437,15 @@ class Connection:
         """
         self._snapshot = None
 
-        if self._autocommit:
-            warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
+        if not self.transaction_begun:
+            warnings.warn(TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2)
         elif self._transaction:
             if not self.read_only:
                 self._transaction.rollback()
 
             self._release_session()
             self._statements = []
+            self._transaction_begin_marked = False
 
     @check_not_closed
     def cursor(self):

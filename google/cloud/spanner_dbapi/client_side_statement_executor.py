@@ -22,8 +22,15 @@ def execute(connection, parsed_statement: ParsedStatement):
 
     It is an internal method that can make backwards-incompatible changes.
 
+    :type connection: Connection
+    :param connection: Connection object of the dbApi
+
     :type parsed_statement: ParsedStatement
     :param parsed_statement: parsed_statement based on the sql query
     """
     if parsed_statement.client_side_statement_type == ClientSideStatementType.COMMIT:
         return connection.commit()
+    if parsed_statement.client_side_statement_type == ClientSideStatementType.BEGIN:
+        return connection.begin()
+    if parsed_statement.client_side_statement_type == ClientSideStatementType.ROLLBACK:
+        return connection.rollback()
