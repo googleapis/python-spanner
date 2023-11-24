@@ -71,12 +71,14 @@ class TestDbApi:
         raw_database.run_in_transaction(self.clear_table)
 
     @pytest.fixture(autouse=True)
-    def init_connection(self, shared_instance, dbapi_database):
-        self._conn = Connection(shared_instance, dbapi_database)
-        self._cursor = self._conn.cursor()
+    def init_connection(self, request, shared_instance, dbapi_database):
+        if "noautofixt" not in request.keywords:
+            self._conn = Connection(shared_instance, dbapi_database)
+            self._cursor = self._conn.cursor()
         yield
-        self._cursor.close()
-        self._conn.close()
+        if "noautofixt" not in request.keywords:
+            self._cursor.close()
+            self._conn.close()
 
     @pytest.fixture
     def execute_common_statements(self):
@@ -199,6 +201,7 @@ class TestDbApi:
 
         assert got_rows == [want_row]
 
+    @pytest.mark.noautofixt
     def test_rollback_on_connection_closing(self, shared_instance, dbapi_database):
         """
         When closing a connection all the pending transactions
@@ -303,6 +306,7 @@ class TestDbApi:
 
         assert res[0] == 1
 
+    @pytest.mark.noautofixt
     def test_DDL_autocommit(self, shared_instance, dbapi_database):
         """Check that DDLs in autocommit mode are immediately executed."""
 
@@ -528,6 +532,7 @@ class TestDbApi:
                 op = dbapi_database.update_ddl(["DROP TABLE JsonDetails"])
                 op.result()
 
+    @pytest.mark.noautofixt
     def test_DDL_commit(self, shared_instance, dbapi_database):
         """Check that DDLs in commit mode are executed on calling `commit()`."""
         try:
@@ -563,6 +568,7 @@ class TestDbApi:
         """Check connection validation method."""
         self._conn.validate()
 
+    @pytest.mark.noautofixt
     def test_user_agent(self, shared_instance, dbapi_database):
         """Check that DB API uses an appropriate user agent."""
         conn = connect(shared_instance.name, dbapi_database.name)
