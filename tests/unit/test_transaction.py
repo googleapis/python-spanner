@@ -305,6 +305,17 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertNoSpans()
 
+    def test_commit_should_throw_error_for_recycled_session(self):
+        session = _Session()
+        transaction = self._make_one(session)
+        transaction._session = None
+        with self.assertRaises(Exception) as cm:
+            transaction.commit()
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
+        )
+
     def test_commit_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -665,6 +676,17 @@ class TestTransaction(OpenTelemetryBase):
 
         with self.assertRaises(RuntimeError):
             transaction.batch_update(statements=[DML_QUERY])
+
+    def test_batch_update_should_throw_error_for_recycled_session(self):
+        session = _Session()
+        transaction = self._make_one(session)
+        transaction._session = None
+        with self.assertRaises(Exception) as cm:
+            transaction.batch_update(statements=[DML_QUERY])
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
+        )
 
     def _batch_update_helper(self, error_after=None, count=0, request_options=None):
         from google.rpc.status_pb2 import Status

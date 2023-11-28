@@ -429,6 +429,7 @@ class Instance(object):
         ddl_statements=(),
         pool=None,
         logger=None,
+        close_inactive_transactions=False,
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
@@ -452,6 +453,10 @@ class Instance(object):
                        is `True` to log commit statistics. If not passed, a logger
                        will be created when needed that will log the commit statistics
                        to stdout.
+
+        :type close_inactive_transactions: boolean
+        :param close_inactive_transactions: (Optional) Represents whether the database
+                        has close inactive transactions enabled or not. Default is False
 
         :type encryption_config:
             :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
@@ -481,6 +486,7 @@ class Instance(object):
             ddl_statements=ddl_statements,
             pool=pool,
             logger=logger,
+            close_inactive_transactions=close_inactive_transactions,
             encryption_config=encryption_config,
             database_dialect=database_dialect,
             database_role=database_role,

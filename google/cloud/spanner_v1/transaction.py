@@ -24,6 +24,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _retry,
     _check_rst_stream_error,
+    LONG_RUNNING_TRANSACTION_ERR_MSG,
 )
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
@@ -61,6 +62,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             raise ValueError("Session has existing transaction.")
 
         super(Transaction, self).__init__(session)
+
+    def _check_session_state(self):
+        if self._session is None:
+            raise ValueError(LONG_RUNNING_TRANSACTION_ERR_MSG)
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.
@@ -102,6 +107,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :type request: proto
         :param request: request proto to call the method with
         """
+        self._check_session_state()
         transaction = self._make_txn_selector()
         request.transaction = transaction
         with trace_call(trace_name, session, attributes):
@@ -130,6 +136,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self.rolled_back:
             raise ValueError("Transaction is already rolled back")
 
+        self._check_session_state()
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
@@ -154,6 +161,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
     def rollback(self):
         """Roll back a transaction on the database."""
+        self._check_session_state()
         self._check_state()
 
         if self._transaction_id is not None:
@@ -198,6 +206,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :returns: timestamp of the committed changes.
         :raises ValueError: if there are no mutations to commit.
         """
+        self._check_session_state()
         self._check_state()
         if self._transaction_id is None and len(self._mutations) > 0:
             self.begin()
@@ -331,6 +340,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         :rtype: int
         :returns: Count of rows affected by the DML statement.
         """
+        self._check_session_state()
         params_pb = self._make_params_pb(params, param_types)
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
@@ -435,6 +445,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             statement triggering the error will not have an entry in the
             list, nor will any statements following that one.
         """
+        self._check_session_state()
         parsed = []
         for statement in statements:
             if isinstance(statement, str):

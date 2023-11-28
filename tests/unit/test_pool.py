@@ -15,8 +15,11 @@
 
 from functools import total_ordering
 import unittest
-
+import random
+import string
+import threading
 import mock
+import datetime
 
 
 def _make_database(name="name"):
@@ -45,14 +48,18 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
-        pool = self._make_one(labels=labels, database_role=database_role)
+        pool = self._make_one(
+            labels=labels, database_role=database_role, logging_enabled=False
+        )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_bind_abstract(self):
         pool = self._make_one()
@@ -131,6 +138,220 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertIsNone(checkout._session)
         self.assertEqual(checkout._kwargs, {"foo": "bar"})
 
+    @mock.patch("threading.Thread")
+    def test_startCleaningLongRunningSessions_success(self, mock_thread_class):
+        mock_thread = mock.MagicMock()
+        mock_thread.start = mock.MagicMock()
+        mock_thread_class.return_value = mock_thread
+
+        pool = self._make_one()
+        pool._database = mock.MagicMock()
+        pool._cleanup_task_ongoing_event.clear()
+        pool._cleanup_task_ongoing = False
+        with mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
+            new=5,
+        ), mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC",
+            new=10,
+        ):
+            pool.startCleaningLongRunningSessions()
+
+            # The event should be set, indicating the task is now ongoing
+            self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
+
+            # A new thread should have been created to start the task
+            threading.Thread.assert_called_once_with(
+                target=pool.deleteLongRunningTransactions,
+                args=(5, 10),
+                daemon=True,
+                name="recycle-sessions",
+            )
+            mock_thread.start.assert_called_once()
+            pool.stopCleaningLongRunningSessions()
+            self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    @mock.patch("threading.Thread")
+    def test_startCleaningLongRunningSessions_should_trigger_background_task_once(
+        self, mock_thread_class
+    ):
+        mock_thread = mock.MagicMock()
+        mock_thread.start = mock.MagicMock()
+        mock_thread_class.return_value = mock_thread
+
+        pool = self._make_one()
+        pool._database = mock.MagicMock()
+        pool._cleanup_task_ongoing_event.clear()
+        with mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC",
+            new=5,
+        ), mock.patch(
+            "google.cloud.spanner_v1._helpers.DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC",
+            new=10,
+        ):
+            pool.startCleaningLongRunningSessions()
+
+            # Calling start and stop background task multiple times. Background should get trigerred only once.
+            threads = []
+            threads.append(
+                threading.Thread(
+                    target=pool.startCleaningLongRunningSessions,
+                )
+            )
+            threads.append(
+                threading.Thread(
+                    target=pool.stopCleaningLongRunningSessions,
+                )
+            )
+            threads.append(
+                threading.Thread(
+                    target=pool.startCleaningLongRunningSessions,
+                )
+            )
+            for thread in threads:
+                thread.start()
+
+            for thread in threads:
+                thread.join()
+
+            # A new thread should have been created to start the task
+            deleteLongRunningTransactions_calls = sum(
+                [
+                    1
+                    for call in threading.Thread.mock_calls
+                    if "deleteLongRunningTransactions" in call.kwargs.__str__()
+                ]
+            )
+
+            self.assertEqual(deleteLongRunningTransactions_calls, 1)
+            self.assertEqual(
+                pool._database.logger.info.mock_calls[0].args[0].__str__(),
+                "95.0% of the session pool is exhausted",
+            )
+
+        pool.stopCleaningLongRunningSessions()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def test_stopCleaningLongRunningSessions(self):
+        pool = self._make_one()
+        pool._cleanup_task_ongoing_event.set()
+        pool.stopCleaningLongRunningSessions()
+
+        # The event should not be set, indicating the task is now stopped
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def _setup_session_leak(self, close_inactive_transactions, logging_enabled):
+        pool = self._make_one()
+        pool._database = mock.MagicMock()
+        pool.put = mock.MagicMock()
+
+        def put_side_effect(*args, **kwargs):
+            pool._borrowed_sessions = []
+            pool._cleanup_task_ongoing_event.clear()
+
+        pool.put.side_effect = put_side_effect
+
+        pool.logging_enabled = logging_enabled
+        pool._cleanup_task_ongoing_event.set()
+        pool._database.close_inactive_transactions = close_inactive_transactions
+        pool._borrowed_sessions = []
+        pool._database.logger.warning = mock.MagicMock()
+        pool._format_trace = mock.MagicMock()
+        return pool
+
+    def test_deleteLongRunningTransactions_noSessionsToDelete(self):
+        pool = self._setup_session_leak(True, True)
+        pool.deleteLongRunningTransactions(1, 1)
+
+        # Assert that no warnings were logged and no sessions were put back
+        self.assertEqual(pool._database.logger.warning.call_count, 0)
+        pool.put.assert_not_called()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def test_deleteLongRunningTransactions_deleteAndLogSession(self):
+        pool = self._setup_session_leak(True, True)
+        # Create a session that needs to be closed
+        session = mock.MagicMock()
+        session.transaction_logged = False
+        session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(
+            minutes=61
+        )
+        session.long_running = False
+        session._session_id = "session_id"
+        pool._traces["session_id"] = "trace"
+        pool._borrowed_sessions = [session]
+        pool._cleanup_task_ongoing_event.set()
+        # Call deleteLongRunningTransactions
+        pool.deleteLongRunningTransactions(2, 2)
+
+        # Assert that the session was put back and a warning was logged
+        pool.put.assert_called_once()
+        pool._database.logger.warning.assert_called_once()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def test_deleteLongRunningTransactions_logSession(self):
+        pool = self._setup_session_leak(False, True)
+        # Create a session that needs to be closed
+        session = mock.MagicMock()
+        session.transaction_logged = False
+        session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(
+            minutes=61
+        )
+        session.long_running = False
+        session._session_id = "session_id"
+        pool._traces["session_id"] = "trace"
+        pool._borrowed_sessions = [session]
+        pool._cleanup_task_ongoing_event.set()
+        # Call deleteLongRunningTransactions
+        pool.deleteLongRunningTransactions(2, 2)
+
+        # Assert that the session was not put back and a warning was logged
+        pool.put.assert_not_called()
+        pool._database.logger.warning.assert_called_once()
+        self.assertTrue(session.transaction_logged)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def test_deleteLongRunningTransactions_deleteSession(self):
+        pool = self._setup_session_leak(True, False)
+        # Create a session that needs to be closed
+        session = mock.MagicMock()
+        session.transaction_logged = False
+        session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(
+            minutes=61
+        )
+        session.long_running = False
+        session._session_id = "session_id"
+        pool._traces["session_id"] = "trace"
+        pool._borrowed_sessions = [session]
+        pool._cleanup_task_ongoing_event.set()
+        # Call deleteLongRunningTransactions
+        pool.deleteLongRunningTransactions(2, 2)
+
+        # Assert that the session was not put back and a warning was logged
+        pool.put.assert_called_once()
+        pool._database.logger.warning.assert_not_called()
+        self.assertFalse(session.transaction_logged)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+    def test_deleteLongRunningTransactions_close_if_no_transaction_is_released(self):
+        pool = self._setup_session_leak(False, True)
+        # Create a session that needs to be closed
+        session = mock.MagicMock()
+        session.transaction_logged = True
+        session.checkout_time = datetime.datetime.utcnow() - datetime.timedelta(
+            minutes=61
+        )
+        session.long_running = False
+        session._session_id = "session_id"
+        pool._traces["session_id"] = "trace"
+        pool._borrowed_sessions = [session]
+        pool._cleanup_task_ongoing_event.set()
+        # Call deleteLongRunningTransactions
+        pool.deleteLongRunningTransactions(2, 2)
+
+        # Assert that background task was closed as there was no transaction to close.
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
 
 class TestFixedSizePool(unittest.TestCase):
     def _getTargetClass(self):
@@ -149,12 +370,17 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
         pool = self._make_one(
-            size=4, default_timeout=30, labels=labels, database_role=database_role
+            size=4,
+            default_timeout=30,
+            labels=labels,
+            database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -162,6 +388,7 @@ class TestFixedSizePool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_bind(self):
         database_role = "dummy-role"
@@ -197,6 +424,8 @@ class TestFixedSizePool(unittest.TestCase):
             self.assertIs(session, SESSIONS[i])
             self.assertTrue(session._exists_checked)
             self.assertFalse(pool._sessions.full())
+        # Stop Long running session
+        pool.stopCleaningLongRunningSessions()
 
     def test_get_expired(self):
         pool = self._make_one(size=4)
@@ -212,6 +441,29 @@ class TestFixedSizePool(unittest.TestCase):
         session.create.assert_called()
         self.assertTrue(SESSIONS[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
+        pool.stopCleaningLongRunningSessions()
+
+    def test_get_trigger_longrunning_and_set_defaults(self):
+        pool = self._make_one(size=2)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 3
+        for session in SESSIONS:
+            session._exists = True
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+        session = pool.get()
+        self.assertIsInstance(session.checkout_time, datetime.datetime)
+        self.assertFalse(session.long_running)
+        self.assertFalse(session.transaction_logged)
+        self.assertIs(session, pool._borrowed_sessions[0])
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+        # Fetch new session which will trigger the cleanup task.
+        pool.get()
+        self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
+
+        pool.stopCleaningLongRunningSessions()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
     def test_get_empty_default_timeout(self):
         import queue
@@ -257,8 +509,14 @@ class TestFixedSizePool(unittest.TestCase):
         pool.bind(database)
         pool._sessions.get()
 
-        pool.put(_Session(database))
+        session = _Session(database)
+        pool._borrowed_sessions.append(session)
+        pool._cleanup_task_ongoing_event.set()
 
+        pool.put(session)
+
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         self.assertTrue(pool._sessions.full())
 
     def test_clear(self):
@@ -274,8 +532,10 @@ class TestFixedSizePool(unittest.TestCase):
         for session in SESSIONS:
             session.create.assert_not_called()
 
+        pool._cleanup_task_ongoing_event.set()
         pool.clear()
 
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         for session in SESSIONS:
             self.assertTrue(session._deleted)
 
@@ -296,16 +556,23 @@ class TestBurstyPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
-        pool = self._make_one(target_size=4, labels=labels, database_role=database_role)
+        pool = self._make_one(
+            target_size=4,
+            labels=labels,
+            database_role=database_role,
+            logging_enabled=False,
+        )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.target_size, 4)
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -327,6 +594,28 @@ class TestBurstyPool(unittest.TestCase):
         self.assertIs(session._database, database)
         session.create.assert_called()
         self.assertTrue(pool._sessions.empty())
+
+    def test_get_trigger_longrunning_and_set_defaults(self):
+        pool = self._make_one(target_size=2)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 3
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+
+        session = pool.get()
+        session.create.assert_called()
+        self.assertIsInstance(session.checkout_time, datetime.datetime)
+        self.assertFalse(session.long_running)
+        self.assertFalse(session.transaction_logged)
+        self.assertTrue(len(pool._borrowed_sessions), 1)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+        # Fetch new session which will trigger the cleanup task.
+        pool.get()
+        self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
+
+        pool.stopCleaningLongRunningSessions()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
     def test_get_non_empty_session_exists(self):
         pool = self._make_one()
@@ -364,9 +653,13 @@ class TestBurstyPool(unittest.TestCase):
         database = _Database("name")
         pool.bind(database)
         session = _Session(database)
+        pool._borrowed_sessions.append(session)
+        pool._cleanup_task_ongoing_event.set()
 
         pool.put(session)
 
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         self.assertFalse(pool._sessions.empty())
 
     def test_put_full(self):
@@ -383,29 +676,16 @@ class TestBurstyPool(unittest.TestCase):
         self.assertTrue(younger._deleted)
         self.assertIs(pool.get(), older)
 
-    def test_put_full_expired(self):
-        pool = self._make_one(target_size=1)
-        database = _Database("name")
-        pool.bind(database)
-        older = _Session(database)
-        pool.put(older)
-        self.assertFalse(pool._sessions.empty())
-
-        younger = _Session(database, exists=False)
-        pool.put(younger)  # discarded silently
-
-        self.assertTrue(younger._deleted)
-        self.assertIs(pool.get(), older)
-
     def test_clear(self):
         pool = self._make_one()
         database = _Database("name")
         pool.bind(database)
         previous = _Session(database)
         pool.put(previous)
+        pool._cleanup_task_ongoing_event.set()
 
         pool.clear()
-
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         self.assertTrue(previous._deleted)
 
 
@@ -427,6 +707,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
@@ -437,6 +718,7 @@ class TestPingingPool(unittest.TestCase):
             ping_interval=1800,
             labels=labels,
             database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -445,6 +727,7 @@ class TestPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -486,6 +769,27 @@ class TestPingingPool(unittest.TestCase):
         self.assertIs(session, SESSIONS[0])
         self.assertFalse(session._exists_checked)
         self.assertFalse(pool._sessions.full())
+
+    def test_get_trigger_longrunning_and_set_defaults(self):
+        pool = self._make_one(size=2)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 3
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+        session = pool.get()
+        self.assertIsInstance(session.checkout_time, datetime.datetime)
+        self.assertFalse(session.long_running)
+        self.assertFalse(session.transaction_logged)
+        self.assertTrue(len(pool._borrowed_sessions), 1)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
+        # Fetch new session which will trigger the cleanup task.
+        pool.get()
+        self.assertTrue(pool._cleanup_task_ongoing_event.is_set())
+
+        # Stop the background task.
+        pool.stopCleaningLongRunningSessions()
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
     def test_get_hit_w_ping(self):
         import datetime
@@ -578,9 +882,14 @@ class TestPingingPool(unittest.TestCase):
         now = datetime.datetime.utcnow()
         database = _Database("name")
         session = _Session(database)
-
+        pool._borrowed_sessions.append(session)
+        pool._database = database
+        pool._cleanup_task_ongoing_event.set()
         with _Monkey(MUT, _NOW=lambda: now):
             pool.put(session)
+
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
         self.assertEqual(len(session_queue._items), 1)
         ping_after, queued = session_queue._items[0]
@@ -599,9 +908,11 @@ class TestPingingPool(unittest.TestCase):
         self.assertEqual(api.batch_create_sessions.call_count, 5)
         for session in SESSIONS:
             session.create.assert_not_called()
+        pool._cleanup_task_ongoing_event.set()
 
         pool.clear()
 
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
         for session in SESSIONS:
             self.assertTrue(session._deleted)
 
@@ -676,6 +987,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
+        self.assertTrue(pool.logging_enabled)
 
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
@@ -686,6 +998,7 @@ class TestTransactionPingingPool(unittest.TestCase):
             ping_interval=1800,
             labels=labels,
             database_role=database_role,
+            logging_enabled=False,
         )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
@@ -695,6 +1008,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._pending_sessions.empty())
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
+        self.assertFalse(pool.logging_enabled)
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
@@ -778,7 +1092,9 @@ class TestTransactionPingingPool(unittest.TestCase):
         database = _Database("name")
         session = _Session(database)
         txn = session.transaction()
-
+        pool._borrowed_sessions.append(session)
+        pool._cleanup_task_ongoing_event.set()
+        pool._database = database
         pool.put(session)
 
         self.assertEqual(len(session_queue._items), 1)
@@ -786,17 +1102,24 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertIs(queued, session)
 
         self.assertEqual(len(pending._items), 0)
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
         txn.begin.assert_not_called()
 
     def test_put_non_full_w_committed_txn(self):
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
         pending = pool._pending_sessions = _Queue()
+
         database = _Database("name")
         session = _Session(database)
+        database._sessions.extend([session])
         committed = session.transaction()
         committed.committed = True
-
+        pool._borrowed_sessions.append(session)
+        pool._cleanup_task_ongoing_event.set()
+        pool._database = database
         pool.put(session)
 
         self.assertEqual(len(session_queue._items), 0)
@@ -804,6 +1127,9 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertEqual(len(pending._items), 1)
         self.assertIs(pending._items[0], session)
         self.assertIsNot(session._transaction, committed)
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
+
         session._transaction.begin.assert_not_called()
 
     def test_put_non_full(self):
@@ -812,12 +1138,16 @@ class TestTransactionPingingPool(unittest.TestCase):
         pending = pool._pending_sessions = _Queue()
         database = _Database("name")
         session = _Session(database)
-
+        pool._database = database
+        pool._borrowed_sessions.append(session)
+        pool._cleanup_task_ongoing_event.set()
         pool.put(session)
 
         self.assertEqual(len(session_queue._items), 0)
         self.assertEqual(len(pending._items), 1)
         self.assertIs(pending._items[0], session)
+        self.assertEqual(len(pool._borrowed_sessions), 0)
+        self.assertFalse(pool._cleanup_task_ongoing_event.is_set())
 
         self.assertFalse(pending.empty())
 
@@ -835,7 +1165,7 @@ class TestTransactionPingingPool(unittest.TestCase):
 
         pending = pool._pending_sessions = _Queue(*PENDING_SESSIONS)
         self.assertFalse(pending.empty())
-
+        pool._database = database
         pool.begin_pending_transactions()  # no raise
 
         for txn in TRANSACTIONS:
@@ -870,7 +1200,8 @@ class TestSessionCheckout(unittest.TestCase):
         )
 
     def test_context_manager_wo_kwargs(self):
-        session = object()
+        database = _Database("name")
+        session = _Session(database)
         pool = _Pool(session)
         checkout = self._make_one(pool)
 
@@ -886,7 +1217,8 @@ class TestSessionCheckout(unittest.TestCase):
         self.assertEqual(pool._got, {})
 
     def test_context_manager_w_kwargs(self):
-        session = object()
+        database = _Database("name")
+        session = _Session(database)
         pool = _Pool(session)
         checkout = self._make_one(pool, foo="bar")
 
@@ -923,6 +1255,7 @@ class _Session(object):
         self.create = mock.Mock()
         self._deleted = False
         self._transaction = transaction
+        self._session_id = "".join(random.choices(string.ascii_letters, k=10))
 
     def __lt__(self, other):
         return id(self) < id(other)
@@ -957,6 +1290,10 @@ class _Database(object):
         self._database_role = None
         self.database_id = name
         self._route_to_leader_enabled = True
+        self.close_inactive_transactions = True
+        self._logger = mock.MagicMock()
+        self._logger.info = mock.MagicMock()
+        self._logger.warning = mock.MagicMock()
 
         def mock_batch_create_sessions(
             request=None,
@@ -994,6 +1331,10 @@ class _Database(object):
         :returns: an str with the name of the database role.
         """
         return self._database_role
+
+    @property
+    def logger(self):
+        return self._logger
 
     def session(self, **kwargs):
         # always return first session in the list

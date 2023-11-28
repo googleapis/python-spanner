@@ -812,6 +812,19 @@ class Test_SnapshotBase(OpenTelemetryBase):
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
 
+    def test_execute_sql_should_throw_error_for_recycled_session(self):
+        session = _Session()
+        derived = self._makeDerived(session)
+        derived._session = None
+
+        with self.assertRaises(Exception) as cm:
+            list(derived.execute_sql(SQL_QUERY))
+
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
+        )
+
     def test_execute_sql_w_params_wo_param_types(self):
         database = _Database()
         session = _Session(database)
@@ -1152,6 +1165,22 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
+    def test_partition_read_should_throw_error_is_session_is_none(self):
+        from google.cloud.spanner_v1.keyset import KeySet
+
+        keyset = KeySet(all_=True)
+        session = _Session()
+        derived = self._makeDerived(session)
+        derived._session = None
+
+        with self.assertRaises(Exception) as cm:
+            list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
+
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
+        )
+
     def test_partition_read_w_retry(self):
         from google.cloud.spanner_v1.keyset import KeySet
         from google.api_core.exceptions import InternalServerError
@@ -1309,6 +1338,19 @@ class Test_SnapshotBase(OpenTelemetryBase):
             "CloudSpanner.PartitionReadWriteTransaction",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
+        )
+
+    def test_partition_query_should_throw_error_if_session_is_none(self):
+        session = _Session()
+        derived = self._makeDerived(session)
+        derived._session = None
+
+        with self.assertRaises(Exception) as cm:
+            list(derived.partition_query(SQL_QUERY))
+
+        self.assertEqual(
+            str(cm.exception),
+            "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML.",
         )
 
     def test_partition_query_w_params_wo_param_types(self):

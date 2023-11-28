@@ -38,6 +38,12 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
     + "numeric has a whole component with precision {}"
 )
 
+LONG_RUNNING_TRANSACTION_ERR_MSG = "Transaction has been closed as it was running for more than 60 minutes. If transaction is expected to run long, run as batch or partitioned DML."
+
+# Constants
+DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC = 120
+DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC = 3600
+
 
 def _try_to_coerce_bytes(bytestring):
     """Try to coerce a byte string into the right thing based on Python

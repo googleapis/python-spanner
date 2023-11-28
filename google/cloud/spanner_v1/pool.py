@@ -16,13 +16,16 @@
 
 import datetime
 import queue
-
+import threading
+import traceback
+import time
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    LONG_RUNNING_TRANSACTION_ERR_MSG,
 )
 from warnings import warn
 
@@ -38,15 +41,27 @@ class AbstractSessionPool(object):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type logging_enabled: boolean
+    :param logging_enabled: (Optional) Represents whether the session pool
+                    has logging enabled or not. Default is True
     """
 
     _database = None
+    _sessions = None
+    _borrowed_sessions = []
+    _traces = {}
 
-    def __init__(self, labels=None, database_role=None):
+    _cleanup_task_ongoing_event = threading.Event()
+    _cleanup_task_ongoing = False
+    _used_sessions_ratio_threshold = 0.95
+
+    def __init__(self, labels=None, database_role=None, logging_enabled=True):
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._logging_enabled = logging_enabled
 
     @property
     def labels(self):
@@ -66,6 +81,18 @@ class AbstractSessionPool(object):
         """
         return self._database_role
 
+    @property
+    def logging_enabled(self):
+        """Whether the session pool has logging enabled. Default: True.
+        :rtype: bool
+        :returns: True if logging is enabled, else False.
+        """
+        return self._logging_enabled
+
+    @logging_enabled.setter
+    def logging_enabled(self, value):
+        self._logging_enabled = value
+
     def bind(self, database):
         """Associate the pool with a database.
 
@@ -80,8 +107,11 @@ class AbstractSessionPool(object):
         """
         raise NotImplementedError()
 
-    def get(self):
+    def get(self, isLongRunning=False):
         """Check a session out from the pool.
+
+        :type isLongRunning: bool
+        :param isLongRunning: Specifies if the session fetched is for long running transaction or not.
 
         Concrete implementations of this method are allowed to raise an
         error to signal that the pool is exhausted, or to block until a
@@ -126,6 +156,14 @@ class AbstractSessionPool(object):
             labels=self.labels, database_role=self.database_role
         )
 
+    def _set_session_properties(self, session, isLongRunning):
+        """Helper for setting common session properties."""
+        session.checkout_time = datetime.datetime.utcnow()
+        session.long_running = isLongRunning
+        session.transaction_logged = False
+        self._borrowed_sessions.append(session)
+        self._traces[session._session_id] = "".join(traceback.format_stack())
+
     def session(self, **kwargs):
         """Check out a session from the pool.
 
@@ -137,6 +175,117 @@ class AbstractSessionPool(object):
                   accessing the session and returning it to the pool.
         """
         return SessionCheckout(self, **kwargs)
+
+    def startCleaningLongRunningSessions(self):
+        """Starts background task for recycling session."""
+        from google.cloud.spanner_v1._helpers import (
+            DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC,
+            DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC,
+        )
+
+        if (
+            not AbstractSessionPool._cleanup_task_ongoing_event.is_set()
+            and not AbstractSessionPool._cleanup_task_ongoing
+        ):
+            AbstractSessionPool._cleanup_task_ongoing_event.set()
+            if self.logging_enabled:
+                self._database.logger.info(
+                    f"{self._used_sessions_ratio_threshold * 100}% of the session pool is exhausted"
+                )
+            background = threading.Thread(
+                target=self.deleteLongRunningTransactions,
+                args=(
+                    DELETE_LONG_RUNNING_TRANSACTION_FREQUENCY_SEC,
+                    DELETE_LONG_RUNNING_TRANSACTION_THRESHOLD_SEC,
+                ),
+                daemon=True,
+                name="recycle-sessions",
+            )
+            background.start()
+        else:
+            AbstractSessionPool._cleanup_task_ongoing_event.set()
+
+    def stopCleaningLongRunningSessions(self):
+        """Stops background task for recycling session."""
+        AbstractSessionPool._cleanup_task_ongoing_event.clear()
+
+    def deleteLongRunningTransactions(
+        self, longRunningTransactionFrequency_sec, longRunningTransactionThreshold_sec
+    ):
+        """Recycles sessions with long-running transactions
+        :param longRunningTransactionFrequency_sec: Interval for running background task in seconds.
+        :param longRunningTransactionThreshold_sec: Timeout for recycling sessions in seconds.
+        """
+        long_running_transaction_timer = time.time()
+        transactions_closed = 0
+        while AbstractSessionPool._cleanup_task_ongoing_event.is_set():
+            AbstractSessionPool._cleanup_task_ongoing = True
+            is_timeout_reached = (
+                time.time() - long_running_transaction_timer
+                >= longRunningTransactionThreshold_sec
+                + longRunningTransactionFrequency_sec
+            )
+
+            if is_timeout_reached and transactions_closed == 0:
+                break
+            iteration_start = time.time()
+
+            # Retrieve a list of sessions to delete.
+            sessions_to_delete = [
+                session
+                for session in self._borrowed_sessions
+                if not session.long_running
+                and (datetime.datetime.utcnow() - session.checkout_time)
+                > datetime.timedelta(seconds=longRunningTransactionThreshold_sec)
+            ]
+
+            for session in sessions_to_delete:
+                transactions_closed += int(
+                    self._close_long_running_transactions(session)
+                )
+
+            # Calculate and sleep for the time remaining until the next iteration based on the interval.
+            iteration_elapsed = time.time() - iteration_start
+            remaining_time = longRunningTransactionFrequency_sec - iteration_elapsed
+            if remaining_time > 0:
+                time.sleep(remaining_time)
+
+        AbstractSessionPool._cleanup_task_ongoing = False
+        AbstractSessionPool._cleanup_task_ongoing_event.clear()
+
+    def _close_long_running_transactions(self, session):
+        """Helper method to close long running transactions.
+        :rtype: :bool
+        :returns: True if transaction is closed else False.
+        """
+        session_recycled = False
+        if session._session_id in self._traces:
+            session_trace = self._traces[session._session_id]
+            if self._database.close_inactive_transactions:
+                if self.logging_enabled:
+                    # Log a warning for a long-running transaction that has been closed
+                    self._database.logger.warning(
+                        LONG_RUNNING_TRANSACTION_ERR_MSG + session_trace
+                    )
+
+                # Set the session as None for associated transaction object
+                if session._transaction is not None:
+                    session._transaction._session = None
+
+                # Increment the count of closed transactions and return the session to the pool
+                session_recycled = True
+                self.put(session)
+            elif self.logging_enabled:
+                # Log a warning for a potentially leaking long-running transaction.
+                # Only log the warning if it hasn't been logged already.
+                if not session.transaction_logged:
+                    self._database.logger.warning(
+                        "Transaction has been running for longer than 60 minutes and might be causing a leak. "
+                        + "Enable closeInactiveTransactions in Session Pool Options to automatically clean such transactions or use batch or partitioned transactions for long running operations."
+                        + session_trace
+                    )
+                    session.transaction_logged = True
+        return session_recycled
 
 
 class FixedSizePool(AbstractSessionPool):
@@ -167,6 +316,10 @@ class FixedSizePool(AbstractSessionPool):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type logging_enabled: boolean
+    :param logging_enabled: (Optional) Represents whether the session pool
+                    has logging enabled or not. Default is True
     """
 
     DEFAULT_SIZE = 10
@@ -178,11 +331,16 @@ class FixedSizePool(AbstractSessionPool):
         default_timeout=DEFAULT_TIMEOUT,
         labels=None,
         database_role=None,
+        logging_enabled=True,
     ):
-        super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
+        super(FixedSizePool, self).__init__(
+            labels=labels, database_role=database_role, logging_enabled=logging_enabled
+        )
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
+        self._borrowed_sessions = []
+        self._traces = {}
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -215,7 +373,7 @@ class FixedSizePool(AbstractSessionPool):
                 session._session_id = session_pb.name.split("/")[-1]
                 self._sessions.put(session)
 
-    def get(self, timeout=None):
+    def get(self, isLongRunning=False, timeout=None):
         """Check a session out from the pool.
 
         :type timeout: int
@@ -235,6 +393,19 @@ class FixedSizePool(AbstractSessionPool):
             session = self._database.session()
             session.create()
 
+        # Set session properties.
+        self._set_session_properties(session, isLongRunning)
+
+        # Start background task for handling long-running transactions if used session threshold has reached.
+        if (self._database.close_inactive_transactions or self.logging_enabled) and len(
+            self._borrowed_sessions
+        ) / self.size >= self._used_sessions_ratio_threshold:
+            self.startCleaningLongRunningSessions()
+
+        # Log a warning message if Session pool is exhausted.
+        if self.logging_enabled and len(self._borrowed_sessions) == self.size:
+            self._database.logger.warning("100% of the session pool is exhausted")
+
         return session
 
     def put(self, session):
@@ -247,11 +418,21 @@ class FixedSizePool(AbstractSessionPool):
 
         :raises: :exc:`queue.Full` if the queue is full.
         """
+        if self._borrowed_sessions.__contains__(session):
+            self._borrowed_sessions.remove(session)
         self._sessions.put_nowait(session)
+        self._traces.pop(session._session_id, None)
+
+        # Stop background task for handling long running transactions if used sessions are less the threshold"
+        if (self._database.close_inactive_transactions or self.logging_enabled) and len(
+            self._borrowed_sessions
+        ) / self.size < self._used_sessions_ratio_threshold:
+            self.stopCleaningLongRunningSessions()
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
 
+        self.stopCleaningLongRunningSessions()
         while True:
             try:
                 session = self._sessions.get(block=False)
@@ -282,13 +463,23 @@ class BurstyPool(AbstractSessionPool):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type logging_enabled: boolean
+    :param logging_enabled: (Optional) Represents whether the session pool
+                    has logging enabled or not. Default is True
     """
 
-    def __init__(self, target_size=10, labels=None, database_role=None):
-        super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
+    def __init__(
+        self, target_size=10, labels=None, database_role=None, logging_enabled=True
+    ):
+        super(BurstyPool, self).__init__(
+            labels=labels, database_role=database_role, logging_enabled=logging_enabled
+        )
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
+        self._borrowed_sessions = []
+        self._traces = {}
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -300,7 +491,7 @@ class BurstyPool(AbstractSessionPool):
         self._database = database
         self._database_role = self._database_role or self._database.database_role
 
-    def get(self):
+    def get(self, isLongRunning=False):
         """Check a session out from the pool.
 
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
@@ -316,6 +507,20 @@ class BurstyPool(AbstractSessionPool):
             if not session.exists():
                 session = self._new_session()
                 session.create()
+
+        # Set session properties.
+        self._set_session_properties(session, isLongRunning)
+
+        # Start background task for handling long-running transactions if used sessions threshold has reached.
+        if (self._database.close_inactive_transactions or self.logging_enabled) and len(
+            self._borrowed_sessions
+        ) / self.target_size >= self._used_sessions_ratio_threshold:
+            self.startCleaningLongRunningSessions()
+
+        # Log a warning message if Session pool is exhausted.
+        if self.logging_enabled and len(self._borrowed_sessions) == self.target_size:
+            self._database.logger.warning("100% of the session pool is exhausted")
+
         return session
 
     def put(self, session):
@@ -328,7 +533,18 @@ class BurstyPool(AbstractSessionPool):
         :param session: the session being returned.
         """
         try:
+            if self._borrowed_sessions.__contains__(session):
+                self._borrowed_sessions.remove(session)
             self._sessions.put_nowait(session)
+            self._traces.pop(session._session_id, None)
+
+            # Stop background task for handling long running transactions if used sessions are less then threshold."
+            if (
+                self._database.close_inactive_transactions or self.logging_enabled
+            ) and len(
+                self._borrowed_sessions
+            ) / self.target_size < self._used_sessions_ratio_threshold:
+                self.stopCleaningLongRunningSessions()
         except queue.Full:
             try:
                 session.delete()
@@ -336,7 +552,9 @@ class BurstyPool(AbstractSessionPool):
                 pass
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
+
+        self.stopCleaningLongRunningSessions()
 
         while True:
             try:
@@ -383,6 +601,10 @@ class PingingPool(AbstractSessionPool):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type logging_enabled: boolean
+    :param logging_enabled: (Optional) Represents whether the session pool
+                    has logging enabled or not. Default is True
     """
 
     def __init__(
@@ -392,12 +614,17 @@ class PingingPool(AbstractSessionPool):
         ping_interval=3000,
         labels=None,
         database_role=None,
+        logging_enabled=True,
     ):
-        super(PingingPool, self).__init__(labels=labels, database_role=database_role)
+        super(PingingPool, self).__init__(
+            labels=labels, database_role=database_role, logging_enabled=logging_enabled
+        )
         self.size = size
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)
         self._sessions = queue.PriorityQueue(size)
+        self._borrowed_sessions = []
+        self._traces = {}
 
     def bind(self, database):
         """Associate the pool with a database.
@@ -433,7 +660,7 @@ class PingingPool(AbstractSessionPool):
                 self.put(session)
             created_session_count += len(resp.session)
 
-    def get(self, timeout=None):
+    def get(self, isLongRunning=False, timeout=None):
         """Check a session out from the pool.
 
         :type timeout: int
@@ -457,6 +684,18 @@ class PingingPool(AbstractSessionPool):
                 session = self._new_session()
                 session.create()
 
+        # Set session properties.
+        self._set_session_properties(session, isLongRunning)
+
+        # Start background task for handling long-running transactions if used sessions threshold has reached.
+        if (self._database.close_inactive_transactions or self.logging_enabled) and len(
+            self._borrowed_sessions
+        ) / self.size >= self._used_sessions_ratio_threshold:
+            self.startCleaningLongRunningSessions()
+
+        # Log a warning message if Session pool is exhausted.
+        if self.logging_enabled and len(self._borrowed_sessions) == self.size:
+            self._database.logger.warning("100% of the session pool is exhausted")
         return session
 
     def put(self, session):
@@ -469,10 +708,22 @@ class PingingPool(AbstractSessionPool):
 
         :raises: :exc:`queue.Full` if the queue is full.
         """
+        if self._borrowed_sessions.__contains__(session):
+            self._borrowed_sessions.remove(session)
         self._sessions.put_nowait((_NOW() + self._delta, session))
+        self._traces.pop(session._session_id, None)
+
+        # Stop background task for handling long running transactions if used sessions are less then the threshold"
+        if (self._database.close_inactive_transactions or self.logging_enabled) and len(
+            self._borrowed_sessions
+        ) / self.size < self._used_sessions_ratio_threshold:
+            self.stopCleaningLongRunningSessions()
 
     def clear(self):
-        """Delete all sessions in the pool."""
+        """Delete all sessions in the pool and stops the background cleanup task."""
+
+        self.stopCleaningLongRunningSessions()
+
         while True:
             try:
                 _, session = self._sessions.get(block=False)
@@ -537,6 +788,10 @@ class TransactionPingingPool(PingingPool):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type logging_enabled: boolean
+    :param logging_enabled: (Optional) Represents whether the session pool
+                    has logging enabled or not. Default is True
     """
 
     def __init__(
@@ -546,6 +801,7 @@ class TransactionPingingPool(PingingPool):
         ping_interval=3000,
         labels=None,
         database_role=None,
+        logging_enabled=True,
     ):
         """This throws a deprecation warning on initialization."""
         warn(
@@ -554,6 +810,8 @@ class TransactionPingingPool(PingingPool):
             stacklevel=2,
         )
         self._pending_sessions = queue.Queue()
+        self._borrowed_sessions = []
+        self._traces = {}
 
         super(TransactionPingingPool, self).__init__(
             size,
@@ -561,6 +819,7 @@ class TransactionPingingPool(PingingPool):
             ping_interval,
             labels=labels,
             database_role=database_role,
+            logging_enabled=logging_enabled,
         )
 
         self.begin_pending_transactions()
@@ -592,7 +851,18 @@ class TransactionPingingPool(PingingPool):
         txn = session._transaction
         if txn is None or txn.committed or txn.rolled_back:
             session.transaction()
+            if self._borrowed_sessions.__contains__(session):
+                self._borrowed_sessions.remove(session)
             self._pending_sessions.put(session)
+            self._traces.pop(session._session_id, None)
+
+            # Stop background task for handling long running transactions if used sessions are less then threshold."
+            if (
+                self._database.close_inactive_transactions or self.logging_enabled
+            ) and len(
+                self._borrowed_sessions
+            ) / self.size < self._used_sessions_ratio_threshold:
+                self.stopCleaningLongRunningSessions()
         else:
             super(TransactionPingingPool, self).put(session)
 
@@ -624,4 +894,9 @@ class SessionCheckout(object):
         return self._session
 
     def __exit__(self, *ignored):
-        self._pool.put(self._session)
+        if not (
+            self._session._transaction is not None
+            and self._session._transaction._session is None
+        ):
+            self._pool.put(self._session)
+        self._session._transaction = None

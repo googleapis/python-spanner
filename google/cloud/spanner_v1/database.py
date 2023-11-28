@@ -113,6 +113,11 @@ class Database(object):
                    is `True` to log commit statistics. If not passed, a logger
                    will be created when needed that will log the commit statistics
                    to stdout.
+
+    :type close_inactive_transactions: boolean
+    :param close_inactive_transactions: (Optional) If set to True, the database will automatically close inactive transactions that have been running for longer than 60 minutes which may cause session leaks.
+                    By default, this is set to False.
+
     :type encryption_config:
         :class:`~google.cloud.spanner_admin_database_v1.types.EncryptionConfig`
         or :class:`~google.cloud.spanner_admin_database_v1.types.RestoreDatabaseEncryptionConfig`
@@ -142,6 +147,7 @@ class Database(object):
         ddl_statements=(),
         pool=None,
         logger=None,
+        close_inactive_transactions=False,
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
@@ -160,6 +166,7 @@ class Database(object):
         self._default_leader = None
         self.log_commit_stats = False
         self._logger = logger
+        self._close_inactive_transactions = close_inactive_transactions
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
@@ -366,7 +373,7 @@ class Database(object):
     def logger(self):
         """Logger used by the database.
 
-        The default logger will log commit stats at the log level INFO using
+        The default logger will log at the log level INFO using
         `sys.stderr`.
 
         :rtype: :class:`logging.Logger` or `None`
@@ -380,6 +387,14 @@ class Database(object):
             ch.setLevel(logging.INFO)
             self._logger.addHandler(ch)
         return self._logger
+
+    @property
+    def close_inactive_transactions(self):
+        """Whether the database has has closing inactive transactions enabled. Default: False.
+        :rtype: bool
+        :returns: True if closing inactive transactions is enabled, else False.
+        """
+        return self._close_inactive_transactions
 
     @property
     def spanner_api(self):
@@ -647,7 +662,7 @@ class Database(object):
             )
 
         def execute_pdml():
-            with SessionCheckout(self._pool) as session:
+            with SessionCheckout(self._pool, isLongRunning=True) as session:
                 txn = api.begin_transaction(
                     session=session.name, options=txn_options, metadata=metadata
                 )
@@ -1019,6 +1034,7 @@ class BatchCheckout(object):
         """Begin ``with`` block."""
         session = self._session = self._database._pool.get()
         batch = self._batch = Batch(session)
+        self._session._transaction = batch
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
         return batch
@@ -1037,7 +1053,9 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            self._database._pool.put(self._session)
+            if self._batch._session is not None:
+                self._database._pool.put(self._session)
+            self._session._transaction = None
 
 
 class SnapshotCheckout(object):
@@ -1061,22 +1079,27 @@ class SnapshotCheckout(object):
     def __init__(self, database, **kw):
         self._database = database
         self._session = None
+        self._snapshot = None
         self._kw = kw
 
     def __enter__(self):
         """Begin ``with`` block."""
         session = self._session = self._database._pool.get()
-        return Snapshot(session, **self._kw)
+        self._snapshot = Snapshot(session, **self._kw)
+        self._session._transaction = self._snapshot
+        return self._snapshot
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
-        self._database._pool.put(self._session)
+        if self._snapshot._session is not None:
+            if isinstance(exc_val, NotFound):
+                # If NotFound exception occurs inside the with block
+                # then we validate if the session still exists.
+                if not self._session.exists():
+                    self._session = self._database._pool._new_session()
+                    self._session.create()
+            self._database._pool.put(self._session)
+        self._session._transaction = None
 
 
 class BatchSnapshot(object):

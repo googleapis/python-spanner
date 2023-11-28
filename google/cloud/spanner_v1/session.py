@@ -96,6 +96,42 @@ class Session(object):
         return self._labels
 
     @property
+    def checkout_time(self):
+        """Check out time for the session.
+        :rtype: time
+        :returns: the checked out time for a session.
+        """
+        return self._checkout_time
+
+    @checkout_time.setter
+    def checkout_time(self, value):
+        self._checkout_time = value
+
+    @property
+    def long_running(self):
+        """Whether the session is used for long running transaction.
+        :rtype: bool
+        :returns: True if session is long running, else False.
+        """
+        return self._long_running
+
+    @long_running.setter
+    def long_running(self, value):
+        self._long_running = value
+
+    @property
+    def transaction_logged(self):
+        """Whether the session is already logged for long running transaction.
+        :rtype: bool
+        :returns: True if session is already logged for long running, else False.
+        """
+        return self._transaction_logged
+
+    @transaction_logged.setter
+    def transaction_logged(self, value):
+        self._transaction_logged = value
+
+    @property
     def name(self):
         """Session name used in requests.
 

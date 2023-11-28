@@ -19,6 +19,7 @@ import mock
 import unittest
 import warnings
 import pytest
+from google.cloud.spanner_v1 import BurstyPool
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -470,6 +471,7 @@ class TestConnection(unittest.TestCase):
         """
         connection = self._make_connection()
         connection._transaction = mock.Mock(rolled_back=False, committed=False)
+        connection._session = mock.MagicMock()
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
@@ -486,6 +488,7 @@ class TestConnection(unittest.TestCase):
         """
         connection = self._make_connection()
         connection._transaction = mock.Mock()
+        connection._session = mock.MagicMock()
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
@@ -1000,11 +1003,30 @@ class _Instance(object):
         self.name = name
         self._client = client
 
-    def database(self, database_id="database_id", pool=None):
-        return _Database(database_id, pool)
+    def database(
+        self,
+        database_id="database_id",
+        pool=None,
+        logging_enabled=False,
+        close_inactive_transactions=False,
+    ):
+        return _Database(
+            database_id, pool, logging_enabled=False, close_inactive_transactions=False
+        )
 
 
 class _Database(object):
-    def __init__(self, database_id="database_id", pool=None):
+    def __init__(
+        self,
+        database_id="database_id",
+        pool=None,
+        logging_enabled=False,
+        close_inactive_transactions=False,
+    ):
         self.name = database_id
-        self.pool = pool
+        if pool is None:
+            pool = BurstyPool()
+
+        self._pool = pool
+        self.logging_enabled = logging_enabled
+        self.close_inactive_transactions = close_inactive_transactions
