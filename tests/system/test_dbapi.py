@@ -20,13 +20,14 @@ import time
 
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
+
+from google.cloud.spanner_dbapi import Cursor
 from google.cloud.spanner_dbapi.connection import connect
 from google.cloud.spanner_dbapi.connection import Connection
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
 from . import _helpers
-
 
 DATABASE_NAME = "dbapi-txn"
 
@@ -73,37 +74,11 @@ def dbapi_database(raw_database):
 
 def test_commit(shared_instance, dbapi_database):
     """Test committing a transaction with several statements."""
-    want_row = (
-        1,
-        "updated-first-name",
-        "last-name",
-        "test.email_updated@domen.ru",
-    )
     # connect to the test database
     conn = Connection(shared_instance, dbapi_database)
     cursor = conn.cursor()
 
-    # execute several DML statements within one transaction
-    cursor.execute(
-        """
-INSERT INTO contacts (contact_id, first_name, last_name, email)
-VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
-    """
-    )
-    cursor.execute(
-        """
-UPDATE contacts
-SET first_name = 'updated-first-name'
-WHERE first_name = 'first-name'
-"""
-    )
-    cursor.execute(
-        """
-UPDATE contacts
-SET email = 'test.email_updated@domen.ru'
-WHERE email = 'test.email@domen.ru'
-"""
-    )
+    want_row = _execute_common_precommit_statements(cursor)
     conn.commit()
 
     # read the resulting data from the database
@@ -115,6 +90,25 @@ WHERE email = 'test.email@domen.ru'
 
     cursor.close()
     conn.close()
+
+
+def test_commit_client_side(shared_instance, dbapi_database):
+    """Test committing a transaction with several statements."""
+    # connect to the test database
+    conn = Connection(shared_instance, dbapi_database)
+    cursor = conn.cursor()
+
+    want_row = _execute_common_precommit_statements(cursor)
+    cursor.execute("""COMMIT""")
+
+    # read the resulting data from the database
+    cursor.execute("SELECT * FROM contacts")
+    got_rows = cursor.fetchall()
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    assert got_rows == [want_row]
 
 
 def test_rollback(shared_instance, dbapi_database):
@@ -342,6 +336,156 @@ def test_DDL_autocommit(shared_instance, dbapi_database):
         if table.exists():
             op = dbapi_database.update_ddl(["DROP TABLE Singers"])
             op.result()
+
+
+def test_ddl_execute_autocommit_true(shared_instance, dbapi_database):
+    """Check that DDL statement in autocommit mode results in successful
+    DDL statement execution for execute method."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecuteAutocommit (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+        """
+    )
+    table = dbapi_database.table("DdlExecuteAutocommit")
+    assert table.exists() is True
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany_autocommit_true(shared_instance, dbapi_database):
+    """Check that DDL statement in autocommit mode results in exception for
+    executemany method ."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    conn.autocommit = True
+    cur = conn.cursor()
+    with pytest.raises(ProgrammingError):
+        cur.executemany(
+            """
+            CREATE TABLE DdlExecuteManyAutocommit (
+                SingerId     INT64 NOT NULL,
+                Name    STRING(1024),
+            ) PRIMARY KEY (SingerId)
+            """,
+            [],
+        )
+    table = dbapi_database.table("DdlExecuteManyAutocommit")
+    assert table.exists() is False
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany_autocommit_false(shared_instance, dbapi_database):
+    """Check that DDL statement in non-autocommit mode results in exception for
+    executemany method ."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    cur = conn.cursor()
+    with pytest.raises(ProgrammingError):
+        cur.executemany(
+            """
+            CREATE TABLE DdlExecuteManyAutocommit (
+                SingerId     INT64 NOT NULL,
+                Name    STRING(1024),
+            ) PRIMARY KEY (SingerId)
+            """,
+            [],
+        )
+    table = dbapi_database.table("DdlExecuteManyAutocommit")
+    assert table.exists() is False
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_execute(shared_instance, dbapi_database):
+    """Check that DDL statement followed by non-DDL execute statement in
+    non autocommit mode results in successful DDL statement execution."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    want_row = (
+        1,
+        "first-name",
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecute (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+        """
+    )
+    table = dbapi_database.table("DdlExecute")
+    assert table.exists() is False
+
+    cur.execute(
+        """
+        INSERT INTO DdlExecute (SingerId, Name)
+        VALUES (1, "first-name")
+        """
+    )
+    assert table.exists() is True
+    conn.commit()
+
+    # read the resulting data from the database
+    cur.execute("SELECT * FROM DdlExecute")
+    got_rows = cur.fetchall()
+
+    assert got_rows == [want_row]
+
+    cur.close()
+    conn.close()
+
+
+def test_ddl_executemany(shared_instance, dbapi_database):
+    """Check that DDL statement followed by non-DDL executemany statement in
+    non autocommit mode results in successful DDL statement execution."""
+
+    conn = Connection(shared_instance, dbapi_database)
+    want_row = (
+        1,
+        "first-name",
+    )
+    cur = conn.cursor()
+    cur.execute(
+        """
+        CREATE TABLE DdlExecuteMany (
+            SingerId     INT64 NOT NULL,
+            Name    STRING(1024),
+        ) PRIMARY KEY (SingerId)
+        """
+    )
+    table = dbapi_database.table("DdlExecuteMany")
+    assert table.exists() is False
+
+    cur.executemany(
+        """
+        INSERT INTO DdlExecuteMany (SingerId, Name)
+        VALUES (%s, %s)
+        """,
+        [want_row],
+    )
+    assert table.exists() is True
+    conn.commit()
+
+    # read the resulting data from the database
+    cur.execute("SELECT * FROM DdlExecuteMany")
+    got_rows = cur.fetchall()
+
+    assert got_rows == [want_row]
+
+    cur.close()
+    conn.close()
 
 
 @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not support json.")
@@ -661,3 +805,33 @@ THEN RETURN contact_id, first_name
     assert cur.fetchone() == (1, "first-name")
     assert cur.rowcount == 1
     conn.commit()
+
+
+def _execute_common_precommit_statements(cursor: Cursor):
+    # execute several DML statements within one transaction
+    cursor.execute(
+        """
+        INSERT INTO contacts (contact_id, first_name, last_name, email)
+        VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
+        """
+    )
+    cursor.execute(
+        """
+        UPDATE contacts
+        SET first_name = 'updated-first-name'
+        WHERE first_name = 'first-name'
+        """
+    )
+    cursor.execute(
+        """
+        UPDATE contacts
+        SET email = 'test.email_updated@domen.ru'
+        WHERE email = 'test.email@domen.ru'
+        """
+    )
+    return (
+        1,
+        "updated-first-name",
+        "last-name",
+        "test.email_updated@domen.ru",
+    )
