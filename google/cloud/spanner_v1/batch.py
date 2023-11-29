@@ -48,7 +48,7 @@ class _BatchBase(_SessionWrapper):
 
     def __init__(self, session, mutations=[]):
         super(_BatchBase, self).__init__(session)
-        self._mutations = mutations
+        self._mutations = []
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.
