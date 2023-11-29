@@ -37,7 +37,6 @@ def _make_credentials():
 
 
 class TestConnection(unittest.TestCase):
-
     def setUp(self):
         self._under_test = self._make_connection()
 
@@ -285,7 +284,9 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_commit(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
+        from google.cloud.spanner_dbapi.connection import (
+            CLIENT_TRANSACTION_NOT_STARTED_WARNING,
+        )
 
         connection = Connection(INSTANCE, DATABASE)
 
@@ -326,7 +327,9 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_rollback(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
+        from google.cloud.spanner_dbapi.connection import (
+            CLIENT_TRANSACTION_NOT_STARTED_WARNING,
+        )
 
         connection = Connection(INSTANCE, DATABASE)
 
@@ -391,7 +394,6 @@ class TestConnection(unittest.TestCase):
         self.assertTrue(connection.is_closed)
 
     def test_begin_cursor_closed(self):
-
         connection = self._make_connection()
         connection.close()
 

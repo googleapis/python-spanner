@@ -416,7 +416,9 @@ class Connection:
         self._snapshot = None
 
         if not self.client_transaction_started:
-            warnings.warn(CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2)
+            warnings.warn(
+                CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+            )
             return
 
         self.run_prior_DDL_statements()
@@ -441,7 +443,9 @@ class Connection:
         self._snapshot = None
 
         if not self.client_transaction_started:
-            warnings.warn(CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2)
+            warnings.warn(
+                CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+            )
         elif self._transaction:
             if not self.read_only:
                 self._transaction.rollback()

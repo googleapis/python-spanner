@@ -396,7 +396,10 @@ class Cursor(object):
         sequence, or None when no more data is available."""
         try:
             res = next(self)
-            if self.connection.client_transaction_started and not self.connection.read_only:
+            if (
+                self.connection.client_transaction_started
+                and not self.connection.read_only
+            ):
                 self._checksum.consume_result(res)
             return res
         except StopIteration:
@@ -414,7 +417,10 @@ class Cursor(object):
         res = []
         try:
             for row in self:
-                if self.connection.client_transaction_started and not self.connection.read_only:
+                if (
+                    self.connection.client_transaction_started
+                    and not self.connection.read_only
+                ):
                     self._checksum.consume_result(row)
                 res.append(row)
         except Aborted:
@@ -443,7 +449,10 @@ class Cursor(object):
         for _ in range(size):
             try:
                 res = next(self)
-                if self.connection.client_transaction_started and not self.connection.read_only:
+                if (
+                    self.connection.client_transaction_started
+                    and not self.connection.read_only
+                ):
                     self._checksum.consume_result(res)
                 items.append(res)
             except StopIteration:
