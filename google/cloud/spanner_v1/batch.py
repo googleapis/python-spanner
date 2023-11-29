@@ -232,8 +232,9 @@ class MutationGroup(_BatchBase):
     :param mutations: The list into which mutations are to be accumulated.
     """
 
-    def __init__(self, session, mutations):
-        super(MutationGroup, self).__init__(session, mutations)
+    def __init__(self, session, mutations=[]):
+        super(MutationGroup, self).__init__(session)
+        self._mutations = mutations
 
 
 class MutationGroups(_SessionWrapper):
