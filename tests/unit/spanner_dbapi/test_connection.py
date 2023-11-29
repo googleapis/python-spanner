@@ -19,6 +19,7 @@ import mock
 import unittest
 import warnings
 import pytest
+from google.cloud.spanner_dbapi.exceptions import InterfaceError, OperationalError
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -36,6 +37,10 @@ def _make_credentials():
 
 
 class TestConnection(unittest.TestCase):
+
+    def setUp(self):
+        self._under_test = self._make_connection()
+
     def _get_client_info(self):
         from google.api_core.gapic_v1.client_info import ClientInfo
 
@@ -280,7 +285,7 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_commit(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import TRANSACTION_NOT_BEGUN_WARNING
+        from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
 
         connection = Connection(INSTANCE, DATABASE)
 
@@ -307,7 +312,7 @@ class TestConnection(unittest.TestCase):
         connection._autocommit = True
         connection.commit()
         mock_warn.assert_called_once_with(
-            TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2
+            CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
 
     def test_commit_database_error(self):
@@ -321,7 +326,7 @@ class TestConnection(unittest.TestCase):
     @mock.patch.object(warnings, "warn")
     def test_rollback(self, mock_warn):
         from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import TRANSACTION_NOT_BEGUN_WARNING
+        from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
 
         connection = Connection(INSTANCE, DATABASE)
 
@@ -348,7 +353,7 @@ class TestConnection(unittest.TestCase):
         connection._autocommit = True
         connection.rollback()
         mock_warn.assert_called_once_with(
-            TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2
+            CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
 
     @mock.patch("google.cloud.spanner_v1.database.Database", autospec=True)
@@ -386,7 +391,6 @@ class TestConnection(unittest.TestCase):
         self.assertTrue(connection.is_closed)
 
     def test_begin_cursor_closed(self):
-        from google.cloud.spanner_dbapi.exceptions import InterfaceError
 
         connection = self._make_connection()
         connection.close()
@@ -397,33 +401,25 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(connection._transaction_begin_marked, False)
 
     def test_begin_transaction_begin_marked(self):
-        from google.cloud.spanner_dbapi.exceptions import OperationalError
-
-        connection = self._make_connection()
-        connection._transaction_begin_marked = True
+        self._under_test._transaction_begin_marked = True
 
         with self.assertRaises(OperationalError):
-            connection.begin()
+            self._under_test.begin()
 
     def test_begin_inside_transaction(self):
-        from google.cloud.spanner_dbapi.exceptions import OperationalError
-
-        connection = self._make_connection()
         mock_transaction = mock.MagicMock()
         mock_transaction.committed = mock_transaction.rolled_back = False
-        connection._transaction = mock_transaction
+        self._under_test._transaction = mock_transaction
 
         with self.assertRaises(OperationalError):
-            connection.begin()
+            self._under_test.begin()
 
-        self.assertEqual(connection._transaction_begin_marked, False)
+        self.assertEqual(self._under_test._transaction_begin_marked, False)
 
     def test_begin(self):
-        connection = self._make_connection()
+        self._under_test.begin()
 
-        connection.begin()
-
-        self.assertEqual(connection._transaction_begin_marked, True)
+        self.assertEqual(self._under_test._transaction_begin_marked, True)
 
     def test_run_statement_wo_retried(self):
         """Check that Connection remembers executed statements."""

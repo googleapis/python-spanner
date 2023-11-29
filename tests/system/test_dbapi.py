@@ -142,11 +142,15 @@ class TestDbApi:
         cursor2.execute("SELECT * FROM contacts")
         conn2.commit()
         got_rows = cursor2.fetchall()
+        cursor2.close()
+        conn2.close()
         assert got_rows != [updated_row]
 
         assert conn1._transaction_begin_marked is True
         conn1.commit()
         assert conn1._transaction_begin_marked is False
+        cursor1.close()
+        conn1.close()
 
         # As the connection conn1 is committed a new connection should see its results
         conn3 = Connection(shared_instance, dbapi_database)
@@ -154,14 +158,9 @@ class TestDbApi:
         cursor3.execute("SELECT * FROM contacts")
         conn3.commit()
         got_rows = cursor3.fetchall()
-        assert got_rows == [updated_row]
-
-        conn1.close()
-        conn2.close()
-        conn3.close()
-        cursor1.close()
-        cursor2.close()
         cursor3.close()
+        conn3.close()
+        assert got_rows == [updated_row]
 
     def test_begin_success_post_commit(self):
         """Test beginning a new transaction post commiting an existing transaction

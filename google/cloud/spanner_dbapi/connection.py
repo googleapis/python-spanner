@@ -34,7 +34,7 @@ from google.cloud.spanner_dbapi.version import PY_VERSION
 from google.rpc.code_pb2 import ABORTED
 
 
-TRANSACTION_NOT_BEGUN_WARNING = (
+CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
     "This method is non-operational as transaction has not begun"
 )
 MAX_INTERNAL_RETRIES = 50
@@ -125,7 +125,7 @@ class Connection:
         :type value: bool
         :param value: New autocommit mode state.
         """
-        if value and not self._autocommit and self.inside_transaction:
+        if value and not self._autocommit and self.spanner_transaction_started:
             self.commit()
 
         self._autocommit = value
@@ -140,11 +140,14 @@ class Connection:
         return self._database
 
     @property
-    def inside_transaction(self):
-        """Flag: transaction is started.
+    def spanner_transaction_started(self):
+        """Flag: whether transaction started at SpanFE. This means that we had
+        made atleast one call to SpanFE. Property client_transaction_started
+        would always be true if this is true as transaction has to start first
+        at clientside than at Spanner (SpanFE)
 
         Returns:
-            bool: True if transaction started, False otherwise.
+            bool: True if SpanFE transaction started, False otherwise.
         """
         return (
             self._transaction
@@ -153,8 +156,8 @@ class Connection:
         )
 
     @property
-    def transaction_begun(self):
-        """Flag: transaction has begun
+    def client_transaction_started(self):
+        """Flag: whether transaction started at client side.
 
         Returns:
             bool: True if transaction begun, False otherwise.
@@ -187,7 +190,7 @@ class Connection:
         Args:
             value (bool): True for ReadOnly mode, False for ReadWrite.
         """
-        if self.inside_transaction:
+        if self.spanner_transaction_started:
             raise ValueError(
                 "Connection read/write mode can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -225,7 +228,7 @@ class Connection:
         Args:
             value (dict): Staleness type and value.
         """
-        if self.inside_transaction:
+        if self.spanner_transaction_started:
             raise ValueError(
                 "`staleness` option can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -348,8 +351,8 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.transaction.Transaction`
         :returns: A Cloud Spanner transaction object, ready to use.
         """
-        if self.transaction_begun:
-            if not self.inside_transaction:
+        if self.client_transaction_started:
+            if not self.spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
                 self._transaction.begin()
 
@@ -364,7 +367,7 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
-        if self.read_only and self.transaction_begun:
+        if self.read_only and self.client_transaction_started:
             if not self._snapshot:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
@@ -379,7 +382,7 @@ class Connection:
         The connection will be unusable from this point forward. If the
         connection has an active transaction, it will be rolled back.
         """
-        if self.inside_transaction:
+        if self.spanner_transaction_started:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
@@ -397,7 +400,7 @@ class Connection:
         """
         if self._transaction_begin_marked:
             raise OperationalError("A transaction has already begun")
-        if self.inside_transaction:
+        if self.spanner_transaction_started:
             raise OperationalError(
                 "Beginning a new transaction is not allowed when a transaction is already running"
             )
@@ -412,12 +415,12 @@ class Connection:
             raise ValueError("Database needs to be passed for this operation")
         self._snapshot = None
 
-        if not self.transaction_begun:
-            warnings.warn(TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2)
+        if not self.client_transaction_started:
+            warnings.warn(CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2)
             return
 
         self.run_prior_DDL_statements()
-        if self.inside_transaction:
+        if self.spanner_transaction_started:
             try:
                 if not self.read_only:
                     self._transaction.commit()
@@ -437,8 +440,8 @@ class Connection:
         """
         self._snapshot = None
 
-        if not self.transaction_begun:
-            warnings.warn(TRANSACTION_NOT_BEGUN_WARNING, UserWarning, stacklevel=2)
+        if not self.client_transaction_started:
+            warnings.warn(CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2)
         elif self._transaction:
             if not self.read_only:
                 self._transaction.rollback()
