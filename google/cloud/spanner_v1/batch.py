@@ -37,7 +37,7 @@ class _BatchBase(_SessionWrapper):
     """Accumulate mutations for transmission during :meth:`commit`.
 
     :type session: :class:`~google.cloud.spanner_v1.session.Session`
-    :param session: The session used to perform the commit.
+    :param session: the session used to perform the commit
 
     :type mutations: list
     :param mutations: The list into which mutations are to be accumulated.
@@ -46,7 +46,7 @@ class _BatchBase(_SessionWrapper):
     transaction_tag = None
     _read_only = False
 
-    def __init__(self, session, mutations=[]):
+    def __init__(self, session):
         super(_BatchBase, self).__init__(session)
         self._mutations = []
 

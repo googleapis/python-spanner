@@ -2521,7 +2521,7 @@ def test_partition_query(sessions_database, not_emulator):
     batch_txn.close()
 
 
-def test_mutation_groups_insert_or_update_then_query(sessions_database):
+def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_database):
     sd = _sample_data
     ROW_DATA = (
         (1, "Phred", "Phlyntstone", "phred@example.com"),

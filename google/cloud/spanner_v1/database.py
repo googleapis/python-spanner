@@ -1067,7 +1067,7 @@ class MutationGroupsCheckout(object):
 
     def __init__(self, database):
         self._database = database
-        self._session = self._mutation_groups = None
+        self._session = None
 
     def __enter__(self):
         """Begin ``with`` block."""
