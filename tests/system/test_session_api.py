@@ -2523,23 +2523,17 @@ def test_partition_query(sessions_database, not_emulator):
 
 def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_database):
     sd = _sample_data
-    ROW_DATA = (
-        (1, "Phred", "Phlyntstone", "phred@example.com"),
-        (2, "Bharney", "Rhubble", "bharney@example.com"),
-        (3, "Wylma", "Phlyntstone", "wylma@example.com"),
-        (4, "Pebbles", "Phlyntstone", "pebbles@example.com"),
-        (5, "Betty", "Rhubble", "betty@example.com"),
-        (6, "Slate", "Stephenson", "slate@example.com"),
-    )
     num_groups = 3
-    num_mutations_per_group = len(ROW_DATA) // num_groups
+    num_mutations_per_group = len(sd.BATCH_WRITE_ROW_DATA) // num_groups
 
     with sessions_database.mutation_groups() as groups:
         for i in range(num_groups):
             group = groups.group()
             for j in range(num_mutations_per_group):
                 group.insert_or_update(
-                    sd.TABLE, sd.COLUMNS, [ROW_DATA[i * num_mutations_per_group + j]]
+                    sd.TABLE,
+                    sd.COLUMNS,
+                    [sd.BATCH_WRITE_ROW_DATA[i * num_mutations_per_group + j]],
                 )
         # Response indexes received
         seen = collections.Counter()
@@ -2556,7 +2550,7 @@ def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_data
     with sessions_database.snapshot() as snapshot:
         rows = list(snapshot.execute_sql(sd.SQL))
 
-    sd._check_rows_data(rows, ROW_DATA)
+    sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
 
 
 class FauxCall:
