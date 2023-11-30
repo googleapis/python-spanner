@@ -38,9 +38,6 @@ class _BatchBase(_SessionWrapper):
 
     :type session: :class:`~google.cloud.spanner_v1.session.Session`
     :param session: the session used to perform the commit
-
-    :type mutations: list
-    :param mutations: The list into which mutations are to be accumulated.
     """
 
     transaction_tag = None
