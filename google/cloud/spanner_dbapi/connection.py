@@ -35,7 +35,7 @@ from google.rpc.code_pb2 import ABORTED
 
 
 CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not begun"
+    "This method is non-operational as transaction has not started"
 )
 MAX_INTERNAL_RETRIES = 50
 
@@ -125,7 +125,7 @@ class Connection:
         :type value: bool
         :param value: New autocommit mode state.
         """
-        if value and not self._autocommit and self.spanner_transaction_started:
+        if value and not self._autocommit and self._spanner_transaction_started:
             self.commit()
 
         self._autocommit = value
@@ -140,27 +140,33 @@ class Connection:
         return self._database
 
     @property
-    def spanner_transaction_started(self):
-        """Flag: whether transaction started at SpanFE. This means that we had
-        made atleast one call to SpanFE. Property client_transaction_started
+    def _spanner_transaction_started(self):
+        """Flag: whether transaction started at Spanner. This means that we had
+        made atleast one call to Spanner. Property client_transaction_started
         would always be true if this is true as transaction has to start first
-        at clientside than at Spanner (SpanFE)
+        at clientside than at Spanner
 
         Returns:
-            bool: True if SpanFE transaction started, False otherwise.
+            bool: True if Spanner transaction started, False otherwise.
         """
         return (
             self._transaction
             and not self._transaction.committed
             and not self._transaction.rolled_back
-        )
+        ) or (self._snapshot is not None)
 
     @property
-    def client_transaction_started(self):
+    def inside_transaction(self):
+        """Deprecated property which won't be supported in future versions.
+        Please use spanner_transaction_started property instead."""
+        return self._spanner_transaction_started
+
+    @property
+    def _client_transaction_started(self):
         """Flag: whether transaction started at client side.
 
         Returns:
-            bool: True if transaction begun, False otherwise.
+            bool: True if transaction started, False otherwise.
         """
         return (not self._autocommit) or self._transaction_begin_marked
 
@@ -190,7 +196,7 @@ class Connection:
         Args:
             value (bool): True for ReadOnly mode, False for ReadWrite.
         """
-        if self.spanner_transaction_started:
+        if self._spanner_transaction_started:
             raise ValueError(
                 "Connection read/write mode can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -228,7 +234,7 @@ class Connection:
         Args:
             value (dict): Staleness type and value.
         """
-        if self.spanner_transaction_started:
+        if self._spanner_transaction_started:
             raise ValueError(
                 "`staleness` option can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -346,13 +352,16 @@ class Connection:
         """Get a Cloud Spanner transaction.
 
         Begin a new transaction, if there is no transaction in
-        this connection yet. Return the begun one otherwise.
+        this connection yet. Return the started one otherwise.
+
+        This method is a no-op if the connection is in autocommit mode and no
+        explicit transaction has been started
 
         :rtype: :class:`google.cloud.spanner_v1.transaction.Transaction`
         :returns: A Cloud Spanner transaction object, ready to use.
         """
-        if self.client_transaction_started:
-            if not self.spanner_transaction_started:
+        if not self.read_only and self._client_transaction_started:
+            if not self._spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
                 self._transaction.begin()
 
@@ -367,7 +376,7 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
-        if self.read_only and self.client_transaction_started:
+        if self.read_only and self._client_transaction_started:
             if not self._snapshot:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
@@ -382,7 +391,7 @@ class Connection:
         The connection will be unusable from this point forward. If the
         connection has an active transaction, it will be rolled back.
         """
-        if self.spanner_transaction_started:
+        if self._spanner_transaction_started and not self.read_only:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
@@ -399,8 +408,8 @@ class Connection:
         :raises: :class:`OperationalError`: if there is an existing transaction that has begin or is running
         """
         if self._transaction_begin_marked:
-            raise OperationalError("A transaction has already begun")
-        if self.spanner_transaction_started:
+            raise OperationalError("A transaction has already started")
+        if self._spanner_transaction_started:
             raise OperationalError(
                 "Beginning a new transaction is not allowed when a transaction is already running"
             )
@@ -409,22 +418,23 @@ class Connection:
     def commit(self):
         """Commits any pending transaction to the database.
 
-        This method is non-operational in autocommit mode.
+        This is a no-op if there is no active client transaction.
         """
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self._snapshot = None
 
-        if not self.client_transaction_started:
+        if not self._client_transaction_started:
             warnings.warn(
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
             return
 
         self.run_prior_DDL_statements()
-        if self.spanner_transaction_started:
+        if self._spanner_transaction_started:
             try:
-                if not self.read_only:
+                if self.read_only:
+                    self._snapshot = None
+                else:
                     self._transaction.commit()
 
                 self._release_session()
@@ -437,17 +447,19 @@ class Connection:
     def rollback(self):
         """Rolls back any pending transaction.
 
-        This is a no-op if there is no active transaction or if the connection
-        is in autocommit mode.
+        This is a no-op if there is no active client transaction.
         """
-        self._snapshot = None
 
-        if not self.client_transaction_started:
+        if not self._client_transaction_started:
             warnings.warn(
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
-        elif self._transaction:
-            if not self.read_only:
+            return
+
+        if self._spanner_transaction_started:
+            if self.read_only:
+                self._snapshot = None
+            else:
                 self._transaction.rollback()
 
             self._release_session()

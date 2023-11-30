@@ -394,13 +394,12 @@ class TestConnection(unittest.TestCase):
         self.assertTrue(connection.is_closed)
 
     def test_begin_cursor_closed(self):
-        connection = self._make_connection()
-        connection.close()
+        self._under_test.close()
 
         with self.assertRaises(InterfaceError):
-            connection.begin()
+            self._under_test.begin()
 
-        self.assertEqual(connection._transaction_begin_marked, False)
+        self.assertEqual(self._under_test._transaction_begin_marked, False)
 
     def test_begin_transaction_begin_marked(self):
         self._under_test._transaction_begin_marked = True
@@ -408,7 +407,7 @@ class TestConnection(unittest.TestCase):
         with self.assertRaises(OperationalError):
             self._under_test.begin()
 
-    def test_begin_inside_transaction(self):
+    def test_begin_transaction_started(self):
         mock_transaction = mock.MagicMock()
         mock_transaction.committed = mock_transaction.rolled_back = False
         self._under_test._transaction = mock_transaction
