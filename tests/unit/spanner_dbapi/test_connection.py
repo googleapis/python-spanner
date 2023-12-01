@@ -230,6 +230,8 @@ class TestConnection(unittest.TestCase):
 
         session_checkout = mock.MagicMock(autospec=True)
         connection._session_checkout = session_checkout
+        release_session = mock.MagicMock()
+        connection._release_session = release_session
 
         snapshot = connection.snapshot_checkout()
         session_checkout.assert_called_once()
@@ -238,6 +240,7 @@ class TestConnection(unittest.TestCase):
 
         connection.commit()
         self.assertIsNone(connection._snapshot)
+        release_session.assert_called_once()
 
         connection.snapshot_checkout()
         self.assertIsNotNone(connection._snapshot)
@@ -341,6 +344,7 @@ class TestConnection(unittest.TestCase):
         mock_release.assert_not_called()
 
         mock_transaction = mock.MagicMock()
+        mock_transaction.committed = mock_transaction.rolled_back = False
         connection._transaction = mock_transaction
         mock_rollback = mock.MagicMock()
         mock_transaction.rollback = mock_rollback
@@ -522,7 +526,8 @@ class TestConnection(unittest.TestCase):
         cleared, when the transaction is roll backed.
         """
         connection = self._make_connection()
-        connection._transaction = mock.Mock()
+        mock_transaction.committed = mock_transaction.rolled_back = False
+        connection._transaction = mock_transaction
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
