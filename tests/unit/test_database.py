@@ -2724,8 +2724,10 @@ class TestMutationGroupsCheckout(_BaseTest):
 
     def test_context_mgr_success(self):
         import datetime
+        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
         from google.cloud.spanner_v1 import BatchWriteRequest
         from google.cloud.spanner_v1 import BatchWriteResponse
+        from google.cloud.spanner_v1 import Mutation
         from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.batch import MutationGroups
@@ -2748,13 +2750,27 @@ class TestMutationGroupsCheckout(_BaseTest):
         request_options = RequestOptions(transaction_tag=self.TRANSACTION_TAG)
         request = BatchWriteRequest(
             session=self.SESSION_NAME,
-            mutation_groups=[],
+            mutation_groups=[
+                BatchWriteRequest.MutationGroup(
+                    mutations=[
+                        Mutation(
+                            insert=Mutation.Write(
+                                table="table",
+                                columns=["col"],
+                                values=_make_list_value_pbs([["val"]]),
+                            )
+                        )
+                    ]
+                )
+            ],
             request_options=request_options,
         )
         with checkout as groups:
             self.assertIsNone(pool._session)
             self.assertIsInstance(groups, MutationGroups)
             self.assertIs(groups._session, session)
+            group = groups.group()
+            group.insert("table", ["col"], [["val"]])
             groups.batch_write(request_options)
             self.assertEqual(groups.committed, True)
 
