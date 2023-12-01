@@ -716,7 +716,7 @@ class TestDbApi:
             # execute with INSERT
             self._cursor.execute(
                 "INSERT INTO Singers (SingerId, Name) VALUES (%s, %s), (%s, %s)",
-                (x for row in rows[98:] for x in row),
+                [x for row in rows[98:] for x in row],
             )
             assert self._cursor.rowcount == 2
 
