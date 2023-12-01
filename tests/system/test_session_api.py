@@ -2526,6 +2526,9 @@ def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_data
     num_groups = 3
     num_mutations_per_group = len(sd.BATCH_WRITE_ROW_DATA) // num_groups
 
+    with sessions_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
     with sessions_database.mutation_groups() as groups:
         for i in range(num_groups):
             group = groups.group()
