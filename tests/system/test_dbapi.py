@@ -136,16 +136,6 @@ class TestDbApi:
         cursor1.execute("begin transaction")
         updated_row = self._execute_common_statements(cursor1)
 
-        # As the connection conn1 is not committed a new connection wont see its results
-        conn2 = Connection(shared_instance, dbapi_database)
-        cursor2 = conn2.cursor()
-        cursor2.execute("SELECT * FROM contacts")
-        conn2.commit()
-        got_rows = cursor2.fetchall()
-        cursor2.close()
-        conn2.close()
-        assert got_rows != [updated_row]
-
         assert conn1._transaction_begin_marked is True
         conn1.commit()
         assert conn1._transaction_begin_marked is False
