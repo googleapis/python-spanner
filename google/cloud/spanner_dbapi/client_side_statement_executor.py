@@ -15,10 +15,24 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from google.cloud.spanner_dbapi import Connection
+    from google.cloud.spanner_dbapi import ProgrammingError
+
 from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     ClientSideStatementType,
 )
+from google.cloud.spanner_v1 import (
+    Type,
+    StructType,
+    TypeCode,
+    ResultSetMetadata,
+    PartialResultSet,
+)
+
+from google.cloud.spanner_v1._helpers import _make_value_pb
+from google.cloud.spanner_v1.streamed import StreamedResultSet
+
+CONNECTION_CLOSED_ERROR = "This connection is closed"
 
 
 def execute(connection: "Connection", parsed_statement: ParsedStatement):
@@ -33,8 +47,43 @@ def execute(connection: "Connection", parsed_statement: ParsedStatement):
     :param parsed_statement: parsed_statement based on the sql query
     """
     if parsed_statement.client_side_statement_type == ClientSideStatementType.COMMIT:
-        return connection.commit()
+        connection.commit()
+        return None
     if parsed_statement.client_side_statement_type == ClientSideStatementType.BEGIN:
-        return connection.begin()
+        connection.begin()
+        return None
     if parsed_statement.client_side_statement_type == ClientSideStatementType.ROLLBACK:
-        return connection.rollback()
+        connection.rollback()
+        return None
+    if (
+        parsed_statement.client_side_statement_type
+        == ClientSideStatementType.SHOW_COMMIT_TIMESTAMP
+    ):
+        if connection.is_closed:
+            raise ProgrammingError(CONNECTION_CLOSED_ERROR)
+        return _get_streamed_result_set(
+            ClientSideStatementType.SHOW_COMMIT_TIMESTAMP.name,
+            TypeCode.TIMESTAMP,
+            connection._transaction.committed,
+        )
+    if (
+        parsed_statement.client_side_statement_type
+        == ClientSideStatementType.SHOW_READ_TIMESTAMP
+    ):
+        if connection.is_closed:
+            raise ProgrammingError(CONNECTION_CLOSED_ERROR)
+        return _get_streamed_result_set(
+            ClientSideStatementType.SHOW_READ_TIMESTAMP.name,
+            TypeCode.TIMESTAMP,
+            connection._snapshot._transaction_read_timestamp,
+        )
+
+
+def _get_streamed_result_set(column_name, type_code, column_value):
+    struct_type_pb = StructType(
+        fields=[StructType.Field(name=column_name, type_=Type(code=type_code))]
+    )
+
+    result_set = PartialResultSet(metadata=ResultSetMetadata(row_type=struct_type_pb))
+    result_set.values.extend([_make_value_pb(column_value)])
+    return StreamedResultSet(iter([result_set]))

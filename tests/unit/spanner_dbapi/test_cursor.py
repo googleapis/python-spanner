@@ -272,6 +272,8 @@ class TestCursor(unittest.TestCase):
             with self.assertRaises(IntegrityError):
                 cursor.execute(sql="sql")
 
+        connection = self._make_connection(self.INSTANCE, mock.MagicMock())
+        cursor = self._make_one(connection)
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_statement",
             side_effect=exceptions.FailedPrecondition("message"),
@@ -279,6 +281,8 @@ class TestCursor(unittest.TestCase):
             with self.assertRaises(IntegrityError):
                 cursor.execute(sql="sql")
 
+        connection = self._make_connection(self.INSTANCE, mock.MagicMock())
+        cursor = self._make_one(connection)
         with mock.patch(
             "google.cloud.spanner_dbapi.parse_utils.classify_statement",
             side_effect=exceptions.OutOfRange("message"),

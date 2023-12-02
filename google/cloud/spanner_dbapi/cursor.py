@@ -179,6 +179,7 @@ class Cursor(object):
         self._is_closed = True
 
     def _do_execute_update(self, transaction, sql, params):
+        self.connection._transaction = transaction
         self._result_set = transaction.execute_sql(
             sql, params=params, param_types=get_param_types(params)
         )
@@ -239,15 +240,18 @@ class Cursor(object):
         self._row_count = _UNSET_COUNT
 
         try:
+            parsed_statement = parse_utils.classify_statement(sql)
+            if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
+                self._result_set = client_side_statement_executor.execute(
+                    self.connection, parsed_statement
+                )
+                if self._result_set is not None:
+                    self._itr = PeekIterator(self._result_set)
+                return
+
             if self.connection.read_only:
                 self._handle_DQL(sql, args or None)
                 return
-
-            parsed_statement = parse_utils.classify_statement(sql)
-            if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
-                return client_side_statement_executor.execute(
-                    self.connection, parsed_statement
-                )
             if parsed_statement.statement_type == StatementType.DDL:
                 self._batch_DDLs(sql)
                 if not self.connection._client_transaction_started:
@@ -293,10 +297,16 @@ class Cursor(object):
                     args or None,
                 )
         except (AlreadyExists, FailedPrecondition, OutOfRange) as e:
+            self.close()
+            self.connection.close()
             raise IntegrityError(getattr(e, "details", e)) from e
         except InvalidArgument as e:
+            self.close()
+            self.connection.close()
             raise ProgrammingError(getattr(e, "details", e)) from e
         except InternalServerError as e:
+            self.close()
+            self.connection.close()
             raise OperationalError(getattr(e, "details", e)) from e
 
     @check_not_closed
@@ -492,6 +502,7 @@ class Cursor(object):
             with self.connection.database.snapshot(
                 **self.connection.staleness
             ) as snapshot:
+                self.connection._snapshot = snapshot
                 self._handle_DQL_with_snapshot(snapshot, sql, params)
 
     def __enter__(self):

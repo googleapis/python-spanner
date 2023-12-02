@@ -15,9 +15,14 @@
 """Model a set of read-only queries to a database as a snapshot."""
 
 import functools
+import itertools
 import threading
 from google.protobuf.struct_pb2 import Struct
-from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import (
+    ExecuteSqlRequest,
+    PartialResultSet,
+    ResultSetMetadata,
+)
 from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import TransactionSelector
@@ -447,33 +452,37 @@ class _SnapshotBase(_SessionWrapper):
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                iterator = _restart_on_unavailable(
-                    restart,
-                    request,
-                    "CloudSpanner.ReadWriteTransaction",
-                    self._session,
-                    trace_attributes,
-                    transaction=self,
+                return self._get_streamed_result_set(
+                    restart, request, trace_attributes, False
                 )
-                self._read_request_count += 1
-                self._execute_sql_count += 1
-
-                if self._multi_use:
-                    return StreamedResultSet(iterator, source=self)
-                else:
-                    return StreamedResultSet(iterator)
         else:
-            iterator = _restart_on_unavailable(
-                restart,
-                request,
-                "CloudSpanner.ReadWriteTransaction",
-                self._session,
-                trace_attributes,
-                transaction=self,
+            return self._get_streamed_result_set(
+                restart, request, trace_attributes, True
             )
 
+    def _get_streamed_result_set(
+        self, restart, request, trace_attributes, transaction_id_set
+    ):
+        iterator = _restart_on_unavailable(
+            restart,
+            request,
+            "CloudSpanner.ReadWriteTransaction",
+            self._session,
+            trace_attributes,
+            transaction=self,
+        )
         self._read_request_count += 1
         self._execute_sql_count += 1
+
+        if self._read_only and not transaction_id_set:
+            peek = next(iterator)
+            response_pb = PartialResultSet.pb(peek)
+            response_metadata = ResultSetMetadata.wrap(response_pb.metadata)
+            if response_metadata.transaction.read_timestamp is not None:
+                self._transaction_read_timestamp = (
+                    response_metadata.transaction.read_timestamp
+                )
+            iterator = itertools.chain([peek], iterator)
 
         if self._multi_use:
             return StreamedResultSet(iterator, source=self)
@@ -739,6 +748,7 @@ class Snapshot(_SnapshotBase):
                     "'min_read_timestamp' / 'max_staleness'"
                 )
 
+        self._transaction_read_timestamp = None
         self._strong = len(flagged) == 0
         self._read_timestamp = read_timestamp
         self._min_read_timestamp = min_read_timestamp
@@ -768,7 +778,9 @@ class Snapshot(_SnapshotBase):
             value = True
 
         options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(**{key: value})
+            read_only=TransactionOptions.ReadOnly(
+                **{key: value, "return_read_timestamp": True}
+            )
         )
 
         if self._multi_use:
@@ -814,4 +826,5 @@ class Snapshot(_SnapshotBase):
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self._transaction_id = response.id
+        self._transaction_read_timestamp = response.read_timestamp
         return self._transaction_id

@@ -71,7 +71,7 @@ class TestConnection(unittest.TestCase):
     @mock.patch("google.cloud.spanner_dbapi.connection.Connection.commit")
     def test_autocommit_setter_transaction_started(self, mock_commit):
         connection = self._make_connection()
-        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._spanner_transaction_started = True
 
         connection.autocommit = True
 
@@ -116,7 +116,7 @@ class TestConnection(unittest.TestCase):
         connection = self._make_connection(read_only=True)
         self.assertTrue(connection.read_only)
 
-        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._spanner_transaction_started = True
         with self.assertRaisesRegex(
             ValueError,
             "Connection read/write mode can't be changed while a transaction is in progress. "
@@ -124,7 +124,7 @@ class TestConnection(unittest.TestCase):
         ):
             connection.read_only = False
 
-        connection._transaction = None
+        connection._spanner_transaction_started = False
         connection.read_only = False
         self.assertFalse(connection.read_only)
 
@@ -239,20 +239,20 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(snapshot, connection.snapshot_checkout())
 
         connection.commit()
-        self.assertIsNone(connection._snapshot)
+        self.assertIsNotNone(connection._snapshot)
         release_session.assert_called_once()
 
         connection.snapshot_checkout()
         self.assertIsNotNone(connection._snapshot)
 
         connection.rollback()
-        self.assertIsNone(connection._snapshot)
+        self.assertIsNotNone(connection._snapshot)
+        self.assertEqual(release_session.call_count, 2)
 
         connection.autocommit = True
         self.assertIsNone(connection.snapshot_checkout())
 
-    @mock.patch("google.cloud.spanner_v1.Client")
-    def test_close(self, mock_client):
+    def test_close(self):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_dbapi import InterfaceError
 
@@ -268,8 +268,8 @@ class TestConnection(unittest.TestCase):
             connection.cursor()
 
         mock_transaction = mock.MagicMock()
-        mock_transaction.committed = mock_transaction.rolled_back = False
         connection._transaction = mock_transaction
+        connection._spanner_transaction_started = True
 
         mock_rollback = mock.MagicMock()
         mock_transaction.rollback = mock_rollback
@@ -300,9 +300,8 @@ class TestConnection(unittest.TestCase):
 
         mock_release.assert_not_called()
 
-        connection._transaction = mock_transaction = mock.MagicMock(
-            rolled_back=False, committed=False
-        )
+        connection._transaction = mock_transaction = mock.MagicMock()
+        connection._spanner_transaction_started = True
         mock_transaction.commit = mock_commit = mock.MagicMock()
 
         with mock.patch(
@@ -344,7 +343,7 @@ class TestConnection(unittest.TestCase):
         mock_release.assert_not_called()
 
         mock_transaction = mock.MagicMock()
-        mock_transaction.committed = mock_transaction.rolled_back = False
+        connection._spanner_transaction_started = True
         connection._transaction = mock_transaction
         mock_rollback = mock.MagicMock()
         mock_transaction.rollback = mock_rollback
@@ -412,9 +411,7 @@ class TestConnection(unittest.TestCase):
             self._under_test.begin()
 
     def test_begin_transaction_started(self):
-        mock_transaction = mock.MagicMock()
-        mock_transaction.committed = mock_transaction.rolled_back = False
-        self._under_test._transaction = mock_transaction
+        self._under_test._spanner_transaction_started = True
 
         with self.assertRaises(OperationalError):
             self._under_test.begin()
@@ -510,7 +507,8 @@ class TestConnection(unittest.TestCase):
         cleared, when the transaction is commited.
         """
         connection = self._make_connection()
-        connection._transaction = mock.Mock(rolled_back=False, committed=False)
+        connection._spanner_transaction_started = True
+        connection._transaction = mock.Mock()
         connection._statements = [{}, {}]
 
         self.assertEqual(len(connection._statements), 2)
@@ -526,7 +524,7 @@ class TestConnection(unittest.TestCase):
         cleared, when the transaction is roll backed.
         """
         connection = self._make_connection()
-        mock_transaction.committed = mock_transaction.rolled_back = False
+        connection._spanner_transaction_started = True
         connection._transaction = mock_transaction
         connection._statements = [{}, {}]
 
@@ -604,7 +602,8 @@ class TestConnection(unittest.TestCase):
 
         statement = Statement("SELECT 1", [], {}, cursor._checksum)
         connection._statements.append(statement)
-        mock_transaction = mock.Mock(rolled_back=False, committed=False)
+        mock_transaction = mock.Mock()
+        connection._spanner_transaction_started = True
         connection._transaction = mock_transaction
         mock_transaction.commit.side_effect = [Aborted("Aborted"), None]
         run_mock = connection.run_statement = mock.Mock()
@@ -874,7 +873,8 @@ class TestConnection(unittest.TestCase):
         option if a transaction is in progress.
         """
         connection = self._make_connection()
-        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._spanner_transaction_started = True
+        connection._transaction = mock.Mock()
 
         with self.assertRaises(ValueError):
             connection.staleness = {"read_timestamp": datetime.datetime(2021, 9, 21)}
@@ -976,7 +976,8 @@ class TestConnection(unittest.TestCase):
         priority = 2
 
         connection = self._make_connection()
-        connection._transaction = mock.Mock(committed=False, rolled_back=False)
+        connection._spanner_transaction_started = True
+        connection._transaction = mock.Mock()
         connection._transaction.execute_sql = mock.Mock()
 
         connection.request_priority = priority
