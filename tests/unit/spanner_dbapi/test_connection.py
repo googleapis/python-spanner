@@ -613,20 +613,6 @@ class TestConnection(unittest.TestCase):
 
         run_mock.assert_called_with(statement, retried=True)
 
-    def test_retry_transaction_drop_transaction(self):
-        """
-        Check that before retrying an aborted transaction
-        connection drops the original aborted transaction.
-        """
-        connection = self._make_connection()
-        transaction_mock = mock.Mock()
-        connection._transaction = transaction_mock
-
-        # as we didn't set any statements, the method
-        # will only drop the transaction object
-        connection.retry_transaction()
-        self.assertIsNone(connection._transaction)
-
     @mock.patch("google.cloud.spanner_v1.Client")
     def test_retry_aborted_retry(self, mock_client):
         """

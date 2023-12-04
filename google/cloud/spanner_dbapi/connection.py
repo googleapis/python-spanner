@@ -310,7 +310,7 @@ class Connection:
                 status, res = transaction.batch_update(statements)
 
                 if status.code == ABORTED:
-                    self.connection._transaction = None
+                    self._spanner_transaction_started = False
                     raise Aborted(status.details)
 
                 retried_checksum = ResultsChecksum()
