@@ -46,32 +46,25 @@ def execute(connection: "Connection", parsed_statement: ParsedStatement):
     :type parsed_statement: ParsedStatement
     :param parsed_statement: parsed_statement based on the sql query
     """
-    if parsed_statement.client_side_statement_type == ClientSideStatementType.COMMIT:
+    if connection.is_closed:
+        raise ProgrammingError(CONNECTION_CLOSED_ERROR)
+    statement_type = parsed_statement.client_side_statement_type
+    if statement_type == ClientSideStatementType.COMMIT:
         connection.commit()
         return None
-    if parsed_statement.client_side_statement_type == ClientSideStatementType.BEGIN:
+    if statement_type == ClientSideStatementType.BEGIN:
         connection.begin()
         return None
-    if parsed_statement.client_side_statement_type == ClientSideStatementType.ROLLBACK:
+    if statement_type == ClientSideStatementType.ROLLBACK:
         connection.rollback()
         return None
-    if (
-        parsed_statement.client_side_statement_type
-        == ClientSideStatementType.SHOW_COMMIT_TIMESTAMP
-    ):
-        if connection.is_closed:
-            raise ProgrammingError(CONNECTION_CLOSED_ERROR)
+    if statement_type == ClientSideStatementType.SHOW_COMMIT_TIMESTAMP:
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_COMMIT_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
             connection._transaction.committed,
         )
-    if (
-        parsed_statement.client_side_statement_type
-        == ClientSideStatementType.SHOW_READ_TIMESTAMP
-    ):
-        if connection.is_closed:
-            raise ProgrammingError(CONNECTION_CLOSED_ERROR)
+    if statement_type == ClientSideStatementType.SHOW_READ_TIMESTAMP:
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_READ_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
@@ -85,5 +78,6 @@ def _get_streamed_result_set(column_name, type_code, column_value):
     )
 
     result_set = PartialResultSet(metadata=ResultSetMetadata(row_type=struct_type_pb))
-    result_set.values.extend([_make_value_pb(column_value)])
+    if column_value is not None:
+        result_set.values.extend([_make_value_pb(column_value)])
     return StreamedResultSet(iter([result_set]))

@@ -20,6 +20,11 @@ import unittest
 import warnings
 import pytest
 from google.cloud.spanner_dbapi.exceptions import InterfaceError, OperationalError
+from google.cloud.spanner_dbapi import Connection
+from google.cloud.spanner_dbapi.connection import (
+    CLIENT_TRANSACTION_NOT_STARTED_WARNING,
+    SPANNER_TRANSACTION_NOT_STARTED_WARNING,
+)
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -46,7 +51,6 @@ class TestConnection(unittest.TestCase):
         return ClientInfo(user_agent=USER_AGENT)
 
     def _make_connection(self, **kwargs):
-        from google.cloud.spanner_dbapi import Connection
         from google.cloud.spanner_v1.instance import Instance
         from google.cloud.spanner_v1.client import Client
 
@@ -76,26 +80,6 @@ class TestConnection(unittest.TestCase):
         connection.autocommit = True
 
         mock_commit.assert_called_once()
-        self.assertTrue(connection._autocommit)
-
-    @mock.patch("google.cloud.spanner_dbapi.connection.Connection.commit")
-    def test_autocommit_setter_transaction_started_commited_rolled_back(
-        self, mock_commit
-    ):
-        connection = self._make_connection()
-
-        connection._transaction = mock.Mock(committed=True, rolled_back=False)
-
-        connection.autocommit = True
-        mock_commit.assert_not_called()
-        self.assertTrue(connection._autocommit)
-
-        connection.autocommit = False
-
-        connection._transaction = mock.Mock(committed=False, rolled_back=True)
-
-        connection.autocommit = True
-        mock_commit.assert_not_called()
         self.assertTrue(connection._autocommit)
 
     def test_property_database(self):
@@ -160,8 +144,6 @@ class TestConnection(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.database.Database")
     def test__session_checkout(self, mock_database):
-        from google.cloud.spanner_dbapi import Connection
-
         pool = self._make_pool()
         mock_database._pool = pool
         connection = Connection(INSTANCE, mock_database)
@@ -175,8 +157,6 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(connection._session, "db_session")
 
     def test_session_checkout_database_error(self):
-        from google.cloud.spanner_dbapi import Connection
-
         connection = Connection(INSTANCE)
 
         with pytest.raises(ValueError):
@@ -184,8 +164,6 @@ class TestConnection(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.database.Database")
     def test__release_session(self, mock_database):
-        from google.cloud.spanner_dbapi import Connection
-
         pool = self._make_pool()
         mock_database._pool = pool
         connection = Connection(INSTANCE, mock_database)
@@ -196,15 +174,11 @@ class TestConnection(unittest.TestCase):
         self.assertIsNone(connection._session)
 
     def test_release_session_database_error(self):
-        from google.cloud.spanner_dbapi import Connection
-
         connection = Connection(INSTANCE)
         with pytest.raises(ValueError):
             connection._release_session()
 
     def test_transaction_checkout(self):
-        from google.cloud.spanner_dbapi import Connection
-
         connection = Connection(INSTANCE, DATABASE)
         mock_checkout = mock.MagicMock(autospec=True)
         connection._session_checkout = mock_checkout
@@ -214,8 +188,8 @@ class TestConnection(unittest.TestCase):
         mock_checkout.assert_called_once_with()
 
         mock_transaction = mock.MagicMock()
-        mock_transaction.committed = mock_transaction.rolled_back = False
         connection._transaction = mock_transaction
+        connection._spanner_transaction_started = True
 
         self.assertEqual(connection.transaction_checkout(), mock_transaction)
 
@@ -223,8 +197,6 @@ class TestConnection(unittest.TestCase):
         self.assertIsNone(connection.transaction_checkout())
 
     def test_snapshot_checkout(self):
-        from google.cloud.spanner_dbapi import Connection
-
         connection = Connection(INSTANCE, DATABASE, read_only=True)
         connection.autocommit = False
 
@@ -285,35 +257,38 @@ class TestConnection(unittest.TestCase):
         self.assertTrue(connection.is_closed)
 
     @mock.patch.object(warnings, "warn")
-    def test_commit(self, mock_warn):
-        from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import (
-            CLIENT_TRANSACTION_NOT_STARTED_WARNING,
-        )
-
-        connection = Connection(INSTANCE, DATABASE)
+    def test_commit_with_spanner_transaction_not_started(self, mock_warn):
+        self._under_test._spanner_transaction_started = False
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection._release_session"
         ) as mock_release:
-            connection.commit()
+            self._under_test.commit()
 
+        mock_warn.assert_called_once_with(
+            SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+        )
         mock_release.assert_not_called()
 
-        connection._transaction = mock_transaction = mock.MagicMock()
-        connection._spanner_transaction_started = True
+    def test_commit(self):
+        self._under_test._transaction = mock_transaction = mock.MagicMock()
+        self._under_test._spanner_transaction_started = True
         mock_transaction.commit = mock_commit = mock.MagicMock()
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection._release_session"
         ) as mock_release:
-            connection.commit()
+            self._under_test.commit()
 
         mock_commit.assert_called_once_with()
         mock_release.assert_called_once_with()
 
-        connection._autocommit = True
-        connection.commit()
+    @mock.patch.object(warnings, "warn")
+    def test_commit_in_autocommit_mode(self, mock_warn):
+        self._under_test._autocommit = True
+
+        self._under_test.commit()
+
         mock_warn.assert_called_once_with(
             CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
@@ -327,37 +302,41 @@ class TestConnection(unittest.TestCase):
             connection.commit()
 
     @mock.patch.object(warnings, "warn")
-    def test_rollback(self, mock_warn):
-        from google.cloud.spanner_dbapi import Connection
-        from google.cloud.spanner_dbapi.connection import (
-            CLIENT_TRANSACTION_NOT_STARTED_WARNING,
-        )
-
-        connection = Connection(INSTANCE, DATABASE)
+    def test_rollback_spanner_transaction_not_started(self, mock_warn):
+        self._under_test._spanner_transaction_started = False
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection._release_session"
         ) as mock_release:
-            connection.rollback()
+            self._under_test.rollback()
 
+        mock_warn.assert_called_once_with(
+            SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+        )
         mock_release.assert_not_called()
 
+    @mock.patch.object(warnings, "warn")
+    def test_rollback(self, mock_warn):
         mock_transaction = mock.MagicMock()
-        connection._spanner_transaction_started = True
-        connection._transaction = mock_transaction
+        self._under_test._spanner_transaction_started = True
+        self._under_test._transaction = mock_transaction
         mock_rollback = mock.MagicMock()
         mock_transaction.rollback = mock_rollback
 
         with mock.patch(
             "google.cloud.spanner_dbapi.connection.Connection._release_session"
         ) as mock_release:
-            connection.rollback()
+            self._under_test.rollback()
 
         mock_rollback.assert_called_once_with()
         mock_release.assert_called_once_with()
 
-        connection._autocommit = True
-        connection.rollback()
+    @mock.patch.object(warnings, "warn")
+    def test_rollback_in_autocommit_mode(self, mock_warn):
+        self._under_test._autocommit = True
+
+        self._under_test.rollback()
+
         mock_warn.assert_called_once_with(
             CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
@@ -888,7 +867,8 @@ class TestConnection(unittest.TestCase):
             "session", multi_use=True, read_timestamp=timestamp
         )
 
-    def test_staleness_single_use_autocommit(self):
+    @mock.patch("google.cloud.spanner_dbapi.cursor.PeekIterator")
+    def test_staleness_single_use_autocommit(self, MockedPeekIterator):
         """
         Check that `staleness` option is correctly
         sent to the snapshot context manager.
@@ -905,7 +885,8 @@ class TestConnection(unittest.TestCase):
 
         # mock snapshot context manager
         snapshot_obj = mock.Mock()
-        snapshot_obj.execute_sql = mock.Mock(return_value=[1])
+        _result_set = mock.Mock()
+        snapshot_obj.execute_sql.return_value = _result_set
 
         snapshot_ctx = mock.Mock()
         snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)
@@ -919,7 +900,8 @@ class TestConnection(unittest.TestCase):
 
         connection.database.snapshot.assert_called_with(read_timestamp=timestamp)
 
-    def test_staleness_single_use_readonly_autocommit(self):
+    @mock.patch("google.cloud.spanner_dbapi.cursor.PeekIterator")
+    def test_staleness_single_use_readonly_autocommit(self, MockedPeekIterator):
         """
         Check that `staleness` option is correctly sent to the
         snapshot context manager while in `autocommit` mode.
@@ -937,7 +919,8 @@ class TestConnection(unittest.TestCase):
 
         # mock snapshot context manager
         snapshot_obj = mock.Mock()
-        snapshot_obj.execute_sql = mock.Mock(return_value=[1])
+        _result_set = mock.Mock()
+        snapshot_obj.execute_sql.return_value = _result_set
 
         snapshot_ctx = mock.Mock()
         snapshot_ctx.__enter__ = mock.Mock(return_value=snapshot_obj)

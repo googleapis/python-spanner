@@ -126,6 +126,63 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
+    def test_cursor_execute_exception(self):
+        """Test that if exception in Cursor's execute method is caught when
+        Connection is not in autocommit mode, then subsequent operations on
+        same Cursor and Connection object works properly."""
+        updated_row = self._execute_common_statements(self._cursor)
+        try:
+            self._cursor.execute("SELECT * FROM unknown_table")
+        except Exception:
+            pass
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+        assert got_rows == [updated_row]
+
+        # Testing that the connection and Cursor are in proper state post commit
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+        assert got_rows == [updated_row]
+
+    def test_cursor_execute_exception_autocommit(self):
+        """Test that if exception in Cursor's execute method is caught when
+        Connection is in autocommit mode, then subsequent operations on
+        same Cursor and Connection object works properly."""
+        self._conn.autocommit = True
+        updated_row = self._execute_common_statements(self._cursor)
+        try:
+            self._cursor.execute("SELECT * FROM unknown_table")
+        except Exception:
+            pass
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        assert got_rows == [updated_row]
+
+    def test_cursor_execute_exception_begin_client_side(self):
+        """Test that if exception in Cursor's execute method is caught when
+        beginning a transaction using client side statement, then subsequent
+        operations on same Cursor and Connection object works properly."""
+        self._conn.autocommit = True
+        self._cursor.execute("begin transaction")
+        updated_row = self._execute_common_statements(self._cursor)
+        try:
+            self._cursor.execute("SELECT * FROM unknown_table")
+        except Exception:
+            pass
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+        assert got_rows == [updated_row]
+
+        # Testing that the connection and Cursor are in proper state post commit
+        self._conn.autocommit = False
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+        assert got_rows == [updated_row]
+
     @pytest.mark.noautofixt
     def test_begin_client_side(self, shared_instance, dbapi_database):
         """Test beginning a transaction using client side statement,
@@ -153,9 +210,21 @@ class TestDbApi:
         conn3.close()
         assert got_rows == [updated_row]
 
-    def test_commit_timestamp_client_side(self):
+    def test_commit_timestamp_client_side_transaction(self):
         """Test executing SHOW_COMMIT_TIMESTAMP client side statement in a
         transaction."""
+
+        self._cursor.execute(
+            """
+    INSERT INTO contacts (contact_id, first_name, last_name, email)
+    VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
+        """
+        )
+        self._cursor.execute("SHOW VARIABLE COMMIT_TIMESTAMP")
+        got_rows = self._cursor.fetchall()
+        # As the connection is not committed we will get 0 rows
+        assert len(got_rows) == 0
+        assert len(self._cursor.description) == 1
 
         self._cursor.execute(
             """
@@ -198,18 +267,33 @@ class TestDbApi:
         transaction."""
 
         self._conn.read_only = True
+        self._cursor.execute("SELECT * FROM contacts")
+        assert self._cursor.fetchall() == []
 
-        self._cursor.execute("SELECT * FROM contacts")
-        self._cursor.execute("SELECT * FROM contacts")
-        self._conn.commit()
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_1 = self._cursor.fetchall()
 
-        got_rows = self._cursor.fetchall()
-        assert len(got_rows) == 1
-        assert len(got_rows[0]) == 1
+        self._cursor.execute("SELECT * FROM contacts")
+        assert self._cursor.fetchall() == []
+
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_2 = self._cursor.fetchall()
+
+        self._conn.commit()
+
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_3 = self._cursor.fetchall()
         assert len(self._cursor.description) == 1
         assert self._cursor.description[0].name == "SHOW_READ_TIMESTAMP"
-        assert isinstance(got_rows[0][0], DatetimeWithNanoseconds)
+
+        assert (
+            read_timestamp_query_result_1
+            == read_timestamp_query_result_2
+            == read_timestamp_query_result_3
+        )
+        assert len(read_timestamp_query_result_1) == 1
+        assert len(read_timestamp_query_result_1[0]) == 1
+        assert isinstance(read_timestamp_query_result_1[0][0], DatetimeWithNanoseconds)
 
     def test_read_timestamp_client_side_autocommit(self):
         """Test executing SHOW_READ_TIMESTAMP client side statement in a
@@ -225,6 +309,9 @@ class TestDbApi:
         )
         self._conn.read_only = True
         self._cursor.execute("SELECT * FROM contacts")
+        assert self._cursor.fetchall() == [
+            (2, "first-name", "last-name", "test.email@domen.ru")
+        ]
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
 
         got_rows = self._cursor.fetchall()
@@ -725,8 +812,10 @@ class TestDbApi:
         ReadOnly transactions.
         """
 
+        self._conn.read_only = True
         self._cursor.execute("SELECT * FROM contacts")
         self._conn.commit()
+        assert self._cursor.fetchall() == []
 
     def test_read_only_dml(self):
         """

@@ -852,7 +852,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             TransactionOptions,
         )
         from google.cloud.spanner_v1 import ExecuteSqlRequest
-        from google.cloud.spanner_v1 import Type, StructType, Transaction
+        from google.cloud.spanner_v1 import Type, StructType
         from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
@@ -869,11 +869,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        read_timestamp = _makeTimestamp()
-        transaction = Transaction(id="transaction_id", read_timestamp=read_timestamp)
-        metadata_pb = ResultSetMetadata(
-            row_type=struct_type_pb, transaction=transaction
-        )
+        metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
@@ -913,8 +909,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         self.assertEqual(derived._read_request_count, count + 1)
-        if first:
-            self.assertEqual(derived._transaction_read_timestamp, read_timestamp)
 
         if multi_use:
             self.assertIs(result_set._source, derived)

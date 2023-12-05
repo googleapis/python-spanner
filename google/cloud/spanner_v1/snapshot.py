@@ -15,14 +15,9 @@
 """Model a set of read-only queries to a database as a snapshot."""
 
 import functools
-import itertools
 import threading
 from google.protobuf.struct_pb2 import Struct
-from google.cloud.spanner_v1 import (
-    ExecuteSqlRequest,
-    PartialResultSet,
-    ResultSetMetadata,
-)
+from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import ReadRequest
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import TransactionSelector
@@ -452,17 +447,11 @@ class _SnapshotBase(_SessionWrapper):
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                return self._get_streamed_result_set(
-                    restart, request, trace_attributes, False
-                )
+                return self._get_streamed_result_set(restart, request, trace_attributes)
         else:
-            return self._get_streamed_result_set(
-                restart, request, trace_attributes, True
-            )
+            return self._get_streamed_result_set(restart, request, trace_attributes)
 
-    def _get_streamed_result_set(
-        self, restart, request, trace_attributes, transaction_id_set
-    ):
+    def _get_streamed_result_set(self, restart, request, trace_attributes):
         iterator = _restart_on_unavailable(
             restart,
             request,
@@ -473,16 +462,6 @@ class _SnapshotBase(_SessionWrapper):
         )
         self._read_request_count += 1
         self._execute_sql_count += 1
-
-        if self._read_only and not transaction_id_set:
-            peek = next(iterator)
-            response_pb = PartialResultSet.pb(peek)
-            response_metadata = ResultSetMetadata.wrap(response_pb.metadata)
-            if response_metadata.transaction.read_timestamp is not None:
-                self._transaction_read_timestamp = (
-                    response_metadata.transaction.read_timestamp
-                )
-            iterator = itertools.chain([peek], iterator)
 
         if self._multi_use:
             return StreamedResultSet(iterator, source=self)

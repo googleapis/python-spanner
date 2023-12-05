@@ -178,7 +178,8 @@ class Cursor(object):
         """Closes this cursor."""
         self._is_closed = True
 
-    def _do_execute_update(self, transaction, sql, params):
+    def _do_execute_update_in_autocommit(self, transaction, sql, params):
+        """This function should only be used autocommit mode."""
         self.connection._transaction = transaction
         self._result_set = transaction.execute_sql(
             sql, params=params, param_types=get_param_types(params)
@@ -260,54 +261,54 @@ class Cursor(object):
 
             # For every other operation, we've got to ensure that
             # any prior DDL statements were run.
-            # self._run_prior_DDL_statements()
             self.connection.run_prior_DDL_statements()
-
             if parsed_statement.statement_type == StatementType.UPDATE:
                 sql = parse_utils.ensure_where_clause(sql)
-
             sql, args = sql_pyformat_args_to_spanner(sql, args or None)
 
             if self.connection._client_transaction_started:
-                statement = Statement(
-                    sql,
-                    args,
-                    get_param_types(args or None),
-                    ResultsChecksum(),
-                )
-
-                (
-                    self._result_set,
-                    self._checksum,
-                ) = self.connection.run_statement(statement)
-                while True:
-                    try:
-                        self._itr = PeekIterator(self._result_set)
-                        break
-                    except Aborted:
-                        self.connection.retry_transaction()
-                return
-
-            if parsed_statement.statement_type == StatementType.QUERY:
-                self._handle_DQL(sql, args or None)
+                self._execute_statement_in_non_autocommit_mode(sql, args)
             else:
-                self.connection.database.run_in_transaction(
-                    self._do_execute_update,
-                    sql,
-                    args or None,
-                )
+                self._execute_statement_in_autocommit_mode(sql, args, parsed_statement)
+
         except (AlreadyExists, FailedPrecondition, OutOfRange) as e:
-            self.close()
-            self.connection.close()
             raise IntegrityError(getattr(e, "details", e)) from e
         except InvalidArgument as e:
-            self.close()
-            self.connection.close()
             raise ProgrammingError(getattr(e, "details", e)) from e
         except InternalServerError as e:
-            self.close()
-            self.connection.close()
             raise OperationalError(getattr(e, "details", e)) from e
+        finally:
+            if self.connection._client_transaction_started is False:
+                self.connection._spanner_transaction_started = False
+
+    def _execute_statement_in_non_autocommit_mode(self, sql, args):
+        statement = Statement(
+            sql,
+            args,
+            get_param_types(args or None),
+            ResultsChecksum(),
+        )
+
+        (
+            self._result_set,
+            self._checksum,
+        ) = self.connection.run_statement(statement)
+        while True:
+            try:
+                self._itr = PeekIterator(self._result_set)
+                break
+            except Aborted:
+                self.connection.retry_transaction()
+
+    def _execute_statement_in_autocommit_mode(self, sql, args, parsed_statement):
+        if parsed_statement.statement_type == StatementType.QUERY:
+            self._handle_DQL(sql, args or None)
+        else:
+            self.connection.database.run_in_transaction(
+                self._do_execute_update_in_autocommit,
+                sql,
+                args or None,
+            )
 
     @check_not_closed
     def executemany(self, operation, seq_of_params):
@@ -487,6 +488,10 @@ class Cursor(object):
         # Unfortunately, Spanner doesn't seem to send back
         # information about the number of rows available.
         self._row_count = _UNSET_COUNT
+        if self._result_set.metadata.transaction.read_timestamp is not None:
+            snapshot._transaction_read_timestamp = (
+                self._result_set.metadata.transaction.read_timestamp
+            )
 
     def _handle_DQL(self, sql, params):
         if self.connection.database is None:
