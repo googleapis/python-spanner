@@ -233,7 +233,14 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(committed, now)
         self.assertEqual(batch.committed, committed)
 
-        (session, mutations, single_use_txn, request_options, max_commit_delay, metadata) = api._committed
+        (
+            session,
+            mutations,
+            single_use_txn,
+            request_options,
+            max_commit_delay,
+            metadata,
+        ) = api._committed
         self.assertEqual(session, self.SESSION_NAME)
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)
@@ -268,7 +275,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         batch = self._make_one(session)
         batch.transaction_tag = self.TRANSACTION_TAG
         batch.insert(TABLE_NAME, COLUMNS, VALUES)
-        committed = batch.commit(request_options=request_options, max_commit_delay_ms=max_commit_delay_ms)
+        committed = batch.commit(
+            request_options=request_options, max_commit_delay_ms=max_commit_delay_ms
+        )
 
         self.assertEqual(committed, now)
         self.assertEqual(batch.committed, committed)
@@ -307,7 +316,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
         expected_max_commit_delay = None
         if max_commit_delay_ms:
-            expected_max_commit_delay = datetime.timedelta(milliseconds=max_commit_delay_ms)
+            expected_max_commit_delay = datetime.timedelta(
+                milliseconds=max_commit_delay_ms
+            )
         self.assertEqual(expected_max_commit_delay, max_commit_delay)
 
     def test_commit_w_request_tag_success(self):
@@ -342,7 +353,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         request_options = RequestOptions(
             request_tag="tag-1",
         )
-        self._test_commit_with_options(request_options=request_options, max_commit_delay_ms=100)
+        self._test_commit_with_options(
+            request_options=request_options, max_commit_delay_ms=100
+        )
 
     def test_context_mgr_already_committed(self):
         import datetime
@@ -381,7 +394,14 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
         self.assertEqual(batch.committed, now)
 
-        (session, mutations, single_use_txn, request_options, _, metadata) = api._committed
+        (
+            session,
+            mutations,
+            single_use_txn,
+            request_options,
+            _,
+            metadata,
+        ) = api._committed
         self.assertEqual(session, self.SESSION_NAME)
         self.assertEqual(mutations, batch._mutations)
         self.assertIsInstance(single_use_txn, TransactionOptions)

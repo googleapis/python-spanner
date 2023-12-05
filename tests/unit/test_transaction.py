@@ -408,7 +408,9 @@ class TestTransaction(OpenTelemetryBase):
 
         expected_max_commit_delay = None
         if max_commit_delay_ms:
-            expected_max_commit_delay = datetime.timedelta(milliseconds=max_commit_delay_ms)
+            expected_max_commit_delay = datetime.timedelta(
+                milliseconds=max_commit_delay_ms
+            )
 
         self.assertEqual(expected_max_commit_delay, max_commit_delay)
         self.assertEqual(session_id, session.name)
@@ -963,7 +965,7 @@ class _FauxSpannerAPI(object):
         max_commit_delay = None
         if CommitRequest.max_commit_delay in request:
             max_commit_delay = request.max_commit_delay
-        
+
         self._committed = (
             request.session,
             request.mutations,
