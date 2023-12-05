@@ -232,7 +232,8 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         max_commit_delay = None
         if max_commit_delay_ms:
-            max_commit_delay = Duration.FromMilliseconds(max_commit_delay_ms)
+            max_commit_delay = Duration()
+            max_commit_delay.FromMilliseconds(millis=max_commit_delay_ms)
 
         request = CommitRequest(
             session=self._session.name,

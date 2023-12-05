@@ -357,6 +357,7 @@ class TestTransaction(OpenTelemetryBase):
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
+        from google.protobuf.duration_pb2 import Duration
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         keys = [[0], [1], [2]]
@@ -407,7 +408,7 @@ class TestTransaction(OpenTelemetryBase):
 
         expected_max_commit_delay = None
         if max_commit_delay_ms:
-            expected_max_commit_delay = Duration.FromMilliseconds(max_commit_delay_ms)
+            expected_max_commit_delay = datetime.timedelta(milliseconds=max_commit_delay_ms)
 
         self.assertEqual(expected_max_commit_delay, max_commit_delay)
         self.assertEqual(session_id, session.name)
@@ -441,6 +442,9 @@ class TestTransaction(OpenTelemetryBase):
 
     def test_commit_w_return_commit_stats(self):
         self._commit_helper(return_commit_stats=True)
+
+    def test_commit_w_max_commit_delay(self):
+        self._commit_helper(max_commit_delay_ms=100)
 
     def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(
