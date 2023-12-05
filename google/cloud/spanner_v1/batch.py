@@ -186,9 +186,9 @@ class Batch(_BatchBase):
         # Request tags are not supported for commit requests.
         request_options.request_tag = None
 
-        Duration max_commit_delay = None
-        if max_commit_delay_ms is not None:
-            max_commit_delay.nanos = 1000000 * [max_commit_delay_ms]
+        max_commit_delay = None
+        if max_commit_delay_ms:
+            max_commit_delay = Duration.FromMilliseconds(max_commit_delay_ms)
 
         request = CommitRequest(
             session=self._session.name,
