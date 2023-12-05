@@ -597,7 +597,6 @@ class _FauxSpannerAPI:
         metadata=None,
     ):
         from google.api_core.exceptions import Unknown
-        from google.protobuf.duration_pb2 import Duration
         from google.cloud.spanner_v1 import CommitRequest
 
         max_commit_delay = None
