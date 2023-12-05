@@ -16,6 +16,7 @@
 import mock
 
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.api_core.retry import Retry
@@ -954,14 +955,17 @@ class _FauxSpannerAPI(object):
         metadata=None,
     ):
         assert not request.single_use_transaction
-        assert request.max_commit_delay is None
+
+        max_commit_delay = None
+        if CommitRequest.max_commit_delay in request:
+            max_commit_delay = request.max_commit_delay
+        
         self._committed = (
             request.session,
             request.mutations,
             request.transaction_id,
             request.request_options,
-            request.max_commit_delay,
-            #            None,
+            max_commit_delay,
             metadata,
         )
         return self._commit_response
