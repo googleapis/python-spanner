@@ -79,6 +79,70 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
     if clean_up_generated_samples:
         shutil.rmtree("samples/generated_samples", ignore_errors=True)
         clean_up_generated_samples = False
+        # Avoid import of `KeyRange` and `KeySet` in __init__ due to naming conflict in handwritten layer
+        num_replacements = s.replace(
+            library / "google/cloud/spanner_v1/__init__.py",
+            """from .types.keys import KeyRange
+from .types.keys import KeySet""",
+            """from .types.keys import KeyRange as KeyRangePB
+from .types.keys import KeySet as KeySetPB""")
+        assert num_replacements == 1
+
+        num_replacements = s.replace(
+            library / "google/cloud/spanner_v1/__init__.py",
+            """'KeyRange',\n'KeySet',""",
+            """"KeyRangePB",
+    "KeySetPB",""")
+        assert num_replacements == 1
+    
+        # Integrate handwritten code
+        num_replacements = s.replace(
+            library / "google/cloud/spanner_v1/__init__.py",
+            """from .types.type import TypeCode\n\n__all__ = \(""",
+            """from .types.type import TypeCode
+from .data_types import JsonObject
+
+from google.cloud.spanner_v1 import param_types
+from google.cloud.spanner_v1.client import Client
+from google.cloud.spanner_v1.keyset import KeyRange
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.pool import AbstractSessionPool
+from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner_v1.pool import FixedSizePool
+from google.cloud.spanner_v1.pool import PingingPool
+from google.cloud.spanner_v1.pool import TransactionPingingPool
+
+
+COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
+\"\"\"Placeholder be used to store commit timestamp of a transaction in a column.
+This value can only be used for timestamp columns that have set the option
+``(allow_commit_timestamp=true)`` in the schema.
+\"\"\"
+
+
+__all__ = (
+    # google.cloud.spanner_v1
+    "__version__",
+    "param_types",
+    # google.cloud.spanner_v1.client
+    "Client",
+    # google.cloud.spanner_v1.data_types
+    "JsonObject",
+    # google.cloud.spanner_v1.keyset
+    "KeyRange",
+    "KeySet",
+    # google.cloud.spanner_v1.pool
+    "AbstractSessionPool",
+    "BurstyPool",
+    "FixedSizePool",
+    "PingingPool",
+    "TransactionPingingPool",
+    # local
+    "COMMIT_TIMESTAMP",
+    # google.cloud.spanner_v1.types
+    """
+    )
+    assert num_replacements == 1
 
     s.move(
         library,
@@ -86,7 +150,6 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
             "google/cloud/spanner/**",
             "*.*",
             "docs/index.rst",
-            "google/cloud/spanner_v1/__init__.py",
             "**/gapic_version.py",
             "testing/constraints-3.7.txt",
         ],
@@ -95,11 +158,6 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
 for library in get_staging_dirs(
     spanner_admin_instance_default_version, "spanner_admin_instance"
 ):
-    s.replace(
-        library / "google/cloud/spanner_admin_instance_v*/__init__.py",
-        "from google.cloud.spanner_admin_instance import gapic_version as package_version",
-        f"from google.cloud.spanner_admin_instance_{library.name} import gapic_version as package_version",
-    )
     s.move(
         library,
         excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "**/gapic_version.py", "testing/constraints-3.7.txt",],
@@ -108,11 +166,6 @@ for library in get_staging_dirs(
 for library in get_staging_dirs(
     spanner_admin_database_default_version, "spanner_admin_database"
 ):
-    s.replace(
-        library / "google/cloud/spanner_admin_database_v*/__init__.py",
-        "from google.cloud.spanner_admin_database import gapic_version as package_version",
-        f"from google.cloud.spanner_admin_database_{library.name} import gapic_version as package_version",
-    )
     s.move(
         library,
         excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "**/gapic_version.py", "testing/constraints-3.7.txt",],

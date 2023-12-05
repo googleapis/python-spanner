@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-# Copyright 2020 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from __future__ import absolute_import
-
 from google.cloud.spanner_v1 import gapic_version as package_version
 
-__version__: str = package_version.__version__
+__version__ = package_version.__version__
+
 
 from .services.spanner import SpannerClient
+from .services.spanner import SpannerAsyncClient
+
 from .types.commit_response import CommitResponse
 from .types.keys import KeyRange as KeyRangePB
 from .types.keys import KeySet as KeySetPB
@@ -28,7 +28,6 @@ from .types.mutation import Mutation
 from .types.query_plan import PlanNode
 from .types.query_plan import QueryPlan
 from .types.result_set import PartialResultSet
-from .types import RequestOptions
 from .types.result_set import ResultSet
 from .types.result_set import ResultSetMetadata
 from .types.result_set import ResultSetStats
@@ -40,6 +39,7 @@ from .types.spanner import BeginTransactionRequest
 from .types.spanner import CommitRequest
 from .types.spanner import CreateSessionRequest
 from .types.spanner import DeleteSessionRequest
+from .types.spanner import DirectedReadOptions
 from .types.spanner import ExecuteBatchDmlRequest
 from .types.spanner import ExecuteBatchDmlResponse
 from .types.spanner import ExecuteSqlRequest
@@ -52,6 +52,7 @@ from .types.spanner import PartitionQueryRequest
 from .types.spanner import PartitionReadRequest
 from .types.spanner import PartitionResponse
 from .types.spanner import ReadRequest
+from .types.spanner import RequestOptions
 from .types.spanner import RollbackRequest
 from .types.spanner import Session
 from .types.transaction import Transaction
@@ -87,6 +88,8 @@ __all__ = (
     "param_types",
     # google.cloud.spanner_v1.client
     "Client",
+    # google.cloud.spanner_v1.data_types
+    "JsonObject",
     # google.cloud.spanner_v1.keyset
     "KeyRange",
     "KeySet",
@@ -99,6 +102,7 @@ __all__ = (
     # local
     "COMMIT_TIMESTAMP",
     # google.cloud.spanner_v1.types
+    "SpannerAsyncClient",
     "BatchCreateSessionsRequest",
     "BatchCreateSessionsResponse",
     "BatchWriteRequest",
@@ -108,6 +112,7 @@ __all__ = (
     "CommitResponse",
     "CreateSessionRequest",
     "DeleteSessionRequest",
+    "DirectedReadOptions",
     "ExecuteBatchDmlRequest",
     "ExecuteBatchDmlResponse",
     "ExecuteSqlRequest",
@@ -132,6 +137,7 @@ __all__ = (
     "ResultSetStats",
     "RollbackRequest",
     "Session",
+    "SpannerClient",
     "StructType",
     "Transaction",
     "TransactionOptions",
@@ -139,8 +145,4 @@ __all__ = (
     "Type",
     "TypeAnnotationCode",
     "TypeCode",
-    # Custom spanner related data types
-    "JsonObject",
-    # google.cloud.spanner_v1.services
-    "SpannerClient",
 )
