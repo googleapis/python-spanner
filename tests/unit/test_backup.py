@@ -34,9 +34,8 @@ class _BaseTest(unittest.TestCase):
     @staticmethod
     def _make_timestamp():
         import datetime
-        from google.cloud._helpers import UTC
 
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        return datetime.datetime.now(datetime.timezone.utc)
 
 
 class TestBackup(_BaseTest):
@@ -357,7 +356,7 @@ class TestBackup(_BaseTest):
         api.create_backup.return_value = op_future
 
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        version_timestamp = datetime.utcnow() - timedelta(minutes=5)
+        version_timestamp = datetime.now(timezone.utc) - timedelta(minutes=5)
         version_timestamp = version_timestamp.replace(tzinfo=timezone.utc)
         expire_timestamp = self._make_timestamp()
         encryption_config = {"encryption_type": 3, "kms_key_name": "key_name"}

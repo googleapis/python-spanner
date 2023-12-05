@@ -1378,9 +1378,8 @@ class TestSnapshot(OpenTelemetryBase):
 
     def _makeTimestamp(self):
         import datetime
-        from google.cloud._helpers import UTC
 
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        return datetime.datetime.now(datetime.timezone.utc)
 
     def _makeDuration(self, seconds=1, microseconds=0):
         import datetime

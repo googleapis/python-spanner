@@ -216,10 +216,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
+
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now =datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -255,10 +255,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -333,9 +332,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
     def test_context_mgr_already_committed(self):
         import datetime
-        from google.cloud._helpers import UTC
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         database = _Database()
         api = database.spanner_api = _FauxSpannerAPI()
         session = _Session(database)
@@ -352,10 +350,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -389,10 +386,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
     def test_context_mgr_failure(self):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -471,11 +467,10 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
     def _test_batch_write_with_request_options(self, request_options=None):
         import datetime
         from google.cloud.spanner_v1 import BatchWriteResponse
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.rpc.status_pb2 import Status
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         status_pb = Status(code=200)
         response = BatchWriteResponse(

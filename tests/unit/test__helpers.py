@@ -216,7 +216,7 @@ class Test_make_value_pb(unittest.TestCase):
         from google.protobuf.struct_pb2 import Value
         from google.api_core import datetime_helpers
 
-        now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+        now = datetime.datetime.now(datetime.timezone.utc)
         value_pb = self._callFUT(now)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, datetime_helpers.to_rfc3339(now))
@@ -672,34 +672,36 @@ class Test_metadata_with_prefix(unittest.TestCase):
         self.assertEqual(metadata, [("google-cloud-resource-prefix", prefix)])
 
 
+class SomeClass:
+    def some_function(self):
+        pass
+
+
 class Test_retry(unittest.TestCase):
-    class test_class:
-        def test_fxn(self):
-            return True
 
     def test_retry_on_error(self):
         from google.api_core.exceptions import InternalServerError, NotFound
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
-        test_api.test_fxn.side_effect = [
+        test_api = mock.create_autospec(SomeClass)
+        test_api.some_function.side_effect = [
             InternalServerError("testing"),
             NotFound("testing"),
             True,
         ]
 
-        _retry(functools.partial(test_api.test_fxn))
+        _retry(functools.partial(test_api.some_function))
 
-        self.assertEqual(test_api.test_fxn.call_count, 3)
+        self.assertEqual(test_api.some_function.call_count, 3)
 
     def test_retry_allowed_exceptions(self):
         from google.api_core.exceptions import InternalServerError, NotFound
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
-        test_api.test_fxn.side_effect = [
+        test_api = mock.create_autospec(SomeClass)
+        test_api.some_function.side_effect = [
             NotFound("testing"),
             InternalServerError("testing"),
             True,
@@ -707,46 +709,46 @@ class Test_retry(unittest.TestCase):
 
         with self.assertRaises(InternalServerError):
             _retry(
-                functools.partial(test_api.test_fxn),
+                functools.partial(test_api.some_function),
                 allowed_exceptions={NotFound: None},
             )
 
-        self.assertEqual(test_api.test_fxn.call_count, 2)
+        self.assertEqual(test_api.some_function.call_count, 2)
 
     def test_retry_count(self):
         from google.api_core.exceptions import InternalServerError
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
-        test_api.test_fxn.side_effect = [
+        test_api = mock.create_autospec(SomeClass)
+        test_api.some_function.side_effect = [
             InternalServerError("testing"),
             InternalServerError("testing"),
         ]
 
         with self.assertRaises(InternalServerError):
-            _retry(functools.partial(test_api.test_fxn), retry_count=1)
+            _retry(functools.partial(test_api.some_function), retry_count=1)
 
-        self.assertEqual(test_api.test_fxn.call_count, 2)
+        self.assertEqual(test_api.some_function.call_count, 2)
 
     def test_check_rst_stream_error(self):
         from google.api_core.exceptions import InternalServerError
         from google.cloud.spanner_v1._helpers import _retry, _check_rst_stream_error
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
-        test_api.test_fxn.side_effect = [
+        test_api = mock.create_autospec(SomeClass)
+        test_api.some_function.side_effect = [
             InternalServerError("Received unexpected EOS on DATA frame from server"),
             InternalServerError("RST_STREAM"),
             True,
         ]
 
         _retry(
-            functools.partial(test_api.test_fxn),
+            functools.partial(test_api.some_function),
             allowed_exceptions={InternalServerError: _check_rst_stream_error},
         )
 
-        self.assertEqual(test_api.test_fxn.call_count, 3)
+        self.assertEqual(test_api.some_function.call_count, 3)
 
 
 class Test_metadata_with_leader_aware_routing(unittest.TestCase):

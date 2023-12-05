@@ -351,9 +351,8 @@ class TestTransaction(OpenTelemetryBase):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
-        from google.cloud._helpers import UTC
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         keys = [[0], [1], [2]]
         keyset = KeySet(keys=keys)
         response = CommitResponse(commit_timestamp=now)
@@ -834,10 +833,9 @@ class TestTransaction(OpenTelemetryBase):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import Transaction as TransactionPB
-        from google.cloud._helpers import UTC
 
         transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         response = CommitResponse(commit_timestamp=now)
         database = _Database()
         api = database.spanner_api = _FauxSpannerAPI(

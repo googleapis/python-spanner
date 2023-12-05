@@ -16,7 +16,6 @@ import datetime
 import math
 
 from google.api_core import datetime_helpers
-from google.cloud._helpers import UTC
 from google.cloud import spanner_v1
 
 
@@ -45,7 +44,7 @@ COUNTERS_COLUMNS = ("name", "value")
 def _assert_timestamp(value, nano_value):
     assert isinstance(value, datetime.datetime)
     assert value.tzinfo is None
-    assert nano_value.tzinfo is UTC
+    assert nano_value.tzinfo is  datetime.timezone.utc
 
     assert value.year == nano_value.year
     assert value.month == nano_value.month

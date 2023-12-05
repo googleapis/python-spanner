@@ -70,9 +70,8 @@ class _BaseTest(unittest.TestCase):
     @staticmethod
     def _make_timestamp():
         import datetime
-        from google.cloud._helpers import UTC
 
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        return datetime.datetime.now(datetime.timezone.utc)
 
     @staticmethod
     def _make_duration(seconds=1, microseconds=0):
@@ -1200,10 +1199,9 @@ class TestDatabase(_BaseTest):
 
     def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
-        from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.database import SnapshotCheckout
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
@@ -1695,11 +1693,10 @@ class TestBatchCheckout(_BaseTest):
         from google.cloud.spanner_v1 import CommitRequest
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database(self.DATABASE_NAME)
@@ -1742,11 +1739,10 @@ class TestBatchCheckout(_BaseTest):
         from google.cloud.spanner_v1 import CommitRequest
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -1882,10 +1878,9 @@ class TestSnapshotCheckout(_BaseTest):
 
     def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
-        from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.snapshot import Snapshot
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
         pool = database._pool = _Pool()
@@ -2728,12 +2723,11 @@ class TestMutationGroupsCheckout(_BaseTest):
         from google.cloud.spanner_v1 import BatchWriteRequest
         from google.cloud.spanner_v1 import BatchWriteResponse
         from google.cloud.spanner_v1 import Mutation
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.batch import MutationGroups
         from google.rpc.status_pb2 import Status
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         status_pb = Status(code=200)
         response = BatchWriteResponse(
