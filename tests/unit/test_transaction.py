@@ -346,7 +346,11 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def _commit_helper(
-      self, mutate=True, return_commit_stats=False, request_options=None, max_commit_delay_ms=None
+        self,
+        mutate=True,
+        return_commit_stats=False,
+        request_options=None,
+        max_commit_delay_ms=None,
     ):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
@@ -372,13 +376,20 @@ class TestTransaction(OpenTelemetryBase):
         transaction.commit(
             return_commit_stats=return_commit_stats,
             request_options=request_options,
-            max_commit_delay_ms=max_commit_delay_ms
+            max_commit_delay_ms=max_commit_delay_ms,
         )
 
         self.assertEqual(transaction.committed, now)
         self.assertIsNone(session._transaction)
 
-        session_id, mutations, txn_id, actual_request_options, max_commit_delay, metadata = api._committed
+        (
+            session_id,
+            mutations,
+            txn_id,
+            actual_request_options,
+            max_commit_delay,
+            metadata,
+        ) = api._committed
 
         if request_options is None:
             expected_request_options = RequestOptions(
@@ -950,7 +961,7 @@ class _FauxSpannerAPI(object):
             request.transaction_id,
             request.request_options,
             request.max_commit_delay,
-#            None,
+            #            None,
             metadata,
         )
         return self._commit_response

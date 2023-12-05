@@ -147,7 +147,9 @@ class Batch(_BatchBase):
         if self.committed is not None:
             raise ValueError("Batch already committed")
 
-    def commit(self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None):
+    def commit(
+        self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None
+    ):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool

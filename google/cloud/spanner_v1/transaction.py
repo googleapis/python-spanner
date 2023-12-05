@@ -181,7 +181,9 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None):
+    def commit(
+        self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None
+    ):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
