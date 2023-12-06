@@ -126,6 +126,51 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
+    @pytest.mark.parametrize("client_side", [True, False])
+    def test_commit_exception(self, client_side):
+        """Test that if exception during commit method is caught, then
+        subsequent operations on same Cursor and Connection object works
+        properly."""
+        self._execute_common_statements(self._cursor)
+        # deleting the session to fail the commit
+        self._conn._session.delete()
+        try:
+            if client_side:
+                self._cursor.execute("""COMMIT""")
+            else:
+                self._conn.commit()
+        except Exception:
+            pass
+
+        # Testing that the connection and Cursor are in proper state post commit
+        updated_row = self._execute_common_statements(self._cursor)
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+
+        assert got_rows == [updated_row]
+
+    def test_rollback_exception(self, client_side):
+        """Test that if exception during rollback method is caught, then
+        subsequent operations on same Cursor and Connection object works
+        properly."""
+        self._execute_common_statements(self._cursor)
+        # deleting the session to fail the rollback
+        self._conn._session.delete()
+        try:
+            self._conn.rollback()
+        except Exception:
+            pass
+
+        # Testing that the connection and Cursor are in proper state post
+        # exception in rollback
+        updated_row = self._execute_common_statements(self._cursor)
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        self._conn.commit()
+
+        assert got_rows == [updated_row]
+
     def test_cursor_execute_exception(self):
         """Test that if exception in Cursor's execute method is caught when
         Connection is not in autocommit mode, then subsequent operations on
