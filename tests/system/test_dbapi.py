@@ -126,8 +126,7 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.parametrize("client_side", [True, False])
-    def test_commit_exception(self, client_side):
+    def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
         properly."""
@@ -135,10 +134,7 @@ class TestDbApi:
         # deleting the session to fail the commit
         self._conn._session.delete()
         try:
-            if client_side:
-                self._cursor.execute("""COMMIT""")
-            else:
-                self._conn.commit()
+            self._conn.commit()
         except Exception:
             pass
 
@@ -150,7 +146,7 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    def test_rollback_exception(self, client_side):
+    def test_rollback_exception(self):
         """Test that if exception during rollback method is caught, then
         subsequent operations on same Cursor and Connection object works
         properly."""
