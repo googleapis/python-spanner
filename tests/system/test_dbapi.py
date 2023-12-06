@@ -126,6 +126,8 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
+
+    @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30")
     def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -146,6 +148,7 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
+    @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30")
     def test_rollback_exception(self):
         """Test that if exception during rollback method is caught, then
         subsequent operations on same Cursor and Connection object works
