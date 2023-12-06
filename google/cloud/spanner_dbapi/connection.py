@@ -147,6 +147,18 @@ class Connection:
         return self._database
 
     @property
+    def ddl_statements(self):
+        return self._ddl_statements
+
+    @property
+    def statements(self):
+        return self._statements
+
+    @property
+    def client_transaction_started(self):
+        return self._client_transaction_started
+
+    @property
     @deprecated(
         reason="This method is deprecated. Use spanner_transaction_started method"
     )

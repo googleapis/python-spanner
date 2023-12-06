@@ -126,8 +126,10 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-
-    @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30")
+    @pytest.mark.skipif(
+        _helpers.USE_EMULATOR,
+        reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30",
+    )
     def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -141,6 +143,7 @@ class TestDbApi:
             pass
 
         # Testing that the connection and Cursor are in proper state post commit
+        # and a new transaction is started
         updated_row = self._execute_common_statements(self._cursor)
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
@@ -148,7 +151,10 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30")
+    @pytest.mark.skipif(
+        _helpers.USE_EMULATOR,
+        reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30",
+    )
     def test_rollback_exception(self):
         """Test that if exception during rollback method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -162,7 +168,7 @@ class TestDbApi:
             pass
 
         # Testing that the connection and Cursor are in proper state post
-        # exception in rollback
+        # exception in rollback and a new transaction is started
         updated_row = self._execute_common_statements(self._cursor)
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
@@ -185,6 +191,7 @@ class TestDbApi:
         assert got_rows == [updated_row]
 
         # Testing that the connection and Cursor are in proper state post commit
+        # and a new transaction is started
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
         self._conn.commit()
