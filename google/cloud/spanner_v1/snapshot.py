@@ -226,10 +226,10 @@ class _SnapshotBase(_SessionWrapper):
                 ``partition_token``, the API will return an
                 ``INVALID_ARGUMENT`` error.
 
-        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
-        :param directed_read_options: (Optional) Client options used to set the directed_read_options
-            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
             or regions should be used for non-transactional reads or queries.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
@@ -239,9 +239,7 @@ class _SnapshotBase(_SessionWrapper):
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
 
-        :raises InvalidArguement: if directed_read_options is incorrect.
-
-        :raises BadRequest: if directed_read_options are set for READ-WRITE Transaction or PDML.
+        :raises InvalidArgument: if directed_read_options is set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:
@@ -398,19 +396,17 @@ class _SnapshotBase(_SessionWrapper):
                 ``partition_token``, the API will return an
                 ``INVALID_ARGUMENT`` error.
 
-        :type directed_read_options: :class:`~googlecloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
             or :class:`dict`
-        :param directed_read_options: (Optional) Client options used to set the directed_read_options
-            for all ReadRequests and ExecuteSqlRequests for the Client which indicate which replicas
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
             or regions should be used for non-transactional reads or queries.
 
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
 
-        :raises InvalidArguement: if directed_read_options is incorrect.
-
-        :raises BadRequest: if directed_read_options are set for READ-WRITE Transaction or PDML.
+        :raises InvalidArgument: if directed_read_options is set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:

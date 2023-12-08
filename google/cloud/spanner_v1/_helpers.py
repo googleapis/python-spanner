@@ -28,8 +28,6 @@ from google.cloud._helpers import _datetime_to_rfc3339
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
-from google.cloud.spanner_v1 import DirectedReadOptions
-from google.api_core.exceptions import InvalidArgument
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
