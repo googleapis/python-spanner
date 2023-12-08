@@ -28,7 +28,6 @@ from google.cloud.spanner_v1 import PartitionReadRequest
 from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 from google.api_core.exceptions import InvalidArgument
-from google.api_core.exceptions import BadRequest
 from google.api_core import gapic_v1
 from google.cloud.spanner_v1._helpers import (
     _make_value_pb,

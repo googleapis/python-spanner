@@ -2604,6 +2604,25 @@ def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_data
     sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
 
 
+def test_readwrite_transaction_w_directed_read_options_w_error(
+    sessions_database, not_emulator, not_postgres
+):
+    sd = _sample_data
+
+    def _transaction_read(transaction):
+        list(
+            transaction.read(
+                sd.TABLE,
+                sd.COLUMNS,
+                sd.ALL,
+                directed_read_options=DIRECTED_READ_OPTIONS,
+            )
+        )
+
+    with pytest.raises(exceptions.InvalidArgument):
+        sessions_database.run_in_transaction(_transaction_read)
+
+
 class FauxCall:
     def __init__(self, code, details="FauxCall"):
         self._code = code
