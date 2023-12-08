@@ -1364,11 +1364,6 @@ class BatchSnapshot(object):
             (Optional) desired size for each partition generated.  The service
             uses this as a hint, the actual partition size may differ.
 
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
         :type max_partitions: int
         :param max_partitions:
             (Optional) desired maximum number of partitions generated. The
