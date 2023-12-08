@@ -36,10 +36,7 @@ from google.rpc.code_pb2 import ABORTED
 
 
 CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not been started at " "client."
-)
-SPANNER_TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not been started at " "spanner."
+    "This method is non-operational as transaction has not been started."
 )
 MAX_INTERNAL_RETRIES = 50
 
@@ -160,7 +157,7 @@ class Connection:
 
     @property
     @deprecated(
-        reason="This method is deprecated. Use spanner_transaction_started method"
+        reason="This method is deprecated. Use _spanner_transaction_started field"
     )
     def inside_transaction(self):
         return (
@@ -371,6 +368,7 @@ class Connection:
         if not self.read_only and self._client_transaction_started:
             if not self._spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
+                self._snapshot = None
                 self._spanner_transaction_started = True
                 self._transaction.begin()
 
@@ -390,6 +388,7 @@ class Connection:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
                 )
+                self._transaction = None
                 self._snapshot.begin()
                 self._spanner_transaction_started = True
 
@@ -440,15 +439,10 @@ class Connection:
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
             return
-        if not self._spanner_transaction_started:
-            warnings.warn(
-                SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
-            )
-            return
 
         self.run_prior_DDL_statements()
         try:
-            if not self._read_only:
+            if self._spanner_transaction_started and not self._read_only:
                 self._transaction.commit()
         except Aborted:
             self.retry_transaction()
@@ -469,14 +463,9 @@ class Connection:
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
             return
-        if not self._spanner_transaction_started:
-            warnings.warn(
-                SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
-            )
-            return
 
         try:
-            if not self._read_only:
+            if self._spanner_transaction_started and not self._read_only:
                 self._transaction.rollback()
         finally:
             self._release_session()

@@ -181,6 +181,7 @@ class Cursor(object):
     def _do_execute_update_in_autocommit(self, transaction, sql, params):
         """This function should only be used in autocommit mode."""
         self.connection._transaction = transaction
+        self.connection._snapshot = None
         self._result_set = transaction.execute_sql(
             sql, params=params, param_types=get_param_types(params)
         )
@@ -298,6 +299,9 @@ class Cursor(object):
                     break
                 except Aborted:
                     self.connection.retry_transaction()
+                except Exception as ex:
+                    self.connection.statements.remove(statement)
+                    raise ex
         else:
             self.connection.database.run_in_transaction(
                 self._do_execute_update_in_autocommit,
@@ -503,6 +507,7 @@ class Cursor(object):
                 **self.connection.staleness
             ) as snapshot:
                 self.connection._snapshot = snapshot
+                self.connection._transaction = None
                 self._handle_DQL_with_snapshot(snapshot, sql, params)
 
     def __enter__(self):

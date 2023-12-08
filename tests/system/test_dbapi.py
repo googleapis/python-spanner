@@ -160,16 +160,19 @@ class TestDbApi:
         subsequent operations on same Cursor and Connection object works
         properly."""
         self._execute_common_statements(self._cursor)
+        print("trxn id is : " + str(self._conn._transaction._transaction_id))
         # deleting the session to fail the rollback
         self._conn._session.delete()
         try:
             self._conn.rollback()
-        except Exception:
-            pass
+        except Exception as ex:
+            print(ex)
 
         # Testing that the connection and Cursor are in proper state post
         # exception in rollback and a new transaction is started
         updated_row = self._execute_common_statements(self._cursor)
+        print(self._conn._session.name)
+        print("trxn id is : " + str(self._conn._transaction._transaction_id))
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
         self._conn.commit()
@@ -261,6 +264,53 @@ class TestDbApi:
         conn3.close()
         assert got_rows == [updated_row]
 
+    def test_begin_and_commit(self):
+        """Test beginning and then committing a transaction is a Noop"""
+        self._cursor.execute("begin transaction")
+        self._cursor.execute("commit transaction")
+        self._cursor.execute("SELECT * FROM contacts")
+        self._conn.commit()
+        assert self._cursor.fetchall() == []
+
+    def test_begin_and_rollback(self):
+        """Test beginning and then rolling back a transaction is a Noop"""
+        self._cursor.execute("begin transaction")
+        self._cursor.execute("rollback transaction")
+        self._cursor.execute("SELECT * FROM contacts")
+        self._conn.commit()
+        assert self._cursor.fetchall() == []
+
+    def test_read_and_commit_timestamps(self):
+        """Test COMMIT_TIMESTAMP is not available after read statement and
+        READ_TIMESTAMP is not available after write statement in autocommit
+        mode. """
+        self._conn.autocommit = True
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute(
+            """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+
+        self._cursor.execute("SHOW VARIABLE COMMIT_TIMESTAMP")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 1
+
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 0
+
+        self._cursor.execute("SELECT * FROM contacts")
+
+        self._cursor.execute("SHOW VARIABLE COMMIT_TIMESTAMP")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 0
+
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 1
+
     def test_commit_timestamp_client_side_transaction(self):
         """Test executing SHOW_COMMIT_TIMESTAMP client side statement in a
         transaction."""
@@ -346,6 +396,12 @@ class TestDbApi:
         assert len(read_timestamp_query_result_1[0]) == 1
         assert isinstance(read_timestamp_query_result_1[0][0], DatetimeWithNanoseconds)
 
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_4 = self._cursor.fetchall()
+        self._conn.commit()
+        assert read_timestamp_query_result_1 != read_timestamp_query_result_4
+
     def test_read_timestamp_client_side_autocommit(self):
         """Test executing SHOW_READ_TIMESTAMP client side statement in a
         transaction when connection is in autocommit mode."""
@@ -364,13 +420,18 @@ class TestDbApi:
             (2, "first-name", "last-name", "test.email@domen.ru")
         ]
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_1 = self._cursor.fetchall()
 
-        got_rows = self._cursor.fetchall()
-        assert len(got_rows) == 1
-        assert len(got_rows[0]) == 1
+        assert len(read_timestamp_query_result_1) == 1
+        assert len(read_timestamp_query_result_1[0]) == 1
         assert len(self._cursor.description) == 1
         assert self._cursor.description[0].name == "SHOW_READ_TIMESTAMP"
-        assert isinstance(got_rows[0][0], DatetimeWithNanoseconds)
+        assert isinstance(read_timestamp_query_result_1[0][0], DatetimeWithNanoseconds)
+
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
+        read_timestamp_query_result_2 = self._cursor.fetchall()
+        assert read_timestamp_query_result_1 != read_timestamp_query_result_2
 
     def test_begin_success_post_commit(self):
         """Test beginning a new transaction post commiting an existing transaction
@@ -865,8 +926,8 @@ class TestDbApi:
 
         self._conn.read_only = True
         self._cursor.execute("SELECT * FROM contacts")
-        self._conn.commit()
         assert self._cursor.fetchall() == []
+        self._conn.commit()
 
     def test_read_only_dml(self):
         """

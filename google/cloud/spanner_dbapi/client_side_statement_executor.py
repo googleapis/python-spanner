@@ -33,6 +33,9 @@ from google.cloud.spanner_v1._helpers import _make_value_pb
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 
 CONNECTION_CLOSED_ERROR = "This connection is closed"
+TRANSACTION_NOT_STARTED_WARNING = (
+    "This method is non-operational as transaction has not been started."
+)
 
 
 def execute(connection: "Connection", parsed_statement: ParsedStatement):
@@ -59,16 +62,24 @@ def execute(connection: "Connection", parsed_statement: ParsedStatement):
         connection.rollback()
         return None
     if statement_type == ClientSideStatementType.SHOW_COMMIT_TIMESTAMP:
+        if connection._transaction is None:
+            committed_timestamp = None
+        else:
+            committed_timestamp = connection._transaction.committed
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_COMMIT_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
-            connection._transaction.committed,
+            committed_timestamp,
         )
     if statement_type == ClientSideStatementType.SHOW_READ_TIMESTAMP:
+        if connection._snapshot is None:
+            read_timestamp = None
+        else:
+            read_timestamp = connection._snapshot._transaction_read_timestamp
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_READ_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
-            connection._snapshot._transaction_read_timestamp,
+            read_timestamp,
         )
 
 

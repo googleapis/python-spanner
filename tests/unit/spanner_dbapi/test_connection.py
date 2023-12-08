@@ -21,10 +21,7 @@ import warnings
 import pytest
 from google.cloud.spanner_dbapi.exceptions import InterfaceError, OperationalError
 from google.cloud.spanner_dbapi import Connection
-from google.cloud.spanner_dbapi.connection import (
-    CLIENT_TRANSACTION_NOT_STARTED_WARNING,
-    SPANNER_TRANSACTION_NOT_STARTED_WARNING,
-)
+from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -265,10 +262,7 @@ class TestConnection(unittest.TestCase):
         ) as mock_release:
             self._under_test.commit()
 
-        mock_warn.assert_called_once_with(
-            SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
-        )
-        mock_release.assert_not_called()
+        mock_release.assert_called()
 
     def test_commit(self):
         self._under_test._transaction = mock_transaction = mock.MagicMock()
@@ -310,10 +304,7 @@ class TestConnection(unittest.TestCase):
         ) as mock_release:
             self._under_test.rollback()
 
-        mock_warn.assert_called_once_with(
-            SPANNER_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
-        )
-        mock_release.assert_not_called()
+        mock_release.assert_called()
 
     @mock.patch.object(warnings, "warn")
     def test_rollback(self, mock_warn):
