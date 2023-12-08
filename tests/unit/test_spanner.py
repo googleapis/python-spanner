@@ -630,7 +630,7 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
-    def test_transaction_w_directed_read_options(self):
+    def test_transaction_execute_sql_w_directed_read_options(self):
         database = _Database()
         session = _Session(database)
         api = database.spanner_api = self._make_spanner_api()
@@ -652,6 +652,12 @@ class TestTransaction(OpenTelemetryBase):
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
         )
+
+    def test_transaction_streaming_read_w_directed_read_options(self):
+        database = _Database()
+        session = _Session(database)
+        api = database.spanner_api = self._make_spanner_api()
+        transaction = self._make_one(session)
 
         self._read_helper(
             transaction=transaction,
