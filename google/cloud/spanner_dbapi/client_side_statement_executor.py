@@ -34,7 +34,7 @@ from google.cloud.spanner_v1.streamed import StreamedResultSet
 
 CONNECTION_CLOSED_ERROR = "This connection is closed"
 TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not been started."
+    "This method is non-operational as a transaction has not been started."
 )
 
 

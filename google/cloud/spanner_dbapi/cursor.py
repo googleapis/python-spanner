@@ -223,7 +223,7 @@ class Cursor(object):
                 statements.append(ddl)
 
         # Only queue DDL statements if they are all correctly classified.
-        self.connection.ddl_statements.extend(statements)
+        self.connection._ddl_statements.extend(statements)
 
     @check_not_closed
     def execute(self, sql, args=None):
@@ -251,13 +251,13 @@ class Cursor(object):
                 if self._result_set is not None:
                     self._itr = PeekIterator(self._result_set)
             elif self.connection.read_only or (
-                not self.connection.client_transaction_started
+                not self.connection._client_transaction_started
                 and parsed_statement.statement_type == StatementType.QUERY
             ):
                 self._handle_DQL(sql, args or None)
             elif parsed_statement.statement_type == StatementType.DDL:
                 self._batch_DDLs(sql)
-                if not self.connection.client_transaction_started:
+                if not self.connection._client_transaction_started:
                     self.connection.run_prior_DDL_statements()
             else:
                 self._execute_in_rw_transaction(parsed_statement, sql, args)
@@ -269,7 +269,7 @@ class Cursor(object):
         except InternalServerError as e:
             raise OperationalError(getattr(e, "details", e)) from e
         finally:
-            if self.connection.client_transaction_started is False:
+            if self.connection._client_transaction_started is False:
                 self.connection._spanner_transaction_started = False
 
     def _execute_in_rw_transaction(self, parsed_statement, sql, args):
@@ -280,7 +280,7 @@ class Cursor(object):
             sql = parse_utils.ensure_where_clause(sql)
         sql, args = sql_pyformat_args_to_spanner(sql, args or None)
 
-        if self.connection.client_transaction_started:
+        if self.connection._client_transaction_started:
             statement = Statement(
                 sql,
                 args,
@@ -300,7 +300,7 @@ class Cursor(object):
                 except Aborted:
                     self.connection.retry_transaction()
                 except Exception as ex:
-                    self.connection.statements.remove(statement)
+                    self.connection._statements.remove(statement)
                     raise ex
         else:
             self.connection.database.run_in_transaction(
@@ -358,7 +358,7 @@ class Cursor(object):
                 )
                 statements.append((sql, params, get_param_types(params)))
 
-            if not self.connection.client_transaction_started:
+            if not self.connection._client_transaction_started:
                 self.connection.database.run_in_transaction(
                     self._do_batch_update, statements, many_result_set
                 )
@@ -371,7 +371,7 @@ class Cursor(object):
 
                         res_checksum = ResultsChecksum()
                         if not retried:
-                            self.connection.statements.append(
+                            self.connection._statements.append(
                                 (statements, res_checksum)
                             )
 
@@ -407,7 +407,7 @@ class Cursor(object):
         try:
             res = next(self)
             if (
-                self.connection.client_transaction_started
+                self.connection._client_transaction_started
                 and not self.connection.read_only
             ):
                 self._checksum.consume_result(res)
@@ -428,7 +428,7 @@ class Cursor(object):
         try:
             for row in self:
                 if (
-                    self.connection.client_transaction_started
+                    self.connection._client_transaction_started
                     and not self.connection.read_only
                 ):
                     self._checksum.consume_result(row)
@@ -460,7 +460,7 @@ class Cursor(object):
             try:
                 res = next(self)
                 if (
-                    self.connection.client_transaction_started
+                    self.connection._client_transaction_started
                     and not self.connection.read_only
                 ):
                     self._checksum.consume_result(res)
@@ -496,7 +496,7 @@ class Cursor(object):
         if self.connection.database is None:
             raise ValueError("Database needs to be passed for this operation")
         sql, params = parse_utils.sql_pyformat_args_to_spanner(sql, params)
-        if self.connection.read_only and self.connection.client_transaction_started:
+        if self.connection.read_only and self.connection._client_transaction_started:
             # initiate or use the existing multi-use snapshot
             self._handle_DQL_with_snapshot(
                 self.connection.snapshot_checkout(), sql, params

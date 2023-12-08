@@ -36,7 +36,7 @@ from google.rpc.code_pb2 import ABORTED
 
 
 CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not been started."
+    "This method is non-operational as a transaction has not been started."
 )
 MAX_INTERNAL_RETRIES = 50
 
@@ -142,18 +142,6 @@ class Connection:
         :returns: The related database object.
         """
         return self._database
-
-    @property
-    def ddl_statements(self):
-        return self._ddl_statements
-
-    @property
-    def statements(self):
-        return self._statements
-
-    @property
-    def client_transaction_started(self):
-        return self._client_transaction_started
 
     @property
     @deprecated(

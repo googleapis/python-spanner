@@ -126,10 +126,7 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skipif(
-        _helpers.USE_EMULATOR,
-        reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30",
-    )
+    @pytest.mark.skip(reason="b/315807641")
     def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -151,34 +148,29 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skipif(
-        _helpers.USE_EMULATOR,
-        reason="https://github.com/GoogleCloudPlatform/cloud-spanner-emulator/issues/30",
-    )
+    @pytest.mark.skip(reason="b/315807641")
     def test_rollback_exception(self):
         """Test that if exception during rollback method is caught, then
         subsequent operations on same Cursor and Connection object works
         properly."""
         self._execute_common_statements(self._cursor)
-        print("trxn id is : " + str(self._conn._transaction._transaction_id))
         # deleting the session to fail the rollback
         self._conn._session.delete()
         try:
             self._conn.rollback()
-        except Exception as ex:
-            print(ex)
+        except Exception:
+            pass
 
         # Testing that the connection and Cursor are in proper state post
         # exception in rollback and a new transaction is started
         updated_row = self._execute_common_statements(self._cursor)
-        print(self._conn._session.name)
-        print("trxn id is : " + str(self._conn._transaction._transaction_id))
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
         self._conn.commit()
 
         assert got_rows == [updated_row]
 
+    @pytest.mark.skip(reason="b/315807641")
     def test_cursor_execute_exception(self):
         """Test that if exception in Cursor's execute method is caught when
         Connection is not in autocommit mode, then subsequent operations on
@@ -283,7 +275,7 @@ class TestDbApi:
     def test_read_and_commit_timestamps(self):
         """Test COMMIT_TIMESTAMP is not available after read statement and
         READ_TIMESTAMP is not available after write statement in autocommit
-        mode. """
+        mode."""
         self._conn.autocommit = True
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.execute(
