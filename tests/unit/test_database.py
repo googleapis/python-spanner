@@ -2214,6 +2214,7 @@ class TestBatchSnapshot(_BaseTest):
             "keyset": {"all": True},
             "index": "",
             "data_boost_enabled": False,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2256,6 +2257,7 @@ class TestBatchSnapshot(_BaseTest):
             "keyset": {"all": True},
             "index": "",
             "data_boost_enabled": False,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2297,6 +2299,7 @@ class TestBatchSnapshot(_BaseTest):
             "keyset": {"all": True},
             "index": self.INDEX,
             "data_boost_enabled": False,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2338,6 +2341,7 @@ class TestBatchSnapshot(_BaseTest):
             "keyset": {"all": True},
             "index": self.INDEX,
             "data_boost_enabled": True,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2435,6 +2439,7 @@ class TestBatchSnapshot(_BaseTest):
             "sql": sql,
             "data_boost_enabled": False,
             "query_options": client._query_options,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2477,6 +2482,7 @@ class TestBatchSnapshot(_BaseTest):
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2524,6 +2530,7 @@ class TestBatchSnapshot(_BaseTest):
             "params": params,
             "param_types": param_types,
             "query_options": client._query_options,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
@@ -2555,6 +2562,7 @@ class TestBatchSnapshot(_BaseTest):
             "sql": sql,
             "data_boost_enabled": True,
             "query_options": client._query_options,
+            "directed_read_options": None,
         }
         self.assertEqual(len(batches), len(self.TOKENS))
         for batch, token in zip(batches, self.TOKENS):
