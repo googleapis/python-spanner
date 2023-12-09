@@ -28,7 +28,6 @@ from google.api_core import exceptions
 from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud._helpers import UTC
-from google.cloud.spanner_v1 import TransactionTypes
 from google.cloud.spanner_v1.data_types import JsonObject
 from tests import _helpers as ot_helpers
 from . import _helpers
@@ -58,17 +57,6 @@ JSON_1 = JsonObject(
 JSON_2 = JsonObject(
     {"sample_object": {"name": "Anamika", "id": 2635}},
 )
-DIRECTED_READ_OPTIONS = {
-    "include_replicas": {
-        "replica_selections": [
-            {
-                "location": "us-west1",
-                "type_": TransactionTypes.READ_ONLY,
-            },
-        ],
-        "auto_failover_disabled": True,
-    },
-}
 
 COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
@@ -511,29 +499,6 @@ def test_batch_insert_w_commit_timestamp(sessions_database, not_postgres):
     assert r_name == name
     assert r_email == email
     assert not deleted
-
-
-def test_snapshot_read_w_directed_read_options(sessions_database, not_postgres):
-    table = "users_history"
-    columns = ["id", "commit_ts", "name", "email", "deleted"]
-    user_id = 1234
-    name = "phred"
-    email = "phred@example.com"
-    row_data = [[user_id, spanner_v1.COMMIT_TIMESTAMP, name, email, False]]
-    sd = _sample_data
-
-    with sessions_database.batch() as batch:
-        batch.delete(table, sd.ALL)
-        batch.insert(table, columns, row_data)
-
-    with sessions_database.snapshot() as snapshot:
-        rows = list(
-            snapshot.read(
-                table, columns, sd.ALL, directed_read_options=DIRECTED_READ_OPTIONS
-            )
-        )
-
-    assert len(rows) == 1
 
 
 @_helpers.retry_mabye_aborted_txn
@@ -1948,19 +1913,6 @@ def test_execute_sql_w_manual_consume(sessions_database):
     assert streamed._pending_chunk is None
 
 
-def test_execute_sql_w_directed_read_options(sessions_database, not_postgres):
-    sd = _sample_data
-    row_count = 3000
-    committed = _set_up_table(sessions_database, row_count)
-
-    with sessions_database.snapshot() as snapshot:
-        streamed = snapshot.execute_sql(
-            sd.SQL, directed_read_options=DIRECTED_READ_OPTIONS
-        )
-
-    assert len(list(streamed)) == 3000
-
-
 def test_execute_sql_w_to_dict_list(sessions_database):
     sd = _sample_data
     row_count = 40
@@ -2602,25 +2554,6 @@ def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_data
         rows = list(snapshot.execute_sql(sd.SQL))
 
     sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
-
-
-def test_readwrite_transaction_w_directed_read_options_w_error(
-    sessions_database, not_emulator, not_postgres
-):
-    sd = _sample_data
-
-    def _transaction_read(transaction):
-        list(
-            transaction.read(
-                sd.TABLE,
-                sd.COLUMNS,
-                sd.ALL,
-                directed_read_options=DIRECTED_READ_OPTIONS,
-            )
-        )
-
-    with pytest.raises(exceptions.InvalidArgument):
-        sessions_database.run_in_transaction(_transaction_read)
 
 
 class FauxCall:

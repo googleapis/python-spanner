@@ -173,10 +173,10 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         request_options=None,
         data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
-        directed_read_options=None,
     ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
