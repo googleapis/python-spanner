@@ -666,7 +666,6 @@ class TestInstance(unittest.TestCase):
 
     def test_backup_factory_explicit(self):
         import datetime
-        from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.backup import Backup
         from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
 
@@ -674,7 +673,7 @@ class TestInstance(unittest.TestCase):
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
         BACKUP_ID = "backup-id"
         DATABASE_NAME = "database-name"
-        timestamp = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        timestamp = datetime.datetime.now(datetime.timezone.utc)
         encryption_config = CreateBackupEncryptionConfig(
             encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
             kms_key_name="kms_key_name",

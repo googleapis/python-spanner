@@ -33,7 +33,7 @@ def create_backup(instance_id, database_id, backup_id, version_time):
     database = instance.database(database_id)
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(datetime.utc) + timedelta(days=14)
     backup = instance.backup(
         backup_id, database=database, expire_time=expire_time, version_time=version_time
     )
@@ -69,7 +69,7 @@ def create_backup_with_encryption_key(
     database = instance.database(database_id)
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(datetime.utc) + timedelta(days=14)
     encryption_config = {
         "encryption_type": CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
         "kms_key_name": kms_key_name,
@@ -178,7 +178,7 @@ def cancel_backup(instance_id, database_id, backup_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    expire_time = datetime.utcnow() + timedelta(days=30)
+    expire_time = datetime.now(datetime.utc) + timedelta(days=30)
 
     # Create a backup.
     backup = instance.backup(backup_id, database=database, expire_time=expire_time)
@@ -426,7 +426,7 @@ def copy_backup(instance_id, backup_id, source_backup_path):
     instance = spanner_client.instance(instance_id)
 
     # Create a backup object and wait for copy backup operation to complete.
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(datetime.utc) + timedelta(days=14)
     copy_backup = instance.copy_backup(
         backup_id=backup_id, source_backup=source_backup_path, expire_time=expire_time
     )

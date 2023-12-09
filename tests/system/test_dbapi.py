@@ -19,7 +19,6 @@ import pytest
 import time
 
 from google.cloud import spanner_v1
-from google.cloud._helpers import UTC
 
 from google.cloud.spanner_dbapi.connection import Connection, connect
 from google.cloud.spanner_dbapi.exceptions import ProgrammingError, OperationalError
@@ -659,7 +658,7 @@ class TestDbApi:
     def test_staleness(self):
         """Check the DB API `staleness` option."""
 
-        before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        before_insert = datetime.datetime.now(datetime.timezone.utc)
         time.sleep(0.25)
 
         self._cursor.execute(

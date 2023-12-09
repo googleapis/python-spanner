@@ -26,7 +26,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from warnings import warn
 
-_NOW = datetime.datetime.utcnow  # unit tests may replace
+_NOW = datetime.datetime.now(datetime.timezone.utc)  # unit tests may replace
 
 
 class AbstractSessionPool(object):
@@ -449,7 +449,7 @@ class PingingPool(AbstractSessionPool):
 
         ping_after, session = self._sessions.get(block=True, timeout=timeout)
 
-        if _NOW() > ping_after:
+        if _NOW > ping_after:
             # Using session.exists() guarantees the returned session exists.
             # session.ping() uses a cached result in the backend which could
             # result in a recently deleted session being returned.
@@ -469,7 +469,7 @@ class PingingPool(AbstractSessionPool):
 
         :raises: :exc:`queue.Full` if the queue is full.
         """
-        self._sessions.put_nowait((_NOW() + self._delta, session))
+        self._sessions.put_nowait((_NOW + self._delta, session))
 
     def clear(self):
         """Delete all sessions in the pool."""
@@ -492,7 +492,7 @@ class PingingPool(AbstractSessionPool):
                 ping_after, session = self._sessions.get(block=False)
             except queue.Empty:  # all sessions in use
                 break
-            if ping_after > _NOW():  # oldest session is fresh
+            if ping_after > _NOW:  # oldest session is fresh
                 # Re-add to queue with existing expiration
                 self._sessions.put((ping_after, session))
                 break

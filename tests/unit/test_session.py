@@ -885,7 +885,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -897,7 +896,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1012,7 +1011,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -1024,7 +1022,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         aborted = _make_rpc_error(Aborted, trailing_metadata=[])
         response = CommitResponse(commit_timestamp=now_pb)
@@ -1098,7 +1096,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -1119,7 +1116,7 @@ class TestSession(OpenTelemetryBase):
         ]
         aborted = _make_rpc_error(Aborted, trailing_metadata=trailing_metadata)
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1197,7 +1194,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -1211,7 +1207,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1287,7 +1283,6 @@ class TestSession(OpenTelemetryBase):
             TransactionOptions,
         )
         from google.cloud.spanner_v1.transaction import Transaction
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
 
         TABLE_NAME = "citizens"
@@ -1300,7 +1295,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1476,7 +1471,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -1488,7 +1482,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -1621,7 +1615,6 @@ class TestSession(OpenTelemetryBase):
             Transaction as TransactionPB,
             TransactionOptions,
         )
-        from google.cloud._helpers import UTC
         from google.cloud._helpers import _datetime_to_pb_timestamp
         from google.cloud.spanner_v1.transaction import Transaction
 
@@ -1633,7 +1626,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(datetime.timezone.utc)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)

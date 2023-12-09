@@ -27,7 +27,6 @@ from google.api_core import datetime_helpers
 from google.api_core import exceptions
 from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
-from google.cloud._helpers import UTC
 from google.cloud.spanner_v1.data_types import JsonObject
 from tests import _helpers as ot_helpers
 from . import _helpers
@@ -1372,7 +1371,7 @@ def test_snapshot_read_w_various_staleness(sessions_database):
     committed = _set_up_table(sessions_database, row_count)
     all_data_rows = list(_row_data(row_count))
 
-    before_reads = datetime.datetime.utcnow().replace(tzinfo=UTC)
+    before_reads = datetime.datetime.now(datetime.timezone.utc)
 
     # Test w/ read timestamp
     with sessions_database.snapshot(read_timestamp=committed) as read_tx:
@@ -1384,7 +1383,7 @@ def test_snapshot_read_w_various_staleness(sessions_database):
         rows = list(min_read_ts.read(sd.TABLE, sd.COLUMNS, sd.ALL))
         sd._check_row_data(rows, all_data_rows)
 
-    staleness = datetime.datetime.utcnow().replace(tzinfo=UTC) - before_reads
+    staleness = datetime.datetime.now(datetime.timezone.utc) - before_reads
 
     # Test w/ max staleness
     with sessions_database.snapshot(max_staleness=staleness) as max_staleness:
@@ -2192,7 +2191,7 @@ def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
     timestamps = [timestamp_1, timestamp_2]
 
     # In round-trip, timestamps acquire a timezone value.
-    expected_timestamps = [timestamp.replace(tzinfo=UTC) for timestamp in timestamps]
+    expected_timestamps = [timestamp.replace(tzinfo=datetime.timezone.utc) for timestamp in timestamps]
 
     _bind_test_helper(
         sessions_database,

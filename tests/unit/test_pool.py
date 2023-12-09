@@ -14,6 +14,7 @@
 
 
 from functools import total_ordering
+import pytest
 import unittest
 
 import mock
@@ -497,9 +498,9 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS = [_Session(database)] * 4
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=4000)
 
-        with _Monkey(MUT, _NOW=lambda: sessions_created):
+        with _Monkey(MUT, _NOW=sessions_created):
             pool.bind(database)
 
         session = pool.get()
@@ -519,9 +520,9 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS[0]._exists = False
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(seconds=4000)
 
-        with _Monkey(MUT, _NOW=lambda: sessions_created):
+        with _Monkey(MUT, _NOW= sessions_created):
             pool.bind(database)
 
         session = pool.get()
@@ -575,11 +576,11 @@ class TestPingingPool(unittest.TestCase):
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(datetime.timezone.utc)
         database = _Database("name")
         session = _Session(database)
 
-        with _Monkey(MUT, _NOW=lambda: now):
+        with _Monkey(MUT, _NOW=now):
             pool.put(session)
 
         self.assertEqual(len(session_queue._items), 1)
@@ -631,8 +632,8 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
-        with _Monkey(MUT, _NOW=lambda: later):
+        later = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=4000)
+        with _Monkey(MUT, _NOW= later):
             pool.ping()
 
         self.assertTrue(SESSIONS[0]._pinged)
@@ -649,8 +650,8 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
-        with _Monkey(MUT, _NOW=lambda: later):
+        later = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(seconds=4000)
+        with _Monkey(MUT, _NOW=later):
             pool.ping()
 
         self.assertTrue(SESSIONS[0]._pinged)
@@ -667,7 +668,8 @@ class TestTransactionPingingPool(unittest.TestCase):
         return self._getTargetClass()(*args, **kwargs)
 
     def test_ctor_defaults(self):
-        pool = self._make_one()
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one()
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 10)
         self.assertEqual(pool.default_timeout, 10)
@@ -680,13 +682,14 @@ class TestTransactionPingingPool(unittest.TestCase):
     def test_ctor_explicit(self):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
-        pool = self._make_one(
-            size=4,
-            default_timeout=30,
-            ping_interval=1800,
-            labels=labels,
-            database_role=database_role,
-        )
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(
+                size=4,
+                default_timeout=30,
+                ping_interval=1800,
+                labels=labels,
+                database_role=database_role,
+            )
         self.assertIsNone(pool._database)
         self.assertEqual(pool.size, 4)
         self.assertEqual(pool.default_timeout, 30)
@@ -698,7 +701,8 @@ class TestTransactionPingingPool(unittest.TestCase):
 
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
-        pool = self._make_one()
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one()
         database = pool._database = _Database("name")
         SESSIONS = [_Session(database)] * 10
         database._sessions.extend(SESSIONS)
@@ -707,7 +711,8 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertEqual(pool.database_role, database_role)
 
     def test_bind(self):
-        pool = self._make_one()
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database) for _ in range(10)]
         database._sessions.extend(SESSIONS)
@@ -733,13 +738,14 @@ class TestTransactionPingingPool(unittest.TestCase):
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
-        NOW = datetime.datetime.utcnow()
-        pool = self._make_one()
+        NOW = datetime.datetime.now(datetime.timezone.utc)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database) for _ in range(10)]
         database._sessions.extend(SESSIONS)
 
-        with _Monkey(MUT, _NOW=lambda: NOW):
+        with _Monkey(MUT, _NOW=NOW):
             pool.bind(database)
 
         self.assertIs(pool._database, database)
@@ -759,8 +765,8 @@ class TestTransactionPingingPool(unittest.TestCase):
 
     def test_put_full(self):
         import queue
-
-        pool = self._make_one(size=4)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = [_Session(database) for _ in range(4)]
         database._sessions.extend(SESSIONS)
@@ -772,7 +778,8 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertTrue(pool._sessions.full())
 
     def test_put_non_full_w_active_txn(self):
-        pool = self._make_one(size=1)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
         pending = pool._pending_sessions = _Queue()
         database = _Database("name")
@@ -789,7 +796,8 @@ class TestTransactionPingingPool(unittest.TestCase):
         txn.begin.assert_not_called()
 
     def test_put_non_full_w_committed_txn(self):
-        pool = self._make_one(size=1)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
         pending = pool._pending_sessions = _Queue()
         database = _Database("name")
@@ -807,7 +815,8 @@ class TestTransactionPingingPool(unittest.TestCase):
         session._transaction.begin.assert_not_called()
 
     def test_put_non_full(self):
-        pool = self._make_one(size=1)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
         pending = pool._pending_sessions = _Queue()
         database = _Database("name")
@@ -822,11 +831,13 @@ class TestTransactionPingingPool(unittest.TestCase):
         self.assertFalse(pending.empty())
 
     def test_begin_pending_transactions_empty(self):
-        pool = self._make_one(size=1)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=1)
         pool.begin_pending_transactions()  # no raise
 
     def test_begin_pending_transactions_non_empty(self):
-        pool = self._make_one(size=1)
+        with pytest.warns(DeprecationWarning, match="TransactionPingingPool is deprecated."):
+            pool = self._make_one(size=1)
         pool._sessions = _Queue()
 
         database = _Database("name")
