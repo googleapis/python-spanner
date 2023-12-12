@@ -42,8 +42,11 @@ from google.cloud.spanner_dbapi._helpers import CODE_TO_DISPLAY_SIZE
 
 from google.cloud.spanner_dbapi import parse_utils
 from google.cloud.spanner_dbapi.parse_utils import get_param_types
-from google.cloud.spanner_dbapi.parsed_statement import StatementType, \
-    Statement, ParsedStatement
+from google.cloud.spanner_dbapi.parsed_statement import (
+    StatementType,
+    Statement,
+    ParsedStatement,
+)
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
@@ -232,7 +235,9 @@ class Cursor(object):
         self._row_count = _UNSET_COUNT
 
         try:
-            parsed_statement: ParsedStatement = parse_utils.classify_statement(sql, args)
+            parsed_statement: ParsedStatement = parse_utils.classify_statement(
+                sql, args
+            )
             if parsed_statement.statement_type == StatementType.CLIENT_SIDE:
                 self._result_set = client_side_statement_executor.execute(
                     self, parsed_statement
@@ -283,7 +288,7 @@ class Cursor(object):
                 except Aborted:
                     self.connection.retry_transaction()
                 except Exception as ex:
-                    self.connection.statements.remove(parsed_statement.statement)
+                    self.connection._statements.remove(parsed_statement.statement)
                     raise ex
         else:
             self.connection.database.run_in_transaction(

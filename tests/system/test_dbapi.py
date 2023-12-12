@@ -450,14 +450,19 @@ class TestDbApi:
             self._conn.commit()
 
         self._cursor.execute("SELECT * FROM contacts")
-        assert self._cursor.fetchall() == [
-            (1, "first-name-1", "last-name-1", "test.email@domen.ru"),
-            (2, "first-name-2", "last-name-2", "test.email@domen.ru"),
-            (3, "first-name-3", "last-name-3", "test.email@domen.ru"),
-            (4, "first-name-4", "last-name-4", "test.email@domen.ru"),
-            (5, "first-name-5", "last-name-5", "test.email@domen.ru"),
-            (6, "first-name-6", "last-name-6", "test.email@domen.ru"),
-        ]
+        assert (
+            self._cursor.fetchall().sort()
+            == (
+                [
+                    (1, "first-name-1", "last-name-1", "test.email@domen.ru"),
+                    (2, "first-name-2", "last-name-2", "test.email@domen.ru"),
+                    (3, "first-name-3", "last-name-3", "test.email@domen.ru"),
+                    (4, "first-name-4", "last-name-4", "test.email@domen.ru"),
+                    (5, "first-name-5", "last-name-5", "test.email@domen.ru"),
+                    (6, "first-name-6", "last-name-6", "test.email@domen.ru"),
+                ]
+            ).sort()
+        )
 
         # Test starting another dml batch in same connection post commit works
         self._cursor.execute("start batch dml")

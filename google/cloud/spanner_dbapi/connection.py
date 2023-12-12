@@ -20,8 +20,7 @@ from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
-from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, \
-    Statement
+from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1.session import _get_retry_delay
 from google.cloud.spanner_v1.snapshot import Snapshot
