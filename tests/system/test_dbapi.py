@@ -425,6 +425,62 @@ class TestDbApi:
         read_timestamp_query_result_2 = self._cursor.fetchall()
         assert read_timestamp_query_result_1 != read_timestamp_query_result_2
 
+    @pytest.mark.parametrize("auto_commit", [False, True])
+    def test_batch_dml(self, auto_commit):
+        """Test batch dml."""
+
+        if auto_commit:
+            self._conn.autocommit = True
+        self._insert_row(1)
+
+        self._cursor.execute("start batch dml")
+        self._insert_row(2)
+        self._insert_row(3)
+        self._cursor.execute("run batch")
+
+        self._insert_row(4)
+
+        # Test starting another dml batch in same transaction works
+        self._cursor.execute("start batch dml")
+        self._insert_row(5)
+        self._insert_row(6)
+        self._cursor.execute("run batch")
+
+        if not auto_commit:
+            self._conn.commit()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        assert self._cursor.fetchall() == [
+            (1, "first-name-1", "last-name-1", "test.email@domen.ru"),
+            (2, "first-name-2", "last-name-2", "test.email@domen.ru"),
+            (3, "first-name-3", "last-name-3", "test.email@domen.ru"),
+            (4, "first-name-4", "last-name-4", "test.email@domen.ru"),
+            (5, "first-name-5", "last-name-5", "test.email@domen.ru"),
+            (6, "first-name-6", "last-name-6", "test.email@domen.ru"),
+        ]
+
+        # Test starting another dml batch in same connection post commit works
+        self._cursor.execute("start batch dml")
+        self._insert_row(7)
+        self._insert_row(8)
+        self._cursor.execute("run batch")
+
+        self._insert_row(9)
+
+        if not auto_commit:
+            self._conn.commit()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        assert len(self._cursor.fetchall()) == 9
+
+    def _insert_row(self, i):
+        self._cursor.execute(
+            f"""
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES ({i}, 'first-name-{i}', 'last-name-{i}', 'test.email@domen.ru')
+            """
+        )
+
     def test_begin_success_post_commit(self):
         """Test beginning a new transaction post commiting an existing transaction
         is possible on a connection, when connection is in autocommit mode."""
