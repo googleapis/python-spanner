@@ -34,6 +34,7 @@ class ClientSideStatementType(Enum):
     SHOW_READ_TIMESTAMP = 5
     START_BATCH_DML = 6
     RUN_BATCH = 7
+    ABORT_BATCH = 8
 
 
 @dataclass

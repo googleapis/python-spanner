@@ -478,6 +478,64 @@ class TestDbApi:
         self._cursor.execute("SELECT * FROM contacts")
         assert len(self._cursor.fetchall()) == 9
 
+    def test_abort_batch_dml(self):
+        """Test abort batch dml."""
+
+        self._cursor.execute("start batch dml")
+        self._insert_row(1)
+        self._insert_row(2)
+        self._cursor.execute("abort batch")
+
+        self._insert_row(3)
+        self._conn.commit()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 1
+        assert got_rows == [(3, "first-name-3", "last-name-3", "test.email@domen.ru")]
+
+    def test_batch_dml_invalid_statements(self):
+        """Test batch dml having invalid statements."""
+
+        # Test first statement in batch is invalid
+        self._cursor.execute("start batch dml")
+        self._cursor.execute(
+            """
+            INSERT INTO unknown_table (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+        self._insert_row(1)
+        self._insert_row(2)
+        with pytest.raises(OperationalError):
+            self._cursor.execute("run batch")
+
+        # Test middle statement in batch is invalid
+        self._cursor.execute("start batch dml")
+        self._insert_row(1)
+        self._cursor.execute(
+            """
+            INSERT INTO unknown_table (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+        self._insert_row(2)
+        with pytest.raises(OperationalError):
+            self._cursor.execute("run batch")
+
+        # Test last statement in batch is invalid
+        self._cursor.execute("start batch dml")
+        self._insert_row(1)
+        self._insert_row(2)
+        self._cursor.execute(
+            """
+            INSERT INTO unknown_table (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+        with pytest.raises(OperationalError):
+            self._cursor.execute("run batch")
+
     def _insert_row(self, i):
         self._cursor.execute(
             f"""

@@ -87,6 +87,8 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         return None
     if statement_type == ClientSideStatementType.RUN_BATCH:
         return connection.run_batch()
+    if statement_type == ClientSideStatementType.ABORT_BATCH:
+        return connection.abort_batch()
 
 
 def _get_streamed_result_set(column_name, type_code, column_value):

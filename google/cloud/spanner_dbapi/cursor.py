@@ -247,7 +247,7 @@ class Cursor(object):
                         self._itr = self._result_set
                     else:
                         self._itr = PeekIterator(self._result_set)
-            elif self.connection.batch_mode == BatchMode.DML:
+            elif self.connection._batch_mode == BatchMode.DML:
                 self.connection.execute_batch_dml_statement(parsed_statement)
             elif self.connection.read_only or (
                 not self.connection._client_transaction_started

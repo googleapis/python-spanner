@@ -204,24 +204,6 @@ class Connection:
         self._read_only = value
 
     @property
-    def batch_mode(self):
-        """_batch_mode flag for this connection.
-
-        :rtype: bool
-        :returns: _batch_mode flag value.
-        """
-        return self._batch_mode
-
-    @batch_mode.setter
-    def batch_mode(self, value):
-        """`batch_mode` flag setter.
-
-        Args:
-            value (BatchMode)
-        """
-        self._batch_mode = value
-
-    @property
     def request_options(self):
         """Options for the next SQL operations.
 
@@ -564,7 +546,7 @@ class Connection:
 
     @check_not_closed
     def start_batch_dml(self, cursor):
-        if self.batch_mode is not BatchMode.NONE:
+        if self._batch_mode is not BatchMode.NONE:
             raise ProgrammingError(
                 "Cannot start a DML batch when a batch is already active"
             )
@@ -572,12 +554,12 @@ class Connection:
             raise ProgrammingError(
                 "Cannot start a DML batch when the connection is in read-only mode"
             )
-        self.batch_mode = BatchMode.DML
+        self._batch_mode = BatchMode.DML
         self._batch_dml_executor = BatchDmlExecutor(cursor)
 
     @check_not_closed
     def execute_batch_dml_statement(self, parsed_statement: ParsedStatement):
-        if self.batch_mode is not BatchMode.DML:
+        if self._batch_mode is not BatchMode.DML:
             raise ProgrammingError(
                 "Cannot execute statement when the BatchMode is not DML"
             )
@@ -585,15 +567,23 @@ class Connection:
 
     @check_not_closed
     def run_batch(self):
-        if self.batch_mode is BatchMode.NONE:
+        if self._batch_mode is BatchMode.NONE:
             raise ProgrammingError("Cannot run a batch when the BatchMode is not set")
         try:
-            if self.batch_mode is BatchMode.DML:
+            if self._batch_mode is BatchMode.DML:
                 many_result_set = self._batch_dml_executor.run_batch_dml()
         finally:
-            self.batch_mode = BatchMode.NONE
+            self._batch_mode = BatchMode.NONE
             self._batch_dml_executor = None
         return many_result_set
+
+    @check_not_closed
+    def abort_batch(self):
+        if self._batch_mode is BatchMode.NONE:
+            raise ProgrammingError("Cannot abort a batch when the BatchMode is not set")
+        if self._batch_mode is BatchMode.DML:
+            self._batch_dml_executor = None
+        self._batch_mode = BatchMode.NONE
 
     def __enter__(self):
         return self
