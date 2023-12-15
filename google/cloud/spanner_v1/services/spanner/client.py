@@ -28,6 +28,7 @@ from typing import (
     Type,
     Union,
     cast,
+    List,
 )
 
 from google.cloud.spanner_v1 import gapic_version as package_version
@@ -60,6 +61,7 @@ from .transports.base import SpannerTransport, DEFAULT_CLIENT_INFO
 from .transports.grpc import SpannerGrpcTransport
 from .transports.grpc_asyncio import SpannerGrpcAsyncIOTransport
 from .transports.rest import SpannerRestTransport
+from grpc_interceptor import ClientInterceptor
 
 
 class SpannerClientMeta(type):
@@ -383,6 +385,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         transport: Optional[Union[str, SpannerTransport]] = None,
         client_options: Optional[Union[client_options_lib.ClientOptions, dict]] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
+        interceptors=None,
     ) -> None:
         """Instantiates the spanner client.
 
@@ -464,17 +467,31 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 )
 
             Transport = type(self).get_transport_class(transport)
-            self._transport = Transport(
-                credentials=credentials,
-                credentials_file=client_options.credentials_file,
-                host=api_endpoint,
-                scopes=client_options.scopes,
-                client_cert_source_for_mtls=client_cert_source_func,
-                quota_project_id=client_options.quota_project_id,
-                client_info=client_info,
-                always_use_jwt_access=True,
-                api_audience=client_options.api_audience,
-            )
+            if interceptors is None:
+                self._transport = Transport(
+                    credentials=credentials,
+                    credentials_file=client_options.credentials_file,
+                    host=api_endpoint,
+                    scopes=client_options.scopes,
+                    client_cert_source_for_mtls=client_cert_source_func,
+                    quota_project_id=client_options.quota_project_id,
+                    client_info=client_info,
+                    always_use_jwt_access=True,
+                    api_audience=client_options.api_audience,
+                )
+            else:
+                self._transport = Transport(
+                    credentials=credentials,
+                    credentials_file=client_options.credentials_file,
+                    host=api_endpoint,
+                    scopes=client_options.scopes,
+                    client_cert_source_for_mtls=client_cert_source_func,
+                    quota_project_id=client_options.quota_project_id,
+                    client_info=client_info,
+                    always_use_jwt_access=True,
+                    api_audience=client_options.api_audience,
+                    interceptors=interceptors,
+                )
 
     def create_session(
         self,

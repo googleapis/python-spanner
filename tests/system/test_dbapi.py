@@ -15,6 +15,7 @@
 import datetime
 import hashlib
 import pickle
+from collections import defaultdict
 import pytest
 import time
 
@@ -29,6 +30,10 @@ from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 from . import _helpers
 
 DATABASE_NAME = "dbapi-txn"
+SPANNER_RPC_PREFIX = "/google.spanner.v1.Spanner/"
+EXECUTE_BATCH_DML_METHOD = SPANNER_RPC_PREFIX + "ExecuteBatchDml"
+COMMIT_METHOD = SPANNER_RPC_PREFIX + "Commit"
+EXECUTE_SQL_METHOD = SPANNER_RPC_PREFIX + "ExecuteSql"
 
 DDL_STATEMENTS = (
     """CREATE TABLE contacts (
@@ -65,6 +70,9 @@ class TestDbApi:
 
     @pytest.fixture(scope="function")
     def dbapi_database(self, raw_database):
+        # Resetting the count so that each test gives correct count of the api
+        # methods called during that test
+        raw_database._method_count_interceptor._counts = defaultdict(int)
         raw_database.run_in_transaction(self.clear_table)
 
         yield raw_database
@@ -126,7 +134,10 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skip(reason="b/315807641")
+    @pytest.mark.skipif(
+        _helpers.USE_EMULATOR,
+        reason="Emulator does not support multiple parallel transactions.",
+    )
     def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -148,7 +159,10 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skip(reason="b/315807641")
+    @pytest.mark.skipif(
+        _helpers.USE_EMULATOR,
+        reason="Emulator does not support multiple parallel transactions.",
+    )
     def test_rollback_exception(self):
         """Test that if exception during rollback method is caught, then
         subsequent operations on same Cursor and Connection object works
@@ -170,7 +184,6 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skip(reason="b/315807641")
     def test_cursor_execute_exception(self):
         """Test that if exception in Cursor's execute method is caught when
         Connection is not in autocommit mode, then subsequent operations on
@@ -420,13 +433,14 @@ class TestDbApi:
         assert self._cursor.description[0].name == "SHOW_READ_TIMESTAMP"
         assert isinstance(read_timestamp_query_result_1[0][0], DatetimeWithNanoseconds)
 
+        time.sleep(0.25)
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
         read_timestamp_query_result_2 = self._cursor.fetchall()
         assert read_timestamp_query_result_1 != read_timestamp_query_result_2
 
     @pytest.mark.parametrize("auto_commit", [False, True])
-    def test_batch_dml(self, auto_commit):
+    def test_batch_dml(self, auto_commit, dbapi_database):
         """Test batch dml."""
 
         if auto_commit:
@@ -477,6 +491,11 @@ class TestDbApi:
 
         self._cursor.execute("SELECT * FROM contacts")
         assert len(self._cursor.fetchall()) == 9
+        # Test that ExecuteBatchDml rpc is called
+        assert (
+            dbapi_database._method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD]
+            == 3
+        )
 
     def test_abort_batch_dml(self):
         """Test abort batch dml."""
@@ -543,6 +562,71 @@ class TestDbApi:
             VALUES ({i}, 'first-name-{i}', 'last-name-{i}', 'test.email@domen.ru')
             """
         )
+
+    def test_commit_abort_retry(self, dbapi_database):
+        """Test that when commit failed with Abort exception, then the retry
+        succeeds with transaction having insert as well as query type of
+        statements along with batch dml statements."""
+
+        self._insert_row(1)
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute("start batch dml")
+        self._insert_row(2)
+        self._insert_row(3)
+        self._cursor.execute("run batch")
+        self._cursor.execute("SELECT * FROM contacts")
+        self._insert_row(4)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+        self._conn.commit()
+        dbapi_database._method_abort_interceptor.reset()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 4
+
+    def test_execute_sql_abort_retry(self, dbapi_database):
+        """Test that when execute sql failed with Abort exception, then the
+        retry succeeds with transaction having insert as well as query type of
+        statements along with batch dml statements."""
+
+        self._insert_row(1)
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute("start batch dml")
+        self._insert_row(2)
+        self._insert_row(3)
+        self._cursor.execute("run batch")
+        self._cursor.execute("SELECT * FROM contacts")
+        dbapi_database._method_abort_interceptor.set_method_to_abort(EXECUTE_SQL_METHOD)
+        self._insert_row(4)
+        dbapi_database._method_abort_interceptor.reset()
+        self._conn.commit()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 4
+
+    def test_execute_batch_dml_abort_retry(self, dbapi_database):
+        """Test that when any execute batch dml failed with Abort exception,
+        then the retry succeeds with transaction having insert as well as query
+        type of statements along with batch dml statements."""
+
+        self._insert_row(1)
+        self._cursor.execute("SELECT * FROM contacts")
+        self._cursor.execute("start batch dml")
+        self._insert_row(2)
+        self._insert_row(3)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            EXECUTE_BATCH_DML_METHOD
+        )
+        self._cursor.execute("run batch")
+        dbapi_database._method_abort_interceptor.reset()
+        self._cursor.execute("SELECT * FROM contacts")
+        self._insert_row(4)
+        self._conn.commit()
+
+        self._cursor.execute("SELECT * FROM contacts")
+        got_rows = self._cursor.fetchall()
+        assert len(got_rows) == 4
 
     def test_begin_success_post_commit(self):
         """Test beginning a new transaction post commiting an existing transaction
@@ -690,32 +774,6 @@ class TestDbApi:
 
         cursor.close()
         conn.close()
-
-    def test_results_checksum(self):
-        """Test that results checksum is calculated properly."""
-
-        self._cursor.execute(
-            """
-    INSERT INTO contacts (contact_id, first_name, last_name, email)
-    VALUES
-    (1, 'first-name', 'last-name', 'test.email@domen.ru'),
-    (2, 'first-name2', 'last-name2', 'test.email2@domen.ru')
-        """
-        )
-        assert len(self._conn._statements) == 1
-        self._conn.commit()
-
-        self._cursor.execute("SELECT * FROM contacts")
-        got_rows = self._cursor.fetchall()
-
-        assert len(self._conn._statements) == 1
-        self._conn.commit()
-
-        checksum = hashlib.sha256()
-        checksum.update(pickle.dumps(got_rows[0]))
-        checksum.update(pickle.dumps(got_rows[1]))
-
-        assert self._cursor._checksum.checksum.digest() == checksum.digest()
 
     def test_execute_many(self):
         row_data = [

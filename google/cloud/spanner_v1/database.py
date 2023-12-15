@@ -62,7 +62,10 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
     SpannerGrpcTransport,
 )
 from google.cloud.spanner_v1.table import Table
-
+from google.cloud.spanner_v1.testing.interceptors import (
+    MethodCountInterceptor,
+    MethodAbortInterceptor,
+)
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 
@@ -167,6 +170,10 @@ class Database(object):
         self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
+
+        # These are only used in system tests
+        self._method_count_interceptor = MethodCountInterceptor()
+        self._method_abort_interceptor = MethodAbortInterceptor()
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -385,6 +392,11 @@ class Database(object):
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
+        interceptors = None
+        # To make sure interceptors are only added while system testing
+        if "testcase" in self._pool.labels:
+            interceptors = [self._method_count_interceptor]
+            interceptors.append(self._method_abort_interceptor)
         if self._spanner_api is None:
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
@@ -393,7 +405,9 @@ class Database(object):
                     channel=grpc.insecure_channel(self._instance.emulator_host)
                 )
                 self._spanner_api = SpannerClient(
-                    client_info=client_info, transport=transport
+                    client_info=client_info,
+                    transport=transport,
+                    interceptors=interceptors,
                 )
                 return self._spanner_api
             credentials = self._instance._client.credentials
@@ -403,6 +417,7 @@ class Database(object):
                 credentials=credentials,
                 client_info=client_info,
                 client_options=client_options,
+                interceptors=interceptors,
             )
         return self._spanner_api
 

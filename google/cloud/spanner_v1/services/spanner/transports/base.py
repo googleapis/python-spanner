@@ -58,6 +58,7 @@ class SpannerTransport(abc.ABC):
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
         always_use_jwt_access: Optional[bool] = False,
         api_audience: Optional[str] = None,
+        interceptors=None,
         **kwargs,
     ) -> None:
         """Instantiate the transport.

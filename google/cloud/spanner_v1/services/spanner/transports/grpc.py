@@ -66,6 +66,7 @@ class SpannerGrpcTransport(SpannerTransport):
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
         always_use_jwt_access: Optional[bool] = False,
         api_audience: Optional[str] = None,
+        interceptors=None,
     ) -> None:
         """Instantiate the transport.
 
@@ -179,6 +180,11 @@ class SpannerGrpcTransport(SpannerTransport):
                     ("grpc.max_send_message_length", -1),
                     ("grpc.max_receive_message_length", -1),
                 ],
+            )
+
+        if interceptors is not None:
+            self._grpc_channel = grpc.intercept_channel(
+                self._grpc_channel, *interceptors
             )
 
         # Wrap messages. This must be done after self._grpc_channel exists

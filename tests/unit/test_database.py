@@ -385,6 +385,7 @@ class TestDatabase(_BaseTest):
             credentials=credentials,
             client_info=client_info,
             client_options=client_options,
+            interceptors=None,
         )
 
     def test_spanner_api_w_scoped_creds(self):
@@ -2914,6 +2915,11 @@ class _Database(object):
 
 class _Pool(object):
     _bound = None
+    _labels = {}
+
+    @property
+    def labels(self):
+        return self._labels
 
     def bind(self, database):
         self._bound = database
