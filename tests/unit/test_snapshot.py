@@ -68,6 +68,13 @@ DIRECTED_READ_OPTIONS_FOR_CLIENT = {
 }
 
 
+def _makeTimestamp():
+    import datetime
+    from google.cloud._helpers import UTC
+
+    return datetime.datetime.utcnow().replace(tzinfo=UTC)
+
+
 class Test_restart_on_unavailable(OpenTelemetryBase):
     def _getTargetClass(self):
         from google.cloud.spanner_v1.snapshot import _SnapshotBase
@@ -1455,12 +1462,6 @@ class TestSnapshot(OpenTelemetryBase):
 
         return mock.create_autospec(SpannerClient, instance=True)
 
-    def _makeTimestamp(self):
-        import datetime
-        from google.cloud._helpers import UTC
-
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
-
     def _makeDuration(self, seconds=1, microseconds=0):
         import datetime
 
@@ -1478,7 +1479,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertFalse(snapshot._multi_use)
 
     def test_ctor_w_multiple_options(self):
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         duration = self._makeDuration()
         session = _Session()
 
@@ -1486,7 +1487,7 @@ class TestSnapshot(OpenTelemetryBase):
             self._make_one(session, read_timestamp=timestamp, max_staleness=duration)
 
     def test_ctor_w_read_timestamp(self):
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, read_timestamp=timestamp)
         self.assertIs(snapshot._session, session)
@@ -1498,7 +1499,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertFalse(snapshot._multi_use)
 
     def test_ctor_w_min_read_timestamp(self):
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, min_read_timestamp=timestamp)
         self.assertIs(snapshot._session, session)
@@ -1545,7 +1546,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertTrue(snapshot._multi_use)
 
     def test_ctor_w_multi_use_and_read_timestamp(self):
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
         self.assertTrue(snapshot._session is session)
@@ -1557,7 +1558,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertTrue(snapshot._multi_use)
 
     def test_ctor_w_multi_use_and_min_read_timestamp(self):
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
 
         with self.assertRaises(ValueError):
@@ -1599,7 +1600,7 @@ class TestSnapshot(OpenTelemetryBase):
     def test__make_txn_selector_w_read_timestamp(self):
         from google.cloud._helpers import _pb_timestamp_to_datetime
 
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, read_timestamp=timestamp)
         selector = snapshot._make_txn_selector()
@@ -1614,7 +1615,7 @@ class TestSnapshot(OpenTelemetryBase):
     def test__make_txn_selector_w_min_read_timestamp(self):
         from google.cloud._helpers import _pb_timestamp_to_datetime
 
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, min_read_timestamp=timestamp)
         selector = snapshot._make_txn_selector()
@@ -1658,7 +1659,7 @@ class TestSnapshot(OpenTelemetryBase):
     def test__make_txn_selector_w_read_timestamp_w_multi_use(self):
         from google.cloud._helpers import _pb_timestamp_to_datetime
 
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session()
         snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
         selector = snapshot._make_txn_selector()
@@ -1705,7 +1706,7 @@ class TestSnapshot(OpenTelemetryBase):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
         database.spanner_api.begin_transaction.side_effect = RuntimeError()
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session(database)
         snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
 
@@ -1730,7 +1731,7 @@ class TestSnapshot(OpenTelemetryBase):
             InternalServerError("Received unexpected EOS on DATA frame from server"),
             TransactionPB(id=TXN_ID),
         ]
-        timestamp = self._makeTimestamp()
+        timestamp = _makeTimestamp()
         session = _Session(database)
         snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
 
@@ -1759,7 +1760,9 @@ class TestSnapshot(OpenTelemetryBase):
 
         expected_duration = Duration(seconds=SECONDS, nanos=MICROS * 1000)
         expected_txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(exact_staleness=expected_duration)
+            read_only=TransactionOptions.ReadOnly(
+                exact_staleness=expected_duration, return_read_timestamp=True
+            )
         )
 
         api.begin_transaction.assert_called_once_with(
@@ -1793,7 +1796,9 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertEqual(snapshot._transaction_id, TXN_ID)
 
         expected_txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(strong=True)
+            read_only=TransactionOptions.ReadOnly(
+                strong=True, return_read_timestamp=True
+            )
         )
 
         api.begin_transaction.assert_called_once_with(
