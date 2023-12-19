@@ -50,6 +50,9 @@ class TypeCode(proto.Enum):
         FLOAT64 (3):
             Encoded as ``number``, or the strings ``"NaN"``,
             ``"Infinity"``, or ``"-Infinity"``.
+        FLOAT32 (15):
+            Encoded as TBD (``number`` or ``string``), or the strings
+            ``"NaN"``, ``"Infinity"``, or ``"-Infinity"``.
         TIMESTAMP (4):
             Encoded as ``string`` in RFC 3339 timestamp format. The time
             zone must be present, and must be ``"Z"``.
@@ -99,6 +102,7 @@ class TypeCode(proto.Enum):
     BOOL = 1
     INT64 = 2
     FLOAT64 = 3
+    FLOAT32 = 15
     TIMESTAMP = 4
     DATE = 5
     STRING = 6
