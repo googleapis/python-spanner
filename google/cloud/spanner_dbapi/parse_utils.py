@@ -18,6 +18,7 @@ import datetime
 import decimal
 import re
 
+import numpy
 import sqlparse
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1 import JsonObject
@@ -36,6 +37,7 @@ TYPES_MAP = {
     str: spanner.param_types.STRING,
     int: spanner.param_types.INT64,
     float: spanner.param_types.FLOAT64,
+    numpy.float32: spanner.param_types.Float32,
     datetime.datetime: spanner.param_types.TIMESTAMP,
     datetime.date: spanner.param_types.DATE,
     DateStr: spanner.param_types.DATE,

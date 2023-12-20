@@ -40,6 +40,8 @@ CREATE TABLE all_types (
     date_array ARRAY<DATE>,
     float_value FLOAT64,
     float_array ARRAY<FLOAT64>,
+    float32_value FLOAT32,
+    float32_array ARRAY<FLOAT32>,    
     string_value STRING(16),
     string_array ARRAY<STRING(16)>,
     timestamp_value TIMESTAMP,

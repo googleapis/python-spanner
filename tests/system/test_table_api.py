@@ -69,6 +69,7 @@ def test_table_schema(shared_database, database_dialect):
         ("bool_value", spanner_v1.TypeCode.BOOL),
         ("bytes_value", spanner_v1.TypeCode.BYTES),
         ("float_value", spanner_v1.TypeCode.FLOAT64),
+        ("float32_value", spanner_v1.TypeCode.FLOAT32),
         ("string_value", spanner_v1.TypeCode.STRING),
         ("timestamp_value", spanner_v1.TypeCode.TIMESTAMP),
         ("date_value", spanner_v1.TypeCode.DATE),
