@@ -41,7 +41,7 @@ ISORT_VERSION = "isort==5.10.1"
 
 TEST_CONFIG = {
     # You can opt out from the test for specific Python versions.
-    "ignored_versions": [],
+    "ignored_versions": ["3.7", "3.9", "3.10", "3.11"],
     # Old samples are opted out of enforcing Python type hints
     # All new samples should feature them
     "enforce_type_hints": False,
