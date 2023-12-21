@@ -239,7 +239,7 @@ def _session_tests(
     )
 
 
-@nox.session(python=TESTED_VERSIONS)
+@nox.session(python=ALL_VERSIONS)
 def py(session: nox.sessions.Session) -> None:
     """Runs py.test for a sample using the specified version of Python."""
     if session.python in TESTED_VERSIONS:
