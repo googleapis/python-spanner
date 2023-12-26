@@ -70,6 +70,36 @@ def create_instance(instance_id):
 
 # [END spanner_create_instance]
 
+# [START spanner_create_instance_v2]
+def create_instance_v2(instance_id):
+    """Creates an instance."""
+    spanner_client = spanner.Client()
+
+    config_name = "{}/instanceConfigs/regional-us-central1".format(
+        spanner_client.project_name
+    )
+
+    operation = spanner_client.instance_admin_api.create_instance(
+        parent="projects/{}".format(spanner_client.project),
+        instance_id="projects/{}/instances/{}".format(spanner_client.project,instance_id),
+        instance=spanner_instance_admin.Instance(
+            config=config_name,
+            display_name="This is a display name.",
+            node_count=1,
+            labels={
+                "cloud_spanner_samples": "true",
+                "sample_name": "snippets-create_instance-explicit",
+                "created": str(int(time.time())),
+            }),
+    )
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Created instance {}".format(instance_id))
+
+
+# [END spanner_create_instance_v2]
 
 # [START spanner_create_instance_with_processing_units]
 def create_instance_with_processing_units(instance_id, processing_units):
