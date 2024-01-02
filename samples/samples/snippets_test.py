@@ -132,6 +132,14 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(instance.delete)()
 
 
+def test_create_instance_v2_explicit(spanner_client, create_instance_id):
+    # Rather than re-use 'sample_isntance', we create a new instance, to
+    # ensure that the 'create_instance' snippet is tested.
+    retry_429(snippets.create_instance_v2)(create_instance_id)
+    instance = spanner_client.instance(create_instance_id)
+    retry_429(instance.delete)()
+
+
 def test_create_database_explicit(sample_instance, create_database_id):
     # Rather than re-use 'sample_database', we create a new database, to
     # ensure that the 'create_database' snippet is tested.

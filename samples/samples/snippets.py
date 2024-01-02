@@ -82,9 +82,7 @@ def create_instance_v2(instance_id):
 
     operation = spanner_client.instance_admin_api.create_instance(
         parent="projects/{}".format(spanner_client.project),
-        instance_id="projects/{}/instances/{}".format(
-            spanner_client.project, instance_id
-        ),
+        instance_id=instance_id,
         instance=spanner_instance_admin.Instance(
             config=config_name,
             display_name="This is a display name.",
