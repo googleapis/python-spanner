@@ -71,39 +71,6 @@ def create_instance(instance_id):
 # [END spanner_create_instance]
 
 
-# [START spanner_create_instance_v2]
-def create_instance_v2(instance_id):
-    """Creates an instance."""
-    spanner_client = spanner.Client()
-
-    config_name = "{}/instanceConfigs/regional-us-central1".format(
-        spanner_client.project_name
-    )
-
-    operation = spanner_client.instance_admin_api.create_instance(
-        parent="projects/{}".format(spanner_client.project),
-        instance_id=instance_id,
-        instance=spanner_instance_admin.Instance(
-            config=config_name,
-            display_name="This is a display name.",
-            node_count=1,
-            labels={
-                "cloud_spanner_samples": "true",
-                "sample_name": "snippets-create_instance-explicit",
-                "created": str(int(time.time())),
-            },
-        ),
-    )
-
-    print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    print("Created instance {}".format(instance_id))
-
-
-# [END spanner_create_instance_v2]
-
-
 # [START spanner_create_instance_with_processing_units]
 def create_instance_with_processing_units(instance_id, processing_units):
     """Creates an instance."""
@@ -330,46 +297,6 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 
 
 # [END spanner_create_database_with_default_leader]
-
-
-# [START spanner_create_database_with_default_leader_v2]
-def create_database_with_default_leader_v2(instance_id, database_id, default_leader):
-    """Creates a database with tables with a default leader."""
-    spanner_client = spanner.Client()
-    operation = spanner_client.database_admin_api.create_database(
-        parent="projects/{}/instances/{}".format(spanner_client.project, instance_id),
-        create_statement=[
-            "CREATE DATABASE '{}'".format(database_id),
-            """CREATE TABLE Singers (
-            SingerId     INT64 NOT NULL,
-            FirstName    STRING(1024),
-            LastName     STRING(1024),
-            SingerInfo   BYTES(MAX)
-        ) PRIMARY KEY (SingerId)""",
-            """CREATE TABLE Albums (
-            SingerId     INT64 NOT NULL,
-            AlbumId      INT64 NOT NULL,
-            AlbumTitle   STRING(MAX)
-        ) PRIMARY KEY (SingerId, AlbumId),
-        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
-            "ALTER DATABASE {}"
-            " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader),
-        ],
-    )
-
-    print("Waiting for operation to complete...")
-    database = operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    database.reload()
-
-    print(
-        "Database {} created with default leader {}".format(
-            database.name, database.default_leader
-        )
-    )
-
-
-# [END spanner_create_database_with_default_leader_v2]
 
 
 # [START spanner_update_database_with_default_leader]
@@ -1446,7 +1373,6 @@ def insert_data_with_dml(instance_id, database_id):
 # [START spanner_get_commit_stats]
 def log_commit_stats(instance_id, database_id):
     """Inserts sample data using DML and displays the commit statistics."""
-
     # By default, commit statistics are logged via stdout at level Info.
     # This sample uses a custom logger to access the commit statistics.
     class CommitStatsSampleLogger(logging.Logger):
@@ -2406,7 +2332,6 @@ def create_instance_config(user_config_name, base_config_id):
 
 # [END spanner_create_instance_config]
 
-
 # [START spanner_update_instance_config]
 def update_instance_config(user_config_name):
     """Updates the user-managed instance configuration."""
@@ -2430,7 +2355,6 @@ def update_instance_config(user_config_name):
 
 
 # [END spanner_update_instance_config]
-
 
 # [START spanner_delete_instance_config]
 def delete_instance_config(user_config_id):
@@ -2730,7 +2654,6 @@ def create_sequence(instance_id, database_id):
 
 # [END spanner_create_sequence]
 
-
 # [START spanner_alter_sequence]
 def alter_sequence(instance_id, database_id):
     """Alters the Sequence and insert data"""
@@ -2773,7 +2696,6 @@ def alter_sequence(instance_id, database_id):
 
 
 # [END spanner_alter_sequence]
-
 
 # [START spanner_drop_sequence]
 def drop_sequence(instance_id, database_id):
