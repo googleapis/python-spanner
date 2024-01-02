@@ -536,6 +536,24 @@ class TestDbApi:
         with pytest.raises(OperationalError):
             self._cursor.execute("run batch")
 
+    def test_partitioned_query(self):
+        self._cursor.execute("start batch dml")
+        for i in range(1, 11):
+            self._insert_row(i)
+        self._cursor.execute("run batch")
+        self._conn.commit()
+
+        self._conn.read_only = True
+        self._cursor.execute("PARTITION SELECT * FROM contacts")
+        partition_id_rows = self._cursor.fetchall()
+        assert len(partition_id_rows) == 1
+
+        partition_id_row = partition_id_rows[0]
+        self._cursor.execute("RUN PARTITION " + partition_id_row[0])
+        rows = self._cursor.fetchall()
+        assert len(rows) == 10
+        self._conn.commit()
+
     def _insert_row(self, i):
         self._cursor.execute(
             f"""

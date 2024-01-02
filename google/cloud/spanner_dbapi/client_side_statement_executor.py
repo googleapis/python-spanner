@@ -20,6 +20,7 @@ if TYPE_CHECKING:
 from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     ClientSideStatementType,
+    ClientSideStatementParamKey,
 )
 from google.cloud.spanner_v1 import (
     Type,
@@ -66,7 +67,7 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         if connection._transaction is None:
             committed_timestamp = None
         else:
-            committed_timestamp = connection._transaction.committed
+            committed_timestamp = list(connection._transaction.committed)
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_COMMIT_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
@@ -76,7 +77,7 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         if connection._snapshot is None:
             read_timestamp = None
         else:
-            read_timestamp = connection._snapshot._transaction_read_timestamp
+            read_timestamp = list(connection._snapshot._transaction_read_timestamp)
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_READ_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
@@ -89,14 +90,30 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         return connection.run_batch()
     if statement_type == ClientSideStatementType.ABORT_BATCH:
         return connection.abort_batch()
+    if statement_type == ClientSideStatementType.PARTITION_QUERY:
+        partition_ids = connection.partition_query(parsed_statement)
+        return _get_streamed_result_set(
+            "PARTITION",
+            TypeCode.STRING,
+            partition_ids,
+        )
+    if statement_type == ClientSideStatementType.RUN_PARTITION:
+        return connection.run_partition(
+            parsed_statement.client_side_statement_params[
+                ClientSideStatementParamKey.PARTITION_ID
+            ]
+        )
 
 
-def _get_streamed_result_set(column_name, type_code, column_value):
+def _get_streamed_result_set(column_name, type_code, column_values):
     struct_type_pb = StructType(
         fields=[StructType.Field(name=column_name, type_=Type(code=type_code))]
     )
 
     result_set = PartialResultSet(metadata=ResultSetMetadata(row_type=struct_type_pb))
-    if column_value is not None:
-        result_set.values.extend([_make_value_pb(column_value)])
+    column_values_pb = []
+    if column_values is not None:
+        for column_value in column_values:
+            column_values_pb.append(_make_value_pb(column_value))
+        result_set.values.extend(column_values_pb)
     return StreamedResultSet(iter([result_set]))

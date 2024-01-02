@@ -35,6 +35,13 @@ class ClientSideStatementType(Enum):
     START_BATCH_DML = 6
     RUN_BATCH = 7
     ABORT_BATCH = 8
+    PARTITION_QUERY = 9
+    RUN_PARTITION = 10
+
+
+class ClientSideStatementParamKey(Enum):
+    PARTITIONED_SQL_QUERY = 1
+    PARTITION_ID = 2
 
 
 @dataclass
@@ -53,3 +60,4 @@ class ParsedStatement:
     statement_type: StatementType
     statement: Statement
     client_side_statement_type: ClientSideStatementType = None
+    client_side_statement_params: dict[ClientSideStatementParamKey, Any] = None
