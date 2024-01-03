@@ -13,21 +13,27 @@
 # limitations under the License.
 
 """DB-API Connection for the Google Cloud Spanner."""
-
 import time
 import warnings
 
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
+from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
+from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1.session import _get_retry_delay
 from google.cloud.spanner_v1.snapshot import Snapshot
+from deprecated import deprecated
 
 from google.cloud.spanner_dbapi.checksum import _compare_checksums
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 from google.cloud.spanner_dbapi.cursor import Cursor
-from google.cloud.spanner_dbapi.exceptions import InterfaceError, OperationalError
+from google.cloud.spanner_dbapi.exceptions import (
+    InterfaceError,
+    OperationalError,
+    ProgrammingError,
+)
 from google.cloud.spanner_dbapi.version import DEFAULT_USER_AGENT
 from google.cloud.spanner_dbapi.version import PY_VERSION
 
@@ -35,7 +41,7 @@ from google.rpc.code_pb2 import ABORTED
 
 
 CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
-    "This method is non-operational as transaction has not started"
+    "This method is non-operational as a transaction has not been started."
 )
 MAX_INTERNAL_RETRIES = 50
 
@@ -107,6 +113,11 @@ class Connection:
         self._staleness = None
         self.request_priority = None
         self._transaction_begin_marked = False
+        # whether transaction started at Spanner. This means that we had
+        # made atleast one call to Spanner.
+        self._spanner_transaction_started = False
+        self._batch_mode = BatchMode.NONE
+        self._batch_dml_executor: BatchDmlExecutor = None
 
     @property
     def autocommit(self):
@@ -140,26 +151,15 @@ class Connection:
         return self._database
 
     @property
-    def _spanner_transaction_started(self):
-        """Flag: whether transaction started at Spanner. This means that we had
-        made atleast one call to Spanner. Property client_transaction_started
-        would always be true if this is true as transaction has to start first
-        at clientside than at Spanner
-
-        Returns:
-            bool: True if Spanner transaction started, False otherwise.
-        """
+    @deprecated(
+        reason="This method is deprecated. Use _spanner_transaction_started field"
+    )
+    def inside_transaction(self):
         return (
             self._transaction
             and not self._transaction.committed
             and not self._transaction.rolled_back
-        ) or (self._snapshot is not None)
-
-    @property
-    def inside_transaction(self):
-        """Deprecated property which won't be supported in future versions.
-        Please use spanner_transaction_started property instead."""
-        return self._spanner_transaction_started
+        )
 
     @property
     def _client_transaction_started(self):
@@ -277,7 +277,8 @@ class Connection:
         """
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self.database._pool.put(self._session)
+        if self._session is not None:
+            self.database._pool.put(self._session)
         self._session = None
 
     def retry_transaction(self):
@@ -293,7 +294,7 @@ class Connection:
         """
         attempt = 0
         while True:
-            self._transaction = None
+            self._spanner_transaction_started = False
             attempt += 1
             if attempt > MAX_INTERNAL_RETRIES:
                 raise
@@ -316,10 +317,12 @@ class Connection:
                 statements, checksum = statement
 
                 transaction = self.transaction_checkout()
-                status, res = transaction.batch_update(statements)
+                statements_tuple = []
+                for single_statement in statements:
+                    statements_tuple.append(single_statement.get_tuple())
+                status, res = transaction.batch_update(statements_tuple)
 
                 if status.code == ABORTED:
-                    self.connection._transaction = None
                     raise Aborted(status.details)
 
                 retried_checksum = ResultsChecksum()
@@ -363,6 +366,8 @@ class Connection:
         if not self.read_only and self._client_transaction_started:
             if not self._spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
+                self._snapshot = None
+                self._spanner_transaction_started = True
                 self._transaction.begin()
 
             return self._transaction
@@ -377,11 +382,13 @@ class Connection:
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
         if self.read_only and self._client_transaction_started:
-            if not self._snapshot:
+            if not self._spanner_transaction_started:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
                 )
+                self._transaction = None
                 self._snapshot.begin()
+                self._spanner_transaction_started = True
 
             return self._snapshot
 
@@ -391,7 +398,7 @@ class Connection:
         The connection will be unusable from this point forward. If the
         connection has an active transaction, it will be rolled back.
         """
-        if self._spanner_transaction_started and not self.read_only:
+        if self._spanner_transaction_started and not self._read_only:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
@@ -405,13 +412,15 @@ class Connection:
         Marks the transaction as started.
 
         :raises: :class:`InterfaceError`: if this connection is closed.
-        :raises: :class:`OperationalError`: if there is an existing transaction that has begin or is running
+        :raises: :class:`OperationalError`: if there is an existing transaction
+        that has been started
         """
         if self._transaction_begin_marked:
             raise OperationalError("A transaction has already started")
         if self._spanner_transaction_started:
             raise OperationalError(
-                "Beginning a new transaction is not allowed when a transaction is already running"
+                "Beginning a new transaction is not allowed when a transaction "
+                "is already running"
             )
         self._transaction_begin_marked = True
 
@@ -430,41 +439,37 @@ class Connection:
             return
 
         self.run_prior_DDL_statements()
-        if self._spanner_transaction_started:
-            try:
-                if self.read_only:
-                    self._snapshot = None
-                else:
-                    self._transaction.commit()
-
-                self._release_session()
-                self._statements = []
-                self._transaction_begin_marked = False
-            except Aborted:
-                self.retry_transaction()
-                self.commit()
+        try:
+            if self._spanner_transaction_started and not self._read_only:
+                self._transaction.commit()
+        except Aborted:
+            self.retry_transaction()
+            self.commit()
+        finally:
+            self._release_session()
+            self._statements = []
+            self._transaction_begin_marked = False
+            self._spanner_transaction_started = False
 
     def rollback(self):
         """Rolls back any pending transaction.
 
         This is a no-op if there is no active client transaction.
         """
-
         if not self._client_transaction_started:
             warnings.warn(
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
             return
 
-        if self._spanner_transaction_started:
-            if self.read_only:
-                self._snapshot = None
-            else:
+        try:
+            if self._spanner_transaction_started and not self._read_only:
                 self._transaction.rollback()
-
+        finally:
             self._release_session()
             self._statements = []
             self._transaction_begin_marked = False
+            self._spanner_transaction_started = False
 
     @check_not_closed
     def cursor(self):
@@ -481,14 +486,14 @@ class Connection:
 
             return self.database.update_ddl(ddl_statements).result()
 
-    def run_statement(self, statement, retried=False):
+    def run_statement(self, statement: Statement, retried=False):
         """Run single SQL statement in begun transaction.
 
         This method is never used in autocommit mode. In
         !autocommit mode however it remembers every executed
         SQL statement with its parameters.
 
-        :type statement: :class:`dict`
+        :type statement: :class:`Statement`
         :param statement: SQL statement to execute.
 
         :type retried: bool
@@ -538,6 +543,47 @@ class Connection:
                     "The checking query (SELECT 1) returned an unexpected result: %s. "
                     "Expected: [[1]]" % result
                 )
+
+    @check_not_closed
+    def start_batch_dml(self, cursor):
+        if self._batch_mode is not BatchMode.NONE:
+            raise ProgrammingError(
+                "Cannot start a DML batch when a batch is already active"
+            )
+        if self.read_only:
+            raise ProgrammingError(
+                "Cannot start a DML batch when the connection is in read-only mode"
+            )
+        self._batch_mode = BatchMode.DML
+        self._batch_dml_executor = BatchDmlExecutor(cursor)
+
+    @check_not_closed
+    def execute_batch_dml_statement(self, parsed_statement: ParsedStatement):
+        if self._batch_mode is not BatchMode.DML:
+            raise ProgrammingError(
+                "Cannot execute statement when the BatchMode is not DML"
+            )
+        self._batch_dml_executor.execute_statement(parsed_statement)
+
+    @check_not_closed
+    def run_batch(self):
+        if self._batch_mode is BatchMode.NONE:
+            raise ProgrammingError("Cannot run a batch when the BatchMode is not set")
+        try:
+            if self._batch_mode is BatchMode.DML:
+                many_result_set = self._batch_dml_executor.run_batch_dml()
+        finally:
+            self._batch_mode = BatchMode.NONE
+            self._batch_dml_executor = None
+        return many_result_set
+
+    @check_not_closed
+    def abort_batch(self):
+        if self._batch_mode is BatchMode.NONE:
+            raise ProgrammingError("Cannot abort a batch when the BatchMode is not set")
+        if self._batch_mode is BatchMode.DML:
+            self._batch_dml_executor = None
+        self._batch_mode = BatchMode.NONE
 
     def __enter__(self):
         return self
