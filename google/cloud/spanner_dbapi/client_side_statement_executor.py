@@ -51,6 +51,7 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
     :param parsed_statement: parsed_statement based on the sql query
     """
     connection = cursor.connection
+    column_values = []
     if connection.is_closed:
         raise ProgrammingError(CONNECTION_CLOSED_ERROR)
     statement_type = parsed_statement.client_side_statement_type
@@ -64,24 +65,26 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         connection.rollback()
         return None
     if statement_type == ClientSideStatementType.SHOW_COMMIT_TIMESTAMP:
-        if connection._transaction is None:
-            committed_timestamp = None
-        else:
-            committed_timestamp = list(connection._transaction.committed)
+        if (
+            connection._transaction is not None
+            and connection._transaction.committed is not None
+        ):
+            column_values.append(connection._transaction.committed)
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_COMMIT_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
-            committed_timestamp,
+            column_values,
         )
     if statement_type == ClientSideStatementType.SHOW_READ_TIMESTAMP:
-        if connection._snapshot is None:
-            read_timestamp = None
-        else:
-            read_timestamp = list(connection._snapshot._transaction_read_timestamp)
+        if (
+            connection._snapshot is not None
+            and connection._snapshot._transaction_read_timestamp is not None
+        ):
+            column_values.append(connection._snapshot._transaction_read_timestamp)
         return _get_streamed_result_set(
             ClientSideStatementType.SHOW_READ_TIMESTAMP.name,
             TypeCode.TIMESTAMP,
-            read_timestamp,
+            column_values,
         )
     if statement_type == ClientSideStatementType.START_BATCH_DML:
         connection.start_batch_dml(cursor)
@@ -111,8 +114,8 @@ def _get_streamed_result_set(column_name, type_code, column_values):
     )
 
     result_set = PartialResultSet(metadata=ResultSetMetadata(row_type=struct_type_pb))
-    column_values_pb = []
-    if column_values is not None:
+    if len(column_values) > 0:
+        column_values_pb = []
         for column_value in column_values:
             column_values_pb.append(_make_value_pb(column_value))
         result_set.values.extend(column_values_pb)

@@ -578,10 +578,10 @@ class TestDbApi:
         self._conn.read_only = True
         with pytest.raises(ProgrammingError):
             self._cursor.execute(
-                f"""
-            PARTITION INSERT INTO contacts (contact_id, first_name, last_name, email)
-            VALUES (1111, 'first-name', 'last-name', 'test.email@domen.ru')
-            """
+                """
+                PARTITION INSERT INTO contacts (contact_id, first_name, last_name, email)
+                VALUES (1111, 'first-name', 'last-name', 'test.email@domen.ru')
+                """
             )
 
     def test_partitioned_query_in_autocommit_mode(self):
