@@ -105,6 +105,7 @@ def run_batch_dml(cursor: "Cursor", statements: List[Statement]):
                 cursor._row_count = sum([max(val, 0) for val in res])
                 return many_result_set
             except Aborted:
+                # We are raising it so it could be handled in transaction_helper.py and is retried
                 if cursor._in_retry_mode:
                     raise
                 else:

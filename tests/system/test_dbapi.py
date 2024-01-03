@@ -649,6 +649,69 @@ class TestDbApi:
         got_rows = self._cursor.fetchall()
         assert len(got_rows) == 2
 
+    @pytest.mark.noautofixt
+    def test_abort_retry_multiple_cursors(self, shared_instance, dbapi_database):
+        """Test that retry works when multiple cursors are involved in the transaction."""
+
+        try:
+            conn = Connection(shared_instance, dbapi_database)
+            cur = conn.cursor()
+            cur.execute(
+                """
+                CREATE TABLE Singers (
+                    SingerId     INT64 NOT NULL,
+                    Name    STRING(1024),
+                ) PRIMARY KEY (SingerId)
+            """
+            )
+            cur.execute(
+                """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+            )
+            cur.execute(
+                """
+            INSERT INTO Singers (SingerId, Name)
+            VALUES (1, 'first-name')
+            """
+            )
+            cur.execute(
+                """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+            )
+            cur.execute(
+                """
+            INSERT INTO Singers (SingerId, Name)
+            VALUES (2, 'first-name')
+            """
+            )
+            conn.commit()
+
+            cur1 = conn.cursor()
+            cur1.execute("SELECT * FROM contacts")
+            cur2 = conn.cursor()
+            cur2.execute("SELECT * FROM Singers")
+            row1 = cur1.fetchone()
+            row2 = cur2.fetchone()
+            row3 = cur1.fetchone()
+            row4 = cur2.fetchone()
+            dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+            conn.commit()
+            dbapi_database._method_abort_interceptor.reset()
+            assert row1 == (1, "first-name", "last-name", "test.email@domen.ru")
+            assert row2 == (1, "first-name")
+            assert row3 == (2, "first-name", "last-name", "test.email@domen.ru")
+            assert row4 == (2, "first-name")
+        finally:
+            # Delete table
+            table = dbapi_database.table("Singers")
+            if table.exists():
+                op = dbapi_database.update_ddl(["DROP TABLE Singers"])
+                op.result()
+
     def test_execute_batch_dml_abort_retry(self, dbapi_database):
         """Test that when any execute batch dml failed with Abort exception,
         then the retry succeeds with transaction having insert as well as query

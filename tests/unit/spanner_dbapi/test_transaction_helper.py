@@ -40,10 +40,11 @@ ARGS = []
 
 
 class TestTransactionHelper(unittest.TestCase):
+    @mock.patch("google.cloud.spanner_dbapi.cursor.Cursor")
     @mock.patch("google.cloud.spanner_dbapi.connection.Connection")
-    def setUp(self, mock_connection):
+    def setUp(self, mock_connection, mock_cursor):
         self._under_test = TransactionRetryHelper(mock_connection)
-        self._mock_connection = mock_connection
+        self._mock_cursor = mock_cursor
 
     def test_retry_transaction_execute(self):
         """
@@ -51,6 +52,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=None,
@@ -69,6 +71,7 @@ class TestTransactionHelper(unittest.TestCase):
         update_count = 3
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=update_count,
@@ -88,6 +91,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=2,
@@ -107,6 +111,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE_MANY,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=None,
@@ -125,6 +130,7 @@ class TestTransactionHelper(unittest.TestCase):
         update_count = 3
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE_MANY,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=update_count,
@@ -144,6 +150,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE_MANY,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=2,
@@ -163,6 +170,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         result_row = ("field1", "field2")
         fetch_statement = FetchStatement(
+            cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_ALL,
             result_details=_get_checksum(result_row),
         )
@@ -181,6 +189,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         result_row = ("field1", "field2")
         fetch_statement = FetchStatement(
+            cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_ALL,
             result_details=_get_checksum(result_row),
         )
@@ -200,6 +209,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         result_row = ("field1", "field2")
         fetch_statement = FetchStatement(
+            cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_MANY,
             result_details=_get_checksum(result_row),
             size=1,
@@ -219,6 +229,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         result_row = ("field1", "field2")
         fetch_statement = FetchStatement(
+            cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_MANY,
             result_details=_get_checksum(result_row),
             size=1,
@@ -241,6 +252,7 @@ class TestTransactionHelper(unittest.TestCase):
         exception = Exception("Test")
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=exception,
@@ -260,6 +272,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=Exception("Test"),
@@ -280,6 +293,7 @@ class TestTransactionHelper(unittest.TestCase):
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=None,
@@ -306,18 +320,20 @@ class TestTransactionHelper(unittest.TestCase):
         """
         Test add_execute_statement_for_retry method works
         """
-        parsed_statement = ParsedStatement(
+        self._mock_cursor._parsed_statement = ParsedStatement(
             statement_type=StatementType.INSERT, statement=None
         )
 
         sql = "INSERT INTO Table"
         rows_inserted = 3
+        self._mock_cursor.rowcount = rows_inserted
         self._under_test.add_execute_statement_for_retry(
-            parsed_statement, sql, [], rows_inserted, None, False
+            self._mock_cursor, sql, [], None, False
         )
 
         expected_statement_result_details = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=sql,
             args=[],
             result_details=rows_inserted,
@@ -335,18 +351,20 @@ class TestTransactionHelper(unittest.TestCase):
         """
         Test add_execute_statement_for_retry method with exception
         """
-        parsed_statement = ParsedStatement(
+        self._mock_cursor._parsed_statement = ParsedStatement(
             statement_type=StatementType.INSERT, statement=None
         )
+        self._mock_cursor.rowcount = -1
 
         sql = "INSERT INTO Table"
         exception = Exception("Test")
         self._under_test.add_execute_statement_for_retry(
-            parsed_statement, sql, [], -1, exception, False
+            self._mock_cursor, sql, [], exception, False
         )
 
         expected_statement_result_details = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=sql,
             args=[],
             result_details=exception,
@@ -364,17 +382,19 @@ class TestTransactionHelper(unittest.TestCase):
         """
         Test add_execute_statement_for_retry method works for non DML statement
         """
-        parsed_statement = ParsedStatement(
+        self._mock_cursor._parsed_statement = ParsedStatement(
             statement_type=StatementType.QUERY, statement=None
         )
+        self._mock_cursor.rowcount = -1
 
         sql = "SELECT 1"
         self._under_test.add_execute_statement_for_retry(
-            parsed_statement, sql, [], -1, None, False
+            self._mock_cursor, sql, [], None, False
         )
 
         expected_statement_result_details = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=sql,
             args=[],
             result_details=None,
@@ -392,18 +412,20 @@ class TestTransactionHelper(unittest.TestCase):
         """
         Test add_execute_statement_for_retry method works for executemany
         """
-        parsed_statement = ParsedStatement(
+        self._mock_cursor._parsed_statement = ParsedStatement(
             statement_type=StatementType.INSERT, statement=None
         )
 
         sql = "INSERT INTO Table"
         rows_inserted = 3
+        self._mock_cursor.rowcount = rows_inserted
         self._under_test.add_execute_statement_for_retry(
-            parsed_statement, sql, [], rows_inserted, None, True
+            self._mock_cursor, sql, [], None, True
         )
 
         expected_statement_result_details = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE_MANY,
+            cursor=self._mock_cursor,
             sql=sql,
             args=[],
             result_details=rows_inserted,
@@ -419,20 +441,23 @@ class TestTransactionHelper(unittest.TestCase):
 
     def test_add_fetch_statement_for_retry(self):
         """
-        Test add_execute_statement_for_retry method when
-        last_statement_result_details is a Fetch statement
+        Test add_fetch_statement_for_retry method when last_statement_result_details is a
+        Fetch statement
         """
         result_row = ("field1", "field2")
         result_checksum = _get_checksum(result_row)
         original_checksum_digest = result_checksum.checksum.digest()
         self._under_test._last_statement_result_details = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
+            cursor=self._mock_cursor,
             result_details=result_checksum,
             size=1,
         )
         new_rows = [("field3", "field4"), ("field5", "field6")]
 
-        self._under_test.add_fetch_statement_for_retry(new_rows, None, False)
+        self._under_test.add_fetch_statement_for_retry(
+            self._mock_cursor, new_rows, None, False
+        )
 
         self.assertEqual(
             self._under_test._last_statement_result_details.size,
@@ -445,22 +470,26 @@ class TestTransactionHelper(unittest.TestCase):
 
     def test_add_fetch_statement_for_retry_with_exception(self):
         """
-        Test add_execute_statement_for_retry method with exception
+        Test add_fetch_statement_for_retry method with exception
         """
         result_row = ("field1", "field2")
         self._under_test._last_statement_result_details = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
+            cursor=self._mock_cursor,
             result_details=_get_checksum(result_row),
             size=1,
         )
         exception = Exception("Test")
 
-        self._under_test.add_fetch_statement_for_retry([], exception, False)
+        self._under_test.add_fetch_statement_for_retry(
+            self._mock_cursor, [], exception, False
+        )
 
         self.assertEqual(
             self._under_test._last_statement_result_details,
             FetchStatement(
                 statement_type=CursorStatementType.FETCH_MANY,
+                cursor=self._mock_cursor,
                 result_details=exception,
                 size=1,
             ),
@@ -468,15 +497,18 @@ class TestTransactionHelper(unittest.TestCase):
 
     def test_add_fetch_statement_for_retry_last_statement_not_exists(self):
         """
-        Test add_execute_statement_for_retry method when
-        last_statement_result_details doesn't exists
+        Test add_fetch_statement_for_retry method when last_statement_result_details
+        doesn't exists
         """
         row = ("field3", "field4")
 
-        self._under_test.add_fetch_statement_for_retry([row], None, False)
+        self._under_test.add_fetch_statement_for_retry(
+            self._mock_cursor, [row], None, False
+        )
 
         expected_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
+            cursor=self._mock_cursor,
             result_details=_get_checksum(row),
             size=1,
         )
@@ -491,14 +523,17 @@ class TestTransactionHelper(unittest.TestCase):
 
     def test_add_fetch_statement_for_retry_fetch_all_statement(self):
         """
-        Test add_execute_statement_for_retry method for fetchall statement
+        Test add_fetch_statement_for_retry method for fetchall statement
         """
         row = ("field3", "field4")
 
-        self._under_test.add_fetch_statement_for_retry([row], None, True)
+        self._under_test.add_fetch_statement_for_retry(
+            self._mock_cursor, [row], None, True
+        )
 
         expected_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_ALL,
+            cursor=self._mock_cursor,
             result_details=_get_checksum(row),
         )
         self.assertEqual(
@@ -512,11 +547,12 @@ class TestTransactionHelper(unittest.TestCase):
 
     def test_add_fetch_statement_for_retry_when_last_statement_is_not_fetch(self):
         """
-        Test add_execute_statement_for_retry method when last statement is not
+        Test add_fetch_statement_for_retry method when last statement is not
         a fetch type of statement
         """
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE,
+            cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
             result_details=2,
@@ -525,10 +561,13 @@ class TestTransactionHelper(unittest.TestCase):
         self._under_test._statement_result_details_list.append(execute_statement)
         row = ("field3", "field4")
 
-        self._under_test.add_fetch_statement_for_retry([row], None, False)
+        self._under_test.add_fetch_statement_for_retry(
+            self._mock_cursor, [row], None, False
+        )
 
         expected_fetch_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
+            cursor=self._mock_cursor,
             result_details=_get_checksum(row),
             size=1,
         )

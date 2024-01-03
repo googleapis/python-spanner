@@ -220,7 +220,10 @@ class Cursor(object):
         self.connection._ddl_statements.extend(statements)
 
     @check_not_closed
-    def execute(self, sql, args=None, call_from_execute_many=False):
+    def execute(self, sql, args=None):
+        self._execute(sql, args, False)
+
+    def _execute(self, sql, args=None, call_from_execute_many=False):
         """Prepares and executes a Spanner database operation.
 
         :type sql: str
@@ -276,7 +279,7 @@ class Cursor(object):
         finally:
             if not self._in_retry_mode and not call_from_execute_many:
                 self.transaction_helper.add_execute_statement_for_retry(
-                    self._parsed_statement, sql, args, self.rowcount, exception, False
+                    self, sql, args, exception, False
                 )
             if self.connection._client_transaction_started is False:
                 self.connection._spanner_transaction_started = False
@@ -293,6 +296,7 @@ class Cursor(object):
                     self._itr = PeekIterator(self._result_set)
                     return
                 except Aborted:
+                    # We are raising it so it could be handled in transaction_helper.py and is retried
                     if self._in_retry_mode:
                         raise
                     else:
@@ -354,7 +358,7 @@ class Cursor(object):
             else:
                 many_result_set = StreamedManyResultSets()
                 for params in seq_of_params:
-                    self.execute(operation, params, True)
+                    self._execute(operation, params, True)
                     many_result_set.add_iter(self._itr)
 
             self._result_set = many_result_set
@@ -365,10 +369,9 @@ class Cursor(object):
         finally:
             if not self._in_retry_mode:
                 self.transaction_helper.add_execute_statement_for_retry(
-                    self._parsed_statement,
+                    self,
                     operation,
                     seq_of_params,
-                    self.rowcount,
                     exception,
                     True,
                 )
@@ -407,7 +410,7 @@ class Cursor(object):
             size = self.arraysize
         return self._fetch(CursorStatementType.FETCH_MANY, size)
 
-    def _fetch(self, cursor_statement_type: CursorStatementType, size=None):
+    def _fetch(self, cursor_statement_type, size=None):
         exception = None
         rows = []
         is_fetch_all = False
@@ -445,7 +448,7 @@ class Cursor(object):
         finally:
             if not self._in_retry_mode:
                 self.transaction_helper.add_fetch_statement_for_retry(
-                    rows, exception, is_fetch_all
+                    self, rows, exception, is_fetch_all
                 )
             return rows
 

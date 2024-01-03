@@ -11,10 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import random
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, List, Union, Any
+from typing import TYPE_CHECKING, List, Union, Any, Dict
 from google.api_core.exceptions import Aborted
 
 import time
@@ -25,6 +24,7 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     StatementType,
     ClientSideStatementType,
 )
+from google.cloud.spanner_v1.session import _get_retry_delay
 
 if TYPE_CHECKING:
     from google.cloud.spanner_dbapi import Connection, Cursor
@@ -47,8 +47,12 @@ class TransactionRetryHelper:
         self._connection = connection
         # list of all single and batch statements in the same order as executed
         # in original transaction along with their checksum value
-        self._statement_result_details_list: List[StatementResultDetails] = []
-        self._last_statement_result_details: StatementResultDetails = None
+        self._statement_result_details_list: List[StatementDetails] = []
+        # last StatementDetails that was added in the _statement_result_details_list
+        self._last_statement_result_details: StatementDetails = None
+        # 1-1 map from original cursor object on which transaction ran to the
+        # new cursor object used in the retry
+        self._cursor_map: Dict[Cursor, Cursor] = {}
 
     def _set_connection_for_retry(self):
         self._connection._spanner_transaction_started = False
@@ -62,49 +66,80 @@ class TransactionRetryHelper:
         """
         self._statement_result_details_list = []
         self._last_statement_result_details = None
+        self._cursor_map = {}
 
-    def add_fetch_statement_for_retry(self, rows, exception, is_fetch_all):
+    def add_fetch_statement_for_retry(
+        self, cursor, result_rows, exception, is_fetch_all
+    ):
+        """
+        StatementDetails to be added to _statement_result_details_list whenever fetchone, fetchmany or
+        fetchall method is called on the cursor.
+        If fetchone is consecutively called n times then it is stored as fetchmany with size as n.
+        Same for fetchmany, so consecutive fetchone and fetchmany statements are stored as one
+        fetchmany statement in _statement_result_details_list with size param appropriately set
+
+        :param cursor: original Cursor object on which statement executed in the transaction
+        :param result_rows: All the rows from the resultSet from fetch statement execution
+        :param exception: Not none in case non-aborted exception is thrown on the original
+        statement execution
+        :param is_fetch_all: True in case of fetchall statement execution
+        """
         if not self._connection._client_transaction_started:
             return
         if (
             self._last_statement_result_details is not None
             and self._last_statement_result_details.statement_type
             == CursorStatementType.FETCH_MANY
+            and self._last_statement_result_details.cursor == cursor
         ):
             if exception is not None:
                 self._last_statement_result_details.result_details = exception
             else:
-                for row in rows:
+                for row in result_rows:
                     self._last_statement_result_details.result_details.consume_result(
                         row
                     )
-                self._last_statement_result_details.size += len(rows)
+                self._last_statement_result_details.size += len(result_rows)
         else:
-            result_details = _get_statement_result_checksum(rows)
+            result_details = _get_statement_result_checksum(result_rows)
             if is_fetch_all:
                 self._last_statement_result_details = FetchStatement(
+                    cursor=cursor,
                     statement_type=CursorStatementType.FETCH_ALL,
                     result_details=result_details,
                 )
             else:
                 self._last_statement_result_details = FetchStatement(
+                    cursor=cursor,
                     statement_type=CursorStatementType.FETCH_MANY,
                     result_details=result_details,
-                    size=len(rows),
+                    size=len(result_rows),
                 )
             self._statement_result_details_list.append(
                 self._last_statement_result_details
             )
 
     def add_execute_statement_for_retry(
-        self, parsed_statement, sql, args, rowcount, exception, is_execute_many
+        self, cursor, sql, args, exception, is_execute_many
     ):
+        """
+        StatementDetails to be added to _statement_result_details_list whenever execute or
+        executemany method is called on the cursor.
+
+        :param cursor: original Cursor object on which statement executed in the transaction
+        :param sql: Input param of the execute/executemany method
+        :param args: Input param of the execute/executemany method
+        :param exception: Not none in case non-aborted exception is thrown on the original
+        statement execution
+        :param is_execute_many: True in case of executemany statement execution
+        """
         if not self._connection._client_transaction_started:
             return
         statement_type = CursorStatementType.EXECUTE
         if is_execute_many:
             statement_type = CursorStatementType.EXECUTE_MANY
         result_details = None
+        parsed_statement = cursor._parsed_statement
         if exception is not None:
             result_details = exception
         elif (
@@ -113,9 +148,10 @@ class TransactionRetryHelper:
             or parsed_statement.client_side_statement_type
             == ClientSideStatementType.RUN_BATCH
         ):
-            result_details = rowcount
+            result_details = cursor.rowcount
 
         self._last_statement_result_details = ExecuteStatement(
+            cursor=cursor,
             statement_type=statement_type,
             sql=sql,
             args=args,
@@ -141,10 +177,15 @@ class TransactionRetryHelper:
                 raise
 
             self._set_connection_for_retry()
-            cursor: Cursor = self._connection.cursor()
-            cursor._in_retry_mode = True
+
             try:
                 for statement_result_details in self._statement_result_details_list:
+                    if statement_result_details.cursor in self._cursor_map:
+                        cursor = self._cursor_map.get(statement_result_details.cursor)
+                    else:
+                        cursor: Cursor = self._connection.cursor()
+                        cursor._in_retry_mode = True
+                        self._cursor_map[statement_result_details.cursor] = cursor
                     try:
                         self._handle_statement(statement_result_details, cursor)
                     except Aborted:
@@ -159,8 +200,8 @@ class TransactionRetryHelper:
                         ):
                             raise RetryAborted(RETRY_ABORTED_ERROR, ex)
                 return
-            except Aborted:
-                delay = 2**attempt + random.random()
+            except Aborted as ex:
+                delay = _get_retry_delay(ex.errors[0], attempt)
                 if delay:
                     time.sleep(delay)
 
@@ -209,8 +250,10 @@ class CursorStatementType(Enum):
 
 
 @dataclass
-class StatementResultDetails:
+class StatementDetails:
     statement_type: CursorStatementType
+    # The cursor object on which this statement was executed
+    cursor: "Cursor"
     # This would be one of
     # 1. checksum of ResultSet in case of fetch call on query statement
     # 2. Total rows updated in case of DML
@@ -220,11 +263,11 @@ class StatementResultDetails:
 
 
 @dataclass
-class ExecuteStatement(StatementResultDetails):
+class ExecuteStatement(StatementDetails):
     sql: str
     args: Any = None
 
 
 @dataclass
-class FetchStatement(StatementResultDetails):
+class FetchStatement(StatementDetails):
     size: int = None

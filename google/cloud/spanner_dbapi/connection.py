@@ -27,11 +27,11 @@ from google.cloud.spanner_dbapi.parsed_statement import (
 from google.cloud.spanner_dbapi.partition_helper import PartitionId
 from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
 from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
+from google.cloud.spanner_dbapi.cursor import Cursor
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1.snapshot import Snapshot
 from deprecated import deprecated
 
-from google.cloud.spanner_dbapi.cursor import Cursor
 from google.cloud.spanner_dbapi.exceptions import (
     InterfaceError,
     OperationalError,
@@ -354,12 +354,10 @@ class Connection:
 
     def commit(self):
         """Commits any pending transaction to the database.
-
         This is a no-op if there is no active client transaction.
         """
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-
         if not self._client_transaction_started:
             warnings.warn(
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
@@ -374,14 +372,10 @@ class Connection:
             self._transaction_helper.retry_transaction()
             self.commit()
         finally:
-            self._release_session()
-            self._transaction_helper.reset()
-            self._transaction_begin_marked = False
-            self._spanner_transaction_started = False
+            self._reset_post_commit_or_rollback()
 
     def rollback(self):
         """Rolls back any pending transaction.
-
         This is a no-op if there is no active client transaction.
         """
         if not self._client_transaction_started:
@@ -389,15 +383,17 @@ class Connection:
                 CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
             )
             return
-
         try:
             if self._spanner_transaction_started and not self._read_only:
                 self._transaction.rollback()
         finally:
-            self._release_session()
-            self._transaction_helper.reset()
-            self._transaction_begin_marked = False
-            self._spanner_transaction_started = False
+            self._reset_post_commit_or_rollback()
+
+    def _reset_post_commit_or_rollback(self):
+        self._release_session()
+        self._transaction_helper.reset()
+        self._transaction_begin_marked = False
+        self._spanner_transaction_started = False
 
     @check_not_closed
     def cursor(self):
