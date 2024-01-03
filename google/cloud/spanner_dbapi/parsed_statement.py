@@ -1,4 +1,4 @@
-# Copyright 20203 Google LLC All rights reserved.
+# Copyright 2023 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Dict
 
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 
@@ -60,4 +60,4 @@ class ParsedStatement:
     statement_type: StatementType
     statement: Statement
     client_side_statement_type: ClientSideStatementType = None
-    client_side_statement_params: dict[ClientSideStatementParamKey, Any] = None
+    client_side_statement_params: Dict[ClientSideStatementParamKey, Any] = None

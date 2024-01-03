@@ -607,6 +607,12 @@ class Connection:
             raise ProgrammingError(
                 "Only queries can be partitioned. Invalid statement: " + statement.sql
             )
+        if self.read_only is not True and self._client_transaction_started is True:
+            raise ProgrammingError(
+                "Partitioned query not supported as the connection is not in "
+                "read only mode or ReadWrite transaction started"
+            )
+
         batch_snapshot = self._database.batch_snapshot()
         partition_ids = []
         partitions = list(
@@ -635,7 +641,7 @@ class Connection:
             session_id=batch_transaction_id.session_id,
             transaction_id=batch_transaction_id.transaction_id,
         )
-        return batch_snapshot.process(partition_id.batch_result)
+        return batch_snapshot.process(partition_id.partition_result)
 
     def __enter__(self):
         return self
