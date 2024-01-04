@@ -71,12 +71,10 @@ class TestCursor(unittest.TestCase):
         self.assertIsInstance(cursor.description[0], ColumnInfo)
 
     def test_property_rowcount(self):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
-
         connection = self._make_connection(self.INSTANCE, self.DATABASE)
         cursor = self._make_one(connection)
 
-        self.assertEqual(cursor.rowcount, _UNSET_COUNT)
+        self.assertEqual(cursor.rowcount, None)
 
     def test_callproc(self):
         from google.cloud.spanner_dbapi.exceptions import InterfaceError
@@ -505,7 +503,7 @@ class TestCursor(unittest.TestCase):
         cursor._itr = iter([1, 2, 3])
 
         with mock.patch(
-            "google.cloud.spanner_dbapi.cursor.Cursor.execute"
+            "google.cloud.spanner_dbapi.cursor.Cursor._execute"
         ) as execute_mock:
             cursor.executemany(operation, params_seq)
 
@@ -858,8 +856,6 @@ class TestCursor(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_dbapi.cursor.PeekIterator")
     def test_handle_dql(self, MockedPeekIterator):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
-
         connection = self._make_connection(self.INSTANCE, mock.MagicMock())
         connection.database.snapshot.return_value.__enter__.return_value = (
             mock_snapshot
@@ -871,11 +867,10 @@ class TestCursor(unittest.TestCase):
         cursor._handle_DQL("sql", params=None)
         self.assertEqual(cursor._result_set, _result_set)
         self.assertEqual(cursor._itr, MockedPeekIterator())
-        self.assertEqual(cursor._row_count, _UNSET_COUNT)
+        self.assertEqual(cursor._row_count, None)
 
     @mock.patch("google.cloud.spanner_dbapi.cursor.PeekIterator")
     def test_handle_dql_priority(self, MockedPeekIterator):
-        from google.cloud.spanner_dbapi.cursor import _UNSET_COUNT
         from google.cloud.spanner_v1 import RequestOptions
 
         connection = self._make_connection(self.INSTANCE, mock.MagicMock())
@@ -892,7 +887,7 @@ class TestCursor(unittest.TestCase):
         cursor._handle_DQL(sql, params=None)
         self.assertEqual(cursor._result_set, _result_set)
         self.assertEqual(cursor._itr, MockedPeekIterator())
-        self.assertEqual(cursor._row_count, _UNSET_COUNT)
+        self.assertEqual(cursor._row_count, None)
         mock_snapshot.execute_sql.assert_called_with(
             sql, None, None, request_options=RequestOptions(priority=1)
         )

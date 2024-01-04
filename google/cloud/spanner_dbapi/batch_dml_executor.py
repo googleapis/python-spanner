@@ -101,6 +101,7 @@ def run_batch_dml(cursor: "Cursor", statements: List[Statement]):
                 elif status.code != OK:
                     raise OperationalError(status.message)
 
+                cursor._batch_dml_rows_count = res
                 many_result_set.add_iter(res)
                 cursor._row_count = sum([max(val, 0) for val in res])
                 return many_result_set

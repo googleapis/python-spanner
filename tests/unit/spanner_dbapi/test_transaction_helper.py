@@ -26,6 +26,7 @@ from google.cloud.spanner_dbapi.transaction_helper import (
     ExecuteStatement,
     CursorStatementType,
     FetchStatement,
+    ResultType,
 )
 
 
@@ -55,6 +56,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.NONE,
             result_details=None,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -74,6 +76,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.ROW_COUNT,
             result_details=update_count,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -94,6 +97,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.ROW_COUNT,
             result_details=2,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -114,6 +118,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.NONE,
             result_details=None,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -133,6 +138,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.ROW_COUNT,
             result_details=update_count,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -153,6 +159,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.ROW_COUNT,
             result_details=2,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -172,6 +179,7 @@ class TestTransactionHelper(unittest.TestCase):
         fetch_statement = FetchStatement(
             cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_ALL,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
         )
         self._under_test._statement_result_details_list.append(fetch_statement)
@@ -191,6 +199,7 @@ class TestTransactionHelper(unittest.TestCase):
         fetch_statement = FetchStatement(
             cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_ALL,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
         )
         self._under_test._statement_result_details_list.append(fetch_statement)
@@ -211,6 +220,7 @@ class TestTransactionHelper(unittest.TestCase):
         fetch_statement = FetchStatement(
             cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_MANY,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
             size=1,
         )
@@ -231,6 +241,7 @@ class TestTransactionHelper(unittest.TestCase):
         fetch_statement = FetchStatement(
             cursor=self._mock_cursor,
             statement_type=CursorStatementType.FETCH_MANY,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
             size=1,
         )
@@ -255,6 +266,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.EXCEPTION,
             result_details=exception,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -275,6 +287,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.EXCEPTION,
             result_details=Exception("Test"),
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -296,6 +309,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.NONE,
             result_details=None,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
@@ -336,6 +350,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=sql,
             args=[],
+            result_type=ResultType.ROW_COUNT,
             result_details=rows_inserted,
         )
         self.assertEqual(
@@ -367,6 +382,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=sql,
             args=[],
+            result_type=ResultType.EXCEPTION,
             result_details=exception,
         )
         self.assertEqual(
@@ -397,6 +413,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=sql,
             args=[],
+            result_type=ResultType.NONE,
             result_details=None,
         )
         self.assertEqual(
@@ -428,6 +445,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=sql,
             args=[],
+            result_type=ResultType.ROW_COUNT,
             result_details=rows_inserted,
         )
         self.assertEqual(
@@ -450,6 +468,7 @@ class TestTransactionHelper(unittest.TestCase):
         self._under_test._last_statement_result_details = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
+            result_type=ResultType.CHECKSUM,
             result_details=result_checksum,
             size=1,
         )
@@ -476,6 +495,7 @@ class TestTransactionHelper(unittest.TestCase):
         self._under_test._last_statement_result_details = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
             size=1,
         )
@@ -490,6 +510,7 @@ class TestTransactionHelper(unittest.TestCase):
             FetchStatement(
                 statement_type=CursorStatementType.FETCH_MANY,
                 cursor=self._mock_cursor,
+                result_type=ResultType.EXCEPTION,
                 result_details=exception,
                 size=1,
             ),
@@ -509,6 +530,7 @@ class TestTransactionHelper(unittest.TestCase):
         expected_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(row),
             size=1,
         )
@@ -534,6 +556,7 @@ class TestTransactionHelper(unittest.TestCase):
         expected_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_ALL,
             cursor=self._mock_cursor,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(row),
         )
         self.assertEqual(
@@ -555,6 +578,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
+            result_type=ResultType.ROW_COUNT,
             result_details=2,
         )
         self._under_test._last_statement_result_details = execute_statement
@@ -568,6 +592,7 @@ class TestTransactionHelper(unittest.TestCase):
         expected_fetch_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
+            result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(row),
             size=1,
         )

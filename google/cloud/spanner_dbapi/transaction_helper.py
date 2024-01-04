@@ -13,17 +13,13 @@
 # limitations under the License.
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, List, Union, Any, Dict
+from typing import TYPE_CHECKING, List, Any, Dict
 from google.api_core.exceptions import Aborted
 
 import time
 
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
 from google.cloud.spanner_dbapi.exceptions import RetryAborted
-from google.cloud.spanner_dbapi.parsed_statement import (
-    StatementType,
-    ClientSideStatementType,
-)
 from google.cloud.spanner_v1.session import _get_retry_delay
 
 if TYPE_CHECKING:
@@ -45,8 +41,8 @@ class TransactionRetryHelper:
         """
 
         self._connection = connection
-        # list of all single and batch statements in the same order as executed
-        # in original transaction along with their checksum value
+        # list of all statements in the same order as executed in original
+        # transaction along with their results
         self._statement_result_details_list: List[StatementDetails] = []
         # last StatementDetails that was added in the _statement_result_details_list
         self._last_statement_result_details: StatementDetails = None
@@ -93,6 +89,7 @@ class TransactionRetryHelper:
             and self._last_statement_result_details.cursor == cursor
         ):
             if exception is not None:
+                self._last_statement_result_details.result_type = ResultType.EXCEPTION
                 self._last_statement_result_details.result_details = exception
             else:
                 for row in result_rows:
@@ -106,12 +103,14 @@ class TransactionRetryHelper:
                 self._last_statement_result_details = FetchStatement(
                     cursor=cursor,
                     statement_type=CursorStatementType.FETCH_ALL,
+                    result_type=ResultType.CHECKSUM,
                     result_details=result_details,
                 )
             else:
                 self._last_statement_result_details = FetchStatement(
                     cursor=cursor,
                     statement_type=CursorStatementType.FETCH_MANY,
+                    result_type=ResultType.CHECKSUM,
                     result_details=result_details,
                     size=len(result_rows),
                 )
@@ -138,16 +137,15 @@ class TransactionRetryHelper:
         statement_type = CursorStatementType.EXECUTE
         if is_execute_many:
             statement_type = CursorStatementType.EXECUTE_MANY
+
+        result_type = ResultType.NONE
         result_details = None
-        parsed_statement = cursor._parsed_statement
         if exception is not None:
+            result_type = ResultType.EXCEPTION
             result_details = exception
-        elif (
-            parsed_statement.statement_type == StatementType.INSERT
-            or parsed_statement.statement_type == StatementType.UPDATE
-            or parsed_statement.client_side_statement_type
-            == ClientSideStatementType.RUN_BATCH
-        ):
+        # True in case of DML statement
+        elif cursor.rowcount != -1:
+            result_type = ResultType.ROW_COUNT
             result_details = cursor.rowcount
 
         self._last_statement_result_details = ExecuteStatement(
@@ -155,6 +153,7 @@ class TransactionRetryHelper:
             statement_type=statement_type,
             sql=sql,
             args=args,
+            result_type=result_type,
             result_details=result_details,
         )
         self._statement_result_details_list.append(self._last_statement_result_details)
@@ -175,19 +174,17 @@ class TransactionRetryHelper:
             attempt += 1
             if attempt > MAX_INTERNAL_RETRIES:
                 raise
-
             self._set_connection_for_retry()
-
             try:
                 for statement_result_details in self._statement_result_details_list:
                     if statement_result_details.cursor in self._cursor_map:
                         cursor = self._cursor_map.get(statement_result_details.cursor)
                     else:
-                        cursor: Cursor = self._connection.cursor()
+                        cursor = self._connection.cursor()
                         cursor._in_retry_mode = True
                         self._cursor_map[statement_result_details.cursor] = cursor
                     try:
-                        self._handle_statement(statement_result_details, cursor)
+                        _handle_statement(statement_result_details, cursor)
                     except Aborted:
                         raise
                     except RetryAborted:
@@ -205,33 +202,37 @@ class TransactionRetryHelper:
                 if delay:
                     time.sleep(delay)
 
-    def _handle_statement(self, statement_result_details, cursor):
-        statement_type = statement_result_details.statement_type
+
+def _handle_statement(statement_result_details, cursor):
+    statement_type = statement_result_details.statement_type
+    if _is_execute_type_statement(statement_type):
         if statement_type == CursorStatementType.EXECUTE:
             cursor.execute(statement_result_details.sql, statement_result_details.args)
-            if (
-                type(statement_result_details.result_details) is int
-                and statement_result_details.result_details != cursor.rowcount
-            ):
-                raise RetryAborted(RETRY_ABORTED_ERROR)
-        elif statement_type == CursorStatementType.EXECUTE_MANY:
+        else:
             cursor.executemany(
-                statement_result_details.sql,
-                statement_result_details.args,
+                statement_result_details.sql, statement_result_details.args
             )
-            if (
-                type(statement_result_details.result_details) is int
-                and statement_result_details.result_details != cursor.rowcount
-            ):
-                raise RetryAborted(RETRY_ABORTED_ERROR)
-        elif statement_type == CursorStatementType.FETCH_ALL:
+        if (
+            statement_result_details.result_type == ResultType.ROW_COUNT
+            and statement_result_details.result_details != cursor.rowcount
+        ):
+            raise RetryAborted(RETRY_ABORTED_ERROR)
+    else:
+        if statement_type == CursorStatementType.FETCH_ALL:
             res = cursor.fetchall()
-            checksum = _get_statement_result_checksum(res)
-            _compare_checksums(checksum, statement_result_details.result_details)
-        elif statement_type == CursorStatementType.FETCH_MANY:
+        else:
             res = cursor.fetchmany(statement_result_details.size)
-            checksum = _get_statement_result_checksum(res)
-            _compare_checksums(checksum, statement_result_details.result_details)
+        checksum = _get_statement_result_checksum(res)
+        _compare_checksums(checksum, statement_result_details.result_details)
+    if statement_result_details.result_type == ResultType.EXCEPTION:
+        raise RetryAborted(RETRY_ABORTED_ERROR)
+
+
+def _is_execute_type_statement(statement_type):
+    return statement_type in (
+        CursorStatementType.EXECUTE,
+        CursorStatementType.EXECUTE_MANY,
+    )
 
 
 def _get_statement_result_checksum(res_iter):
@@ -249,17 +250,24 @@ class CursorStatementType(Enum):
     FETCH_MANY = 5
 
 
+class ResultType(Enum):
+    # checksum of ResultSet in case of fetch call on query statement
+    CHECKSUM = (1,)
+    # None in case of execute call on query statement
+    NONE = (2,)
+    # Exception details in case of any statement execution throws exception
+    EXCEPTION = (3,)
+    # Total rows updated in case of execute call on DML statement
+    ROW_COUNT = 4
+
+
 @dataclass
 class StatementDetails:
     statement_type: CursorStatementType
     # The cursor object on which this statement was executed
     cursor: "Cursor"
-    # This would be one of
-    # 1. checksum of ResultSet in case of fetch call on query statement
-    # 2. Total rows updated in case of DML
-    # 3. Exception details in case of statement execution throws exception
-    # 4. None in case of execute calls
-    result_details: Union[ResultsChecksum, int, Exception, None]
+    result_type: ResultType
+    result_details: Any
 
 
 @dataclass

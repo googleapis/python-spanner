@@ -50,8 +50,6 @@ from google.cloud.spanner_dbapi.transaction_helper import CursorStatementType
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
-_UNSET_COUNT = -1
-
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
 
 
@@ -87,7 +85,7 @@ class Cursor(object):
     def __init__(self, connection):
         self._itr = None
         self._result_set = None
-        self._row_count = _UNSET_COUNT
+        self._row_count = None
         self.lastrowid = None
         self.connection = connection
         self.transaction_helper = self.connection._transaction_helper
@@ -96,6 +94,7 @@ class Cursor(object):
         self.arraysize = 1
         self._parsed_statement: ParsedStatement = None
         self._in_retry_mode = False
+        self._batch_dml_rows_count = None
 
     @property
     def is_closed(self):
@@ -150,14 +149,14 @@ class Cursor(object):
         :returns: The number of rows updated by the last INSERT, UPDATE, DELETE request's .execute*() call.
         """
 
-        if self._row_count != _UNSET_COUNT or self._result_set is None:
+        if self._row_count is not None or self._result_set is None:
             return self._row_count
 
         stats = getattr(self._result_set, "stats", None)
         if stats is not None and "row_count_exact" in stats:
             return stats.row_count_exact
 
-        return _UNSET_COUNT
+        return -1
 
     @check_not_closed
     def callproc(self, procname, args=None):
@@ -191,7 +190,7 @@ class Cursor(object):
             sql, params=params, param_types=get_param_types(params)
         )
         self._itr = PeekIterator(self._result_set)
-        self._row_count = _UNSET_COUNT
+        self._row_count = None
 
     def _batch_DDLs(self, sql):
         """
@@ -219,6 +218,14 @@ class Cursor(object):
         # Only queue DDL statements if they are all correctly classified.
         self.connection._ddl_statements.extend(statements)
 
+    def _reset(self):
+        if self.connection.database is None:
+            raise ValueError("Database needs to be passed for this operation")
+        self._itr = None
+        self._result_set = None
+        self._row_count = None
+        self._batch_dml_rows_count = None
+
     @check_not_closed
     def execute(self, sql, args=None):
         self._execute(sql, args, False)
@@ -232,13 +239,8 @@ class Cursor(object):
         :type args: list
         :param args: Additional parameters to supplement the SQL query.
         """
-        if self.connection.database is None:
-            raise ValueError("Database needs to be passed for this operation")
-        self._itr = None
-        self._result_set = None
-        self._row_count = _UNSET_COUNT
+        self._reset()
         exception = None
-
         try:
             self._parsed_statement = parse_utils.classify_statement(sql, args)
             if self._parsed_statement.statement_type == StatementType.CLIENT_SIDE:
@@ -320,13 +322,8 @@ class Cursor(object):
         :param seq_of_params: Sequence of additional parameters to run
                               the query with.
         """
-        if self.connection.database is None:
-            raise ValueError("Database needs to be passed for this operation")
-        self._itr = None
-        self._result_set = None
-        self._row_count = _UNSET_COUNT
+        self._reset()
         exception = None
-
         try:
             self._parsed_statement = parse_utils.classify_statement(operation)
             if self._parsed_statement.statement_type == StatementType.DDL:
@@ -464,7 +461,7 @@ class Cursor(object):
         self._itr = PeekIterator(self._result_set)
         # Unfortunately, Spanner doesn't seem to send back
         # information about the number of rows available.
-        self._row_count = _UNSET_COUNT
+        self._row_count = None
         if self._result_set.metadata.transaction.read_timestamp is not None:
             snapshot._transaction_read_timestamp = (
                 self._result_set.metadata.transaction.read_timestamp
