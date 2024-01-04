@@ -547,11 +547,12 @@ class TestDbApi:
         self._conn.read_only = True
         self._cursor.execute("PARTITION SELECT * FROM contacts")
         partition_id_rows = self._cursor.fetchall()
-        assert len(partition_id_rows) == 1
+        assert len(partition_id_rows) > 0
 
-        partition_id_row = partition_id_rows[0]
-        self._cursor.execute("RUN PARTITION " + partition_id_row[0])
-        rows = self._cursor.fetchall()
+        rows = []
+        for partition_id_row in partition_id_rows:
+            self._cursor.execute("RUN PARTITION " + partition_id_row[0])
+            rows = rows + self._cursor.fetchall()
         assert len(rows) == 10
         self._conn.commit()
 
@@ -596,12 +597,14 @@ class TestDbApi:
         self._conn.autocommit = True
         self._cursor.execute("PARTITION SELECT * FROM contacts")
         partition_id_rows = self._cursor.fetchall()
-        assert len(partition_id_rows) == 1
+        assert len(partition_id_rows) > 0
 
-        partition_id_row = partition_id_rows[0]
-        self._cursor.execute("RUN PARTITION " + partition_id_row[0])
-        rows = self._cursor.fetchall()
+        rows = []
+        for partition_id_row in partition_id_rows:
+            self._cursor.execute("RUN PARTITION " + partition_id_row[0])
+            rows = rows + self._cursor.fetchall()
         assert len(rows) == 10
+        self._conn.commit()
 
     def test_partitioned_query_with_client_transaction_started(self):
         """Test partition query throws exception when connection is in
