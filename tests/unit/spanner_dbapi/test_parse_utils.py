@@ -20,7 +20,6 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     Statement,
     ClientSideStatementType,
-    ClientSideStatementParamKey,
 )
 from google.cloud.spanner_v1 import param_types
 from google.cloud.spanner_v1 import JsonObject
@@ -86,9 +85,7 @@ class TestParseUtils(unittest.TestCase):
                 StatementType.CLIENT_SIDE,
                 Statement("PARTITION  SELECT s.SongName FROM Songs AS s"),
                 ClientSideStatementType.PARTITION_QUERY,
-                {
-                    ClientSideStatementParamKey.PARTITIONED_SQL_QUERY: "SELECT s.SongName FROM Songs AS s"
-                },
+                ["SELECT s.SongName FROM Songs AS s"],
             ),
         )
 
@@ -100,7 +97,7 @@ class TestParseUtils(unittest.TestCase):
                 StatementType.CLIENT_SIDE,
                 Statement("RUN  PARTITION  bj2bjb2j2bj2ebbh"),
                 ClientSideStatementType.RUN_PARTITION,
-                {ClientSideStatementParamKey.PARTITION_ID: "bj2bjb2j2bj2ebbh"},
+                ["bj2bjb2j2bj2ebbh"],
             ),
         )
 

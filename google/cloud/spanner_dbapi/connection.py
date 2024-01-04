@@ -26,7 +26,6 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     Statement,
     StatementType,
-    ClientSideStatementParamKey,
 )
 from google.cloud.spanner_dbapi.partition_helper import PartitionId
 from google.cloud.spanner_v1 import RequestOptions
@@ -600,9 +599,7 @@ class Connection:
         query_options=None,
     ):
         statement = parsed_statement.statement
-        partitioned_query = parsed_statement.client_side_statement_params[
-            ClientSideStatementParamKey.PARTITIONED_SQL_QUERY
-        ]
+        partitioned_query = parsed_statement.client_side_statement_params[0]
         if _get_statement_type(Statement(partitioned_query)) is not StatementType.QUERY:
             raise ProgrammingError(
                 "Only queries can be partitioned. Invalid statement: " + statement.sql

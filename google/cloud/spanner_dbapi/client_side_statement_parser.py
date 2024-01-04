@@ -19,7 +19,6 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     StatementType,
     ClientSideStatementType,
     Statement,
-    ClientSideStatementParamKey,
 )
 
 RE_BEGIN = re.compile(r"^\s*(BEGIN|START)(TRANSACTION)?", re.IGNORECASE)
@@ -51,7 +50,7 @@ def parse_stmt(query):
     :returns: ParsedStatement object.
     """
     client_side_statement_type = None
-    client_side_statement_params = {}
+    client_side_statement_params = []
     if RE_COMMIT.match(query):
         client_side_statement_type = ClientSideStatementType.COMMIT
     if RE_BEGIN.match(query):
@@ -70,15 +69,11 @@ def parse_stmt(query):
         client_side_statement_type = ClientSideStatementType.ABORT_BATCH
     if RE_PARTITION_QUERY.match(query):
         match = re.search(RE_PARTITION_QUERY, query)
-        client_side_statement_params[
-            ClientSideStatementParamKey.PARTITIONED_SQL_QUERY
-        ] = match.group(2)
+        client_side_statement_params.append(match.group(2))
         client_side_statement_type = ClientSideStatementType.PARTITION_QUERY
     if RE_RUN_PARTITION.match(query):
         match = re.search(RE_RUN_PARTITION, query)
-        client_side_statement_params[
-            ClientSideStatementParamKey.PARTITION_ID
-        ] = match.group(3)
+        client_side_statement_params.append(match.group(3))
         client_side_statement_type = ClientSideStatementType.RUN_PARTITION
     if client_side_statement_type is not None:
         return ParsedStatement(

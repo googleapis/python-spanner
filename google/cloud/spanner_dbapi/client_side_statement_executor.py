@@ -20,7 +20,6 @@ if TYPE_CHECKING:
 from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     ClientSideStatementType,
-    ClientSideStatementParamKey,
 )
 from google.cloud.spanner_v1 import (
     Type,
@@ -102,9 +101,7 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
         )
     if statement_type == ClientSideStatementType.RUN_PARTITION:
         return connection.run_partition(
-            parsed_statement.client_side_statement_params[
-                ClientSideStatementParamKey.PARTITION_ID
-            ]
+            parsed_statement.client_side_statement_params[0]
         )
 
 

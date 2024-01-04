@@ -13,7 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Dict
+from typing import Any, List
 
 from google.cloud.spanner_dbapi.checksum import ResultsChecksum
 
@@ -39,11 +39,6 @@ class ClientSideStatementType(Enum):
     RUN_PARTITION = 10
 
 
-class ClientSideStatementParamKey(Enum):
-    PARTITIONED_SQL_QUERY = 1
-    PARTITION_ID = 2
-
-
 @dataclass
 class Statement:
     sql: str
@@ -60,4 +55,4 @@ class ParsedStatement:
     statement_type: StatementType
     statement: Statement
     client_side_statement_type: ClientSideStatementType = None
-    client_side_statement_params: Dict[ClientSideStatementParamKey, Any] = None
+    client_side_statement_params: List[Any] = None
