@@ -357,8 +357,8 @@ class TestTransactionHelper(unittest.TestCase):
             result_details=rows_inserted,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement_result_details,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement_result_details},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -389,8 +389,8 @@ class TestTransactionHelper(unittest.TestCase):
             result_details=exception,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement_result_details,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement_result_details},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -421,8 +421,8 @@ class TestTransactionHelper(unittest.TestCase):
             result_details=None,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement_result_details,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement_result_details},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -453,8 +453,8 @@ class TestTransactionHelper(unittest.TestCase):
             result_details=rows_inserted,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement_result_details,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement_result_details},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -469,25 +469,31 @@ class TestTransactionHelper(unittest.TestCase):
         result_row = ("field1", "field2")
         result_checksum = _get_checksum(result_row)
         original_checksum_digest = result_checksum.checksum.digest()
-        self._under_test._last_statement_result_details = FetchStatement(
+        last_statement_result_details = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
             result_type=ResultType.CHECKSUM,
             result_details=result_checksum,
             size=1,
         )
+        self._under_test._last_statement_details_per_cursor = {
+            self._mock_cursor: last_statement_result_details
+        }
         new_rows = [("field3", "field4"), ("field5", "field6")]
 
         self._under_test.add_fetch_statement_for_retry(
             self._mock_cursor, new_rows, None, False
         )
 
+        updated_last_statement_result_details = (
+            self._under_test._last_statement_details_per_cursor.get(self._mock_cursor)
+        )
         self.assertEqual(
-            self._under_test._last_statement_result_details.size,
+            updated_last_statement_result_details.size,
             3,
         )
         self.assertNotEqual(
-            self._under_test._last_statement_result_details.result_details.checksum.digest(),
+            updated_last_statement_result_details.result_details.checksum.digest(),
             original_checksum_digest,
         )
 
@@ -496,13 +502,16 @@ class TestTransactionHelper(unittest.TestCase):
         Test add_fetch_statement_for_retry method with exception
         """
         result_row = ("field1", "field2")
-        self._under_test._last_statement_result_details = FetchStatement(
+        fetch_statement = FetchStatement(
             statement_type=CursorStatementType.FETCH_MANY,
             cursor=self._mock_cursor,
             result_type=ResultType.CHECKSUM,
             result_details=_get_checksum(result_row),
             size=1,
         )
+        self._under_test._last_statement_details_per_cursor = {
+            self._mock_cursor: fetch_statement
+        }
         exception = Exception("Test")
 
         self._under_test.add_fetch_statement_for_retry(
@@ -510,7 +519,7 @@ class TestTransactionHelper(unittest.TestCase):
         )
 
         self.assertEqual(
-            self._under_test._last_statement_result_details,
+            self._under_test._last_statement_details_per_cursor.get(self._mock_cursor),
             FetchStatement(
                 statement_type=CursorStatementType.FETCH_MANY,
                 cursor=self._mock_cursor,
@@ -539,8 +548,8 @@ class TestTransactionHelper(unittest.TestCase):
             size=1,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -564,8 +573,8 @@ class TestTransactionHelper(unittest.TestCase):
             result_details=_get_checksum(row),
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details,
-            expected_statement,
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_statement},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,
@@ -585,7 +594,9 @@ class TestTransactionHelper(unittest.TestCase):
             result_type=ResultType.ROW_COUNT,
             result_details=2,
         )
-        self._under_test._last_statement_result_details = execute_statement
+        self._under_test._last_statement_details_per_cursor = {
+            self._mock_cursor: execute_statement
+        }
         self._under_test._statement_result_details_list.append(execute_statement)
         row = ("field3", "field4")
 
@@ -601,7 +612,8 @@ class TestTransactionHelper(unittest.TestCase):
             size=1,
         )
         self.assertEqual(
-            self._under_test._last_statement_result_details, expected_fetch_statement
+            self._under_test._last_statement_details_per_cursor,
+            {self._mock_cursor: expected_fetch_statement},
         )
         self.assertEqual(
             self._under_test._statement_result_details_list,

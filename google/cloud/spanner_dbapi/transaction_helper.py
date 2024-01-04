@@ -44,8 +44,8 @@ class TransactionRetryHelper:
         # list of all statements in the same order as executed in original
         # transaction along with their results
         self._statement_result_details_list: List[StatementDetails] = []
-        # last StatementDetails that was added in the _statement_result_details_list
-        self._last_statement_result_details: StatementDetails = None
+        # Map of last StatementDetails that was added to a particular cursor
+        self._last_statement_details_per_cursor: Dict[Cursor, StatementDetails] = {}
         # 1-1 map from original cursor object on which transaction ran to the
         # new cursor object used in the retry
         self._cursor_map: Dict[Cursor, Cursor] = {}
@@ -61,7 +61,7 @@ class TransactionRetryHelper:
         or aborted
         """
         self._statement_result_details_list = []
-        self._last_statement_result_details = None
+        self._last_statement_details_per_cursor = {}
         self._cursor_map = {}
 
     def add_fetch_statement_for_retry(
@@ -82,41 +82,42 @@ class TransactionRetryHelper:
         """
         if not self._connection._client_transaction_started:
             return
+
+        last_statement_result_details = self._last_statement_details_per_cursor.get(
+            cursor
+        )
         if (
-            self._last_statement_result_details is not None
-            and self._last_statement_result_details.statement_type
+            last_statement_result_details is not None
+            and last_statement_result_details.statement_type
             == CursorStatementType.FETCH_MANY
-            and self._last_statement_result_details.cursor == cursor
         ):
             if exception is not None:
-                self._last_statement_result_details.result_type = ResultType.EXCEPTION
-                self._last_statement_result_details.result_details = exception
+                last_statement_result_details.result_type = ResultType.EXCEPTION
+                last_statement_result_details.result_details = exception
             else:
                 for row in result_rows:
-                    self._last_statement_result_details.result_details.consume_result(
-                        row
-                    )
-                self._last_statement_result_details.size += len(result_rows)
+                    last_statement_result_details.result_details.consume_result(row)
+                last_statement_result_details.size += len(result_rows)
         else:
             result_details = _get_statement_result_checksum(result_rows)
             if is_fetch_all:
-                self._last_statement_result_details = FetchStatement(
-                    cursor=cursor,
-                    statement_type=CursorStatementType.FETCH_ALL,
-                    result_type=ResultType.CHECKSUM,
-                    result_details=result_details,
-                )
+                statement_type = CursorStatementType.FETCH_ALL
+                size = None
             else:
-                self._last_statement_result_details = FetchStatement(
-                    cursor=cursor,
-                    statement_type=CursorStatementType.FETCH_MANY,
-                    result_type=ResultType.CHECKSUM,
-                    result_details=result_details,
-                    size=len(result_rows),
-                )
-            self._statement_result_details_list.append(
-                self._last_statement_result_details
+                statement_type = CursorStatementType.FETCH_MANY
+                size = len(result_rows)
+
+            last_statement_result_details = FetchStatement(
+                cursor=cursor,
+                statement_type=statement_type,
+                result_type=ResultType.CHECKSUM,
+                result_details=result_details,
+                size=size,
             )
+            self._last_statement_details_per_cursor[
+                cursor
+            ] = last_statement_result_details
+            self._statement_result_details_list.append(last_statement_result_details)
 
     def add_execute_statement_for_retry(
         self, cursor, sql, args, exception, is_execute_many
@@ -150,7 +151,7 @@ class TransactionRetryHelper:
             result_type = ResultType.ROW_COUNT
             result_details = cursor.rowcount
 
-        self._last_statement_result_details = ExecuteStatement(
+        last_statement_result_details = ExecuteStatement(
             cursor=cursor,
             statement_type=statement_type,
             sql=sql,
@@ -158,7 +159,8 @@ class TransactionRetryHelper:
             result_type=result_type,
             result_details=result_details,
         )
-        self._statement_result_details_list.append(self._last_statement_result_details)
+        self._last_statement_details_per_cursor[cursor] = last_statement_result_details
+        self._statement_result_details_list.append(last_statement_result_details)
 
     def retry_transaction(self):
         """Retry the aborted transaction.
