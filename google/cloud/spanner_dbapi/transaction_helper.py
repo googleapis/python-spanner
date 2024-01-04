@@ -143,8 +143,10 @@ class TransactionRetryHelper:
         if exception is not None:
             result_type = ResultType.EXCEPTION
             result_details = exception
-        # True in case of DML statement
-        elif cursor.rowcount != -1:
+        elif cursor._batch_dml_rows_count is not None:
+            result_type = ResultType.BATCH_DML_ROWS_COUNT
+            result_details = cursor._batch_dml_rows_count
+        elif cursor._row_count is not None:
             result_type = ResultType.ROW_COUNT
             result_details = cursor.rowcount
 
@@ -208,13 +210,18 @@ def _handle_statement(statement_result_details, cursor):
     if _is_execute_type_statement(statement_type):
         if statement_type == CursorStatementType.EXECUTE:
             cursor.execute(statement_result_details.sql, statement_result_details.args)
+            if (
+                statement_result_details.result_type == ResultType.ROW_COUNT
+                and statement_result_details.result_details != cursor.rowcount
+            ):
+                raise RetryAborted(RETRY_ABORTED_ERROR)
         else:
             cursor.executemany(
                 statement_result_details.sql, statement_result_details.args
             )
         if (
-            statement_result_details.result_type == ResultType.ROW_COUNT
-            and statement_result_details.result_details != cursor.rowcount
+            statement_result_details.result_type == ResultType.BATCH_DML_ROWS_COUNT
+            and statement_result_details.result_details != cursor._batch_dml_rows_count
         ):
             raise RetryAborted(RETRY_ABORTED_ERROR)
     else:
@@ -252,13 +259,15 @@ class CursorStatementType(Enum):
 
 class ResultType(Enum):
     # checksum of ResultSet in case of fetch call on query statement
-    CHECKSUM = (1,)
+    CHECKSUM = 1
     # None in case of execute call on query statement
-    NONE = (2,)
+    NONE = 2
     # Exception details in case of any statement execution throws exception
-    EXCEPTION = (3,)
+    EXCEPTION = 3
     # Total rows updated in case of execute call on DML statement
     ROW_COUNT = 4
+    # Total rows updated in case of Batch DML statement execution
+    BATCH_DML_ROWS_COUNT = 5
 
 
 @dataclass

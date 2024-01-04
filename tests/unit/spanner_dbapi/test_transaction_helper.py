@@ -154,17 +154,19 @@ class TestTransactionHelper(unittest.TestCase):
         Test retrying a transaction with an executemany DML statement with different
         row update count than original throws RetryAborted exception.
         """
+        rows_inserted = [3, 4]
+        self._mock_cursor._batch_dml_rows_count = rows_inserted
         execute_statement = ExecuteStatement(
             statement_type=CursorStatementType.EXECUTE_MANY,
             cursor=self._mock_cursor,
             sql=SQL,
             args=ARGS,
-            result_type=ResultType.ROW_COUNT,
-            result_details=2,
+            result_type=ResultType.BATCH_DML_ROWS_COUNT,
+            result_details=rows_inserted,
         )
         self._under_test._statement_result_details_list.append(execute_statement)
         run_mock = self._under_test._connection.cursor = mock.Mock()
-        run_mock().rowcount = 3
+        run_mock()._batch_dml_rows_count = [4, 3]
 
         with self.assertRaises(RetryAborted):
             self._under_test.retry_transaction()
@@ -341,6 +343,7 @@ class TestTransactionHelper(unittest.TestCase):
         sql = "INSERT INTO Table"
         rows_inserted = 3
         self._mock_cursor.rowcount = rows_inserted
+        self._mock_cursor._batch_dml_rows_count = None
         self._under_test.add_execute_statement_for_retry(
             self._mock_cursor, sql, [], None, False
         )
@@ -401,7 +404,8 @@ class TestTransactionHelper(unittest.TestCase):
         self._mock_cursor._parsed_statement = ParsedStatement(
             statement_type=StatementType.QUERY, statement=None
         )
-        self._mock_cursor.rowcount = -1
+        self._mock_cursor._row_count = None
+        self._mock_cursor._batch_dml_rows_count = None
 
         sql = "SELECT 1"
         self._under_test.add_execute_statement_for_retry(
@@ -434,8 +438,8 @@ class TestTransactionHelper(unittest.TestCase):
         )
 
         sql = "INSERT INTO Table"
-        rows_inserted = 3
-        self._mock_cursor.rowcount = rows_inserted
+        rows_inserted = [3, 4]
+        self._mock_cursor._batch_dml_rows_count = rows_inserted
         self._under_test.add_execute_statement_for_retry(
             self._mock_cursor, sql, [], None, True
         )
@@ -445,7 +449,7 @@ class TestTransactionHelper(unittest.TestCase):
             cursor=self._mock_cursor,
             sql=sql,
             args=[],
-            result_type=ResultType.ROW_COUNT,
+            result_type=ResultType.BATCH_DML_ROWS_COUNT,
             result_details=rows_inserted,
         )
         self.assertEqual(
