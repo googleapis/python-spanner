@@ -40,8 +40,6 @@ SOME_TIME = datetime.datetime(1989, 1, 17, 17, 59, 12, 345612)
 NANO_TIME = datetime_helpers.DatetimeWithNanoseconds(1995, 8, 31, nanosecond=987654321)
 POS_INF = float("+inf")
 NEG_INF = float("-inf")
-NUMPY_POS_INF = numpy.float32("+inf")
-NUMPY_NEG_INF = numpy.float32("-inf")
 (OTHER_NAN,) = struct.unpack("<d", b"\x01\x00\x01\x00\x00\x00\xf8\xff")
 BYTES_1 = b"Ymlu"
 BYTES_2 = b"Ym9vdHM="
@@ -119,14 +117,13 @@ LIVE_ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=103, bytes_value=BYTES_1),
     AllTypesRowData(pkey=104, date_value=SOME_DATE),
     AllTypesRowData(pkey=105, float32_value=1.414213),
-    AllTypesRowData(pkey=106, float32_value=numpy.float32(1.414213)),
-    AllTypesRowData(pkey=107, float_value=1.4142136),
-    AllTypesRowData(pkey=108, string_value="VALUE"),
-    AllTypesRowData(pkey=109, timestamp_value=SOME_TIME),
-    AllTypesRowData(pkey=110, timestamp_value=NANO_TIME),
-    AllTypesRowData(pkey=111, numeric_value=NUMERIC_1),
-    AllTypesRowData(pkey=112, json_value=JSON_1),
-    AllTypesRowData(pkey=113, json_value=JsonObject([JSON_1, JSON_2])),
+    AllTypesRowData(pkey=106, float_value=1.4142136),
+    AllTypesRowData(pkey=107, string_value="VALUE"),
+    AllTypesRowData(pkey=108, timestamp_value=SOME_TIME),
+    AllTypesRowData(pkey=109, timestamp_value=NANO_TIME),
+    AllTypesRowData(pkey=110, numeric_value=NUMERIC_1),
+    AllTypesRowData(pkey=111, json_value=JSON_1),
+    AllTypesRowData(pkey=112, json_value=JsonObject([JSON_1, JSON_2])),
     # empty array values
     AllTypesRowData(pkey=201, int_array=[]),
     AllTypesRowData(pkey=202, bool_array=[]),
@@ -147,15 +144,12 @@ LIVE_ALL_TYPES_ROWDATA = (
         pkey=305, float32_array=[3.1415926, 2.71828, math.inf, -math.inf, None]
     ),
     AllTypesRowData(
-        pkey=306, float32_array=numpy.array([3.14159, 2.71828, math.inf,-math.inf, None], dtype=numpy.float32)
+        pkey=306, float_array=[3.1415926, 2.71828, math.inf, -math.inf, None]
     ),
-    AllTypesRowData(
-        pkey=307, float_array=[3.1415926, 2.71828, math.inf, -math.inf, None]
-    ),
-    AllTypesRowData(pkey=308, string_array=["One", "Two", None]),
-    AllTypesRowData(pkey=309, timestamp_array=[SOME_TIME, NANO_TIME, None]),
-    AllTypesRowData(pkey=310, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
-    AllTypesRowData(pkey=311, json_array=[JSON_1, JSON_2, None]),
+    AllTypesRowData(pkey=307, string_array=["One", "Two", None]),
+    AllTypesRowData(pkey=308, timestamp_array=[SOME_TIME, NANO_TIME, None]),
+    AllTypesRowData(pkey=309, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
+    AllTypesRowData(pkey=310, json_array=[JSON_1, JSON_2, None]),
 )
 EMULATOR_ALL_TYPES_ROWDATA = (
     # all nulls
@@ -2166,6 +2160,14 @@ def test_execute_sql_w_float_bindings_transfinite(sessions_database, database_di
         sessions_database,
         sql=f"SELECT {placeholder}",
         params={key: NEG_INF},
+        param_types={key: spanner_v1.param_types.FLOAT64},
+        expected=[(NEG_INF,)],
+        order=False,
+    )
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: NEG_INF},
         param_types={key: spanner_v1.param_types.Float32},
         expected=[(NEG_INF,)],
         order=False,
@@ -2178,37 +2180,18 @@ def test_execute_sql_w_float_bindings_transfinite(sessions_database, database_di
         sessions_database,
         sql=f"SELECT {placeholder}",
         params={key: POS_INF},
+        param_types={key: spanner_v1.param_types.FLOAT64},
+        expected=[(POS_INF,)],
+        order=False,
+    )
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: POS_INF},
         param_types={key: spanner_v1.param_types.Float32},
         expected=[(POS_INF,)],
         order=False,
     )
-
-def test_execute_sql_w_float32_bindings_transfinite(sessions_database, database_dialect):
-    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "neg_inf"
-    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
-
-    # Find -inf
-    _check_sql_results(
-        sessions_database,
-        sql=f"SELECT {placeholder}",
-        params={key: NUMPY_NEG_INF},
-        param_types={key: spanner_v1.param_types.Float32},
-        expected=[(NUMPY_NEG_INF,)],
-        order=False,
-    )
-
-    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "pos_inf"
-    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
-    # Find +inf
-    _check_sql_results(
-        sessions_database,
-        sql=f"SELECT {placeholder}",
-        params={key: NUMPY_POS_INF},
-        param_types={key: spanner_v1.param_types.Float32},
-        expected=[(NUMPY_POS_INF,)],
-        order=False,
-    )
-
 
 def test_execute_sql_w_bytes_bindings(sessions_database, database_dialect):
     _bind_test_helper(

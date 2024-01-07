@@ -19,7 +19,6 @@ import decimal
 import math
 import time
 
-import numpy
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
 
@@ -135,8 +134,6 @@ def _make_value_pb(value):
     """
     if value is None:
         return Value(null_value="NULL_VALUE")
-    if isinstance(value, (list, tuple, numpy.ndarray)):
-        return Value(list_value=_make_list_value_pb(value))
     if isinstance(value, bool):
         return Value(bool_value=value)
     if isinstance(value, int):
@@ -145,15 +142,6 @@ def _make_value_pb(value):
         if math.isnan(value):
             return Value(string_value="NaN")
         if math.isinf(value):
-            if value > 0:
-                return Value(string_value="Infinity")
-            else:
-                return Value(string_value="-Infinity")
-        return Value(number_value=value)
-    if isinstance(value, numpy.float32):
-        if numpy.isnan(value):
-            return Value(string_value="NaN")
-        if numpy.isinf(value):
             if value > 0:
                 return Value(string_value="Infinity")
             else:
@@ -240,7 +228,7 @@ def _parse_value_pb(value_pb, field_type):
             return value_pb.number_value
     elif  type_code == TypeCode.FLOAT32:
         if value_pb.HasField("string_value"):
-            return numpy.float32(value_pb.string_value)
+            return float(value_pb.string_value)
         else:
             return value_pb.number_value
     elif type_code == TypeCode.DATE:
