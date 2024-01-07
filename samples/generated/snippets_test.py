@@ -129,6 +129,7 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     instance = spanner_client.instance(create_instance_id)
     retry_429(instance.delete)()
 
+
 def test_create_database_with_default_leader(
     capsys,
     multi_region_instance,
