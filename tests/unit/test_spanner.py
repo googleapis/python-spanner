@@ -74,7 +74,6 @@ LIMIT = 20
 MODE = 2
 RETRY = gapic_v1.method.DEFAULT
 TIMEOUT = gapic_v1.method.DEFAULT
-REQUEST_OPTIONS = RequestOptions()
 DIRECTED_READ_OPTIONS = {
     "include_replicas": {
         "replica_selections": [
@@ -154,7 +153,7 @@ class TestTransaction(OpenTelemetryBase):
             PARAM_TYPES,
             query_mode=MODE,
             query_options=query_options,
-            request_options=REQUEST_OPTIONS,
+            request_options=RequestOptions(),
             retry=RETRY,
             timeout=TIMEOUT,
         )
@@ -179,7 +178,7 @@ class TestTransaction(OpenTelemetryBase):
             expected_query_options = _merge_query_options(
                 expected_query_options, query_options
             )
-        expected_request_options = REQUEST_OPTIONS
+        expected_request_options = RequestOptions()
         expected_request_options.transaction_tag = self.TRANSACTION_TAG
 
         expected_request = ExecuteSqlRequest(
@@ -239,7 +238,7 @@ class TestTransaction(OpenTelemetryBase):
             PARAM_TYPES,
             query_mode=MODE,
             query_options=query_options,
-            request_options=REQUEST_OPTIONS,
+            request_options=RequestOptions(),
             partition=partition,
             retry=RETRY,
             timeout=TIMEOUT,
@@ -260,6 +259,7 @@ class TestTransaction(OpenTelemetryBase):
         query_options=None,
         begin=True,
         sql_count=0,
+        transaction_tag=False,
         directed_read_options=None,
     ):
         if begin is True:
@@ -279,8 +279,12 @@ class TestTransaction(OpenTelemetryBase):
                 expected_query_options, query_options
             )
 
-        expected_request_options = REQUEST_OPTIONS
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        expected_request_options = RequestOptions()
+
+        if transaction_tag is True:
+            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        else:
+            expected_request_options.transaction_tag = None
 
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
@@ -342,7 +346,7 @@ class TestTransaction(OpenTelemetryBase):
                 partition=partition,
                 retry=RETRY,
                 timeout=TIMEOUT,
-                request_options=REQUEST_OPTIONS,
+                request_options=RequestOptions(),
                 directed_read_options=directed_read_options,
             )
         else:
@@ -354,7 +358,7 @@ class TestTransaction(OpenTelemetryBase):
                 limit=LIMIT,
                 retry=RETRY,
                 timeout=TIMEOUT,
-                request_options=REQUEST_OPTIONS,
+                request_options=RequestOptions(),
                 directed_read_options=directed_read_options,
             )
 
@@ -367,7 +371,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.stats, stats_pb)
 
     def _read_helper_expected_request(
-        self, partition=None, begin=True, count=0, directed_read_options=None
+        self, partition=None, begin=True, count=0, transaction_tag=False, directed_read_options=None
     ):
         if begin is True:
             expected_transaction = TransactionSelector(
@@ -381,9 +385,14 @@ class TestTransaction(OpenTelemetryBase):
         else:
             expected_limit = LIMIT
 
-        expected_request_options = REQUEST_OPTIONS
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        # Transaction tag is ignored for read request.
+        expected_request_options = RequestOptions()
 
+        if transaction_tag is True:
+            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        else:
+            expected_request_options.transaction_tag = None
+            
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
             table=TABLE_NAME,
@@ -436,7 +445,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction._execute_sql_count = count
 
         status, row_counts = transaction.batch_update(
-            dml_statements, request_options=REQUEST_OPTIONS
+            dml_statements, request_options=RequestOptions()
         )
 
         self.assertEqual(status, expected_status)
@@ -466,7 +475,7 @@ class TestTransaction(OpenTelemetryBase):
             ExecuteBatchDmlRequest.Statement(sql=delete_dml),
         ]
 
-        expected_request_options = REQUEST_OPTIONS
+        expected_request_options = RequestOptions()
         expected_request_options.transaction_tag = self.TRANSACTION_TAG
 
         expected_request = ExecuteBatchDmlRequest(
@@ -621,7 +630,9 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_sql_helper(transaction=transaction, api=api)
         api.execute_streaming_sql.assert_called_once_with(
-            request=self._execute_sql_expected_request(database=database, begin=False),
+            request=self._execute_sql_expected_request(
+                database=database, begin=False, transaction_tag=True
+            ),
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
             metadata=[
@@ -716,7 +727,9 @@ class TestTransaction(OpenTelemetryBase):
         )
         self._read_helper(transaction=transaction, api=api)
         api.streaming_read.assert_called_once_with(
-            request=self._read_helper_expected_request(begin=False),
+            request=self._read_helper_expected_request(
+                begin=False, transaction_tag=True
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
