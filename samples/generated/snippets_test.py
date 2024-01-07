@@ -15,7 +15,6 @@
 import uuid
 
 from google.api_core import exceptions
-from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 import pytest
 from test_utils.retry import RetryErrors
@@ -48,7 +47,7 @@ retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
 
 @pytest.fixture(scope="module")
 def sample_name():
-    return "snippets.py"
+    return "snippets"
 
 
 @pytest.fixture(scope="module")
@@ -129,3 +128,18 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(snippets.create_instance)(create_instance_id)
     instance = spanner_client.instance(create_instance_id)
     retry_429(instance.delete)()
+
+def test_create_database_with_default_leader(
+    capsys,
+    multi_region_instance,
+    multi_region_instance_id,
+    default_leader_database_id,
+    default_leader,
+):
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(snippets.create_database_with_default_leader)(
+        multi_region_instance_id, default_leader_database_id, default_leader
+    )
+    out, _ = capsys.readouterr()
+    assert default_leader_database_id in out
+    assert default_leader in out
