@@ -239,7 +239,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._execute_sql_count, sql_count + 1)
 
     def _execute_sql_expected_request(
-        self, database, partition=None, query_options=None, begin=True, sql_count=0, transaction_tag=False
+        self,
+        database,
+        partition=None,
+        query_options=None,
+        begin=True,
+        sql_count=0,
+        transaction_tag=False,
     ):
         if begin is True:
             expected_transaction = TransactionSelector(
@@ -345,7 +351,9 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
 
-    def _read_helper_expected_request(self, partition=None, begin=True, count=0, transaction_tag=False):
+    def _read_helper_expected_request(
+        self, partition=None, begin=True, count=0, transaction_tag=False
+    ):
         if begin is True:
             expected_transaction = TransactionSelector(
                 begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
@@ -602,7 +610,9 @@ class TestTransaction(OpenTelemetryBase):
 
         self._execute_sql_helper(transaction=transaction, api=api)
         api.execute_streaming_sql.assert_called_once_with(
-            request=self._execute_sql_expected_request(database=database, begin=False, transaction_tag=True),
+            request=self._execute_sql_expected_request(
+                database=database, begin=False, transaction_tag=True
+            ),
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
             metadata=[
@@ -651,7 +661,9 @@ class TestTransaction(OpenTelemetryBase):
         )
         self._read_helper(transaction=transaction, api=api)
         api.streaming_read.assert_called_once_with(
-            request=self._read_helper_expected_request(begin=False, transaction_tag=True),
+            request=self._read_helper_expected_request(
+                begin=False, transaction_tag=True
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
