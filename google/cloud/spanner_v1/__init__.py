@@ -80,7 +80,6 @@ COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
 This value can only be used for timestamp columns that have set the option
 ``(allow_commit_timestamp=true)`` in the schema.
 """
-TransactionTypes = DirectedReadOptions.ReplicaSelection.Type
 
 
 __all__ = (
@@ -100,7 +99,6 @@ __all__ = (
     "TransactionPingingPool",
     # local
     "COMMIT_TIMESTAMP",
-    "TransactionTypes",
     # google.cloud.spanner_v1.types
     "BatchCreateSessionsRequest",
     "BatchCreateSessionsResponse",

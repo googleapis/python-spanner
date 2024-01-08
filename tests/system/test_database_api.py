@@ -22,7 +22,7 @@ from google.iam.v1 import policy_pb2
 from google.cloud import spanner_v1
 from google.cloud.spanner_v1.pool import FixedSizePool, PingingPool
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
-from google.cloud.spanner_v1 import TransactionTypes
+from google.cloud.spanner_v1 import DirectedReadOptions
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
@@ -37,7 +37,7 @@ DIRECTED_READ_OPTIONS = {
         "replica_selections": [
             {
                 "location": "us-west1",
-                "type_": TransactionTypes.READ_ONLY,
+                "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
             },
         ],
         "auto_failover_disabled": True,

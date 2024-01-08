@@ -31,7 +31,7 @@ import time
 from google.cloud import spanner
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import param_types
-from google.cloud.spanner_v1 import TransactionTypes
+from google.cloud.spanner_v1 import DirectedReadOptions
 from google.type import expr_pb2
 from google.iam.v1 import policy_pb2
 from google.cloud.spanner_v1.data_types import JsonObject
@@ -2776,7 +2776,7 @@ def directed_read_options(
         "include_replicas": {
             "replica_selections": [
                 {
-                    "type_": TransactionTypes.READ_ONLY,
+                    "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
                 },
             ],
             "auto_failover_disabled": True,

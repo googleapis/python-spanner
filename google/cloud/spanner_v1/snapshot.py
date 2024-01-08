@@ -237,8 +237,6 @@ class _SnapshotBase(_SessionWrapper):
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
-
-        :raises InvalidArgument: if directed_read_options is set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:
@@ -404,8 +402,6 @@ class _SnapshotBase(_SessionWrapper):
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
-
-        :raises InvalidArgument: if directed_read_options is set for READ-WRITE Transaction or PDML.
         """
         if self._read_request_count > 0:
             if not self._multi_use:

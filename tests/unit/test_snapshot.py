@@ -16,7 +16,7 @@
 from google.api_core import gapic_v1
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions, TransactionTypes
+from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
@@ -51,7 +51,7 @@ DIRECTED_READ_OPTIONS = {
         "replica_selections": [
             {
                 "location": "us-west1",
-                "type_": TransactionTypes.READ_ONLY,
+                "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
             },
         ],
         "auto_failover_disabled": True,

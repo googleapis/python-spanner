@@ -28,7 +28,7 @@ from google.cloud.spanner_v1 import (
     StructType,
     TransactionOptions,
     TransactionSelector,
-    TransactionTypes,
+    DirectedReadOptions,
     ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
     param_types,
@@ -79,7 +79,7 @@ DIRECTED_READ_OPTIONS = {
         "replica_selections": [
             {
                 "location": "us-west1",
-                "type_": TransactionTypes.READ_ONLY,
+                "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
             },
         ],
         "auto_failover_disabled": True,

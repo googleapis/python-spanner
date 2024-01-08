@@ -15,7 +15,7 @@
 import unittest
 
 import mock
-from google.cloud.spanner_v1 import TransactionTypes
+from google.cloud.spanner_v1 import DirectedReadOptions
 
 
 def _make_credentials():
@@ -46,7 +46,7 @@ class TestClient(unittest.TestCase):
             "replica_selections": [
                 {
                     "location": "us-west1",
-                    "type_": TransactionTypes.READ_ONLY,
+                    "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
                 },
             ],
             "auto_failover_disabled": True,
