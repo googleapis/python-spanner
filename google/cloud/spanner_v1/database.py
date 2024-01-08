@@ -1267,7 +1267,7 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned read and this field is
                 set ``true``, the request will be executed via offline access.
 
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: (Optional) Request level option used to set the directed_read_options
             for ReadRequests that indicates which replicas
@@ -1398,7 +1398,7 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
 
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: (Optional) Request level option used to set the directed_read_options
             for ExecuteSqlRequests that indicates which replicas

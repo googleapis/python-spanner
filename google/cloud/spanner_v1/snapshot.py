@@ -225,7 +225,7 @@ class _SnapshotBase(_SessionWrapper):
                 ``partition_token``, the API will return an
                 ``INVALID_ARGUMENT`` error.
 
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: (Optional) Request level option used to set the directed_read_options
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas
@@ -393,7 +393,7 @@ class _SnapshotBase(_SessionWrapper):
                 ``partition_token``, the API will return an
                 ``INVALID_ARGUMENT`` error.
 
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: (Optional) Request level option used to set the directed_read_options
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas

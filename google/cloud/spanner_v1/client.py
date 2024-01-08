@@ -120,7 +120,7 @@ class Client(ClientWithProject):
         disable leader aware routing. Disabling leader aware routing would
         route all requests in RW/PDML transactions to the closest region.
 
-    :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+    :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
         or :class:`dict`
     :param directed_read_options: (Optional) Client options used to set the directed_read_options
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas
@@ -273,7 +273,7 @@ class Client(ClientWithProject):
         """Getter for directed_read_options.
 
         :rtype:
-            :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+            :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :returns: The directed_read_options for the client.
         """
@@ -406,7 +406,7 @@ class Client(ClientWithProject):
     @directed_read_options.setter
     def directed_read_options(self, directed_read_options):
         """Sets directed_read_options for the client
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.types.DirectedReadOptions`
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
             or :class:`dict`
         :param directed_read_options: Client options used to set the directed_read_options
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas
