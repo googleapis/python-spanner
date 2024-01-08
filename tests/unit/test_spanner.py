@@ -371,7 +371,12 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(result_set.stats, stats_pb)
 
     def _read_helper_expected_request(
-        self, partition=None, begin=True, count=0, transaction_tag=False, directed_read_options=None
+        self,
+        partition=None,
+        begin=True,
+        count=0,
+        transaction_tag=False,
+        directed_read_options=None,
     ):
         if begin is True:
             expected_transaction = TransactionSelector(
@@ -392,7 +397,7 @@ class TestTransaction(OpenTelemetryBase):
             expected_request_options.transaction_tag = self.TRANSACTION_TAG
         else:
             expected_request_options.transaction_tag = None
-            
+
         expected_request = ReadRequest(
             session=self.SESSION_NAME,
             table=TABLE_NAME,
