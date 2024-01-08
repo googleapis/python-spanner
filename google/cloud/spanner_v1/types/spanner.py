@@ -398,7 +398,7 @@ class DirectedReadOptions(proto.Message):
     .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
 
     Attributes:
-        include_replicas (google.cloud.spanner_v1.DirectedReadOptions.IncludeReplicas):
+        include_replicas (google.cloud.spanner_v1.types.DirectedReadOptions.IncludeReplicas):
             Include_replicas indicates the order of replicas (as they
             appear in this list) to process the request. If
             auto_failover_disabled is set to true and all replicas are
@@ -407,7 +407,7 @@ class DirectedReadOptions(proto.Message):
             may fail due to ``DEADLINE_EXCEEDED`` errors.
 
             This field is a member of `oneof`_ ``replicas``.
-        exclude_replicas (google.cloud.spanner_v1.DirectedReadOptions.ExcludeReplicas):
+        exclude_replicas (google.cloud.spanner_v1.types.DirectedReadOptions.ExcludeReplicas):
             Exclude_replicas indicates that should be excluded from
             serving requests. Spanner will not route requests to the
             replicas in this list.
@@ -437,7 +437,7 @@ class DirectedReadOptions(proto.Message):
             location (str):
                 The location or region of the serving
                 requests, e.g. "us-east1".
-            type_ (google.cloud.spanner_v1.DirectedReadOptions.ReplicaSelection.Type):
+            type_ (google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection.Type):
                 The type of replica.
         """
 
@@ -474,7 +474,7 @@ class DirectedReadOptions(proto.Message):
         should be considered.
 
         Attributes:
-            replica_selections (MutableSequence[google.cloud.spanner_v1.DirectedReadOptions.ReplicaSelection]):
+            replica_selections (MutableSequence[google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection]):
                 The directed read replica selector.
             auto_failover_disabled (bool):
                 If true, Spanner will not route requests to a replica
@@ -500,7 +500,7 @@ class DirectedReadOptions(proto.Message):
         ReplicaSelection that should be excluded from serving requests.
 
         Attributes:
-            replica_selections (MutableSequence[google.cloud.spanner_v1.DirectedReadOptions.ReplicaSelection]):
+            replica_selections (MutableSequence[google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection]):
                 The directed read replica selector.
         """
 
@@ -626,7 +626,7 @@ class ExecuteSqlRequest(proto.Message):
             given query.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
-        directed_read_options (google.cloud.spanner_v1.DirectedReadOptions):
+        directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
             Directed read options for this request.
         data_boost_enabled (bool):
             If this is for a partitioned query and this field is set to
@@ -1294,7 +1294,7 @@ class ReadRequest(proto.Message):
             create this partition_token.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
-        directed_read_options (google.cloud.spanner_v1.DirectedReadOptions):
+        directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
             Directed read options for this request.
         data_boost_enabled (bool):
             If this is for a partitioned read and this field is set to
