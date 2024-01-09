@@ -474,6 +474,9 @@ def drop_sequence(instance_id, database_id):
     )
 
 
+# [END spanner_drop_sequence]
+
+
 # [START spanner_insert_data]
 def insert_data(instance_id, database_id):
     """Inserts sample data into the given database.
