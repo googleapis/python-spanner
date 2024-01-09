@@ -19,27 +19,27 @@ from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 import pytest
 from test_utils.retry import RetryErrors
 
-import snippets
+import pg_snippets as snippets
 
 CREATE_TABLE_SINGERS = """\
 CREATE TABLE Singers (
-    SingerId     INT64 NOT NULL,
-    FirstName    STRING(1024),
-    LastName     STRING(1024),
-    SingerInfo   BYTES(MAX),
-    FullName     STRING(2048) AS (
-        ARRAY_TO_STRING([FirstName, LastName], " ")
-    ) STORED
-) PRIMARY KEY (SingerId)
+    SingerId     BIGINT NOT NULL,
+    FirstName    CHARACTER VARYING(1024),
+    LastName     CHARACTER VARYING(1024),
+    SingerInfo   BYTEA,
+    FullName     CHARACTER VARYING(2048)
+        GENERATED ALWAYS AS (FirstName || ' ' || LastName) STORED,
+    PRIMARY KEY (SingerId)
+)
 """
 
 CREATE_TABLE_ALBUMS = """\
 CREATE TABLE Albums (
-    SingerId     INT64 NOT NULL,
-    AlbumId      INT64 NOT NULL,
-    AlbumTitle   STRING(MAX)
-) PRIMARY KEY (SingerId, AlbumId),
-INTERLEAVE IN PARENT Singers ON DELETE CASCADE
+    SingerId     BIGINT NOT NULL,
+    AlbumId      BIGINT NOT NULL,
+    AlbumTitle   CHARACTER VARYING(1024),
+    PRIMARY KEY (SingerId, AlbumId)
+    ) INTERLEAVE IN PARENT Singers ON DELETE CASCADE
 """
 
 retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
@@ -47,7 +47,7 @@ retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
 
 @pytest.fixture(scope="module")
 def sample_name():
-    return "snippets"
+    return "pg_snippets"
 
 
 @pytest.fixture(scope="module")
@@ -57,7 +57,7 @@ def database_dialect():
     The dialect is used to initialize the dialect for the database.
     It can either be GoogleStandardSql or PostgreSql.
     """
-    return DatabaseDialect.GOOGLE_STANDARD_SQL
+    return DatabaseDialect.POSTGRESQL
 
 
 @pytest.fixture(scope="module")
@@ -107,55 +107,26 @@ def default_leader():
     return "us-east4"
 
 
-@pytest.fixture(scope="module")
-def user_managed_instance_config_name(spanner_client):
-    name = f"custom-python-samples-config-{uuid.uuid4().hex[:10]}"
-    yield name
-    snippets.delete_instance_config(
-        "{}/instanceConfigs/{}".format(spanner_client.project_name, name)
-    )
-    return
-
-
-@pytest.fixture(scope="module")
-def base_instance_config_id(spanner_client):
-    return "{}/instanceConfigs/{}".format(spanner_client.project_name, "nam7")
-
-
-@pytest.mark.dependency(name="insert_data")
-def test_insert_data(capsys, instance_id, sample_database):
-    snippets.insert_data(instance_id, sample_database.database_id)
+@pytest.mark.dependency(name="create_table_with_datatypes")
+def test_create_table_with_datatypes(capsys, instance_id, sample_database):
+    snippets.create_table_with_datatypes(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "Inserted data" in out
+    assert "Created Venues table on database" in out
 
 
-def test_create_instance_explicit(spanner_client, create_instance_id):
-    # Rather than re-use 'sample_isntance', we create a new instance, to
-    # ensure that the 'create_instance' snippet is tested.
-    retry_429(snippets.create_instance)(create_instance_id)
-    instance = spanner_client.instance(create_instance_id)
-    retry_429(instance.delete)()
-
-
-def test_create_database_with_default_leader(
-    capsys,
-    multi_region_instance,
-    multi_region_instance_id,
-    default_leader_database_id,
-    default_leader,
-):
-    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
-    retry_429(snippets.create_database_with_default_leader)(
-        multi_region_instance_id, default_leader_database_id, default_leader
-    )
+@pytest.mark.dependency(
+    name="insert_datatypes_data",
+    depends=["create_table_with_datatypes"],
+)
+def test_insert_datatypes_data(capsys, instance_id, sample_database):
+    snippets.insert_datatypes_data(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert default_leader_database_id in out
-    assert default_leader in out
+    assert "Inserted data." in out
 
 
-@pytest.mark.dependency(name="add_and_drop_database_roles", depends=["insert_data"])
-def test_add_and_drop_database_roles(capsys, instance_id, sample_database):
-    snippets.add_and_drop_database_roles(instance_id, sample_database.database_id)
+@pytest.mark.dependency(name="add_jsonb_column", depends=["insert_datatypes_data"])
+def test_add_jsonb_column(capsys, instance_id, sample_database):
+    snippets.add_jsonb_column(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "Created roles new_parent and new_child and granted privileges" in out
-    assert "Revoked privileges and dropped role new_child" in out
+    assert "Waiting for operation to complete..." in out
+    assert 'Altered table "Venues" on database ' in out
