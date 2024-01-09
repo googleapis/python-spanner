@@ -121,26 +121,6 @@ class TestConnection(unittest.TestCase):
         connection.read_only = False
         self.assertFalse(connection.read_only)
 
-    def test_read_only_not_retried(self):
-        """
-        Testing the unlikely case of a read-only transaction
-        failed with Aborted exception. In this case the
-        transaction should not be automatically retried.
-        """
-        from google.api_core.exceptions import Aborted
-
-        connection = self._make_connection(read_only=True)
-        connection.retry_transaction = mock.Mock()
-
-        cursor = connection.cursor()
-        cursor._itr = mock.Mock(
-            __next__=mock.Mock(
-                side_effect=Aborted("Aborted"),
-            )
-        )
-
-        connection.retry_transaction.assert_not_called()
-
     @staticmethod
     def _make_pool():
         from google.cloud.spanner_v1.pool import AbstractSessionPool
@@ -493,23 +473,6 @@ class TestConnection(unittest.TestCase):
         self._under_test.begin()
 
         self.assertEqual(self._under_test._transaction_begin_marked, True)
-
-    @mock.patch("google.cloud.spanner_v1.Client")
-    def test_commit_retry_aborted_statements(self, mock_client):
-        """Check that retried transaction executing the same statements."""
-        from google.api_core.exceptions import Aborted
-        from google.cloud.spanner_dbapi.connection import connect
-
-        connection = connect("test-instance", "test-database")
-        mock_transaction = mock.Mock()
-        connection._spanner_transaction_started = True
-        connection._transaction = mock_transaction
-        mock_transaction.commit.side_effect = [Aborted("Aborted"), None]
-        run_mock = connection._transaction_helper = mock.Mock()
-
-        connection.commit()
-
-        assert run_mock.retry_transaction.called
 
     def test_validate_ok(self):
         connection = self._make_connection()

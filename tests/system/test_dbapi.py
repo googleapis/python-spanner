@@ -21,7 +21,11 @@ from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
 
 from google.cloud.spanner_dbapi.connection import Connection, connect
-from google.cloud.spanner_dbapi.exceptions import ProgrammingError, OperationalError
+from google.cloud.spanner_dbapi.exceptions import (
+    ProgrammingError,
+    OperationalError,
+    RetryAborted,
+)
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
@@ -609,7 +613,9 @@ class TestDbApi:
         )
         self._cursor.fetchone()
         self._cursor.fetchmany(2)
-        dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, self._conn
+        )
         # called 2 times
         self._conn.commit()
         dbapi_database._method_abort_interceptor.reset()
@@ -620,6 +626,39 @@ class TestDbApi:
         self._cursor.execute("SELECT * FROM contacts")
         got_rows = self._cursor.fetchall()
         assert len(got_rows) == 5
+
+    def test_retry_aborted(self, shared_instance, dbapi_database):
+        """Test that retry fails with RetryAborted error when rows are updated during retry."""
+
+        conn1 = Connection(shared_instance, dbapi_database)
+        cursor1 = conn1.cursor()
+        cursor1.execute(
+            """
+            INSERT INTO contacts (contact_id, first_name, last_name, email)
+            VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
+            """
+        )
+        conn1.commit()
+        cursor1.execute("SELECT * FROM contacts")
+        cursor1.fetchall()
+
+        conn2 = Connection(shared_instance, dbapi_database)
+        cursor2 = conn2.cursor()
+        cursor2.execute(
+            """
+            UPDATE contacts
+            SET email = 'test.email_updated@domen.ru'
+            WHERE contact_id = 1
+            """
+        )
+        conn2.commit()
+
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, conn1
+        )
+        with pytest.raises(RetryAborted):
+            conn1.commit()
+        dbapi_database._method_abort_interceptor.reset()
 
     def test_execute_sql_abort_retry_multiple_times(self, dbapi_database):
         """Test that when execute sql failed 2 times with Abort exception, then
@@ -633,14 +672,13 @@ class TestDbApi:
         self._cursor.execute("run batch")
         # aborting method 2 times before succeeding
         dbapi_database._method_abort_interceptor.set_method_to_abort(
-            EXECUTE_STREAMING_SQL_METHOD, 2
+            EXECUTE_STREAMING_SQL_METHOD, self._conn, 2
         )
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.fetchmany(2)
         dbapi_database._method_abort_interceptor.reset()
         self._conn.commit()
         # Check that all rpcs except commit should be called 3 times the original
-        print(method_count_interceptor._counts)
         assert method_count_interceptor._counts[COMMIT_METHOD] == 1
         assert method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD] == 3
         assert method_count_interceptor._counts[EXECUTE_STREAMING_SQL_METHOD] == 3
@@ -665,7 +703,7 @@ class TestDbApi:
         self._insert_row(2)
         self._insert_row(3)
         dbapi_database._method_abort_interceptor.set_method_to_abort(
-            EXECUTE_BATCH_DML_METHOD, 2
+            EXECUTE_BATCH_DML_METHOD, self._conn, 2
         )
         # called 3 times
         self._cursor.execute("run batch")
@@ -688,7 +726,7 @@ class TestDbApi:
         # called 3 times
         self._insert_row(1)
         dbapi_database._method_abort_interceptor.set_method_to_abort(
-            EXECUTE_STREAMING_SQL_METHOD
+            EXECUTE_STREAMING_SQL_METHOD, self._conn
         )
         # called 3 times
         self._cursor.execute("SELECT * FROM contacts")
@@ -699,7 +737,9 @@ class TestDbApi:
         # called 2 times
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.fetchone()
-        dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, self._conn
+        )
         # called 2 times
         self._conn.commit()
         dbapi_database._method_abort_interceptor.reset()
@@ -720,7 +760,9 @@ class TestDbApi:
         self._insert_row(2)
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.fetchall()
-        dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, self._conn
+        )
         self._conn.commit()
         dbapi_database._method_abort_interceptor.reset()
         assert method_count_interceptor._counts[COMMIT_METHOD] == 2
@@ -732,7 +774,9 @@ class TestDbApi:
         self._insert_row(4)
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.fetchall()
-        dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, self._conn
+        )
         self._conn.commit()
         dbapi_database._method_abort_interceptor.reset()
         assert method_count_interceptor._counts[COMMIT_METHOD] == 2
@@ -742,72 +786,41 @@ class TestDbApi:
         got_rows = self._cursor.fetchall()
         assert len(got_rows) == 4
 
-    @pytest.mark.noautofixt
-    def test_abort_retry_multiple_cursors(self, shared_instance, dbapi_database):
+    def test_abort_retry_multiple_cursors(self, dbapi_database):
         """Test that retry works when multiple cursors are involved in the transaction."""
 
-        try:
-            conn = Connection(shared_instance, dbapi_database)
-            cur = conn.cursor()
-            cur.execute(
-                """
-                CREATE TABLE Singers (
-                    SingerId     INT64 NOT NULL,
-                    Name    STRING(1024),
-                ) PRIMARY KEY (SingerId)
-            """
-            )
-            cur.execute(
-                """
-            INSERT INTO contacts (contact_id, first_name, last_name, email)
-            VALUES (1, 'first-name', 'last-name', 'test.email@domen.ru')
-            """
-            )
-            cur.execute(
-                """
-            INSERT INTO Singers (SingerId, Name)
-            VALUES (1, 'first-name')
-            """
-            )
-            cur.execute(
-                """
-            INSERT INTO contacts (contact_id, first_name, last_name, email)
-            VALUES (2, 'first-name', 'last-name', 'test.email@domen.ru')
-            """
-            )
-            cur.execute(
-                """
-            INSERT INTO Singers (SingerId, Name)
-            VALUES (2, 'first-name')
-            """
-            )
-            conn.commit()
+        self._insert_row(1)
+        self._insert_row(2)
+        self._insert_row(3)
+        self._insert_row(4)
+        self._conn.commit()
 
-            cur1 = conn.cursor()
-            cur1.execute("SELECT * FROM contacts")
-            cur2 = conn.cursor()
-            cur2.execute("SELECT * FROM Singers")
-            row1 = cur1.fetchone()
-            row2 = cur2.fetchone()
-            row3 = cur1.fetchone()
-            row4 = cur2.fetchone()
-            dbapi_database._method_abort_interceptor.set_method_to_abort(COMMIT_METHOD)
-            conn.commit()
-            dbapi_database._method_abort_interceptor.reset()
+        cur1 = self._conn.cursor()
+        cur1.execute("SELECT * FROM contacts WHERE contact_id IN (1, 2)")
+        cur2 = self._conn.cursor()
+        cur2.execute("SELECT * FROM contacts WHERE contact_id IN (3, 4)")
+        row1 = cur1.fetchone()
+        row2 = cur2.fetchone()
+        row3 = cur1.fetchone()
+        row4 = cur2.fetchone()
+        dbapi_database._method_abort_interceptor.set_method_to_abort(
+            COMMIT_METHOD, self._conn
+        )
+        self._conn.commit()
+        dbapi_database._method_abort_interceptor.reset()
 
-            assert set([row1, row3]) == set(
-                [
-                    (1, "first-name", "last-name", "test.email@domen.ru"),
-                    (2, "first-name", "last-name", "test.email@domen.ru"),
-                ]
-            )
-            assert set([row2, row4]) == set([(1, "first-name"), (2, "first-name")])
-        finally:
-            # Delete table
-            table = dbapi_database.table("Singers")
-            if table.exists():
-                op = dbapi_database.update_ddl(["DROP TABLE Singers"])
-                op.result()
+        assert set([row1, row3]) == set(
+            [
+                (1, "first-name-1", "last-name-1", "test.email@domen.ru"),
+                (2, "first-name-2", "last-name-2", "test.email@domen.ru"),
+            ]
+        )
+        assert set([row2, row4]) == set(
+            [
+                (3, "first-name-3", "last-name-3", "test.email@domen.ru"),
+                (4, "first-name-4", "last-name-4", "test.email@domen.ru"),
+            ]
+        )
 
     def test_begin_success_post_commit(self):
         """Test beginning a new transaction post commiting an existing transaction

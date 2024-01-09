@@ -39,6 +39,7 @@ class MethodAbortInterceptor(ClientInterceptor):
         self._method_to_abort = None
         self._count = 0
         self._max_raise_count = 1
+        self._connection = None
 
     def intercept(self, method, request_or_iterator, call_details):
         if (
@@ -46,14 +47,20 @@ class MethodAbortInterceptor(ClientInterceptor):
             and call_details.method == self._method_to_abort
         ):
             self._count += 1
+            if self._connection is not None:
+                self._connection._transaction.rollback()
+                self._connection._transaction.rolled_back = False
             raise Aborted("Thrown from ClientInterceptor for testing")
         return method(request_or_iterator, call_details)
 
-    def set_method_to_abort(self, method_to_abort, max_raise_count=1):
+    def set_method_to_abort(self, method_to_abort, connection=None, max_raise_count=1):
         self._method_to_abort = method_to_abort
+        self._count = 0
         self._max_raise_count = max_raise_count
+        self._connection = connection
 
     def reset(self):
         """Reset the interceptor to the original state."""
         self._method_to_abort = None
         self._count = 0
+        self._connection = None
