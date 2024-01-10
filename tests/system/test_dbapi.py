@@ -626,8 +626,10 @@ class TestDbApi:
         got_rows = self._cursor.fetchall()
         assert len(got_rows) == 5
 
-
-    @pytest.mark.skipif(_helpers.USE_EMULATOR, reason="Emulator does not concurrent transactions.")
+    @pytest.mark.skipif(
+        _helpers.USE_EMULATOR,
+        reason="Emulator does not support concurrent transactions.",
+    )
     def test_retry_aborted_exception(self, shared_instance, dbapi_database):
         """Test that retry fails with RetryAborted error when rows are updated during retry."""
 
