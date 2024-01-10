@@ -169,6 +169,7 @@ class Database(object):
         self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
+        self._directed_read_options = self._instance._client.directed_read_options
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -1268,6 +1269,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1307,6 +1309,12 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned read and this field is
                 set ``true``, the request will be executed via offline access.
 
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for ReadRequests that indicates which replicas
+            or regions should be used for non-transactional reads.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1335,6 +1343,7 @@ class BatchSnapshot(object):
             "keyset": keyset._to_dict(),
             "index": index,
             "data_boost_enabled": data_boost_enabled,
+            "directed_read_options": directed_read_options,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1379,6 +1388,7 @@ class BatchSnapshot(object):
         max_partitions=None,
         query_options=None,
         data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1430,6 +1440,12 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
 
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional queries.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1454,6 +1470,7 @@ class BatchSnapshot(object):
         query_info = {
             "sql": sql,
             "data_boost_enabled": data_boost_enabled,
+            "directed_read_options": directed_read_options,
         }
         if params:
             query_info["params"] = params
