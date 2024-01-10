@@ -559,22 +559,12 @@ class TestDbApi:
     def test_partitioned_query_in_rw_transaction(self):
         """Test partition query throws exception when connection is not in
         read-only mode and neither in auto-commit mode."""
-        self._cursor.execute("start batch dml")
-        for i in range(1, 11):
-            self._insert_row(i)
-        self._cursor.execute("run batch")
-        self._conn.commit()
 
         with pytest.raises(ProgrammingError):
             self._cursor.execute("PARTITION SELECT * FROM contacts")
 
     def test_partitioned_query_with_dml_query(self):
         """Test partition query throws exception when sql query is a DML query."""
-        self._cursor.execute("start batch dml")
-        for i in range(1, 11):
-            self._insert_row(i)
-        self._cursor.execute("run batch")
-        self._conn.commit()
 
         self._conn.read_only = True
         with pytest.raises(ProgrammingError):
@@ -604,16 +594,10 @@ class TestDbApi:
             self._cursor.execute("RUN PARTITION " + partition_id_row[0])
             rows = rows + self._cursor.fetchall()
         assert len(rows) == 10
-        self._conn.commit()
 
     def test_partitioned_query_with_client_transaction_started(self):
-        """Test partition query throws exception when connection is in
-        auto-commit mode but transaction started using client side statement."""
-        self._cursor.execute("start batch dml")
-        for i in range(1, 11):
-            self._insert_row(i)
-        self._cursor.execute("run batch")
-        self._conn.commit()
+        """Test partition query throws exception when connection is not in
+        read-only mode and transaction started using client side statement."""
 
         self._conn.autocommit = True
         self._cursor.execute("begin transaction")
