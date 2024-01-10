@@ -49,7 +49,6 @@ class MethodAbortInterceptor(ClientInterceptor):
             self._count += 1
             if self._connection is not None:
                 self._connection._transaction.rollback()
-                self._connection._transaction.rolled_back = False
             raise Aborted("Thrown from ClientInterceptor for testing")
         return method(request_or_iterator, call_details)
 

@@ -445,7 +445,6 @@ class TestDbApi:
         assert self._cursor.description[0].name == "SHOW_READ_TIMESTAMP"
         assert isinstance(read_timestamp_query_result_1[0][0], DatetimeWithNanoseconds)
 
-        time.sleep(0.25)
         self._cursor.execute("SELECT * FROM contacts")
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
         read_timestamp_query_result_2 = self._cursor.fetchall()
@@ -627,7 +626,7 @@ class TestDbApi:
         got_rows = self._cursor.fetchall()
         assert len(got_rows) == 5
 
-    def test_retry_aborted(self, shared_instance, dbapi_database):
+    def test_retry_aborted_exception(self, shared_instance, dbapi_database):
         """Test that retry fails with RetryAborted error when rows are updated during retry."""
 
         conn1 = Connection(shared_instance, dbapi_database)
