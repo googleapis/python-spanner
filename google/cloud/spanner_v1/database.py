@@ -965,28 +965,40 @@ class Database(object):
         """
         return Table(table_id, self)
 
-    def list_tables(self, schema=default_schema_name):
+    def list_tables(self, schema="_default"):
         """List tables within the database.
+
+        :type schema: str
+        :param schema: The schema to search for tables, or None for all schemas. Use the special string "_default" to
+                       search for tables in the default schema of the database.
 
         :type: Iterable
         :returns:
             Iterable of :class:`~google.cloud.spanner_v1.table.Table`
             resources within the current database.
         """
+        if "_default" == schema:
+            schema = self.default_schema_name
+
         with self.snapshot() as snapshot:
-            if self._database_dialect == DatabaseDialect.POSTGRESQL:
-                where_clause = "WHERE TABLE_SCHEMA = $1"
-                param_name = "p1"
-            else:
-                where_clause = (
-                    "WHERE TABLE_SCHEMA = @schema AND SPANNER_STATE = 'COMMITTED'"
+            if schema is None:
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(""),
                 )
-                param_name = "schema"
-            results = snapshot.execute_sql(
-                sql=_LIST_TABLES_QUERY.format(where_clause),
-                params={param_name: schema},
-                param_types={param_name: Type(code=TypeCode.STRING)},
-            )
+            else:
+                if self._database_dialect == DatabaseDialect.POSTGRESQL:
+                    where_clause = "WHERE TABLE_SCHEMA = $1"
+                    param_name = "p1"
+                else:
+                    where_clause = (
+                        "WHERE TABLE_SCHEMA = @schema AND SPANNER_STATE = 'COMMITTED'"
+                    )
+                    param_name = "schema"
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(where_clause),
+                    params={param_name: schema},
+                    param_types={param_name: Type(code=TypeCode.STRING)},
+                )
             for row in results:
                 yield self.table(row[0])
 
