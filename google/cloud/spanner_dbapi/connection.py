@@ -545,7 +545,7 @@ class Connection:
         return batch_snapshot.process(partition_id.partition_result)
 
     @check_not_closed
-    def run_partition_query(
+    def run_partitioned_query(
         self,
         parsed_statement: ParsedStatement,
     ):
@@ -553,7 +553,7 @@ class Connection:
         partitioned_query = parsed_statement.client_side_statement_params[0]
         self._partitioned_query_validation(partitioned_query, statement)
         batch_snapshot = self._database.batch_snapshot()
-        return batch_snapshot.run_partition_query(
+        return batch_snapshot.run_partitioned_query(
             partitioned_query, statement.params, statement.param_types
         )
 
@@ -564,8 +564,7 @@ class Connection:
             )
         if self.read_only is not True and self._client_transaction_started is True:
             raise ProgrammingError(
-                "Partitioned query not supported as the connection is not in "
-                "read only mode or ReadWrite transaction started"
+                "Partitioned query is not supported, because the connection is in a read/write transaction."
             )
 
     def __enter__(self):

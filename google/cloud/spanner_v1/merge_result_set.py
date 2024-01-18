@@ -1,24 +1,37 @@
+# Copyright 2024 Google LLC All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from queue import Queue
 from typing import Any, TYPE_CHECKING
-from threading import Lock
+from threading import Lock, Semaphore
 
 if TYPE_CHECKING:
     from google.cloud.spanner_v1.database import BatchSnapshot
 
 QUEUE_SIZE_PER_WORKER = 32
-LOCK = Lock()
+MAX_PARALLELISM = 100
+METADATA_LOCK = Lock()
 
 
 def _set_metadata(merged_result_set, results):
-    LOCK.acquire()
+    METADATA_LOCK.acquire()
     try:
         merged_result_set._metadata = results.metadata
-        merged_result_set._stats = results.stats
-        merged_result_set._first_row_read = True
     finally:
-        LOCK.release()
+        METADATA_LOCK.release()
+        merged_result_set.metadata_semaphore.release()
 
 
 class PartitionExecutor:
@@ -38,16 +51,18 @@ class PartitionExecutor:
             results = self._batch_snapshot.process_query_batch(self._partition_id)
             merged_result_set = self._merged_result_set
             for row in results:
-                if not merged_result_set._first_row_read:
+                if merged_result_set._metadata is None:
                     _set_metadata(merged_result_set, results)
                 self._queue.put(PartitionExecutorResult(data=row))
             # Special case: The result set did not return any rows.
             # Push the metadata to the merged result set.
-            if not merged_result_set._first_row_read:
+            if merged_result_set._metadata is None:
                 _set_metadata(merged_result_set, results)
         except Exception as ex:
             self._queue.put(PartitionExecutorResult(exception=ex))
         finally:
+            # Emit a special 'is_last' result to ensure that the MergedResultSet
+            # is not blocked on a queue that never receives any more results.
             self._queue.put(PartitionExecutorResult(is_last=True))
 
 
@@ -66,16 +81,14 @@ class MergedResultSet:
     """
 
     def __init__(self, batch_snapshot, partition_ids, max_parallelism):
-        self._metadata = None
-        self._stats = None
+        self._exception = None
+        self.metadata_semaphore = Semaphore(0)
+
         partition_ids_count = len(partition_ids)
-        self._finished_counter = partition_ids_count
-        # True if at least one row has been read from any of the partition
-        self._first_row_read = False
+        self._finished_count_down_latch = partition_ids_count
+        parallelism = min(MAX_PARALLELISM, partition_ids_count)
         if max_parallelism != 0:
             parallelism = min(partition_ids_count, max_parallelism)
-        else:
-            parallelism = partition_ids_count
         self._queue = Queue(maxsize=QUEUE_SIZE_PER_WORKER * parallelism)
 
         partition_executors = []
@@ -88,27 +101,33 @@ class MergedResultSet:
             executor.submit(partition_executor.run)
         executor.shutdown(False)
 
+        self._metadata = None
+        # This will make sure that _metadata is set
+        self.metadata_semaphore.acquire()
+
+    def __iter__(self):
+        return self
+
     def __next__(self):
+        if self._exception is not None:
+            raise self._exception
         while True:
             partition_result = self._queue.get()
             if partition_result.is_last:
-                self._finished_counter -= 1
-                if self._finished_counter == 0:
+                self._finished_count_down_latch -= 1
+                if self._finished_count_down_latch == 0:
                     raise StopIteration
+            elif partition_result.exception is not None:
+                self._exception = partition_result.exception
+                raise self._exception
             else:
                 return partition_result.data
 
     @property
     def metadata(self):
-        while True:
-            if self._first_row_read:
-                return self._metadata
+        return self._metadata
 
     @property
     def stats(self):
-        while True:
-            if self._first_row_read:
-                return self._stats
-
-    def __iter__(self):
-        return self
+        # TODO: Implement
+        return None

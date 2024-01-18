@@ -654,7 +654,7 @@ class TestDbApi:
             self._cursor.execute("PARTITION SELECT * FROM contacts")
 
     def test_run_partitioned_query(self):
-        """Test run partition query works in read-only mode."""
+        """Test run partitioned query works in read-only mode."""
         self._cursor.execute("start batch dml")
         for i in range(1, 11):
             self._insert_row(i)
@@ -662,7 +662,7 @@ class TestDbApi:
         self._conn.commit()
 
         self._conn.read_only = True
-        self._cursor.execute("RUN PARTITION QUERY SELECT * FROM contacts")
+        self._cursor.execute("RUN PARTITIONED QUERY SELECT * FROM contacts")
         assert self._cursor.description is not None
         assert self._cursor.rowcount == -1
         rows = self._cursor.fetchall()

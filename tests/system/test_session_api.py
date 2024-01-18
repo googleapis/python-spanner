@@ -2530,7 +2530,7 @@ def test_run_partition_query(sessions_database, not_emulator):
     all_data_rows = set(_row_data(row_count))
     union = set()
     batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
-    p_results_iter = batch_txn.run_partition_query(sql, data_boost_enabled=True)
+    p_results_iter = batch_txn.run_partitioned_query(sql, data_boost_enabled=True)
     # Lists aren't hashable so the results need to be converted
     rows = [tuple(result) for result in p_results_iter]
     union.update(set(rows))

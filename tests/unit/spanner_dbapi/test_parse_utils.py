@@ -101,16 +101,16 @@ class TestParseUtils(unittest.TestCase):
             ),
         )
 
-    def test_run_partition_query_classify_stmt(self):
+    def test_run_partitioned_query_classify_stmt(self):
         parsed_statement = classify_statement(
-            " RUN PARTITION  QUERY  SELECT s.SongName FROM Songs AS s  "
+            " RUN PARTITIONED  QUERY  SELECT s.SongName FROM Songs AS s  "
         )
         self.assertEqual(
             parsed_statement,
             ParsedStatement(
                 StatementType.CLIENT_SIDE,
-                Statement("RUN PARTITION  QUERY  SELECT s.SongName FROM Songs AS s"),
-                ClientSideStatementType.RUN_PARTITION_QUERY,
+                Statement("RUN PARTITIONED  QUERY  SELECT s.SongName FROM Songs AS s"),
+                ClientSideStatementType.RUN_PARTITIONED_QUERY,
                 ["SELECT s.SongName FROM Songs AS s"],
             ),
         )

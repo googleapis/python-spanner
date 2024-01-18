@@ -35,8 +35,8 @@ RE_RUN_BATCH = re.compile(r"^\s*(RUN)\s+(BATCH)", re.IGNORECASE)
 RE_ABORT_BATCH = re.compile(r"^\s*(ABORT)\s+(BATCH)", re.IGNORECASE)
 RE_PARTITION_QUERY = re.compile(r"^\s*(PARTITION)\s+(.+)", re.IGNORECASE)
 RE_RUN_PARTITION = re.compile(r"^\s*(RUN)\s+(PARTITION)\s+(.+)", re.IGNORECASE)
-RE_RUN_PARTITION_QUERY = re.compile(
-    r"^\s*(RUN)\s+(PARTITION)\s+(QUERY)\s+(.+)", re.IGNORECASE
+RE_RUN_PARTITIONED_QUERY = re.compile(
+    r"^\s*(RUN)\s+(PARTITIONED)\s+(QUERY)\s+(.+)", re.IGNORECASE
 )
 
 
@@ -70,10 +70,10 @@ def parse_stmt(query):
         client_side_statement_type = ClientSideStatementType.RUN_BATCH
     elif RE_ABORT_BATCH.match(query):
         client_side_statement_type = ClientSideStatementType.ABORT_BATCH
-    elif RE_RUN_PARTITION_QUERY.match(query):
-        match = re.search(RE_RUN_PARTITION_QUERY, query)
+    elif RE_RUN_PARTITIONED_QUERY.match(query):
+        match = re.search(RE_RUN_PARTITIONED_QUERY, query)
         client_side_statement_params.append(match.group(4))
-        client_side_statement_type = ClientSideStatementType.RUN_PARTITION_QUERY
+        client_side_statement_type = ClientSideStatementType.RUN_PARTITIONED_QUERY
     elif RE_PARTITION_QUERY.match(query):
         match = re.search(RE_PARTITION_QUERY, query)
         client_side_statement_params.append(match.group(2))

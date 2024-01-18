@@ -249,9 +249,9 @@ class Cursor(object):
                     self, self._parsed_statement
                 )
                 if self._result_set is not None:
-                    if isinstance(self._result_set, StreamedManyResultSets):
-                        self._itr = self._result_set
-                    elif isinstance(self._result_set, MergedResultSet):
+                    if isinstance(
+                        self._result_set, StreamedManyResultSets
+                    ) or isinstance(self._result_set, MergedResultSet):
                         self._itr = self._result_set
                     else:
                         self._itr = PeekIterator(self._result_set)

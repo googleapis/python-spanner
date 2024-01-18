@@ -35,7 +35,7 @@ class ClientSideStatementType(Enum):
     ABORT_BATCH = 8
     PARTITION_QUERY = 9
     RUN_PARTITION = 10
-    RUN_PARTITION_QUERY = 11
+    RUN_PARTITIONED_QUERY = 11
 
 
 @dataclass
