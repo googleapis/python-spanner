@@ -54,6 +54,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.merge_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
@@ -1512,6 +1513,29 @@ class BatchSnapshot(object):
         return self._get_snapshot().execute_sql(
             partition=batch["partition"], **batch["query"], retry=retry, timeout=timeout
         )
+
+    def run_partition_query(
+        self,
+        sql,
+        params=None,
+        param_types=None,
+        partition_size_bytes=None,
+        max_partitions=None,
+        query_options=None,
+        data_boost_enabled=False,
+    ):
+        partitions = list(
+            self.generate_query_batches(
+                sql,
+                params,
+                param_types,
+                partition_size_bytes,
+                max_partitions,
+                query_options,
+                data_boost_enabled,
+            )
+        )
+        return MergedResultSet(self, partitions, 0)
 
     def process(self, batch):
         """Process a single, partitioned query or read.

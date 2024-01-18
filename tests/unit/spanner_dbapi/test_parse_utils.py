@@ -101,6 +101,20 @@ class TestParseUtils(unittest.TestCase):
             ),
         )
 
+    def test_run_partition_query_classify_stmt(self):
+        parsed_statement = classify_statement(
+            " RUN PARTITION  QUERY  SELECT s.SongName FROM Songs AS s  "
+        )
+        self.assertEqual(
+            parsed_statement,
+            ParsedStatement(
+                StatementType.CLIENT_SIDE,
+                Statement("RUN PARTITION  QUERY  SELECT s.SongName FROM Songs AS s"),
+                ClientSideStatementType.RUN_PARTITION_QUERY,
+                ["SELECT s.SongName FROM Songs AS s"],
+            ),
+        )
+
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):
         from google.cloud.spanner_dbapi.parse_utils import sql_pyformat_args_to_spanner
