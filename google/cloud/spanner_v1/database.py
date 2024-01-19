@@ -1417,11 +1417,6 @@ class BatchSnapshot(object):
             (Optional) desired size for each partition generated.  The service
             uses this as a hint, the actual partition size may differ.
 
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
         :type max_partitions: int
         :param max_partitions:
             (Optional) desired maximum number of partitions generated. The
@@ -1544,11 +1539,6 @@ class BatchSnapshot(object):
             (Optional) desired size for each partition generated.  The service
             uses this as a hint, the actual partition size may differ.
 
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
         :type max_partitions: int
         :param max_partitions:
             (Optional) desired maximum number of partitions generated. The
@@ -1566,7 +1556,8 @@ class BatchSnapshot(object):
         :type data_boost_enabled:
         :param data_boost_enabled:
                 (Optional) If this is for a partitioned query and this field is
-                set ``true``, the request will be executed via offline access.
+                set ``true``, the request will be executed using data boost.
+                Please see https://cloud.google.com/spanner/docs/databoost/databoost-overview
 
         :rtype: :class:`~google.cloud.spanner_v1.merged_result_set.MergedResultSet`
         :returns: a result set instance which can be used to consume rows.

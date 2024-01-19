@@ -15,13 +15,13 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from queue import Queue
 from typing import Any, TYPE_CHECKING
-from threading import Lock, Semaphore
+from threading import Lock, Event
 
 if TYPE_CHECKING:
     from google.cloud.spanner_v1.database import BatchSnapshot
 
 QUEUE_SIZE_PER_WORKER = 32
-MAX_PARALLELISM = 100
+MAX_PARALLELISM = 16
 METADATA_LOCK = Lock()
 
 
@@ -31,7 +31,7 @@ def _set_metadata(merged_result_set, results):
         merged_result_set._metadata = results.metadata
     finally:
         METADATA_LOCK.release()
-        merged_result_set.metadata_semaphore.release()
+        merged_result_set.metadata_event.set()
 
 
 class PartitionExecutor:
@@ -82,7 +82,8 @@ class MergedResultSet:
 
     def __init__(self, batch_snapshot, partition_ids, max_parallelism):
         self._exception = None
-        self.metadata_semaphore = Semaphore(0)
+        self._metadata = None
+        self.metadata_event = Event()
 
         partition_ids_count = len(partition_ids)
         self._finished_count_down_latch = partition_ids_count
@@ -100,10 +101,6 @@ class MergedResultSet:
         for partition_executor in partition_executors:
             executor.submit(partition_executor.run)
         executor.shutdown(False)
-
-        self._metadata = None
-        # This will make sure that _metadata is set
-        self.metadata_semaphore.acquire()
 
     def __iter__(self):
         return self
@@ -125,6 +122,7 @@ class MergedResultSet:
 
     @property
     def metadata(self):
+        self.metadata_event.wait()
         return self._metadata
 
     @property
