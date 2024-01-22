@@ -1474,10 +1474,6 @@ class CommitRequest(proto.Message):
     max_commit_delay: duration_pb2.Duration = proto.Field(
         proto.MESSAGE,
         number=8,
-<<<<<<< HEAD
-        optional=True,
-=======
->>>>>>> main
         message=duration_pb2.Duration,
     )
     request_options: "RequestOptions" = proto.Field(
