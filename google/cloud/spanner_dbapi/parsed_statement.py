@@ -1,4 +1,4 @@
-# Copyright 20203 Google LLC All rights reserved.
+# Copyright 2023 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,9 +13,7 @@
 # limitations under the License.
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
-
-from google.cloud.spanner_dbapi.checksum import ResultsChecksum
+from typing import Any, List
 
 
 class StatementType(Enum):
@@ -35,6 +33,8 @@ class ClientSideStatementType(Enum):
     START_BATCH_DML = 6
     RUN_BATCH = 7
     ABORT_BATCH = 8
+    PARTITION_QUERY = 9
+    RUN_PARTITION = 10
 
 
 @dataclass
@@ -42,7 +42,6 @@ class Statement:
     sql: str
     params: Any = None
     param_types: Any = None
-    checksum: ResultsChecksum = None
 
     def get_tuple(self):
         return self.sql, self.params, self.param_types
@@ -53,3 +52,4 @@ class ParsedStatement:
     statement_type: StatementType
     statement: Statement
     client_side_statement_type: ClientSideStatementType = None
+    client_side_statement_params: List[Any] = None

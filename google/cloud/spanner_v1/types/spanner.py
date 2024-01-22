@@ -1436,8 +1436,13 @@ class CommitRequest(proto.Message):
             [CommitResponse][google.spanner.v1.CommitResponse.commit_stats].
             Default value is ``false``.
         max_commit_delay (google.protobuf.duration_pb2.Duration):
-
-            This field is a member of `oneof`_ ``_max_commit_delay``.
+            Optional. The amount of latency this request
+            is willing to incur in order to improve
+            throughput. If this field is not set, Spanner
+            assumes requests are relatively latency
+            sensitive and automatically determines an
+            appropriate delay time. You can specify a
+            batching delay value between 0 and 500 ms.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
@@ -1469,7 +1474,10 @@ class CommitRequest(proto.Message):
     max_commit_delay: duration_pb2.Duration = proto.Field(
         proto.MESSAGE,
         number=8,
+<<<<<<< HEAD
         optional=True,
+=======
+>>>>>>> main
         message=duration_pb2.Duration,
     )
     request_options: "RequestOptions" = proto.Field(
