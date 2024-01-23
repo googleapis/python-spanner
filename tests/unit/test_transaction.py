@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import datetime
 import mock
 
 from google.cloud.spanner_v1 import RequestOptions
@@ -350,9 +351,8 @@ class TestTransaction(OpenTelemetryBase):
         mutate=True,
         return_commit_stats=False,
         request_options=None,
-        max_commit_delay_ms=None,
+        max_commit_delay_in=None,
     ):
-        import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
@@ -377,7 +377,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction.commit(
             return_commit_stats=return_commit_stats,
             request_options=request_options,
-            max_commit_delay_ms=max_commit_delay_ms,
+            max_commit_delay=max_commit_delay_in,
         )
 
         self.assertEqual(transaction.committed, now)
@@ -405,13 +405,7 @@ class TestTransaction(OpenTelemetryBase):
             expected_request_options.transaction_tag = self.TRANSACTION_TAG
             expected_request_options.request_tag = None
 
-        expected_max_commit_delay = None
-        if max_commit_delay_ms:
-            expected_max_commit_delay = datetime.timedelta(
-                milliseconds=max_commit_delay_ms
-            )
-
-        self.assertEqual(expected_max_commit_delay, max_commit_delay)
+        self.assertEqual(max_commit_delay_in, max_commit_delay)
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
@@ -445,7 +439,7 @@ class TestTransaction(OpenTelemetryBase):
         self._commit_helper(return_commit_stats=True)
 
     def test_commit_w_max_commit_delay(self):
-        self._commit_helper(max_commit_delay_ms=100)
+        self._commit_helper(max_commit_delay_in=datetime.timedelta(milliseconds=100))
 
     def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(

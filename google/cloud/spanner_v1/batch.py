@@ -148,7 +148,7 @@ class Batch(_BatchBase):
             raise ValueError("Batch already committed")
 
     def commit(
-        self, return_commit_stats=False, request_options=None, max_commit_delay_ms=None
+        self, return_commit_stats=False, request_options=None, max_commit_delay=None
     ):
         """Commit mutations to the database.
 
@@ -162,7 +162,8 @@ class Batch(_BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
-        :param max_commit_delay_ms:
+        :type max_commit_delay: :class:`datetime.timedelta`
+        :param max_commit_delay:
                 (Optional) The amount of latency this request is willing to incur
                 in order to improve throughput.
 
@@ -188,11 +189,6 @@ class Batch(_BatchBase):
 
         # Request tags are not supported for commit requests.
         request_options.request_tag = None
-
-        max_commit_delay = None
-        if max_commit_delay_ms:
-            max_commit_delay = Duration()
-            max_commit_delay.FromMilliseconds(max_commit_delay_ms)
 
         request = CommitRequest(
             session=self._session.name,

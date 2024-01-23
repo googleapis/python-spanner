@@ -259,7 +259,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
         )
 
-    def _test_commit_with_options(self, request_options=None, max_commit_delay_ms=None):
+    def _test_commit_with_options(self, request_options=None, max_commit_delay_in=None):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1 import TransactionOptions
@@ -276,7 +276,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         batch.transaction_tag = self.TRANSACTION_TAG
         batch.insert(TABLE_NAME, COLUMNS, VALUES)
         committed = batch.commit(
-            request_options=request_options, max_commit_delay_ms=max_commit_delay_ms
+            request_options=request_options, max_commit_delay=max_commit_delay_in
         )
 
         self.assertEqual(committed, now)
@@ -314,12 +314,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
         )
 
-        expected_max_commit_delay = None
-        if max_commit_delay_ms:
-            expected_max_commit_delay = datetime.timedelta(
-                milliseconds=max_commit_delay_ms
-            )
-        self.assertEqual(expected_max_commit_delay, max_commit_delay)
+        self.assertEqual(max_commit_delay_in, max_commit_delay)
 
     def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(
@@ -354,7 +349,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             request_tag="tag-1",
         )
         self._test_commit_with_options(
-            request_options=request_options, max_commit_delay_ms=100
+            request_options=request_options, max_commit_delay=datetime.timedelta(milliseconds=100)
         )
 
     def test_context_mgr_already_committed(self):
@@ -600,7 +595,7 @@ class _FauxSpannerAPI:
         from google.cloud.spanner_v1 import CommitRequest
 
         max_commit_delay = None
-        if CommitRequest.max_commit_delay in request:
+        if type(request).pb(request).HasField("max_commit_delay"):
             max_commit_delay = request.max_commit_delay
 
         assert request.transaction_id == b""
