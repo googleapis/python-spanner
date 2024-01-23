@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import datetime
 import mock
 
 from google.cloud.spanner_v1 import RequestOptions
@@ -353,6 +352,8 @@ class TestTransaction(OpenTelemetryBase):
         request_options=None,
         max_commit_delay_in=None,
     ):
+        import datetime
+
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
@@ -439,6 +440,7 @@ class TestTransaction(OpenTelemetryBase):
         self._commit_helper(return_commit_stats=True)
 
     def test_commit_w_max_commit_delay(self):
+        import datetime
         self._commit_helper(max_commit_delay_in=datetime.timedelta(milliseconds=100))
 
     def test_commit_w_request_tag_success(self):
