@@ -966,7 +966,7 @@ class _FauxSpannerAPI(object):
         assert not request.single_use_transaction
 
         max_commit_delay = None
-        if CommitRequest.max_commit_delay in request:
+        if request.HasField("max_commit_delay"):
             max_commit_delay = request.max_commit_delay
 
         self._committed = (
