@@ -720,7 +720,7 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self, request_options=None):
+    def batch(self, request_options=None, max_commit_delay=None):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -732,11 +732,15 @@ class Database(object):
                 (Optional) Common options for the commit request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+        :type max_commit_delay: :class:`datetime.timedelta`
+        :param max_commit_delay:
+                (Optional) The amount of latency this request is willing to incur
+                in order to improve throughput.
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self, request_options)
+        return BatchCheckout(self, request_options, max_commit_delay)
 
     def mutation_groups(self):
         """Return an object which wraps a mutation_group.
@@ -1034,9 +1038,13 @@ class BatchCheckout(object):
             (Optional) Common options for the commit request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+    :type max_commit_delay: :class:`datetime.timedelta`
+    :param max_commit_delay:
+            (Optional) The amount of latency this request is willing to incur
+            in order to improve throughput.
     """
 
-    def __init__(self, database, request_options=None):
+    def __init__(self, database, request_options=None, max_commit_delay=None):
         self._database = database
         self._session = self._batch = None
         if request_options is None:
@@ -1045,6 +1053,7 @@ class BatchCheckout(object):
             self._request_options = RequestOptions(request_options)
         else:
             self._request_options = request_options
+        self._max_commit_delay = max_commit_delay
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1061,6 +1070,7 @@ class BatchCheckout(object):
                 self._batch.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=self._request_options,
+                    max_commit_delay=self._max_commit_delay,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
