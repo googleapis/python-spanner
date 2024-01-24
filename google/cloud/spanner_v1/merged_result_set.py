@@ -22,16 +22,6 @@ if TYPE_CHECKING:
 
 QUEUE_SIZE_PER_WORKER = 32
 MAX_PARALLELISM = 16
-METADATA_LOCK = Lock()
-
-
-def _set_metadata(merged_result_set, results):
-    METADATA_LOCK.acquire()
-    try:
-        merged_result_set._metadata = results.metadata
-    finally:
-        METADATA_LOCK.release()
-        merged_result_set.metadata_event.set()
 
 
 class PartitionExecutor:
@@ -47,23 +37,34 @@ class PartitionExecutor:
         self._queue: Queue[PartitionExecutorResult] = merged_result_set._queue
 
     def run(self):
+        results = None
         try:
             results = self._batch_snapshot.process_query_batch(self._partition_id)
-            merged_result_set = self._merged_result_set
             for row in results:
-                if merged_result_set._metadata is None:
-                    _set_metadata(merged_result_set, results)
+                if self._merged_result_set._metadata is None:
+                    self._set_metadata(results)
                 self._queue.put(PartitionExecutorResult(data=row))
             # Special case: The result set did not return any rows.
             # Push the metadata to the merged result set.
-            if merged_result_set._metadata is None:
-                _set_metadata(merged_result_set, results)
+            if self._merged_result_set._metadata is None:
+                self._set_metadata(results)
         except Exception as ex:
+            if self._merged_result_set._metadata is None:
+                self._set_metadata(results, True)
             self._queue.put(PartitionExecutorResult(exception=ex))
         finally:
             # Emit a special 'is_last' result to ensure that the MergedResultSet
             # is not blocked on a queue that never receives any more results.
             self._queue.put(PartitionExecutorResult(is_last=True))
+
+    def _set_metadata(self, results, is_exception=False):
+        self._merged_result_set.metadata_lock.acquire()
+        try:
+            if not is_exception:
+                self._merged_result_set._metadata = results.metadata
+        finally:
+            self._merged_result_set.metadata_lock.release()
+            self._merged_result_set.metadata_event.set()
 
 
 @dataclass
@@ -84,6 +85,7 @@ class MergedResultSet:
         self._exception = None
         self._metadata = None
         self.metadata_event = Event()
+        self.metadata_lock = Lock()
 
         partition_ids_count = len(partition_ids)
         self._finished_count_down_latch = partition_ids_count

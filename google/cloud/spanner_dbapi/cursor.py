@@ -49,7 +49,7 @@ from google.cloud.spanner_dbapi.parsed_statement import (
 from google.cloud.spanner_dbapi.transaction_helper import CursorStatementType
 from google.cloud.spanner_dbapi.utils import PeekIterator
 from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
-from google.cloud.spanner_v1.merge_result_set import MergedResultSet
+from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 
 ColumnDetails = namedtuple("column_details", ["null_ok", "spanner_type"])
 
