@@ -826,7 +826,9 @@ def test_db_batch_insert_w_max_commit_delay(shared_database):
     _helpers.retry_has_all_dll(shared_database.reload)()
     sd = _sample_data
 
-    with shared_database.batch(max_commit_delay=datetime.timedelta(milliseconds=100)) as batch:
+    with shared_database.batch(
+        max_commit_delay=datetime.timedelta(milliseconds=100)
+    ) as batch:
         batch.delete(sd.TABLE, sd.ALL)
         batch.insert(sd.TABLE, sd.COLUMNS, sd.ROW_DATA)
 
@@ -849,7 +851,9 @@ def test_db_run_in_transaction_w_max_commit_delay(shared_database):
 
         transaction.insert_or_update(test.TABLE, test.COLUMNS, test.ROW_DATA)
 
-    shared_database.run_in_transaction(_unit_of_work, test=sd, max_commit_delay=datetime.timedelta(milliseconds=100))
+    shared_database.run_in_transaction(
+        _unit_of_work, test=sd, max_commit_delay=datetime.timedelta(milliseconds=100)
+    )
 
     with shared_database.snapshot() as after:
         rows = list(after.execute_sql(sd.SQL))

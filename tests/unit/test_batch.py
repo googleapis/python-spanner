@@ -351,7 +351,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             request_tag="tag-1",
         )
         self._test_commit_with_options(
-            request_options=request_options, max_commit_delay_in=datetime.timedelta(milliseconds=100)
+            request_options=request_options,
+            max_commit_delay_in=datetime.timedelta(milliseconds=100),
         )
 
     def test_context_mgr_already_committed(self):

@@ -441,6 +441,7 @@ class TestTransaction(OpenTelemetryBase):
 
     def test_commit_w_max_commit_delay(self):
         import datetime
+
         self._commit_helper(max_commit_delay_in=datetime.timedelta(milliseconds=100))
 
     def test_commit_w_request_tag_success(self):
