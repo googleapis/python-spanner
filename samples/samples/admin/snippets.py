@@ -72,17 +72,17 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
             "create_statement": "CREATE DATABASE {}".format(database_id),
             "extra_statements": [
                 """CREATE TABLE Singers (
-        SingerId     INT64 NOT NULL,
-        FirstName    STRING(1024),
-        LastName     STRING(1024),
-        SingerInfo   BYTES(MAX)
-    ) PRIMARY KEY (SingerId)""",
+                    SingerId     INT64 NOT NULL,
+                    FirstName    STRING(1024),
+                    LastName     STRING(1024),
+                    SingerInfo   BYTES(MAX)
+                ) PRIMARY KEY (SingerId)""",
                 """CREATE TABLE Albums (
-        SingerId     INT64 NOT NULL,
-        AlbumId      INT64 NOT NULL,
-        AlbumTitle   STRING(MAX)
-    ) PRIMARY KEY (SingerId, AlbumId),
-    INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+                    SingerId     INT64 NOT NULL,
+                    AlbumId      INT64 NOT NULL,
+                    AlbumTitle   STRING(MAX)
+                ) PRIMARY KEY (SingerId, AlbumId),
+                INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
                 "ALTER DATABASE {}"
                 " SET OPTIONS (default_leader = '{}')".format(
                     database_id, default_leader
