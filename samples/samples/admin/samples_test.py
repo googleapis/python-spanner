@@ -175,7 +175,7 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
 
     # ensure that the 'create_instance' snippet is tested.
 
-    retry_429(snippets.create_instance)(create_instance_id)
+    retry_429(samples.create_instance)(create_instance_id)
 
     instance = spanner_client.instance(create_instance_id)
 
@@ -191,7 +191,7 @@ def test_create_database_with_default_leader(
 ):
     retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
 
-    retry_429(snippets.create_database_with_default_leader)(
+    retry_429(samples.create_database_with_default_leader)(
         multi_region_instance_id, default_leader_database_id, default_leader
     )
 
