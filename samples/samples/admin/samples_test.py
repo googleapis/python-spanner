@@ -32,7 +32,7 @@ import pytest
 from test_utils.retry import RetryErrors
 
 
-import snippets
+import samples
 
 
 CREATE_TABLE_SINGERS = """\
