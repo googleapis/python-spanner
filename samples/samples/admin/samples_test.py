@@ -153,19 +153,6 @@ def default_leader():
 
 
 @pytest.fixture(scope="module")
-def user_managed_instance_config_name(spanner_client):
-    name = f"custom-python-samples-config-{uuid.uuid4().hex[:10]}"
-
-    yield name
-
-    snippets.delete_instance_config(
-        "{}/instanceConfigs/{}".format(spanner_client.project_name, name)
-    )
-
-    return
-
-
-@pytest.fixture(scope="module")
 def base_instance_config_id(spanner_client):
     return "{}/instanceConfigs/{}".format(spanner_client.project_name, "nam7")
 
