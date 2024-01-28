@@ -161,6 +161,7 @@ class Batch(_BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
         :type max_commit_delay: :class:`datetime.timedelta`
         :param max_commit_delay:
                 (Optional) The amount of latency this request is willing to incur
