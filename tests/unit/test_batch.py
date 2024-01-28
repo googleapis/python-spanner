@@ -595,7 +595,6 @@ class _FauxSpannerAPI:
         metadata=None,
     ):
         from google.api_core.exceptions import Unknown
-        from google.cloud.spanner_v1 import CommitRequest
 
         max_commit_delay = None
         if type(request).pb(request).HasField("max_commit_delay"):

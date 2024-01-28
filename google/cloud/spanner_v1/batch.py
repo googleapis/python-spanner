@@ -31,7 +31,6 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
 from google.api_core.exceptions import InternalServerError
-from google.protobuf.duration_pb2 import Duration
 
 
 class _BatchBase(_SessionWrapper):

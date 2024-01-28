@@ -36,7 +36,6 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
-from google.protobuf.duration_pb2 import Duration
 
 
 class Transaction(_SnapshotBase, _BatchBase):
@@ -196,6 +195,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
         :type max_commit_delay: :class:`datetime.timedelta`
         :param max_commit_delay:
                 (Optional) The amount of latency this request is willing to incur

@@ -357,7 +357,6 @@ class TestTransaction(OpenTelemetryBase):
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
-        from google.protobuf.duration_pb2 import Duration
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         keys = [[0], [1], [2]]
@@ -958,8 +957,6 @@ class _FauxSpannerAPI(object):
         request=None,
         metadata=None,
     ):
-        from google.cloud.spanner_v1 import CommitRequest
-
         assert not request.single_use_transaction
 
         max_commit_delay = None
