@@ -1338,7 +1338,6 @@ def _set_up_table(database, row_count):
 
 
 def _set_up_proto_table(database):
-
     sd = _sample_data
 
     def _unit_of_work(transaction):

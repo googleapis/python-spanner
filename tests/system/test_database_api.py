@@ -444,7 +444,11 @@ def test_update_ddl_w_default_leader_success(
 
 
 def test_create_role_grant_access_success(
-    not_emulator, shared_instance, databases_to_delete, database_dialect, proto_descriptor_file,
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
@@ -469,7 +473,9 @@ def test_create_role_grant_access_success(
             f"GRANT SELECT ON TABLE contacts TO {creator_role_parent}",
         ]
 
-    operation = temp_db.update_ddl(ddl_statements, proto_descriptors=proto_descriptor_file)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     # Perform select with orphan role on table contacts.
@@ -504,7 +510,11 @@ def test_create_role_grant_access_success(
 
 
 def test_list_database_role_success(
-    not_emulator, shared_instance, databases_to_delete, database_dialect, proto_descriptor_file
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")

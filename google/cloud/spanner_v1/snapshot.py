@@ -483,9 +483,13 @@ class _SnapshotBase(_SessionWrapper):
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                return self._get_streamed_result_set(restart, request, trace_attributes, column_info)
+                return self._get_streamed_result_set(
+                    restart, request, trace_attributes, column_info
+                )
         else:
-            return self._get_streamed_result_set(restart, request, trace_attributes, column_info)
+            return self._get_streamed_result_set(
+                restart, request, trace_attributes, column_info
+            )
 
     def _get_streamed_result_set(self, restart, request, trace_attributes, column_info):
         iterator = _restart_on_unavailable(

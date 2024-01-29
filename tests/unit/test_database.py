@@ -390,7 +390,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.default_leader, default_leader)
 
     def test_proto_descriptors(self):
-
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
         database = self._make_one(
