@@ -843,9 +843,9 @@ def test_list_databases_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -875,9 +875,9 @@ async def test_list_databases_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_list_databases_flattened():
@@ -1260,9 +1260,9 @@ def test_create_database_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -1292,9 +1292,9 @@ async def test_create_database_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_create_database_flattened():
@@ -1527,9 +1527,9 @@ def test_get_database_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -1559,9 +1559,9 @@ async def test_get_database_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 def test_get_database_flattened():
@@ -1754,9 +1754,9 @@ def test_update_database_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database.name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database.name=name_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -1786,9 +1786,9 @@ async def test_update_database_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database.name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database.name=name_value",
+    ) in kw["metadata"]
 
 
 def test_update_database_flattened():
@@ -1999,9 +1999,9 @@ def test_update_database_ddl_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -2033,9 +2033,9 @@ async def test_update_database_ddl_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 def test_update_database_ddl_flattened():
@@ -2240,9 +2240,9 @@ def test_drop_database_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -2270,9 +2270,9 @@ async def test_drop_database_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 def test_drop_database_flattened():
@@ -2473,9 +2473,9 @@ def test_get_database_ddl_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -2505,9 +2505,9 @@ async def test_get_database_ddl_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "database=database_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "database=database_value",
+    ) in kw["metadata"]
 
 
 def test_get_database_ddl_flattened():
@@ -2709,9 +2709,9 @@ def test_set_iam_policy_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -2739,9 +2739,9 @@ async def test_set_iam_policy_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 def test_set_iam_policy_from_dict_foreign():
@@ -2959,9 +2959,9 @@ def test_get_iam_policy_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -2989,9 +2989,9 @@ async def test_get_iam_policy_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 def test_get_iam_policy_from_dict_foreign():
@@ -3213,9 +3213,9 @@ def test_test_iam_permissions_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -3247,9 +3247,9 @@ async def test_test_iam_permissions_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "resource=resource_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "resource=resource_value",
+    ) in kw["metadata"]
 
 
 def test_test_iam_permissions_from_dict_foreign():
@@ -3474,9 +3474,9 @@ def test_create_backup_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -3506,9 +3506,9 @@ async def test_create_backup_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_create_backup_flattened():
@@ -3720,9 +3720,9 @@ def test_copy_backup_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -3752,9 +3752,9 @@ async def test_copy_backup_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_copy_backup_flattened():
@@ -4006,9 +4006,9 @@ def test_get_backup_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -4036,9 +4036,9 @@ async def test_get_backup_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 def test_get_backup_flattened():
@@ -4258,9 +4258,9 @@ def test_update_backup_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "backup.name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "backup.name=name_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -4288,9 +4288,9 @@ async def test_update_backup_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "backup.name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "backup.name=name_value",
+    ) in kw["metadata"]
 
 
 def test_update_backup_flattened():
@@ -4488,9 +4488,9 @@ def test_delete_backup_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -4518,9 +4518,9 @@ async def test_delete_backup_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=name_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=name_value",
+    ) in kw["metadata"]
 
 
 def test_delete_backup_flattened():
@@ -4716,9 +4716,9 @@ def test_list_backups_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -4748,9 +4748,9 @@ async def test_list_backups_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_list_backups_flattened():
@@ -5133,9 +5133,9 @@ def test_restore_database_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -5165,9 +5165,9 @@ async def test_restore_database_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_restore_database_flattened():
@@ -5390,9 +5390,9 @@ def test_list_database_operations_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -5424,9 +5424,9 @@ async def test_list_database_operations_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_list_database_operations_flattened():
@@ -5834,9 +5834,9 @@ def test_list_backup_operations_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -5868,9 +5868,9 @@ async def test_list_backup_operations_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_list_backup_operations_flattened():
@@ -6279,9 +6279,9 @@ def test_list_database_roles_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -6313,9 +6313,9 @@ async def test_list_database_roles_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "parent=parent_value",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "parent=parent_value",
+    ) in kw["metadata"]
 
 
 def test_list_database_roles_flattened():
@@ -6867,7 +6867,7 @@ def test_list_databases_rest_flattened():
         assert path_template.validate(
             "%s/v1/{parent=projects/*/instances/*}/databases" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_list_databases_rest_flattened_error(transport: str = "rest"):
@@ -7072,11 +7072,11 @@ def test_create_database_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "parent",
-            "createStatement",
+            (
+                "parent",
+                "createStatement",
+            )
         )
-    )
     )
 
 
@@ -7200,7 +7200,7 @@ def test_create_database_rest_flattened():
         assert path_template.validate(
             "%s/v1/{parent=projects/*/instances/*}/databases" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_create_database_rest_flattened_error(transport: str = "rest"):
@@ -7485,7 +7485,7 @@ def test_get_database_rest_flattened():
         assert path_template.validate(
             "%s/v1/{name=projects/*/instances/*/databases/*}" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_get_database_rest_flattened_error(transport: str = "rest"):
@@ -7732,11 +7732,11 @@ def test_update_database_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(("updateMask",))
         & set(
-        (
-            "database",
-            "updateMask",
+            (
+                "database",
+                "updateMask",
+            )
         )
-    )
     )
 
 
@@ -7865,7 +7865,7 @@ def test_update_database_rest_flattened():
             "%s/v1/{database.name=projects/*/instances/*/databases/*}"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_update_database_rest_flattened_error(transport: str = "rest"):
@@ -8014,11 +8014,11 @@ def test_update_database_ddl_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "database",
-            "statements",
+            (
+                "database",
+                "statements",
+            )
         )
-    )
     )
 
 
@@ -8146,7 +8146,7 @@ def test_update_database_ddl_rest_flattened():
             "%s/v1/{database=projects/*/instances/*/databases/*}/ddl"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_update_database_ddl_rest_flattened_error(transport: str = "rest"):
@@ -8402,7 +8402,7 @@ def test_drop_database_rest_flattened():
             "%s/v1/{database=projects/*/instances/*/databases/*}"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_drop_database_rest_flattened_error(transport: str = "rest"):
@@ -8681,7 +8681,7 @@ def test_get_database_ddl_rest_flattened():
             "%s/v1/{database=projects/*/instances/*/databases/*}/ddl"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_get_database_ddl_rest_flattened_error(transport: str = "rest"):
@@ -8831,11 +8831,11 @@ def test_set_iam_policy_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "resource",
-            "policy",
+            (
+                "resource",
+                "policy",
+            )
         )
-    )
     )
 
 
@@ -8955,7 +8955,7 @@ def test_set_iam_policy_rest_flattened():
             "%s/v1/{resource=projects/*/instances/*/databases/*}:setIamPolicy"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_set_iam_policy_rest_flattened_error(transport: str = "rest"):
@@ -9221,7 +9221,7 @@ def test_get_iam_policy_rest_flattened():
             "%s/v1/{resource=projects/*/instances/*/databases/*}:getIamPolicy"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_get_iam_policy_rest_flattened_error(transport: str = "rest"):
@@ -9373,11 +9373,11 @@ def test_test_iam_permissions_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "resource",
-            "permissions",
+            (
+                "resource",
+                "permissions",
+            )
         )
-    )
     )
 
 
@@ -9500,7 +9500,7 @@ def test_test_iam_permissions_rest_flattened():
             "%s/v1/{resource=projects/*/instances/*/databases/*}:testIamPermissions"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_test_iam_permissions_rest_flattened_error(transport: str = "rest"):
@@ -9770,12 +9770,12 @@ def test_create_backup_rest_unset_required_fields():
             )
         )
         & set(
-        (
-            "parent",
-            "backupId",
-            "backup",
+            (
+                "parent",
+                "backupId",
+                "backup",
+            )
         )
-    )
     )
 
 
@@ -9900,7 +9900,7 @@ def test_create_backup_rest_flattened():
         assert path_template.validate(
             "%s/v1/{parent=projects/*/instances/*}/backups" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_create_backup_rest_flattened_error(transport: str = "rest"):
@@ -10052,13 +10052,13 @@ def test_copy_backup_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "parent",
-            "backupId",
-            "sourceBackup",
-            "expireTime",
+            (
+                "parent",
+                "backupId",
+                "sourceBackup",
+                "expireTime",
+            )
         )
-    )
     )
 
 
@@ -10183,7 +10183,7 @@ def test_copy_backup_rest_flattened():
             "%s/v1/{parent=projects/*/instances/*}/backups:copy"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_copy_backup_rest_flattened_error(transport: str = "rest"):
@@ -10462,7 +10462,7 @@ def test_get_backup_rest_flattened():
         assert path_template.validate(
             "%s/v1/{name=projects/*/instances/*/backups/*}" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_get_backup_rest_flattened_error(transport: str = "rest"):
@@ -10725,11 +10725,11 @@ def test_update_backup_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(("updateMask",))
         & set(
-        (
-            "backup",
-            "updateMask",
+            (
+                "backup",
+                "updateMask",
+            )
         )
-    )
     )
 
 
@@ -10856,7 +10856,7 @@ def test_update_backup_rest_flattened():
             "%s/v1/{backup.name=projects/*/instances/*/backups/*}"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_update_backup_rest_flattened_error(transport: str = "rest"):
@@ -11105,7 +11105,7 @@ def test_delete_backup_rest_flattened():
         assert path_template.validate(
             "%s/v1/{name=projects/*/instances/*/backups/*}" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_delete_backup_rest_flattened_error(transport: str = "rest"):
@@ -11388,7 +11388,7 @@ def test_list_backups_rest_flattened():
         assert path_template.validate(
             "%s/v1/{parent=projects/*/instances/*}/backups" % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_list_backups_rest_flattened_error(transport: str = "rest"):
@@ -11591,11 +11591,11 @@ def test_restore_database_rest_unset_required_fields():
     assert set(unset_fields) == (
         set(())
         & set(
-        (
-            "parent",
-            "databaseId",
+            (
+                "parent",
+                "databaseId",
+            )
         )
-    )
     )
 
 
@@ -11720,7 +11720,7 @@ def test_restore_database_rest_flattened():
             "%s/v1/{parent=projects/*/instances/*}/databases:restore"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_restore_database_rest_flattened_error(transport: str = "rest"):
@@ -12019,7 +12019,7 @@ def test_list_database_operations_rest_flattened():
             "%s/v1/{parent=projects/*/instances/*}/databaseOperations"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_list_database_operations_rest_flattened_error(transport: str = "rest"):
@@ -12365,7 +12365,7 @@ def test_list_backup_operations_rest_flattened():
             "%s/v1/{parent=projects/*/instances/*}/backupOperations"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_list_backup_operations_rest_flattened_error(transport: str = "rest"):
@@ -12715,7 +12715,7 @@ def test_list_database_roles_rest_flattened():
             "%s/v1/{parent=projects/*/instances/*/databases/*}/databaseRoles"
             % client.transport._host,
             args[1],
-            )
+        )
 
 
 def test_list_database_roles_rest_flattened_error(transport: str = "rest"):
@@ -14105,9 +14105,9 @@ def test_delete_operation_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -14133,9 +14133,9 @@ async def test_delete_operation_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 def test_delete_operation_from_dict():
@@ -14244,9 +14244,9 @@ def test_cancel_operation_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -14272,9 +14272,9 @@ async def test_cancel_operation_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 def test_cancel_operation_from_dict():
@@ -14385,9 +14385,9 @@ def test_get_operation_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -14415,9 +14415,9 @@ async def test_get_operation_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 def test_get_operation_from_dict():
@@ -14530,9 +14530,9 @@ def test_list_operations_field_headers():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 @pytest.mark.asyncio
@@ -14560,9 +14560,9 @@ async def test_list_operations_field_headers_async():
     # Establish that the field header was sent.
     _, _, kw = call.mock_calls[0]
     assert (
-               "x-goog-request-params",
-               "name=locations",
-           ) in kw["metadata"]
+        "x-goog-request-params",
+        "name=locations",
+    ) in kw["metadata"]
 
 
 def test_list_operations_from_dict():
