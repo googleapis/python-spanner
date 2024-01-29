@@ -23,6 +23,7 @@ import time
 
 from google.cloud import spanner
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
+from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -65,12 +66,12 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
     """Creates a database with tables with a default leader."""
     spanner_client = spanner.Client()
     operation = spanner_client.database_admin_api.create_database(
-        request={
-            "parent": "projects/{}/instances/{}".format(
+        request=spanner_database_admin.CreateDatabaseRequest(
+            parent="projects/{}/instances/{}".format(
                 spanner_client.project, instance_id
             ),
-            "create_statement": "CREATE DATABASE {}".format(database_id),
-            "extra_statements": [
+            create_statement="CREATE DATABASE {}".format(database_id),
+            extra_statements=[
                 """CREATE TABLE Singers (
                     SingerId     INT64 NOT NULL,
                     FirstName    STRING(1024),
@@ -88,7 +89,7 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
                     database_id, default_leader
                 ),
             ],
-        },
+        )
     )
 
     print("Waiting for operation to complete...")
