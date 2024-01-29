@@ -14,6 +14,5 @@ opentelemetry-api==1.1.0
 opentelemetry-sdk==1.1.0
 opentelemetry-instrumentation==0.20b0
 protobuf==3.20.2
-protobuf==3.20.2
 deprecated==1.2.14
 grpc-interceptor==0.15.4

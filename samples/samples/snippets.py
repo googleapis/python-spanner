@@ -40,7 +40,7 @@ from google.cloud.spanner_v1 import DirectedReadOptions
 from google.type import expr_pb2
 from google.iam.v1 import policy_pb2
 from google.protobuf import field_mask_pb2  # type: ignore
-from samples.samples.testdata import singer_pb2
+from testdata import singer_pb2
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -2617,7 +2617,7 @@ def insert_proto_columns_data(instance_id, database_id):
     The database and table must already exist and can be created using
     `create_database`.
     """
-    spanner_client = spanner.Client(client_options={'api_endpoint':'staging-wrenchworks.sandbox.googleapis.com'})
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 

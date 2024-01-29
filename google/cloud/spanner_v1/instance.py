@@ -511,7 +511,6 @@ class Instance(object):
                 database_dialect=database_dialect,
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
-                proto_descriptors=proto_descriptors,
             )
 
     def list_databases(self, page_size=None):
