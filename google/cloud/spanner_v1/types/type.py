@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from __future__ import annotations
+
 from typing import MutableMapping, MutableSequence
 
 import proto  # type: ignore
@@ -46,6 +48,9 @@ class TypeCode(proto.Enum):
         INT64 (2):
             Encoded as ``string``, in decimal format.
         FLOAT64 (3):
+            Encoded as ``number``, or the strings ``"NaN"``,
+            ``"Infinity"``, or ``"-Infinity"``.
+        FLOAT32 (15):
             Encoded as ``number``, or the strings ``"NaN"``,
             ``"Infinity"``, or ``"-Infinity"``.
         TIMESTAMP (4):
@@ -92,11 +97,17 @@ class TypeCode(proto.Enum):
             -  Members of a JSON object are not guaranteed to have their
                order preserved.
             -  JSON array elements will have their order preserved.
+        PROTO (13):
+            Encoded as a base64-encoded ``string``, as described in RFC
+            4648, section 4.
+        ENUM (14):
+            Encoded as ``string``, in decimal format.
     """
     TYPE_CODE_UNSPECIFIED = 0
     BOOL = 1
     INT64 = 2
     FLOAT64 = 3
+    FLOAT32 = 15
     TIMESTAMP = 4
     DATE = 5
     STRING = 6
@@ -137,10 +148,17 @@ class TypeAnnotationCode(proto.Enum):
             PostgreSQL JSONB values. Currently this annotation is always
             needed for [JSON][google.spanner.v1.TypeCode.JSON] when a
             client interacts with PostgreSQL-enabled Spanner databases.
+        PG_OID (4):
+            PostgreSQL compatible OID type. This
+            annotation can be used by a client interacting
+            with PostgreSQL-enabled Spanner database to
+            specify that a value should be treated using the
+            semantics of the OID type.
     """
     TYPE_ANNOTATION_CODE_UNSPECIFIED = 0
     PG_NUMERIC = 2
     PG_JSONB = 3
+    PG_OID = 4
 
 
 class Type(proto.Message):
@@ -173,10 +191,12 @@ class Type(proto.Message):
             (it doesn't affect serialization) and clients can ignore it
             on the read path.
         proto_type_fqn (str):
-            If [code][] == [PROTO][TypeCode.PROTO] or [code][] ==
-            [ENUM][TypeCode.ENUM], then ``proto_type_fqn`` is the fully
-            qualified name of the proto type representing the proto/enum
-            definition.
+            If [code][google.spanner.v1.Type.code] ==
+            [PROTO][google.spanner.v1.TypeCode.PROTO] or
+            [code][google.spanner.v1.Type.code] ==
+            [ENUM][google.spanner.v1.TypeCode.ENUM], then
+            ``proto_type_fqn`` is the fully qualified name of the proto
+            type representing the proto/enum definition.
     """
 
     code: "TypeCode" = proto.Field(
