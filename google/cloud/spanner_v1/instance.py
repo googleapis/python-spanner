@@ -34,7 +34,7 @@ from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsRequest
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.backup import Backup
 from google.cloud.spanner_v1.database import Database
-
+from google.cloud.spanner_v1.testing.database_test import TestDatabase
 
 _INSTANCE_NAME_RE = re.compile(
     r"^projects/(?P<project>[^/]+)/" r"instances/(?P<instance_id>[a-z][-a-z0-9]*)$"
@@ -432,6 +432,9 @@ class Instance(object):
         encryption_config=None,
         database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
         database_role=None,
+        enable_drop_protection=False,
+        # should be only set for tests if tests want to use interceptors
+        enable_interceptors_in_tests=False,
         proto_descriptors=None,
     ):
         """Factory to create a database within this instance.
@@ -468,6 +471,14 @@ class Instance(object):
         :param database_dialect:
             (Optional) database dialect for the database
 
+        :type enable_drop_protection: boolean
+        :param enable_drop_protection: (Optional) Represents whether the database
+            has drop protection enabled or not.
+
+        :type enable_interceptors_in_tests: boolean
+        :param enable_interceptors_in_tests: (Optional) should only be set to True
+            for tests if the tests want to use interceptors.
+
         :type proto_descriptors: bytes
         :param proto_descriptors: (Optional) Proto descriptors used by CREATE/ALTER PROTO BUNDLE
                                   statements in 'ddl_statements' above.
@@ -475,17 +486,33 @@ class Instance(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
-        return Database(
-            database_id,
-            self,
-            ddl_statements=ddl_statements,
-            pool=pool,
-            logger=logger,
-            encryption_config=encryption_config,
-            database_dialect=database_dialect,
-            database_role=database_role,
-            proto_descriptors=proto_descriptors,
-        )
+
+        if not enable_interceptors_in_tests:
+            return Database(
+                database_id,
+                self,
+                ddl_statements=ddl_statements,
+                pool=pool,
+                logger=logger,
+                encryption_config=encryption_config,
+                database_dialect=database_dialect,
+                database_role=database_role,
+                enable_drop_protection=enable_drop_protection,
+                proto_descriptors=proto_descriptors,
+            )
+        else:
+            return TestDatabase(
+                database_id,
+                self,
+                ddl_statements=ddl_statements,
+                pool=pool,
+                logger=logger,
+                encryption_config=encryption_config,
+                database_dialect=database_dialect,
+                database_role=database_role,
+                enable_drop_protection=enable_drop_protection,
+                proto_descriptors=proto_descriptors,
+            )
 
     def list_databases(self, page_size=None):
         """List databases for the instance.

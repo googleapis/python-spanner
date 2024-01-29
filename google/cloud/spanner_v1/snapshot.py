@@ -29,10 +29,15 @@ from google.api_core.exceptions import InternalServerError
 from google.api_core.exceptions import ServiceUnavailable
 from google.api_core.exceptions import InvalidArgument
 from google.api_core import gapic_v1
-from google.cloud.spanner_v1._helpers import _make_value_pb
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1._helpers import _SessionWrapper
+from google.cloud.spanner_v1._helpers import (
+    _make_value_pb,
+    _merge_query_options,
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+    _retry,
+    _check_rst_stream_error,
+    _SessionWrapper,
+)
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
@@ -167,6 +172,8 @@ class _SnapshotBase(_SessionWrapper):
         limit=0,
         partition=None,
         request_options=None,
+        data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -211,6 +218,20 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type data_boost_enabled:
+        :param data_boost_enabled:
+                (Optional) If this is for a partitioned read and this field is
+                set ``true``, the request will be executed via offline access.
+                If the field is set to ``true`` but the request does not set
+                ``partition_token``, the API will return an
+                ``INVALID_ARGUMENT`` error.
+
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional reads or queries.
+
         :type column_info: dict
         :param column_info: (Optional) dict of mapping between column names and additional column information
 
@@ -230,16 +251,25 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        else:
+            if (
+                directed_read_options is None
+                and database._directed_read_options is not None
+            ):
+                directed_read_options = database._directed_read_options
+        elif self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
 
         request = ReadRequest(
@@ -251,6 +281,8 @@ class _SnapshotBase(_SessionWrapper):
             limit=limit,
             partition_token=partition,
             request_options=request_options,
+            data_boost_enabled=data_boost_enabled,
+            directed_read_options=directed_read_options,
         )
         restart = functools.partial(
             api.streaming_read,
@@ -308,6 +340,8 @@ class _SnapshotBase(_SessionWrapper):
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        data_boost_enabled=False,
+        directed_read_options=None,
         column_info=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
@@ -358,6 +392,20 @@ class _SnapshotBase(_SessionWrapper):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type data_boost_enabled:
+        :param data_boost_enabled:
+                (Optional) If this is for a partitioned query and this field is
+                set ``true``, the request will be executed via offline access.
+                If the field is set to ``true`` but the request does not set
+                ``partition_token``, the API will return an
+                ``INVALID_ARGUMENT`` error.
+
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional reads or queries.
+
         :type column_info: dict
         :param column_info: (Optional) dict of mapping between column names and additional column information
 
@@ -382,6 +430,10 @@ class _SnapshotBase(_SessionWrapper):
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
 
         api = database.spanner_api
 
@@ -392,12 +444,17 @@ class _SnapshotBase(_SessionWrapper):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         if self._read_only:
             # Transaction tags are not supported for read only transactions.
             request_options.transaction_tag = None
-        else:
+            if (
+                directed_read_options is None
+                and database._directed_read_options is not None
+            ):
+                directed_read_options = database._directed_read_options
+        elif self.transaction_tag is not None:
             request_options.transaction_tag = self.transaction_tag
 
         request = ExecuteSqlRequest(
@@ -410,6 +467,8 @@ class _SnapshotBase(_SessionWrapper):
             seqno=self._execute_sql_count,
             query_options=query_options,
             request_options=request_options,
+            data_boost_enabled=data_boost_enabled,
+            directed_read_options=directed_read_options,
         )
         restart = functools.partial(
             api.execute_streaming_sql,
@@ -424,33 +483,19 @@ class _SnapshotBase(_SessionWrapper):
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                iterator = _restart_on_unavailable(
-                    restart,
-                    request,
-                    "CloudSpanner.ReadWriteTransaction",
-                    self._session,
-                    trace_attributes,
-                    transaction=self,
-                )
-                self._read_request_count += 1
-                self._execute_sql_count += 1
-
-                if self._multi_use:
-                    return StreamedResultSet(
-                        iterator, source=self, column_info=column_info
-                    )
-                else:
-                    return StreamedResultSet(iterator, column_info=column_info)
+                return self._get_streamed_result_set(restart, request, trace_attributes, column_info)
         else:
-            iterator = _restart_on_unavailable(
-                restart,
-                request,
-                "CloudSpanner.ReadWriteTransaction",
-                self._session,
-                trace_attributes,
-                transaction=self,
-            )
+            return self._get_streamed_result_set(restart, request, trace_attributes, column_info)
 
+    def _get_streamed_result_set(self, restart, request, trace_attributes, column_info):
+        iterator = _restart_on_unavailable(
+            restart,
+            request,
+            "CloudSpanner.ReadWriteTransaction",
+            self._session,
+            trace_attributes,
+            transaction=self,
+        )
         self._read_request_count += 1
         self._execute_sql_count += 1
 
@@ -519,6 +564,10 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         transaction = self._make_txn_selector()
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
@@ -537,11 +586,16 @@ class _SnapshotBase(_SessionWrapper):
         with trace_call(
             "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
         ):
-            response = api.partition_read(
+            method = functools.partial(
+                api.partition_read,
                 request=request,
                 metadata=metadata,
                 retry=retry,
                 timeout=timeout,
+            )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
         return [partition.partition_token for partition in response.partitions]
@@ -613,6 +667,10 @@ class _SnapshotBase(_SessionWrapper):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         transaction = self._make_txn_selector()
         partition_options = PartitionOptions(
             partition_size_bytes=partition_size_bytes, max_partitions=max_partitions
@@ -632,11 +690,16 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
         ):
-            response = api.partition_query(
+            method = functools.partial(
+                api.partition_query,
                 request=request,
                 metadata=metadata,
                 retry=retry,
                 timeout=timeout,
+            )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
         return [partition.partition_token for partition in response.partitions]
@@ -685,6 +748,7 @@ class Snapshot(_SnapshotBase):
         max_staleness=None,
         exact_staleness=None,
         multi_use=False,
+        transaction_id=None,
     ):
         super(Snapshot, self).__init__(session)
         opts = [read_timestamp, min_read_timestamp, max_staleness, exact_staleness]
@@ -700,12 +764,14 @@ class Snapshot(_SnapshotBase):
                     "'min_read_timestamp' / 'max_staleness'"
                 )
 
+        self._transaction_read_timestamp = None
         self._strong = len(flagged) == 0
         self._read_timestamp = read_timestamp
         self._min_read_timestamp = min_read_timestamp
         self._max_staleness = max_staleness
         self._exact_staleness = exact_staleness
         self._multi_use = multi_use
+        self._transaction_id = transaction_id
 
     def _make_txn_selector(self):
         """Helper for :meth:`read`."""
@@ -729,7 +795,9 @@ class Snapshot(_SnapshotBase):
             value = True
 
         options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(**{key: value})
+            read_only=TransactionOptions.ReadOnly(
+                **{key: value, "return_read_timestamp": True}
+            )
         )
 
         if self._multi_use:
@@ -758,12 +826,22 @@ class Snapshot(_SnapshotBase):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if not self._read_only and database._route_to_leader_enabled:
+            metadata.append(
+                (_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
+            )
         txn_selector = self._make_txn_selector()
         with trace_call("CloudSpanner.BeginTransaction", self._session):
-            response = api.begin_transaction(
+            method = functools.partial(
+                api.begin_transaction,
                 session=self._session.name,
                 options=txn_selector.begin,
                 metadata=metadata,
             )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
+            )
         self._transaction_id = response.id
+        self._transaction_read_timestamp = response.read_timestamp
         return self._transaction_id

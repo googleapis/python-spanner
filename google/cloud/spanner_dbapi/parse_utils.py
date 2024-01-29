@@ -21,8 +21,11 @@ import re
 import sqlparse
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_v1 import JsonObject
+from . import client_side_statement_parser
+from deprecated import deprecated
 
 from .exceptions import Error
+from .parsed_statement import ParsedStatement, StatementType, Statement
 from .types import DateStr, TimestampStr
 from .utils import sanitize_literals_for_upload
 
@@ -174,12 +177,11 @@ RE_VALUES_PYFORMAT = re.compile(
 RE_PYFORMAT = re.compile(r"(%s|%\([^\(\)]+\)s)+", re.DOTALL)
 
 
+@deprecated(reason="This method is deprecated. Use _classify_stmt method")
 def classify_stmt(query):
     """Determine SQL query type.
-
     :type query: str
     :param query: A SQL query.
-
     :rtype: str
     :returns: The query type name.
     """
@@ -201,6 +203,50 @@ def classify_stmt(query):
         return STMT_NON_UPDATING
 
     return STMT_UPDATING
+
+
+def classify_statement(query, args=None):
+    """Determine SQL query type.
+
+    It is an internal method that can make backwards-incompatible changes.
+
+    :type query: str
+    :param query: A SQL query.
+
+    :rtype: ParsedStatement
+    :returns: parsed statement attributes.
+    """
+    # sqlparse will strip Cloud Spanner comments,
+    # still, special commenting styles, like
+    # PostgreSQL dollar quoted comments are not
+    # supported and will not be stripped.
+    query = sqlparse.format(query, strip_comments=True).strip()
+    parsed_statement: ParsedStatement = client_side_statement_parser.parse_stmt(query)
+    if parsed_statement is not None:
+        return parsed_statement
+    query, args = sql_pyformat_args_to_spanner(query, args or None)
+    statement = Statement(
+        query,
+        args,
+        get_param_types(args or None),
+    )
+    statement_type = _get_statement_type(statement)
+    return ParsedStatement(statement_type, statement)
+
+
+def _get_statement_type(statement):
+    query = statement.sql
+    if RE_DDL.match(query):
+        return StatementType.DDL
+    if RE_IS_INSERT.match(query):
+        return StatementType.INSERT
+    if RE_NON_UPDATE.match(query) or RE_WITH.match(query):
+        # As of 13-March-2020, Cloud Spanner only supports WITH for DQL
+        # statements and doesn't yet support WITH for DML statements.
+        return StatementType.QUERY
+
+    statement.sql = ensure_where_clause(query)
+    return StatementType.UPDATE
 
 
 def sql_pyformat_args_to_spanner(sql, params):

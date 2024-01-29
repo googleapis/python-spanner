@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,14 +35,14 @@ from google.cloud.spanner_v1 import gapic_version as package_version
 from google.api_core.client_options import ClientOptions
 from google.api_core import exceptions as core_exceptions
 from google.api_core import gapic_v1
-from google.api_core import retry as retries
+from google.api_core import retry_async as retries
 from google.auth import credentials as ga_credentials  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 
 try:
-    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault]
+    OptionalRetry = Union[retries.AsyncRetry, gapic_v1.method._MethodDefault]
 except AttributeError:  # pragma: NO COVER
-    OptionalRetry = Union[retries.Retry, object]  # type: ignore
+    OptionalRetry = Union[retries.AsyncRetry, object]  # type: ignore
 
 from google.cloud.spanner_v1.services.spanner import pagers
 from google.cloud.spanner_v1.types import commit_response
@@ -60,6 +60,7 @@ from .client import SpannerClient
 
 class SpannerAsyncClient:
     """Cloud Spanner API
+
     The Cloud Spanner API can be used to manage sessions and execute
     transactions on data stored in Cloud Spanner databases.
     """
@@ -285,7 +286,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``database`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -316,7 +317,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.create_session,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -357,6 +358,7 @@ class SpannerAsyncClient:
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.BatchCreateSessionsResponse:
         r"""Creates multiple new sessions.
+
         This API can be used to initialize a session cache on
         the clients. See https://goo.gl/TgSFN2 for best
         practices on session cache management.
@@ -411,7 +413,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``session_count`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -420,7 +422,7 @@ class SpannerAsyncClient:
         Returns:
             google.cloud.spanner_v1.types.BatchCreateSessionsResponse:
                 The response for
-                [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
+                   [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
 
         """
         # Create or coerce a protobuf request object.
@@ -446,7 +448,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.batch_create_sessions,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -526,7 +528,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``name`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -557,7 +559,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.get_session,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -636,7 +638,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``database`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -672,7 +674,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.list_sessions,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -758,7 +760,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``name`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -785,7 +787,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.delete_session,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -867,7 +869,7 @@ class SpannerAsyncClient:
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -886,7 +888,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.execute_sql,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -964,7 +966,7 @@ class SpannerAsyncClient:
                 The request object. The request for
                 [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql] and
                 [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql].
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1065,7 +1067,7 @@ class SpannerAsyncClient:
             request (Optional[Union[google.cloud.spanner_v1.types.ExecuteBatchDmlRequest, dict]]):
                 The request object. The request for
                 [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1073,8 +1075,10 @@ class SpannerAsyncClient:
 
         Returns:
             google.cloud.spanner_v1.types.ExecuteBatchDmlResponse:
-                The response for [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml]. Contains a list
-                   of [ResultSet][google.spanner.v1.ResultSet] messages,
+                The response for
+                   [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
+                   Contains a list of
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
                    one for each DML statement that has successfully
                    executed, in the same order as the statements in the
                    request. If a statement fails, the status in the
@@ -1084,34 +1088,35 @@ class SpannerAsyncClient:
                    following approach:
 
                    1. Check the status in the response message. The
-                      [google.rpc.Code][google.rpc.Code] enum value OK
-                      indicates that all statements were executed
-                      successfully.
-                   2. If the status was not OK, check the number of
-                      result sets in the response. If the response
-                      contains N
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      then statement N+1 in the request failed.
+                   [google.rpc.Code][google.rpc.Code] enum value OK
+                   indicates that all statements were executed
+                   successfully. 2. If the status was not OK, check the
+                   number of result sets in the response. If the
+                   response contains N
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   then statement N+1 in the request failed.
 
                    Example 1:
 
                    -  Request: 5 DML statements, all executed
                       successfully.
-                   -  Response: 5
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      with the status OK.
+
+                   \* Response: 5
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   with the status OK.
 
                    Example 2:
 
                    -  Request: 5 DML statements. The third statement has
                       a syntax error.
-                   -  Response: 2
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      and a syntax error (INVALID_ARGUMENT) status. The
-                      number of [ResultSet][google.spanner.v1.ResultSet]
-                      messages indicates that the third statement
-                      failed, and the fourth and fifth statements were
-                      not executed.
+
+                   \* Response: 2
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   and a syntax error (INVALID_ARGUMENT) status. The
+                   number of [ResultSet][google.spanner.v1.ResultSet]
+                   messages indicates that the third statement failed,
+                   and the fourth and fifth statements were not
+                   executed.
 
         """
         # Create or coerce a protobuf request object.
@@ -1121,7 +1126,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.execute_batch_dml,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1205,10 +1210,10 @@ class SpannerAsyncClient:
 
         Args:
             request (Optional[Union[google.cloud.spanner_v1.types.ReadRequest, dict]]):
-                The request object. The request for
-                [Read][google.spanner.v1.Spanner.Read] and
+                The request object. The request for [Read][google.spanner.v1.Spanner.Read]
+                and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1227,7 +1232,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.read,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1303,10 +1308,10 @@ class SpannerAsyncClient:
 
         Args:
             request (Optional[Union[google.cloud.spanner_v1.types.ReadRequest, dict]]):
-                The request object. The request for
-                [Read][google.spanner.v1.Spanner.Read] and
+                The request object. The request for [Read][google.spanner.v1.Spanner.Read]
+                and
                 [StreamingRead][google.spanner.v1.Spanner.StreamingRead].
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1409,7 +1414,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``options`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1442,7 +1447,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.begin_transaction,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1570,7 +1575,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``single_use_transaction`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1611,7 +1616,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.commit,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1704,7 +1709,7 @@ class SpannerAsyncClient:
                 This corresponds to the ``transaction_id`` field
                 on the ``request`` instance; if ``request`` is provided, this
                 should not be set.
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1733,7 +1738,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.rollback,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1814,7 +1819,7 @@ class SpannerAsyncClient:
             request (Optional[Union[google.cloud.spanner_v1.types.PartitionQueryRequest, dict]]):
                 The request object. The request for
                 [PartitionQuery][google.spanner.v1.Spanner.PartitionQuery]
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1834,7 +1839,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.partition_query,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1921,7 +1926,7 @@ class SpannerAsyncClient:
             request (Optional[Union[google.cloud.spanner_v1.types.PartitionReadRequest, dict]]):
                 The request object. The request for
                 [PartitionRead][google.spanner.v1.Spanner.PartitionRead]
-            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
                 should be retried.
             timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
@@ -1941,7 +1946,7 @@ class SpannerAsyncClient:
         # and friendly error handling.
         rpc = gapic_v1.method_async.wrap_method(
             self._client._transport.partition_read,
-            default_retry=retries.Retry(
+            default_retry=retries.AsyncRetry(
                 initial=0.25,
                 maximum=32.0,
                 multiplier=1.3,
@@ -1971,7 +1976,144 @@ class SpannerAsyncClient:
         # Done; return the response.
         return response
 
-    async def __aenter__(self):
+    def batch_write(
+        self,
+        request: Optional[Union[spanner.BatchWriteRequest, dict]] = None,
+        *,
+        session: Optional[str] = None,
+        mutation_groups: Optional[
+            MutableSequence[spanner.BatchWriteRequest.MutationGroup]
+        ] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> Awaitable[AsyncIterable[spanner.BatchWriteResponse]]:
+        r"""Batches the supplied mutation groups in a collection
+        of efficient transactions. All mutations in a group are
+        committed atomically. However, mutations across groups
+        can be committed non-atomically in an unspecified order
+        and thus, they must be independent of each other.
+        Partial failure is possible, i.e., some groups may have
+        been committed successfully, while some may have failed.
+        The results of individual batches are streamed into the
+        response as the batches are applied.
+
+        BatchWrite requests are not replay protected, meaning
+        that each mutation group may be applied more than once.
+        Replays of non-idempotent mutations may have undesirable
+        effects. For example, replays of an insert mutation may
+        produce an already exists error or if you use generated
+        or commit timestamp-based keys, it may result in
+        additional rows being added to the mutation's table. We
+        recommend structuring your mutation groups to be
+        idempotent to avoid this issue.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_v1
+
+            async def sample_batch_write():
+                # Create a client
+                client = spanner_v1.SpannerAsyncClient()
+
+                # Initialize request argument(s)
+                mutation_groups = spanner_v1.MutationGroup()
+                mutation_groups.mutations.insert.table = "table_value"
+
+                request = spanner_v1.BatchWriteRequest(
+                    session="session_value",
+                    mutation_groups=mutation_groups,
+                )
+
+                # Make the request
+                stream = await client.batch_write(request=request)
+
+                # Handle the response
+                async for response in stream:
+                    print(response)
+
+        Args:
+            request (Optional[Union[google.cloud.spanner_v1.types.BatchWriteRequest, dict]]):
+                The request object. The request for
+                [BatchWrite][google.spanner.v1.Spanner.BatchWrite].
+            session (:class:`str`):
+                Required. The session in which the
+                batch request is to be run.
+
+                This corresponds to the ``session`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            mutation_groups (:class:`MutableSequence[google.cloud.spanner_v1.types.BatchWriteRequest.MutationGroup]`):
+                Required. The groups of mutations to
+                be applied.
+
+                This corresponds to the ``mutation_groups`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry_async.AsyncRetry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            AsyncIterable[google.cloud.spanner_v1.types.BatchWriteResponse]:
+                The result of applying a batch of
+                mutations.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([session, mutation_groups])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        request = spanner.BatchWriteRequest(request)
+
+        # If we have keyword arguments corresponding to fields on the
+        # request, apply these.
+        if session is not None:
+            request.session = session
+        if mutation_groups:
+            request.mutation_groups.extend(mutation_groups)
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = gapic_v1.method_async.wrap_method(
+            self._client._transport.batch_write,
+            default_timeout=3600.0,
+            client_info=DEFAULT_CLIENT_INFO,
+        )
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("session", request.session),)),
+        )
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    async def __aenter__(self) -> "SpannerAsyncClient":
         return self
 
     async def __aexit__(self, exc_type, exc, tb):

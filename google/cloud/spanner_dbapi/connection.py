@@ -13,29 +13,37 @@
 # limitations under the License.
 
 """DB-API Connection for the Google Cloud Spanner."""
-
-import time
 import warnings
 
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1.session import _get_retry_delay
-from google.cloud.spanner_v1.snapshot import Snapshot
-
-from google.cloud.spanner_dbapi.checksum import _compare_checksums
-from google.cloud.spanner_dbapi.checksum import ResultsChecksum
+from google.cloud.spanner_dbapi import partition_helper
+from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
+from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
+from google.cloud.spanner_dbapi.parsed_statement import (
+    StatementType,
+)
+from google.cloud.spanner_dbapi.partition_helper import PartitionId
+from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
+from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
 from google.cloud.spanner_dbapi.cursor import Cursor
-from google.cloud.spanner_dbapi.exceptions import InterfaceError, OperationalError
+from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.snapshot import Snapshot
+from deprecated import deprecated
+
+from google.cloud.spanner_dbapi.exceptions import (
+    InterfaceError,
+    OperationalError,
+    ProgrammingError,
+)
 from google.cloud.spanner_dbapi.version import DEFAULT_USER_AGENT
 from google.cloud.spanner_dbapi.version import PY_VERSION
 
-from google.rpc.code_pb2 import ABORTED
 
-
-AUTOCOMMIT_MODE_WARNING = "This method is non-operational in autocommit mode"
-MAX_INTERNAL_RETRIES = 50
+CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
+    "This method is non-operational as a transaction has not been started."
+)
 
 
 def check_not_closed(function):
@@ -83,7 +91,7 @@ class Connection:
         should end a that a new one should be started when the next statement is executed.
     """
 
-    def __init__(self, instance, database, read_only=False):
+    def __init__(self, instance, database=None, read_only=False):
         self._instance = instance
         self._database = database
         self._ddl_statements = []
@@ -91,9 +99,6 @@ class Connection:
         self._transaction = None
         self._session = None
         self._snapshot = None
-        # SQL statements, which were executed
-        # within the current transaction
-        self._statements = []
 
         self.is_closed = False
         self._autocommit = False
@@ -104,6 +109,13 @@ class Connection:
         self._read_only = read_only
         self._staleness = None
         self.request_priority = None
+        self._transaction_begin_marked = False
+        # whether transaction started at Spanner. This means that we had
+        # made atleast one call to Spanner.
+        self._spanner_transaction_started = False
+        self._batch_mode = BatchMode.NONE
+        self._batch_dml_executor: BatchDmlExecutor = None
+        self._transaction_helper = TransactionRetryHelper(self)
 
     @property
     def autocommit(self):
@@ -122,7 +134,7 @@ class Connection:
         :type value: bool
         :param value: New autocommit mode state.
         """
-        if value and not self._autocommit and self.inside_transaction:
+        if value and not self._autocommit and self._spanner_transaction_started:
             self.commit()
 
         self._autocommit = value
@@ -137,17 +149,24 @@ class Connection:
         return self._database
 
     @property
+    @deprecated(
+        reason="This method is deprecated. Use _spanner_transaction_started field"
+    )
     def inside_transaction(self):
-        """Flag: transaction is started.
-
-        Returns:
-            bool: True if transaction begun, False otherwise.
-        """
         return (
             self._transaction
             and not self._transaction.committed
             and not self._transaction.rolled_back
         )
+
+    @property
+    def _client_transaction_started(self):
+        """Flag: whether transaction started at client side.
+
+        Returns:
+            bool: True if transaction started, False otherwise.
+        """
+        return (not self._autocommit) or self._transaction_begin_marked
 
     @property
     def instance(self):
@@ -175,7 +194,7 @@ class Connection:
         Args:
             value (bool): True for ReadOnly mode, False for ReadWrite.
         """
-        if self.inside_transaction:
+        if self._spanner_transaction_started:
             raise ValueError(
                 "Connection read/write mode can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -213,7 +232,7 @@ class Connection:
         Args:
             value (dict): Staleness type and value.
         """
-        if self.inside_transaction:
+        if self._spanner_transaction_started:
             raise ValueError(
                 "`staleness` option can't be changed while a transaction is in progress. "
                 "Commit or rollback the current transaction and try again."
@@ -242,6 +261,8 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.session.Session`
         :returns: Cloud Spanner session object ready to use.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         if not self._session:
             self._session = self.database._pool.get()
 
@@ -252,91 +273,29 @@ class Connection:
 
         The session will be returned into the sessions pool.
         """
-        self.database._pool.put(self._session)
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
+        if self._session is not None:
+            self.database._pool.put(self._session)
         self._session = None
-
-    def retry_transaction(self):
-        """Retry the aborted transaction.
-
-        All the statements executed in the original transaction
-        will be re-executed in new one. Results checksums of the
-        original statements and the retried ones will be compared.
-
-        :raises: :class:`google.cloud.spanner_dbapi.exceptions.RetryAborted`
-            If results checksum of the retried statement is
-            not equal to the checksum of the original one.
-        """
-        attempt = 0
-        while True:
-            self._transaction = None
-            attempt += 1
-            if attempt > MAX_INTERNAL_RETRIES:
-                raise
-
-            try:
-                self._rerun_previous_statements()
-                break
-            except Aborted as exc:
-                delay = _get_retry_delay(exc.errors[0], attempt)
-                if delay:
-                    time.sleep(delay)
-
-    def _rerun_previous_statements(self):
-        """
-        Helper to run all the remembered statements
-        from the last transaction.
-        """
-        for statement in self._statements:
-            if isinstance(statement, list):
-                statements, checksum = statement
-
-                transaction = self.transaction_checkout()
-                status, res = transaction.batch_update(statements)
-
-                if status.code == ABORTED:
-                    self.connection._transaction = None
-                    raise Aborted(status.details)
-
-                retried_checksum = ResultsChecksum()
-                retried_checksum.consume_result(res)
-                retried_checksum.consume_result(status.code)
-
-                _compare_checksums(checksum, retried_checksum)
-            else:
-                res_iter, retried_checksum = self.run_statement(statement, retried=True)
-                # executing all the completed statements
-                if statement != self._statements[-1]:
-                    for res in res_iter:
-                        retried_checksum.consume_result(res)
-
-                    _compare_checksums(statement.checksum, retried_checksum)
-                # executing the failed statement
-                else:
-                    # streaming up to the failed result or
-                    # to the end of the streaming iterator
-                    while len(retried_checksum) < len(statement.checksum):
-                        try:
-                            res = next(iter(res_iter))
-                            retried_checksum.consume_result(res)
-                        except StopIteration:
-                            break
-
-                    _compare_checksums(statement.checksum, retried_checksum)
 
     def transaction_checkout(self):
         """Get a Cloud Spanner transaction.
 
         Begin a new transaction, if there is no transaction in
-        this connection yet. Return the begun one otherwise.
+        this connection yet. Return the started one otherwise.
 
-        The method is non operational in autocommit mode.
+        This method is a no-op if the connection is in autocommit mode and no
+        explicit transaction has been started
 
         :rtype: :class:`google.cloud.spanner_v1.transaction.Transaction`
         :returns: A Cloud Spanner transaction object, ready to use.
         """
-        if not self.autocommit:
-            if not self.inside_transaction:
+        if not self.read_only and self._client_transaction_started:
+            if not self._spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
+                self._snapshot = None
+                self._spanner_transaction_started = True
                 self._transaction.begin()
 
             return self._transaction
@@ -350,12 +309,14 @@ class Connection:
         :rtype: :class:`google.cloud.spanner_v1.snapshot.Snapshot`
         :returns: A Cloud Spanner snapshot object, ready to use.
         """
-        if self.read_only and not self.autocommit:
-            if not self._snapshot:
+        if self.read_only and self._client_transaction_started:
+            if not self._spanner_transaction_started:
                 self._snapshot = Snapshot(
                     self._session_checkout(), multi_use=True, **self.staleness
                 )
+                self._transaction = None
                 self._snapshot.begin()
+                self._spanner_transaction_started = True
 
             return self._snapshot
 
@@ -365,53 +326,74 @@ class Connection:
         The connection will be unusable from this point forward. If the
         connection has an active transaction, it will be rolled back.
         """
-        if self.inside_transaction:
+        if self._spanner_transaction_started and not self._read_only:
             self._transaction.rollback()
 
-        if self._own_pool:
+        if self._own_pool and self.database:
             self.database._pool.clear()
 
         self.is_closed = True
 
+    @check_not_closed
+    def begin(self):
+        """
+        Marks the transaction as started.
+
+        :raises: :class:`InterfaceError`: if this connection is closed.
+        :raises: :class:`OperationalError`: if there is an existing transaction
+        that has been started
+        """
+        if self._transaction_begin_marked:
+            raise OperationalError("A transaction has already started")
+        if self._spanner_transaction_started:
+            raise OperationalError(
+                "Beginning a new transaction is not allowed when a transaction "
+                "is already running"
+            )
+        self._transaction_begin_marked = True
+
     def commit(self):
         """Commits any pending transaction to the database.
-
-        This method is non-operational in autocommit mode.
+        This is a no-op if there is no active client transaction.
         """
-        self._snapshot = None
-
-        if self._autocommit:
-            warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
+        if not self._client_transaction_started:
+            warnings.warn(
+                CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+            )
             return
 
         self.run_prior_DDL_statements()
-        if self.inside_transaction:
-            try:
-                if not self.read_only:
-                    self._transaction.commit()
-
-                self._release_session()
-                self._statements = []
-            except Aborted:
-                self.retry_transaction()
-                self.commit()
+        try:
+            if self._spanner_transaction_started and not self._read_only:
+                self._transaction.commit()
+        except Aborted:
+            self._transaction_helper.retry_transaction()
+            self.commit()
+        finally:
+            self._reset_post_commit_or_rollback()
 
     def rollback(self):
         """Rolls back any pending transaction.
-
-        This is a no-op if there is no active transaction or if the connection
-        is in autocommit mode.
+        This is a no-op if there is no active client transaction.
         """
-        self._snapshot = None
-
-        if self._autocommit:
-            warnings.warn(AUTOCOMMIT_MODE_WARNING, UserWarning, stacklevel=2)
-        elif self._transaction:
-            if not self.read_only:
+        if not self._client_transaction_started:
+            warnings.warn(
+                CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
+            )
+            return
+        try:
+            if self._spanner_transaction_started and not self._read_only:
                 self._transaction.rollback()
+        finally:
+            self._reset_post_commit_or_rollback()
 
-            self._release_session()
-            self._statements = []
+    def _reset_post_commit_or_rollback(self):
+        self._release_session()
+        self._transaction_helper.reset()
+        self._transaction_begin_marked = False
+        self._spanner_transaction_started = False
 
     @check_not_closed
     def cursor(self):
@@ -420,20 +402,22 @@ class Connection:
 
     @check_not_closed
     def run_prior_DDL_statements(self):
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         if self._ddl_statements:
             ddl_statements = self._ddl_statements
             self._ddl_statements = []
 
             return self.database.update_ddl(ddl_statements).result()
 
-    def run_statement(self, statement, retried=False):
+    def run_statement(self, statement: Statement):
         """Run single SQL statement in begun transaction.
 
         This method is never used in autocommit mode. In
         !autocommit mode however it remembers every executed
         SQL statement with its parameters.
 
-        :type statement: :class:`dict`
+        :type statement: :class:`Statement`
         :param statement: SQL statement to execute.
 
         :type retried: bool
@@ -446,17 +430,11 @@ class Connection:
                   checksum of this statement results.
         """
         transaction = self.transaction_checkout()
-        if not retried:
-            self._statements.append(statement)
-
-        return (
-            transaction.execute_sql(
-                statement.sql,
-                statement.params,
-                param_types=statement.param_types,
-                request_options=self.request_options,
-            ),
-            ResultsChecksum() if retried else statement.checksum,
+        return transaction.execute_sql(
+            statement.sql,
+            statement.params,
+            param_types=statement.param_types,
+            request_options=self.request_options,
         )
 
     @check_not_closed
@@ -474,6 +452,8 @@ class Connection:
         :raises: :class:`google.cloud.exceptions.NotFound`: if the linked instance
                   or database doesn't exist.
         """
+        if self.database is None:
+            raise ValueError("Database needs to be passed for this operation")
         with self.database.snapshot() as snapshot:
             result = list(snapshot.execute_sql("SELECT 1"))
             if result != [[1]]:
@@ -481,6 +461,111 @@ class Connection:
                     "The checking query (SELECT 1) returned an unexpected result: %s. "
                     "Expected: [[1]]" % result
                 )
+
+    @check_not_closed
+    def start_batch_dml(self, cursor):
+        if self._batch_mode is not BatchMode.NONE:
+            raise ProgrammingError(
+                "Cannot start a DML batch when a batch is already active"
+            )
+        if self.read_only:
+            raise ProgrammingError(
+                "Cannot start a DML batch when the connection is in read-only mode"
+            )
+        self._batch_mode = BatchMode.DML
+        self._batch_dml_executor = BatchDmlExecutor(cursor)
+
+    @check_not_closed
+    def execute_batch_dml_statement(self, parsed_statement: ParsedStatement):
+        if self._batch_mode is not BatchMode.DML:
+            raise ProgrammingError(
+                "Cannot execute statement when the BatchMode is not DML"
+            )
+        self._batch_dml_executor.execute_statement(parsed_statement)
+
+    @check_not_closed
+    def run_batch(self):
+        if self._batch_mode is BatchMode.NONE:
+            raise ProgrammingError("Cannot run a batch when the BatchMode is not set")
+        try:
+            if self._batch_mode is BatchMode.DML:
+                many_result_set = self._batch_dml_executor.run_batch_dml()
+        finally:
+            self._batch_mode = BatchMode.NONE
+            self._batch_dml_executor = None
+        return many_result_set
+
+    @check_not_closed
+    def abort_batch(self):
+        if self._batch_mode is BatchMode.NONE:
+            raise ProgrammingError("Cannot abort a batch when the BatchMode is not set")
+        if self._batch_mode is BatchMode.DML:
+            self._batch_dml_executor = None
+        self._batch_mode = BatchMode.NONE
+
+    @check_not_closed
+    def partition_query(
+        self,
+        parsed_statement: ParsedStatement,
+        query_options=None,
+    ):
+        statement = parsed_statement.statement
+        partitioned_query = parsed_statement.client_side_statement_params[0]
+        self._partitioned_query_validation(partitioned_query, statement)
+
+        batch_snapshot = self._database.batch_snapshot()
+        partition_ids = []
+        partitions = list(
+            batch_snapshot.generate_query_batches(
+                partitioned_query,
+                statement.params,
+                statement.param_types,
+                query_options=query_options,
+            )
+        )
+
+        batch_transaction_id = batch_snapshot.get_batch_transaction_id()
+        for partition in partitions:
+            partition_ids.append(
+                partition_helper.encode_to_string(batch_transaction_id, partition)
+            )
+        return partition_ids
+
+    @check_not_closed
+    def run_partition(self, encoded_partition_id):
+        partition_id: PartitionId = partition_helper.decode_from_string(
+            encoded_partition_id
+        )
+        batch_transaction_id = partition_id.batch_transaction_id
+        batch_snapshot = self._database.batch_snapshot(
+            read_timestamp=batch_transaction_id.read_timestamp,
+            session_id=batch_transaction_id.session_id,
+            transaction_id=batch_transaction_id.transaction_id,
+        )
+        return batch_snapshot.process(partition_id.partition_result)
+
+    @check_not_closed
+    def run_partitioned_query(
+        self,
+        parsed_statement: ParsedStatement,
+    ):
+        statement = parsed_statement.statement
+        partitioned_query = parsed_statement.client_side_statement_params[0]
+        self._partitioned_query_validation(partitioned_query, statement)
+        batch_snapshot = self._database.batch_snapshot()
+        return batch_snapshot.run_partitioned_query(
+            partitioned_query, statement.params, statement.param_types
+        )
+
+    def _partitioned_query_validation(self, partitioned_query, statement):
+        if _get_statement_type(Statement(partitioned_query)) is not StatementType.QUERY:
+            raise ProgrammingError(
+                "Only queries can be partitioned. Invalid statement: " + statement.sql
+            )
+        if self.read_only is not True and self._client_transaction_started is True:
+            raise ProgrammingError(
+                "Partitioned query is not supported, because the connection is in a read/write transaction."
+            )
 
     def __enter__(self):
         return self
@@ -492,11 +577,13 @@ class Connection:
 
 def connect(
     instance_id,
-    database_id,
+    database_id=None,
     project=None,
     credentials=None,
     pool=None,
     user_agent=None,
+    client=None,
+    route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -504,7 +591,7 @@ def connect(
     :param instance_id: The ID of the instance to connect to.
 
     :type database_id: str
-    :param database_id: The ID of the database to connect to.
+    :param database_id: (Optional) The ID of the database to connect to.
 
     :type project: str
     :param project: (Optional) The ID of the project which owns the
@@ -529,28 +616,49 @@ def connect(
     :param user_agent: (Optional) User agent to be used with this connection's
                        requests.
 
+    :type client: Concrete subclass of
+                  :class:`~google.cloud.spanner_v1.Client`.
+    :param client: (Optional) Custom user provided Client Object
+
+    :type route_to_leader_enabled: boolean
+    :param route_to_leader_enabled:
+        (Optional) Default True. Set route_to_leader_enabled as False to
+        disable leader aware routing. Disabling leader aware routing would
+        route all requests in RW/PDML transactions to the closest region.
+
+
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
-
-    client_info = ClientInfo(
-        user_agent=user_agent or DEFAULT_USER_AGENT,
-        python_version=PY_VERSION,
-        client_library_version=spanner.__version__,
-    )
-
-    if isinstance(credentials, str):
-        client = spanner.Client.from_service_account_json(
-            credentials, project=project, client_info=client_info
+    if client is None:
+        client_info = ClientInfo(
+            user_agent=user_agent or DEFAULT_USER_AGENT,
+            python_version=PY_VERSION,
+            client_library_version=spanner.__version__,
         )
+        if isinstance(credentials, str):
+            client = spanner.Client.from_service_account_json(
+                credentials,
+                project=project,
+                client_info=client_info,
+                route_to_leader_enabled=True,
+            )
+        else:
+            client = spanner.Client(
+                project=project,
+                credentials=credentials,
+                client_info=client_info,
+                route_to_leader_enabled=True,
+            )
     else:
-        client = spanner.Client(
-            project=project, credentials=credentials, client_info=client_info
-        )
+        if project is not None and client.project != project:
+            raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(instance, instance.database(database_id, pool=pool))
+    conn = Connection(
+        instance, instance.database(database_id, pool=pool) if database_id else None
+    )
     if pool is not None:
         conn._own_pool = False
 

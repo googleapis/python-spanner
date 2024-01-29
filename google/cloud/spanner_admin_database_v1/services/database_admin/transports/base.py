@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2022 Google LLC
+# Copyright 2023 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -32,7 +32,6 @@ from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 from google.iam.v1 import policy_pb2  # type: ignore
-from google.longrunning import operations_pb2
 from google.longrunning import operations_pb2  # type: ignore
 from google.protobuf import empty_pb2  # type: ignore
 
@@ -156,6 +155,21 @@ class DatabaseAdminTransport(abc.ABC):
             ),
             self.get_database: gapic_v1.method.wrap_method(
                 self.get_database,
+                default_retry=retries.Retry(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
+                        core_exceptions.DeadlineExceeded,
+                        core_exceptions.ServiceUnavailable,
+                    ),
+                    deadline=3600.0,
+                ),
+                default_timeout=3600.0,
+                client_info=client_info,
+            ),
+            self.update_database: gapic_v1.method.wrap_method(
+                self.update_database,
                 default_retry=retries.Retry(
                     initial=1.0,
                     maximum=32.0,
@@ -404,6 +418,15 @@ class DatabaseAdminTransport(abc.ABC):
         Union[
             spanner_database_admin.Database, Awaitable[spanner_database_admin.Database]
         ],
+    ]:
+        raise NotImplementedError()
+
+    @property
+    def update_database(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.UpdateDatabaseRequest],
+        Union[operations_pb2.Operation, Awaitable[operations_pb2.Operation]],
     ]:
         raise NotImplementedError()
 

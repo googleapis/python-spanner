@@ -13,16 +13,24 @@
 # limitations under the License.
 
 """Context manager for Cloud Spanner batched writes."""
+import functools
 
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import Mutation
 from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import BatchWriteRequest
 
 from google.cloud.spanner_v1._helpers import _SessionWrapper
 from google.cloud.spanner_v1._helpers import _make_list_value_pbs
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_prefix,
+    _metadata_with_leader_aware_routing,
+)
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1._helpers import _retry
+from google.cloud.spanner_v1._helpers import _check_rst_stream_error
+from google.api_core.exceptions import InternalServerError
 
 
 class _BatchBase(_SessionWrapper):
@@ -159,12 +167,16 @@ class Batch(_BatchBase):
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         trace_attributes = {"num_mutations": len(self._mutations)}
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
@@ -179,9 +191,14 @@ class Batch(_BatchBase):
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
-            response = api.commit(
+            method = functools.partial(
+                api.commit,
                 request=request,
                 metadata=metadata,
+            )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
@@ -197,6 +214,99 @@ class Batch(_BatchBase):
         """End ``with`` block."""
         if exc_type is None:
             self.commit()
+
+
+class MutationGroup(_BatchBase):
+    """A container for mutations.
+
+    Clients should use :class:`~google.cloud.spanner_v1.MutationGroups` to
+    obtain instances instead of directly creating instances.
+
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :param session: The session used to perform the commit.
+
+    :type mutations: list
+    :param mutations: The list into which mutations are to be accumulated.
+    """
+
+    def __init__(self, session, mutations=[]):
+        super(MutationGroup, self).__init__(session)
+        self._mutations = mutations
+
+
+class MutationGroups(_SessionWrapper):
+    """Accumulate mutation groups for transmission during :meth:`batch_write`.
+
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :param session: the session used to perform the commit
+    """
+
+    committed = None
+
+    def __init__(self, session):
+        super(MutationGroups, self).__init__(session)
+        self._mutation_groups = []
+
+    def _check_state(self):
+        """Checks if the object's state is valid for making API requests.
+
+        :raises: :exc:`ValueError` if the object's state is invalid for making
+                 API requests.
+        """
+        if self.committed is not None:
+            raise ValueError("MutationGroups already committed")
+
+    def group(self):
+        """Returns a new `MutationGroup` to which mutations can be added."""
+        mutation_group = BatchWriteRequest.MutationGroup()
+        self._mutation_groups.append(mutation_group)
+        return MutationGroup(self._session, mutation_group.mutations)
+
+    def batch_write(self, request_options=None):
+        """Executes batch_write.
+
+        :type request_options:
+            :class:`google.cloud.spanner_v1.types.RequestOptions`
+        :param request_options:
+                (Optional) Common options for this request.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :rtype: :class:`Iterable[google.cloud.spanner_v1.types.BatchWriteResponse]`
+        :returns: a sequence of responses for each batch.
+        """
+        self._check_state()
+
+        database = self._session._database
+        api = database.spanner_api
+        metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
+        trace_attributes = {"num_mutation_groups": len(self._mutation_groups)}
+        if request_options is None:
+            request_options = RequestOptions()
+        elif type(request_options) is dict:
+            request_options = RequestOptions(request_options)
+
+        request = BatchWriteRequest(
+            session=self._session.name,
+            mutation_groups=self._mutation_groups,
+            request_options=request_options,
+        )
+        with trace_call("CloudSpanner.BatchWrite", self._session, trace_attributes):
+            method = functools.partial(
+                api.batch_write,
+                request=request,
+                metadata=metadata,
+            )
+            response = _retry(
+                method,
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
+            )
+        self.committed = True
+        return response
 
 
 def _make_write_pb(table, columns, values):

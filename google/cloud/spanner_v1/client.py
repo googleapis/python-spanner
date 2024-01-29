@@ -114,6 +114,18 @@ class Client(ClientWithProject):
         If a dict is provided, it must be of the same form as the protobuf
         message :class:`~google.cloud.spanner_v1.types.QueryOptions`
 
+    :type route_to_leader_enabled: boolean
+    :param route_to_leader_enabled:
+        (Optional) Default True. Set route_to_leader_enabled as False to
+        disable leader aware routing. Disabling leader aware routing would
+        route all requests in RW/PDML transactions to the closest region.
+
+    :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+        or :class:`dict`
+    :param directed_read_options: (Optional) Client options used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional reads or queries.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -132,10 +144,12 @@ class Client(ClientWithProject):
         client_info=_CLIENT_INFO,
         client_options=None,
         query_options=None,
+        route_to_leader_enabled=True,
+        directed_read_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
-        if client_options and type(client_options) == dict:
+        if client_options and type(client_options) is dict:
             self._client_options = google.api_core.client_options.from_dict(
                 client_options
             )
@@ -170,6 +184,9 @@ class Client(ClientWithProject):
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
+
+        self._route_to_leader_enabled = route_to_leader_enabled
+        self._directed_read_options = directed_read_options
 
     @property
     def credentials(self):
@@ -241,6 +258,26 @@ class Client(ClientWithProject):
                     client_options=self._client_options,
                 )
         return self._database_admin_api
+
+    @property
+    def route_to_leader_enabled(self):
+        """Getter for if read-write or pdml requests will be routed to leader.
+
+        :rtype: boolean
+        :returns: If read-write requests will be routed to leader.
+        """
+        return self._route_to_leader_enabled
+
+    @property
+    def directed_read_options(self):
+        """Getter for directed_read_options.
+
+        :rtype:
+            :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :returns: The directed_read_options for the client.
+        """
+        return self._directed_read_options
 
     def copy(self):
         """Make a copy of this client.
@@ -365,3 +402,14 @@ class Client(ClientWithProject):
             request=request, metadata=metadata
         )
         return page_iter
+
+    @directed_read_options.setter
+    def directed_read_options(self, directed_read_options):
+        """Sets directed_read_options for the client
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: Client options used to set the directed_read_options
+            for all ReadRequests and ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional reads or queries.
+        """
+        self._directed_read_options = directed_read_options

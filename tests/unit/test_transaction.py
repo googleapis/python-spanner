@@ -42,7 +42,6 @@ PARAM_TYPES = {"age": Type(code=TypeCode.INT64)}
 
 
 class TestTransaction(OpenTelemetryBase):
-
     PROJECT_ID = "project-id"
     INSTANCE_ID = "instance-id"
     INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
@@ -182,11 +181,36 @@ class TestTransaction(OpenTelemetryBase):
         session_id, txn_options, metadata = api._begun
         self.assertEqual(session_id, session.name)
         self.assertTrue(type(txn_options).pb(txn_options).HasField("read_write"))
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
 
         self.assertSpanAttributes(
             "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
         )
+
+    def test_begin_w_retry(self):
+        from google.cloud.spanner_v1 import (
+            Transaction as TransactionPB,
+        )
+        from google.api_core.exceptions import InternalServerError
+
+        database = _Database()
+        api = database.spanner_api = self._make_spanner_api()
+        database.spanner_api.begin_transaction.side_effect = [
+            InternalServerError("Received unexpected EOS on DATA frame from server"),
+            TransactionPB(id=self.TRANSACTION_ID),
+        ]
+
+        session = _Session(database)
+        transaction = self._make_one(session)
+        transaction.begin()
+
+        self.assertEqual(api.begin_transaction.call_count, 2)
 
     def test_rollback_not_begun(self):
         database = _Database()
@@ -261,7 +285,13 @@ class TestTransaction(OpenTelemetryBase):
         session_id, txn_id, metadata = api._rolled_back
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
 
         self.assertSpanAttributes(
             "CloudSpanner.Rollback", attributes=TestTransaction.BASE_ATTRIBUTES
@@ -352,7 +382,7 @@ class TestTransaction(OpenTelemetryBase):
             expected_request_options = RequestOptions(
                 transaction_tag=self.TRANSACTION_TAG
             )
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             expected_request_options = RequestOptions(request_options)
             expected_request_options.transaction_tag = self.TRANSACTION_TAG
             expected_request_options.request_tag = None
@@ -364,7 +394,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
         self.assertEqual(actual_request_options, expected_request_options)
 
         if return_commit_stats:
@@ -497,7 +533,7 @@ class TestTransaction(OpenTelemetryBase):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
         row_count = transaction.execute_update(
@@ -541,7 +577,10 @@ class TestTransaction(OpenTelemetryBase):
             request=expected_request,
             retry=retry,
             timeout=timeout,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         self.assertEqual(transaction._execute_sql_count, count + 1)
@@ -677,7 +716,7 @@ class TestTransaction(OpenTelemetryBase):
 
         if request_options is None:
             request_options = RequestOptions()
-        elif type(request_options) == dict:
+        elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
         status, row_counts = transaction.batch_update(
@@ -714,7 +753,10 @@ class TestTransaction(OpenTelemetryBase):
         )
         api.execute_batch_dml.assert_called_once_with(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
         )
 
         self.assertEqual(transaction._execute_sql_count, count + 1)
@@ -813,7 +855,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(session_id, self.SESSION_NAME)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
-        self.assertEqual(metadata, [("google-cloud-resource-prefix", database.name)])
+        self.assertEqual(
+            metadata,
+            [
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
 
     def test_context_mgr_failure(self):
         from google.protobuf.empty_pb2 import Empty
@@ -846,6 +894,7 @@ class _Client(object):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.directed_read_options = None
 
 
 class _Instance(object):
@@ -857,10 +906,11 @@ class _Database(object):
     def __init__(self):
         self.name = "testing"
         self._instance = _Instance()
+        self._route_to_leader_enabled = True
+        self._directed_read_options = None
 
 
 class _Session(object):
-
     _transaction = None
 
     def __init__(self, database=None, name=TestTransaction.SESSION_NAME):
@@ -869,7 +919,6 @@ class _Session(object):
 
 
 class _FauxSpannerAPI(object):
-
     _committed = None
 
     def __init__(self, **kwargs):

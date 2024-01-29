@@ -4,6 +4,181 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.41.0](https://github.com/googleapis/python-spanner/compare/v3.40.1...v3.41.0) (2024-01-10)
+
+
+### Features
+
+* Add BatchWrite API ([#1011](https://github.com/googleapis/python-spanner/issues/1011)) ([d0e4ffc](https://github.com/googleapis/python-spanner/commit/d0e4ffccea071feaa2ca012a0e3f60a945ed1a13))
+* Add PG.OID type cod annotation ([#1023](https://github.com/googleapis/python-spanner/issues/1023)) ([2d59dd0](https://github.com/googleapis/python-spanner/commit/2d59dd09b8f14a37c780d8241a76e2f109ba88b0))
+* Add support for Directed Reads ([#1000](https://github.com/googleapis/python-spanner/issues/1000)) ([c4210b2](https://github.com/googleapis/python-spanner/commit/c4210b28466cfd88fffe546140a005a8e0a1af23))
+* Add support for Python 3.12 ([#1040](https://github.com/googleapis/python-spanner/issues/1040)) ([b28dc9b](https://github.com/googleapis/python-spanner/commit/b28dc9b0f97263d3926043fe5dfcb4cdc75ab35a))
+* Batch Write API implementation and samples ([#1027](https://github.com/googleapis/python-spanner/issues/1027)) ([aa36b07](https://github.com/googleapis/python-spanner/commit/aa36b075ebb13fa952045695a8f4eb6d21ae61ff))
+* Implementation for batch dml in dbapi ([#1055](https://github.com/googleapis/python-spanner/issues/1055)) ([7a92315](https://github.com/googleapis/python-spanner/commit/7a92315c8040dbf6f652974e19cd63abfd6cda2f))
+* Implementation for Begin and Rollback clientside statements ([#1041](https://github.com/googleapis/python-spanner/issues/1041)) ([15623cd](https://github.com/googleapis/python-spanner/commit/15623cda0ac1eb5dd71434c9064134cfa7800a79))
+* Implementation for partitioned query in dbapi ([#1067](https://github.com/googleapis/python-spanner/issues/1067)) ([63daa8a](https://github.com/googleapis/python-spanner/commit/63daa8a682824609b5a21699d95b0f41930635ef))
+* Implementation of client side statements that return ([#1046](https://github.com/googleapis/python-spanner/issues/1046)) ([bb5fa1f](https://github.com/googleapis/python-spanner/commit/bb5fa1fb75dba18965cddeacd77b6af0a05b4697))
+* Implementing client side statements in dbapi (starting with commit) ([#1037](https://github.com/googleapis/python-spanner/issues/1037)) ([eb41b0d](https://github.com/googleapis/python-spanner/commit/eb41b0da7c1e60561b46811d7307e879f071c6ce))
+* Introduce compatibility with native namespace packages ([#1036](https://github.com/googleapis/python-spanner/issues/1036)) ([5d80ab0](https://github.com/googleapis/python-spanner/commit/5d80ab0794216cd093a21989be0883b02eaa437a))
+* Return list of dictionaries for execute streaming sql ([#1003](https://github.com/googleapis/python-spanner/issues/1003)) ([b534a8a](https://github.com/googleapis/python-spanner/commit/b534a8aac116a824544d63a24e38f3d484e0d207))
+* **spanner:** Add autoscaling config to the instance proto ([#1022](https://github.com/googleapis/python-spanner/issues/1022)) ([4d490cf](https://github.com/googleapis/python-spanner/commit/4d490cf9de600b16a90a1420f8773b2ae927983d))
+* **spanner:** Add directed_read_option in spanner.proto ([#1030](https://github.com/googleapis/python-spanner/issues/1030)) ([84d662b](https://github.com/googleapis/python-spanner/commit/84d662b056ca4bd4177b3107ba463302b5362ff9))
+
+
+### Bug Fixes
+
+* Executing existing DDL statements on executemany statement execution ([#1032](https://github.com/googleapis/python-spanner/issues/1032)) ([07fbc45](https://github.com/googleapis/python-spanner/commit/07fbc45156a1b42a5e61c9c4b09923f239729aa8))
+* Fix for flaky test_read_timestamp_client_side_autocommit test ([#1071](https://github.com/googleapis/python-spanner/issues/1071)) ([0406ded](https://github.com/googleapis/python-spanner/commit/0406ded8b0abcdc93a7a2422247a14260f5c620c))
+* Require google-cloud-core &gt;= 1.4.4 ([#1015](https://github.com/googleapis/python-spanner/issues/1015)) ([a2f87b9](https://github.com/googleapis/python-spanner/commit/a2f87b9d9591562877696526634f0c7c4dd822dd))
+* Require proto-plus 1.22.2 for python 3.11 ([#880](https://github.com/googleapis/python-spanner/issues/880)) ([7debe71](https://github.com/googleapis/python-spanner/commit/7debe7194b9f56b14daeebb99f48787174a9471b))
+* Use `retry_async` instead of `retry` in async client ([#1044](https://github.com/googleapis/python-spanner/issues/1044)) ([1253ae4](https://github.com/googleapis/python-spanner/commit/1253ae46011daa3a0b939e22e957dd3ab5179210))
+
+
+### Documentation
+
+* Minor formatting ([498dba2](https://github.com/googleapis/python-spanner/commit/498dba26a7c1a1cb710a92c0167272ff5c0eef27))
+
+## [3.40.1](https://github.com/googleapis/python-spanner/compare/v3.40.0...v3.40.1) (2023-08-17)
+
+
+### Bug Fixes
+
+* Fix to reload table when checking if table exists ([#1002](https://github.com/googleapis/python-spanner/issues/1002)) ([53bda62](https://github.com/googleapis/python-spanner/commit/53bda62c4996d622b7a11e860841c16e4097bded))
+
+## [3.40.0](https://github.com/googleapis/python-spanner/compare/v3.39.0...v3.40.0) (2023-08-04)
+
+
+### Features
+
+* Enable leader aware routing by default. This update contains performance optimisations that will reduce the latency of read/write transactions that originate from a region other than the default leader region. ([e8dbfe7](https://github.com/googleapis/python-spanner/commit/e8dbfe709d72a04038e05166adbad275642f1f22))
+
+## [3.39.0](https://github.com/googleapis/python-spanner/compare/v3.38.0...v3.39.0) (2023-08-02)
+
+
+### Features
+
+* Foreign key on delete cascade action testing and samples ([#910](https://github.com/googleapis/python-spanner/issues/910)) ([681c8ee](https://github.com/googleapis/python-spanner/commit/681c8eead40582addf75e02c159ea1ff9d6de85e))
+
+
+### Documentation
+
+* Minor formatting ([#991](https://github.com/googleapis/python-spanner/issues/991)) ([60efc42](https://github.com/googleapis/python-spanner/commit/60efc426cf26c4863d81743a5545c5f296308815))
+
+## [3.38.0](https://github.com/googleapis/python-spanner/compare/v3.37.0...v3.38.0) (2023-07-21)
+
+
+### Features
+
+* Set LAR as False ([#980](https://github.com/googleapis/python-spanner/issues/980)) ([75e8a59](https://github.com/googleapis/python-spanner/commit/75e8a59ff5d7f15088b9c4ba5961345746e35bcc))
+
+## [3.37.0](https://github.com/googleapis/python-spanner/compare/v3.36.0...v3.37.0) (2023-07-21)
+
+
+### Features
+
+* Enable leader aware routing by default. This update contains performance optimisations that will reduce the latency of read/write transactions that originate from a region other than the default leader region. ([402b101](https://github.com/googleapis/python-spanner/commit/402b1015a58f0982d5e3f9699297db82d3cdd7b2))
+
+
+### Bug Fixes
+
+* Add async context manager return types ([#967](https://github.com/googleapis/python-spanner/issues/967)) ([7e2e712](https://github.com/googleapis/python-spanner/commit/7e2e712f9ee1e8643c5c59dbd1d15b13b3c0f3ea))
+
+
+### Documentation
+
+* Fix documentation structure ([#949](https://github.com/googleapis/python-spanner/issues/949)) ([b73e47b](https://github.com/googleapis/python-spanner/commit/b73e47bb43f5767957685400c7876d6a8b7489a3))
+
+## [3.36.0](https://github.com/googleapis/python-spanner/compare/v3.35.1...v3.36.0) (2023-06-06)
+
+
+### Features
+
+* Add DdlStatementActionInfo and add actions to UpdateDatabaseDdlMetadata ([#948](https://github.com/googleapis/python-spanner/issues/948)) ([1ca6874](https://github.com/googleapis/python-spanner/commit/1ca687464fe65a19370a460556acc0957d693399))
+* Testing for fgac-pg ([#902](https://github.com/googleapis/python-spanner/issues/902)) ([ad1f527](https://github.com/googleapis/python-spanner/commit/ad1f5277dfb3b6a6c7458ff2ace5f724e56360c1))
+
+## [3.35.1](https://github.com/googleapis/python-spanner/compare/v3.35.0...v3.35.1) (2023-05-25)
+
+
+### Bug Fixes
+
+* Catch rst stream error for all transactions ([#934](https://github.com/googleapis/python-spanner/issues/934)) ([d317d2e](https://github.com/googleapis/python-spanner/commit/d317d2e1b882d9cf576bfc6c195fa9df7c518c4e))
+
+## [3.35.0](https://github.com/googleapis/python-spanner/compare/v3.34.0...v3.35.0) (2023-05-16)
+
+
+### Features
+
+* Add support for updateDatabase in Cloud Spanner ([#914](https://github.com/googleapis/python-spanner/issues/914)) ([6c7ad29](https://github.com/googleapis/python-spanner/commit/6c7ad2921d2bf886b538f7e24e86397c188620c8))
+
+## [3.34.0](https://github.com/googleapis/python-spanner/compare/v3.33.0...v3.34.0) (2023-05-16)
+
+
+### Features
+
+* Add support for UpdateDatabase in Cloud Spanner ([#941](https://github.com/googleapis/python-spanner/issues/941)) ([38fb890](https://github.com/googleapis/python-spanner/commit/38fb890e34762f104ca97e612e62d4f59e752133))
+
+
+### Bug Fixes
+
+* Upgrade version of sqlparse ([#943](https://github.com/googleapis/python-spanner/issues/943)) ([df57ce6](https://github.com/googleapis/python-spanner/commit/df57ce6f00b6a992024c9f1bd6948905ae1e5cf4))
+
+## [3.33.0](https://github.com/googleapis/python-spanner/compare/v3.32.0...v3.33.0) (2023-04-27)
+
+
+### Features
+
+* Leader Aware Routing ([#899](https://github.com/googleapis/python-spanner/issues/899)) ([f9fefad](https://github.com/googleapis/python-spanner/commit/f9fefad6ee2e16804d109d8bfbb613062f57ea65))
+
+## [3.32.0](https://github.com/googleapis/python-spanner/compare/v3.31.0...v3.32.0) (2023-04-25)
+
+
+### Features
+
+* Enable instance-level connection ([#931](https://github.com/googleapis/python-spanner/issues/931)) ([d6963e2](https://github.com/googleapis/python-spanner/commit/d6963e2142d880e94c6f3e9eb27ed1ac310bd1d0))
+
+## [3.31.0](https://github.com/googleapis/python-spanner/compare/v3.30.0...v3.31.0) (2023-04-12)
+
+
+### Features
+
+* Add databoost enabled property for batch transactions  ([#892](https://github.com/googleapis/python-spanner/issues/892)) ([ffb3915](https://github.com/googleapis/python-spanner/commit/ffb39158be5a551b698739c003ee6125a11c1c7a))
+
+
+### Bug Fixes
+
+* Set databoost false ([#928](https://github.com/googleapis/python-spanner/issues/928)) ([c9ed9d2](https://github.com/googleapis/python-spanner/commit/c9ed9d24d19594dfff57c979fa3bf68d84bbc3b5))
+
+## [3.30.0](https://github.com/googleapis/python-spanner/compare/v3.29.0...v3.30.0) (2023-03-28)
+
+
+### Features
+
+* Pass custom Client object to dbapi ([#911](https://github.com/googleapis/python-spanner/issues/911)) ([52b1a0a](https://github.com/googleapis/python-spanner/commit/52b1a0af0103a5b91aa5bf9ea1138319bdb90d79))
+
+## [3.29.0](https://github.com/googleapis/python-spanner/compare/v3.28.0...v3.29.0) (2023-03-23)
+
+
+### Features
+
+* Adding new fields for Serverless analytics ([#906](https://github.com/googleapis/python-spanner/issues/906)) ([2a5a636](https://github.com/googleapis/python-spanner/commit/2a5a636fc296ad0a7f86ace6a5f361db1e2ee26d))
+
+
+### Bug Fixes
+
+* Correcting the proto field Id for field data_boost_enabled ([#915](https://github.com/googleapis/python-spanner/issues/915)) ([428aa1e](https://github.com/googleapis/python-spanner/commit/428aa1e5e4458649033a5566dc3017d2fadbd2a0))
+
+
+### Documentation
+
+* Fix formatting of request arg in docstring ([#918](https://github.com/googleapis/python-spanner/issues/918)) ([c022bf8](https://github.com/googleapis/python-spanner/commit/c022bf859a3ace60c0a9ddb86896bc83f85e327f))
+
+## [3.28.0](https://github.com/googleapis/python-spanner/compare/v3.27.1...v3.28.0) (2023-02-28)
+
+
+### Features
+
+* Enable "rest" transport in Python for services supporting numeric enums ([#897](https://github.com/googleapis/python-spanner/issues/897)) ([c21a0d5](https://github.com/googleapis/python-spanner/commit/c21a0d5f4600818ca79cd4e199a2245683c33467))
+
 ## [3.27.1](https://github.com/googleapis/python-spanner/compare/v3.27.0...v3.27.1) (2023-01-30)
 
 
