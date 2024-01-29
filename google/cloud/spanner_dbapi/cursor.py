@@ -125,7 +125,8 @@ class Cursor(object):
         :returns: The result columns' description.
         """
         if (
-            self._result_set.metadata is None
+            self._result_set is None
+            or self._result_set.metadata is None
             or self._result_set.metadata.row_type is None
             or self._result_set.metadata.row_type.fields is None
             or len(self._result_set.metadata.row_type.fields) == 0
