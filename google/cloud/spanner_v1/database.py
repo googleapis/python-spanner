@@ -737,7 +737,8 @@ class Database(object):
         :type max_commit_delay: :class:`datetime.timedelta`
         :param max_commit_delay:
                 (Optional) The amount of latency this request is willing to incur
-                in order to improve throughput. Value must be between 0ms and 500ms.
+                in order to improve throughput. Value must be between 0ms and
+                500ms.
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
@@ -805,7 +806,9 @@ class Database(object):
                    "timeout_secs" will be removed and used to
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
-                   "max_commit_delay" will be removed and used to set the max_commit_delay for the request.
+                   "max_commit_delay" will be removed and used to set the
+                       max_commit_delay for the request. Value must be between
+                       0ms and 500ms.
 
         :rtype: Any
         :returns: The return value of ``func``.
