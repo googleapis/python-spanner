@@ -807,8 +807,8 @@ class Database(object):
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
                    "max_commit_delay" will be removed and used to set the
-                       max_commit_delay for the request. Value must be between
-                       0ms and 500ms.
+                   max_commit_delay for the request. Value must be between
+                   0ms and 500ms.
 
         :rtype: Any
         :returns: The return value of ``func``.
