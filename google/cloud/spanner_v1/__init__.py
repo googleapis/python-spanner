@@ -146,5 +146,5 @@ __all__ = (
     "JsonObject",
     # google.cloud.spanner_v1.services
     "SpannerClient",
-    "SpannerAsyncClient"
+    "SpannerAsyncClient",
 )
