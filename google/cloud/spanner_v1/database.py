@@ -737,7 +737,7 @@ class Database(object):
         :type max_commit_delay: :class:`datetime.timedelta`
         :param max_commit_delay:
                 (Optional) The amount of latency this request is willing to incur
-                in order to improve throughput.
+                in order to improve throughput. Value must be between 0ms and 500ms.
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
