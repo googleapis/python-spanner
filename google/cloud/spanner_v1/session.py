@@ -372,6 +372,7 @@ class Session(object):
         """
         deadline = time.time() + kw.pop("timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS)
         commit_request_options = kw.pop("commit_request_options", None)
+        max_commit_delay = kw.pop("max_commit_delay", None)
         transaction_tag = kw.pop("transaction_tag", None)
         attempts = 0
 
@@ -400,6 +401,7 @@ class Session(object):
                 txn.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=commit_request_options,
+                    max_commit_delay=max_commit_delay,
                 )
             except Aborted as exc:
                 del self._transaction

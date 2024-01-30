@@ -180,7 +180,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self, return_commit_stats=False, request_options=None):
+    def commit(self, return_commit_stats=False, request_options=None, max_commit_delay=None):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
@@ -229,6 +229,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             transaction_id=self._transaction_id,
             return_commit_stats=return_commit_stats,
             request_options=request_options,
+            max_commit_delay=max_commit_delay,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             method = functools.partial(
