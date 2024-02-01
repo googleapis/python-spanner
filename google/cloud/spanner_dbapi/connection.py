@@ -19,7 +19,11 @@ from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi import partition_helper
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
+from google.cloud.spanner_dbapi.batch_executor import (
+    BatchMode,
+    BatchDmlExecutor,
+    BatchDdlExecutor,
+)
 from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
 from google.cloud.spanner_dbapi.parsed_statement import (
     StatementType,
@@ -91,7 +95,9 @@ class Connection:
         should end a that a new one should be started when the next statement is executed.
     """
 
-    def __init__(self, instance, database=None, read_only=False):
+    def __init__(
+        self, instance, database=None, read_only=False, buffer_ddl_statements=False
+    ):
         self._instance = instance
         self._database = database
         self._ddl_statements = []
@@ -114,8 +120,10 @@ class Connection:
         # made atleast one call to Spanner.
         self._spanner_transaction_started = False
         self._batch_mode = BatchMode.NONE
+        self._batch_ddl_executor: BatchDdlExecutor = None
         self._batch_dml_executor: BatchDmlExecutor = None
         self._transaction_helper = TransactionRetryHelper(self)
+        self._buffer_ddl_statements = buffer_ddl_statements
 
     @property
     def autocommit(self):
@@ -125,6 +133,15 @@ class Connection:
         :returns: Autocommit mode flag value.
         """
         return self._autocommit
+
+    @property
+    def buffer_ddl_statements(self):
+        """Whether to buffer ddl statements for this connection.
+
+        :rtype: bool
+        :returns: _buffer_ddl_statements flag value.
+        """
+        return self._buffer_ddl_statements
 
     @autocommit.setter
     def autocommit(self, value):
@@ -365,7 +382,8 @@ class Connection:
             )
             return
 
-        self.run_prior_DDL_statements()
+        if self.buffer_ddl_statements:
+            self.run_prior_DDL_statements()
         try:
             if self._spanner_transaction_started and not self._read_only:
                 self._transaction.commit()
@@ -464,6 +482,31 @@ class Connection:
                 )
 
     @check_not_closed
+    def start_batch_ddl(self):
+        if self._batch_mode is not BatchMode.NONE:
+            raise ProgrammingError(
+                "Cannot start a DDL batch when a batch is already active"
+            )
+        if self.read_only:
+            raise ProgrammingError(
+                "Cannot start a DDL batch when the connection is in read-only mode"
+            )
+        if self.buffer_ddl_statements:
+            raise ProgrammingError(
+                "Cannot start a DDL batch when _buffer_ddl_statements flag is True"
+            )
+        self._batch_mode = BatchMode.DDL
+        self._batch_ddl_executor = BatchDdlExecutor(self)
+
+    @check_not_closed
+    def execute_batch_ddl_statement(self, parsed_statement: ParsedStatement):
+        if self._batch_mode is not BatchMode.DDL:
+            raise ProgrammingError(
+                "Cannot execute statement when the BatchMode is not DDL"
+            )
+        self._batch_ddl_executor.execute_statement(parsed_statement)
+
+    @check_not_closed
     def start_batch_dml(self, cursor):
         if self._batch_mode is not BatchMode.NONE:
             raise ProgrammingError(
@@ -486,15 +529,19 @@ class Connection:
 
     @check_not_closed
     def run_batch(self):
+        result_set = None
         if self._batch_mode is BatchMode.NONE:
             raise ProgrammingError("Cannot run a batch when the BatchMode is not set")
         try:
             if self._batch_mode is BatchMode.DML:
-                many_result_set = self._batch_dml_executor.run_batch_dml()
+                result_set = self._batch_dml_executor.run_batch()
+            elif self._batch_mode is BatchMode.DDL:
+                self._batch_ddl_executor.run_batch()
         finally:
             self._batch_mode = BatchMode.NONE
             self._batch_dml_executor = None
-        return many_result_set
+            self._batch_ddl_executor = None
+        return result_set
 
     @check_not_closed
     def abort_batch(self):
@@ -502,6 +549,8 @@ class Connection:
             raise ProgrammingError("Cannot abort a batch when the BatchMode is not set")
         if self._batch_mode is BatchMode.DML:
             self._batch_dml_executor = None
+        if self._batch_mode is BatchMode.DDL:
+            self._batch_ddl_executor = None
         self._batch_mode = BatchMode.NONE
 
     @check_not_closed
@@ -584,9 +633,13 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
+    buffer_ddl_statements=False,
     route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
+
+    :type buffer_ddl_statements: bool
+    :param buffer_ddl_statements:
 
     :type instance_id: str
     :param instance_id: The ID of the instance to connect to.
@@ -658,7 +711,9 @@ def connect(
 
     instance = client.instance(instance_id)
     conn = Connection(
-        instance, instance.database(database_id, pool=pool) if database_id else None
+        instance,
+        instance.database(database_id, pool=pool) if database_id else None,
+        buffer_ddl_statements=buffer_ddl_statements,
     )
     if pool is not None:
         conn._own_pool = False

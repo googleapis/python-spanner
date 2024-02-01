@@ -85,6 +85,9 @@ def execute(cursor: "Cursor", parsed_statement: ParsedStatement):
             TypeCode.TIMESTAMP,
             column_values,
         )
+    if statement_type == ClientSideStatementType.START_BATCH_DDL:
+        connection.start_batch_ddl()
+        return None
     if statement_type == ClientSideStatementType.START_BATCH_DML:
         connection.start_batch_dml(cursor)
         return None

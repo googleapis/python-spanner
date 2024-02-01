@@ -16,6 +16,8 @@ from __future__ import annotations
 
 from enum import Enum
 from typing import TYPE_CHECKING, List
+
+from google.cloud.spanner_dbapi import parse_utils
 from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     StatementType,
@@ -28,6 +30,48 @@ from google.cloud.spanner_dbapi.utils import StreamedManyResultSets
 
 if TYPE_CHECKING:
     from google.cloud.spanner_dbapi.cursor import Cursor
+    from google.cloud.spanner_dbapi.connection import Connection
+
+
+class BatchDdlExecutor:
+    """Executor that is used when a DDL batch is started. These batches only
+    accept DDL statements. All DDL statements are buffered locally and sent to
+    Spanner when runBatch() is called.
+
+    :type "Connection": :class:`~google.cloud.spanner_dbapi.connection.Connection`
+    :param connection:
+    """
+
+    def __init__(self, connection: "Connection"):
+        self._connection = connection
+        self._statements: List[str] = []
+
+    def execute_statement(self, parsed_statement: ParsedStatement):
+        """Executes the statement when ddl batch is active by buffering the
+        statement in-memory.
+
+        :type parsed_statement: ParsedStatement
+        :param parsed_statement: parsed statement containing sql query
+        """
+        from google.cloud.spanner_dbapi import ProgrammingError
+
+        if parsed_statement.statement_type != StatementType.DDL:
+            raise ProgrammingError("Only DDL statements are allowed in batch DDL mode.")
+        self._statements.extend(
+            parse_utils.parse_and_get_ddl_statements(parsed_statement.statement.sql)
+        )
+
+    def run_batch(self):
+        """Executes all the buffered statements on the active ddl batch by
+        making a call to Spanner.
+        """
+        from google.cloud.spanner_dbapi import ProgrammingError
+
+        if self._connection._client_transaction_started:
+            raise ProgrammingError(
+                "Cannot execute DDL statement when transaction is already active."
+            )
+        return self._connection.database.update_ddl(self._statements).result()
 
 
 class BatchDmlExecutor:
@@ -52,6 +96,7 @@ class BatchDmlExecutor:
         :param parsed_statement: parsed statement containing sql query and query
          params
         """
+
         from google.cloud.spanner_dbapi import ProgrammingError
 
         if (
@@ -61,7 +106,7 @@ class BatchDmlExecutor:
             raise ProgrammingError("Only DML statements are allowed in batch DML mode.")
         self._statements.append(parsed_statement.statement)
 
-    def run_batch_dml(self):
+    def run_batch(self):
         """Executes all the buffered statements on the active dml batch by
         making a call to Spanner.
         """

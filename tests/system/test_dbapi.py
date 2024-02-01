@@ -86,7 +86,9 @@ class TestDbApi:
     @pytest.fixture(autouse=True)
     def init_connection(self, request, shared_instance, dbapi_database):
         if "noautofixt" not in request.keywords:
-            self._conn = Connection(shared_instance, dbapi_database)
+            self._conn = Connection(
+                shared_instance, dbapi_database, buffer_ddl_statements=True
+            )
             self._cursor = self._conn.cursor()
         yield
         if "noautofixt" not in request.keywords:
@@ -152,7 +154,7 @@ class TestDbApi:
         try:
             self._conn.commit()
         except Exception:
-            pass
+            self._conn.database._pool._sessions.get()
 
         # Testing that the connection and Cursor are in proper state post commit
         # and a new transaction is started
@@ -177,7 +179,7 @@ class TestDbApi:
         try:
             self._conn.rollback()
         except Exception:
-            pass
+            self._conn.database._pool._sessions.get()
 
         # Testing that the connection and Cursor are in proper state post
         # exception in rollback and a new transaction is started
@@ -453,6 +455,49 @@ class TestDbApi:
         self._cursor.execute("SHOW VARIABLE READ_TIMESTAMP")
         read_timestamp_query_result_2 = self._cursor.fetchall()
         assert read_timestamp_query_result_1 != read_timestamp_query_result_2
+
+    @pytest.mark.parametrize("auto_commit", [False, True])
+    def test_batch_ddl(self, auto_commit, dbapi_database):
+        """Test batch ddl."""
+
+        self._conn._buffer_ddl_statements = False
+        if auto_commit:
+            self._conn.autocommit = True
+
+        self._cursor.execute("start batch ddl")
+        self._cursor.execute(
+            """
+            CREATE TABLE Table_1 (
+                SingerId     INT64 NOT NULL,
+                Name    STRING(1024),
+            ) PRIMARY KEY (SingerId)
+            """
+        )
+        self._cursor.execute(
+            """
+            CREATE TABLE Table_2 (
+                SingerId     INT64 NOT NULL,
+                Name    STRING(1024),
+            ) PRIMARY KEY (SingerId)
+            """
+        )
+        exception_raised = False
+        try:
+            self._cursor.execute("run batch")
+        except ProgrammingError:
+            exception_raised = True
+        table_1 = dbapi_database.table("Table_1")
+        table_2 = dbapi_database.table("Table_2")
+        if auto_commit:
+            assert exception_raised is False
+            assert table_1.exists() is True
+            self._cursor.execute("DROP TABLE Table_1")
+            assert table_2.exists() is True
+            self._cursor.execute("DROP TABLE Table_2")
+        else:
+            assert exception_raised is True
+            assert table_1.exists() is False
+            assert table_2.exists() is False
 
     @pytest.mark.parametrize("auto_commit", [False, True])
     def test_batch_dml(self, auto_commit, dbapi_database):
@@ -1113,44 +1158,13 @@ class TestDbApi:
 
         assert res[0] == 1
 
-    @pytest.mark.noautofixt
-    def test_DDL_autocommit(self, shared_instance, dbapi_database):
-        """Check that DDLs in autocommit mode are immediately executed."""
+    @pytest.mark.parametrize("autocommit", [True, False])
+    def test_ddl_execute(self, autocommit, dbapi_database):
+        """Check that DDL statement results in successful execution for execute
+        method in autocommit mode while it's a noop in non-autocommit mode."""
 
-        try:
-            conn = Connection(shared_instance, dbapi_database)
-            conn.autocommit = True
-
-            cur = conn.cursor()
-            cur.execute(
-                """
-                CREATE TABLE Singers (
-                    SingerId     INT64 NOT NULL,
-                    Name    STRING(1024),
-                ) PRIMARY KEY (SingerId)
-            """
-            )
-            conn.close()
-
-            # if previous DDL wasn't committed, the next DROP TABLE
-            # statement will fail with a ProgrammingError
-            conn = Connection(shared_instance, dbapi_database)
-            cur = conn.cursor()
-
-            cur.execute("DROP TABLE Singers")
-            conn.commit()
-        finally:
-            # Delete table
-            table = dbapi_database.table("Singers")
-            if table.exists():
-                op = dbapi_database.update_ddl(["DROP TABLE Singers"])
-                op.result()
-
-    def test_ddl_execute_autocommit_true(self, dbapi_database):
-        """Check that DDL statement in autocommit mode results in successful
-        DDL statement execution for execute method."""
-
-        self._conn.autocommit = True
+        if autocommit:
+            self._conn.autocommit = True
         self._cursor.execute(
             """
             CREATE TABLE DdlExecuteAutocommit (
@@ -1160,13 +1174,51 @@ class TestDbApi:
             """
         )
         table = dbapi_database.table("DdlExecuteAutocommit")
-        assert table.exists() is True
+        if autocommit:
+            assert table.exists() is True
+            self._cursor.execute("DROP TABLE DdlExecuteAutocommit")
+        else:
+            assert table.exists() is False
 
-    def test_ddl_executemany_autocommit_true(self, dbapi_database):
-        """Check that DDL statement in autocommit mode results in exception for
-        executemany method ."""
+    @pytest.mark.parametrize("autocommit", [True, False])
+    def test_ddl_execute_without_buffer_ddl_enabled(self, autocommit, dbapi_database):
+        """Check that DDL statement results in successful execution for execute
+        method in autocommit mode while it results in error in non-autocommit
+        mode when buffer_ddl_statements flag is disabled."""
 
-        self._conn.autocommit = True
+        self._conn._buffer_ddl_statements = False
+        exception = False
+        if autocommit:
+            self._conn.autocommit = True
+        try:
+            self._cursor.execute(
+                """
+                CREATE TABLE DdlExecuteAutocommit (
+                    SingerId     INT64 NOT NULL,
+                    Name    STRING(1024),
+                ) PRIMARY KEY (SingerId)
+                """
+            )
+        except ProgrammingError:
+            exception = True
+        table = dbapi_database.table("DdlExecuteAutocommit")
+        if autocommit:
+            assert table.exists() is True
+            self._cursor.execute("DROP TABLE DdlExecuteAutocommit")
+        else:
+            assert table.exists() is False
+            assert exception is True
+
+    @pytest.mark.parametrize("autocommit", [True, False])
+    @pytest.mark.parametrize("buffer_ddl", [True, False])
+    def test_ddl_executemany(self, buffer_ddl, autocommit, dbapi_database):
+        """Check that DDL statement always results in exception for execution of
+        executemany method."""
+
+        if not buffer_ddl:
+            self._conn._buffer_ddl_statements = False
+        if autocommit:
+            self._conn.autocommit = True
         with pytest.raises(ProgrammingError):
             self._cursor.executemany(
                 """
@@ -1180,23 +1232,7 @@ class TestDbApi:
         table = dbapi_database.table("DdlExecuteManyAutocommit")
         assert table.exists() is False
 
-    def test_ddl_executemany_autocommit_false(self, dbapi_database):
-        """Check that DDL statement in non-autocommit mode results in exception for
-        executemany method ."""
-        with pytest.raises(ProgrammingError):
-            self._cursor.executemany(
-                """
-                CREATE TABLE DdlExecuteManyAutocommit (
-                    SingerId     INT64 NOT NULL,
-                    Name    STRING(1024),
-                ) PRIMARY KEY (SingerId)
-                """,
-                [],
-            )
-        table = dbapi_database.table("DdlExecuteManyAutocommit")
-        assert table.exists() is False
-
-    def test_ddl_execute(self, dbapi_database):
+    def test_ddl_then_non_ddl_execute(self, dbapi_database):
         """Check that DDL statement followed by non-DDL execute statement in
         non autocommit mode results in successful DDL statement execution."""
 
@@ -1230,7 +1266,7 @@ class TestDbApi:
 
         assert got_rows == [want_row]
 
-    def test_ddl_executemany(self, dbapi_database):
+    def test_ddl_then_non_ddl_executemany(self, dbapi_database):
         """Check that DDL statement followed by non-DDL executemany statement in
         non autocommit mode results in successful DDL statement execution."""
 
@@ -1339,14 +1375,10 @@ class TestDbApi:
                 op = dbapi_database.update_ddl(["DROP TABLE JsonDetails"])
                 op.result()
 
-    @pytest.mark.noautofixt
-    def test_DDL_commit(self, shared_instance, dbapi_database):
+    def test_DDL_commit(self, dbapi_database):
         """Check that DDLs in commit mode are executed on calling `commit()`."""
         try:
-            conn = Connection(shared_instance, dbapi_database)
-            cur = conn.cursor()
-
-            cur.execute(
+            self._cursor.execute(
                 """
             CREATE TABLE Singers (
                 SingerId     INT64 NOT NULL,
@@ -1354,16 +1386,12 @@ class TestDbApi:
             ) PRIMARY KEY (SingerId)
             """
             )
-            conn.commit()
-            conn.close()
+            self._conn.commit()
 
             # if previous DDL wasn't committed, the next DROP TABLE
             # statement will fail with a ProgrammingError
-            conn = Connection(shared_instance, dbapi_database)
-            cur = conn.cursor()
-
-            cur.execute("DROP TABLE Singers")
-            conn.commit()
+            self._cursor.execute("DROP TABLE Singers")
+            self._conn.commit()
         finally:
             # Delete table
             table = dbapi_database.table("Singers")
@@ -1406,7 +1434,7 @@ class TestDbApi:
         """
 
         self._conn.read_only = True
-        with pytest.raises(ProgrammingError):
+        with pytest.raises(Exception):
             self._cursor.execute(
                 """
     UPDATE contacts

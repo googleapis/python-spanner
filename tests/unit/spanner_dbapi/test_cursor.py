@@ -203,7 +203,9 @@ class TestCursor(unittest.TestCase):
                 self.assertIsInstance(cursor._result_set, mock.MagicMock)
 
     def test_execute_statement(self):
-        connection = self._make_connection(self.INSTANCE, mock.MagicMock())
+        connection = self._make_connection(
+            self.INSTANCE, mock.MagicMock(), buffer_ddl_statements=True
+        )
         cursor = self._make_one(connection)
 
         sql = "sql"
@@ -1163,7 +1165,9 @@ class TestCursor(unittest.TestCase):
             "DROP TABLE table_name",
         ]
 
-        connection = connect("test-instance", "test-database")
+        connection = connect(
+            "test-instance", "test-database", buffer_ddl_statements=True
+        )
 
         cursor = connection.cursor()
         cursor.execute(

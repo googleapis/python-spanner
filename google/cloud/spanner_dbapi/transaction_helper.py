@@ -18,7 +18,7 @@ from google.api_core.exceptions import Aborted
 
 import time
 
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
+from google.cloud.spanner_dbapi.batch_executor import BatchMode
 from google.cloud.spanner_dbapi.exceptions import RetryAborted
 from google.cloud.spanner_v1.session import _get_retry_delay
 
