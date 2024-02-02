@@ -15,9 +15,15 @@
 import sys
 import unittest
 
-from google.cloud.spanner_dbapi.parsed_statement import StatementType
+from google.cloud.spanner_dbapi.parsed_statement import (
+    StatementType,
+    ParsedStatement,
+    Statement,
+    ClientSideStatementType,
+)
 from google.cloud.spanner_v1 import param_types
 from google.cloud.spanner_v1 import JsonObject
+from google.cloud.spanner_dbapi.parse_utils import classify_statement
 
 
 class TestParseUtils(unittest.TestCase):
@@ -25,8 +31,6 @@ class TestParseUtils(unittest.TestCase):
     skip_message = "Subtests are not supported in Python 2"
 
     def test_classify_stmt(self):
-        from google.cloud.spanner_dbapi.parse_utils import classify_statement
-
         cases = (
             ("SELECT 1", StatementType.QUERY),
             ("SELECT s.SongName FROM Songs AS s", StatementType.QUERY),
@@ -52,13 +56,15 @@ class TestParseUtils(unittest.TestCase):
             ),
             ("CREATE ROLE parent", StatementType.DDL),
             ("commit", StatementType.CLIENT_SIDE),
-            (" commit TRANSACTION ", StatementType.CLIENT_SIDE),
             ("begin", StatementType.CLIENT_SIDE),
             ("start", StatementType.CLIENT_SIDE),
             ("begin transaction", StatementType.CLIENT_SIDE),
             ("start transaction", StatementType.CLIENT_SIDE),
             ("rollback", StatementType.CLIENT_SIDE),
+            (" commit   TRANSACTION ", StatementType.CLIENT_SIDE),
             (" rollback TRANSACTION ", StatementType.CLIENT_SIDE),
+            ("  SHOW   VARIABLE COMMIT_TIMESTAMP  ", StatementType.CLIENT_SIDE),
+            ("SHOW VARIABLE READ_TIMESTAMP", StatementType.CLIENT_SIDE),
             ("GRANT SELECT ON TABLE Singers TO ROLE parent", StatementType.DDL),
             ("REVOKE SELECT ON TABLE Singers TO ROLE parent", StatementType.DDL),
             ("GRANT ROLE parent TO ROLE child", StatementType.DDL),
@@ -68,6 +74,46 @@ class TestParseUtils(unittest.TestCase):
 
         for query, want_class in cases:
             self.assertEqual(classify_statement(query).statement_type, want_class)
+
+    def test_partition_query_classify_stmt(self):
+        parsed_statement = classify_statement(
+            " PARTITION  SELECT s.SongName FROM Songs AS s  "
+        )
+        self.assertEqual(
+            parsed_statement,
+            ParsedStatement(
+                StatementType.CLIENT_SIDE,
+                Statement("PARTITION  SELECT s.SongName FROM Songs AS s"),
+                ClientSideStatementType.PARTITION_QUERY,
+                ["SELECT s.SongName FROM Songs AS s"],
+            ),
+        )
+
+    def test_run_partition_classify_stmt(self):
+        parsed_statement = classify_statement(" RUN  PARTITION  bj2bjb2j2bj2ebbh  ")
+        self.assertEqual(
+            parsed_statement,
+            ParsedStatement(
+                StatementType.CLIENT_SIDE,
+                Statement("RUN  PARTITION  bj2bjb2j2bj2ebbh"),
+                ClientSideStatementType.RUN_PARTITION,
+                ["bj2bjb2j2bj2ebbh"],
+            ),
+        )
+
+    def test_run_partitioned_query_classify_stmt(self):
+        parsed_statement = classify_statement(
+            " RUN PARTITIONED  QUERY  SELECT s.SongName FROM Songs AS s  "
+        )
+        self.assertEqual(
+            parsed_statement,
+            ParsedStatement(
+                StatementType.CLIENT_SIDE,
+                Statement("RUN PARTITIONED  QUERY  SELECT s.SongName FROM Songs AS s"),
+                ClientSideStatementType.RUN_PARTITIONED_QUERY,
+                ["SELECT s.SongName FROM Songs AS s"],
+            ),
+        )
 
     @unittest.skipIf(skip_condition, skip_message)
     def test_sql_pyformat_args_to_spanner(self):

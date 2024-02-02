@@ -21,6 +21,7 @@ from google.cloud.spanner_v1 import gapic_version as package_version
 __version__: str = package_version.__version__
 
 from .services.spanner import SpannerClient
+from .services.spanner import SpannerAsyncClient
 from .types.commit_response import CommitResponse
 from .types.keys import KeyRange as KeyRangePB
 from .types.keys import KeySet as KeySetPB
@@ -40,6 +41,7 @@ from .types.spanner import BeginTransactionRequest
 from .types.spanner import CommitRequest
 from .types.spanner import CreateSessionRequest
 from .types.spanner import DeleteSessionRequest
+from .types.spanner import DirectedReadOptions
 from .types.spanner import ExecuteBatchDmlRequest
 from .types.spanner import ExecuteBatchDmlResponse
 from .types.spanner import ExecuteSqlRequest
@@ -108,6 +110,7 @@ __all__ = (
     "CommitResponse",
     "CreateSessionRequest",
     "DeleteSessionRequest",
+    "DirectedReadOptions",
     "ExecuteBatchDmlRequest",
     "ExecuteBatchDmlResponse",
     "ExecuteSqlRequest",
@@ -143,4 +146,5 @@ __all__ = (
     "JsonObject",
     # google.cloud.spanner_v1.services
     "SpannerClient",
+    "SpannerAsyncClient",
 )

@@ -1,4 +1,4 @@
-# Copyright 20203 Google LLC All rights reserved.
+# Copyright 2023 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -11,9 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from dataclasses import dataclass
 from enum import Enum
+from typing import Any, List
 
 
 class StatementType(Enum):
@@ -28,10 +28,29 @@ class ClientSideStatementType(Enum):
     COMMIT = 1
     BEGIN = 2
     ROLLBACK = 3
+    SHOW_COMMIT_TIMESTAMP = 4
+    SHOW_READ_TIMESTAMP = 5
+    START_BATCH_DML = 6
+    RUN_BATCH = 7
+    ABORT_BATCH = 8
+    PARTITION_QUERY = 9
+    RUN_PARTITION = 10
+    RUN_PARTITIONED_QUERY = 11
+
+
+@dataclass
+class Statement:
+    sql: str
+    params: Any = None
+    param_types: Any = None
+
+    def get_tuple(self):
+        return self.sql, self.params, self.param_types
 
 
 @dataclass
 class ParsedStatement:
     statement_type: StatementType
-    query: str
+    statement: Statement
     client_side_statement_type: ClientSideStatementType = None
+    client_side_statement_params: List[Any] = None
