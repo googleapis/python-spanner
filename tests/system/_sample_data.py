@@ -27,6 +27,14 @@ ROW_DATA = (
     (2, "Bharney", "Rhubble", "bharney@example.com"),
     (3, "Wylma", "Phlyntstone", "wylma@example.com"),
 )
+BATCH_WRITE_ROW_DATA = (
+    (1, "Phred", "Phlyntstone", "phred@example.com"),
+    (2, "Bharney", "Rhubble", "bharney@example.com"),
+    (3, "Wylma", "Phlyntstone", "wylma@example.com"),
+    (4, "Pebbles", "Phlyntstone", "pebbles@example.com"),
+    (5, "Betty", "Rhubble", "betty@example.com"),
+    (6, "Slate", "Stephenson", "slate@example.com"),
+)
 ALL = spanner_v1.KeySet(all_=True)
 SQL = "SELECT * FROM contacts ORDER BY contact_id"
 
@@ -70,7 +78,6 @@ def _check_row_data(row_data, expected, recurse_into_lists=True):
 
 
 def _check_cell_data(found_cell, expected_cell, recurse_into_lists=True):
-
     if isinstance(found_cell, datetime_helpers.DatetimeWithNanoseconds):
         _assert_timestamp(expected_cell, found_cell)
 

@@ -319,7 +319,6 @@ def assert_span_attributes(
 
 
 def _make_attributes(db_instance, **kwargs):
-
     attributes = {
         "db.type": "spanner",
         "db.url": "spanner.googleapis.com",
@@ -1145,7 +1144,6 @@ def test_transaction_batch_update_w_parent_span(
     )
 
     def unit_of_work(transaction):
-
         status, row_counts = transaction.batch_update(
             [insert_statement, update_statement, delete_statement]
         )
@@ -1349,7 +1347,6 @@ def _row_data(max_index):
 
 
 def _set_up_table(database, row_count):
-
     sd = _sample_data
 
     def _unit_of_work(transaction):
@@ -1476,7 +1473,6 @@ def test_multiuse_snapshot_read_isolation_read_timestamp(sessions_database):
     with sessions_database.snapshot(
         read_timestamp=committed, multi_use=True
     ) as read_ts:
-
         before = list(read_ts.read(sd.TABLE, sd.COLUMNS, sd.ALL))
         sd._check_row_data(before, all_data_rows)
 
@@ -1498,7 +1494,6 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
     delta = datetime.timedelta(microseconds=1000)
 
     with sessions_database.snapshot(exact_staleness=delta, multi_use=True) as exact:
-
         before = list(exact.read(sd.TABLE, sd.COLUMNS, sd.ALL))
         sd._check_row_data(before, all_data_rows)
 
@@ -1964,6 +1959,19 @@ def test_execute_sql_w_manual_consume(sessions_database):
     assert streamed._pending_chunk is None
 
 
+def test_execute_sql_w_to_dict_list(sessions_database):
+    sd = _sample_data
+    row_count = 40
+    _set_up_table(sessions_database, row_count)
+
+    with sessions_database.snapshot() as snapshot:
+        rows = snapshot.execute_sql(sd.SQL).to_dict_list()
+        all_data_rows = list(_row_data(row_count))
+        row_data = [list(row.values()) for row in rows]
+        sd._check_row_data(row_data, all_data_rows)
+        assert all(set(row.keys()) == set(sd.COLUMNS) for row in rows)
+
+
 def _check_sql_results(
     database,
     sql,
@@ -1991,7 +1999,6 @@ def test_multiuse_snapshot_execute_sql_isolation_strong(sessions_database):
     all_data_rows = list(_row_data(row_count))
 
     with sessions_database.snapshot(multi_use=True) as strong:
-
         before = list(strong.execute_sql(sd.SQL))
         sd._check_row_data(before, all_data_rows)
 
@@ -2051,7 +2058,6 @@ def test_invalid_type(sessions_database):
 
 
 def test_execute_sql_select_1(sessions_database):
-
     sessions_database.snapshot(multi_use=True)
 
     # Hello, world query
@@ -2221,7 +2227,6 @@ def test_execute_sql_w_bytes_bindings(sessions_database, database_dialect):
 
 
 def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
-
     timestamp_1 = datetime_helpers.DatetimeWithNanoseconds(
         1989, 1, 17, 17, 59, 12, nanosecond=345612789
     )
@@ -2508,7 +2513,6 @@ def test_execute_sql_w_query_param_struct(sessions_database, not_postgres):
 
 
 def test_execute_sql_returning_transfinite_floats(sessions_database, not_postgres):
-
     with sessions_database.snapshot(multi_use=True) as snapshot:
         # Query returning -inf, +inf, NaN as column values
         rows = list(
@@ -2563,6 +2567,59 @@ def test_partition_query(sessions_database, not_emulator):
     batch_txn.close()
 
 
+def test_run_partition_query(sessions_database, not_emulator):
+    row_count = 40
+    sql = f"SELECT * FROM {_sample_data.TABLE}"
+    committed = _set_up_table(sessions_database, row_count)
+
+    # Paritioned query does not support ORDER BY
+    all_data_rows = set(_row_data(row_count))
+    union = set()
+    batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
+    p_results_iter = batch_txn.run_partitioned_query(sql, data_boost_enabled=True)
+    # Lists aren't hashable so the results need to be converted
+    rows = [tuple(result) for result in p_results_iter]
+    union.update(set(rows))
+
+    assert union == all_data_rows
+    batch_txn.close()
+
+
+def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_database):
+    sd = _sample_data
+    num_groups = 3
+    num_mutations_per_group = len(sd.BATCH_WRITE_ROW_DATA) // num_groups
+
+    with sessions_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
+    with sessions_database.mutation_groups() as groups:
+        for i in range(num_groups):
+            group = groups.group()
+            for j in range(num_mutations_per_group):
+                group.insert_or_update(
+                    sd.TABLE,
+                    sd.COLUMNS,
+                    [sd.BATCH_WRITE_ROW_DATA[i * num_mutations_per_group + j]],
+                )
+        # Response indexes received
+        seen = collections.Counter()
+        for response in groups.batch_write():
+            _check_batch_status(response.status.code)
+            assert response.commit_timestamp is not None
+            assert len(response.indexes) > 0
+            seen.update(response.indexes)
+        # All indexes must be in the range [0, num_groups-1] and seen exactly once
+        assert len(seen) == num_groups
+        assert all((0 <= idx < num_groups and ct == 1) for (idx, ct) in seen.items())
+
+    # Verify the writes by reading from the database
+    with sessions_database.snapshot() as snapshot:
+        rows = list(snapshot.execute_sql(sd.SQL))
+
+    sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
+
+
 class FauxCall:
     def __init__(self, code, details="FauxCall"):
         self._code = code
@@ -2583,7 +2640,6 @@ class FauxCall:
 
 def _check_batch_status(status_code, expected=code_pb2.OK):
     if status_code != expected:
-
         _status_code_to_grpc_status_code = {
             member.value[0]: member for member in grpc.StatusCode
         }

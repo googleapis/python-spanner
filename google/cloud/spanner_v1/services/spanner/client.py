@@ -99,6 +99,7 @@ class SpannerClientMeta(type):
 
 class SpannerClient(metaclass=SpannerClientMeta):
     """Cloud Spanner API
+
     The Cloud Spanner API can be used to manage sessions and execute
     transactions on data stored in Cloud Spanner databases.
     """
@@ -604,6 +605,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         metadata: Sequence[Tuple[str, str]] = (),
     ) -> spanner.BatchCreateSessionsResponse:
         r"""Creates multiple new sessions.
+
         This API can be used to initialize a session cache on
         the clients. See https://goo.gl/TgSFN2 for best
         practices on session cache management.
@@ -667,7 +669,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
         Returns:
             google.cloud.spanner_v1.types.BatchCreateSessionsResponse:
                 The response for
-                [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
+                   [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
 
         """
         # Create or coerce a protobuf request object.
@@ -1277,8 +1279,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
         Returns:
             google.cloud.spanner_v1.types.ExecuteBatchDmlResponse:
-                The response for [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml]. Contains a list
-                   of [ResultSet][google.spanner.v1.ResultSet] messages,
+                The response for
+                   [ExecuteBatchDml][google.spanner.v1.Spanner.ExecuteBatchDml].
+                   Contains a list of
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
                    one for each DML statement that has successfully
                    executed, in the same order as the statements in the
                    request. If a statement fails, the status in the
@@ -1288,34 +1292,35 @@ class SpannerClient(metaclass=SpannerClientMeta):
                    following approach:
 
                    1. Check the status in the response message. The
-                      [google.rpc.Code][google.rpc.Code] enum value OK
-                      indicates that all statements were executed
-                      successfully.
-                   2. If the status was not OK, check the number of
-                      result sets in the response. If the response
-                      contains N
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      then statement N+1 in the request failed.
+                   [google.rpc.Code][google.rpc.Code] enum value OK
+                   indicates that all statements were executed
+                   successfully. 2. If the status was not OK, check the
+                   number of result sets in the response. If the
+                   response contains N
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   then statement N+1 in the request failed.
 
                    Example 1:
 
                    -  Request: 5 DML statements, all executed
                       successfully.
-                   -  Response: 5
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      with the status OK.
+
+                   \* Response: 5
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   with the status OK.
 
                    Example 2:
 
                    -  Request: 5 DML statements. The third statement has
                       a syntax error.
-                   -  Response: 2
-                      [ResultSet][google.spanner.v1.ResultSet] messages,
-                      and a syntax error (INVALID_ARGUMENT) status. The
-                      number of [ResultSet][google.spanner.v1.ResultSet]
-                      messages indicates that the third statement
-                      failed, and the fourth and fifth statements were
-                      not executed.
+
+                   \* Response: 2
+                   [ResultSet][google.spanner.v1.ResultSet] messages,
+                   and a syntax error (INVALID_ARGUMENT) status. The
+                   number of [ResultSet][google.spanner.v1.ResultSet]
+                   messages indicates that the third statement failed,
+                   and the fourth and fifth statements were not
+                   executed.
 
         """
         # Create or coerce a protobuf request object.
@@ -2099,6 +2104,143 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
         rpc = self._transport._wrapped_methods[self._transport.partition_read]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("session", request.session),)),
+        )
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def batch_write(
+        self,
+        request: Optional[Union[spanner.BatchWriteRequest, dict]] = None,
+        *,
+        session: Optional[str] = None,
+        mutation_groups: Optional[
+            MutableSequence[spanner.BatchWriteRequest.MutationGroup]
+        ] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> Iterable[spanner.BatchWriteResponse]:
+        r"""Batches the supplied mutation groups in a collection
+        of efficient transactions. All mutations in a group are
+        committed atomically. However, mutations across groups
+        can be committed non-atomically in an unspecified order
+        and thus, they must be independent of each other.
+        Partial failure is possible, i.e., some groups may have
+        been committed successfully, while some may have failed.
+        The results of individual batches are streamed into the
+        response as the batches are applied.
+
+        BatchWrite requests are not replay protected, meaning
+        that each mutation group may be applied more than once.
+        Replays of non-idempotent mutations may have undesirable
+        effects. For example, replays of an insert mutation may
+        produce an already exists error or if you use generated
+        or commit timestamp-based keys, it may result in
+        additional rows being added to the mutation's table. We
+        recommend structuring your mutation groups to be
+        idempotent to avoid this issue.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_v1
+
+            def sample_batch_write():
+                # Create a client
+                client = spanner_v1.SpannerClient()
+
+                # Initialize request argument(s)
+                mutation_groups = spanner_v1.MutationGroup()
+                mutation_groups.mutations.insert.table = "table_value"
+
+                request = spanner_v1.BatchWriteRequest(
+                    session="session_value",
+                    mutation_groups=mutation_groups,
+                )
+
+                # Make the request
+                stream = client.batch_write(request=request)
+
+                # Handle the response
+                for response in stream:
+                    print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_v1.types.BatchWriteRequest, dict]):
+                The request object. The request for
+                [BatchWrite][google.spanner.v1.Spanner.BatchWrite].
+            session (str):
+                Required. The session in which the
+                batch request is to be run.
+
+                This corresponds to the ``session`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            mutation_groups (MutableSequence[google.cloud.spanner_v1.types.BatchWriteRequest.MutationGroup]):
+                Required. The groups of mutations to
+                be applied.
+
+                This corresponds to the ``mutation_groups`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            Iterable[google.cloud.spanner_v1.types.BatchWriteResponse]:
+                The result of applying a batch of
+                mutations.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([session, mutation_groups])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner.BatchWriteRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(request, spanner.BatchWriteRequest):
+            request = spanner.BatchWriteRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if session is not None:
+                request.session = session
+            if mutation_groups is not None:
+                request.mutation_groups = mutation_groups
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[self._transport.batch_write]
 
         # Certain fields should be provided within the metadata header;
         # add these here.

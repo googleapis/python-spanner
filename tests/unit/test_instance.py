@@ -17,7 +17,6 @@ import mock
 
 
 class TestInstance(unittest.TestCase):
-
     PROJECT = "project"
     PARENT = "projects/" + PROJECT
     INSTANCE_ID = "instance-id"
@@ -1016,6 +1015,7 @@ class _Client(object):
         self.project_name = "projects/" + self.project
         self.timeout_seconds = timeout_seconds
         self.route_to_leader_enabled = True
+        self.directed_read_options = None
 
     def copy(self):
         from copy import deepcopy
@@ -1031,7 +1031,6 @@ class _Client(object):
 
 
 class _FauxInstanceAdminAPI(object):
-
     _create_instance_conflict = False
     _instance_not_found = False
     _rpc_error = False

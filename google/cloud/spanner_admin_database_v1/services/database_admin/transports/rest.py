@@ -28,7 +28,6 @@ from google.api_core import gapic_v1
 
 from google.protobuf import json_format
 from google.api_core import operations_v1
-from google.longrunning import operations_pb2
 from requests import __version__ as requests_version
 import dataclasses
 import re
@@ -46,8 +45,8 @@ from google.cloud.spanner_admin_database_v1.types import backup as gsad_backup
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 from google.iam.v1 import policy_pb2  # type: ignore
-from google.longrunning import operations_pb2  # type: ignore
 from google.protobuf import empty_pb2  # type: ignore
+from google.longrunning import operations_pb2  # type: ignore
 
 from .base import (
     DatabaseAdminTransport,
@@ -3184,7 +3183,6 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             timeout: Optional[float] = None,
             metadata: Sequence[Tuple[str, str]] = (),
         ) -> None:
-
             r"""Call the cancel operation method over HTTP.
 
             Args:
@@ -3259,7 +3257,6 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             timeout: Optional[float] = None,
             metadata: Sequence[Tuple[str, str]] = (),
         ) -> None:
-
             r"""Call the delete operation method over HTTP.
 
             Args:
@@ -3334,7 +3331,6 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             timeout: Optional[float] = None,
             metadata: Sequence[Tuple[str, str]] = (),
         ) -> operations_pb2.Operation:
-
             r"""Call the get operation method over HTTP.
 
             Args:
@@ -3413,7 +3409,6 @@ class DatabaseAdminRestTransport(DatabaseAdminTransport):
             timeout: Optional[float] = None,
             metadata: Sequence[Tuple[str, str]] = (),
         ) -> operations_pb2.ListOperationsResponse:
-
             r"""Call the list operations method over HTTP.
 
             Args:
