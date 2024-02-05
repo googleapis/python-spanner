@@ -265,7 +265,7 @@ class Cursor(object):
                         self.connection.run_prior_DDL_statements()
                     else:
                         raise ProgrammingError(
-                            "Cannot execute DDL statement when transaction is already active"
+                            "Cannot execute DDL statement when a transaction is already active"
                         )
                 else:
                     self._batch_DDLs(sql)

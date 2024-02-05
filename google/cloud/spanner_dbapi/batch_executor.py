@@ -50,6 +50,8 @@ class BatchDdlExecutor:
         """Executes the statement when ddl batch is active by buffering the
         statement in-memory.
 
+        This method is internal and not for public use as it can change anytime.
+
         :type parsed_statement: ParsedStatement
         :param parsed_statement: parsed statement containing sql query
         """
@@ -64,6 +66,8 @@ class BatchDdlExecutor:
     def run_batch(self):
         """Executes all the buffered statements on the active ddl batch by
         making a call to Spanner.
+
+        This method is internal and not for public use as it can change anytime.
         """
         from google.cloud.spanner_dbapi import ProgrammingError
 
@@ -92,6 +96,8 @@ class BatchDmlExecutor:
         """Executes the statement when dml batch is active by buffering the
         statement in-memory.
 
+        This method is internal and not for public use as it can change anytime.
+
         :type parsed_statement: ParsedStatement
         :param parsed_statement: parsed statement containing sql query and query
          params
@@ -109,12 +115,16 @@ class BatchDmlExecutor:
     def run_batch(self):
         """Executes all the buffered statements on the active dml batch by
         making a call to Spanner.
+
+        This method is internal and not for public use as it can change anytime.
         """
         return run_batch_dml(self._cursor, self._statements)
 
 
 def run_batch_dml(cursor: "Cursor", statements: List[Statement]):
     """Executes all the dml statements by making a batch call to Spanner.
+
+    This method is internal and not for public use as it can change anytime.
 
     :type cursor: Cursor
     :param cursor: Database Cursor object

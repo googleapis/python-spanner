@@ -461,8 +461,7 @@ class TestDbApi:
         """Test batch ddl."""
 
         self._conn._buffer_ddl_statements = False
-        if auto_commit:
-            self._conn.autocommit = True
+        self._conn.autocommit = auto_commit
 
         self._cursor.execute("start batch ddl")
         self._cursor.execute(
@@ -491,9 +490,12 @@ class TestDbApi:
         if auto_commit:
             assert exception_raised is False
             assert table_1.exists() is True
-            self._cursor.execute("DROP TABLE Table_1")
             assert table_2.exists() is True
+
+            self._cursor.execute("start batch ddl")
+            self._cursor.execute("DROP TABLE Table_1")
             self._cursor.execute("DROP TABLE Table_2")
+            self._cursor.execute("run batch")
         else:
             assert exception_raised is True
             assert table_1.exists() is False
@@ -1161,7 +1163,8 @@ class TestDbApi:
     @pytest.mark.parametrize("autocommit", [True, False])
     def test_ddl_execute(self, autocommit, dbapi_database):
         """Check that DDL statement results in successful execution for execute
-        method in autocommit mode while it's a noop in non-autocommit mode."""
+        method in autocommit mode while it's a noop in non-autocommit mode when
+        buffer_ddl_statements flag is enabled."""
 
         if autocommit:
             self._conn.autocommit = True
@@ -1179,6 +1182,7 @@ class TestDbApi:
             self._cursor.execute("DROP TABLE DdlExecuteAutocommit")
         else:
             assert table.exists() is False
+            assert len(self._conn._ddl_statements) == 1
 
     @pytest.mark.parametrize("autocommit", [True, False])
     def test_ddl_execute_without_buffer_ddl_enabled(self, autocommit, dbapi_database):
@@ -1234,7 +1238,8 @@ class TestDbApi:
 
     def test_ddl_then_non_ddl_execute(self, dbapi_database):
         """Check that DDL statement followed by non-DDL execute statement in
-        non autocommit mode results in successful DDL statement execution."""
+        non autocommit mode results in successful DDL statement execution
+        when buffer_ddl_statements flag is enabled."""
 
         want_row = (
             1,
@@ -1376,7 +1381,8 @@ class TestDbApi:
                 op.result()
 
     def test_DDL_commit(self, dbapi_database):
-        """Check that DDLs in commit mode are executed on calling `commit()`."""
+        """Check that DDLs in commit mode are executed on calling `commit()`
+        when buffer_ddl_statements flag is enabled."""
         try:
             self._cursor.execute(
                 """
