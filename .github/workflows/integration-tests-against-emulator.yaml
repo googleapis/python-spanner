@@ -29,4 +29,4 @@ jobs:
         env:
           SPANNER_EMULATOR_HOST: localhost:9010
           GOOGLE_CLOUD_PROJECT: emulator-test-project
-          GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE: true
+          GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE: false

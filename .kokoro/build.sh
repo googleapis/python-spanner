@@ -33,8 +33,8 @@ export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-account.json
 # Setup project id.
 export PROJECT_ID=$(cat "${KOKORO_GFILE_DIR}/project-id.json")
 
-# Set up creating a new instance for each system test run
-export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
+# use existing instance for every system test run
+export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=false
 
 # Remove old nox
 python3 -m pip uninstall --yes --quiet nox-automation
