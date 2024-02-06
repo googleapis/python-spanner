@@ -15,6 +15,7 @@
 import operator
 import os
 import time
+from random import randrange
 
 from google.api_core import exceptions
 from google.cloud.spanner_v1 import instance as instance_mod
@@ -134,4 +135,4 @@ def cleanup_old_instances(spanner_client):
 
 
 def unique_id(prefix, separator="-"):
-    return f"{prefix}{system.unique_resource_id(separator)}"
+    return f"{prefix}{system.unique_resource_id(separator)}{randrange(100)}"
