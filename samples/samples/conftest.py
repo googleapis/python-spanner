@@ -33,7 +33,7 @@ OPERATION_TIMEOUT_SECONDS = 120  # seconds
 
 CREATE_INSTANCE = False
 
-INSTANCE_ID_DEFAULT = "google-cloud-python-systest"
+INSTANCE_ID_DEFAULT = "test-instance"
 
 retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
 
