@@ -27,6 +27,8 @@ from google.cloud.spanner_v1 import instance
 import pytest
 from test_utils import retry
 
+from tests.system import _helpers
+
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
 OPERATION_TIMEOUT_SECONDS = 120  # seconds
@@ -200,7 +202,7 @@ def database_id():
 
     Sample testcase modules can override as needed.
     """
-    return "my-database-id"
+    return _helpers.unique_id("dbapi-txn")
 
 
 @pytest.fixture(scope="module")

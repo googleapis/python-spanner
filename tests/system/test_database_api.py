@@ -427,7 +427,7 @@ def test_create_role_grant_access_success(
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_ldrr_ddl", separator="_")
     temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
@@ -487,7 +487,7 @@ def test_list_database_role_success(
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_ldrr_ddl", separator="_")
     temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
