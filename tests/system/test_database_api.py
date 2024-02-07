@@ -342,7 +342,7 @@ def test_update_ddl_w_pitr_invalid(
     databases_to_delete,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
-    temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
+    temp_db_id = _helpers.unique_id("pitr_upd_ddl", separator="_")
     retention_period = "0d"
     temp_db = shared_instance.database(temp_db_id, pool=pool)
 
@@ -367,7 +367,7 @@ def test_update_ddl_w_pitr_success(
     databases_to_delete,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
-    temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
+    temp_db_id = _helpers.unique_id("pitr_upd_ddl", separator="_")
     retention_period = "7d"
     temp_db = shared_instance.database(temp_db_id, pool=pool)
 
@@ -399,7 +399,7 @@ def test_update_ddl_w_default_leader_success(
         labels={"testcase": "update_database_ddl_default_leader"},
     )
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_upd_ddl", separator="_")
     default_leader = "us-east4"
     temp_db = multiregion_instance.database(temp_db_id, pool=pool)
 

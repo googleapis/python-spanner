@@ -15,6 +15,7 @@
 
 import time
 import uuid
+from random import randrange
 
 from google.api_core import exceptions
 
@@ -26,8 +27,7 @@ from google.cloud.spanner_v1 import database
 from google.cloud.spanner_v1 import instance
 import pytest
 from test_utils import retry
-
-from tests.system import _helpers
+from test_utils import system
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
@@ -82,17 +82,18 @@ def scrub_instance_ignore_not_found(to_scrub):
 @pytest.fixture(scope="session")
 def cleanup_old_instances(spanner_client):
     """Delete instances, created by samples, that are older than an hour."""
-    cutoff = int(time.time()) - 1 * 60 * 60
-    instance_filter = "labels.cloud_spanner_samples:true"
+    if CREATE_INSTANCE:
+        cutoff = int(time.time()) - 1 * 60 * 60
+        instance_filter = "labels.cloud_spanner_samples:true"
 
-    for instance_pb in spanner_client.list_instances(filter_=instance_filter):
-        inst = instance.Instance.from_pb(instance_pb, spanner_client)
+        for instance_pb in spanner_client.list_instances(filter_=instance_filter):
+            inst = instance.Instance.from_pb(instance_pb, spanner_client)
 
-        if "created" in inst.labels:
-            create_time = int(inst.labels["created"])
+            if "created" in inst.labels:
+                create_time = int(inst.labels["created"])
 
-            if create_time <= cutoff:
-                scrub_instance_ignore_not_found(inst)
+                if create_time <= cutoff:
+                    scrub_instance_ignore_not_found(inst)
 
 
 @pytest.fixture(scope="module")
@@ -202,7 +203,7 @@ def database_id():
 
     Sample testcase modules can override as needed.
     """
-    return _helpers.unique_id("dbapi-txn")
+    return unique_id("dbapi-txn")
 
 
 @pytest.fixture(scope="module")
@@ -304,3 +305,6 @@ def kms_key_name(spanner_client):
         "spanner-test-keyring",
         "spanner-test-cmek",
     )
+
+def unique_id(prefix, separator="-"):
+    return f"{prefix}{system.unique_resource_id(separator)}{randrange(100)}"
