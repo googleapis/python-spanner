@@ -345,6 +345,7 @@ class TestConnection(unittest.TestCase):
             self._under_test.start_batch_ddl()
 
     def test_start_batch_ddl(self):
+        self._under_test.autocommit = True
         self._under_test.start_batch_ddl()
 
         self.assertEqual(self._under_test._batch_mode, BatchMode.DDL)

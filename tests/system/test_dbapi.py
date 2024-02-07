@@ -154,6 +154,9 @@ class TestDbApi:
         try:
             self._conn.commit()
         except Exception:
+            # The new transaction might try to checkout the same session which was deleted earlier,
+            # which might result in Session not found exception. So we are removing the session from
+            # the session pool at client by getting the first session from the queue.
             self._conn.database._pool._sessions.get()
 
         # Testing that the connection and Cursor are in proper state post commit
@@ -179,6 +182,9 @@ class TestDbApi:
         try:
             self._conn.rollback()
         except Exception:
+            # The new transaction might try to checkout the same session which was deleted earlier,
+            # which might result in Session not found exception. So we are removing the session from
+            # the session pool at client by getting the first session from the queue.
             self._conn.database._pool._sessions.get()
 
         # Testing that the connection and Cursor are in proper state post
@@ -463,28 +469,29 @@ class TestDbApi:
         self._conn._buffer_ddl_statements = False
         self._conn.autocommit = auto_commit
 
-        self._cursor.execute("start batch ddl")
-        self._cursor.execute(
-            """
-            CREATE TABLE Table_1 (
-                SingerId     INT64 NOT NULL,
-                Name    STRING(1024),
-            ) PRIMARY KEY (SingerId)
-            """
-        )
-        self._cursor.execute(
-            """
-            CREATE TABLE Table_2 (
-                SingerId     INT64 NOT NULL,
-                Name    STRING(1024),
-            ) PRIMARY KEY (SingerId)
-            """
-        )
         exception_raised = False
         try:
+            self._cursor.execute("start batch ddl")
+            self._cursor.execute(
+                """
+                CREATE TABLE Table_1 (
+                    SingerId     INT64 NOT NULL,
+                    Name    STRING(1024),
+                ) PRIMARY KEY (SingerId)
+                """
+            )
+            self._cursor.execute(
+                """
+                CREATE TABLE Table_2 (
+                    SingerId     INT64 NOT NULL,
+                    Name    STRING(1024),
+                ) PRIMARY KEY (SingerId)
+                """
+            )
             self._cursor.execute("run batch")
         except ProgrammingError:
             exception_raised = True
+
         table_1 = dbapi_database.table("Table_1")
         table_2 = dbapi_database.table("Table_2")
         if auto_commit:

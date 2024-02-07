@@ -137,15 +137,20 @@ class Connection:
     @property
     def buffer_ddl_statements(self):
         """Whether to buffer ddl statements for this connection.
-        If the connection is in auto commit mode then this flag doesn't have any
-        significance as ddl statements would be executed as they come.
+        This flag determines how DDL statements are handled when auto_commit=False:
 
-        For connection not in auto commit mode:
-        If enabled ddl statements would be buffered at client and not executed
-        at cloud spanner. When a non ddl statement comes or a transaction is
-        committed then all the existing buffered ddl statements would be executed.
+        1. buffer_ddl_statements=True: DDL statements are buffered in the client until the
+            next non-DDL statement, or until the transaction is committed. Executing a
+            non-DDL statement causes the connection to send all buffered DDL statements
+            to Spanner, and then to execute the non-DDL statement. Note that although the
+            DDL statements are sent as one batch to Spanner, they are not guaranteed to be
+            atomic. See https://cloud.google.com/spanner/docs/reference/rpc/google.spanner.admin.database.v1#google.spanner.admin.database.v1.UpdateDatabaseDdlRequest
+            for more details on DDL batches.
+        2. buffer_ddl_statements=False: Executing DDL statements is not allowed and an
+            error will be raised when the connection is in auto_commit=False mode, a
+            transaction is active, and DDL statements cannot be executed in a transaction.
 
-        If disabled then its an error to execute ddl statement in autocommit mode.
+        This flag is ignored when auto_commit=True.
 
 
         :rtype: bool
@@ -161,6 +166,10 @@ class Connection:
         :type value: bool
         :param value: New autocommit mode state.
         """
+        if self._batch_mode is not BatchMode.NONE:
+            raise ProgrammingError(
+                "Can't change the autocommit mode as the batch is already active."
+            )
         if value and not self._autocommit and self._spanner_transaction_started:
             self.commit()
 
@@ -494,7 +503,7 @@ class Connection:
     @check_not_closed
     def start_batch_ddl(self):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         if self._batch_mode is not BatchMode.NONE:
             raise ProgrammingError(
@@ -508,13 +517,17 @@ class Connection:
             raise ProgrammingError(
                 "Cannot start a DDL batch when _buffer_ddl_statements flag is True"
             )
+        if self._client_transaction_started:
+            raise ProgrammingError(
+                "Cannot start a DDL batch when transaction is already active."
+            )
         self._batch_mode = BatchMode.DDL
         self._batch_ddl_executor = BatchDdlExecutor(self)
 
     @check_not_closed
     def execute_batch_ddl_statement(self, parsed_statement: ParsedStatement):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         if self._batch_mode is not BatchMode.DDL:
             raise ProgrammingError(
@@ -525,7 +538,7 @@ class Connection:
     @check_not_closed
     def start_batch_dml(self, cursor):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         if self._batch_mode is not BatchMode.NONE:
             raise ProgrammingError(
@@ -541,7 +554,7 @@ class Connection:
     @check_not_closed
     def execute_batch_dml_statement(self, parsed_statement: ParsedStatement):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         if self._batch_mode is not BatchMode.DML:
             raise ProgrammingError(
@@ -552,7 +565,7 @@ class Connection:
     @check_not_closed
     def run_batch(self):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         result_set = None
         if self._batch_mode is BatchMode.NONE:
@@ -571,7 +584,7 @@ class Connection:
     @check_not_closed
     def abort_batch(self):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         if self._batch_mode is BatchMode.NONE:
             raise ProgrammingError("Cannot abort a batch when the BatchMode is not set")
@@ -588,7 +601,7 @@ class Connection:
         query_options=None,
     ):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         statement = parsed_statement.statement
         partitioned_query = parsed_statement.client_side_statement_params[0]
@@ -615,7 +628,7 @@ class Connection:
     @check_not_closed
     def run_partition(self, encoded_partition_id):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         partition_id: PartitionId = partition_helper.decode_from_string(
             encoded_partition_id
@@ -634,7 +647,7 @@ class Connection:
         parsed_statement: ParsedStatement,
     ):
         """
-        This method is internal and not for public use as it can change anytime.
+        This method is internal and not for public use
         """
         statement = parsed_statement.statement
         partitioned_query = parsed_statement.client_side_statement_params[0]
