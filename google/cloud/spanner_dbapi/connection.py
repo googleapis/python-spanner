@@ -120,7 +120,7 @@ class Connection:
     @property
     def spanner_client(self):
         """Client for interacting with Cloud Spanner API. This property exposes
-        the spanner client so that underlying methods could be accessed.
+        the spanner client so that underlying methods can be accessed.
         """
         return self._instance._client
 
