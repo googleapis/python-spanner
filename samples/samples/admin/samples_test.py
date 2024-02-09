@@ -141,3 +141,110 @@ def test_create_database_with_default_leader(
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
     assert default_leader in out
+
+
+@pytest.mark.dependency(name="add_and_drop_database_roles")
+def test_add_and_drop_database_roles(capsys, instance_id, sample_database):
+    samples.add_and_drop_database_roles(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Created roles new_parent and new_child and granted privileges" in out
+    assert "Revoked privileges and dropped role new_child" in out
+
+
+@pytest.mark.dependency(name="create_table_with_datatypes")
+def test_create_table_with_datatypes(capsys, instance_id, sample_database):
+    samples.create_table_with_datatypes(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Created Venues table on database" in out
+
+
+@pytest.mark.dependency(
+    name="add_json_column",
+    depends=["create_table_with_datatypes"],
+)
+def test_add_json_column(capsys, instance_id, sample_database):
+    samples.add_json_column(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert 'Altered table "Venues" on database ' in out
+
+
+@pytest.mark.dependency(
+    name="add_numeric_column",
+    depends=["create_table_with_datatypes"],
+)
+def test_add_numeric_column(capsys, instance_id, sample_database):
+    samples.add_numeric_column(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert 'Altered table "Venues" on database ' in out
+
+
+@pytest.mark.dependency(name="create_table_with_foreign_key_delete_cascade")
+def test_create_table_with_foreign_key_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    samples.create_table_with_foreign_key_delete_cascade(
+        instance_id, sample_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert (
+        "Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId"
+        in out
+    )
+
+
+@pytest.mark.dependency(
+    name="alter_table_with_foreign_key_delete_cascade",
+    depends=["create_table_with_foreign_key_delete_cascade"],
+)
+def test_alter_table_with_foreign_key_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    samples.alter_table_with_foreign_key_delete_cascade(
+        instance_id, sample_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "Altered ShoppingCarts table with FKShoppingCartsCustomerName" in out
+
+
+@pytest.mark.dependency(depends=["alter_table_with_foreign_key_delete_cascade"])
+def test_drop_foreign_key_contraint_delete_cascade(
+    capsys, instance_id, sample_database
+):
+    samples.drop_foreign_key_constraint_delete_cascade(
+        instance_id, sample_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "Altered ShoppingCarts table to drop FKShoppingCartsCustomerName" in out
+
+
+def test_create_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.create_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Created Seq sequence and Customers table, where the key column CustomerId uses the sequence as a default value on database"
+        in out
+    )
+    assert "Number of customer records inserted is 3" in out
+    assert "Inserted customer record with Customer Id:" in out
+
+
+@pytest.mark.dependency(depends=["create_sequence"])
+def test_alter_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.alter_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Altered Seq sequence to skip an inclusive range between 1000 and 5000000 on database"
+        in out
+    )
+    assert "Number of customer records inserted is 3" in out
+    assert "Inserted customer record with Customer Id:" in out
+
+
+@pytest.mark.dependency(depends=["alter_sequence"])
+def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.drop_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"
+        in out
+    )

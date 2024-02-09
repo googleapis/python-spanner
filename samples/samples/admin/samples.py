@@ -103,3 +103,378 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 
 
 # [END spanner_create_database_with_default_leader]
+
+
+def add_and_drop_database_roles(instance_id, database_id):
+    """Showcases how to manage a user defined database role."""
+    # [START spanner_add_and_drop_database_role]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    role_parent = "new_parent"
+    role_child = "new_child"
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "CREATE ROLE {}".format(role_parent),
+            "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_parent),
+            "CREATE ROLE {}".format(role_child),
+            "GRANT ROLE {} TO ROLE {}".format(role_parent, role_child),
+        ],
+    )
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print(
+        "Created roles {} and {} and granted privileges".format(role_parent, role_child)
+    )
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "REVOKE ROLE {} FROM ROLE {}".format(role_parent, role_child),
+            "DROP ROLE {}".format(role_child),
+        ],
+    )
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print("Revoked privileges and dropped role {}".format(role_child))
+
+    # [END spanner_add_and_drop_database_role]
+
+
+def create_table_with_datatypes(instance_id, database_id):
+    """Creates a table with supported datatypes."""
+    # [START spanner_create_table_with_datatypes]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            """CREATE TABLE Venues (
+            VenueId         INT64 NOT NULL,
+            VenueName       STRING(100),
+            VenueInfo       BYTES(MAX),
+            Capacity        INT64,
+            AvailableDates  ARRAY<DATE>,
+            LastContactDate DATE,
+            OutdoorVenue    BOOL,
+            PopularityScore FLOAT64,
+            LastUpdateTime  TIMESTAMP NOT NULL
+            OPTIONS(allow_commit_timestamp=true)
+        ) PRIMARY KEY (VenueId)"""
+        ],
+    )
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Created Venues table on database {} on instance {}".format(
+            database_id, instance_id
+        )
+    )
+    # [END spanner_create_table_with_datatypes]
+
+
+# [START spanner_add_json_column]
+def add_json_column(instance_id, database_id):
+    """Adds a new JSON column to the Venues table in the example database."""
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=["ALTER TABLE Venues ADD COLUMN VenueDetails JSON"],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Venues" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_add_json_column]
+
+
+# [START spanner_add_numeric_column]
+def add_numeric_column(instance_id, database_id):
+    """Adds a new NUMERIC column to the Venues table in the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Venues" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_add_numeric_column]
+
+
+# [START spanner_create_table_with_foreign_key_delete_cascade]
+def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
+    """Creates a table with foreign key delete cascade action"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            """CREATE TABLE Customers (
+               CustomerId INT64 NOT NULL,
+               CustomerName STRING(62) NOT NULL,
+               ) PRIMARY KEY (CustomerId)
+            """,
+            """
+               CREATE TABLE ShoppingCarts (
+               CartId INT64 NOT NULL,
+               CustomerId INT64 NOT NULL,
+               CustomerName STRING(62) NOT NULL,
+               CONSTRAINT FKShoppingCartsCustomerId FOREIGN KEY (CustomerId)
+               REFERENCES Customers (CustomerId) ON DELETE CASCADE
+               ) PRIMARY KEY (CartId)
+            """,
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        """Created Customers and ShoppingCarts table with FKShoppingCartsCustomerId
+           foreign key constraint on database {} on instance {}""".format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_create_table_with_foreign_key_delete_cascade]
+
+
+# [START spanner_alter_table_with_foreign_key_delete_cascade]
+def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
+    """Alters a table with foreign key delete cascade action"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            """ALTER TABLE ShoppingCarts
+               ADD CONSTRAINT FKShoppingCartsCustomerName
+               FOREIGN KEY (CustomerName)
+               REFERENCES Customers(CustomerName)
+               ON DELETE CASCADE"""
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        """Altered ShoppingCarts table with FKShoppingCartsCustomerName
+           foreign key constraint on database {} on instance {}""".format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_alter_table_with_foreign_key_delete_cascade]
+
+
+# [START spanner_drop_foreign_key_constraint_delete_cascade]
+def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
+    """Alter table to drop foreign key delete cascade action"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            """ALTER TABLE ShoppingCarts
+               DROP CONSTRAINT FKShoppingCartsCustomerName"""
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        """Altered ShoppingCarts table to drop FKShoppingCartsCustomerName
+           foreign key constraint on database {} on instance {}""".format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_drop_foreign_key_constraint_delete_cascade]
+
+
+# [START spanner_create_sequence]
+def create_sequence(instance_id, database_id):
+    """Creates the Sequence and insert data"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "CREATE SEQUENCE Seq OPTIONS (sequence_kind = 'bit_reversed_positive')",
+            """CREATE TABLE Customers (
+            CustomerId     INT64 DEFAULT (GET_NEXT_SEQUENCE_VALUE(Sequence Seq)),
+            CustomerName      STRING(1024)
+            ) PRIMARY KEY (CustomerId)""",
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Created Seq sequence and Customers table, where the key column CustomerId uses the sequence as a default value on database {} on instance {}".format(
+            database_id, instance_id
+        )
+    )
+
+    def insert_customers(transaction):
+        results = transaction.execute_sql(
+            "INSERT INTO Customers (CustomerName) VALUES "
+            "('Alice'), "
+            "('David'), "
+            "('Marc') "
+            "THEN RETURN CustomerId"
+        )
+        for result in results:
+            print("Inserted customer record with Customer Id: {}".format(*result))
+        print(
+            "Number of customer records inserted is {}".format(
+                results.stats.row_count_exact
+            )
+        )
+
+    database.run_in_transaction(insert_customers)
+
+
+# [END spanner_create_sequence]
+
+
+# [START spanner_alter_sequence]
+def alter_sequence(instance_id, database_id):
+    """Alters the Sequence and insert data"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "ALTER SEQUENCE Seq SET OPTIONS (skip_range_min = 1000, skip_range_max = 5000000)",
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Altered Seq sequence to skip an inclusive range between 1000 and 5000000 on database {} on instance {}".format(
+            database_id, instance_id
+        )
+    )
+
+    def insert_customers(transaction):
+        results = transaction.execute_sql(
+            "INSERT INTO Customers (CustomerName) VALUES "
+            "('Lea'), "
+            "('Cataline'), "
+            "('Smith') "
+            "THEN RETURN CustomerId"
+        )
+        for result in results:
+            print("Inserted customer record with Customer Id: {}".format(*result))
+        print(
+            "Number of customer records inserted is {}".format(
+                results.stats.row_count_exact
+            )
+        )
+
+    database.run_in_transaction(insert_customers)
+
+
+# [END spanner_alter_sequence]
+
+
+# [START spanner_drop_sequence]
+def drop_sequence(instance_id, database_id):
+    """Drops the Sequence"""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "ALTER TABLE Customers ALTER COLUMN CustomerId DROP DEFAULT",
+            "DROP SEQUENCE Seq",
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database {} on instance {}".format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_drop_sequence]
