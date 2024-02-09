@@ -351,11 +351,15 @@ class Client(ClientWithProject):
 
         :type node_count: int
         :param node_count: (Optional) The number of nodes in the instance's
-                            cluster; used to set up the instance's cluster.
+                            cluster; used to set up the instance's cluster. Exactly one of
+                            processing units, node count, or autoscaling config must be set
+                            when creating a new instance.
 
         :type processing_units: int
         :param processing_units: (Optional) The number of processing units
-                                allocated to this instance.
+                                allocated to this instance. Exactly one of
+                                processing units, node count, or autoscaling config must be set
+                                when creating a new instance.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) User-assigned labels for this instance.
@@ -363,6 +367,8 @@ class Client(ClientWithProject):
         :type autoscaling_config:
             :class:`~google.cloud.spanner_admin_instance_v1.types.AutoscalingConfig`
         :param autoscaling_config: (Optional) The autoscaling configuration for this instance.
+                                    Exactly one of processing units, node count, or autoscaling config
+                                    must be set when creating a new instance.
 
         :rtype: :class:`~google.cloud.spanner_v1.instance.Instance`
         :returns: an instance owned by this client.

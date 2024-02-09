@@ -110,6 +110,12 @@ class Instance(object):
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) User-assigned labels for this instance.
+
+    :type autoscaling_config:
+        :class:`~google.cloud.spanner_admin_instance_v1.types.AutoscalingConfig`
+    :param autoscaling_config: (Optional) The autoscaling configuration for this instance.
+                                Exactly one of processing units, node count, or autoscaling config
+                                must be set when creating a new instance.
     """
 
     def __init__(
