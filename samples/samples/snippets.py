@@ -2988,6 +2988,8 @@ if __name__ == "__main__":  # noqa: C901
         add_column(args.instance_id, args.database_id)
     elif args.command == "update_data":
         update_data(args.instance_id, args.database_id)
+    elif args.command == "set_max_commit_delay":
+        set_max_commit_delay(args.instance_id, args.database_id)
     elif args.command == "query_data_with_new_column":
         query_data_with_new_column(args.instance_id, args.database_id)
     elif args.command == "read_write_transaction":
