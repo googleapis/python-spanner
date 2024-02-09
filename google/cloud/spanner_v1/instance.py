@@ -385,7 +385,7 @@ class Instance(object):
 
         self._update_from_pb(instance_pb)
 
-    def update(self, fields=None):
+    def update(self):
         """Update this instance.
 
         See
@@ -403,9 +403,6 @@ class Instance(object):
 
            before calling :meth:`update`.
 
-        :type fields: Sequence[str]
-        :param fields: a list of fields to update. Ex: ["autoscaling_config"]
-
         :rtype: :class:`google.api_core.operation.Operation`
         :returns: an operation instance
         :raises NotFound: if the instance does not exist
@@ -420,8 +417,11 @@ class Instance(object):
             labels=self.labels,
             autoscaling_config=self._autoscaling_config,
         )
-        # default field paths to update
-        # Always update only processing_units, not nodes
+        # default field paths to update. Always update only processing_units,
+        # not nodes.
+        # When switching from autoscalar to non-autoscalar
+        # instance, we need to update processing_units value and set
+        # autoscaling_config to None
         paths = [
             "config",
             "display_name",
@@ -429,8 +429,18 @@ class Instance(object):
             "labels",
             "autoscaling_config",
         ]
-        if fields is not None:
-            paths = fields
+        if self._autoscaling_config is not None:
+            # When switching from non-autoscalar to autoscalar instance,
+            # update only autoscaling_config. An update cannot simultaneously
+            # set processing_units to non-zero and autoscaling_config to
+            # non-empty.
+            paths = [
+                "config",
+                "display_name",
+                "labels",
+                "autoscaling_config",
+            ]
+
 
         field_mask = FieldMask(paths=paths)
         metadata = _metadata_with_prefix(self.name)
