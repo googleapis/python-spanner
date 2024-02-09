@@ -787,6 +787,34 @@ def update_data(instance_id, database_id):
 # [END spanner_update_data]
 
 
+# [START spanner_set_max_commit_delay_batch]
+def set_max_commit_delay(instance_id, database_id):
+    """Updates sample data in the database.
+
+    This updates the `MarketingBudget` column which must be created before
+    running this sample. You can add the column by running the `add_column`
+    sample or by running this DDL statement against your database:
+
+        ALTER TABLE Albums ADD COLUMN MarketingBudget INT64
+
+    """
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    with database.batch(max_commit_delay=datetime.timedelta(milliseconds=100)) as batch:
+        batch.update(
+            table="Albums",
+            columns=("SingerId", "AlbumId", "MarketingBudget"),
+            values=[(1, 1, 100000), (2, 2, 500000)],
+        )
+
+    print("Updated data.")
+
+
+# [END spanner_set_max_commit_delay_batch]
+
+
 # [START spanner_read_write_transaction]
 def read_write_transaction(instance_id, database_id):
     """Performs a read-write transaction to update two sample records in the
@@ -2816,6 +2844,7 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser("read_stale_data", help=read_stale_data.__doc__)
     subparsers.add_parser("add_column", help=add_column.__doc__)
     subparsers.add_parser("update_data", help=update_data.__doc__)
+    subparsers.add_parser("set_max_commit_delay", help=set_max_commit_delay.__doc__)
     subparsers.add_parser(
         "query_data_with_new_column", help=query_data_with_new_column.__doc__
     )
