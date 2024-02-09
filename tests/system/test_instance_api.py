@@ -178,7 +178,7 @@ def test_create_instance_with_autoscaling_config(
     # We want to make sure the operation completes.
     operation.result(instance_operation_timeout)  # raises on failure / timeout.
 
-    # Create a new instance instance and make sure it is the same.
+    # Create a new instance and make sure it is the same.
     instance_alt = spanner_client.instance(alt_instance_id, instance_config.name)
     instance_alt.reload()
 
@@ -212,10 +212,7 @@ def test_update_instance_with_autoscaling_config(
 
     old_node_count = shared_instance.node_count
     shared_instance.autoscaling_config = autoscaling_config
-    # Update only the autoscaling_config field. This is to ensure that
-    # node_count or processing_unit field is not considered during update,
-    # which might otherwise throw an error.
-    operation = shared_instance.update(fields=["autoscaling_config"])
+    operation = shared_instance.update()
 
     # We want to make sure the operation completes.
     operation.result(instance_operation_timeout)  # raises on failure / timeout.

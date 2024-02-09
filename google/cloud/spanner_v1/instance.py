@@ -441,7 +441,6 @@ class Instance(object):
                 "autoscaling_config",
             ]
 
-
         field_mask = FieldMask(paths=paths)
         metadata = _metadata_with_prefix(self.name)
 

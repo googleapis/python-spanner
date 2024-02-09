@@ -607,12 +607,20 @@ class TestInstance(unittest.TestCase):
             autoscaling_config=autoscaling_config,
         )
 
-        future = instance.update(fields=["autoscaling_config"])
+        future = instance.update()
 
         self.assertIs(future, op_future)
 
         instance, field_mask, metadata = api._updated_instance
-        self.assertEqual(field_mask.paths, ["autoscaling_config"])
+        self.assertEqual(
+            field_mask.paths,
+            [
+                "config",
+                "display_name",
+                "labels",
+                "autoscaling_config",
+            ],
+        )
         self.assertEqual(instance.name, self.INSTANCE_NAME)
         self.assertEqual(instance.autoscaling_config, autoscaling_config)
         self.assertEqual(metadata, [("google-cloud-resource-prefix", instance.name)])
