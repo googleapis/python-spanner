@@ -421,6 +421,7 @@ class Instance(object):
             autoscaling_config=self._autoscaling_config,
         )
         # default field paths to update
+        # Always update only processing_units, not nodes
         paths = [
             "config",
             "display_name",
@@ -431,7 +432,6 @@ class Instance(object):
         if fields is not None:
             paths = fields
 
-        # Always update only processing_units, not nodes
         field_mask = FieldMask(paths=paths)
         metadata = _metadata_with_prefix(self.name)
 
