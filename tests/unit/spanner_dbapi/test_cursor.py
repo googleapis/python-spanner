@@ -949,8 +949,8 @@ class TestCursor(unittest.TestCase):
             cursor.list_tables()
             mock_run_sql.assert_called_once_with(
                 sql=_helpers.SQL_LIST_TABLES,
-                params={"schema_name": ""},
-                param_types={"schema_name": param_types.STRING},
+                params={"table_schema": ""},
+                param_types={"table_schema": param_types.STRING},
             )
 
     def test_run_sql_in_snapshot(self):
