@@ -1417,14 +1417,13 @@ def set_max_commit_delay(instance_id, database_id):
     def insert_singers(transaction):
         row_ct = transaction.execute_update(
             "INSERT Singers (SingerId, FirstName, LastName) "
-            " VALUES (110, 'Virginia', 'Watson')"
+            " VALUES (111, 'Grace', 'Bennis')"
         )
 
         print("{} record(s) inserted.".format(row_ct))
 
     database.run_in_transaction(
-        insert_singers, max_commit_delay=datetime.timedelta(milliseconds=100)
-
+        insert_singers, max_commit_delay=datetime.timedelta(milliseconds=100))
 
 
 # [END spanner_set_max_commit_delay]
