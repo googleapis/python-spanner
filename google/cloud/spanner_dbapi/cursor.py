@@ -518,8 +518,8 @@ class Cursor(object):
         """
         return self.run_sql_in_snapshot(
             sql=_helpers.SQL_LIST_TABLES,
-            params={"schema_name": schema_name},
-            param_types={"schema_name": spanner.param_types.STRING},
+            params={"table_schema": schema_name},
+            param_types={"table_schema": spanner.param_types.STRING},
         )
 
     def run_sql_in_snapshot(self, sql, params=None, param_types=None):
