@@ -116,6 +116,7 @@ class Connection:
         self._batch_mode = BatchMode.NONE
         self._batch_dml_executor: BatchDmlExecutor = None
         self._transaction_helper = TransactionRetryHelper(self)
+        self._schema_name = self.database.default_schema_name
 
     @property
     def spanner_client(self):
@@ -123,6 +124,24 @@ class Connection:
         the spanner client so that underlying methods can be accessed.
         """
         return self._instance._client
+
+    @property
+    def schema_name(self):
+        """schema name for this database.
+
+        :rtype: str
+        :returns: "" for GoogleSQL and "public" for PostgreSQL for default schema
+        """
+        return self._schema_name
+
+    @schema_name.setter
+    def schema_name(self, value):
+        """Updates the database schema name used in the connection.
+
+        :type value: str
+        :param value: database schema name used in the connection
+        """
+        self._schema_name = value
 
     @property
     def autocommit(self):
