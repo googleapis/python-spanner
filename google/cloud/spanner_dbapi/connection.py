@@ -18,7 +18,6 @@ import warnings
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_dbapi import partition_helper
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
 from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
