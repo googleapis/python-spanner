@@ -59,7 +59,9 @@ class TestConnection(unittest.TestCase):
 
         return ClientInfo(user_agent=USER_AGENT)
 
-    def _make_connection(self, database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED, **kwargs):
+    def _make_connection(
+        self, database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED, **kwargs
+    ):
         from google.cloud.spanner_v1.instance import Instance
         from google.cloud.spanner_v1.client import Client
 
@@ -109,7 +111,9 @@ class TestConnection(unittest.TestCase):
     def test_property_current_schema_google_sql_dialect(self):
         from google.cloud.spanner_v1.database import Database
 
-        connection = self._make_connection(database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL)
+        connection = self._make_connection(
+            database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL
+        )
         self.assertIsInstance(connection.database, Database)
         self.assertEqual(connection.current_schema, "")
 
@@ -760,12 +764,22 @@ class _Instance(object):
         self.name = name
         self._client = client
 
-    def database(self, database_id="database_id", pool=None, database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL):
+    def database(
+        self,
+        database_id="database_id",
+        pool=None,
+        database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
+    ):
         return _Database(database_id, pool, database_dialect)
 
 
 class _Database(object):
-    def __init__(self, database_id="database_id", pool=None, database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL):
+    def __init__(
+        self,
+        database_id="database_id",
+        pool=None,
+        database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
+    ):
         self.name = database_id
         self.pool = pool
         self.database_dialect = database_dialect
