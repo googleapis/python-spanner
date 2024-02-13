@@ -20,7 +20,7 @@ import unittest
 import warnings
 import pytest
 
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
+from google.cloud.spanner_dbapi.batch_executor import BatchMode
 from google.cloud.spanner_dbapi.exceptions import (
     InterfaceError,
     OperationalError,
@@ -326,6 +326,52 @@ class TestConnection(unittest.TestCase):
             CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
 
+    def test_start_batch_ddl_batch_mode_active(self):
+        self._under_test._batch_mode = BatchMode.DDL
+
+        with self.assertRaises(ProgrammingError):
+            self._under_test.start_batch_ddl()
+
+    def test_start_batch_ddl_connection_read_only(self):
+        self._under_test.read_only = True
+
+        with self.assertRaises(ProgrammingError):
+            self._under_test.start_batch_ddl()
+
+    def test_start_batch_ddl_buffer_ddl_active(self):
+        self._under_test._buffer_ddl_statements = True
+
+        with self.assertRaises(ProgrammingError):
+            self._under_test.start_batch_ddl()
+
+    def test_start_batch_ddl(self):
+        self._under_test.autocommit = True
+        self._under_test.start_batch_ddl()
+
+        self.assertEqual(self._under_test._batch_mode, BatchMode.DDL)
+
+    def test_execute_batch_ddl_batch_mode_inactive(self):
+        self._under_test._batch_mode = BatchMode.NONE
+
+        with self.assertRaises(ProgrammingError):
+            self._under_test.execute_batch_ddl_statement(
+                ParsedStatement(StatementType.DDL, Statement("sql"))
+            )
+
+    @mock.patch(
+        "google.cloud.spanner_dbapi.batch_executor.BatchDdlExecutor", autospec=True
+    )
+    def test_execute_batch_ddl(self, mock_batch_ddl_executor):
+        self._under_test._batch_mode = BatchMode.DDL
+        self._under_test._batch_ddl_executor = mock_batch_ddl_executor
+
+        parsed_statement = ParsedStatement(StatementType.DDL, Statement("sql"))
+        self._under_test.execute_batch_ddl_statement(parsed_statement)
+
+        mock_batch_ddl_executor.execute_statement.assert_called_once_with(
+            parsed_statement
+        )
+
     def test_start_batch_dml_batch_mode_active(self):
         self._under_test._batch_mode = BatchMode.DML
         cursor = self._under_test.cursor()
@@ -356,7 +402,7 @@ class TestConnection(unittest.TestCase):
             )
 
     @mock.patch(
-        "google.cloud.spanner_dbapi.batch_dml_executor.BatchDmlExecutor", autospec=True
+        "google.cloud.spanner_dbapi.batch_executor.BatchDmlExecutor", autospec=True
     )
     def test_execute_batch_dml(self, mock_batch_dml_executor):
         self._under_test._batch_mode = BatchMode.DML
@@ -370,7 +416,7 @@ class TestConnection(unittest.TestCase):
         )
 
     @mock.patch(
-        "google.cloud.spanner_dbapi.batch_dml_executor.BatchDmlExecutor", autospec=True
+        "google.cloud.spanner_dbapi.batch_executor.BatchDmlExecutor", autospec=True
     )
     def test_run_batch_batch_mode_inactive(self, mock_batch_dml_executor):
         self._under_test._batch_mode = BatchMode.NONE
@@ -380,20 +426,33 @@ class TestConnection(unittest.TestCase):
             self._under_test.run_batch()
 
     @mock.patch(
-        "google.cloud.spanner_dbapi.batch_dml_executor.BatchDmlExecutor", autospec=True
+        "google.cloud.spanner_dbapi.batch_executor.BatchDmlExecutor", autospec=True
     )
-    def test_run_batch(self, mock_batch_dml_executor):
+    def test_run_dml_batch(self, mock_batch_dml_executor):
         self._under_test._batch_mode = BatchMode.DML
         self._under_test._batch_dml_executor = mock_batch_dml_executor
 
         self._under_test.run_batch()
 
-        mock_batch_dml_executor.run_batch_dml.assert_called_once_with()
+        mock_batch_dml_executor.run_batch.assert_called_once_with()
         self.assertEqual(self._under_test._batch_mode, BatchMode.NONE)
         self.assertEqual(self._under_test._batch_dml_executor, None)
 
     @mock.patch(
-        "google.cloud.spanner_dbapi.batch_dml_executor.BatchDmlExecutor", autospec=True
+        "google.cloud.spanner_dbapi.batch_executor.BatchDdlExecutor", autospec=True
+    )
+    def test_run_ddl_batch(self, mock_batch_ddl_executor):
+        self._under_test._batch_mode = BatchMode.DDL
+        self._under_test._batch_ddl_executor = mock_batch_ddl_executor
+
+        self._under_test.run_batch()
+
+        mock_batch_ddl_executor.run_batch.assert_called_once_with()
+        self.assertEqual(self._under_test._batch_mode, BatchMode.NONE)
+        self.assertEqual(self._under_test._batch_ddl_executor, None)
+
+    @mock.patch(
+        "google.cloud.spanner_dbapi.batch_executor.BatchDmlExecutor", autospec=True
     )
     def test_abort_batch_batch_mode_inactive(self, mock_batch_dml_executor):
         self._under_test._batch_mode = BatchMode.NONE
@@ -403,7 +462,7 @@ class TestConnection(unittest.TestCase):
             self._under_test.abort_batch()
 
     @mock.patch(
-        "google.cloud.spanner_dbapi.batch_dml_executor.BatchDmlExecutor", autospec=True
+        "google.cloud.spanner_dbapi.batch_executor.BatchDmlExecutor", autospec=True
     )
     def test_abort_dml_batch(self, mock_batch_dml_executor):
         self._under_test._batch_mode = BatchMode.DML

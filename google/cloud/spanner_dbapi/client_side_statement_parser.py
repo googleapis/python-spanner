@@ -30,6 +30,7 @@ RE_SHOW_COMMIT_TIMESTAMP = re.compile(
 RE_SHOW_READ_TIMESTAMP = re.compile(
     r"^\s*(SHOW)\s+(VARIABLE)\s+(READ_TIMESTAMP)", re.IGNORECASE
 )
+RE_START_BATCH_DDL = re.compile(r"^\s*(START)\s+(BATCH)\s+(DDL)", re.IGNORECASE)
 RE_START_BATCH_DML = re.compile(r"^\s*(START)\s+(BATCH)\s+(DML)", re.IGNORECASE)
 RE_RUN_BATCH = re.compile(r"^\s*(RUN)\s+(BATCH)", re.IGNORECASE)
 RE_ABORT_BATCH = re.compile(r"^\s*(ABORT)\s+(BATCH)", re.IGNORECASE)
@@ -62,6 +63,8 @@ def parse_stmt(query):
         client_side_statement_type = ClientSideStatementType.SHOW_COMMIT_TIMESTAMP
     elif RE_SHOW_READ_TIMESTAMP.match(query):
         client_side_statement_type = ClientSideStatementType.SHOW_READ_TIMESTAMP
+    elif RE_START_BATCH_DDL.match(query):
+        client_side_statement_type = ClientSideStatementType.START_BATCH_DDL
     elif RE_START_BATCH_DML.match(query):
         client_side_statement_type = ClientSideStatementType.START_BATCH_DML
     elif RE_BEGIN.match(query):

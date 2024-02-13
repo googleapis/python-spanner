@@ -15,8 +15,6 @@
 """Database cursor for Google Cloud Spanner DB API."""
 from collections import namedtuple
 
-import sqlparse
-
 from google.api_core.exceptions import Aborted
 from google.api_core.exceptions import AlreadyExists
 from google.api_core.exceptions import FailedPrecondition
@@ -25,7 +23,7 @@ from google.api_core.exceptions import InvalidArgument
 from google.api_core.exceptions import OutOfRange
 
 from google.cloud import spanner_v1 as spanner
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
+from google.cloud.spanner_dbapi.batch_executor import BatchMode
 from google.cloud.spanner_dbapi.exceptions import IntegrityError
 from google.cloud.spanner_dbapi.exceptions import InterfaceError
 from google.cloud.spanner_dbapi.exceptions import OperationalError
@@ -34,7 +32,7 @@ from google.cloud.spanner_dbapi.exceptions import ProgrammingError
 from google.cloud.spanner_dbapi import (
     _helpers,
     client_side_statement_executor,
-    batch_dml_executor,
+    batch_executor,
 )
 from google.cloud.spanner_dbapi._helpers import ColumnInfo
 from google.cloud.spanner_dbapi._helpers import CODE_TO_DISPLAY_SIZE
@@ -210,18 +208,8 @@ class Cursor(object):
         :raises: :class:`ValueError` in case not a DDL statement
                  present in the operation.
         """
-        statements = []
-        for ddl in sqlparse.split(sql):
-            if ddl:
-                ddl = ddl.rstrip(";")
-                if (
-                    parse_utils.classify_statement(ddl).statement_type
-                    != StatementType.DDL
-                ):
-                    raise ValueError("Only DDL statements may be batched.")
 
-                statements.append(ddl)
-
+        statements = parse_utils.parse_and_get_ddl_statements(sql)
         # Only queue DDL statements if they are all correctly classified.
         self.connection._ddl_statements.extend(statements)
 
@@ -261,6 +249,8 @@ class Cursor(object):
                         self._itr = self._result_set
                     else:
                         self._itr = PeekIterator(self._result_set)
+            elif self.connection._batch_mode == BatchMode.DDL:
+                self.connection.execute_batch_ddl_statement(self._parsed_statement)
             elif self.connection._batch_mode == BatchMode.DML:
                 self.connection.execute_batch_dml_statement(self._parsed_statement)
             elif self.connection.read_only or (
@@ -269,9 +259,18 @@ class Cursor(object):
             ):
                 self._handle_DQL(sql, args or None)
             elif self._parsed_statement.statement_type == StatementType.DDL:
-                self._batch_DDLs(sql)
-                if not self.connection._client_transaction_started:
-                    self.connection.run_prior_DDL_statements()
+                if not self.connection.buffer_ddl_statements:
+                    if not self.connection._client_transaction_started:
+                        self._batch_DDLs(sql)
+                        self.connection.run_prior_DDL_statements()
+                    else:
+                        raise ProgrammingError(
+                            "Cannot execute DDL statement when a transaction is already active"
+                        )
+                else:
+                    self._batch_DDLs(sql)
+                    if not self.connection._client_transaction_started:
+                        self.connection.run_prior_DDL_statements()
             else:
                 self._execute_in_rw_transaction()
 
@@ -296,9 +295,8 @@ class Cursor(object):
                 self.connection._spanner_transaction_started = False
 
     def _execute_in_rw_transaction(self):
-        # For every other operation, we've got to ensure that
-        # any prior DDL statements were run.
-        self.connection.run_prior_DDL_statements()
+        if self.connection.buffer_ddl_statements:
+            self.connection.run_prior_DDL_statements()
         statement = self._parsed_statement.statement
         if self.connection._client_transaction_started:
             while True:
@@ -347,9 +345,8 @@ class Cursor(object):
                     + ", with executemany() method is not allowed."
                 )
 
-            # For every operation, we've got to ensure that any prior DDL
-            # statements were run.
-            self.connection.run_prior_DDL_statements()
+            if self.connection.buffer_ddl_statements:
+                self.connection.run_prior_DDL_statements()
             if self._parsed_statement.statement_type in (
                 StatementType.INSERT,
                 StatementType.UPDATE,
@@ -360,7 +357,7 @@ class Cursor(object):
                         operation, params
                     )
                     statements.append(Statement(sql, params, get_param_types(params)))
-                many_result_set = batch_dml_executor.run_batch_dml(self, statements)
+                many_result_set = batch_executor.run_batch_dml(self, statements)
             else:
                 many_result_set = StreamedManyResultSets()
                 for params in seq_of_params:
@@ -527,7 +524,8 @@ class Cursor(object):
         # hence this method exists to circumvent that limit.
         if self.connection.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self.connection.run_prior_DDL_statements()
+        if self.connection.buffer_ddl_statements:
+            self.connection.run_prior_DDL_statements()
 
         with self.connection.database.snapshot() as snapshot:
             return list(snapshot.execute_sql(sql, params, param_types))

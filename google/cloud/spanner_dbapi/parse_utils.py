@@ -205,6 +205,17 @@ def classify_stmt(query):
     return STMT_UPDATING
 
 
+def parse_and_get_ddl_statements(sql):
+    statements = []
+    for ddl in sqlparse.split(sql):
+        if ddl:
+            ddl = ddl.rstrip(";")
+            if classify_statement(ddl).statement_type != StatementType.DDL:
+                raise ValueError("Only DDL statements may be batched.")
+            statements.append(ddl)
+    return statements
+
+
 def classify_statement(query, args=None):
     """Determine SQL query type.
 

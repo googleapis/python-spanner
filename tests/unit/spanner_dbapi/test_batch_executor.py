@@ -16,7 +16,7 @@ import unittest
 from unittest import mock
 
 from google.cloud.spanner_dbapi import ProgrammingError
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchDmlExecutor
+from google.cloud.spanner_dbapi.batch_executor import BatchDmlExecutor, BatchDdlExecutor
 from google.cloud.spanner_dbapi.parsed_statement import (
     ParsedStatement,
     Statement,
@@ -52,3 +52,28 @@ class TestBatchDmlExecutor(unittest.TestCase):
         )
 
         self.assertEqual(self._under_test._statements, [statement])
+
+
+class TestBatchDdlExecutor(unittest.TestCase):
+    @mock.patch("google.cloud.spanner_dbapi.connection.Connection")
+    def setUp(self, mock_connection):
+        self._under_test = BatchDdlExecutor(mock_connection)
+
+    def test_execute_statement_non_ddl_statement_type(self):
+        parsed_statement = ParsedStatement(StatementType.QUERY, Statement("sql"))
+
+        with self.assertRaises(ProgrammingError):
+            self._under_test.execute_statement(parsed_statement)
+
+    def test_execute_statement_ddl_statement_type(self):
+        sql = """CREATE TABLE Singers (
+                SingerId INT64 NOT NULL,
+                Name     STRING(1024),
+            ) PRIMARY KEY (SingerId)"""
+        statement = Statement(sql)
+
+        self._under_test.execute_statement(
+            ParsedStatement(StatementType.DDL, statement)
+        )
+
+        self.assertEqual(self._under_test._statements, [sql])
