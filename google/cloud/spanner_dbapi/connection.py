@@ -130,7 +130,7 @@ class Connection:
         """schema name for this database.
 
         :rtype: str
-        :returns: "" for GoogleSQL and "public" for PostgreSQL for default schema
+        :returns: schema name for this database.
         """
         return self._schema_name
 
@@ -610,6 +610,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
+    database_dialect=None,
     route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
@@ -646,6 +647,9 @@ def connect(
     :type client: Concrete subclass of
                   :class:`~google.cloud.spanner_v1.Client`.
     :param client: (Optional) Custom user provided Client Object
+
+    :type database_dialect: class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
+    :param database_dialect: (Optional) DatabaseDialect for the connection
 
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
@@ -684,7 +688,7 @@ def connect(
 
     instance = client.instance(instance_id)
     conn = Connection(
-        instance, instance.database(database_id, pool=pool) if database_id else None
+        instance, instance.database(database_id, pool=pool, database_dialect=database_dialect) if database_id else None
     )
     if pool is not None:
         conn._own_pool = False
