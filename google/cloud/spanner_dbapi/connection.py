@@ -18,6 +18,7 @@ import warnings
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_dbapi import partition_helper
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
 from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
@@ -116,7 +117,6 @@ class Connection:
         self._batch_mode = BatchMode.NONE
         self._batch_dml_executor: BatchDmlExecutor = None
         self._transaction_helper = TransactionRetryHelper(self)
-        self._schema_name = database.default_schema_name
 
     @property
     def spanner_client(self):
@@ -126,22 +126,16 @@ class Connection:
         return self._instance._client
 
     @property
-    def schema_name(self):
-        """schema name for this database.
+    def current_schema(self):
+        """schema name for this connection.
 
         :rtype: str
-        :returns: schema name for this database.
+        :returns: the current default schema of this connection. Currently, this
+         is always "" for GoogleSQL and "public" for PostgreSQL databases.
         """
-        return self._schema_name
-
-    @schema_name.setter
-    def schema_name(self, value):
-        """Updates the database schema name used in the connection.
-
-        :type value: str
-        :param value: database schema name used in the connection
-        """
-        self._schema_name = value
+        if self.database is None:
+            raise ValueError("database property not set on the connection")
+        return self.database.default_schema_name
 
     @property
     def autocommit(self):
@@ -610,7 +604,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
-    database_dialect=None,
+    database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
     route_to_leader_enabled=True,
 ):
     """Creates a connection to a Google Cloud Spanner database.
@@ -687,12 +681,10 @@ def connect(
             raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(
-        instance,
-        instance.database(database_id, pool=pool, database_dialect=database_dialect)
-        if database_id
-        else None,
-    )
+    database = None
+    if database_id:
+        database = instance.database(database_id, pool=pool, database_dialect=database_dialect)
+    conn = Connection(instance, database)
     if pool is not None:
         conn._own_pool = False
 
