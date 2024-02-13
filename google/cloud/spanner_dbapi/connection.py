@@ -116,7 +116,7 @@ class Connection:
         self._batch_mode = BatchMode.NONE
         self._batch_dml_executor: BatchDmlExecutor = None
         self._transaction_helper = TransactionRetryHelper(self)
-        self._schema_name = self.database.default_schema_name
+        self._schema_name = database.default_schema_name
 
     @property
     def spanner_client(self):
