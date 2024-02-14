@@ -20,7 +20,6 @@ import time
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
 
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_dbapi.connection import Connection, connect
 from google.cloud.spanner_dbapi.exceptions import (
     ProgrammingError,
@@ -58,7 +57,6 @@ def raw_database(shared_instance, database_operation_timeout, not_postgres):
         database_id,
         ddl_statements=DDL_STATEMENTS,
         pool=pool,
-        database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
         enable_interceptors_in_tests=True,
     )
     op = database.create()
