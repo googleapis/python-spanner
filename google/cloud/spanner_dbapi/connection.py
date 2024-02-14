@@ -118,6 +118,25 @@ class Connection:
         self._transaction_helper = TransactionRetryHelper(self)
 
     @property
+    def spanner_client(self):
+        """Client for interacting with Cloud Spanner API. This property exposes
+        the spanner client so that underlying methods can be accessed.
+        """
+        return self._instance._client
+
+    @property
+    def current_schema(self):
+        """schema name for this connection.
+
+        :rtype: str
+        :returns: the current default schema of this connection. Currently, this
+         is always "" for GoogleSQL and "public" for PostgreSQL databases.
+        """
+        if self.database is None:
+            raise ValueError("database property not set on the connection")
+        return self.database.default_schema_name
+
+    @property
     def autocommit(self):
         """Autocommit mode flag for this connection.
 
@@ -657,9 +676,10 @@ def connect(
             raise ValueError("project in url does not match client object project")
 
     instance = client.instance(instance_id)
-    conn = Connection(
-        instance, instance.database(database_id, pool=pool) if database_id else None
-    )
+    database = None
+    if database_id:
+        database = instance.database(database_id, pool=pool)
+    conn = Connection(instance, database)
     if pool is not None:
         conn._own_pool = False
 
