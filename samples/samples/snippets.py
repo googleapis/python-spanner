@@ -1407,9 +1407,11 @@ def log_commit_stats(instance_id, database_id):
 # [END spanner_get_commit_stats]
 
 
-# [START spanner_set_max_commit_delay]
 def set_max_commit_delay(instance_id, database_id):
     """Inserts sample data and sets a max commit delay."""
+    # [START spanner_set_max_commit_delay]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -1423,10 +1425,9 @@ def set_max_commit_delay(instance_id, database_id):
         print("{} record(s) inserted.".format(row_ct))
 
     database.run_in_transaction(
-        insert_singers, max_commit_delay=datetime.timedelta(milliseconds=100))
-
-
-# [END spanner_set_max_commit_delay]
+        insert_singers, max_commit_delay=datetime.timedelta(milliseconds=100)
+    )
+    # [END spanner_set_max_commit_delay]
 
 
 def update_data_with_dml(instance_id, database_id):
