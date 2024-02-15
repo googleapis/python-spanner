@@ -23,6 +23,7 @@ from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExe
 from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
 from google.cloud.spanner_dbapi.parsed_statement import (
     StatementType,
+    AutocommitDmlMode,
 )
 from google.cloud.spanner_dbapi.partition_helper import PartitionId
 from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
@@ -116,6 +117,7 @@ class Connection:
         self._batch_mode = BatchMode.NONE
         self._batch_dml_executor: BatchDmlExecutor = None
         self._transaction_helper = TransactionRetryHelper(self)
+        self._autocommit_dml_mode: AutocommitDmlMode = AutocommitDmlMode.TRANSACTIONAL
 
     @property
     def spanner_client(self):
@@ -154,6 +156,14 @@ class Connection:
         :returns: The related database object.
         """
         return self._database
+
+    @property
+    def autocommit_dml_mode(self):
+        """AutocommitDmlMode of this connection.
+
+        :rtype: :class:`~google.cloud.spanner_dbapi.parsed_statement.AutocommitDmlMode`
+        """
+        return self._autocommit_dml_mode
 
     @property
     @deprecated(
@@ -540,7 +550,8 @@ class Connection:
         return partition_ids
 
     @check_not_closed
-    def run_partition(self, encoded_partition_id):
+    def run_partition(self, parsed_statement: ParsedStatement):
+        encoded_partition_id = parsed_statement.client_side_statement_params[0]
         partition_id: PartitionId = partition_helper.decode_from_string(
             encoded_partition_id
         )
@@ -564,6 +575,24 @@ class Connection:
         return batch_snapshot.run_partitioned_query(
             partitioned_query, statement.params, statement.param_types
         )
+
+    @check_not_closed
+    def set_autocommit_dml_mode(
+        self,
+        parsed_statement: ParsedStatement,
+    ):
+        if self._client_transaction_started is True:
+            raise ProgrammingError(
+                "Cannot set autocommit DML mode while not in autocommit mode or while a transaction is active."
+            )
+        if self.read_only is True:
+            raise ProgrammingError(
+                "Cannot set autocommit DML mode for a read-only connection."
+            )
+        if self._batch_mode is not BatchMode.NONE:
+            raise ProgrammingError("Cannot set autocommit DML mode while in a batch.")
+        autocommit_dml_mode_str = parsed_statement.client_side_statement_params[0]
+        self._autocommit_dml_mode = AutocommitDmlMode[autocommit_dml_mode_str.upper()]
 
     def _partitioned_query_validation(self, partitioned_query, statement):
         if _get_statement_type(Statement(partitioned_query)) is not StatementType.QUERY:
