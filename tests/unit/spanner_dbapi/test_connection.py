@@ -466,8 +466,11 @@ class TestConnection(unittest.TestCase):
             ["PARTITIONED_NON_ATOMIC"],
         )
 
-        with self.assertRaises(ProgrammingError):
-            self._under_test.set_autocommit_dml_mode(parsed_statement)
+        self._under_test.set_autocommit_dml_mode(parsed_statement)
+        assert (
+            self._under_test.autocommit_dml_mode
+            == AutocommitDmlMode.PARTITIONED_NON_ATOMIC
+        )
 
     @mock.patch("google.cloud.spanner_v1.database.Database", autospec=True)
     def test_run_prior_DDL_statements(self, mock_database):
