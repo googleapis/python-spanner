@@ -50,6 +50,9 @@ class TypeCode(proto.Enum):
         FLOAT64 (3):
             Encoded as ``number``, or the strings ``"NaN"``,
             ``"Infinity"``, or ``"-Infinity"``.
+        FLOAT32 (15):
+            Encoded as ``number``, or the strings ``"NaN"``,
+            ``"Infinity"``, or ``"-Infinity"``.
         TIMESTAMP (4):
             Encoded as ``string`` in RFC 3339 timestamp format. The time
             zone must be present, and must be ``"Z"``.
@@ -94,11 +97,17 @@ class TypeCode(proto.Enum):
             -  Members of a JSON object are not guaranteed to have their
                order preserved.
             -  JSON array elements will have their order preserved.
+        PROTO (13):
+            Encoded as a base64-encoded ``string``, as described in RFC
+            4648, section 4.
+        ENUM (14):
+            Encoded as ``string``, in decimal format.
     """
     TYPE_CODE_UNSPECIFIED = 0
     BOOL = 1
     INT64 = 2
     FLOAT64 = 3
+    FLOAT32 = 15
     TIMESTAMP = 4
     DATE = 5
     STRING = 6
@@ -107,6 +116,8 @@ class TypeCode(proto.Enum):
     STRUCT = 9
     NUMERIC = 10
     JSON = 11
+    PROTO = 13
+    ENUM = 14
 
 
 class TypeAnnotationCode(proto.Enum):
@@ -179,6 +190,13 @@ class Type(proto.Message):
             typically is not needed to process the content of a value
             (it doesn't affect serialization) and clients can ignore it
             on the read path.
+        proto_type_fqn (str):
+            If [code][google.spanner.v1.Type.code] ==
+            [PROTO][google.spanner.v1.TypeCode.PROTO] or
+            [code][google.spanner.v1.Type.code] ==
+            [ENUM][google.spanner.v1.TypeCode.ENUM], then
+            ``proto_type_fqn`` is the fully qualified name of the proto
+            type representing the proto/enum definition.
     """
 
     code: "TypeCode" = proto.Field(
@@ -200,6 +218,10 @@ class Type(proto.Message):
         proto.ENUM,
         number=4,
         enum="TypeAnnotationCode",
+    )
+    proto_type_fqn: str = proto.Field(
+        proto.STRING,
+        number=5,
     )
 
 

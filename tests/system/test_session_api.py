@@ -90,6 +90,8 @@ POSTGRES_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:17] + (
     "jsonb_array",
 )
 
+QUERY_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[1:17:2]
+
 AllTypesRowData = collections.namedtuple("AllTypesRowData", LIVE_ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in LIVE_ALL_TYPES_COLUMNS])
 EmulatorAllTypesRowData = collections.namedtuple(
@@ -209,6 +211,17 @@ POSTGRES_ALL_TYPES_ROWDATA = (
     PostGresAllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     PostGresAllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
     PostGresAllTypesRowData(pkey=309, jsonb_array=[JSON_1, JSON_2, None]),
+)
+
+QUERY_ALL_TYPES_DATA = (
+    123,
+    False,
+    BYTES_1,
+    SOME_DATE,
+    1.4142136,
+    "VALUE",
+    SOME_TIME,
+    NUMERIC_1,
 )
 
 if _helpers.USE_EMULATOR:
@@ -473,6 +486,39 @@ def test_batch_insert_or_update_then_query(sessions_database):
         rows = list(snapshot.execute_sql(sd.SQL))
 
     sd._check_rows_data(rows)
+
+
+def test_batch_insert_then_read_wo_param_types(
+    sessions_database, database_dialect, not_emulator
+):
+    sd = _sample_data
+
+    with sessions_database.batch() as batch:
+        batch.delete(ALL_TYPES_TABLE, sd.ALL)
+        batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
+
+    with sessions_database.snapshot(multi_use=True) as snapshot:
+        for column_type, value in list(
+            zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)
+        ):
+            placeholder = (
+                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else "@value"
+            )
+            sql = (
+                "SELECT * FROM "
+                + ALL_TYPES_TABLE
+                + " WHERE "
+                + column_type
+                + " = "
+                + placeholder
+            )
+            param = (
+                {"p1": value}
+                if database_dialect == DatabaseDialect.POSTGRESQL
+                else {"value": value}
+            )
+            rows = list(snapshot.execute_sql(sql, params=param))
+            assert len(rows) == 1
 
 
 def test_batch_insert_w_commit_timestamp(sessions_database, not_postgres):
@@ -1930,8 +1976,8 @@ def _check_sql_results(
     database,
     sql,
     params,
-    param_types,
-    expected,
+    param_types=None,
+    expected=None,
     order=True,
     recurse_into_lists=True,
 ):
@@ -2516,6 +2562,24 @@ def test_partition_query(sessions_database, not_emulator):
         # Lists aren't hashable so the results need to be converted
         rows = [tuple(result) for result in p_results_iter]
         union.update(set(rows))
+
+    assert union == all_data_rows
+    batch_txn.close()
+
+
+def test_run_partition_query(sessions_database, not_emulator):
+    row_count = 40
+    sql = f"SELECT * FROM {_sample_data.TABLE}"
+    committed = _set_up_table(sessions_database, row_count)
+
+    # Paritioned query does not support ORDER BY
+    all_data_rows = set(_row_data(row_count))
+    union = set()
+    batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
+    p_results_iter = batch_txn.run_partitioned_query(sql, data_boost_enabled=True)
+    # Lists aren't hashable so the results need to be converted
+    rows = [tuple(result) for result in p_results_iter]
+    union.update(set(rows))
 
     assert union == all_data_rows
     batch_txn.close()
