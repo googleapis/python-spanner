@@ -18,9 +18,6 @@
 Spanner PostgreSql dialect.
 For more information, see the README.rst under /spanner.
 """
-import base64
-import decimal
-
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 

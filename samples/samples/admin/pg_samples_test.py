@@ -14,12 +14,11 @@
 
 import uuid
 
+import pg_samples as samples
+import pytest
 from google.api_core import exceptions
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
-import pytest
 from test_utils.retry import RetryErrors
-
-import pg_samples as samples
 
 CREATE_TABLE_SINGERS = """\
 CREATE TABLE Singers (

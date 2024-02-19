@@ -13,10 +13,9 @@
 # limitations under the License.
 import uuid
 
-from google.api_core.exceptions import DeadlineExceeded
+import backup_snippet
 import pytest
-
-import backup_sample
+from google.api_core.exceptions import DeadlineExceeded
 from test_utils.retry import RetryErrors
 
 
@@ -50,7 +49,7 @@ def test_create_backup(capsys, instance_id, sample_database):
         results = snapshot.execute_sql("SELECT CURRENT_TIMESTAMP()")
         version_time = list(results)[0][0]
 
-    backup_sample.create_backup(
+    backup_snippet.create_backup(
         instance_id,
         sample_database.database_id,
         BACKUP_ID,
@@ -67,7 +66,7 @@ def test_create_backup_with_encryption_key(
     sample_database,
     kms_key_name,
 ):
-    backup_sample.create_backup_with_encryption_key(
+    backup_snippet.create_backup_with_encryption_key(
         instance_id,
         sample_database.database_id,
         CMEK_BACKUP_ID,
@@ -81,8 +80,26 @@ def test_create_backup_with_encryption_key(
 # @pytest.mark.dependency(depends=["create_backup"])
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database(capsys, instance_id, sample_database):
-    backup_sample.restore_database(instance_id, RESTORE_DB_ID, BACKUP_ID)
+    backup_snippet.restore_database(instance_id, RESTORE_DB_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert (sample_database.database_id + " restored to ") in out
     assert (RESTORE_DB_ID + " from backup ") in out
     assert BACKUP_ID in out
+
+
+@pytest.mark.dependency(depends=["create_backup_with_encryption_key"])
+@RetryErrors(exception=DeadlineExceeded, max_tries=2)
+def test_restore_database_with_encryption_key(
+    capsys,
+    instance_id,
+    sample_database,
+    kms_key_name,
+):
+    backup_snippet.restore_database_with_encryption_key(
+        instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_name
+    )
+    out, _ = capsys.readouterr()
+    assert (sample_database.database_id + " restored to ") in out
+    assert (CMEK_RESTORE_DB_ID + " from backup ") in out
+    assert CMEK_BACKUP_ID in out
+    assert kms_key_name in out

@@ -17,8 +17,8 @@ using Cloud Spanner.
 For more information, see the README.rst under /spanner.
 """
 
-from datetime import datetime, timedelta
 import time
+from datetime import datetime, timedelta
 
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
@@ -85,8 +85,8 @@ def create_backup_with_encryption_key(
         backup=backup_pb.Backup(
             database=database.name,
             expire_time=expire_time,
-            encryption_config=encryption_config,
         ),
+        encryption_config=encryption_config,
     )
     operation = spanner_client.database_admin_api.create_backup(request)
 
@@ -146,7 +146,10 @@ def restore_database_with_encryption_key(
     instance_id, new_database_id, backup_id, kms_key_name
 ):
     """Restores a database from a backup using a Customer Managed Encryption Key (CMEK)."""
-    from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
+    from google.cloud.spanner_admin_database_v1 import (
+        RestoreDatabaseEncryptionConfig,
+        RestoreDatabaseRequest,
+    )
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -168,6 +171,20 @@ def restore_database_with_encryption_key(
     # Newly created database has restore information.
     new_database.reload()
     restore_info = new_database.restore_info
+
+    request = RestoreDatabaseRequest(
+        parent=instance.name,
+        database_id=new_database_id,
+        backup="{}/backups/{}".format(instance.name, backup_id),
+        encryption_config=encryption_config,
+    )
+    operation = spanner_client.database_admin_api.restore_database(request)
+
+    # Wait for restore operation to complete.
+    db = operation.result(1600)
+
+    # Newly created database has restore information.
+    restore_info = db.restore_info
     print(
         "Database {} restored to {} from backup {} with using encryption key {}.".format(
             restore_info.backup_info.source_database,
@@ -458,4 +475,4 @@ def copy_backup(instance_id, backup_id, source_backup_path):
     )
 
 
-# [END spanner_copy_backup
+# [END spanner_copy_backup]
