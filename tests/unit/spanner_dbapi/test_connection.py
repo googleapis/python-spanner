@@ -426,7 +426,7 @@ class TestConnection(unittest.TestCase):
         )
 
         with self.assertRaises(ProgrammingError):
-            self._under_test.set_autocommit_dml_mode(parsed_statement)
+            self._under_test._set_autocommit_dml_mode(parsed_statement)
 
     def test_set_autocommit_dml_mode_with_readonly(self):
         self._under_test.autocommit = True
@@ -439,7 +439,7 @@ class TestConnection(unittest.TestCase):
         )
 
         with self.assertRaises(ProgrammingError):
-            self._under_test.set_autocommit_dml_mode(parsed_statement)
+            self._under_test._set_autocommit_dml_mode(parsed_statement)
 
     def test_set_autocommit_dml_mode_with_batch_mode(self):
         self._under_test.autocommit = True
@@ -450,7 +450,7 @@ class TestConnection(unittest.TestCase):
             ["PARTITIONED_NON_ATOMIC"],
         )
 
-        self._under_test.set_autocommit_dml_mode(parsed_statement)
+        self._under_test._set_autocommit_dml_mode(parsed_statement)
 
         assert (
             self._under_test.autocommit_dml_mode
@@ -466,7 +466,7 @@ class TestConnection(unittest.TestCase):
             ["PARTITIONED_NON_ATOMIC"],
         )
 
-        self._under_test.set_autocommit_dml_mode(parsed_statement)
+        self._under_test._set_autocommit_dml_mode(parsed_statement)
         assert (
             self._under_test.autocommit_dml_mode
             == AutocommitDmlMode.PARTITIONED_NON_ATOMIC

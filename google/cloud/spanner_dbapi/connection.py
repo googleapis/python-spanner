@@ -550,8 +550,7 @@ class Connection:
         return partition_ids
 
     @check_not_closed
-    def run_partition(self, parsed_statement: ParsedStatement):
-        encoded_partition_id = parsed_statement.client_side_statement_params[0]
+    def run_partition(self, encoded_partition_id):
         partition_id: PartitionId = partition_helper.decode_from_string(
             encoded_partition_id
         )
@@ -577,9 +576,17 @@ class Connection:
         )
 
     @check_not_closed
-    def set_autocommit_dml_mode(
+    def _set_autocommit_dml_mode(
         self,
         parsed_statement: ParsedStatement,
+    ):
+        autocommit_dml_mode_str = parsed_statement.client_side_statement_params[0]
+        autocommit_dml_mode = AutocommitDmlMode[autocommit_dml_mode_str.upper()]
+        self.set_autocommit_dml_mode(autocommit_dml_mode)
+
+    def set_autocommit_dml_mode(
+        self,
+        autocommit_dml_mode,
     ):
         if self._client_transaction_started is True:
             raise ProgrammingError(
@@ -591,8 +598,7 @@ class Connection:
             )
         if self._batch_mode is not BatchMode.NONE:
             raise ProgrammingError("Cannot set autocommit DML mode while in a batch.")
-        autocommit_dml_mode_str = parsed_statement.client_side_statement_params[0]
-        self._autocommit_dml_mode = AutocommitDmlMode[autocommit_dml_mode_str.upper()]
+        self._autocommit_dml_mode = autocommit_dml_mode
 
     def _partitioned_query_validation(self, partitioned_query, statement):
         if _get_statement_type(Statement(partitioned_query)) is not StatementType.QUERY:
