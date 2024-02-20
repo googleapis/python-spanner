@@ -159,7 +159,16 @@ class Connection:
 
     @property
     def autocommit_dml_mode(self):
-        """AutocommitDmlMode of this connection.
+        """Modes for executing DML statements in autocommit mode for this connection.
+
+        The DML autocommit modes are:
+        1) TRANSACTIONAL - DML statements are executed as single read-write transaction.
+        After successful execution, the DML statement is guaranteed to have been applied
+        exactly once to the database.
+
+        2) PARTITIONED_NON_ATOMIC - DML statements are executed as partitioned DML transactions.
+        If an error occurs during the execution of the DML statement, it is possible that the
+        statement has been applied to some but not all of the rows specified in the statement.
 
         :rtype: :class:`~google.cloud.spanner_dbapi.parsed_statement.AutocommitDmlMode`
         """
@@ -588,6 +597,12 @@ class Connection:
         self,
         autocommit_dml_mode,
     ):
+        """
+        Sets the mode for executing DML statements in autocommit mode for this connection.
+        This mode is only used when the connection is in autocommit mode, and may only
+        be set while the transaction is in autocommit mode and not in a temporary transaction.
+        """
+
         if self._client_transaction_started is True:
             raise ProgrammingError(
                 "Cannot set autocommit DML mode while not in autocommit mode or while a transaction is active."
