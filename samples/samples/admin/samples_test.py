@@ -23,7 +23,6 @@ import uuid
 
 import pytest
 from google.api_core import exceptions
-from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from test_utils.retry import RetryErrors
 
