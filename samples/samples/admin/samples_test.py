@@ -23,6 +23,7 @@ import uuid
 
 import pytest
 from google.api_core import exceptions
+from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from test_utils.retry import RetryErrors
 
@@ -125,6 +126,14 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(samples.create_instance)(create_instance_id)
     instance = spanner_client.instance(create_instance_id)
     retry_429(instance.delete)()
+
+
+def test_create_database_explicit(sample_instance, create_database_id):
+    # Rather than re-use 'sample_database', we create a new database, to
+    # ensure that the 'create_database' snippet is tested.
+    samples.create_database(sample_instance.instance_id, create_database_id)
+    database = sample_instance.database(create_database_id)
+    database.drop()
 
 
 def test_create_database_with_default_leader(
@@ -248,3 +257,17 @@ def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
         "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"
         in out
     )
+
+
+@pytest.mark.dependency(name="add_column", depends=["create_table_with_datatypes"])
+def test_add_column(capsys, instance_id, sample_database):
+    samples.add_column(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added the MarketingBudget column." in out
+
+
+# @pytest.mark.dependency(name="add_timestamp_column", depends=["create_table_with_datatypes"])
+def test_add_timestamp_column(capsys, instance_id, sample_database):
+    samples.add_timestamp_column(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert 'Altered table "Albums" on database ' in out

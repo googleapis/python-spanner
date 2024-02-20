@@ -61,16 +61,55 @@ def create_instance(instance_id):
 # [END spanner_create_instance]
 
 
+# [START spanner_create_database]
+def create_database(instance_id, database_id):
+    """Creates a database and tables for sample data."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    request = spanner_database_admin.CreateDatabaseRequest(
+        parent=instance.name,
+        create_statement=f"CREATE DATABASE `{database_id}`",
+        extra_statements=[
+            """CREATE TABLE Singers (
+            SingerId     INT64 NOT NULL,
+            FirstName    STRING(1024),
+            LastName     STRING(1024),
+            SingerInfo   BYTES(MAX),
+            FullName   STRING(2048) AS (
+                ARRAY_TO_STRING([FirstName, LastName], " ")
+            ) STORED
+        ) PRIMARY KEY (SingerId)""",
+            """CREATE TABLE Albums (
+            SingerId     INT64 NOT NULL,
+            AlbumId      INT64 NOT NULL,
+            AlbumTitle   STRING(MAX)
+        ) PRIMARY KEY (SingerId, AlbumId),
+        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.create_database(request=request)
+
+    print("Waiting for operation to complete...")
+    database = operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Created database {} on instance {}".format(database.name, instance.name))
+
+
+# [END spanner_create_database]
+
+
 # [START spanner_create_database_with_default_leader]
 def create_database_with_default_leader(instance_id, database_id, default_leader):
     """Creates a database with tables with a default leader."""
     spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
     operation = spanner_client.database_admin_api.create_database(
         request=spanner_database_admin.CreateDatabaseRequest(
-            parent="projects/{}/instances/{}".format(
-                spanner_client.project, instance_id
-            ),
-            create_statement="CREATE DATABASE {}".format(database_id),
+            parent=instance.name,
+            create_statement=f"CREATE DATABASE `{database_id}`",
             extra_statements=[
                 """CREATE TABLE Singers (
                     SingerId     INT64 NOT NULL,
@@ -478,3 +517,58 @@ def drop_sequence(instance_id, database_id):
 
 
 # [END spanner_drop_sequence]
+
+
+# [START spanner_add_column]
+def add_column(instance_id, database_id):
+    """Adds a new column to the Albums table in the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "ALTER TABLE Albums ADD COLUMN MarketingBudget INT64",
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+    print("Added the MarketingBudget column.")
+
+
+# [END spanner_add_column]
+
+
+# [START spanner_add_timestamp_column]
+def add_timestamp_column(instance_id, database_id):
+    """Adds a new TIMESTAMP column to the Albums table in the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "ALTER TABLE Albums ADD COLUMN LastUpdateTime TIMESTAMP "
+            "OPTIONS(allow_commit_timestamp=true)"
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        'Altered table "Albums" on database {} on instance {}.'.format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_add_timestamp_column]
