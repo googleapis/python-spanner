@@ -183,7 +183,7 @@ def restore_database_with_encryption_key(
             restore_info.backup_info.source_database,
             new_database_id,
             restore_info.backup_info.backup,
-            new_database.encryption_config.kms_key_name,
+            restore_info.encryption_config.kms_key_name,
         )
     )
 
