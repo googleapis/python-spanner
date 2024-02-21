@@ -23,6 +23,7 @@ import uuid
 
 import pytest
 from google.api_core import exceptions
+from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from test_utils.retry import RetryErrors
 
@@ -127,12 +128,37 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(instance.delete)()
 
 
+def test_create_instance_with_processing_units(capsys, lci_instance_id):
+    processing_units = 500
+    retry_429(samples.create_instance_with_processing_units)(
+        lci_instance_id,
+        processing_units,
+    )
+    out, _ = capsys.readouterr()
+    assert lci_instance_id in out
+    assert "{} processing units".format(processing_units) in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(lci_instance_id)
+    retry_429(instance.delete)()
+
+
 def test_create_database_explicit(sample_instance, create_database_id):
     # Rather than re-use 'sample_database', we create a new database, to
     # ensure that the 'create_database' snippet is tested.
     samples.create_database(sample_instance.instance_id, create_database_id)
     database = sample_instance.database(create_database_id)
     database.drop()
+
+
+def test_create_database_with_encryption_config(
+    capsys, instance_id, cmek_database_id, kms_key_name
+):
+    samples.create_database_with_encryption_key(
+        instance_id, cmek_database_id, kms_key_name
+    )
+    out, _ = capsys.readouterr()
+    assert cmek_database_id in out
+    assert kms_key_name in out
 
 
 def test_create_database_with_default_leader(
@@ -265,8 +291,26 @@ def test_add_column(capsys, instance_id, sample_database):
     assert "Added the MarketingBudget column." in out
 
 
-# @pytest.mark.dependency(name="add_timestamp_column", depends=["create_table_with_datatypes"])
+@pytest.mark.dependency(
+    name="add_timestamp_column", depends=["create_table_with_datatypes"]
+)
 def test_add_timestamp_column(capsys, instance_id, sample_database):
     samples.add_timestamp_column(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert 'Altered table "Albums" on database ' in out
+
+
+@pytest.mark.dependency(name="add_index", depends=["create_table_with_datatypes"])
+def test_add_index(capsys, instance_id, sample_database):
+    samples.add_index(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added the AlbumsByAlbumTitle index" in out
+
+
+@pytest.mark.dependency(
+    name="add_storing_index", depends=["create_table_with_datatypes"]
+)
+def test_add_storing_index(capsys, instance_id, sample_database):
+    samples.add_storing_index(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added the AlbumsByAlbumTitle2 index." in out

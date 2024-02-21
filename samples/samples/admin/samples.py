@@ -61,6 +61,45 @@ def create_instance(instance_id):
 # [END spanner_create_instance]
 
 
+# [START spanner_create_instance_with_processing_units]
+def create_instance_with_processing_units(instance_id, processing_units):
+    """Creates an instance."""
+    spanner_client = spanner.Client()
+
+    config_name = "{}/instanceConfigs/regional-us-central1".format(
+        spanner_client.project_name
+    )
+
+    request = spanner_instance_admin.CreateInstanceRequest(
+        parent="projects/{}".format(spanner_client.project),
+        instance_id=instance_id,
+        instance=spanner_instance_admin.Instance(
+            config=config_name,
+            display_name="This is a display name.",
+            processing_units=processing_units,
+            labels={
+                "cloud_spanner_samples": "true",
+                "sample_name": "snippets-create_instance_with_processing_units",
+                "created": str(int(time.time())),
+            },
+        ),
+    )
+
+    operation = spanner_client.instance_admin_api.create_instance(request=request)
+
+    print("Waiting for operation to complete...")
+    instance = operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Created instance {} with {} processing units".format(
+            instance_id, instance.processing_units
+        )
+    )
+
+
+# [END spanner_create_instance_with_processing_units]
+
+
 # [START spanner_create_database]
 def create_database(instance_id, database_id):
     """Creates a database and tables for sample data."""
@@ -142,6 +181,49 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 
 
 # [END spanner_create_database_with_default_leader]
+
+
+# [START spanner_create_database_with_encryption_key]
+def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
+    """Creates a database with tables using a Customer Managed Encryption Key (CMEK)."""
+    from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    request = spanner_database_admin.CreateDatabaseRequest(
+        parent=instance.name,
+        create_statement=f"CREATE DATABASE `{database_id}`",
+        extra_statements=[
+            """CREATE TABLE Singers (
+            SingerId     INT64 NOT NULL,
+            FirstName    STRING(1024),
+            LastName     STRING(1024),
+            SingerInfo   BYTES(MAX)
+        ) PRIMARY KEY (SingerId)""",
+            """CREATE TABLE Albums (
+            SingerId     INT64 NOT NULL,
+            AlbumId      INT64 NOT NULL,
+            AlbumTitle   STRING(MAX)
+        ) PRIMARY KEY (SingerId, AlbumId),
+        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+        ],
+        encryption_config=EncryptionConfig(kms_key_name=kms_key_name),
+    )
+
+    operation = spanner_client.database_admin_api.create_database(request=request)
+
+    print("Waiting for operation to complete...")
+    database = operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Database {} created with encryption key {}".format(
+            database.name, database.encryption_config.kms_key_name
+        )
+    )
+
+
+# [END spanner_create_database_with_encryption_key]
 
 
 def add_and_drop_database_roles(instance_id, database_id):
@@ -572,3 +654,52 @@ def add_timestamp_column(instance_id, database_id):
 
 
 # [END spanner_add_timestamp_column]
+
+
+# [START spanner_create_index]
+def add_index(instance_id, database_id):
+    """Adds a simple index to the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=["CREATE INDEX AlbumsByAlbumTitle ON Albums(AlbumTitle)"],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Added the AlbumsByAlbumTitle index.")
+
+
+# [END spanner_create_index]
+
+
+# [START spanner_create_storing_index]
+def add_storing_index(instance_id, database_id):
+    """Adds an storing index to the example database."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            "CREATE INDEX AlbumsByAlbumTitle2 ON Albums(AlbumTitle)"
+            "STORING (MarketingBudget)"
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Added the AlbumsByAlbumTitle2 index.")
+
+
+# [END spanner_create_storing_index]
