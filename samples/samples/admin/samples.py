@@ -42,7 +42,7 @@ def create_instance(instance_id):
     )
 
     operation = spanner_client.instance_admin_api.create_instance(
-        parent="projects/{}".format(spanner_client.project_name),
+        parent=spanner_client.project_name,
         instance_id=instance_id,
         instance=spanner_instance_admin.Instance(
             config=config_name,
@@ -75,7 +75,7 @@ def create_instance_with_processing_units(instance_id, processing_units):
     )
 
     request = spanner_instance_admin.CreateInstanceRequest(
-        parent="projects/{}".format(spanner_client.project_name),
+        parent=spanner_client.project_name,
         instance_id=instance_id,
         instance=spanner_instance_admin.Instance(
             config=config_name,
