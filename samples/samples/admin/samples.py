@@ -22,6 +22,10 @@ For more information, see the README.rst under /spanner.
 import time
 
 from google.cloud import spanner
+from google.type import expr_pb2
+from google.iam.v1 import iam_policy_pb2
+from google.iam.v1 import options_pb2
+from google.iam.v1 import policy_pb2
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
@@ -38,7 +42,7 @@ def create_instance(instance_id):
     )
 
     operation = spanner_client.instance_admin_api.create_instance(
-        parent="projects/{}".format(spanner_client.project),
+        parent="projects/{}".format(spanner_client.project_name),
         instance_id=instance_id,
         instance=spanner_instance_admin.Instance(
             config=config_name,
@@ -71,7 +75,7 @@ def create_instance_with_processing_units(instance_id, processing_units):
     )
 
     request = spanner_instance_admin.CreateInstanceRequest(
-        parent="projects/{}".format(spanner_client.project),
+        parent="projects/{}".format(spanner_client.project_name),
         instance_id=instance_id,
         instance=spanner_instance_admin.Instance(
             config=config_name,
@@ -363,6 +367,44 @@ def add_numeric_column(instance_id, database_id):
 
 
 # [END spanner_add_numeric_column]
+
+
+# [START spanner_create_table_with_timestamp_column]
+def create_table_with_timestamp(instance_id, database_id):
+    """Creates a table with a COMMIT_TIMESTAMP column."""
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database.name,
+        statements=[
+            """CREATE TABLE Performances (
+            SingerId     INT64 NOT NULL,
+            VenueId      INT64 NOT NULL,
+            EventDate    Date,
+            Revenue      INT64,
+            LastUpdateTime TIMESTAMP NOT NULL
+            OPTIONS(allow_commit_timestamp=true)
+        ) PRIMARY KEY (SingerId, VenueId, EventDate),
+          INTERLEAVE IN PARENT Singers ON DELETE CASCADE"""
+        ],
+    )
+
+    operation = spanner_client.database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Created Performances table on database {} on instance {}".format(
+            database_id, instance_id
+        )
+    )
+
+
+# [END spanner_create_table_with_timestamp_column]
 
 
 # [START spanner_create_table_with_foreign_key_delete_cascade]
@@ -703,3 +745,57 @@ def add_storing_index(instance_id, database_id):
 
 
 # [END spanner_create_storing_index]
+
+
+def enable_fine_grained_access(
+    instance_id,
+    database_id,
+    iam_member="user:alice@example.com",
+    database_role="new_parent",
+    title="condition title",
+):
+    """Showcases how to enable fine grained access control."""
+    # [START spanner_enable_fine_grained_access]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    # iam_member = "user:alice@example.com"
+    # database_role = "new_parent"
+    # title = "condition title"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # The policy in the response from getDatabaseIAMPolicy might use the policy version
+    # that you specified, or it might use a lower policy version. For example, if you
+    # specify version 3, but the policy has no conditional role bindings, the response
+    # uses version 1. Valid values are 0, 1, and 3.
+    request = iam_policy_pb2.GetIamPolicyRequest(
+        resource=database.name,
+        options=options_pb2.GetPolicyOptions(requested_policy_version=3),
+    )
+    policy = spanner_client.database_admin_api.get_iam_policy(request=request)
+    if policy.version < 3:
+        policy.version = 3
+
+    new_binding = policy_pb2.Binding(
+        role="roles/spanner.fineGrainedAccessUser",
+        members=[iam_member],
+        condition=expr_pb2.Expr(
+            title=title,
+            expression=f'resource.name.endsWith("/databaseRoles/{database_role}")',
+        ),
+    )
+
+    policy.version = 3
+    policy.bindings.append(new_binding)
+    set_request = iam_policy_pb2.SetIamPolicyRequest(
+        resource=database.name,
+        policy=policy,
+    )
+    spanner_client.database_admin_api.set_iam_policy(set_request)
+
+    new_policy = spanner_client.database_admin_api.get_iam_policy(request=request)
+    print(
+        f"Enabled fine-grained access in IAM. New policy has version {new_policy.version}"
+    )
+    # [END spanner_enable_fine_grained_access]

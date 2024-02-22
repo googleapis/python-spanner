@@ -177,7 +177,9 @@ def test_create_database_with_default_leader(
     assert default_leader in out
 
 
-@pytest.mark.dependency(name="add_and_drop_database_roles")
+@pytest.mark.dependency(
+    name="add_and_drop_database_roles", depends=["create_table_with_datatypes"]
+)
 def test_add_and_drop_database_roles(capsys, instance_id, sample_database):
     samples.add_and_drop_database_roles(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
@@ -190,6 +192,13 @@ def test_create_table_with_datatypes(capsys, instance_id, sample_database):
     samples.create_table_with_datatypes(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Created Venues table on database" in out
+
+
+@pytest.mark.dependency(name="create_table_with_timestamp")
+def test_create_table_with_timestamp(capsys, instance_id, sample_database):
+    samples.create_table_with_timestamp(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Created Performances table on database" in out
 
 
 @pytest.mark.dependency(
@@ -251,6 +260,7 @@ def test_drop_foreign_key_contraint_delete_cascade(
     assert "Altered ShoppingCarts table to drop FKShoppingCartsCustomerName" in out
 
 
+@pytest.mark.dependency(name="create_sequence")
 def test_create_sequence(capsys, instance_id, bit_reverse_sequence_database):
     samples.create_sequence(instance_id, bit_reverse_sequence_database.database_id)
     out, _ = capsys.readouterr()
