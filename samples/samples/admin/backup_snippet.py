@@ -161,9 +161,6 @@ def restore_database_with_encryption_key(
         "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
         "kms_key_name": kms_key_name,
     }
-    new_database = instance.database(
-        new_database_id, encryption_config=encryption_config
-    )
 
     request = RestoreDatabaseRequest(
         parent=instance.name,
@@ -183,7 +180,7 @@ def restore_database_with_encryption_key(
             restore_info.backup_info.source_database,
             new_database_id,
             restore_info.backup_info.backup,
-            restore_info.encryption_config.kms_key_name,
+            db.encryption_config.kms_key_name,
         )
     )
 
