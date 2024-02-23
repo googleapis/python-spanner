@@ -104,6 +104,15 @@ def default_leader():
     return "us-east4"
 
 
+@pytest.mark.dependency(name="create_database")
+def test_create_database_explicit(sample_instance, create_database_id):
+    # Rather than re-use 'sample_database', we create a new database, to
+    # ensure that the 'create_database' snippet is tested.
+    samples.create_database(sample_instance.instance_id, create_database_id)
+    database = sample_instance.database(create_database_id)
+    database.drop()
+
+
 @pytest.mark.dependency(name="create_table_with_datatypes")
 def test_create_table_with_datatypes(capsys, instance_id, sample_database):
     samples.create_table_with_datatypes(instance_id, sample_database.database_id)
@@ -111,9 +120,59 @@ def test_create_table_with_datatypes(capsys, instance_id, sample_database):
     assert "Created Venues table on database" in out
 
 
-@pytest.mark.dependency(name="add_jsonb_column", depends=["insert_datatypes_data"])
+@pytest.mark.dependency(name="add_column", depends=["create_database"])
+def test_add_column(capsys, instance_id, sample_database):
+    samples.add_column(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added the MarketingBudget column." in out
+
+
+@pytest.mark.dependency(name="add_storing_index", depends=["create_database"])
+def test_add_storing_index(capsys, instance_id, sample_database):
+    samples.add_storing_index(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added the AlbumsByAlbumTitle2 index." in out
+
+
+@pytest.mark.dependency(
+    name="add_jsonb_column", depends=["create_table_with_datatypes"]
+)
 def test_add_jsonb_column(capsys, instance_id, sample_database):
     samples.add_jsonb_column(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Waiting for operation to complete..." in out
     assert 'Altered table "Venues" on database ' in out
+
+
+@pytest.mark.dependency(name="create_sequence")
+def test_create_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.create_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Created Seq sequence and Customers table, where the key column CustomerId uses the sequence as a default value on database"
+        in out
+    )
+    assert "Number of customer records inserted is 3" in out
+    assert "Inserted customer record with Customer Id:" in out
+
+
+@pytest.mark.dependency(name="alter_sequence", depends=["create_sequence"])
+def test_alter_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.alter_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Altered Seq sequence to skip an inclusive range between 1000 and 5000000 on database"
+        in out
+    )
+    assert "Number of customer records inserted is 3" in out
+    assert "Inserted customer record with Customer Id:" in out
+
+
+@pytest.mark.dependency(depends=["alter_sequence"])
+def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
+    samples.drop_sequence(instance_id, bit_reverse_sequence_database.database_id)
+    out, _ = capsys.readouterr()
+    assert (
+        "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"
+        in out
+    )

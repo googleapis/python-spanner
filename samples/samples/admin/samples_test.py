@@ -161,6 +161,7 @@ def test_create_database_with_encryption_config(
     assert kms_key_name in out
 
 
+@pytest.mark.dependency(name="create_database_with_default_leader")
 def test_create_database_with_default_leader(
     capsys,
     multi_region_instance,
@@ -175,6 +176,34 @@ def test_create_database_with_default_leader(
     out, _ = capsys.readouterr()
     assert default_leader_database_id in out
     assert default_leader in out
+
+
+@pytest.mark.dependency(depends=["create_database_with_default_leader"])
+def test_update_database_with_default_leader(
+    capsys,
+    multi_region_instance,
+    multi_region_instance_id,
+    default_leader_database_id,
+    default_leader,
+):
+    retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
+    retry_429(samples.update_database_with_default_leader)(
+        multi_region_instance_id, default_leader_database_id, default_leader
+    )
+    out, _ = capsys.readouterr()
+    assert default_leader_database_id in out
+    assert default_leader in out
+
+
+def test_update_database(capsys, instance_id, sample_database):
+    samples.update_database(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Updated database {}.".format(sample_database.name) in out
+
+    # Cleanup
+    sample_database.enable_drop_protection = False
+    op = sample_database.update(["enable_drop_protection"])
+    op.result()
 
 
 @pytest.mark.dependency(
