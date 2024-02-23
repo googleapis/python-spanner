@@ -235,12 +235,10 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
     )
     operation = spanner_client.database_admin_api.update_database_ddl(request)
 
-    db = operation.result(OPERATION_TIMEOUT_SECONDS)
+    operation.result(OPERATION_TIMEOUT_SECONDS)
 
     print(
-        "Database {} updated with default leader {}".format(
-            db.name, db.default_leader
-        )
+        "Database {} updated with default leader {}".format(database_id, default_leader)
     )
 
 
