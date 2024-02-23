@@ -161,6 +161,7 @@ def test_delete_backup(capsys, instance_id):
     assert BACKUP_ID in out
     backup_snippet.delete_backup(instance_id, COPY_BACKUP_ID)
     out, _ = capsys.readouterr()
+    assert "has been deleted." in out
     assert COPY_BACKUP_ID in out
 
 

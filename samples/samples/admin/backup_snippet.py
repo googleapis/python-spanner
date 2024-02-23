@@ -23,13 +23,14 @@ from datetime import datetime, timedelta
 from google.api_core import protobuf_helpers
 from google.cloud import spanner
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
-from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
 
 # [START spanner_create_backup]
 def create_backup(instance_id, database_id, backup_id, version_time):
     """Creates a backup for a database."""
+
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -70,8 +71,10 @@ def create_backup_with_encryption_key(
     instance_id, database_id, backup_id, kms_key_name
 ):
     """Creates a backup for a database using a Customer Managed Encryption Key (CMEK)."""
-    from google.cloud.spanner_admin_database_v1 import \
-        CreateBackupEncryptionConfig
+
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
+    from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -151,7 +154,9 @@ def restore_database_with_encryption_key(
 ):
     """Restores a database from a backup using a Customer Managed Encryption Key (CMEK)."""
     from google.cloud.spanner_admin_database_v1 import (
-        RestoreDatabaseEncryptionConfig, RestoreDatabaseRequest)
+        RestoreDatabaseEncryptionConfig,
+        RestoreDatabaseRequest,
+    )
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -190,6 +195,8 @@ def restore_database_with_encryption_key(
 
 # [START spanner_cancel_backup_create]
 def cancel_backup(instance_id, database_id, backup_id):
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -238,6 +245,8 @@ def cancel_backup(instance_id, database_id, backup_id):
 
 # [START spanner_list_backup_operations]
 def list_backup_operations(instance_id, database_id, backup_id):
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -288,6 +297,8 @@ def list_backup_operations(instance_id, database_id, backup_id):
 
 # [START spanner_list_database_operations]
 def list_database_operations(instance_id):
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -316,6 +327,8 @@ def list_database_operations(instance_id):
 
 # [START spanner_list_backups]
 def list_backups(instance_id, database_id, backup_id):
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -402,6 +415,8 @@ def list_backups(instance_id, database_id, backup_id):
 
 # [START spanner_delete_backup]
 def delete_backup(instance_id, backup_id):
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     backup = spanner_client.database_admin_api.get_backup(
@@ -432,7 +447,6 @@ def delete_backup(instance_id, backup_id):
     except NotFound:
         print("Backup {} has been deleted.".format(backup.name))
         return
-    assert True is False
 
 
 # [END spanner_delete_backup]
@@ -440,6 +454,8 @@ def delete_backup(instance_id, backup_id):
 
 # [START spanner_update_backup]
 def update_backup(instance_id, backup_id):
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
@@ -474,6 +490,9 @@ def create_database_with_version_retention_period(
     instance_id, database_id, retention_period
 ):
     """Creates a database with a version retention period."""
+
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     ddl_statements = [
@@ -520,6 +539,9 @@ def create_database_with_version_retention_period(
 # [START spanner_copy_backup]
 def copy_backup(instance_id, backup_id, source_backup_path):
     """Copies a backup."""
+
+    from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
