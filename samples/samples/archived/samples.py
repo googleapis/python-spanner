@@ -24,7 +24,6 @@ import time
 
 from google.cloud import spanner
 from google.iam.v1 import policy_pb2
-from google.protobuf import field_mask_pb2  # type: ignore
 from google.type import expr_pb2
 
 OPERATION_TIMEOUT_SECONDS = 240
