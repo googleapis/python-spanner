@@ -328,51 +328,6 @@ def list_database_operations(instance_id):
 
 
 # [END spanner_list_database_operations]
-# [START spanner_postgresql_jsonb_add_column]
-def add_jsonb_column(instance_id, database_id):
-    """
-    Alters Venues tables in the database adding a JSONB column.
-    You can create the table by running the `create_table_with_datatypes`
-    sample or by running this DDL statement against your database:
-    CREATE TABLE Venues (
-      VenueId         BIGINT NOT NULL,
-      VenueName       character varying(100),
-      VenueInfo       BYTEA,
-      Capacity        BIGINT,
-      OutdoorVenue    BOOL,
-      PopularityScore FLOAT8,
-      Revenue         NUMERIC,
-      LastUpdateTime  SPANNER.COMMIT_TIMESTAMP NOT NULL,
-      PRIMARY KEY (VenueId))
-    """
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
-
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
-
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
-
-    request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
-        statements=["ALTER TABLE Venues ADD COLUMN VenueDetails JSONB"],
-    )
-
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
-
-    print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    print(
-        'Altered table "Venues" on database {} on instance {}.'.format(
-            database_id, instance_id
-        )
-    )
-
-
-# [END spanner_postgresql_jsonb_add_column]
 
 
 # [START spanner_list_backups]

@@ -20,12 +20,6 @@ Spanner.
 For more information, see the README.rst under /spanner.
 """
 
-import argparse
-import base64
-import datetime
-import decimal
-import json
-import logging
 import time
 
 from google.cloud import spanner
