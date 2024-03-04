@@ -35,14 +35,13 @@ def create_backup(instance_id, database_id, backup_id, version_time):
         backup as backup_pb
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup
     expire_time = datetime.utcnow() + timedelta(days=14)
 
     request = backup_pb.CreateBackupRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
         backup=backup_pb.Backup(
             database=database_admin_api.database_path(
@@ -83,7 +82,6 @@ def create_backup_with_encryption_key(
         backup as backup_pb
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup
@@ -93,7 +91,7 @@ def create_backup_with_encryption_key(
         "kms_key_name": kms_key_name,
     }
     request = backup_pb.CreateBackupRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
         backup=backup_pb.Backup(
             database=database_admin_api.database_path(
@@ -211,14 +209,13 @@ def cancel_backup(instance_id, database_id, backup_id):
         backup as backup_pb
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
     database_admin_api = spanner_client.database_admin_api
 
     expire_time = datetime.utcnow() + timedelta(days=30)
 
     # Create a backup.
     request = backup_pb.CreateBackupRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
         backup=backup_pb.Backup(
             database=database_admin_api.database_path(
@@ -241,7 +238,7 @@ def cancel_backup(instance_id, database_id, backup_id):
         database_admin_api.get_backup(
             backup_pb.GetBackupRequest(
                 name="{}/backups/{}".format(
-                    instance_admin_api.instance_path(
+                    database_admin_api.instance_path(
                         spanner_client.project, instance_id
                     ),
                     backup_id,
@@ -255,7 +252,7 @@ def cancel_backup(instance_id, database_id, backup_id):
     database_admin_api.delete_backup(
         backup_pb.DeleteBackupRequest(
             name="{}/backups/{}".format(
-                instance_admin_api.instance_path(spanner_client.project, instance_id),
+                database_admin_api.instance_path(spanner_client.project, instance_id),
                 backup_id,
             )
         )
