@@ -136,9 +136,17 @@ def get_instance_config(instance_config):
 # [START spanner_list_instance_configs]
 def list_instance_config():
     """Lists the available instance configurations."""
+    from google.cloud.spanner_admin_instance_v1.types import \
+        spanner_instance_admin
+
     spanner_client = spanner.Client()
-    configs = spanner_client.list_instance_configs()
-    for config in configs:
+
+    request = spanner_instance_admin.ListInstanceConfigsRequest(
+        parent=spanner_client.project_name
+    )
+    for config in spanner_client.instance_admin_api.list_instance_configs(
+        request=request
+    ):
         print(
             "Available leader options for instance config {}: {}".format(
                 config.name, config.leader_options
@@ -152,11 +160,15 @@ def list_instance_config():
 # [START spanner_list_databases]
 def list_databases(instance_id):
     """Lists databases and their leader options."""
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
 
-    databases = list(instance.list_databases())
-    for database in databases:
+    request = spanner_database_admin.ListDatabasesRequest(parent=instance.name)
+
+    for database in spanner_client.database_admin_api.list_databases(request=request):
         print(
             "Database {} has default leader {}".format(
                 database.name, database.default_leader
@@ -2557,13 +2569,17 @@ def list_database_roles(instance_id, database_id):
     # [START spanner_list_database_roles]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
+    request = spanner_database_admin.ListDatabaseRolesRequest(parent=database.name)
     # List database roles.
     print("Database Roles are:")
-    for role in database.list_database_roles():
+    for role in spanner_client.database_admin_api.list_database_roles(request):
         print(role.name.split("/")[-1])
     # [END spanner_list_database_roles]
 

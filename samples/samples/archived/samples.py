@@ -726,6 +726,56 @@ def enable_fine_grained_access(
     # [END spanner_enable_fine_grained_access]
 
 
+def list_database_roles(instance_id, database_id):
+    """Showcases how to list Database Roles."""
+    # [START spanner_list_database_roles]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    # List database roles.
+    print("Database Roles are:")
+    for role in database.list_database_roles():
+        print(role.name.split("/")[-1])
+    # [END spanner_list_database_roles]
+
+
+# [START spanner_list_databases]
+def list_databases(instance_id):
+    """Lists databases and their leader options."""
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+
+    databases = list(instance.list_databases())
+    for database in databases:
+        print(
+            "Database {} has default leader {}".format(
+                database.name, database.default_leader
+            )
+        )
+
+
+# [END spanner_list_databases]
+
+
+# [START spanner_list_instance_configs]
+def list_instance_config():
+    """Lists the available instance configurations."""
+    spanner_client = spanner.Client()
+    configs = spanner_client.list_instance_configs()
+    for config in configs:
+        print(
+            "Available leader options for instance config {}: {}".format(
+                config.name, config.leader_options
+            )
+        )
+
+
+# [END spanner_list_instance_configs]
+
+
 # [START spanner_update_database]
 def update_database(instance_id, database_id):
     """Updates the drop protection setting for a database."""
