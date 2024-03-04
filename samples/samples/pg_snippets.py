@@ -73,15 +73,15 @@ def create_database(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f'CREATE DATABASE "{database_id}"',
         database_dialect=DatabaseDialect.POSTGRESQL,
     )
 
-    operation = spanner_client.database_admin_api.create_database(request=request)
+    operation = database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)

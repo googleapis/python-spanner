@@ -164,13 +164,13 @@ def list_databases(instance_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.ListDatabasesRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id)
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id)
     )
 
-    for database in spanner_client.database_admin_api.list_databases(request=request):
+    for database in database_admin_api.list_databases(request=request):
         print(
             "Database {} has default leader {}".format(
                 database.name, database.default_leader
@@ -188,10 +188,10 @@ def create_database(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f"CREATE DATABASE `{database_id}`",
         extra_statements=[
             """CREATE TABLE Singers (
@@ -212,7 +212,7 @@ def create_database(instance_id, database_id):
         ],
     )
 
-    operation = spanner_client.database_admin_api.create_database(request=request)
+    operation = database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -220,7 +220,7 @@ def create_database(instance_id, database_id):
     print(
         "Created database {} on instance {}".format(
             database.name,
-            instance_admin_api.instance_path(spanner_client.project, instance_id),
+            database_admin_api.instance_path(spanner_client.project, instance_id),
         )
     )
 
@@ -235,22 +235,21 @@ def update_database(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseRequest(
         database=spanner_database_admin.Database(
-            name="{}/databases/{}".format(
-                instance_admin_api.instance_path(spanner_client.project, instance_id),
-                database_id,
+            name=database_admin_api.database_path(
+                spanner_client.project, instance_id, database_id
             ),
             enable_drop_protection=True,
         ),
         update_mask={"paths": ["enable_drop_protection"]},
     )
-    operation = spanner_client.database_admin_api.update_database(request=request)
+    operation = database_admin_api.update_database(request=request)
     print(
         "Waiting for update operation for {}/databases/{} to complete...".format(
-            instance_admin_api.instance_path(spanner_client.project, instance_id),
+            database_admin_api.instance_path(spanner_client.project, instance_id),
             database_id,
         )
     )
@@ -258,7 +257,7 @@ def update_database(instance_id, database_id):
 
     print(
         "Updated database {}/databases/{}.".format(
-            instance_admin_api.instance_path(spanner_client.project, instance_id),
+            database_admin_api.instance_path(spanner_client.project, instance_id),
             database_id,
         )
     )
@@ -275,10 +274,10 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f"CREATE DATABASE `{database_id}`",
         extra_statements=[
             """CREATE TABLE Singers (
@@ -297,7 +296,7 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
         encryption_config=EncryptionConfig(kms_key_name=kms_key_name),
     )
 
-    operation = spanner_client.database_admin_api.create_database(request=request)
+    operation = database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -319,10 +318,10 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance_admin_api = spanner_client.instance_admin_api
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f"CREATE DATABASE `{database_id}`",
         extra_statements=[
             """CREATE TABLE Singers (
@@ -341,7 +340,7 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
             " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader),
         ],
     )
-    operation = spanner_client.database_admin_api.create_database(request=request)
+    operation = database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2609,7 +2608,7 @@ def list_database_roles(instance_id, database_id):
     )
     # List database roles.
     print("Database Roles are:")
-    for role in spanner_client.database_admin_api.list_database_roles(request):
+    for role in database_admin_api.list_database_roles(request):
         print(role.name.split("/")[-1])
     # [END spanner_list_database_roles]
 
