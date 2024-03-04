@@ -164,9 +164,11 @@ def list_databases(instance_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    instance_admin_api = spanner_client.instance_admin_api
 
-    request = spanner_database_admin.ListDatabasesRequest(parent=instance.name)
+    request = spanner_database_admin.ListDatabasesRequest(
+        parent=instance_admin_api.instance_path(spanner_client.project, instance_id)
+    )
 
     for database in spanner_client.database_admin_api.list_databases(request=request):
         print(
@@ -186,10 +188,10 @@ def create_database(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    instance_admin_api = spanner_client.instance_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance.name,
+        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f"CREATE DATABASE `{database_id}`",
         extra_statements=[
             """CREATE TABLE Singers (
@@ -215,7 +217,12 @@ def create_database(instance_id, database_id):
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Created database {} on instance {}".format(database.name, instance.name))
+    print(
+        "Created database {} on instance {}".format(
+            database.name,
+            instance_admin_api.instance_path(spanner_client.project, instance_id),
+        )
+    )
 
 
 # [END spanner_create_database]
@@ -228,11 +235,14 @@ def update_database(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    instance_admin_api = spanner_client.instance_admin_api
 
     request = spanner_database_admin.UpdateDatabaseRequest(
         database=spanner_database_admin.Database(
-            name="{}/databases/{}".format(instance.name, database_id),
+            name="{}/databases/{}".format(
+                instance_admin_api.instance_path(spanner_client.project, instance_id),
+                database_id,
+            ),
             enable_drop_protection=True,
         ),
         update_mask={"paths": ["enable_drop_protection"]},
@@ -240,12 +250,18 @@ def update_database(instance_id, database_id):
     operation = spanner_client.database_admin_api.update_database(request=request)
     print(
         "Waiting for update operation for {}/databases/{} to complete...".format(
-            instance.name, database_id
+            instance_admin_api.instance_path(spanner_client.project, instance_id),
+            database_id,
         )
     )
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
-    print("Updated database {}/databases/{}.".format(instance.name, database_id))
+    print(
+        "Updated database {}/databases/{}.".format(
+            instance_admin_api.instance_path(spanner_client.project, instance_id),
+            database_id,
+        )
+    )
 
 
 # [END spanner_update_database]
@@ -259,10 +275,10 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    instance_admin_api = spanner_client.instance_admin_api
 
     request = spanner_database_admin.CreateDatabaseRequest(
-        parent=instance.name,
+        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
         create_statement=f"CREATE DATABASE `{database_id}`",
         extra_statements=[
             """CREATE TABLE Singers (
@@ -303,32 +319,29 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    instance_admin_api = spanner_client.instance_admin_api
 
-    operation = spanner_client.database_admin_api.create_database(
-        request=spanner_database_admin.CreateDatabaseRequest(
-            parent=instance.name,
-            create_statement=f"CREATE DATABASE `{database_id}`",
-            extra_statements=[
-                """CREATE TABLE Singers (
-                    SingerId     INT64 NOT NULL,
-                    FirstName    STRING(1024),
-                    LastName     STRING(1024),
-                    SingerInfo   BYTES(MAX)
-                ) PRIMARY KEY (SingerId)""",
-                """CREATE TABLE Albums (
-                    SingerId     INT64 NOT NULL,
-                    AlbumId      INT64 NOT NULL,
-                    AlbumTitle   STRING(MAX)
-                ) PRIMARY KEY (SingerId, AlbumId),
-                INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
-                "ALTER DATABASE {}"
-                " SET OPTIONS (default_leader = '{}')".format(
-                    database_id, default_leader
-                ),
-            ],
-        )
+    request = spanner_database_admin.CreateDatabaseRequest(
+        parent=instance_admin_api.instance_path(spanner_client.project, instance_id),
+        create_statement=f"CREATE DATABASE `{database_id}`",
+        extra_statements=[
+            """CREATE TABLE Singers (
+                SingerId     INT64 NOT NULL,
+                FirstName    STRING(1024),
+                LastName     STRING(1024),
+                SingerInfo   BYTES(MAX)
+            ) PRIMARY KEY (SingerId)""",
+            """CREATE TABLE Albums (
+                SingerId     INT64 NOT NULL,
+                AlbumId      INT64 NOT NULL,
+                AlbumTitle   STRING(MAX)
+            ) PRIMARY KEY (SingerId, AlbumId),
+            INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+            "ALTER DATABASE {}"
+            " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader),
+        ],
     )
+    operation = spanner_client.database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
     database = operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -350,17 +363,18 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "ALTER DATABASE {}"
             " SET OPTIONS (default_leader = '{}')".format(database_id, default_leader)
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
@@ -376,9 +390,12 @@ def update_database_with_default_leader(instance_id, database_id, default_leader
 def get_database_ddl(instance_id, database_id):
     """Gets the database DDL statements."""
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
-    ddl = spanner_client.database_admin_api.get_database_ddl(database=database.name)
+    database_admin_api = spanner_client.database_admin_api
+    ddl = database_admin_api.get_database_ddl(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        )
+    )
     print("Retrieved database DDL for {}".format(database_id))
     for statement in ddl.statements:
         print(statement)
@@ -639,15 +656,16 @@ def add_index(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=["CREATE INDEX AlbumsByAlbumTitle ON Albums(AlbumTitle)"],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -742,18 +760,19 @@ def add_storing_index(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "CREATE INDEX AlbumsByAlbumTitle2 ON Albums(AlbumTitle)"
             "STORING (MarketingBudget)"
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -805,17 +824,18 @@ def add_column(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "ALTER TABLE Albums ADD COLUMN MarketingBudget INT64",
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -967,11 +987,12 @@ def create_table_with_timestamp(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """CREATE TABLE Performances (
             SingerId     INT64 NOT NULL,
@@ -985,7 +1006,7 @@ def create_table_with_timestamp(instance_id, database_id):
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1034,19 +1055,19 @@ def add_timestamp_column(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "ALTER TABLE Albums ADD COLUMN LastUpdateTime TIMESTAMP "
             "OPTIONS(allow_commit_timestamp=true)"
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1138,15 +1159,16 @@ def add_numeric_column(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=["ALTER TABLE Venues ADD COLUMN Revenue NUMERIC"],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1205,15 +1227,16 @@ def add_json_column(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=["ALTER TABLE Venues ADD COLUMN VenueDetails JSON"],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1915,11 +1938,12 @@ def create_table_with_datatypes(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """CREATE TABLE Venues (
             VenueId         INT64 NOT NULL,
@@ -1935,7 +1959,7 @@ def create_table_with_datatypes(instance_id, database_id):
         ) PRIMARY KEY (VenueId)"""
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2509,14 +2533,15 @@ def add_and_drop_database_roles(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     role_parent = "new_parent"
     role_child = "new_child"
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "CREATE ROLE {}".format(role_parent),
             "GRANT SELECT ON TABLE Singers TO ROLE {}".format(role_parent),
@@ -2524,7 +2549,7 @@ def add_and_drop_database_roles(instance_id, database_id):
             "GRANT ROLE {} TO ROLE {}".format(role_parent, role_child),
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     operation.result(OPERATION_TIMEOUT_SECONDS)
     print(
@@ -2532,13 +2557,15 @@ def add_and_drop_database_roles(instance_id, database_id):
     )
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "REVOKE ROLE {} FROM ROLE {}".format(role_parent, role_child),
             "DROP ROLE {}".format(role_child),
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     operation.result(OPERATION_TIMEOUT_SECONDS)
     print("Revoked privileges and dropped role {}".format(role_child))
@@ -2573,10 +2600,13 @@ def list_database_roles(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
-    request = spanner_database_admin.ListDatabaseRolesRequest(parent=database.name)
+    request = spanner_database_admin.ListDatabaseRolesRequest(
+        parent=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        )
+    )
     # List database roles.
     print("Database Roles are:")
     for role in spanner_client.database_admin_api.list_database_roles(request):
@@ -2603,18 +2633,19 @@ def enable_fine_grained_access(
     from google.type import expr_pb2
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     # The policy in the response from getDatabaseIAMPolicy might use the policy version
     # that you specified, or it might use a lower policy version. For example, if you
     # specify version 3, but the policy has no conditional role bindings, the response
     # uses version 1. Valid values are 0, 1, and 3.
     request = iam_policy_pb2.GetIamPolicyRequest(
-        resource=database.name,
+        resource=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         options=options_pb2.GetPolicyOptions(requested_policy_version=3),
     )
-    policy = spanner_client.database_admin_api.get_iam_policy(request=request)
+    policy = database_admin_api.get_iam_policy(request=request)
     if policy.version < 3:
         policy.version = 3
 
@@ -2630,12 +2661,14 @@ def enable_fine_grained_access(
     policy.version = 3
     policy.bindings.append(new_binding)
     set_request = iam_policy_pb2.SetIamPolicyRequest(
-        resource=database.name,
+        resource=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         policy=policy,
     )
-    spanner_client.database_admin_api.set_iam_policy(set_request)
+    database_admin_api.set_iam_policy(set_request)
 
-    new_policy = spanner_client.database_admin_api.get_iam_policy(request=request)
+    new_policy = database_admin_api.get_iam_policy(request=request)
     print(
         f"Enabled fine-grained access in IAM. New policy has version {new_policy.version}"
     )
@@ -2650,11 +2683,12 @@ def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """CREATE TABLE Customers (
                CustomerId INT64 NOT NULL,
@@ -2673,7 +2707,7 @@ def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2697,11 +2731,12 @@ def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """ALTER TABLE ShoppingCarts
                ADD CONSTRAINT FKShoppingCartsCustomerName
@@ -2711,7 +2746,7 @@ def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2735,18 +2770,19 @@ def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """ALTER TABLE ShoppingCarts
                DROP CONSTRAINT FKShoppingCartsCustomerName"""
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2770,11 +2806,12 @@ def create_sequence(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "CREATE SEQUENCE Seq OPTIONS (sequence_kind = 'bit_reversed_positive')",
             """CREATE TABLE Customers (
@@ -2784,7 +2821,7 @@ def create_sequence(instance_id, database_id):
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2811,6 +2848,9 @@ def create_sequence(instance_id, database_id):
             )
         )
 
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
     database.run_in_transaction(insert_customers)
 
 
@@ -2825,17 +2865,18 @@ def alter_sequence(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "ALTER SEQUENCE Seq SET OPTIONS (skip_range_min = 1000, skip_range_max = 5000000)",
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -2862,6 +2903,9 @@ def alter_sequence(instance_id, database_id):
             )
         )
 
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
     database.run_in_transaction(insert_customers)
 
 
@@ -2876,18 +2920,19 @@ def drop_sequence(instance_id, database_id):
         spanner_database_admin
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    database_admin_api = spanner_client.database_admin_api
 
     request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database.name,
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "ALTER TABLE Customers ALTER COLUMN CustomerId DROP DEFAULT",
             "DROP SEQUENCE Seq",
         ],
     )
 
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
