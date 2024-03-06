@@ -3029,16 +3029,18 @@ def set_custom_timeout_and_retry(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    # Customize retry with an initial wait time of 500 milliseconds.
-    # Customize retry with a maximum wait time of 16 seconds.
-    # Customize retry with a wait time multiplier per iteration of 1.5.
-    # Customize retry with a timeout on
-    # how long a certain RPC may be retried in case the server returns an error.
     retry = retry.Retry(
+        # Customize retry with an initial wait time of 500 milliseconds.
         initial=0.5,
+        # Customize retry with a maximum wait time of 16 seconds.
         maximum=16,
+        # Customize retry with a wait time multiplier per iteration of 1.5.
         multiplier=1.5,
+        # Customize retry with a timeout on
+        # how long a certain RPC may be retried in
+        # case the server returns an error.
         timeout=60,
+        # Configure which errors should be retried.
         predicate=retry.if_exception_type(
             core_exceptions.ServiceUnavailable,
         ),
