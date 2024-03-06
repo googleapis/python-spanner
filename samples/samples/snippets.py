@@ -2807,13 +2807,20 @@ def set_custom_timeout_and_retry(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
+    # Customize retry with an initial wait time of 5 seconds.
+    # Customize retry with a maximum wait time of 100 seconds.
+    # Customize retry with a wait time multiplier per iteration of 2.
+    # Customize retry with a timeout on
+    # how long a certain RPC may be retried in case the server returns an error.
     retry = Retry(initial=5, maximum=100, multiplier=2, timeout=60)
 
     # Set a custom retry and timeout setting.
     with database.snapshot() as snapshot:
         results = snapshot.execute_sql(
             "SELECT SingerId, AlbumId, AlbumTitle FROM Albums",
+            # Set custom retry setting for this request
             retry=retry,
+            # Set custom timeout setting for this request
             timeout=60,
         )
 
