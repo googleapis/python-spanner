@@ -3020,7 +3020,8 @@ def directed_read_options(
 def set_custom_timeout_and_retry(instance_id, database_id):
     """Executes a snapshot read with custom timeout and retry."""
     # [START spanner_set_custom_timeout_and_retry]
-    from google.api_core.retry import Retry
+    from google.api_core import retry
+    from google.api_core import exceptions as core_exceptions
 
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
@@ -3028,12 +3029,20 @@ def set_custom_timeout_and_retry(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    # Customize retry with an initial wait time of 5 seconds.
-    # Customize retry with a maximum wait time of 100 seconds.
-    # Customize retry with a wait time multiplier per iteration of 2.
+    # Customize retry with an initial wait time of 500 milliseconds.
+    # Customize retry with a maximum wait time of 16 seconds.
+    # Customize retry with a wait time multiplier per iteration of 1.5.
     # Customize retry with a timeout on
     # how long a certain RPC may be retried in case the server returns an error.
-    retry = Retry(initial=5, maximum=100, multiplier=2, timeout=60)
+    retry = retry.Retry(
+        initial=0.5,
+        maximum=16,
+        multiplier=1.5,
+        timeout=60,
+        predicate=retry.if_exception_type(
+            core_exceptions.ServiceUnavailable,
+        ),
+    )
 
     # Set a custom retry and timeout setting.
     with database.snapshot() as snapshot:
@@ -3041,7 +3050,7 @@ def set_custom_timeout_and_retry(instance_id, database_id):
             "SELECT SingerId, AlbumId, AlbumTitle FROM Albums",
             # Set custom retry setting for this request
             retry=retry,
-            # Set custom timeout setting for this request
+            # Set custom timeout of 60 seconds for this request
             timeout=60,
         )
 
