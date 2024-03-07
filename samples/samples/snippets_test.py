@@ -15,10 +15,10 @@
 import time
 import uuid
 
+import pytest
 from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
-import pytest
 from test_utils.retry import RetryErrors
 
 import snippets
@@ -864,5 +864,12 @@ def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
 @pytest.mark.dependency(depends=["insert_data"])
 def test_directed_read_options(capsys, instance_id, sample_database):
     snippets.directed_read_options(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+
+
+@pytest.mark.dependency(depends=["insert_data"])
+def test_set_custom_timeout_and_retry(capsys, instance_id, sample_database):
+    snippets.set_custom_timeout_and_retry(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out

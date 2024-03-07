@@ -1,4 +1,4 @@
-# Copyright 2020 Google Inc. All Rights Reserved.
+# Copyright 2024 Google Inc. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,11 +13,10 @@
 # limitations under the License.
 import uuid
 
+import backup_snippet
 import pytest
 from google.api_core.exceptions import DeadlineExceeded
 from test_utils.retry import RetryErrors
-
-import backup_sample
 
 
 @pytest.fixture(scope="module")
@@ -46,12 +45,11 @@ COPY_BACKUP_ID = unique_backup_id()
 
 @pytest.mark.dependency(name="create_backup")
 def test_create_backup(capsys, instance_id, sample_database):
-    version_time = None
     with sample_database.snapshot() as snapshot:
         results = snapshot.execute_sql("SELECT CURRENT_TIMESTAMP()")
         version_time = list(results)[0][0]
 
-    backup_sample.create_backup(
+    backup_snippet.create_backup(
         instance_id,
         sample_database.database_id,
         BACKUP_ID,
@@ -70,7 +68,7 @@ def test_copy_backup(capsys, instance_id, spanner_client):
         + "/backups/"
         + BACKUP_ID
     )
-    backup_sample.copy_backup(instance_id, COPY_BACKUP_ID, source_backp_path)
+    backup_snippet.copy_backup(instance_id, COPY_BACKUP_ID, source_backp_path)
     out, _ = capsys.readouterr()
     assert COPY_BACKUP_ID in out
 
@@ -82,7 +80,7 @@ def test_create_backup_with_encryption_key(
     sample_database,
     kms_key_name,
 ):
-    backup_sample.create_backup_with_encryption_key(
+    backup_snippet.create_backup_with_encryption_key(
         instance_id,
         sample_database.database_id,
         CMEK_BACKUP_ID,
@@ -96,7 +94,7 @@ def test_create_backup_with_encryption_key(
 @pytest.mark.dependency(depends=["create_backup"])
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database(capsys, instance_id, sample_database):
-    backup_sample.restore_database(instance_id, RESTORE_DB_ID, BACKUP_ID)
+    backup_snippet.restore_database(instance_id, RESTORE_DB_ID, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert (sample_database.database_id + " restored to ") in out
     assert (RESTORE_DB_ID + " from backup ") in out
@@ -111,7 +109,7 @@ def test_restore_database_with_encryption_key(
     sample_database,
     kms_key_name,
 ):
-    backup_sample.restore_database_with_encryption_key(
+    backup_snippet.restore_database_with_encryption_key(
         instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_name
     )
     out, _ = capsys.readouterr()
@@ -123,7 +121,7 @@ def test_restore_database_with_encryption_key(
 
 @pytest.mark.dependency(depends=["create_backup", "copy_backup"])
 def test_list_backup_operations(capsys, instance_id, sample_database):
-    backup_sample.list_backup_operations(
+    backup_snippet.list_backup_operations(
         instance_id, sample_database.database_id, BACKUP_ID
     )
     out, _ = capsys.readouterr()
@@ -139,7 +137,7 @@ def test_list_backups(
     instance_id,
     sample_database,
 ):
-    backup_sample.list_backups(
+    backup_snippet.list_backups(
         instance_id,
         sample_database.database_id,
         BACKUP_ID,
@@ -151,24 +149,25 @@ def test_list_backups(
 
 @pytest.mark.dependency(depends=["create_backup"])
 def test_update_backup(capsys, instance_id):
-    backup_sample.update_backup(instance_id, BACKUP_ID)
+    backup_snippet.update_backup(instance_id, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
 
 
 @pytest.mark.dependency(depends=["create_backup", "copy_backup", "list_backup"])
 def test_delete_backup(capsys, instance_id):
-    backup_sample.delete_backup(instance_id, BACKUP_ID)
+    backup_snippet.delete_backup(instance_id, BACKUP_ID)
     out, _ = capsys.readouterr()
     assert BACKUP_ID in out
-    backup_sample.delete_backup(instance_id, COPY_BACKUP_ID)
+    backup_snippet.delete_backup(instance_id, COPY_BACKUP_ID)
     out, _ = capsys.readouterr()
+    assert "has been deleted." in out
     assert COPY_BACKUP_ID in out
 
 
 @pytest.mark.dependency(depends=["create_backup"])
 def test_cancel_backup(capsys, instance_id, sample_database):
-    backup_sample.cancel_backup(
+    backup_snippet.cancel_backup(
         instance_id,
         sample_database.database_id,
         BACKUP_ID,
@@ -183,7 +182,7 @@ def test_cancel_backup(capsys, instance_id, sample_database):
 
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_create_database_with_retention_period(capsys, sample_instance):
-    backup_sample.create_database_with_version_retention_period(
+    backup_snippet.create_database_with_version_retention_period(
         sample_instance.instance_id,
         RETENTION_DATABASE_ID,
         RETENTION_PERIOD,
@@ -191,5 +190,3 @@ def test_create_database_with_retention_period(capsys, sample_instance):
     out, _ = capsys.readouterr()
     assert (RETENTION_DATABASE_ID + " created with ") in out
     assert ("retention period " + RETENTION_PERIOD) in out
-    database = sample_instance.database(RETENTION_DATABASE_ID)
-    database.drop()
