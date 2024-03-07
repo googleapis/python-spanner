@@ -3030,16 +3030,22 @@ def create_instance_with_autoscaling_config(instance_id):
     )
 
     autoscaling_config = spanner_instance_admin.AutoscalingConfig(
+        # Only one of minNodes/maxNodes or minProcessingUnits/maxProcessingUnits can be set.
         autoscaling_limits=spanner_instance_admin.AutoscalingConfig.AutoscalingLimits(
             min_nodes=1,
             max_nodes=2,
         ),
+        # highPriorityCpuUtilizationPercent and storageUtilizationPercent are both
+        # percentages and must lie between 0 and 100.
         autoscaling_targets=spanner_instance_admin.AutoscalingConfig.AutoscalingTargets(
             high_priority_cpu_utilization_percent=65,
             storage_utilization_percent=95,
         ),
     )
 
+    #  Creates a new instance with autoscaling configuration
+    #  When autoscalingConfig is enabled, nodeCount and processingUnits fields
+    #  need not be specified.
     request = spanner_instance_admin.CreateInstanceRequest(
         parent=spanner_client.project_name,
         instance_id=instance_id,
