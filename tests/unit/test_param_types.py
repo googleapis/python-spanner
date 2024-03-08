@@ -31,8 +31,7 @@ class Test_ArrayParamType(unittest.TestCase):
 
 class Test_Struct(unittest.TestCase):
     def test_it(self):
-        from google.cloud.spanner_v1 import (StructType, Type, TypeCode,
-                                             param_types)
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode, param_types
 
         struct_type = StructType(
             fields=[
@@ -56,8 +55,12 @@ class Test_Struct(unittest.TestCase):
 
 class Test_JsonbParamType(unittest.TestCase):
     def test_it(self):
-        from google.cloud.spanner_v1 import (Type, TypeAnnotationCode,
-                                             TypeCode, param_types)
+        from google.cloud.spanner_v1 import (
+            Type,
+            TypeAnnotationCode,
+            TypeCode,
+            param_types,
+        )
 
         expected = Type(
             code=TypeCode.JSON,
