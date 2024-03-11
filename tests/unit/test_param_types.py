@@ -46,7 +46,7 @@ class Test_Struct(unittest.TestCase):
             [
                 param_types.StructField("name", param_types.STRING),
                 param_types.StructField("count", param_types.INT64),
-                param_types.StructField("float32", param_types.Float32),
+                param_types.StructField("float32", param_types.FLOAT32),
             ]
         )
 
