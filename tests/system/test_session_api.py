@@ -2239,7 +2239,7 @@ def test_execute_sql_w_float32_bindings_transfinite(
         sessions_database,
         sql=f"SELECT {placeholder}",
         params={key: NEG_INF},
-        param_types={key: spanner_v1.param_types.FLOAT64},
+        param_types={key: spanner_v1.param_types.FLOAT32},
         expected=[(NEG_INF,)],
         order=False,
     )
@@ -2251,7 +2251,7 @@ def test_execute_sql_w_float32_bindings_transfinite(
         sessions_database,
         sql=f"SELECT {placeholder}",
         params={key: POS_INF},
-        param_types={key: spanner_v1.param_types.FLOAT64},
+        param_types={key: spanner_v1.param_types.FLOAT32},
         expected=[(POS_INF,)],
         order=False,
     )
