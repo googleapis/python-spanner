@@ -2217,7 +2217,7 @@ def test_execute_sql_w_float_bindings_transfinite(sessions_database, database_di
 
 
 def test_execute_sql_w_float32_bindings(sessions_database, database_dialect):
-    pytest.skip(f"float32 is not yet supported in production.")
+    pytest.skip("float32 is not yet supported in production.")
     _bind_test_helper(
         sessions_database,
         database_dialect,
@@ -2230,7 +2230,7 @@ def test_execute_sql_w_float32_bindings(sessions_database, database_dialect):
 def test_execute_sql_w_float32_bindings_transfinite(
     sessions_database, database_dialect
 ):
-    pytest.skip(f"float32 is not yet supported in production.")
+    pytest.skip("float32 is not yet supported in production.")
     key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "neg_inf"
     placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
 
