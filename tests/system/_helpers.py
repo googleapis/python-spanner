@@ -15,6 +15,7 @@
 import operator
 import os
 import time
+from random import randrange
 
 from google.api_core import exceptions
 from google.cloud.spanner_v1 import instance as instance_mod
@@ -24,7 +25,7 @@ from test_utils import system
 
 
 CREATE_INSTANCE_ENVVAR = "GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE"
-CREATE_INSTANCE = os.getenv(CREATE_INSTANCE_ENVVAR) is not None
+CREATE_INSTANCE = os.getenv(CREATE_INSTANCE_ENVVAR) == "true"
 
 INSTANCE_ID_ENVVAR = "GOOGLE_CLOUD_TESTS_SPANNER_INSTANCE"
 INSTANCE_ID_DEFAULT = "google-cloud-python-systest"
@@ -134,4 +135,4 @@ def cleanup_old_instances(spanner_client):
 
 
 def unique_id(prefix, separator="-"):
-    return f"{prefix}{system.unique_resource_id(separator)}"
+    return f"{prefix}{system.unique_resource_id(separator)}{randrange(100)}"

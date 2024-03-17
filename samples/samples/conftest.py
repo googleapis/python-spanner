@@ -15,6 +15,7 @@
 
 import time
 import uuid
+from random import randrange
 
 import pytest
 from google.api_core import exceptions
@@ -22,10 +23,15 @@ from google.cloud import spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import backup, client, database, instance
 from test_utils import retry
+from test_utils import system
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
 OPERATION_TIMEOUT_SECONDS = 120  # seconds
+
+CREATE_INSTANCE = False
+
+INSTANCE_ID_DEFAULT = "test-instance"
 
 retry_429 = retry.RetryErrors(exceptions.ResourceExhausted, delay=15)
 
@@ -72,23 +78,26 @@ def scrub_instance_ignore_not_found(to_scrub):
 @pytest.fixture(scope="session")
 def cleanup_old_instances(spanner_client):
     """Delete instances, created by samples, that are older than an hour."""
-    cutoff = int(time.time()) - 1 * 60 * 60
-    instance_filter = "labels.cloud_spanner_samples:true"
+    if CREATE_INSTANCE:
+        cutoff = int(time.time()) - 1 * 60 * 60
+        instance_filter = "labels.cloud_spanner_samples:true"
 
-    for instance_pb in spanner_client.list_instances(filter_=instance_filter):
-        inst = instance.Instance.from_pb(instance_pb, spanner_client)
+        for instance_pb in spanner_client.list_instances(filter_=instance_filter):
+            inst = instance.Instance.from_pb(instance_pb, spanner_client)
 
-        if "created" in inst.labels:
-            create_time = int(inst.labels["created"])
+            if "created" in inst.labels:
+                create_time = int(inst.labels["created"])
 
-            if create_time <= cutoff:
-                scrub_instance_ignore_not_found(inst)
+                if create_time <= cutoff:
+                    scrub_instance_ignore_not_found(inst)
 
 
 @pytest.fixture(scope="module")
 def instance_id():
     """Unique id for the instance used in samples."""
-    return f"test-instance-{uuid.uuid4().hex[:10]}"
+    if CREATE_INSTANCE:
+        return f"test-instance-{uuid.uuid4().hex[:10]}"
+    return INSTANCE_ID_DEFAULT
 
 
 @pytest.fixture(scope="module")
@@ -117,31 +126,36 @@ def sample_instance(
     instance_config,
     sample_name,
 ):
-    sample_instance = spanner_client.instance(
-        instance_id,
-        instance_config,
-        labels={
-            "cloud_spanner_samples": "true",
-            "sample_name": sample_name,
-            "created": str(int(time.time())),
-        },
-    )
-    op = retry_429(sample_instance.create)()
-    op.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
+    if CREATE_INSTANCE:
+        sample_instance = spanner_client.instance(
+            instance_id,
+            instance_config,
+            labels={
+                "cloud_spanner_samples": "true",
+                "sample_name": sample_name,
+                "created": str(int(time.time())),
+            },
+        )
+        op = retry_429(sample_instance.create)()
+        op.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
 
-    # Eventual consistency check
-    retry_found = retry.RetryResult(bool)
-    retry_found(sample_instance.exists)()
+        # Eventual consistency check
+        retry_found = retry.RetryResult(bool)
+        retry_found(sample_instance.exists)()
+    else:
+        sample_instance = spanner_client.instance(instance_id)
+        sample_instance.reload()
 
     yield sample_instance
 
-    for database_pb in sample_instance.list_databases():
-        database.Database.from_pb(database_pb, sample_instance).drop()
+    if CREATE_INSTANCE:
+        for database_pb in sample_instance.list_databases():
+            database.Database.from_pb(database_pb, sample_instance).drop()
 
-    for backup_pb in sample_instance.list_backups():
-        backup.Backup.from_pb(backup_pb, sample_instance).delete()
+        for backup_pb in sample_instance.list_backups():
+            backup.Backup.from_pb(backup_pb, sample_instance).delete()
 
-    sample_instance.delete()
+        sample_instance.delete()
 
 
 @pytest.fixture(scope="module")
@@ -185,7 +199,7 @@ def database_id():
 
     Sample testcase modules can override as needed.
     """
-    return "my-database-id"
+    return unique_id("dbapi-txn")
 
 
 @pytest.fixture(scope="module")
@@ -287,3 +301,6 @@ def kms_key_name(spanner_client):
         "spanner-test-keyring",
         "spanner-test-cmek",
     )
+
+def unique_id(prefix, separator="-"):
+    return f"{prefix}{system.unique_resource_id(separator)}{randrange(100)}"
