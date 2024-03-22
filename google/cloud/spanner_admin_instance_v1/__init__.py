@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,23 +26,34 @@ from .types.spanner_instance_admin import AutoscalingConfig
 from .types.spanner_instance_admin import CreateInstanceConfigMetadata
 from .types.spanner_instance_admin import CreateInstanceConfigRequest
 from .types.spanner_instance_admin import CreateInstanceMetadata
+from .types.spanner_instance_admin import CreateInstancePartitionMetadata
+from .types.spanner_instance_admin import CreateInstancePartitionRequest
 from .types.spanner_instance_admin import CreateInstanceRequest
 from .types.spanner_instance_admin import DeleteInstanceConfigRequest
+from .types.spanner_instance_admin import DeleteInstancePartitionRequest
 from .types.spanner_instance_admin import DeleteInstanceRequest
 from .types.spanner_instance_admin import GetInstanceConfigRequest
+from .types.spanner_instance_admin import GetInstancePartitionRequest
 from .types.spanner_instance_admin import GetInstanceRequest
 from .types.spanner_instance_admin import Instance
 from .types.spanner_instance_admin import InstanceConfig
+from .types.spanner_instance_admin import InstancePartition
 from .types.spanner_instance_admin import ListInstanceConfigOperationsRequest
 from .types.spanner_instance_admin import ListInstanceConfigOperationsResponse
 from .types.spanner_instance_admin import ListInstanceConfigsRequest
 from .types.spanner_instance_admin import ListInstanceConfigsResponse
+from .types.spanner_instance_admin import ListInstancePartitionOperationsRequest
+from .types.spanner_instance_admin import ListInstancePartitionOperationsResponse
+from .types.spanner_instance_admin import ListInstancePartitionsRequest
+from .types.spanner_instance_admin import ListInstancePartitionsResponse
 from .types.spanner_instance_admin import ListInstancesRequest
 from .types.spanner_instance_admin import ListInstancesResponse
 from .types.spanner_instance_admin import ReplicaInfo
 from .types.spanner_instance_admin import UpdateInstanceConfigMetadata
 from .types.spanner_instance_admin import UpdateInstanceConfigRequest
 from .types.spanner_instance_admin import UpdateInstanceMetadata
+from .types.spanner_instance_admin import UpdateInstancePartitionMetadata
+from .types.spanner_instance_admin import UpdateInstancePartitionRequest
 from .types.spanner_instance_admin import UpdateInstanceRequest
 
 __all__ = (
@@ -51,18 +62,27 @@ __all__ = (
     "CreateInstanceConfigMetadata",
     "CreateInstanceConfigRequest",
     "CreateInstanceMetadata",
+    "CreateInstancePartitionMetadata",
+    "CreateInstancePartitionRequest",
     "CreateInstanceRequest",
     "DeleteInstanceConfigRequest",
+    "DeleteInstancePartitionRequest",
     "DeleteInstanceRequest",
     "GetInstanceConfigRequest",
+    "GetInstancePartitionRequest",
     "GetInstanceRequest",
     "Instance",
     "InstanceAdminClient",
     "InstanceConfig",
+    "InstancePartition",
     "ListInstanceConfigOperationsRequest",
     "ListInstanceConfigOperationsResponse",
     "ListInstanceConfigsRequest",
     "ListInstanceConfigsResponse",
+    "ListInstancePartitionOperationsRequest",
+    "ListInstancePartitionOperationsResponse",
+    "ListInstancePartitionsRequest",
+    "ListInstancePartitionsResponse",
     "ListInstancesRequest",
     "ListInstancesResponse",
     "OperationProgress",
@@ -70,5 +90,7 @@ __all__ = (
     "UpdateInstanceConfigMetadata",
     "UpdateInstanceConfigRequest",
     "UpdateInstanceMetadata",
+    "UpdateInstancePartitionMetadata",
+    "UpdateInstancePartitionRequest",
     "UpdateInstanceRequest",
 )

@@ -490,9 +490,8 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
 
-        api = InstanceAdminClient(credentials=mock.Mock())
-        credentials = _make_credentials()
-        client = self._make_one(project=self.PROJECT, credentials=credentials)
+        api = InstanceAdminClient()
+        client = self._make_one(project=self.PROJECT)
         client._instance_admin_api = api
 
         instance_config_pbs = ListInstanceConfigsResponse(
@@ -537,9 +536,8 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
 
-        api = InstanceAdminClient(credentials=mock.Mock())
-        credentials = _make_credentials()
-        client = self._make_one(project=self.PROJECT, credentials=credentials)
+        api = InstanceAdminClient()
+        client = self._make_one(project=self.PROJECT)
         client._instance_admin_api = api
 
         instance_config_pbs = ListInstanceConfigsResponse(
@@ -613,9 +611,8 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
 
-        api = InstanceAdminClient(credentials=mock.Mock())
-        credentials = _make_credentials()
-        client = self._make_one(project=self.PROJECT, credentials=credentials)
+        api = InstanceAdminClient()
+        client = self._make_one(project=self.PROJECT)
         client._instance_admin_api = api
 
         instance_pbs = ListInstancesResponse(
@@ -661,9 +658,8 @@ class TestClient(unittest.TestCase):
         from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
         from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
 
-        api = InstanceAdminClient(credentials=mock.Mock())
-        credentials = _make_credentials()
-        client = self._make_one(project=self.PROJECT, credentials=credentials)
+        api = InstanceAdminClient()
+        client = self._make_one(project=self.PROJECT)
         client._instance_admin_api = api
 
         instance_pbs = ListInstancesResponse(instances=[])
