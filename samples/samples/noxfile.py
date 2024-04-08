@@ -230,6 +230,7 @@ def _session_tests(
 
     session.run(
         "pytest",
+        "-n=12",
         *(PYTEST_COMMON_ARGS + session.posargs + concurrent_args),
         # Pytest will return 5 when no tests are collected. This can happen
         # on travis where slow and flaky tests are excluded.

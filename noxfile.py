@@ -217,6 +217,7 @@ def install_systemtest_dependencies(session, *constraints):
     # Exclude version 1.52.0rc1 which has a known issue.
     # See https://github.com/grpc/grpc/issues/32163
     session.install("--pre", "grpcio!=1.52.0rc1")
+    session.install("pytest-xdist")
 
     session.install(*SYSTEM_TEST_STANDARD_DEPENDENCIES, *constraints)
 
@@ -282,7 +283,7 @@ def system(session, database_dialect):
     if system_test_exists:
         session.run(
             "py.test",
-            "--quiet",
+            "-n=12",
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
             *session.posargs,
@@ -294,7 +295,7 @@ def system(session, database_dialect):
     if system_test_folder_exists:
         session.run(
             "py.test",
-            "--quiet",
+            "-n=12",
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
             *session.posargs,

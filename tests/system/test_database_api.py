@@ -343,7 +343,7 @@ def test_update_ddl_w_pitr_invalid(
     databases_to_delete,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
-    temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
+    temp_db_id = _helpers.unique_id("pitr_upd_ddl", separator="_")
     retention_period = "0d"
     temp_db = shared_instance.database(temp_db_id, pool=pool)
 
@@ -368,7 +368,7 @@ def test_update_ddl_w_pitr_success(
     databases_to_delete,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
-    temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
+    temp_db_id = _helpers.unique_id("pitr_upd_ddl", separator="_")
     retention_period = "7d"
     temp_db = shared_instance.database(temp_db_id, pool=pool)
 
@@ -400,7 +400,7 @@ def test_update_ddl_w_default_leader_success(
         labels={"testcase": "update_database_ddl_default_leader"},
     )
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_upd_ddl", separator="_")
     default_leader = "us-east4"
     temp_db = multiregion_instance.database(temp_db_id, pool=pool)
 
@@ -428,7 +428,7 @@ def test_create_role_grant_access_success(
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_ldrr_ddl", separator="_")
     temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
@@ -488,7 +488,7 @@ def test_list_database_role_success(
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
 
-    temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
+    temp_db_id = _helpers.unique_id("dfl_ldrr_ddl", separator="_")
     temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
 
     create_op = temp_db.create()
