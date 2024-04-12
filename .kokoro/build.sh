@@ -30,6 +30,9 @@ env | grep KOKORO
 # Setup service account credentials.
 export GOOGLE_APPLICATION_CREDENTIALS=${KOKORO_GFILE_DIR}/service-account.json
 
+# Set up creating a new instance for each system test run
+export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
+
 # Setup project id.
 export PROJECT_ID=$(cat "${KOKORO_GFILE_DIR}/project-id.json")
 
