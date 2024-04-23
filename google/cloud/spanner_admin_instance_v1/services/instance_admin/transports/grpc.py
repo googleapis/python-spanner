@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
 
         Args:
             host (Optional[str]):
-                 The hostname to connect to.
+                 The hostname to connect to (default: 'spanner.googleapis.com').
             credentials (Optional[google.auth.credentials.Credentials]): The
                 authorization credentials to attach to requests. These
                 credentials identify the application to the service; if none
@@ -585,6 +585,35 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         return self._stubs["list_instances"]
 
     @property
+    def list_instance_partitions(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.ListInstancePartitionsRequest],
+        spanner_instance_admin.ListInstancePartitionsResponse,
+    ]:
+        r"""Return a callable for the list instance partitions method over gRPC.
+
+        Lists all instance partitions for the given instance.
+
+        Returns:
+            Callable[[~.ListInstancePartitionsRequest],
+                    ~.ListInstancePartitionsResponse]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "list_instance_partitions" not in self._stubs:
+            self._stubs["list_instance_partitions"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstancePartitions",
+                request_serializer=spanner_instance_admin.ListInstancePartitionsRequest.serialize,
+                response_deserializer=spanner_instance_admin.ListInstancePartitionsResponse.deserialize,
+            )
+        return self._stubs["list_instance_partitions"]
+
+    @property
     def get_instance(
         self,
     ) -> Callable[
@@ -880,6 +909,264 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
                 response_deserializer=iam_policy_pb2.TestIamPermissionsResponse.FromString,
             )
         return self._stubs["test_iam_permissions"]
+
+    @property
+    def get_instance_partition(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.GetInstancePartitionRequest],
+        spanner_instance_admin.InstancePartition,
+    ]:
+        r"""Return a callable for the get instance partition method over gRPC.
+
+        Gets information about a particular instance
+        partition.
+
+        Returns:
+            Callable[[~.GetInstancePartitionRequest],
+                    ~.InstancePartition]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "get_instance_partition" not in self._stubs:
+            self._stubs["get_instance_partition"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/GetInstancePartition",
+                request_serializer=spanner_instance_admin.GetInstancePartitionRequest.serialize,
+                response_deserializer=spanner_instance_admin.InstancePartition.deserialize,
+            )
+        return self._stubs["get_instance_partition"]
+
+    @property
+    def create_instance_partition(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.CreateInstancePartitionRequest],
+        operations_pb2.Operation,
+    ]:
+        r"""Return a callable for the create instance partition method over gRPC.
+
+        Creates an instance partition and begins preparing it to be
+        used. The returned [long-running
+        operation][google.longrunning.Operation] can be used to track
+        the progress of preparing the new instance partition. The
+        instance partition name is assigned by the caller. If the named
+        instance partition already exists, ``CreateInstancePartition``
+        returns ``ALREADY_EXISTS``.
+
+        Immediately upon completion of this request:
+
+        -  The instance partition is readable via the API, with all
+           requested attributes but no allocated resources. Its state is
+           ``CREATING``.
+
+        Until completion of the returned operation:
+
+        -  Cancelling the operation renders the instance partition
+           immediately unreadable via the API.
+        -  The instance partition can be deleted.
+        -  All other attempts to modify the instance partition are
+           rejected.
+
+        Upon completion of the returned operation:
+
+        -  Billing for all successfully-allocated resources begins (some
+           types may have lower than the requested levels).
+        -  Databases can start using this instance partition.
+        -  The instance partition's allocated resource levels are
+           readable via the API.
+        -  The instance partition's state becomes ``READY``.
+
+        The returned [long-running
+        operation][google.longrunning.Operation] will have a name of the
+        format ``<instance_partition_name>/operations/<operation_id>``
+        and can be used to track creation of the instance partition. The
+        [metadata][google.longrunning.Operation.metadata] field type is
+        [CreateInstancePartitionMetadata][google.spanner.admin.instance.v1.CreateInstancePartitionMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is
+        [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
+        if successful.
+
+        Returns:
+            Callable[[~.CreateInstancePartitionRequest],
+                    ~.Operation]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "create_instance_partition" not in self._stubs:
+            self._stubs["create_instance_partition"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/CreateInstancePartition",
+                request_serializer=spanner_instance_admin.CreateInstancePartitionRequest.serialize,
+                response_deserializer=operations_pb2.Operation.FromString,
+            )
+        return self._stubs["create_instance_partition"]
+
+    @property
+    def delete_instance_partition(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.DeleteInstancePartitionRequest], empty_pb2.Empty
+    ]:
+        r"""Return a callable for the delete instance partition method over gRPC.
+
+        Deletes an existing instance partition. Requires that the
+        instance partition is not used by any database or backup and is
+        not the default instance partition of an instance.
+
+        Authorization requires ``spanner.instancePartitions.delete``
+        permission on the resource
+        [name][google.spanner.admin.instance.v1.InstancePartition.name].
+
+        Returns:
+            Callable[[~.DeleteInstancePartitionRequest],
+                    ~.Empty]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "delete_instance_partition" not in self._stubs:
+            self._stubs["delete_instance_partition"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/DeleteInstancePartition",
+                request_serializer=spanner_instance_admin.DeleteInstancePartitionRequest.serialize,
+                response_deserializer=empty_pb2.Empty.FromString,
+            )
+        return self._stubs["delete_instance_partition"]
+
+    @property
+    def update_instance_partition(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.UpdateInstancePartitionRequest],
+        operations_pb2.Operation,
+    ]:
+        r"""Return a callable for the update instance partition method over gRPC.
+
+        Updates an instance partition, and begins allocating or
+        releasing resources as requested. The returned [long-running
+        operation][google.longrunning.Operation] can be used to track
+        the progress of updating the instance partition. If the named
+        instance partition does not exist, returns ``NOT_FOUND``.
+
+        Immediately upon completion of this request:
+
+        -  For resource types for which a decrease in the instance
+           partition's allocation has been requested, billing is based
+           on the newly-requested level.
+
+        Until completion of the returned operation:
+
+        -  Cancelling the operation sets its metadata's
+           [cancel_time][google.spanner.admin.instance.v1.UpdateInstancePartitionMetadata.cancel_time],
+           and begins restoring resources to their pre-request values.
+           The operation is guaranteed to succeed at undoing all
+           resource changes, after which point it terminates with a
+           ``CANCELLED`` status.
+        -  All other attempts to modify the instance partition are
+           rejected.
+        -  Reading the instance partition via the API continues to give
+           the pre-request resource levels.
+
+        Upon completion of the returned operation:
+
+        -  Billing begins for all successfully-allocated resources (some
+           types may have lower than the requested levels).
+        -  All newly-reserved resources are available for serving the
+           instance partition's tables.
+        -  The instance partition's new resource levels are readable via
+           the API.
+
+        The returned [long-running
+        operation][google.longrunning.Operation] will have a name of the
+        format ``<instance_partition_name>/operations/<operation_id>``
+        and can be used to track the instance partition modification.
+        The [metadata][google.longrunning.Operation.metadata] field type
+        is
+        [UpdateInstancePartitionMetadata][google.spanner.admin.instance.v1.UpdateInstancePartitionMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is
+        [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
+        if successful.
+
+        Authorization requires ``spanner.instancePartitions.update``
+        permission on the resource
+        [name][google.spanner.admin.instance.v1.InstancePartition.name].
+
+        Returns:
+            Callable[[~.UpdateInstancePartitionRequest],
+                    ~.Operation]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "update_instance_partition" not in self._stubs:
+            self._stubs["update_instance_partition"] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/UpdateInstancePartition",
+                request_serializer=spanner_instance_admin.UpdateInstancePartitionRequest.serialize,
+                response_deserializer=operations_pb2.Operation.FromString,
+            )
+        return self._stubs["update_instance_partition"]
+
+    @property
+    def list_instance_partition_operations(
+        self,
+    ) -> Callable[
+        [spanner_instance_admin.ListInstancePartitionOperationsRequest],
+        spanner_instance_admin.ListInstancePartitionOperationsResponse,
+    ]:
+        r"""Return a callable for the list instance partition
+        operations method over gRPC.
+
+        Lists instance partition [long-running
+        operations][google.longrunning.Operation] in the given instance.
+        An instance partition operation has a name of the form
+        ``projects/<project>/instances/<instance>/instancePartitions/<instance_partition>/operations/<operation>``.
+        The long-running operation
+        [metadata][google.longrunning.Operation.metadata] field type
+        ``metadata.type_url`` describes the type of the metadata.
+        Operations returned include those that have
+        completed/failed/canceled within the last 7 days, and pending
+        operations. Operations returned are ordered by
+        ``operation.metadata.value.start_time`` in descending order
+        starting from the most recently started operation.
+
+        Authorization requires
+        ``spanner.instancePartitionOperations.list`` permission on the
+        resource
+        [parent][google.spanner.admin.instance.v1.ListInstancePartitionOperationsRequest.parent].
+
+        Returns:
+            Callable[[~.ListInstancePartitionOperationsRequest],
+                    ~.ListInstancePartitionOperationsResponse]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "list_instance_partition_operations" not in self._stubs:
+            self._stubs[
+                "list_instance_partition_operations"
+            ] = self.grpc_channel.unary_unary(
+                "/google.spanner.admin.instance.v1.InstanceAdmin/ListInstancePartitionOperations",
+                request_serializer=spanner_instance_admin.ListInstancePartitionOperationsRequest.serialize,
+                response_deserializer=spanner_instance_admin.ListInstancePartitionOperationsResponse.deserialize,
+            )
+        return self._stubs["list_instance_partition_operations"]
 
     def close(self):
         self.grpc_channel.close()

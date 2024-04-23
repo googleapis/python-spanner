@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ from typing import (
     Union,
     cast,
 )
+import warnings
 
 from google.cloud.spanner_admin_instance_v1 import gapic_version as package_version
 
@@ -42,9 +43,9 @@ from google.auth.exceptions import MutualTLSChannelError  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 
 try:
-    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault]
+    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault, None]
 except AttributeError:  # pragma: NO COVER
-    OptionalRetry = Union[retries.Retry, object]  # type: ignore
+    OptionalRetry = Union[retries.Retry, object, None]  # type: ignore
 
 from google.api_core import operation  # type: ignore
 from google.api_core import operation_async  # type: ignore
@@ -152,10 +153,14 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         return api_endpoint.replace(".googleapis.com", ".mtls.googleapis.com")
 
+    # Note: DEFAULT_ENDPOINT is deprecated. Use _DEFAULT_ENDPOINT_TEMPLATE instead.
     DEFAULT_ENDPOINT = "spanner.googleapis.com"
     DEFAULT_MTLS_ENDPOINT = _get_default_mtls_endpoint.__func__(  # type: ignore
         DEFAULT_ENDPOINT
     )
+
+    _DEFAULT_ENDPOINT_TEMPLATE = "spanner.{UNIVERSE_DOMAIN}"
+    _DEFAULT_UNIVERSE = "googleapis.com"
 
     @classmethod
     def from_service_account_info(cls, info: dict, *args, **kwargs):
@@ -242,6 +247,28 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         return m.groupdict() if m else {}
 
     @staticmethod
+    def instance_partition_path(
+        project: str,
+        instance: str,
+        instance_partition: str,
+    ) -> str:
+        """Returns a fully-qualified instance_partition string."""
+        return "projects/{project}/instances/{instance}/instancePartitions/{instance_partition}".format(
+            project=project,
+            instance=instance,
+            instance_partition=instance_partition,
+        )
+
+    @staticmethod
+    def parse_instance_partition_path(path: str) -> Dict[str, str]:
+        """Parses a instance_partition path into its component segments."""
+        m = re.match(
+            r"^projects/(?P<project>.+?)/instances/(?P<instance>.+?)/instancePartitions/(?P<instance_partition>.+?)$",
+            path,
+        )
+        return m.groupdict() if m else {}
+
+    @staticmethod
     def common_billing_account_path(
         billing_account: str,
     ) -> str:
@@ -322,7 +349,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
     def get_mtls_endpoint_and_cert_source(
         cls, client_options: Optional[client_options_lib.ClientOptions] = None
     ):
-        """Return the API endpoint and client cert source for mutual TLS.
+        """Deprecated. Return the API endpoint and client cert source for mutual TLS.
 
         The client cert source is determined in the following order:
         (1) if `GOOGLE_API_USE_CLIENT_CERTIFICATE` environment variable is not "true", the
@@ -352,6 +379,11 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         Raises:
             google.auth.exceptions.MutualTLSChannelError: If any errors happen.
         """
+
+        warnings.warn(
+            "get_mtls_endpoint_and_cert_source is deprecated. Use the api_endpoint property instead.",
+            DeprecationWarning,
+        )
         if client_options is None:
             client_options = client_options_lib.ClientOptions()
         use_client_cert = os.getenv("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false")
@@ -385,6 +417,178 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
 
         return api_endpoint, client_cert_source
 
+    @staticmethod
+    def _read_environment_variables():
+        """Returns the environment variables used by the client.
+
+        Returns:
+            Tuple[bool, str, str]: returns the GOOGLE_API_USE_CLIENT_CERTIFICATE,
+            GOOGLE_API_USE_MTLS_ENDPOINT, and GOOGLE_CLOUD_UNIVERSE_DOMAIN environment variables.
+
+        Raises:
+            ValueError: If GOOGLE_API_USE_CLIENT_CERTIFICATE is not
+                any of ["true", "false"].
+            google.auth.exceptions.MutualTLSChannelError: If GOOGLE_API_USE_MTLS_ENDPOINT
+                is not any of ["auto", "never", "always"].
+        """
+        use_client_cert = os.getenv(
+            "GOOGLE_API_USE_CLIENT_CERTIFICATE", "false"
+        ).lower()
+        use_mtls_endpoint = os.getenv("GOOGLE_API_USE_MTLS_ENDPOINT", "auto").lower()
+        universe_domain_env = os.getenv("GOOGLE_CLOUD_UNIVERSE_DOMAIN")
+        if use_client_cert not in ("true", "false"):
+            raise ValueError(
+                "Environment variable `GOOGLE_API_USE_CLIENT_CERTIFICATE` must be either `true` or `false`"
+            )
+        if use_mtls_endpoint not in ("auto", "never", "always"):
+            raise MutualTLSChannelError(
+                "Environment variable `GOOGLE_API_USE_MTLS_ENDPOINT` must be `never`, `auto` or `always`"
+            )
+        return use_client_cert == "true", use_mtls_endpoint, universe_domain_env
+
+    @staticmethod
+    def _get_client_cert_source(provided_cert_source, use_cert_flag):
+        """Return the client cert source to be used by the client.
+
+        Args:
+            provided_cert_source (bytes): The client certificate source provided.
+            use_cert_flag (bool): A flag indicating whether to use the client certificate.
+
+        Returns:
+            bytes or None: The client cert source to be used by the client.
+        """
+        client_cert_source = None
+        if use_cert_flag:
+            if provided_cert_source:
+                client_cert_source = provided_cert_source
+            elif mtls.has_default_client_cert_source():
+                client_cert_source = mtls.default_client_cert_source()
+        return client_cert_source
+
+    @staticmethod
+    def _get_api_endpoint(
+        api_override, client_cert_source, universe_domain, use_mtls_endpoint
+    ):
+        """Return the API endpoint used by the client.
+
+        Args:
+            api_override (str): The API endpoint override. If specified, this is always
+                the return value of this function and the other arguments are not used.
+            client_cert_source (bytes): The client certificate source used by the client.
+            universe_domain (str): The universe domain used by the client.
+            use_mtls_endpoint (str): How to use the mTLS endpoint, which depends also on the other parameters.
+                Possible values are "always", "auto", or "never".
+
+        Returns:
+            str: The API endpoint to be used by the client.
+        """
+        if api_override is not None:
+            api_endpoint = api_override
+        elif use_mtls_endpoint == "always" or (
+            use_mtls_endpoint == "auto" and client_cert_source
+        ):
+            _default_universe = InstanceAdminClient._DEFAULT_UNIVERSE
+            if universe_domain != _default_universe:
+                raise MutualTLSChannelError(
+                    f"mTLS is not supported in any universe other than {_default_universe}."
+                )
+            api_endpoint = InstanceAdminClient.DEFAULT_MTLS_ENDPOINT
+        else:
+            api_endpoint = InstanceAdminClient._DEFAULT_ENDPOINT_TEMPLATE.format(
+                UNIVERSE_DOMAIN=universe_domain
+            )
+        return api_endpoint
+
+    @staticmethod
+    def _get_universe_domain(
+        client_universe_domain: Optional[str], universe_domain_env: Optional[str]
+    ) -> str:
+        """Return the universe domain used by the client.
+
+        Args:
+            client_universe_domain (Optional[str]): The universe domain configured via the client options.
+            universe_domain_env (Optional[str]): The universe domain configured via the "GOOGLE_CLOUD_UNIVERSE_DOMAIN" environment variable.
+
+        Returns:
+            str: The universe domain to be used by the client.
+
+        Raises:
+            ValueError: If the universe domain is an empty string.
+        """
+        universe_domain = InstanceAdminClient._DEFAULT_UNIVERSE
+        if client_universe_domain is not None:
+            universe_domain = client_universe_domain
+        elif universe_domain_env is not None:
+            universe_domain = universe_domain_env
+        if len(universe_domain.strip()) == 0:
+            raise ValueError("Universe Domain cannot be an empty string.")
+        return universe_domain
+
+    @staticmethod
+    def _compare_universes(
+        client_universe: str, credentials: ga_credentials.Credentials
+    ) -> bool:
+        """Returns True iff the universe domains used by the client and credentials match.
+
+        Args:
+            client_universe (str): The universe domain configured via the client options.
+            credentials (ga_credentials.Credentials): The credentials being used in the client.
+
+        Returns:
+            bool: True iff client_universe matches the universe in credentials.
+
+        Raises:
+            ValueError: when client_universe does not match the universe in credentials.
+        """
+
+        default_universe = InstanceAdminClient._DEFAULT_UNIVERSE
+        credentials_universe = getattr(credentials, "universe_domain", default_universe)
+
+        if client_universe != credentials_universe:
+            raise ValueError(
+                "The configured universe domain "
+                f"({client_universe}) does not match the universe domain "
+                f"found in the credentials ({credentials_universe}). "
+                "If you haven't configured the universe domain explicitly, "
+                f"`{default_universe}` is the default."
+            )
+        return True
+
+    def _validate_universe_domain(self):
+        """Validates client's and credentials' universe domains are consistent.
+
+        Returns:
+            bool: True iff the configured universe domain is valid.
+
+        Raises:
+            ValueError: If the configured universe domain is not valid.
+        """
+        self._is_universe_domain_valid = (
+            self._is_universe_domain_valid
+            or InstanceAdminClient._compare_universes(
+                self.universe_domain, self.transport._credentials
+            )
+        )
+        return self._is_universe_domain_valid
+
+    @property
+    def api_endpoint(self):
+        """Return the API endpoint used by the client instance.
+
+        Returns:
+            str: The API endpoint used by the client instance.
+        """
+        return self._api_endpoint
+
+    @property
+    def universe_domain(self) -> str:
+        """Return the universe domain used by the client instance.
+
+        Returns:
+            str: The universe domain used by the client instance.
+        """
+        return self._universe_domain
+
     def __init__(
         self,
         *,
@@ -404,22 +608,32 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             transport (Union[str, InstanceAdminTransport]): The
                 transport to use. If set to None, a transport is chosen
                 automatically.
-            client_options (Optional[Union[google.api_core.client_options.ClientOptions, dict]]): Custom options for the
-                client. It won't take effect if a ``transport`` instance is provided.
-                (1) The ``api_endpoint`` property can be used to override the
-                default endpoint provided by the client. GOOGLE_API_USE_MTLS_ENDPOINT
-                environment variable can also be used to override the endpoint:
+            client_options (Optional[Union[google.api_core.client_options.ClientOptions, dict]]):
+                Custom options for the client.
+
+                1. The ``api_endpoint`` property can be used to override the
+                default endpoint provided by the client when ``transport`` is
+                not explicitly provided. Only if this property is not set and
+                ``transport`` was not explicitly provided, the endpoint is
+                determined by the GOOGLE_API_USE_MTLS_ENDPOINT environment
+                variable, which have one of the following values:
                 "always" (always use the default mTLS endpoint), "never" (always
-                use the default regular endpoint) and "auto" (auto switch to the
-                default mTLS endpoint if client certificate is present, this is
-                the default value). However, the ``api_endpoint`` property takes
-                precedence if provided.
-                (2) If GOOGLE_API_USE_CLIENT_CERTIFICATE environment variable
+                use the default regular endpoint) and "auto" (auto-switch to the
+                default mTLS endpoint if client certificate is present; this is
+                the default value).
+
+                2. If the GOOGLE_API_USE_CLIENT_CERTIFICATE environment variable
                 is "true", then the ``client_cert_source`` property can be used
-                to provide client certificate for mutual TLS transport. If
+                to provide a client certificate for mTLS transport. If
                 not provided, the default SSL client certificate will be used if
                 present. If GOOGLE_API_USE_CLIENT_CERTIFICATE is "false" or not
                 set, no client certificate will be used.
+
+                3. The ``universe_domain`` property can be used to override the
+                default "googleapis.com" universe. Note that the ``api_endpoint``
+                property still takes precedence; and ``universe_domain`` is
+                currently not supported for mTLS.
+
             client_info (google.api_core.gapic_v1.client_info.ClientInfo):
                 The client info used to send a user-agent string along with
                 API requests. If ``None``, then default info will be used.
@@ -430,17 +644,34 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             google.auth.exceptions.MutualTLSChannelError: If mutual TLS transport
                 creation failed for any reason.
         """
-        if isinstance(client_options, dict):
-            client_options = client_options_lib.from_dict(client_options)
-        if client_options is None:
-            client_options = client_options_lib.ClientOptions()
-        client_options = cast(client_options_lib.ClientOptions, client_options)
-
-        api_endpoint, client_cert_source_func = self.get_mtls_endpoint_and_cert_source(
-            client_options
+        self._client_options = client_options
+        if isinstance(self._client_options, dict):
+            self._client_options = client_options_lib.from_dict(self._client_options)
+        if self._client_options is None:
+            self._client_options = client_options_lib.ClientOptions()
+        self._client_options = cast(
+            client_options_lib.ClientOptions, self._client_options
         )
 
-        api_key_value = getattr(client_options, "api_key", None)
+        universe_domain_opt = getattr(self._client_options, "universe_domain", None)
+
+        (
+            self._use_client_cert,
+            self._use_mtls_endpoint,
+            self._universe_domain_env,
+        ) = InstanceAdminClient._read_environment_variables()
+        self._client_cert_source = InstanceAdminClient._get_client_cert_source(
+            self._client_options.client_cert_source, self._use_client_cert
+        )
+        self._universe_domain = InstanceAdminClient._get_universe_domain(
+            universe_domain_opt, self._universe_domain_env
+        )
+        self._api_endpoint = None  # updated below, depending on `transport`
+
+        # Initialize the universe domain validation.
+        self._is_universe_domain_valid = False
+
+        api_key_value = getattr(self._client_options, "api_key", None)
         if api_key_value and credentials:
             raise ValueError(
                 "client_options.api_key and credentials are mutually exclusive"
@@ -449,20 +680,33 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         # Save or instantiate the transport.
         # Ordinarily, we provide the transport, but allowing a custom transport
         # instance provides an extensibility point for unusual situations.
-        if isinstance(transport, InstanceAdminTransport):
+        transport_provided = isinstance(transport, InstanceAdminTransport)
+        if transport_provided:
             # transport is a InstanceAdminTransport instance.
-            if credentials or client_options.credentials_file or api_key_value:
+            if credentials or self._client_options.credentials_file or api_key_value:
                 raise ValueError(
                     "When providing a transport instance, "
                     "provide its credentials directly."
                 )
-            if client_options.scopes:
+            if self._client_options.scopes:
                 raise ValueError(
                     "When providing a transport instance, provide its scopes "
                     "directly."
                 )
-            self._transport = transport
-        else:
+            self._transport = cast(InstanceAdminTransport, transport)
+            self._api_endpoint = self._transport.host
+
+        self._api_endpoint = (
+            self._api_endpoint
+            or InstanceAdminClient._get_api_endpoint(
+                self._client_options.api_endpoint,
+                self._client_cert_source,
+                self._universe_domain,
+                self._use_mtls_endpoint,
+            )
+        )
+
+        if not transport_provided:
             import google.auth._default  # type: ignore
 
             if api_key_value and hasattr(
@@ -472,17 +716,17 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
                     api_key_value
                 )
 
-            Transport = type(self).get_transport_class(transport)
+            Transport = type(self).get_transport_class(cast(str, transport))
             self._transport = Transport(
                 credentials=credentials,
-                credentials_file=client_options.credentials_file,
-                host=api_endpoint,
-                scopes=client_options.scopes,
-                client_cert_source_for_mtls=client_cert_source_func,
-                quota_project_id=client_options.quota_project_id,
+                credentials_file=self._client_options.credentials_file,
+                host=self._api_endpoint,
+                scopes=self._client_options.scopes,
+                client_cert_source_for_mtls=self._client_cert_source,
+                quota_project_id=self._client_options.quota_project_id,
                 client_info=client_info,
                 always_use_jwt_access=True,
-                api_audience=client_options.api_audience,
+                api_audience=self._client_options.api_audience,
             )
 
     def list_instance_configs(
@@ -583,6 +827,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -700,6 +947,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -883,6 +1133,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -1073,6 +1326,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             ),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
@@ -1184,6 +1440,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         rpc(
@@ -1307,6 +1566,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
@@ -1425,6 +1687,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
@@ -1436,6 +1701,129 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         # This method is paged; wrap the response in a pager, which provides
         # an `__iter__` convenience method.
         response = pagers.ListInstancesPager(
+            method=rpc,
+            request=request,
+            response=response,
+            metadata=metadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def list_instance_partitions(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.ListInstancePartitionsRequest, dict]
+        ] = None,
+        *,
+        parent: Optional[str] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> pagers.ListInstancePartitionsPager:
+        r"""Lists all instance partitions for the given instance.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instance_partitions():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstancePartitionsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instance_partitions(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionsRequest, dict]):
+                The request object. The request for
+                [ListInstancePartitions][google.spanner.admin.instance.v1.InstanceAdmin.ListInstancePartitions].
+            parent (str):
+                Required. The instance whose instance partitions should
+                be listed. Values are of the form
+                ``projects/<project>/instances/<instance>``.
+
+                This corresponds to the ``parent`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.cloud.spanner_admin_instance_v1.services.instance_admin.pagers.ListInstancePartitionsPager:
+                The response for
+                   [ListInstancePartitions][google.spanner.admin.instance.v1.InstanceAdmin.ListInstancePartitions].
+
+                Iterating over this object will yield results and
+                resolve additional pages automatically.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.ListInstancePartitionsRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(
+            request, spanner_instance_admin.ListInstancePartitionsRequest
+        ):
+            request = spanner_instance_admin.ListInstancePartitionsRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if parent is not None:
+                request.parent = parent
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[self._transport.list_instance_partitions]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # This method is paged; wrap the response in a pager, which provides
+        # an `__iter__` convenience method.
+        response = pagers.ListInstancePartitionsPager(
             method=rpc,
             request=request,
             response=response,
@@ -1538,6 +1926,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -1716,6 +2107,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -1906,6 +2300,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             ),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
@@ -2019,6 +2416,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         rpc(
@@ -2151,6 +2551,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
         metadata = tuple(metadata) + (
             gapic_v1.routing_header.to_grpc_metadata((("resource", request.resource),)),
         )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
 
         # Send the request.
         response = rpc(
@@ -2288,6 +2691,9 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             gapic_v1.routing_header.to_grpc_metadata((("resource", request.resource),)),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
@@ -2408,11 +2814,770 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             gapic_v1.routing_header.to_grpc_metadata((("resource", request.resource),)),
         )
 
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
         # Send the request.
         response = rpc(
             request,
             retry=retry,
             timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def get_instance_partition(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.GetInstancePartitionRequest, dict]
+        ] = None,
+        *,
+        name: Optional[str] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> spanner_instance_admin.InstancePartition:
+        r"""Gets information about a particular instance
+        partition.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_get_instance_partition():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.GetInstancePartitionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                response = client.get_instance_partition(request=request)
+
+                # Handle the response
+                print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.GetInstancePartitionRequest, dict]):
+                The request object. The request for
+                [GetInstancePartition][google.spanner.admin.instance.v1.InstanceAdmin.GetInstancePartition].
+            name (str):
+                Required. The name of the requested instance partition.
+                Values are of the form
+                ``projects/{project}/instances/{instance}/instancePartitions/{instance_partition}``.
+
+                This corresponds to the ``name`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.cloud.spanner_admin_instance_v1.types.InstancePartition:
+                An isolated set of Cloud Spanner
+                resources that databases can define
+                placements on.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.GetInstancePartitionRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(request, spanner_instance_admin.GetInstancePartitionRequest):
+            request = spanner_instance_admin.GetInstancePartitionRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if name is not None:
+                request.name = name
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[self._transport.get_instance_partition]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def create_instance_partition(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.CreateInstancePartitionRequest, dict]
+        ] = None,
+        *,
+        parent: Optional[str] = None,
+        instance_partition: Optional[spanner_instance_admin.InstancePartition] = None,
+        instance_partition_id: Optional[str] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> operation.Operation:
+        r"""Creates an instance partition and begins preparing it to be
+        used. The returned [long-running
+        operation][google.longrunning.Operation] can be used to track
+        the progress of preparing the new instance partition. The
+        instance partition name is assigned by the caller. If the named
+        instance partition already exists, ``CreateInstancePartition``
+        returns ``ALREADY_EXISTS``.
+
+        Immediately upon completion of this request:
+
+        -  The instance partition is readable via the API, with all
+           requested attributes but no allocated resources. Its state is
+           ``CREATING``.
+
+        Until completion of the returned operation:
+
+        -  Cancelling the operation renders the instance partition
+           immediately unreadable via the API.
+        -  The instance partition can be deleted.
+        -  All other attempts to modify the instance partition are
+           rejected.
+
+        Upon completion of the returned operation:
+
+        -  Billing for all successfully-allocated resources begins (some
+           types may have lower than the requested levels).
+        -  Databases can start using this instance partition.
+        -  The instance partition's allocated resource levels are
+           readable via the API.
+        -  The instance partition's state becomes ``READY``.
+
+        The returned [long-running
+        operation][google.longrunning.Operation] will have a name of the
+        format ``<instance_partition_name>/operations/<operation_id>``
+        and can be used to track creation of the instance partition. The
+        [metadata][google.longrunning.Operation.metadata] field type is
+        [CreateInstancePartitionMetadata][google.spanner.admin.instance.v1.CreateInstancePartitionMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is
+        [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
+        if successful.
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_create_instance_partition():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance_partition = spanner_admin_instance_v1.InstancePartition()
+                instance_partition.node_count = 1070
+                instance_partition.name = "name_value"
+                instance_partition.config = "config_value"
+                instance_partition.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.CreateInstancePartitionRequest(
+                    parent="parent_value",
+                    instance_partition_id="instance_partition_id_value",
+                    instance_partition=instance_partition,
+                )
+
+                # Make the request
+                operation = client.create_instance_partition(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.CreateInstancePartitionRequest, dict]):
+                The request object. The request for
+                [CreateInstancePartition][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstancePartition].
+            parent (str):
+                Required. The name of the instance in which to create
+                the instance partition. Values are of the form
+                ``projects/<project>/instances/<instance>``.
+
+                This corresponds to the ``parent`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            instance_partition (google.cloud.spanner_admin_instance_v1.types.InstancePartition):
+                Required. The instance partition to create. The
+                instance_partition.name may be omitted, but if specified
+                must be
+                ``<parent>/instancePartitions/<instance_partition_id>``.
+
+                This corresponds to the ``instance_partition`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            instance_partition_id (str):
+                Required. The ID of the instance partition to create.
+                Valid identifiers are of the form
+                ``[a-z][-a-z0-9]*[a-z0-9]`` and must be between 2 and 64
+                characters in length.
+
+                This corresponds to the ``instance_partition_id`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.api_core.operation.Operation:
+                An object representing a long-running operation.
+
+                The result type for the operation will be :class:`google.cloud.spanner_admin_instance_v1.types.InstancePartition` An isolated set of Cloud Spanner resources that databases can define
+                   placements on.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([parent, instance_partition, instance_partition_id])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.CreateInstancePartitionRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(
+            request, spanner_instance_admin.CreateInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.CreateInstancePartitionRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if parent is not None:
+                request.parent = parent
+            if instance_partition is not None:
+                request.instance_partition = instance_partition
+            if instance_partition_id is not None:
+                request.instance_partition_id = instance_partition_id
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[
+            self._transport.create_instance_partition
+        ]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Wrap the response in an operation future.
+        response = operation.from_gapic(
+            response,
+            self._transport.operations_client,
+            spanner_instance_admin.InstancePartition,
+            metadata_type=spanner_instance_admin.CreateInstancePartitionMetadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def delete_instance_partition(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.DeleteInstancePartitionRequest, dict]
+        ] = None,
+        *,
+        name: Optional[str] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> None:
+        r"""Deletes an existing instance partition. Requires that the
+        instance partition is not used by any database or backup and is
+        not the default instance partition of an instance.
+
+        Authorization requires ``spanner.instancePartitions.delete``
+        permission on the resource
+        [name][google.spanner.admin.instance.v1.InstancePartition.name].
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_delete_instance_partition():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.DeleteInstancePartitionRequest(
+                    name="name_value",
+                )
+
+                # Make the request
+                client.delete_instance_partition(request=request)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.DeleteInstancePartitionRequest, dict]):
+                The request object. The request for
+                [DeleteInstancePartition][google.spanner.admin.instance.v1.InstanceAdmin.DeleteInstancePartition].
+            name (str):
+                Required. The name of the instance partition to be
+                deleted. Values are of the form
+                ``projects/{project}/instances/{instance}/instancePartitions/{instance_partition}``
+
+                This corresponds to the ``name`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([name])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.DeleteInstancePartitionRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(
+            request, spanner_instance_admin.DeleteInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.DeleteInstancePartitionRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if name is not None:
+                request.name = name
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[
+            self._transport.delete_instance_partition
+        ]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("name", request.name),)),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+    def update_instance_partition(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.UpdateInstancePartitionRequest, dict]
+        ] = None,
+        *,
+        instance_partition: Optional[spanner_instance_admin.InstancePartition] = None,
+        field_mask: Optional[field_mask_pb2.FieldMask] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> operation.Operation:
+        r"""Updates an instance partition, and begins allocating or
+        releasing resources as requested. The returned [long-running
+        operation][google.longrunning.Operation] can be used to track
+        the progress of updating the instance partition. If the named
+        instance partition does not exist, returns ``NOT_FOUND``.
+
+        Immediately upon completion of this request:
+
+        -  For resource types for which a decrease in the instance
+           partition's allocation has been requested, billing is based
+           on the newly-requested level.
+
+        Until completion of the returned operation:
+
+        -  Cancelling the operation sets its metadata's
+           [cancel_time][google.spanner.admin.instance.v1.UpdateInstancePartitionMetadata.cancel_time],
+           and begins restoring resources to their pre-request values.
+           The operation is guaranteed to succeed at undoing all
+           resource changes, after which point it terminates with a
+           ``CANCELLED`` status.
+        -  All other attempts to modify the instance partition are
+           rejected.
+        -  Reading the instance partition via the API continues to give
+           the pre-request resource levels.
+
+        Upon completion of the returned operation:
+
+        -  Billing begins for all successfully-allocated resources (some
+           types may have lower than the requested levels).
+        -  All newly-reserved resources are available for serving the
+           instance partition's tables.
+        -  The instance partition's new resource levels are readable via
+           the API.
+
+        The returned [long-running
+        operation][google.longrunning.Operation] will have a name of the
+        format ``<instance_partition_name>/operations/<operation_id>``
+        and can be used to track the instance partition modification.
+        The [metadata][google.longrunning.Operation.metadata] field type
+        is
+        [UpdateInstancePartitionMetadata][google.spanner.admin.instance.v1.UpdateInstancePartitionMetadata].
+        The [response][google.longrunning.Operation.response] field type
+        is
+        [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
+        if successful.
+
+        Authorization requires ``spanner.instancePartitions.update``
+        permission on the resource
+        [name][google.spanner.admin.instance.v1.InstancePartition.name].
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_update_instance_partition():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                instance_partition = spanner_admin_instance_v1.InstancePartition()
+                instance_partition.node_count = 1070
+                instance_partition.name = "name_value"
+                instance_partition.config = "config_value"
+                instance_partition.display_name = "display_name_value"
+
+                request = spanner_admin_instance_v1.UpdateInstancePartitionRequest(
+                    instance_partition=instance_partition,
+                )
+
+                # Make the request
+                operation = client.update_instance_partition(request=request)
+
+                print("Waiting for operation to complete...")
+
+                response = operation.result()
+
+                # Handle the response
+                print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.UpdateInstancePartitionRequest, dict]):
+                The request object. The request for
+                [UpdateInstancePartition][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstancePartition].
+            instance_partition (google.cloud.spanner_admin_instance_v1.types.InstancePartition):
+                Required. The instance partition to update, which must
+                always include the instance partition name. Otherwise,
+                only fields mentioned in
+                [field_mask][google.spanner.admin.instance.v1.UpdateInstancePartitionRequest.field_mask]
+                need be included.
+
+                This corresponds to the ``instance_partition`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            field_mask (google.protobuf.field_mask_pb2.FieldMask):
+                Required. A mask specifying which fields in
+                [InstancePartition][google.spanner.admin.instance.v1.InstancePartition]
+                should be updated. The field mask must always be
+                specified; this prevents any future fields in
+                [InstancePartition][google.spanner.admin.instance.v1.InstancePartition]
+                from being erased accidentally by clients that do not
+                know about them.
+
+                This corresponds to the ``field_mask`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.api_core.operation.Operation:
+                An object representing a long-running operation.
+
+                The result type for the operation will be :class:`google.cloud.spanner_admin_instance_v1.types.InstancePartition` An isolated set of Cloud Spanner resources that databases can define
+                   placements on.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([instance_partition, field_mask])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.UpdateInstancePartitionRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(
+            request, spanner_instance_admin.UpdateInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.UpdateInstancePartitionRequest(request)
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if instance_partition is not None:
+                request.instance_partition = instance_partition
+            if field_mask is not None:
+                request.field_mask = field_mask
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[
+            self._transport.update_instance_partition
+        ]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata(
+                (("instance_partition.name", request.instance_partition.name),)
+            ),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # Wrap the response in an operation future.
+        response = operation.from_gapic(
+            response,
+            self._transport.operations_client,
+            spanner_instance_admin.InstancePartition,
+            metadata_type=spanner_instance_admin.UpdateInstancePartitionMetadata,
+        )
+
+        # Done; return the response.
+        return response
+
+    def list_instance_partition_operations(
+        self,
+        request: Optional[
+            Union[spanner_instance_admin.ListInstancePartitionOperationsRequest, dict]
+        ] = None,
+        *,
+        parent: Optional[str] = None,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
+        metadata: Sequence[Tuple[str, str]] = (),
+    ) -> pagers.ListInstancePartitionOperationsPager:
+        r"""Lists instance partition [long-running
+        operations][google.longrunning.Operation] in the given instance.
+        An instance partition operation has a name of the form
+        ``projects/<project>/instances/<instance>/instancePartitions/<instance_partition>/operations/<operation>``.
+        The long-running operation
+        [metadata][google.longrunning.Operation.metadata] field type
+        ``metadata.type_url`` describes the type of the metadata.
+        Operations returned include those that have
+        completed/failed/canceled within the last 7 days, and pending
+        operations. Operations returned are ordered by
+        ``operation.metadata.value.start_time`` in descending order
+        starting from the most recently started operation.
+
+        Authorization requires
+        ``spanner.instancePartitionOperations.list`` permission on the
+        resource
+        [parent][google.spanner.admin.instance.v1.ListInstancePartitionOperationsRequest.parent].
+
+        .. code-block:: python
+
+            # This snippet has been automatically generated and should be regarded as a
+            # code template only.
+            # It will require modifications to work:
+            # - It may require correct/in-range values for request initialization.
+            # - It may require specifying regional endpoints when creating the service
+            #   client as shown in:
+            #   https://googleapis.dev/python/google-api-core/latest/client_options.html
+            from google.cloud import spanner_admin_instance_v1
+
+            def sample_list_instance_partition_operations():
+                # Create a client
+                client = spanner_admin_instance_v1.InstanceAdminClient()
+
+                # Initialize request argument(s)
+                request = spanner_admin_instance_v1.ListInstancePartitionOperationsRequest(
+                    parent="parent_value",
+                )
+
+                # Make the request
+                page_result = client.list_instance_partition_operations(request=request)
+
+                # Handle the response
+                for response in page_result:
+                    print(response)
+
+        Args:
+            request (Union[google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionOperationsRequest, dict]):
+                The request object. The request for
+                [ListInstancePartitionOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstancePartitionOperations].
+            parent (str):
+                Required. The parent instance of the instance partition
+                operations. Values are of the form
+                ``projects/<project>/instances/<instance>``.
+
+                This corresponds to the ``parent`` field
+                on the ``request`` instance; if ``request`` is provided, this
+                should not be set.
+            retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                should be retried.
+            timeout (float): The timeout for this request.
+            metadata (Sequence[Tuple[str, str]]): Strings which should be
+                sent along with the request as metadata.
+
+        Returns:
+            google.cloud.spanner_admin_instance_v1.services.instance_admin.pagers.ListInstancePartitionOperationsPager:
+                The response for
+                   [ListInstancePartitionOperations][google.spanner.admin.instance.v1.InstanceAdmin.ListInstancePartitionOperations].
+
+                Iterating over this object will yield results and
+                resolve additional pages automatically.
+
+        """
+        # Create or coerce a protobuf request object.
+        # Quick check: If we got a request object, we should *not* have
+        # gotten any keyword arguments that map to the request.
+        has_flattened_params = any([parent])
+        if request is not None and has_flattened_params:
+            raise ValueError(
+                "If the `request` argument is set, then none of "
+                "the individual field arguments should be set."
+            )
+
+        # Minor optimization to avoid making a copy if the user passes
+        # in a spanner_instance_admin.ListInstancePartitionOperationsRequest.
+        # There's no risk of modifying the input as we've already verified
+        # there are no flattened fields.
+        if not isinstance(
+            request, spanner_instance_admin.ListInstancePartitionOperationsRequest
+        ):
+            request = spanner_instance_admin.ListInstancePartitionOperationsRequest(
+                request
+            )
+            # If we have keyword arguments corresponding to fields on the
+            # request, apply these.
+            if parent is not None:
+                request.parent = parent
+
+        # Wrap the RPC method; this adds retry and timeout information,
+        # and friendly error handling.
+        rpc = self._transport._wrapped_methods[
+            self._transport.list_instance_partition_operations
+        ]
+
+        # Certain fields should be provided within the metadata header;
+        # add these here.
+        metadata = tuple(metadata) + (
+            gapic_v1.routing_header.to_grpc_metadata((("parent", request.parent),)),
+        )
+
+        # Validate the universe domain.
+        self._validate_universe_domain()
+
+        # Send the request.
+        response = rpc(
+            request,
+            retry=retry,
+            timeout=timeout,
+            metadata=metadata,
+        )
+
+        # This method is paged; wrap the response in a pager, which provides
+        # an `__iter__` convenience method.
+        response = pagers.ListInstancePartitionOperationsPager(
+            method=rpc,
+            request=request,
+            response=response,
             metadata=metadata,
         )
 
