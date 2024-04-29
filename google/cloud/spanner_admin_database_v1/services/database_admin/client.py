@@ -18,6 +18,7 @@ import os
 import re
 from typing import (
     Dict,
+    Callable,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -659,7 +660,9 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
         self,
         *,
         credentials: Optional[ga_credentials.Credentials] = None,
-        transport: Optional[Union[str, DatabaseAdminTransport]] = None,
+        transport: Optional[
+            Union[str, DatabaseAdminTransport, Callable[..., DatabaseAdminTransport]]
+        ] = None,
         client_options: Optional[Union[client_options_lib.ClientOptions, dict]] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
     ) -> None:
@@ -671,9 +674,11 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 credentials identify the application to the service; if none
                 are specified, the client will attempt to ascertain the
                 credentials from the environment.
-            transport (Union[str, DatabaseAdminTransport]): The
-                transport to use. If set to None, a transport is chosen
-                automatically.
+            transport (Optional[Union[str,DatabaseAdminTransport,Callable[..., DatabaseAdminTransport]]]):
+                The transport to use, or a Callable that constructs and returns a new transport.
+                If a Callable is given, it will be called with the same set of initialization
+                arguments as used in the DatabaseAdminTransport constructor.
+                If set to None, a transport is chosen automatically.
             client_options (Optional[Union[google.api_core.client_options.ClientOptions, dict]]):
                 Custom options for the client.
 
@@ -782,8 +787,15 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                     api_key_value
                 )
 
-            Transport = type(self).get_transport_class(cast(str, transport))
-            self._transport = Transport(
+            transport_init: Union[
+                Type[DatabaseAdminTransport], Callable[..., DatabaseAdminTransport]
+            ] = (
+                type(self).get_transport_class(transport)
+                if isinstance(transport, str) or transport is None
+                else cast(Callable[..., DatabaseAdminTransport], transport)
+            )
+            # initialize with the provided callable or the passed in class
+            self._transport = transport_init(
                 credentials=credentials,
                 credentials_file=self._client_options.credentials_file,
                 host=self._api_endpoint,
@@ -863,8 +875,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -872,10 +884,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.ListDatabasesRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.ListDatabasesRequest):
             request = spanner_database_admin.ListDatabasesRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1010,8 +1020,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, create_statement])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1019,10 +1029,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.CreateDatabaseRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.CreateDatabaseRequest):
             request = spanner_database_admin.CreateDatabaseRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1126,8 +1134,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 A Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1135,10 +1143,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.GetDatabaseRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.GetDatabaseRequest):
             request = spanner_database_admin.GetDatabaseRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1289,8 +1295,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, update_mask])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1298,10 +1304,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.UpdateDatabaseRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.UpdateDatabaseRequest):
             request = spanner_database_admin.UpdateDatabaseRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1454,8 +1458,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, statements])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1463,10 +1467,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.UpdateDatabaseDdlRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.UpdateDatabaseDdlRequest):
             request = spanner_database_admin.UpdateDatabaseDdlRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1563,8 +1565,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1572,10 +1574,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.DropDatabaseRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.DropDatabaseRequest):
             request = spanner_database_admin.DropDatabaseRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1671,8 +1671,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1680,10 +1680,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.GetDatabaseDdlRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.GetDatabaseDdlRequest):
             request = spanner_database_admin.GetDatabaseDdlRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -1814,8 +1812,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1824,8 +1822,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             )
 
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
+            # - The request isn't a proto-plus wrapped type,
+            #   so it must be constructed via keyword expansion.
             request = iam_policy_pb2.SetIamPolicyRequest(**request)
         elif not request:
             # Null request, just make one.
@@ -1957,8 +1955,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1967,8 +1965,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             )
 
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
+            # - The request isn't a proto-plus wrapped type,
+            #   so it must be constructed via keyword expansion.
             request = iam_policy_pb2.GetIamPolicyRequest(**request)
         elif not request:
             # Null request, just make one.
@@ -2081,8 +2079,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 Response message for TestIamPermissions method.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource, permissions])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2091,8 +2089,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             )
 
         if isinstance(request, dict):
-            # The request isn't a proto-plus wrapped type,
-            # so it must be constructed via keyword expansion.
+            # - The request isn't a proto-plus wrapped type,
+            #   so it must be constructed via keyword expansion.
             request = iam_policy_pb2.TestIamPermissionsRequest(**request)
         elif not request:
             # Null request, just make one.
@@ -2228,8 +2226,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, backup, backup_id])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2237,10 +2235,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a gsad_backup.CreateBackupRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, gsad_backup.CreateBackupRequest):
             request = gsad_backup.CreateBackupRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -2402,8 +2398,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, backup_id, source_backup, expire_time])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2411,10 +2407,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a backup.CopyBackupRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, backup.CopyBackupRequest):
             request = backup.CopyBackupRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -2520,8 +2514,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 A backup of a Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2529,10 +2523,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a backup.GetBackupRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, backup.GetBackupRequest):
             request = backup.GetBackupRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -2640,8 +2632,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 A backup of a Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([backup, update_mask])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2649,10 +2641,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a gsad_backup.UpdateBackupRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, gsad_backup.UpdateBackupRequest):
             request = gsad_backup.UpdateBackupRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -2742,8 +2732,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2751,10 +2741,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a backup.DeleteBackupRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, backup.DeleteBackupRequest):
             request = backup.DeleteBackupRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -2850,8 +2838,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2859,10 +2847,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a backup.ListBackupsRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, backup.ListBackupsRequest):
             request = backup.ListBackupsRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -3016,8 +3002,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, database_id, backup])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -3025,10 +3011,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.RestoreDatabaseRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.RestoreDatabaseRequest):
             request = spanner_database_admin.RestoreDatabaseRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -3149,8 +3133,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -3158,10 +3142,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.ListDatabaseOperationsRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(
             request, spanner_database_admin.ListDatabaseOperationsRequest
         ):
@@ -3281,8 +3263,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -3290,10 +3272,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a backup.ListBackupOperationsRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, backup.ListBackupOperationsRequest):
             request = backup.ListBackupOperationsRequest(request)
             # If we have keyword arguments corresponding to fields on the
@@ -3402,8 +3382,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -3411,10 +3391,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
                 "the individual field arguments should be set."
             )
 
-        # Minor optimization to avoid making a copy if the user passes
-        # in a spanner_database_admin.ListDatabaseRolesRequest.
-        # There's no risk of modifying the input as we've already verified
-        # there are no flattened fields.
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
         if not isinstance(request, spanner_database_admin.ListDatabaseRolesRequest):
             request = spanner_database_admin.ListDatabaseRolesRequest(request)
             # If we have keyword arguments corresponding to fields on the

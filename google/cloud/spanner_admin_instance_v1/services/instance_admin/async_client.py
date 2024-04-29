@@ -18,6 +18,7 @@ import functools
 import re
 from typing import (
     Dict,
+    Callable,
     Mapping,
     MutableMapping,
     MutableSequence,
@@ -231,7 +232,9 @@ class InstanceAdminAsyncClient:
         self,
         *,
         credentials: Optional[ga_credentials.Credentials] = None,
-        transport: Union[str, InstanceAdminTransport] = "grpc_asyncio",
+        transport: Optional[
+            Union[str, InstanceAdminTransport, Callable[..., InstanceAdminTransport]]
+        ] = "grpc_asyncio",
         client_options: Optional[ClientOptions] = None,
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
     ) -> None:
@@ -243,9 +246,11 @@ class InstanceAdminAsyncClient:
                 credentials identify the application to the service; if none
                 are specified, the client will attempt to ascertain the
                 credentials from the environment.
-            transport (Union[str, ~.InstanceAdminTransport]): The
-                transport to use. If set to None, a transport is chosen
-                automatically.
+            transport (Optional[Union[str,InstanceAdminTransport,Callable[..., InstanceAdminTransport]]]):
+                The transport to use, or a Callable that constructs and returns a new transport to use.
+                If a Callable is given, it will be called with the same set of initialization
+                arguments as used in the InstanceAdminTransport constructor.
+                If set to None, a transport is chosen automatically.
             client_options (Optional[Union[google.api_core.client_options.ClientOptions, dict]]):
                 Custom options for the client.
 
@@ -358,8 +363,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -367,7 +372,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.ListInstanceConfigsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.ListInstanceConfigsRequest):
+            request = spanner_instance_admin.ListInstanceConfigsRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -376,21 +384,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_instance_configs,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.list_instance_configs
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -488,8 +484,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -497,7 +493,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.GetInstanceConfigRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.GetInstanceConfigRequest):
+            request = spanner_instance_admin.GetInstanceConfigRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -506,21 +505,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_instance_config,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.get_instance_config
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -680,8 +667,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, instance_config, instance_config_id])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -689,7 +676,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.CreateInstanceConfigRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.CreateInstanceConfigRequest):
+            request = spanner_instance_admin.CreateInstanceConfigRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -702,11 +692,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.create_instance_config,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.create_instance_config
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -872,8 +860,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([instance_config, update_mask])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -881,7 +869,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.UpdateInstanceConfigRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.UpdateInstanceConfigRequest):
+            request = spanner_instance_admin.UpdateInstanceConfigRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -892,11 +883,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_instance_config,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.update_instance_config
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -991,8 +980,8 @@ class InstanceAdminAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1000,7 +989,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.DeleteInstanceConfigRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.DeleteInstanceConfigRequest):
+            request = spanner_instance_admin.DeleteInstanceConfigRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1009,11 +1001,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.delete_instance_config,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.delete_instance_config
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1110,8 +1100,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1119,7 +1109,14 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.ListInstanceConfigOperationsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.ListInstanceConfigOperationsRequest
+        ):
+            request = spanner_instance_admin.ListInstanceConfigOperationsRequest(
+                request
+            )
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1128,11 +1125,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_instance_config_operations,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.list_instance_config_operations
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1231,8 +1226,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1240,7 +1235,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.ListInstancesRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.ListInstancesRequest):
+            request = spanner_instance_admin.ListInstancesRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1249,21 +1247,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_instances,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.list_instances
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1362,8 +1348,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1371,7 +1357,12 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.ListInstancePartitionsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.ListInstancePartitionsRequest
+        ):
+            request = spanner_instance_admin.ListInstancePartitionsRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1380,11 +1371,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_instance_partitions,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.list_instance_partitions
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1479,8 +1468,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1488,7 +1477,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.GetInstanceRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.GetInstanceRequest):
+            request = spanner_instance_admin.GetInstanceRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1497,21 +1489,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_instance,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.get_instance
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1666,8 +1646,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, instance_id, instance])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1675,7 +1655,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.CreateInstanceRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.CreateInstanceRequest):
+            request = spanner_instance_admin.CreateInstanceRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1688,11 +1671,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.create_instance,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.create_instance
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1858,8 +1839,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([instance, field_mask])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1867,7 +1848,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.UpdateInstanceRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.UpdateInstanceRequest):
+            request = spanner_instance_admin.UpdateInstanceRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1878,11 +1862,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_instance,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.update_instance
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1979,8 +1961,8 @@ class InstanceAdminAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -1988,7 +1970,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.DeleteInstanceRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.DeleteInstanceRequest):
+            request = spanner_instance_admin.DeleteInstanceRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1997,21 +1982,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.delete_instance,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.delete_instance
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2125,8 +2098,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2134,8 +2107,8 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+        # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.SetIamPolicyRequest(**request)
         elif not request:
@@ -2143,11 +2116,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.set_iam_policy,
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.set_iam_policy
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2265,8 +2236,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2274,8 +2245,8 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+        # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.GetIamPolicyRequest(**request)
         elif not request:
@@ -2283,21 +2254,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_iam_policy,
-            default_retry=retries.AsyncRetry(
-                initial=1.0,
-                maximum=32.0,
-                multiplier=1.3,
-                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=30.0,
-            ),
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.get_iam_policy
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2397,8 +2356,8 @@ class InstanceAdminAsyncClient:
                 Response message for TestIamPermissions method.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource, permissions])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2406,8 +2365,8 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+        # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.TestIamPermissionsRequest(**request)
         elif not request:
@@ -2417,11 +2376,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.test_iam_permissions,
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.test_iam_permissions
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2509,8 +2466,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2518,7 +2475,10 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.GetInstancePartitionRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_instance_admin.GetInstancePartitionRequest):
+            request = spanner_instance_admin.GetInstancePartitionRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2527,11 +2487,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_instance_partition,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.get_instance_partition
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2691,8 +2649,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, instance_partition, instance_partition_id])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2700,7 +2658,12 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.CreateInstancePartitionRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.CreateInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.CreateInstancePartitionRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2713,11 +2676,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.create_instance_partition,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.create_instance_partition
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2808,8 +2769,8 @@ class InstanceAdminAsyncClient:
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2817,7 +2778,12 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.DeleteInstancePartitionRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.DeleteInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.DeleteInstancePartitionRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2826,11 +2792,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.delete_instance_partition,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.delete_instance_partition
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2988,8 +2952,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([instance_partition, field_mask])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2997,7 +2961,12 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.UpdateInstancePartitionRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.UpdateInstancePartitionRequest
+        ):
+            request = spanner_instance_admin.UpdateInstancePartitionRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -3008,11 +2977,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_instance_partition,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.update_instance_partition
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -3128,8 +3095,8 @@ class InstanceAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -3137,7 +3104,14 @@ class InstanceAdminAsyncClient:
                 "the individual field arguments should be set."
             )
 
-        request = spanner_instance_admin.ListInstancePartitionOperationsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(
+            request, spanner_instance_admin.ListInstancePartitionOperationsRequest
+        ):
+            request = spanner_instance_admin.ListInstancePartitionOperationsRequest(
+                request
+            )
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -3146,11 +3120,9 @@ class InstanceAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_instance_partition_operations,
-            default_timeout=None,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[
+            self._client._transport.list_instance_partition_operations
+        ]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
