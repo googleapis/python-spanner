@@ -126,7 +126,10 @@ class InstanceAdminTransport(abc.ABC):
             self.list_instance_configs: gapic_v1.method.wrap_method(
                 self.list_instance_configs,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -138,7 +141,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_instance_config: gapic_v1.method.wrap_method(
                 self.get_instance_config,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -170,7 +176,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.list_instances: gapic_v1.method.wrap_method(
                 self.list_instances,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -187,7 +196,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_instance: gapic_v1.method.wrap_method(
                 self.get_instance,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -209,7 +221,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.delete_instance: gapic_v1.method.wrap_method(
                 self.delete_instance,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -226,7 +241,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_iam_policy: gapic_v1.method.wrap_method(
                 self.get_iam_policy,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),

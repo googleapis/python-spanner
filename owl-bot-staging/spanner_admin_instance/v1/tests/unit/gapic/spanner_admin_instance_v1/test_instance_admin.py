@@ -817,6 +817,7 @@ def test_list_instance_configs_empty_call():
     with mock.patch.object(
             type(client.transport.list_instance_configs),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_configs()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -843,6 +844,7 @@ def test_list_instance_configs_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.list_instance_configs),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_configs(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -850,6 +852,38 @@ def test_list_instance_configs_non_empty_request_with_auto_populated_field():
             parent='parent_value',
             page_token='page_token_value',
         )
+
+def test_list_instance_configs_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_configs in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_configs] = mock_rpc
+        request = {}
+        client.list_instance_configs(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_configs(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_configs_empty_call_async():
@@ -872,6 +906,43 @@ async def test_list_instance_configs_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.ListInstanceConfigsRequest()
+
+@pytest.mark.asyncio
+async def test_list_instance_configs_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.list_instance_configs in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.list_instance_configs] = mock_object
+
+        request = {}
+        await client.list_instance_configs(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.list_instance_configs(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_configs_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.ListInstanceConfigsRequest):
@@ -1308,6 +1379,7 @@ def test_get_instance_config_empty_call():
     with mock.patch.object(
             type(client.transport.get_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance_config()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -1333,12 +1405,45 @@ def test_get_instance_config_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.get_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance_config(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstanceConfigRequest(
             name='name_value',
         )
+
+def test_get_instance_config_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance_config] = mock_rpc
+        request = {}
+        client.get_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_config_empty_call_async():
@@ -1368,6 +1473,43 @@ async def test_get_instance_config_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstanceConfigRequest()
+
+@pytest.mark.asyncio
+async def test_get_instance_config_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.get_instance_config in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.get_instance_config] = mock_object
+
+        request = {}
+        await client.get_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.get_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_config_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.GetInstanceConfigRequest):
@@ -1609,6 +1751,7 @@ def test_create_instance_config_empty_call():
     with mock.patch.object(
             type(client.transport.create_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance_config()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -1635,6 +1778,7 @@ def test_create_instance_config_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.create_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance_config(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -1642,6 +1786,42 @@ def test_create_instance_config_non_empty_request_with_auto_populated_field():
             parent='parent_value',
             instance_config_id='instance_config_id_value',
         )
+
+def test_create_instance_config_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance_config] = mock_rpc
+        request = {}
+        client.create_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_config_empty_call_async():
@@ -1664,6 +1844,47 @@ async def test_create_instance_config_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.CreateInstanceConfigRequest()
+
+@pytest.mark.asyncio
+async def test_create_instance_config_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.create_instance_config in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.create_instance_config] = mock_object
+
+        request = {}
+        await client.create_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.create_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_config_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.CreateInstanceConfigRequest):
@@ -1912,6 +2133,7 @@ def test_update_instance_config_empty_call():
     with mock.patch.object(
             type(client.transport.update_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance_config()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -1936,11 +2158,48 @@ def test_update_instance_config_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.update_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance_config(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstanceConfigRequest(
         )
+
+def test_update_instance_config_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance_config] = mock_rpc
+        request = {}
+        client.update_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_config_empty_call_async():
@@ -1963,6 +2222,47 @@ async def test_update_instance_config_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstanceConfigRequest()
+
+@pytest.mark.asyncio
+async def test_update_instance_config_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.update_instance_config in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.update_instance_config] = mock_object
+
+        request = {}
+        await client.update_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.update_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_config_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.UpdateInstanceConfigRequest):
@@ -2201,6 +2501,7 @@ def test_delete_instance_config_empty_call():
     with mock.patch.object(
             type(client.transport.delete_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance_config()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2227,6 +2528,7 @@ def test_delete_instance_config_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.delete_instance_config),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance_config(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2234,6 +2536,38 @@ def test_delete_instance_config_non_empty_request_with_auto_populated_field():
             name='name_value',
             etag='etag_value',
         )
+
+def test_delete_instance_config_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance_config] = mock_rpc
+        request = {}
+        client.delete_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_config_empty_call_async():
@@ -2254,6 +2588,43 @@ async def test_delete_instance_config_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.DeleteInstanceConfigRequest()
+
+@pytest.mark.asyncio
+async def test_delete_instance_config_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.delete_instance_config in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.delete_instance_config] = mock_object
+
+        request = {}
+        await client.delete_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.delete_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_config_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.DeleteInstanceConfigRequest):
@@ -2481,6 +2852,7 @@ def test_list_instance_config_operations_empty_call():
     with mock.patch.object(
             type(client.transport.list_instance_config_operations),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_config_operations()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2508,6 +2880,7 @@ def test_list_instance_config_operations_non_empty_request_with_auto_populated_f
     with mock.patch.object(
             type(client.transport.list_instance_config_operations),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_config_operations(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2516,6 +2889,38 @@ def test_list_instance_config_operations_non_empty_request_with_auto_populated_f
             filter='filter_value',
             page_token='page_token_value',
         )
+
+def test_list_instance_config_operations_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_config_operations in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_config_operations] = mock_rpc
+        request = {}
+        client.list_instance_config_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_config_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_empty_call_async():
@@ -2538,6 +2943,43 @@ async def test_list_instance_config_operations_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.ListInstanceConfigOperationsRequest()
+
+@pytest.mark.asyncio
+async def test_list_instance_config_operations_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.list_instance_config_operations in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.list_instance_config_operations] = mock_object
+
+        request = {}
+        await client.list_instance_config_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.list_instance_config_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.ListInstanceConfigOperationsRequest):
@@ -2962,6 +3404,7 @@ def test_list_instances_empty_call():
     with mock.patch.object(
             type(client.transport.list_instances),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instances()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2989,6 +3432,7 @@ def test_list_instances_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.list_instances),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instances(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -2997,6 +3441,38 @@ def test_list_instances_non_empty_request_with_auto_populated_field():
             page_token='page_token_value',
             filter='filter_value',
         )
+
+def test_list_instances_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instances in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instances] = mock_rpc
+        request = {}
+        client.list_instances(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instances(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instances_empty_call_async():
@@ -3020,6 +3496,43 @@ async def test_list_instances_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.ListInstancesRequest()
+
+@pytest.mark.asyncio
+async def test_list_instances_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.list_instances in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.list_instances] = mock_object
+
+        request = {}
+        await client.list_instances(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.list_instances(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instances_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.ListInstancesRequest):
@@ -3446,6 +3959,7 @@ def test_list_instance_partitions_empty_call():
     with mock.patch.object(
             type(client.transport.list_instance_partitions),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_partitions()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -3472,6 +3986,7 @@ def test_list_instance_partitions_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.list_instance_partitions),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_partitions(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -3479,6 +3994,38 @@ def test_list_instance_partitions_non_empty_request_with_auto_populated_field():
             parent='parent_value',
             page_token='page_token_value',
         )
+
+def test_list_instance_partitions_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_partitions in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_partitions] = mock_rpc
+        request = {}
+        client.list_instance_partitions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_partitions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_partitions_empty_call_async():
@@ -3502,6 +4049,43 @@ async def test_list_instance_partitions_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.ListInstancePartitionsRequest()
+
+@pytest.mark.asyncio
+async def test_list_instance_partitions_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.list_instance_partitions in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.list_instance_partitions] = mock_object
+
+        request = {}
+        await client.list_instance_partitions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.list_instance_partitions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_partitions_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.ListInstancePartitionsRequest):
@@ -3938,6 +4522,7 @@ def test_get_instance_empty_call():
     with mock.patch.object(
             type(client.transport.get_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -3963,12 +4548,45 @@ def test_get_instance_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.get_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstanceRequest(
             name='name_value',
         )
+
+def test_get_instance_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance] = mock_rpc
+        request = {}
+        client.get_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_empty_call_async():
@@ -3997,6 +4615,43 @@ async def test_get_instance_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstanceRequest()
+
+@pytest.mark.asyncio
+async def test_get_instance_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.get_instance in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.get_instance] = mock_object
+
+        request = {}
+        await client.get_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.get_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.GetInstanceRequest):
@@ -4236,6 +4891,7 @@ def test_create_instance_empty_call():
     with mock.patch.object(
             type(client.transport.create_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -4262,6 +4918,7 @@ def test_create_instance_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.create_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -4269,6 +4926,42 @@ def test_create_instance_non_empty_request_with_auto_populated_field():
             parent='parent_value',
             instance_id='instance_id_value',
         )
+
+def test_create_instance_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance] = mock_rpc
+        request = {}
+        client.create_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_empty_call_async():
@@ -4291,6 +4984,47 @@ async def test_create_instance_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.CreateInstanceRequest()
+
+@pytest.mark.asyncio
+async def test_create_instance_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.create_instance in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.create_instance] = mock_object
+
+        request = {}
+        await client.create_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.create_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.CreateInstanceRequest):
@@ -4539,6 +5273,7 @@ def test_update_instance_empty_call():
     with mock.patch.object(
             type(client.transport.update_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -4563,11 +5298,48 @@ def test_update_instance_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.update_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstanceRequest(
         )
+
+def test_update_instance_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance] = mock_rpc
+        request = {}
+        client.update_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_empty_call_async():
@@ -4590,6 +5362,47 @@ async def test_update_instance_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstanceRequest()
+
+@pytest.mark.asyncio
+async def test_update_instance_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.update_instance in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.update_instance] = mock_object
+
+        request = {}
+        await client.update_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.update_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.UpdateInstanceRequest):
@@ -4828,6 +5641,7 @@ def test_delete_instance_empty_call():
     with mock.patch.object(
             type(client.transport.delete_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -4853,12 +5667,45 @@ def test_delete_instance_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.delete_instance),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.DeleteInstanceRequest(
             name='name_value',
         )
+
+def test_delete_instance_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance] = mock_rpc
+        request = {}
+        client.delete_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_empty_call_async():
@@ -4879,6 +5726,43 @@ async def test_delete_instance_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.DeleteInstanceRequest()
+
+@pytest.mark.asyncio
+async def test_delete_instance_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.delete_instance in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.delete_instance] = mock_object
+
+        request = {}
+        await client.delete_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.delete_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.DeleteInstanceRequest):
@@ -5108,6 +5992,7 @@ def test_set_iam_policy_empty_call():
     with mock.patch.object(
             type(client.transport.set_iam_policy),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.set_iam_policy()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -5133,12 +6018,45 @@ def test_set_iam_policy_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.set_iam_policy),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.set_iam_policy(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.SetIamPolicyRequest(
             resource='resource_value',
         )
+
+def test_set_iam_policy_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.set_iam_policy in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.set_iam_policy] = mock_rpc
+        request = {}
+        client.set_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.set_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_set_iam_policy_empty_call_async():
@@ -5162,6 +6080,43 @@ async def test_set_iam_policy_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.SetIamPolicyRequest()
+
+@pytest.mark.asyncio
+async def test_set_iam_policy_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.set_iam_policy in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.set_iam_policy] = mock_object
+
+        request = {}
+        await client.set_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.set_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_set_iam_policy_async(transport: str = 'grpc_asyncio', request_type=iam_policy_pb2.SetIamPolicyRequest):
@@ -5414,6 +6369,7 @@ def test_get_iam_policy_empty_call():
     with mock.patch.object(
             type(client.transport.get_iam_policy),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_iam_policy()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -5439,12 +6395,45 @@ def test_get_iam_policy_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.get_iam_policy),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_iam_policy(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.GetIamPolicyRequest(
             resource='resource_value',
         )
+
+def test_get_iam_policy_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_iam_policy in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_iam_policy] = mock_rpc
+        request = {}
+        client.get_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_iam_policy_empty_call_async():
@@ -5468,6 +6457,43 @@ async def test_get_iam_policy_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.GetIamPolicyRequest()
+
+@pytest.mark.asyncio
+async def test_get_iam_policy_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.get_iam_policy in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.get_iam_policy] = mock_object
+
+        request = {}
+        await client.get_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.get_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_iam_policy_async(transport: str = 'grpc_asyncio', request_type=iam_policy_pb2.GetIamPolicyRequest):
@@ -5717,6 +6743,7 @@ def test_test_iam_permissions_empty_call():
     with mock.patch.object(
             type(client.transport.test_iam_permissions),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.test_iam_permissions()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -5742,12 +6769,45 @@ def test_test_iam_permissions_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.test_iam_permissions),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.test_iam_permissions(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.TestIamPermissionsRequest(
             resource='resource_value',
         )
+
+def test_test_iam_permissions_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.test_iam_permissions in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.test_iam_permissions] = mock_rpc
+        request = {}
+        client.test_iam_permissions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.test_iam_permissions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_test_iam_permissions_empty_call_async():
@@ -5770,6 +6830,43 @@ async def test_test_iam_permissions_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == iam_policy_pb2.TestIamPermissionsRequest()
+
+@pytest.mark.asyncio
+async def test_test_iam_permissions_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.test_iam_permissions in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.test_iam_permissions] = mock_object
+
+        request = {}
+        await client.test_iam_permissions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.test_iam_permissions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_test_iam_permissions_async(transport: str = 'grpc_asyncio', request_type=iam_policy_pb2.TestIamPermissionsRequest):
@@ -6040,6 +7137,7 @@ def test_get_instance_partition_empty_call():
     with mock.patch.object(
             type(client.transport.get_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance_partition()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6065,12 +7163,45 @@ def test_get_instance_partition_non_empty_request_with_auto_populated_field():
     with mock.patch.object(
             type(client.transport.get_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.get_instance_partition(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstancePartitionRequest(
             name='name_value',
         )
+
+def test_get_instance_partition_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance_partition] = mock_rpc
+        request = {}
+        client.get_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_partition_empty_call_async():
@@ -6099,6 +7230,43 @@ async def test_get_instance_partition_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.GetInstancePartitionRequest()
+
+@pytest.mark.asyncio
+async def test_get_instance_partition_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.get_instance_partition in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.get_instance_partition] = mock_object
+
+        request = {}
+        await client.get_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.get_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_get_instance_partition_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.GetInstancePartitionRequest):
@@ -6338,6 +7506,7 @@ def test_create_instance_partition_empty_call():
     with mock.patch.object(
             type(client.transport.create_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance_partition()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6364,6 +7533,7 @@ def test_create_instance_partition_non_empty_request_with_auto_populated_field()
     with mock.patch.object(
             type(client.transport.create_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.create_instance_partition(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6371,6 +7541,42 @@ def test_create_instance_partition_non_empty_request_with_auto_populated_field()
             parent='parent_value',
             instance_partition_id='instance_partition_id_value',
         )
+
+def test_create_instance_partition_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance_partition] = mock_rpc
+        request = {}
+        client.create_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_partition_empty_call_async():
@@ -6393,6 +7599,47 @@ async def test_create_instance_partition_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.CreateInstancePartitionRequest()
+
+@pytest.mark.asyncio
+async def test_create_instance_partition_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.create_instance_partition in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.create_instance_partition] = mock_object
+
+        request = {}
+        await client.create_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.create_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_create_instance_partition_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.CreateInstancePartitionRequest):
@@ -6641,6 +7888,7 @@ def test_delete_instance_partition_empty_call():
     with mock.patch.object(
             type(client.transport.delete_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance_partition()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6667,6 +7915,7 @@ def test_delete_instance_partition_non_empty_request_with_auto_populated_field()
     with mock.patch.object(
             type(client.transport.delete_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.delete_instance_partition(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6674,6 +7923,38 @@ def test_delete_instance_partition_non_empty_request_with_auto_populated_field()
             name='name_value',
             etag='etag_value',
         )
+
+def test_delete_instance_partition_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance_partition] = mock_rpc
+        request = {}
+        client.delete_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_partition_empty_call_async():
@@ -6694,6 +7975,43 @@ async def test_delete_instance_partition_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.DeleteInstancePartitionRequest()
+
+@pytest.mark.asyncio
+async def test_delete_instance_partition_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.delete_instance_partition in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.delete_instance_partition] = mock_object
+
+        request = {}
+        await client.delete_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.delete_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_delete_instance_partition_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.DeleteInstancePartitionRequest):
@@ -6918,6 +8236,7 @@ def test_update_instance_partition_empty_call():
     with mock.patch.object(
             type(client.transport.update_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance_partition()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -6942,11 +8261,48 @@ def test_update_instance_partition_non_empty_request_with_auto_populated_field()
     with mock.patch.object(
             type(client.transport.update_instance_partition),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.update_instance_partition(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstancePartitionRequest(
         )
+
+def test_update_instance_partition_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance_partition] = mock_rpc
+        request = {}
+        client.update_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_partition_empty_call_async():
@@ -6969,6 +8325,47 @@ async def test_update_instance_partition_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.UpdateInstancePartitionRequest()
+
+@pytest.mark.asyncio
+async def test_update_instance_partition_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.update_instance_partition in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.update_instance_partition] = mock_object
+
+        request = {}
+        await client.update_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        await client.update_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_update_instance_partition_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.UpdateInstancePartitionRequest):
@@ -7212,6 +8609,7 @@ def test_list_instance_partition_operations_empty_call():
     with mock.patch.object(
             type(client.transport.list_instance_partition_operations),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_partition_operations()
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -7239,6 +8637,7 @@ def test_list_instance_partition_operations_non_empty_request_with_auto_populate
     with mock.patch.object(
             type(client.transport.list_instance_partition_operations),
             '__call__') as call:
+        call.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
         client.list_instance_partition_operations(request=request)
         call.assert_called()
         _, args, _ = call.mock_calls[0]
@@ -7247,6 +8646,38 @@ def test_list_instance_partition_operations_non_empty_request_with_auto_populate
             filter='filter_value',
             page_token='page_token_value',
         )
+
+def test_list_instance_partition_operations_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="grpc",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_partition_operations in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_partition_operations] = mock_rpc
+        request = {}
+        client.list_instance_partition_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_partition_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_empty_call_async():
@@ -7270,6 +8701,43 @@ async def test_list_instance_partition_operations_empty_call_async():
         call.assert_called()
         _, args, _ = call.mock_calls[0]
         assert args[0] == spanner_instance_admin.ListInstancePartitionOperationsRequest()
+
+@pytest.mark.asyncio
+async def test_list_instance_partition_operations_async_use_cached_wrapped_rpc(transport: str = "grpc_asyncio"):
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
+        client = InstanceAdminAsyncClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport=transport,
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._client._transport.list_instance_partition_operations in client._client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        class AwaitableMock(mock.AsyncMock):
+            def __await__(self):
+                self.await_count += 1
+                return iter([])
+        mock_object = AwaitableMock()
+        client._client._transport._wrapped_methods[client._client._transport.list_instance_partition_operations] = mock_object
+
+        request = {}
+        await client.list_instance_partition_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_object.call_count == 1
+
+        await client.list_instance_partition_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_object.call_count == 2
 
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_async(transport: str = 'grpc_asyncio', request_type=spanner_instance_admin.ListInstancePartitionOperationsRequest):
@@ -7684,6 +9152,39 @@ def test_list_instance_configs_rest(request_type):
     assert isinstance(response, pagers.ListInstanceConfigsPager)
     assert response.next_page_token == 'next_page_token_value'
 
+def test_list_instance_configs_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_configs in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_configs] = mock_rpc
+
+        request = {}
+        client.list_instance_configs(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_configs(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_list_instance_configs_rest_required_fields(request_type=spanner_instance_admin.ListInstanceConfigsRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -7990,6 +9491,39 @@ def test_get_instance_config_rest(request_type):
     assert response.reconciling is True
     assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
 
+def test_get_instance_config_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance_config] = mock_rpc
+
+        request = {}
+        client.get_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_get_instance_config_rest_required_fields(request_type=spanner_instance_admin.GetInstanceConfigRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -8219,6 +9753,43 @@ def test_create_instance_config_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
+
+def test_create_instance_config_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance_config] = mock_rpc
+
+        request = {}
+        client.create_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_create_instance_config_rest_required_fields(request_type=spanner_instance_admin.CreateInstanceConfigRequest):
@@ -8455,6 +10026,43 @@ def test_update_instance_config_rest(request_type):
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
 
+def test_update_instance_config_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance_config] = mock_rpc
+
+        request = {}
+        client.update_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_update_instance_config_rest_required_fields(request_type=spanner_instance_admin.UpdateInstanceConfigRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -8678,6 +10286,39 @@ def test_delete_instance_config_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response is None
+
+def test_delete_instance_config_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance_config in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance_config] = mock_rpc
+
+        request = {}
+        client.delete_instance_config(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance_config(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_delete_instance_config_rest_required_fields(request_type=spanner_instance_admin.DeleteInstanceConfigRequest):
@@ -8905,6 +10546,39 @@ def test_list_instance_config_operations_rest(request_type):
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListInstanceConfigOperationsPager)
     assert response.next_page_token == 'next_page_token_value'
+
+def test_list_instance_config_operations_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_config_operations in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_config_operations] = mock_rpc
+
+        request = {}
+        client.list_instance_config_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_config_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_list_instance_config_operations_rest_required_fields(request_type=spanner_instance_admin.ListInstanceConfigOperationsRequest):
@@ -9200,6 +10874,39 @@ def test_list_instances_rest(request_type):
     assert response.next_page_token == 'next_page_token_value'
     assert response.unreachable == ['unreachable_value']
 
+def test_list_instances_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instances in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instances] = mock_rpc
+
+        request = {}
+        client.list_instances(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instances(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_list_instances_rest_required_fields(request_type=spanner_instance_admin.ListInstancesRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -9493,6 +11200,39 @@ def test_list_instance_partitions_rest(request_type):
     assert isinstance(response, pagers.ListInstancePartitionsPager)
     assert response.next_page_token == 'next_page_token_value'
     assert response.unreachable == ['unreachable_value']
+
+def test_list_instance_partitions_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_partitions in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_partitions] = mock_rpc
+
+        request = {}
+        client.list_instance_partitions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_partitions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_list_instance_partitions_rest_required_fields(request_type=spanner_instance_admin.ListInstancePartitionsRequest):
@@ -9798,6 +11538,39 @@ def test_get_instance_rest(request_type):
     assert response.state == spanner_instance_admin.Instance.State.CREATING
     assert response.endpoint_uris == ['endpoint_uris_value']
 
+def test_get_instance_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance] = mock_rpc
+
+        request = {}
+        client.get_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_get_instance_rest_required_fields(request_type=spanner_instance_admin.GetInstanceRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -10029,6 +11802,43 @@ def test_create_instance_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
+
+def test_create_instance_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance] = mock_rpc
+
+        request = {}
+        client.create_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_create_instance_rest_required_fields(request_type=spanner_instance_admin.CreateInstanceRequest):
@@ -10265,6 +12075,43 @@ def test_update_instance_rest(request_type):
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
 
+def test_update_instance_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance] = mock_rpc
+
+        request = {}
+        client.update_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_update_instance_rest_required_fields(request_type=spanner_instance_admin.UpdateInstanceRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -10488,6 +12335,39 @@ def test_delete_instance_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response is None
+
+def test_delete_instance_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance] = mock_rpc
+
+        request = {}
+        client.delete_instance(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_delete_instance_rest_required_fields(request_type=spanner_instance_admin.DeleteInstanceRequest):
@@ -10713,6 +12593,39 @@ def test_set_iam_policy_rest(request_type):
     assert isinstance(response, policy_pb2.Policy)
     assert response.version == 774
     assert response.etag == b'etag_blob'
+
+def test_set_iam_policy_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.set_iam_policy in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.set_iam_policy] = mock_rpc
+
+        request = {}
+        client.set_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.set_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_set_iam_policy_rest_required_fields(request_type=iam_policy_pb2.SetIamPolicyRequest):
@@ -10946,6 +12859,39 @@ def test_get_iam_policy_rest(request_type):
     assert response.version == 774
     assert response.etag == b'etag_blob'
 
+def test_get_iam_policy_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_iam_policy in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_iam_policy] = mock_rpc
+
+        request = {}
+        client.get_iam_policy(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_iam_policy(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_get_iam_policy_rest_required_fields(request_type=iam_policy_pb2.GetIamPolicyRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -11175,6 +13121,39 @@ def test_test_iam_permissions_rest(request_type):
     # Establish that the response is the type that we expect.
     assert isinstance(response, iam_policy_pb2.TestIamPermissionsResponse)
     assert response.permissions == ['permissions_value']
+
+def test_test_iam_permissions_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.test_iam_permissions in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.test_iam_permissions] = mock_rpc
+
+        request = {}
+        client.test_iam_permissions(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.test_iam_permissions(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_test_iam_permissions_rest_required_fields(request_type=iam_policy_pb2.TestIamPermissionsRequest):
@@ -11427,6 +13406,39 @@ def test_get_instance_partition_rest(request_type):
     assert response.referencing_backups == ['referencing_backups_value']
     assert response.etag == 'etag_value'
 
+def test_get_instance_partition_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.get_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.get_instance_partition] = mock_rpc
+
+        request = {}
+        client.get_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.get_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_get_instance_partition_rest_required_fields(request_type=spanner_instance_admin.GetInstancePartitionRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -11656,6 +13668,43 @@ def test_create_instance_partition_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
+
+def test_create_instance_partition_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.create_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.create_instance_partition] = mock_rpc
+
+        request = {}
+        client.create_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.create_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_create_instance_partition_rest_required_fields(request_type=spanner_instance_admin.CreateInstancePartitionRequest):
@@ -11892,6 +13941,39 @@ def test_delete_instance_partition_rest(request_type):
     # Establish that the response is the type that we expect.
     assert response is None
 
+def test_delete_instance_partition_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.delete_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.delete_instance_partition] = mock_rpc
+
+        request = {}
+        client.delete_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.delete_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
+
 
 def test_delete_instance_partition_rest_required_fields(request_type=spanner_instance_admin.DeleteInstancePartitionRequest):
     transport_class = transports.InstanceAdminRestTransport
@@ -12113,6 +14195,43 @@ def test_update_instance_partition_rest(request_type):
 
     # Establish that the response is the type that we expect.
     assert response.operation.name == "operations/spam"
+
+def test_update_instance_partition_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.update_instance_partition in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.update_instance_partition] = mock_rpc
+
+        request = {}
+        client.update_instance_partition(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        # Operation methods build a cached wrapper on first rpc call
+        # subsequent calls should use the cached wrapper
+        wrapper_fn.reset_mock()
+
+        client.update_instance_partition(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_update_instance_partition_rest_required_fields(request_type=spanner_instance_admin.UpdateInstancePartitionRequest):
@@ -12344,6 +14463,39 @@ def test_list_instance_partition_operations_rest(request_type):
     assert isinstance(response, pagers.ListInstancePartitionOperationsPager)
     assert response.next_page_token == 'next_page_token_value'
     assert response.unreachable_instance_partitions == ['unreachable_instance_partitions_value']
+
+def test_list_instance_partition_operations_rest_use_cached_wrapped_rpc():
+    # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
+    # instead of constructing them on each call
+    with mock.patch("google.api_core.gapic_v1.method.wrap_method") as wrapper_fn:
+        client = InstanceAdminClient(
+            credentials=ga_credentials.AnonymousCredentials(),
+            transport="rest",
+        )
+
+        # Should wrap all calls on client creation
+        assert wrapper_fn.call_count > 0
+        wrapper_fn.reset_mock()
+
+        # Ensure method has been cached
+        assert client._transport.list_instance_partition_operations in client._transport._wrapped_methods
+
+        # Replace cached wrapped function with mock
+        mock_rpc = mock.Mock()
+        mock_rpc.return_value.name = "foo" # operation_request.operation in compute client(s) expect a string.
+        client._transport._wrapped_methods[client._transport.list_instance_partition_operations] = mock_rpc
+
+        request = {}
+        client.list_instance_partition_operations(request)
+
+        # Establish that the underlying gRPC stub method was called.
+        assert mock_rpc.call_count == 1
+
+        client.list_instance_partition_operations(request)
+
+        # Establish that a new wrapper was not created for this call
+        assert wrapper_fn.call_count == 0
+        assert mock_rpc.call_count == 2
 
 
 def test_list_instance_partition_operations_rest_required_fields(request_type=spanner_instance_admin.ListInstancePartitionOperationsRequest):

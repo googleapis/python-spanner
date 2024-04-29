@@ -16,7 +16,7 @@
 from collections import OrderedDict
 import functools
 import re
-from typing import Dict, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Tuple, Type, Union
+from typing import Dict, Callable, Mapping, MutableMapping, MutableSequence, Optional, Sequence, Tuple, Type, Union
 
 from google.cloud.spanner_admin_database_v1 import gapic_version as package_version
 
@@ -193,7 +193,7 @@ class DatabaseAdminAsyncClient:
 
     def __init__(self, *,
             credentials: Optional[ga_credentials.Credentials] = None,
-            transport: Union[str, DatabaseAdminTransport] = "grpc_asyncio",
+            transport: Optional[Union[str, DatabaseAdminTransport, Callable[..., DatabaseAdminTransport]]] = "grpc_asyncio",
             client_options: Optional[ClientOptions] = None,
             client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
             ) -> None:
@@ -205,9 +205,11 @@ class DatabaseAdminAsyncClient:
                 credentials identify the application to the service; if none
                 are specified, the client will attempt to ascertain the
                 credentials from the environment.
-            transport (Union[str, ~.DatabaseAdminTransport]): The
-                transport to use. If set to None, a transport is chosen
-                automatically.
+            transport (Optional[Union[str,DatabaseAdminTransport,Callable[..., DatabaseAdminTransport]]]):
+                The transport to use, or a Callable that constructs and returns a new transport to use.
+                If a Callable is given, it will be called with the same set of initialization
+                arguments as used in the DatabaseAdminTransport constructor.
+                If set to None, a transport is chosen automatically.
             client_options (Optional[Union[google.api_core.client_options.ClientOptions, dict]]):
                 Custom options for the client.
 
@@ -317,14 +319,17 @@ class DatabaseAdminAsyncClient:
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.ListDatabasesRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.ListDatabasesRequest):
+            request = spanner_database_admin.ListDatabasesRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -333,18 +338,7 @@ class DatabaseAdminAsyncClient:
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_databases,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.list_databases]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -468,14 +462,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, create_statement])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.CreateDatabaseRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.CreateDatabaseRequest):
+            request = spanner_database_admin.CreateDatabaseRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -486,11 +483,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.create_database,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.create_database]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -581,14 +574,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 A Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.GetDatabaseRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.GetDatabaseRequest):
+            request = spanner_database_admin.GetDatabaseRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -597,18 +593,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_database,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.get_database]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -748,14 +733,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, update_mask])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.UpdateDatabaseRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.UpdateDatabaseRequest):
+            request = spanner_database_admin.UpdateDatabaseRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -766,18 +754,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_database,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.update_database]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -915,14 +892,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database, statements])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.UpdateDatabaseDdlRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.UpdateDatabaseDdlRequest):
+            request = spanner_database_admin.UpdateDatabaseDdlRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -933,18 +913,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_database_ddl,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.update_database_ddl]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1028,14 +997,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.DropDatabaseRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.DropDatabaseRequest):
+            request = spanner_database_admin.DropDatabaseRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1044,18 +1016,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.drop_database,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.drop_database]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1140,14 +1101,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([database])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.GetDatabaseDdlRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.GetDatabaseDdlRequest):
+            request = spanner_database_admin.GetDatabaseDdlRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1156,18 +1120,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_database_ddl,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.get_database_ddl]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1289,15 +1242,15 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-         # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+         # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.SetIamPolicyRequest(**request)
         elif not request:
@@ -1305,11 +1258,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.set_iam_policy,
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.set_iam_policy]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1432,15 +1381,15 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-         # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+         # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.GetIamPolicyRequest(**request)
         elif not request:
@@ -1448,18 +1397,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_iam_policy,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=30.0,
-            ),
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.get_iam_policy]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1563,15 +1501,15 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 Response message for TestIamPermissions method.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([resource, permissions])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-         # The request isn't a proto-plus wrapped type,
-        # so it must be constructed via keyword expansion.
+         # - The request isn't a proto-plus wrapped type,
+        #   so it must be constructed via keyword expansion.
         if isinstance(request, dict):
             request = iam_policy_pb2.TestIamPermissionsRequest(**request)
         elif not request:
@@ -1579,11 +1517,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.test_iam_permissions,
-            default_timeout=30.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.test_iam_permissions]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1708,14 +1642,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, backup, backup_id])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = gsad_backup.CreateBackupRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, gsad_backup.CreateBackupRequest):
+            request = gsad_backup.CreateBackupRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1728,11 +1665,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.create_backup,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.create_backup]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1881,14 +1814,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, backup_id, source_backup, expire_time])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = backup.CopyBackupRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, backup.CopyBackupRequest):
+            request = backup.CopyBackupRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -1903,11 +1839,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.copy_backup,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.copy_backup]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -1998,14 +1930,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 A backup of a Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = backup.GetBackupRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, backup.GetBackupRequest):
+            request = backup.GetBackupRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2014,18 +1949,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.get_backup,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.get_backup]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2124,14 +2048,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 A backup of a Cloud Spanner database.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([backup, update_mask])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = gsad_backup.UpdateBackupRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, gsad_backup.UpdateBackupRequest):
+            request = gsad_backup.UpdateBackupRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2142,18 +2069,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.update_backup,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.update_backup]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2230,14 +2146,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
                 sent along with the request as metadata.
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([name])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = backup.DeleteBackupRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, backup.DeleteBackupRequest):
+            request = backup.DeleteBackupRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2246,18 +2165,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.delete_backup,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.delete_backup]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2344,14 +2252,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = backup.ListBackupsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, backup.ListBackupsRequest):
+            request = backup.ListBackupsRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2360,18 +2271,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_backups,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.list_backups]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2514,14 +2414,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent, database_id, backup])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.RestoreDatabaseRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.RestoreDatabaseRequest):
+            request = spanner_database_admin.RestoreDatabaseRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2534,11 +2437,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.restore_database,
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.restore_database]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2644,14 +2543,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.ListDatabaseOperationsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.ListDatabaseOperationsRequest):
+            request = spanner_database_admin.ListDatabaseOperationsRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2660,18 +2562,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_database_operations,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.list_database_operations]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2780,14 +2671,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = backup.ListBackupOperationsRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, backup.ListBackupOperationsRequest):
+            request = backup.ListBackupOperationsRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2796,18 +2690,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_backup_operations,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.list_backup_operations]
 
         # Certain fields should be provided within the metadata header;
         # add these here.
@@ -2905,14 +2788,17 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         """
         # Create or coerce a protobuf request object.
-        # Quick check: If we got a request object, we should *not* have
-        # gotten any keyword arguments that map to the request.
+        # - Quick check: If we got a request object, we should *not* have
+        #   gotten any keyword arguments that map to the request.
         has_flattened_params = any([parent])
         if request is not None and has_flattened_params:
             raise ValueError("If the `request` argument is set, then none of "
                              "the individual field arguments should be set.")
 
-        request = spanner_database_admin.ListDatabaseRolesRequest(request)
+        # - Use the request object if provided (there's no risk of modifying the input as
+        #   there are no flattened fields), or create one.
+        if not isinstance(request, spanner_database_admin.ListDatabaseRolesRequest):
+            request = spanner_database_admin.ListDatabaseRolesRequest(request)
 
         # If we have keyword arguments corresponding to fields on the
         # request, apply these.
@@ -2921,18 +2807,7 @@ initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exc
 
         # Wrap the RPC method; this adds retry and timeout information,
         # and friendly error handling.
-        rpc = gapic_v1.method_async.wrap_method(
-            self._client._transport.list_database_roles,
-            default_retry=retries.AsyncRetry(
-initial=1.0,maximum=32.0,multiplier=1.3,                predicate=retries.if_exception_type(
-                    core_exceptions.DeadlineExceeded,
-                    core_exceptions.ServiceUnavailable,
-                ),
-                deadline=3600.0,
-            ),
-            default_timeout=3600.0,
-            client_info=DEFAULT_CLIENT_INFO,
-        )
+        rpc = self._client._transport._wrapped_methods[self._client._transport.list_database_roles]
 
         # Certain fields should be provided within the metadata header;
         # add these here.

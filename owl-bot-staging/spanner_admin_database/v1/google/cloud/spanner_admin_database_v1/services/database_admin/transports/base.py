@@ -128,7 +128,10 @@ class DatabaseAdminTransport(abc.ABC):
             self.list_databases: gapic_v1.method.wrap_method(
                 self.list_databases,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -145,7 +148,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_database: gapic_v1.method.wrap_method(
                 self.get_database,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -157,7 +163,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.update_database: gapic_v1.method.wrap_method(
                 self.update_database,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -169,7 +178,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.update_database_ddl: gapic_v1.method.wrap_method(
                 self.update_database_ddl,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -181,7 +193,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.drop_database: gapic_v1.method.wrap_method(
                 self.drop_database,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -193,7 +208,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_database_ddl: gapic_v1.method.wrap_method(
                 self.get_database_ddl,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -210,7 +228,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_iam_policy: gapic_v1.method.wrap_method(
                 self.get_iam_policy,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -237,7 +258,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.get_backup: gapic_v1.method.wrap_method(
                 self.get_backup,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -249,7 +273,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.update_backup: gapic_v1.method.wrap_method(
                 self.update_backup,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -261,7 +288,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.delete_backup: gapic_v1.method.wrap_method(
                 self.delete_backup,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -273,7 +303,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.list_backups: gapic_v1.method.wrap_method(
                 self.list_backups,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -290,7 +323,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.list_database_operations: gapic_v1.method.wrap_method(
                 self.list_database_operations,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -302,7 +338,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.list_backup_operations: gapic_v1.method.wrap_method(
                 self.list_backup_operations,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
@@ -314,7 +353,10 @@ initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if
             self.list_database_roles: gapic_v1.method.wrap_method(
                 self.list_database_roles,
                 default_retry=retries.Retry(
-initial=1.0,maximum=32.0,multiplier=1.3,                    predicate=retries.if_exception_type(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
                         core_exceptions.DeadlineExceeded,
                         core_exceptions.ServiceUnavailable,
                     ),
