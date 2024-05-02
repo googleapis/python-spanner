@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""User friendly container for Cloud Spanner Database."""
+"""User-friendly container for Cloud Spanner Database."""
 
 import copy
 import functools
+
 import grpc
 import logging
 import re
@@ -39,7 +40,10 @@ from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConf
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
+from google.cloud.spanner_dbapi.partition_helper import BatchTransactionId
 from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import Type
+from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
@@ -52,6 +56,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
@@ -167,6 +172,7 @@ class Database(object):
         self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
+        self._directed_read_options = self._instance._client.directed_read_options
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -330,7 +336,20 @@ class Database(object):
         :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
         :returns: the dialect of the database
         """
+        if self._database_dialect == DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED:
+            self.reload()
         return self._database_dialect
+
+    @property
+    def default_schema_name(self):
+        """Default schema name for this database.
+
+        :rtype: str
+        :returns: "" for GoogleSQL and "public" for PostgreSQL
+        """
+        if self.database_dialect == DatabaseDialect.POSTGRESQL:
+            return "public"
+        return ""
 
     @property
     def database_role(self):
@@ -629,8 +648,6 @@ class Database(object):
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction
 
-            if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
             params_pb = Transaction._make_params_pb(params, param_types)
         else:
             params_pb = {}
@@ -717,7 +734,7 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self, request_options=None):
+    def batch(self, request_options=None, max_commit_delay=None):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -730,10 +747,16 @@ class Database(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
+        :type max_commit_delay: :class:`datetime.timedelta`
+        :param max_commit_delay:
+                (Optional) The amount of latency this request is willing to incur
+                in order to improve throughput. Value must be between 0ms and
+                500ms.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self, request_options)
+        return BatchCheckout(self, request_options, max_commit_delay)
 
     def mutation_groups(self):
         """Return an object which wraps a mutation_group.
@@ -746,7 +769,13 @@ class Database(object):
         """
         return MutationGroupsCheckout(self)
 
-    def batch_snapshot(self, read_timestamp=None, exact_staleness=None):
+    def batch_snapshot(
+        self,
+        read_timestamp=None,
+        exact_staleness=None,
+        session_id=None,
+        transaction_id=None,
+    ):
         """Return an object which wraps a batch read / query.
 
         :type read_timestamp: :class:`datetime.datetime`
@@ -756,11 +785,21 @@ class Database(object):
         :param exact_staleness: Execute all reads at a timestamp that is
                                 ``exact_staleness`` old.
 
+        :type session_id: str
+        :param session_id: id of the session used in transaction
+
+        :type transaction_id: str
+        :param transaction_id: id of the transaction
+
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchSnapshot`
         :returns: new wrapper
         """
         return BatchSnapshot(
-            self, read_timestamp=read_timestamp, exact_staleness=exact_staleness
+            self,
+            read_timestamp=read_timestamp,
+            exact_staleness=exact_staleness,
+            session_id=session_id,
+            transaction_id=transaction_id,
         )
 
     def run_in_transaction(self, func, *args, **kw):
@@ -776,9 +815,13 @@ class Database(object):
 
         :type kw: dict
         :param kw: (Optional) keyword arguments to be passed to ``func``.
-                   If passed, "timeout_secs" will be removed and used to
+                   If passed,
+                   "timeout_secs" will be removed and used to
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
+                   "max_commit_delay" will be removed and used to set the
+                   max_commit_delay for the request. Value must be between
+                   0ms and 500ms.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -931,20 +974,40 @@ class Database(object):
         """
         return Table(table_id, self)
 
-    def list_tables(self):
+    def list_tables(self, schema="_default"):
         """List tables within the database.
+
+        :type schema: str
+        :param schema: The schema to search for tables, or None for all schemas. Use the special string "_default" to
+                       search for tables in the default schema of the database.
 
         :type: Iterable
         :returns:
             Iterable of :class:`~google.cloud.spanner_v1.table.Table`
             resources within the current database.
         """
+        if "_default" == schema:
+            schema = self.default_schema_name
+
         with self.snapshot() as snapshot:
-            if self._database_dialect == DatabaseDialect.POSTGRESQL:
-                where_clause = "WHERE TABLE_SCHEMA = 'public'"
+            if schema is None:
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(""),
+                )
             else:
-                where_clause = "WHERE SPANNER_STATE = 'COMMITTED'"
-            results = snapshot.execute_sql(_LIST_TABLES_QUERY.format(where_clause))
+                if self._database_dialect == DatabaseDialect.POSTGRESQL:
+                    where_clause = "WHERE TABLE_SCHEMA = $1"
+                    param_name = "p1"
+                else:
+                    where_clause = (
+                        "WHERE TABLE_SCHEMA = @schema AND SPANNER_STATE = 'COMMITTED'"
+                    )
+                    param_name = "schema"
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(where_clause),
+                    params={param_name: schema},
+                    param_types={param_name: Type(code=TypeCode.STRING)},
+                )
             for row in results:
                 yield self.table(row[0])
 
@@ -1015,9 +1078,14 @@ class BatchCheckout(object):
             (Optional) Common options for the commit request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+    :type max_commit_delay: :class:`datetime.timedelta`
+    :param max_commit_delay:
+            (Optional) The amount of latency this request is willing to incur
+            in order to improve throughput.
     """
 
-    def __init__(self, database, request_options=None):
+    def __init__(self, database, request_options=None, max_commit_delay=None):
         self._database = database
         self._session = self._batch = None
         if request_options is None:
@@ -1026,6 +1094,7 @@ class BatchCheckout(object):
             self._request_options = RequestOptions(request_options)
         else:
             self._request_options = request_options
+        self._max_commit_delay = max_commit_delay
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1042,6 +1111,7 @@ class BatchCheckout(object):
                 self._batch.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=self._request_options,
+                    max_commit_delay=self._max_commit_delay,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
@@ -1138,10 +1208,19 @@ class BatchSnapshot(object):
                             ``exact_staleness`` old.
     """
 
-    def __init__(self, database, read_timestamp=None, exact_staleness=None):
+    def __init__(
+        self,
+        database,
+        read_timestamp=None,
+        exact_staleness=None,
+        session_id=None,
+        transaction_id=None,
+    ):
         self._database = database
+        self._session_id = session_id
         self._session = None
         self._snapshot = None
+        self._transaction_id = transaction_id
         self._read_timestamp = read_timestamp
         self._exact_staleness = exact_staleness
 
@@ -1189,7 +1268,10 @@ class BatchSnapshot(object):
         """
         if self._session is None:
             session = self._session = self._database.session()
-            session.create()
+            if self._session_id is None:
+                session.create()
+            else:
+                session._session_id = self._session_id
         return self._session
 
     def _get_snapshot(self):
@@ -1199,9 +1281,21 @@ class BatchSnapshot(object):
                 read_timestamp=self._read_timestamp,
                 exact_staleness=self._exact_staleness,
                 multi_use=True,
+                transaction_id=self._transaction_id,
             )
-            self._snapshot.begin()
+            if self._transaction_id is None:
+                self._snapshot.begin()
         return self._snapshot
+
+    def get_batch_transaction_id(self):
+        snapshot = self._snapshot
+        if snapshot is None:
+            raise ValueError("Read-only transaction not begun")
+        return BatchTransactionId(
+            snapshot._transaction_id,
+            snapshot._session.session_id,
+            snapshot._read_timestamp,
+        )
 
     def read(self, *args, **kw):
         """Convenience method:  perform read operation via snapshot.
@@ -1226,6 +1320,7 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1265,6 +1360,12 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned read and this field is
                 set ``true``, the request will be executed via offline access.
 
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for ReadRequests that indicates which replicas
+            or regions should be used for non-transactional reads.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1293,6 +1394,7 @@ class BatchSnapshot(object):
             "keyset": keyset._to_dict(),
             "index": index,
             "data_boost_enabled": data_boost_enabled,
+            "directed_read_options": directed_read_options,
         }
         for partition in partitions:
             yield {"partition": partition, "read": read_info.copy()}
@@ -1337,6 +1439,7 @@ class BatchSnapshot(object):
         max_partitions=None,
         query_options=None,
         data_boost_enabled=False,
+        directed_read_options=None,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -1383,6 +1486,12 @@ class BatchSnapshot(object):
                 (Optional) If this is for a partitioned query and this field is
                 set ``true``, the request will be executed via offline access.
 
+        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
+            or :class:`dict`
+        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
+            for ExecuteSqlRequests that indicates which replicas
+            or regions should be used for non-transactional queries.
+
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
 
@@ -1407,6 +1516,7 @@ class BatchSnapshot(object):
         query_info = {
             "sql": sql,
             "data_boost_enabled": data_boost_enabled,
+            "directed_read_options": directed_read_options,
         }
         if params:
             query_info["params"] = params
@@ -1448,6 +1558,72 @@ class BatchSnapshot(object):
         return self._get_snapshot().execute_sql(
             partition=batch["partition"], **batch["query"], retry=retry, timeout=timeout
         )
+
+    def run_partitioned_query(
+        self,
+        sql,
+        params=None,
+        param_types=None,
+        partition_size_bytes=None,
+        max_partitions=None,
+        query_options=None,
+        data_boost_enabled=False,
+    ):
+        """Start a partitioned query operation to get list of partitions and
+        then executes each partition on a separate thread
+
+        :type sql: str
+        :param sql: SQL query statement
+
+        :type params: dict, {str -> column value}
+        :param params: values for parameter replacement.  Keys must match
+                       the names used in ``sql``.
+
+        :type param_types: dict[str -> Union[dict, .types.Type]]
+        :param param_types:
+            (Optional) maps explicit types for one or more param values;
+            required if parameters are passed.
+
+        :type partition_size_bytes: int
+        :param partition_size_bytes:
+            (Optional) desired size for each partition generated.  The service
+            uses this as a hint, the actual partition size may differ.
+
+        :type max_partitions: int
+        :param max_partitions:
+            (Optional) desired maximum number of partitions generated. The
+            service uses this as a hint, the actual number of partitions may
+            differ.
+
+        :type query_options:
+            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
+            or :class:`dict`
+        :param query_options:
+                (Optional) Query optimizer configuration to use for the given query.
+                If a dict is provided, it must be of the same form as the protobuf
+                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
+
+        :type data_boost_enabled:
+        :param data_boost_enabled:
+                (Optional) If this is for a partitioned query and this field is
+                set ``true``, the request will be executed using data boost.
+                Please see https://cloud.google.com/spanner/docs/databoost/databoost-overview
+
+        :rtype: :class:`~google.cloud.spanner_v1.merged_result_set.MergedResultSet`
+        :returns: a result set instance which can be used to consume rows.
+        """
+        partitions = list(
+            self.generate_query_batches(
+                sql,
+                params,
+                param_types,
+                partition_size_bytes,
+                max_partitions,
+                query_options,
+                data_boost_enabled,
+            )
+        )
+        return MergedResultSet(self, partitions, 0)
 
     def process(self, batch):
         """Process a single, partitioned query or read.

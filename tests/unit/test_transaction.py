@@ -346,9 +346,14 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def _commit_helper(
-        self, mutate=True, return_commit_stats=False, request_options=None
+        self,
+        mutate=True,
+        return_commit_stats=False,
+        request_options=None,
+        max_commit_delay_in=None,
     ):
         import datetime
+
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
@@ -370,13 +375,22 @@ class TestTransaction(OpenTelemetryBase):
             transaction.delete(TABLE_NAME, keyset)
 
         transaction.commit(
-            return_commit_stats=return_commit_stats, request_options=request_options
+            return_commit_stats=return_commit_stats,
+            request_options=request_options,
+            max_commit_delay=max_commit_delay_in,
         )
 
         self.assertEqual(transaction.committed, now)
         self.assertIsNone(session._transaction)
 
-        session_id, mutations, txn_id, actual_request_options, metadata = api._committed
+        (
+            session_id,
+            mutations,
+            txn_id,
+            actual_request_options,
+            max_commit_delay,
+            metadata,
+        ) = api._committed
 
         if request_options is None:
             expected_request_options = RequestOptions(
@@ -391,6 +405,7 @@ class TestTransaction(OpenTelemetryBase):
             expected_request_options.transaction_tag = self.TRANSACTION_TAG
             expected_request_options.request_tag = None
 
+        self.assertEqual(max_commit_delay_in, max_commit_delay)
         self.assertEqual(session_id, session.name)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
@@ -423,6 +438,11 @@ class TestTransaction(OpenTelemetryBase):
     def test_commit_w_return_commit_stats(self):
         self._commit_helper(return_commit_stats=True)
 
+    def test_commit_w_max_commit_delay(self):
+        import datetime
+
+        self._commit_helper(max_commit_delay_in=datetime.timedelta(milliseconds=100))
+
     def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(
             request_tag="tag-1",
@@ -451,20 +471,6 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             self._commit_helper(request_options=request_options)
 
-    def test__make_params_pb_w_params_wo_param_types(self):
-        session = _Session()
-        transaction = self._make_one(session)
-
-        with self.assertRaises(ValueError):
-            transaction._make_params_pb(PARAMS, None)
-
-    def test__make_params_pb_wo_params_w_param_types(self):
-        session = _Session()
-        transaction = self._make_one(session)
-
-        with self.assertRaises(ValueError):
-            transaction._make_params_pb(None, PARAM_TYPES)
-
     def test__make_params_pb_w_params_w_param_types(self):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1._helpers import _make_value_pb
@@ -489,16 +495,6 @@ class TestTransaction(OpenTelemetryBase):
 
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
-
-    def test_execute_update_w_params_wo_param_types(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-
-        with self.assertRaises(ValueError):
-            transaction.execute_update(DML_QUERY_WITH_PARAM, PARAMS)
 
     def _execute_update_helper(
         self,
@@ -666,7 +662,14 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.batch_update(statements=[DML_QUERY])
 
-    def _batch_update_helper(self, error_after=None, count=0, request_options=None):
+    def _batch_update_helper(
+        self,
+        error_after=None,
+        count=0,
+        request_options=None,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
+    ):
         from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import param_types
@@ -720,7 +723,10 @@ class TestTransaction(OpenTelemetryBase):
             request_options = RequestOptions(request_options)
 
         status, row_counts = transaction.batch_update(
-            dml_statements, request_options=request_options
+            dml_statements,
+            request_options=request_options,
+            retry=retry,
+            timeout=timeout,
         )
 
         self.assertEqual(status, expected_status)
@@ -757,6 +763,8 @@ class TestTransaction(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
             ],
+            retry=retry,
+            timeout=timeout,
         )
 
         self.assertEqual(transaction._execute_sql_count, count + 1)
@@ -830,6 +838,15 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction._execute_sql_count, 1)
 
+    def test_batch_update_w_timeout_param(self):
+        self._batch_update_helper(timeout=2.0)
+
+    def test_batch_update_w_retry_param(self):
+        self._batch_update_helper(retry=gapic_v1.method.DEFAULT)
+
+    def test_batch_update_w_timeout_and_retry_params(self):
+        self._batch_update_helper(retry=gapic_v1.method.DEFAULT, timeout=2.0)
+
     def test_context_mgr_success(self):
         import datetime
         from google.cloud.spanner_v1 import CommitResponse
@@ -851,7 +868,7 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction.committed, now)
 
-        session_id, mutations, txn_id, _, metadata = api._committed
+        session_id, mutations, txn_id, _, _, metadata = api._committed
         self.assertEqual(session_id, self.SESSION_NAME)
         self.assertEqual(txn_id, self.TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
@@ -894,6 +911,7 @@ class _Client(object):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self.directed_read_options = None
 
 
 class _Instance(object):
@@ -906,6 +924,7 @@ class _Database(object):
         self.name = "testing"
         self._instance = _Instance()
         self._route_to_leader_enabled = True
+        self._directed_read_options = None
 
 
 class _Session(object):
@@ -936,11 +955,17 @@ class _FauxSpannerAPI(object):
         metadata=None,
     ):
         assert not request.single_use_transaction
+
+        max_commit_delay = None
+        if type(request).pb(request).HasField("max_commit_delay"):
+            max_commit_delay = request.max_commit_delay
+
         self._committed = (
             request.session,
             request.mutations,
             request.transaction_id,
             request.request_options,
+            max_commit_delay,
             metadata,
         )
         return self._commit_response
