@@ -539,9 +539,10 @@ class Test_parse_value_pb(unittest.TestCase):
 
         VALUE = 3.14159
         field_type = Type(code=TypeCode.FLOAT32)
+        field_name = "float32_column"
         value_pb = Value(number_value=VALUE)
 
-        self.assertEqual(self._callFUT(value_pb, field_type), VALUE)
+        self.assertEqual(self._callFUT(value_pb, field_type, field_name), VALUE)
 
     def test_w_float32_str(self):
         from google.cloud.spanner_v1 import Type, TypeCode
@@ -549,10 +550,11 @@ class Test_parse_value_pb(unittest.TestCase):
 
         VALUE = "3.14159"
         field_type = Type(code=TypeCode.FLOAT32)
+        field_name = "float32_str_column"
         value_pb = Value(string_value=VALUE)
         expected_value = 3.14159
 
-        self.assertEqual(self._callFUT(value_pb, field_type), expected_value)
+        self.assertEqual(self._callFUT(value_pb, field_type, field_name), expected_value)
 
     def test_w_date(self):
         import datetime

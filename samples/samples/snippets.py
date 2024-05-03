@@ -36,8 +36,6 @@ from google.cloud.spanner_v1.data_types import (
     get_proto_message,
     get_proto_enum,
 )
-from google.type import expr_pb2
-from google.iam.v1 import policy_pb2
 from google.protobuf import field_mask_pb2  # type: ignore
 from testdata import singer_pb2
 
