@@ -554,7 +554,9 @@ class Test_parse_value_pb(unittest.TestCase):
         value_pb = Value(string_value=VALUE)
         expected_value = 3.14159
 
-        self.assertEqual(self._callFUT(value_pb, field_type, field_name), expected_value)
+        self.assertEqual(
+            self._callFUT(value_pb, field_type, field_name), expected_value
+        )
 
     def test_w_date(self):
         import datetime
