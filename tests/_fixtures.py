@@ -91,6 +91,8 @@ CREATE TABLE Customers (
     ) PRIMARY KEY (CartId);
 """
 
+# TODO: Add Proto Bundle DDL statement in EMULATOR_DDL once b/338557401
+# is fixed.
 EMULATOR_DDL = """\
 CREATE TABLE contacts (
     contact_id INT64,
