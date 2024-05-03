@@ -1543,9 +1543,7 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
         sd._check_row_data(after, all_data_rows)
 
 
-@pytest.mark.skipif(
-    _helpers.USE_EMULATOR, reason="b/338557401"
-)
+@pytest.mark.skipif(_helpers.USE_EMULATOR, reason="b/338557401")
 def test_read_w_index(
     shared_instance,
     database_operation_timeout,
