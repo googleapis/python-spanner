@@ -68,26 +68,34 @@ def create_instance(instance_id):
 # [START spanner_postgresql_create_database]
 def create_database(instance_id, database_id):
     """Creates a PostgreSql database and tables for sample data."""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
 
-    database = instance.database(
-        database_id,
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.CreateDatabaseRequest(
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
+        create_statement=f'CREATE DATABASE "{database_id}"',
         database_dialect=DatabaseDialect.POSTGRESQL,
     )
 
-    operation = database.create()
+    operation = database_admin_api.create_database(request=request)
 
     print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
+    database = operation.result(OPERATION_TIMEOUT_SECONDS)
 
     create_table_using_ddl(database.name)
     print("Created database {} on instance {}".format(database_id, instance_id))
 
 
 def create_table_using_ddl(database_name):
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
     spanner_client = spanner.Client()
-    request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
         database=database_name,
         statements=[
             """CREATE TABLE Singers (
@@ -231,13 +239,20 @@ def read_data(instance_id, database_id):
 # [START spanner_postgresql_add_column]
 def add_column(instance_id, database_id):
     """Adds a new column to the Albums table in the example database."""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    operation = database.update_ddl(
-        ["ALTER TABLE Albums ADD COLUMN MarketingBudget BIGINT"]
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=["ALTER TABLE Albums ADD COLUMN MarketingBudget BIGINT"],
     )
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -390,6 +405,7 @@ def add_index(instance_id, database_id):
 
 # [END spanner_postgresql_create_index]
 
+
 # [START spanner_postgresql_read_data_with_index]
 def read_data_with_index(instance_id, database_id):
     """Reads sample data from the database using an index.
@@ -424,16 +440,24 @@ def read_data_with_index(instance_id, database_id):
 # [START spanner_postgresql_create_storing_index]
 def add_storing_index(instance_id, database_id):
     """Adds an storing index to the example database."""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    operation = database.update_ddl(
-        [
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=[
             "CREATE INDEX AlbumsByAlbumTitle2 ON Albums(AlbumTitle)"
             "INCLUDE (MarketingBudget)"
-        ]
+        ],
     )
+
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1066,12 +1090,17 @@ def create_table_with_datatypes(instance_id, database_id):
     # [START spanner_postgresql_create_table_with_datatypes]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
-        database=database.name,
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             """CREATE TABLE Venues (
   VenueId         BIGINT NOT NULL,
@@ -1085,7 +1114,7 @@ def create_table_with_datatypes(instance_id, database_id):
   PRIMARY KEY (VenueId))"""
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1447,13 +1476,20 @@ def add_jsonb_column(instance_id, database_id):
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
 
-    operation = database.update_ddl(
-        ["ALTER TABLE Venues ADD COLUMN VenueDetails JSONB"]
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=["ALTER TABLE Venues ADD COLUMN VenueDetails JSONB"],
     )
+
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1524,6 +1560,7 @@ def update_data_with_jsonb(instance_id, database_id):
 
 # [END spanner_postgresql_jsonb_update_data]
 
+
 # [START spanner_postgresql_jsonb_query_parameter]
 def query_data_with_jsonb_parameter(instance_id, database_id):
     """Queries sample data using SQL with a JSONB parameter."""
@@ -1555,12 +1592,17 @@ def query_data_with_jsonb_parameter(instance_id, database_id):
 # [START spanner_postgresql_create_sequence]
 def create_sequence(instance_id, database_id):
     """Creates the Sequence and insert data"""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    request = spanner_admin_database_v1.UpdateDatabaseDdlRequest(
-        database=database.name,
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
         statements=[
             "CREATE SEQUENCE Seq BIT_REVERSED_POSITIVE",
             """CREATE TABLE Customers (
@@ -1570,7 +1612,7 @@ def create_sequence(instance_id, database_id):
         )""",
         ],
     )
-    operation = spanner_client.database_admin_api.update_database_ddl(request)
+    operation = database_admin_api.update_database_ddl(request)
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
 
@@ -1596,19 +1638,32 @@ def create_sequence(instance_id, database_id):
             )
         )
 
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
     database.run_in_transaction(insert_customers)
 
 
 # [END spanner_postgresql_create_sequence]
 
+
 # [START spanner_postgresql_alter_sequence]
 def alter_sequence(instance_id, database_id):
     """Alters the Sequence and insert data"""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    operation = database.update_ddl(["ALTER SEQUENCE Seq SKIP RANGE 1000 5000000"])
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=["ALTER SEQUENCE Seq SKIP RANGE 1000 5000000"],
+    )
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
@@ -1635,24 +1690,35 @@ def alter_sequence(instance_id, database_id):
             )
         )
 
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
     database.run_in_transaction(insert_customers)
 
 
 # [END spanner_postgresql_alter_sequence]
 
+
 # [START spanner_postgresql_drop_sequence]
 def drop_sequence(instance_id, database_id):
     """Drops the Sequence"""
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
 
-    operation = database.update_ddl(
-        [
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=[
             "ALTER TABLE Customers ALTER COLUMN CustomerId DROP DEFAULT",
             "DROP SEQUENCE Seq",
-        ]
+        ],
     )
+    operation = database_admin_api.update_database_ddl(request)
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)

@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import datetime
 import time
 import uuid
 
@@ -853,6 +855,45 @@ def test_readwrite_transaction_w_directed_read_options_w_error(
 
     with pytest.raises(exceptions.InvalidArgument):
         shared_database.run_in_transaction(_transaction_read)
+
+
+def test_db_batch_insert_w_max_commit_delay(shared_database):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    with shared_database.batch(
+        max_commit_delay=datetime.timedelta(milliseconds=100)
+    ) as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+        batch.insert(sd.TABLE, sd.COLUMNS, sd.ROW_DATA)
+
+    with shared_database.snapshot(read_timestamp=batch.committed) as snapshot:
+        from_snap = list(snapshot.read(sd.TABLE, sd.COLUMNS, sd.ALL))
+
+    sd._check_rows_data(from_snap)
+
+
+def test_db_run_in_transaction_w_max_commit_delay(shared_database):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    with shared_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
+    def _unit_of_work(transaction, test):
+        rows = list(transaction.read(test.TABLE, test.COLUMNS, sd.ALL))
+        assert rows == []
+
+        transaction.insert_or_update(test.TABLE, test.COLUMNS, test.ROW_DATA)
+
+    shared_database.run_in_transaction(
+        _unit_of_work, test=sd, max_commit_delay=datetime.timedelta(milliseconds=100)
+    )
+
+    with shared_database.snapshot() as after:
+        rows = list(after.execute_sql(sd.SQL))
+
+    sd._check_rows_data(rows)
 
 
 def test_create_table_with_proto_columns(

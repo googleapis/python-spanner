@@ -45,6 +45,7 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     StatementType,
     Statement,
     ParsedStatement,
+    AutocommitDmlMode,
 )
 from google.cloud.spanner_dbapi.transaction_helper import CursorStatementType
 from google.cloud.spanner_dbapi.utils import PeekIterator
@@ -124,7 +125,13 @@ class Cursor(object):
         :rtype: tuple
         :returns: The result columns' description.
         """
-        if not getattr(self._result_set, "metadata", None):
+        if (
+            self._result_set is None
+            or not getattr(self._result_set, "metadata", None)
+            or self._result_set.metadata.row_type is None
+            or self._result_set.metadata.row_type.fields is None
+            or len(self._result_set.metadata.row_type.fields) == 0
+        ):
             return
 
         columns = []
@@ -266,6 +273,17 @@ class Cursor(object):
                 self._batch_DDLs(sql)
                 if not self.connection._client_transaction_started:
                     self.connection.run_prior_DDL_statements()
+            elif (
+                self.connection.autocommit_dml_mode
+                is AutocommitDmlMode.PARTITIONED_NON_ATOMIC
+            ):
+                self._row_count = self.connection.database.execute_partitioned_dml(
+                    sql,
+                    params=args,
+                    param_types=self._parsed_statement.statement.param_types,
+                    request_options=self.connection.request_options,
+                )
+                self._result_set = None
             else:
                 self._execute_in_rw_transaction()
 
@@ -504,13 +522,17 @@ class Cursor(object):
             raise ProgrammingError("no results to return")
         return self._itr
 
-    def list_tables(self):
+    def list_tables(self, schema_name=""):
         """List the tables of the linked Database.
 
         :rtype: list
         :returns: The list of tables within the Database.
         """
-        return self.run_sql_in_snapshot(_helpers.SQL_LIST_TABLES)
+        return self.run_sql_in_snapshot(
+            sql=_helpers.SQL_LIST_TABLES,
+            params={"table_schema": schema_name},
+            param_types={"table_schema": spanner.param_types.STRING},
+        )
 
     def run_sql_in_snapshot(self, sql, params=None, param_types=None):
         # Some SQL e.g. for INFORMATION_SCHEMA cannot be run in read-write transactions
@@ -522,11 +544,14 @@ class Cursor(object):
         with self.connection.database.snapshot() as snapshot:
             return list(snapshot.execute_sql(sql, params, param_types))
 
-    def get_table_column_schema(self, table_name):
+    def get_table_column_schema(self, table_name, schema_name=""):
         rows = self.run_sql_in_snapshot(
             sql=_helpers.SQL_GET_TABLE_COLUMN_SCHEMA,
-            params={"table_name": table_name},
-            param_types={"table_name": spanner.param_types.STRING},
+            params={"schema_name": schema_name, "table_name": table_name},
+            param_types={
+                "schema_name": spanner.param_types.STRING,
+                "table_name": spanner.param_types.STRING,
+            },
         )
 
         column_details = {}

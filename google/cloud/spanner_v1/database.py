@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""User friendly container for Cloud Spanner Database."""
+"""User-friendly container for Cloud Spanner Database."""
 
 import copy
 import functools
@@ -42,6 +42,8 @@ from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
 from google.cloud.spanner_dbapi.partition_helper import BatchTransactionId
 from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import Type
+from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
@@ -339,7 +341,20 @@ class Database(object):
         :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
         :returns: the dialect of the database
         """
+        if self._database_dialect == DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED:
+            self.reload()
         return self._database_dialect
+
+    @property
+    def default_schema_name(self):
+        """Default schema name for this database.
+
+        :rtype: str
+        :returns: "" for GoogleSQL and "public" for PostgreSQL
+        """
+        if self.database_dialect == DatabaseDialect.POSTGRESQL:
+            return "public"
+        return ""
 
     @property
     def database_role(self):
@@ -651,8 +666,6 @@ class Database(object):
         if params is not None:
             from google.cloud.spanner_v1.transaction import Transaction
 
-            if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
             params_pb = Transaction._make_params_pb(params, param_types)
         else:
             params_pb = {}
@@ -739,7 +752,7 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self, request_options=None):
+    def batch(self, request_options=None, max_commit_delay=None):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -752,10 +765,16 @@ class Database(object):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
+        :type max_commit_delay: :class:`datetime.timedelta`
+        :param max_commit_delay:
+                (Optional) The amount of latency this request is willing to incur
+                in order to improve throughput. Value must be between 0ms and
+                500ms.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self, request_options)
+        return BatchCheckout(self, request_options, max_commit_delay)
 
     def mutation_groups(self):
         """Return an object which wraps a mutation_group.
@@ -814,9 +833,13 @@ class Database(object):
 
         :type kw: dict
         :param kw: (Optional) keyword arguments to be passed to ``func``.
-                   If passed, "timeout_secs" will be removed and used to
+                   If passed,
+                   "timeout_secs" will be removed and used to
                    override the default retry timeout which defines maximum timestamp
                    to continue retrying the transaction.
+                   "max_commit_delay" will be removed and used to set the
+                   max_commit_delay for the request. Value must be between
+                   0ms and 500ms.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -969,20 +992,40 @@ class Database(object):
         """
         return Table(table_id, self)
 
-    def list_tables(self):
+    def list_tables(self, schema="_default"):
         """List tables within the database.
+
+        :type schema: str
+        :param schema: The schema to search for tables, or None for all schemas. Use the special string "_default" to
+                       search for tables in the default schema of the database.
 
         :type: Iterable
         :returns:
             Iterable of :class:`~google.cloud.spanner_v1.table.Table`
             resources within the current database.
         """
+        if "_default" == schema:
+            schema = self.default_schema_name
+
         with self.snapshot() as snapshot:
-            if self._database_dialect == DatabaseDialect.POSTGRESQL:
-                where_clause = "WHERE TABLE_SCHEMA = 'public'"
+            if schema is None:
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(""),
+                )
             else:
-                where_clause = "WHERE SPANNER_STATE = 'COMMITTED'"
-            results = snapshot.execute_sql(_LIST_TABLES_QUERY.format(where_clause))
+                if self._database_dialect == DatabaseDialect.POSTGRESQL:
+                    where_clause = "WHERE TABLE_SCHEMA = $1"
+                    param_name = "p1"
+                else:
+                    where_clause = (
+                        "WHERE TABLE_SCHEMA = @schema AND SPANNER_STATE = 'COMMITTED'"
+                    )
+                    param_name = "schema"
+                results = snapshot.execute_sql(
+                    sql=_LIST_TABLES_QUERY.format(where_clause),
+                    params={param_name: schema},
+                    param_types={param_name: Type(code=TypeCode.STRING)},
+                )
             for row in results:
                 yield self.table(row[0])
 
@@ -1053,9 +1096,14 @@ class BatchCheckout(object):
             (Optional) Common options for the commit request.
             If a dict is provided, it must be of the same form as the protobuf
             message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+    :type max_commit_delay: :class:`datetime.timedelta`
+    :param max_commit_delay:
+            (Optional) The amount of latency this request is willing to incur
+            in order to improve throughput.
     """
 
-    def __init__(self, database, request_options=None):
+    def __init__(self, database, request_options=None, max_commit_delay=None):
         self._database = database
         self._session = self._batch = None
         if request_options is None:
@@ -1064,6 +1112,7 @@ class BatchCheckout(object):
             self._request_options = RequestOptions(request_options)
         else:
             self._request_options = request_options
+        self._max_commit_delay = max_commit_delay
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1080,6 +1129,7 @@ class BatchCheckout(object):
                 self._batch.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=self._request_options,
+                    max_commit_delay=self._max_commit_delay,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:

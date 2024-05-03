@@ -97,6 +97,8 @@ POSTGRES_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:17] + (
     "jsonb_array",
 )
 
+QUERY_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[1:17:2]
+
 AllTypesRowData = collections.namedtuple("AllTypesRowData", LIVE_ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in LIVE_ALL_TYPES_COLUMNS])
 EmulatorAllTypesRowData = collections.namedtuple(
@@ -222,6 +224,17 @@ POSTGRES_ALL_TYPES_ROWDATA = (
     PostGresAllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     PostGresAllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
     PostGresAllTypesRowData(pkey=309, jsonb_array=[JSON_1, JSON_2, None]),
+)
+
+QUERY_ALL_TYPES_DATA = (
+    123,
+    False,
+    BYTES_1,
+    SOME_DATE,
+    1.4142136,
+    "VALUE",
+    SOME_TIME,
+    NUMERIC_1,
 )
 
 if _helpers.USE_EMULATOR:
@@ -498,6 +511,39 @@ def test_batch_insert_or_update_then_query(sessions_database):
         rows = list(snapshot.execute_sql(sd.SQL))
 
     sd._check_rows_data(rows)
+
+
+def test_batch_insert_then_read_wo_param_types(
+    sessions_database, database_dialect, not_emulator
+):
+    sd = _sample_data
+
+    with sessions_database.batch() as batch:
+        batch.delete(ALL_TYPES_TABLE, sd.ALL)
+        batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
+
+    with sessions_database.snapshot(multi_use=True) as snapshot:
+        for column_type, value in list(
+            zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)
+        ):
+            placeholder = (
+                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else "@value"
+            )
+            sql = (
+                "SELECT * FROM "
+                + ALL_TYPES_TABLE
+                + " WHERE "
+                + column_type
+                + " = "
+                + placeholder
+            )
+            param = (
+                {"p1": value}
+                if database_dialect == DatabaseDialect.POSTGRESQL
+                else {"value": value}
+            )
+            rows = list(snapshot.execute_sql(sql, params=param))
+            assert len(rows) == 1
 
 
 def test_batch_insert_w_commit_timestamp(sessions_database, not_postgres):
@@ -1998,8 +2044,8 @@ def _check_sql_results(
     database,
     sql,
     params,
-    param_types,
-    expected,
+    param_types=None,
+    expected=None,
     order=True,
     recurse_into_lists=True,
     column_info=None,
@@ -2253,6 +2299,47 @@ def test_execute_sql_w_float_bindings_transfinite(sessions_database, database_di
     )
 
 
+def test_execute_sql_w_float32_bindings(sessions_database, database_dialect):
+    pytest.skip("float32 is not yet supported in production.")
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.FLOAT32,
+        42.3,
+        [12.3, 456.0, 7.89],
+    )
+
+
+def test_execute_sql_w_float32_bindings_transfinite(
+    sessions_database, database_dialect
+):
+    pytest.skip("float32 is not yet supported in production.")
+    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "neg_inf"
+    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
+
+    # Find -inf
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: NEG_INF},
+        param_types={key: spanner_v1.param_types.FLOAT32},
+        expected=[(NEG_INF,)],
+        order=False,
+    )
+
+    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "pos_inf"
+    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
+    # Find +inf
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: POS_INF},
+        param_types={key: spanner_v1.param_types.FLOAT32},
+        expected=[(POS_INF,)],
+        order=False,
+    )
+
+
 def test_execute_sql_w_bytes_bindings(sessions_database, database_dialect):
     _bind_test_helper(
         sessions_database,
@@ -2341,6 +2428,18 @@ def test_execute_sql_w_jsonb_bindings(
         spanner_v1.param_types.PG_JSONB,
         JSON_1,
         [JSON_1, JSON_2],
+    )
+
+
+def test_execute_sql_w_oid_bindings(
+    not_emulator, not_google_standard_sql, sessions_database, database_dialect
+):
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.PG_OID,
+        123,
+        [123, 456],
     )
 
 
