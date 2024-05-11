@@ -29,8 +29,8 @@ CREATE TABLE contact_phones (
     PRIMARY KEY (contact_id, phone_type),
     INTERLEAVE IN PARENT contacts ON DELETE CASCADE;
 CREATE PROTO BUNDLE (
-    spanner.examples.music.SingerInfo,
-    spanner.examples.music.Genre,
+    examples.spanner.music.SingerInfo,
+    examples.spanner.music.Genre,
     );
 CREATE TABLE all_types (
     pkey INT64 NOT NULL,
@@ -52,10 +52,10 @@ CREATE TABLE all_types (
     numeric_array ARRAY<NUMERIC>,
     json_value JSON,
     json_array ARRAY<JSON>,
-    proto_message_value spanner.examples.music.SingerInfo,
-    proto_message_array ARRAY<spanner.examples.music.SingerInfo>,
-    proto_enum_value spanner.examples.music.Genre,
-    proto_enum_array ARRAY<spanner.examples.music.Genre>,
+    proto_message_value examples.spanner.music.SingerInfo,
+    proto_message_array ARRAY<examples.spanner.music.SingerInfo>,
+    proto_enum_value examples.spanner.music.Genre,
+    proto_enum_array ARRAY<examples.spanner.music.Genre>,
     )
     PRIMARY KEY (pkey);
 CREATE TABLE counters (
@@ -200,8 +200,8 @@ CREATE TABLE singers (
      singer_id   INT64 NOT NULL,
      first_name  STRING(1024),
      last_name   STRING(1024),
-     singer_info spanner.examples.music.SingerInfo,
-     singer_genre spanner.examples.music.Genre, )
+     singer_info examples.spanner.music.SingerInfo,
+     singer_genre examples.spanner.music.Genre, )
      PRIMARY KEY (singer_id);
 CREATE INDEX SingerByGenre ON singers(singer_genre) STORING (first_name, last_name);
 """

@@ -905,7 +905,7 @@ def test_create_table_with_proto_columns(
 ):
     proto_cols_db_id = _helpers.unique_id("proto-columns")
     extra_ddl = [
-        "CREATE PROTO BUNDLE (spanner.examples.music.SingerInfo, spanner.examples.music.Genre,)"
+        "CREATE PROTO BUNDLE (examples.spanner.music.SingerInfo, examples.spanner.music.Genre,)"
     ]
 
     proto_cols_database = shared_instance.database(

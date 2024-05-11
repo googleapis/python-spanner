@@ -200,6 +200,29 @@ def database_id():
 
 
 @pytest.fixture(scope="module")
+def proto_columns_database(
+    spanner_client,
+    sample_instance,
+    database_id,
+    proto_columns_database_ddl,
+    database_dialect,
+):
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        sample_database = sample_instance.database(
+            database_id,
+            ddl_statements=proto_columns_database_ddl,
+        )
+
+        if not sample_database.exists():
+            operation = sample_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
+
+        yield sample_database
+
+        sample_database.drop()
+
+
+@pytest.fixture(scope="module")
 def bit_reverse_sequence_database_id():
     """Id for the database used in bit reverse sequence samples.
 
@@ -256,31 +279,6 @@ def sample_database(
     yield sample_database
 
     sample_database.drop()
-
-
-@pytest.fixture(scope="module")
-def sample_database_for_proto_columns(
-        spanner_client,
-        sample_instance,
-        database_id,
-        database_ddl_for_proto_columns,
-        database_dialect,
-        proto_descriptor_file,
-):
-    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
-        sample_database = sample_instance.database(
-            database_id,
-            ddl_statements=database_ddl_for_proto_columns,
-            proto_descriptors=proto_descriptor_file,
-        )
-
-        if not sample_database.exists():
-            operation = sample_database.create()
-            operation.result(OPERATION_TIMEOUT_SECONDS)
-
-        yield sample_database
-
-        sample_database.drop()
 
 
 @pytest.fixture(scope="module")
