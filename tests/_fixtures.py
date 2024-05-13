@@ -106,6 +106,10 @@ CREATE TABLE contact_phones (
     phone_number STRING(1024) )
     PRIMARY KEY (contact_id, phone_type),
     INTERLEAVE IN PARENT contacts ON DELETE CASCADE;
+CREATE PROTO BUNDLE (
+    examples.spanner.music.SingerInfo,
+    examples.spanner.music.Genre,
+    );
 CREATE TABLE all_types (
     pkey INT64 NOT NULL,
     int_value INT64,

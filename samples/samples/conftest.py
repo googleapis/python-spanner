@@ -203,13 +203,13 @@ def database_id():
 def proto_columns_database(
     spanner_client,
     sample_instance,
-    database_id,
+    proto_columns_database_id,
     proto_columns_database_ddl,
     database_dialect,
 ):
     if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
         sample_database = sample_instance.database(
-            database_id,
+            proto_columns_database_id,
             ddl_statements=proto_columns_database_ddl,
         )
 

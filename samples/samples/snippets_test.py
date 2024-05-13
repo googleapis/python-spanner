@@ -103,6 +103,11 @@ def default_leader_database_id():
 
 
 @pytest.fixture(scope="module")
+def proto_columns_database_id():
+    return f"test-db-proto-{uuid.uuid4().hex[:10]}"
+
+
+@pytest.fixture(scope="module")
 def database_ddl():
     """Sequence of DDL statements used to set up the database.
 
