@@ -3151,20 +3151,24 @@ def add_proto_type_columns(instance_id, database_id):
     # database_id = "your-spanner-db-id"
 
     """Adds a new Proto Message column and Proto Enum column to the Singers table."""
+
     import os
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     dirname = os.path.dirname(__file__)
     filename = os.path.join(dirname, "testdata/descriptors.pb")
 
     spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
+    database_admin_api = spanner_client.database_admin_api
 
-    database = instance.database(database_id)
     proto_descriptor_file = open(filename, "rb")
     proto_descriptor = proto_descriptor_file.read()
 
-    operation = database.update_ddl(
-        [
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=[
             """CREATE PROTO BUNDLE (
             examples.spanner.music.SingerInfo,
             examples.spanner.music.Genre,
@@ -3176,11 +3180,12 @@ def add_proto_type_columns(instance_id, database_id):
         ],
         proto_descriptors=proto_descriptor,
     )
+
+    operation = database_admin_api.update_database_ddl(request)
+
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
     proto_descriptor_file.close()
-
-    database.reload()
 
     print(
         'Altered table "Singers" on database {} on instance {} with proto descriptors.'.format(
