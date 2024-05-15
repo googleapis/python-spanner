@@ -254,7 +254,13 @@ def _parse_value_pb(value_pb, field_type, field_name, column_info=None):
     :param field_name: column name
 
     :type column_info: dict
-    :param column_info: (Optional) dict of column name and column information
+    :param column_info: (Optional) dict of column name and column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
 
     :rtype: varies on field_type
     :returns: value extracted from value_pb

@@ -3356,6 +3356,12 @@ def query_data_with_proto_types_parameter(instance_id, database_id):
                 "country": param_types.STRING,
                 "singerGenre": param_types.ProtoEnum(singer_pb2.Genre),
             },
+            # column_info is an optional parameter and is used to deserialize
+            # the proto message and enum object back from bytearray and
+            # int respectively.
+            # If column_info is not passed for proto messages and enums, then
+            # the data types for these columns will be bytes and int
+            # respectively.
             column_info={
                 "SingerInfo": singer_pb2.SingerInfo(),
                 "SingerInfoArray": singer_pb2.SingerInfo(),
@@ -3366,8 +3372,10 @@ def query_data_with_proto_types_parameter(instance_id, database_id):
 
         for row in results:
             print(
-                "SingerId: {}, SingerInfo: {}, SingerGenre: {}, "
-                "SingerInfoArray: {}, SingerGenreArray: {}".format(*row)
+                "SingerId: {}, SingerInfo: {}, SingerInfoNationality: {}, "
+                "SingerInfoArray: {}, SingerGenre: {}, SingerGenreArray: {}".format(
+                    *row
+                )
             )
     # [END spanner_query_with_proto_types_parameter]
 

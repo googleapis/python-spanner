@@ -248,7 +248,13 @@ class Session(object):
         :param limit: (Optional) maximum number of rows to return
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -308,7 +314,13 @@ class Session(object):
         :param timeout: (Optional) The timeout for this request.
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.

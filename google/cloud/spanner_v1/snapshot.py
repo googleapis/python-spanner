@@ -233,7 +233,13 @@ class _SnapshotBase(_SessionWrapper):
             or regions should be used for non-transactional reads or queries.
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
 
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
@@ -407,7 +413,13 @@ class _SnapshotBase(_SessionWrapper):
             or regions should be used for non-transactional reads or queries.
 
         :type column_info: dict
-        :param column_info: (Optional) dict of mapping between column names and additional column information
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
 
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
