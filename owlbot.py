@@ -118,6 +118,11 @@ for library in get_staging_dirs(
         excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "**/gapic_version.py", "testing/constraints-3.7.txt",],
     )
 
+for library in get_staging_dirs(default_version="None",
+    sub_directory="spanner_executor"
+):
+    s.move(library, "test_proxy/protos")
+
 s.remove_staging_dirs()
 
 # ----------------------------------------------------------------------------

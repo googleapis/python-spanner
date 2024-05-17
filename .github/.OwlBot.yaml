@@ -25,6 +25,8 @@ deep-copy-regex:
     dest: /owl-bot-staging/spanner_admin_instance/$1/$2
   - source: /google/spanner/admin/database/(v.*)/.*-py/(.*)
     dest: /owl-bot-staging/spanner_admin_database/$1/$2
+  - source: /google/spanner/executor/(v.*)/.*-py/(cloud_executor.*)
+    dest: /owl-bot-staging/spanner_executor/$1/$2
 
 begin-after-commit-hash: b154da710c5c9eedee127c07f74b6158c9c22382
 
