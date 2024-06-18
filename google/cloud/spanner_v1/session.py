@@ -398,12 +398,14 @@ class Session(object):
         commit_request_options = kw.pop("commit_request_options", None)
         max_commit_delay = kw.pop("max_commit_delay", None)
         transaction_tag = kw.pop("transaction_tag", None)
+        exclude_txn_from_change_streams = kw.pop("exclude_txn_from_change_streams", None)
         attempts = 0
 
         while True:
             if self._transaction is None:
                 txn = self.transaction()
                 txn.transaction_tag = transaction_tag
+                txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
             else:
                 txn = self._transaction
 

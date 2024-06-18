@@ -619,6 +619,7 @@ class Database(object):
         param_types=None,
         query_options=None,
         request_options=None,
+        exclude_txn_from_change_streams=None,
     ):
         """Execute a partitionable DML statement.
 
@@ -673,7 +674,8 @@ class Database(object):
         api = self.spanner_api
 
         txn_options = TransactionOptions(
-            partitioned_dml=TransactionOptions.PartitionedDml()
+            partitioned_dml=TransactionOptions.PartitionedDml(),
+            exclude_txn_from_change_streams=exclude_txn_from_change_streams
         )
 
         metadata = _metadata_with_prefix(self.name)
@@ -752,7 +754,7 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self, request_options=None, max_commit_delay=None):
+    def batch(self, request_options=None, max_commit_delay=None, exclude_txn_from_change_streams=None):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -774,7 +776,7 @@ class Database(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self, request_options, max_commit_delay)
+        return BatchCheckout(self, request_options, max_commit_delay, exclude_txn_from_change_streams)
 
     def mutation_groups(self):
         """Return an object which wraps a mutation_group.
@@ -1103,7 +1105,7 @@ class BatchCheckout(object):
             in order to improve throughput.
     """
 
-    def __init__(self, database, request_options=None, max_commit_delay=None):
+    def __init__(self, database, request_options=None, max_commit_delay=None, exclude_txn_from_change_streams=None):
         self._database = database
         self._session = self._batch = None
         if request_options is None:
@@ -1113,6 +1115,7 @@ class BatchCheckout(object):
         else:
             self._request_options = request_options
         self._max_commit_delay = max_commit_delay
+        self._exclude_txn_from_change_streams = exclude_txn_from_change_streams
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1130,6 +1133,7 @@ class BatchCheckout(object):
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=self._request_options,
                     max_commit_delay=self._max_commit_delay,
+                    exclude_txn_from_change_streams=self._exclude_txn_from_change_streams,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:

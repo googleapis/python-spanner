@@ -147,7 +147,7 @@ class Batch(_BatchBase):
             raise ValueError("Batch already committed")
 
     def commit(
-        self, return_commit_stats=False, request_options=None, max_commit_delay=None
+        self, return_commit_stats=False, request_options=None, max_commit_delay=None, exclude_txn_from_change_streams=None
     ):
         """Commit mutations to the database.
 
@@ -178,7 +178,7 @@ class Batch(_BatchBase):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
+        txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite(), exclude_txn_from_change_streams=exclude_txn_from_change_streams)
         trace_attributes = {"num_mutations": len(self._mutations)}
 
         if request_options is None:
@@ -270,7 +270,7 @@ class MutationGroups(_SessionWrapper):
         self._mutation_groups.append(mutation_group)
         return MutationGroup(self._session, mutation_group.mutations)
 
-    def batch_write(self, request_options=None):
+    def batch_write(self, request_options=None, exclude_txn_from_change_streams=None):
         """Executes batch_write.
 
         :type request_options:
@@ -302,6 +302,7 @@ class MutationGroups(_SessionWrapper):
             session=self._session.name,
             mutation_groups=self._mutation_groups,
             request_options=request_options,
+            exclude_txn_from_change_streams=exclude_txn_from_change_streams,
         )
         with trace_call("CloudSpanner.BatchWrite", self._session, trace_attributes):
             method = functools.partial(
