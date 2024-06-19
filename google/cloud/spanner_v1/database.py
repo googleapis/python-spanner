@@ -675,7 +675,7 @@ class Database(object):
 
         txn_options = TransactionOptions(
             partitioned_dml=TransactionOptions.PartitionedDml(),
-            exclude_txn_from_change_streams=exclude_txn_from_change_streams
+            exclude_txn_from_change_streams=exclude_txn_from_change_streams,
         )
 
         metadata = _metadata_with_prefix(self.name)
@@ -754,7 +754,12 @@ class Database(object):
         """
         return SnapshotCheckout(self, **kw)
 
-    def batch(self, request_options=None, max_commit_delay=None, exclude_txn_from_change_streams=None):
+    def batch(
+        self,
+        request_options=None,
+        max_commit_delay=None,
+        exclude_txn_from_change_streams=None,
+    ):
         """Return an object which wraps a batch.
 
         The wrapper *must* be used as a context manager, with the batch
@@ -776,7 +781,9 @@ class Database(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
-        return BatchCheckout(self, request_options, max_commit_delay, exclude_txn_from_change_streams)
+        return BatchCheckout(
+            self, request_options, max_commit_delay, exclude_txn_from_change_streams
+        )
 
     def mutation_groups(self):
         """Return an object which wraps a mutation_group.
@@ -1105,7 +1112,13 @@ class BatchCheckout(object):
             in order to improve throughput.
     """
 
-    def __init__(self, database, request_options=None, max_commit_delay=None, exclude_txn_from_change_streams=None):
+    def __init__(
+        self,
+        database,
+        request_options=None,
+        max_commit_delay=None,
+        exclude_txn_from_change_streams=None,
+    ):
         self._database = database
         self._session = self._batch = None
         if request_options is None:

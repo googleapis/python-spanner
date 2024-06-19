@@ -1746,7 +1746,10 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(return_value, 42)
         self.assertEqual(args, ("abc",))
 
-        expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite(), exclude_txn_from_change_streams=True)
+        expected_options = TransactionOptions(
+            read_write=TransactionOptions.ReadWrite(),
+            exclude_txn_from_change_streams=True,
+        )
         gax_api.begin_transaction.assert_called_once_with(
             session=self.SESSION_NAME,
             options=expected_options,
@@ -1769,7 +1772,9 @@ class TestSession(OpenTelemetryBase):
             ],
         )
 
-    def test_run_in_transaction_w_abort_w_retry_metadata_w_exclude_txn_from_change_streams(self):
+    def test_run_in_transaction_w_abort_w_retry_metadata_w_exclude_txn_from_change_streams(
+        self,
+    ):
         import datetime
         from google.api_core.exceptions import Aborted
         from google.protobuf.duration_pb2 import Duration
@@ -1819,7 +1824,12 @@ class TestSession(OpenTelemetryBase):
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
 
         with mock.patch("time.sleep") as sleep_mock:
-            session.run_in_transaction(unit_of_work, "abc", some_arg="def", exclude_txn_from_change_streams=True)
+            session.run_in_transaction(
+                unit_of_work,
+                "abc",
+                some_arg="def",
+                exclude_txn_from_change_streams=True,
+            )
 
         sleep_mock.assert_called_once_with(RETRY_SECONDS + RETRY_NANOS / 1.0e9)
         self.assertEqual(len(called_with), 2)
@@ -1833,7 +1843,10 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(args, ("abc",))
             self.assertEqual(kw, {"some_arg": "def"})
 
-        expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite(), exclude_txn_from_change_streams=True)
+        expected_options = TransactionOptions(
+            read_write=TransactionOptions.ReadWrite(),
+            exclude_txn_from_change_streams=True,
+        )
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [
@@ -1847,7 +1860,7 @@ class TestSession(OpenTelemetryBase):
                 )
             ]
             * 2,
-            )
+        )
         request = CommitRequest(
             session=self.SESSION_NAME,
             mutations=txn._mutations,
@@ -1866,7 +1879,7 @@ class TestSession(OpenTelemetryBase):
                 )
             ]
             * 2,
-            )
+        )
 
     def test_delay_helper_w_no_delay(self):
         from google.cloud.spanner_v1.session import _delay_until_retry
