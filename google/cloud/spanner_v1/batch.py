@@ -287,6 +287,13 @@ class MutationGroups(_SessionWrapper):
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
 
+        :type exclude_txn_from_change_streams: bool
+        :param exclude_txn_from_change_streams:
+          If true, instructs the transaction to be excluded from being recorded in change streams
+          with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
+          being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
+          unset.
+
         :rtype: :class:`Iterable[google.cloud.spanner_v1.types.BatchWriteResponse]`
         :returns: a sequence of responses for each batch.
         """

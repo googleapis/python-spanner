@@ -387,6 +387,10 @@ class Session(object):
                    request options for the commit request.
                    "max_commit_delay" will be removed and used to set the max commit delay for the request.
                    "transaction_tag" will be removed and used to set the transaction tag for the request.
+                   "exclude_txn_from_change_streams" if true, instructs the transaction to be excluded
+                   from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
+                   This does not exclude the transaction from being recorded in the change streams with
+                   the DDL option `allow_txn_exclusion` being false or unset.
 
         :rtype: Any
         :returns: The return value of ``func``.

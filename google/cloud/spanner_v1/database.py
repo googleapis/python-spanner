@@ -652,6 +652,13 @@ class Database(object):
             Please note, the `transactionTag` setting will be ignored as it is
             not supported for partitioned DML.
 
+        :type exclude_txn_from_change_streams: bool
+        :param exclude_txn_from_change_streams:
+          If true, instructs the transaction to be excluded from being recorded in change streams
+          with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
+          being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
+          unset.
+
         :rtype: int
         :returns: Count of rows affected by the DML statement.
         """
@@ -778,6 +785,13 @@ class Database(object):
                 in order to improve throughput. Value must be between 0ms and
                 500ms.
 
+        :type exclude_txn_from_change_streams: bool
+        :param exclude_txn_from_change_streams:
+          If true, instructs the transaction to be excluded from being recorded in change streams
+          with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
+          being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
+          unset.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
@@ -849,6 +863,10 @@ class Database(object):
                    "max_commit_delay" will be removed and used to set the
                    max_commit_delay for the request. Value must be between
                    0ms and 500ms.
+                   "exclude_txn_from_change_streams" if true, instructs the transaction to be excluded
+                   from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
+                   This does not exclude the transaction from being recorded in the change streams with
+                   the DDL option `allow_txn_exclusion` being false or unset.
 
         :rtype: Any
         :returns: The return value of ``func``.
