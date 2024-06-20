@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.48.0](https://github.com/googleapis/python-spanner/compare/v3.47.0...v3.48.0) (2024-06-20)
+
+
+### Features
+
+* **spanner:** Add support for txn changstream exclusion ([#1152](https://github.com/googleapis/python-spanner/issues/1152)) ([00ccb7a](https://github.com/googleapis/python-spanner/commit/00ccb7a5c1f246b5099265058a5e9875e6627024))
+
 ## [3.47.0](https://github.com/googleapis/python-spanner/compare/v3.46.0...v3.47.0) (2024-05-22)
 
 
