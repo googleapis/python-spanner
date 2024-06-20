@@ -1083,7 +1083,7 @@ class TestDatabase(_BaseTest):
         query_options=None,
         request_options=None,
         retried=False,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         from google.api_core.exceptions import Aborted
         from google.api_core.retry import Retry

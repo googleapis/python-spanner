@@ -151,7 +151,7 @@ class Batch(_BatchBase):
         return_commit_stats=False,
         request_options=None,
         max_commit_delay=None,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         """Commit mutations to the database.
 
@@ -277,7 +277,7 @@ class MutationGroups(_SessionWrapper):
         self._mutation_groups.append(mutation_group)
         return MutationGroup(self._session, mutation_group.mutations)
 
-    def batch_write(self, request_options=None, exclude_txn_from_change_streams=None):
+    def batch_write(self, request_options=None, exclude_txn_from_change_streams=False):
         """Executes batch_write.
 
         :type request_options:
@@ -289,7 +289,7 @@ class MutationGroups(_SessionWrapper):
 
         :type exclude_txn_from_change_streams: bool
         :param exclude_txn_from_change_streams:
-          If true, instructs the transaction to be excluded from being recorded in change streams
+          (Optional) If true, instructs the transaction to be excluded from being recorded in change streams
           with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
           being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
           unset.

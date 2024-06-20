@@ -137,7 +137,7 @@ class TestTransaction(OpenTelemetryBase):
         api,
         count=0,
         query_options=None,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         stats_pb = ResultSetStats(row_count_exact=1)
 
@@ -167,7 +167,7 @@ class TestTransaction(OpenTelemetryBase):
         query_options=None,
         begin=True,
         count=0,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         if begin is True:
             expected_transaction = TransactionSelector(

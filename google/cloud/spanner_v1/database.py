@@ -619,7 +619,7 @@ class Database(object):
         param_types=None,
         query_options=None,
         request_options=None,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         """Execute a partitionable DML statement.
 
@@ -654,7 +654,7 @@ class Database(object):
 
         :type exclude_txn_from_change_streams: bool
         :param exclude_txn_from_change_streams:
-          If true, instructs the transaction to be excluded from being recorded in change streams
+          (Optional) If true, instructs the transaction to be excluded from being recorded in change streams
           with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
           being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
           unset.
@@ -765,7 +765,7 @@ class Database(object):
         self,
         request_options=None,
         max_commit_delay=None,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         """Return an object which wraps a batch.
 
@@ -787,7 +787,7 @@ class Database(object):
 
         :type exclude_txn_from_change_streams: bool
         :param exclude_txn_from_change_streams:
-          If true, instructs the transaction to be excluded from being recorded in change streams
+          (Optional) If true, instructs the transaction to be excluded from being recorded in change streams
           with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
           being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
           unset.
@@ -1135,7 +1135,7 @@ class BatchCheckout(object):
         database,
         request_options=None,
         max_commit_delay=None,
-        exclude_txn_from_change_streams=None,
+        exclude_txn_from_change_streams=False,
     ):
         self._database = database
         self._session = self._batch = None
