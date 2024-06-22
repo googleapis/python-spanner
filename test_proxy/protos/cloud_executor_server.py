@@ -19,13 +19,17 @@ import logging
 import grpc
 from google.spanner.executor.v1 import cloud_executor_pb2
 from google.spanner.executor.v1 import cloud_executor_pb2_grpc
+from google.cloud.spanner import Client
 
 
 class TestProxyServer(cloud_executor_pb2_grpc.SpannerExecutorProxyServicer):
     def ExecuteActionAsync(self, request, context):
         print("Execute action async")
         print(f"{request=}")
-        # TODO: do something with the request
+        client = Client()
+        # TODO: Replace with correct client code
+        client.list_instances()
+        # TODO: Do something with the request
         yield cloud_executor_pb2.SpannerAsyncActionResponse()
 
 def serve():
