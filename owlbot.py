@@ -119,9 +119,24 @@ for library in get_staging_dirs(
     )
 
 for library in get_staging_dirs(default_version="None",
-    sub_directory="spanner_executor"
+    sub_directory="spanner_executor_pb2"
 ):
-    s.move(library, "test_proxy/protos")
+    s.move(library, "test_proxy/protos/google/spanner/executor/v1")
+
+for library in get_staging_dirs(default_version="None",
+    sub_directory="spanner_pb2"
+):
+    s.move(library, "test_proxy/protos/google/spanner/v1")
+
+for library in get_staging_dirs(default_version="None",
+    sub_directory="spanner_admin_database_pb2"
+):
+    s.move(library, "test_proxy/protos/google/spanner/admin/database/v1")
+
+for library in get_staging_dirs(default_version="None",
+    sub_directory="spanner_admin_instance_pb2"
+):
+    s.move(library, "test_proxy/protos/google/spanner/admin/instance/v1")
 
 s.remove_staging_dirs()
 
