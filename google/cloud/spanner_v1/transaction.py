@@ -55,6 +55,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     _execute_sql_count = 0
     _lock = threading.Lock()
     _read_only = False
+    exclude_txn_from_change_streams = False
 
     def __init__(self, session):
         if session._transaction is not None:
@@ -86,7 +87,10 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if self._transaction_id is None:
             return TransactionSelector(
-                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+                begin=TransactionOptions(
+                    read_write=TransactionOptions.ReadWrite(),
+                    exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+                )
             )
         else:
             return TransactionSelector(id=self._transaction_id)
@@ -137,7 +141,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        txn_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
+        txn_options = TransactionOptions(
+            read_write=TransactionOptions.ReadWrite(),
+            exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+        )
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             method = functools.partial(
                 api.begin_transaction,
@@ -180,7 +187,9 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self, return_commit_stats=False, request_options=None):
+    def commit(
+        self, return_commit_stats=False, request_options=None, max_commit_delay=None
+    ):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
@@ -193,6 +202,12 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :type max_commit_delay: :class:`datetime.timedelta`
+        :param max_commit_delay:
+                (Optional) The amount of latency this request is willing to incur
+                in order to improve throughput.
+                :class:`~google.cloud.spanner_v1.types.MaxCommitDelay`.
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
@@ -228,6 +243,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             mutations=self._mutations,
             transaction_id=self._transaction_id,
             return_commit_stats=return_commit_stats,
+            max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
@@ -267,14 +283,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             If ``params`` is None but ``param_types`` is not None.
         """
         if params is not None:
-            if param_types is None:
-                raise ValueError("Specify 'param_types' when passing 'params'.")
             return Struct(
                 fields={key: _make_value_pb(value) for key, value in params.items()}
             )
-        else:
-            if param_types is not None:
-                raise ValueError("Specify 'params' when passing 'param_types'.")
 
         return {}
 
@@ -406,7 +417,14 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return response.stats.row_count_exact
 
-    def batch_update(self, statements, request_options=None):
+    def batch_update(
+        self,
+        statements,
+        request_options=None,
+        *,
+        retry=gapic_v1.method.DEFAULT,
+        timeout=gapic_v1.method.DEFAULT,
+    ):
         """Perform a batch of DML statements via an ``ExecuteBatchDml`` request.
 
         :type statements:
@@ -426,6 +444,12 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :type retry: :class:`~google.api_core.retry.Retry`
+        :param retry: (Optional) The retry settings for this request.
+
+        :type timeout: float
+        :param timeout: (Optional) The timeout for this request.
 
         :rtype:
             Tuple(status, Sequence[int])
@@ -482,6 +506,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             api.execute_batch_dml,
             request=request,
             metadata=metadata,
+            retry=retry,
+            timeout=timeout,
         )
 
         if self._transaction_id is None:

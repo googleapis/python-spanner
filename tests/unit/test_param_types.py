@@ -18,9 +18,7 @@ import unittest
 
 class Test_ArrayParamType(unittest.TestCase):
     def test_it(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1 import param_types
+        from google.cloud.spanner_v1 import Type, TypeCode, param_types
 
         expected = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
@@ -33,15 +31,13 @@ class Test_ArrayParamType(unittest.TestCase):
 
 class Test_Struct(unittest.TestCase):
     def test_it(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import param_types
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode, param_types
 
         struct_type = StructType(
             fields=[
                 StructType.Field(name="name", type_=Type(code=TypeCode.STRING)),
                 StructType.Field(name="count", type_=Type(code=TypeCode.INT64)),
+                StructType.Field(name="float32", type_=Type(code=TypeCode.FLOAT32)),
             ]
         )
         expected = Type(code=TypeCode.STRUCT, struct_type=struct_type)
@@ -50,6 +46,7 @@ class Test_Struct(unittest.TestCase):
             [
                 param_types.StructField("name", param_types.STRING),
                 param_types.StructField("count", param_types.INT64),
+                param_types.StructField("float32", param_types.FLOAT32),
             ]
         )
 
@@ -58,10 +55,12 @@ class Test_Struct(unittest.TestCase):
 
 class Test_JsonbParamType(unittest.TestCase):
     def test_it(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1 import TypeAnnotationCode
-        from google.cloud.spanner_v1 import param_types
+        from google.cloud.spanner_v1 import (
+            Type,
+            TypeAnnotationCode,
+            TypeCode,
+            param_types,
+        )
 
         expected = Type(
             code=TypeCode.JSON,
@@ -69,5 +68,56 @@ class Test_JsonbParamType(unittest.TestCase):
         )
 
         found = param_types.PG_JSONB
+
+        self.assertEqual(found, expected)
+
+
+class Test_OidParamType(unittest.TestCase):
+    def test_it(self):
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import TypeAnnotationCode
+        from google.cloud.spanner_v1 import param_types
+
+        expected = Type(
+            code=TypeCode.INT64,
+            type_annotation=TypeAnnotationCode.PG_OID,
+        )
+
+        found = param_types.PG_OID
+
+        self.assertEqual(found, expected)
+
+
+class Test_ProtoMessageParamType(unittest.TestCase):
+    def test_it(self):
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import param_types
+        from samples.samples.testdata import singer_pb2
+
+        singer_info = singer_pb2.SingerInfo()
+        expected = Type(
+            code=TypeCode.PROTO, proto_type_fqn=singer_info.DESCRIPTOR.full_name
+        )
+
+        found = param_types.ProtoMessage(singer_info)
+
+        self.assertEqual(found, expected)
+
+
+class Test_ProtoEnumParamType(unittest.TestCase):
+    def test_it(self):
+        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import param_types
+        from samples.samples.testdata import singer_pb2
+
+        singer_genre = singer_pb2.Genre
+        expected = Type(
+            code=TypeCode.ENUM, proto_type_fqn=singer_genre.DESCRIPTOR.full_name
+        )
+
+        found = param_types.ProtoEnum(singer_genre)
 
         self.assertEqual(found, expected)

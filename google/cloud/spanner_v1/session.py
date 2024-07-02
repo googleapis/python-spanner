@@ -228,7 +228,7 @@ class Session(object):
 
         return Snapshot(self, **kw)
 
-    def read(self, table, columns, keyset, index="", limit=0):
+    def read(self, table, columns, keyset, index="", limit=0, column_info=None):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
         :type table: str
@@ -247,10 +247,21 @@ class Session(object):
         :type limit: int
         :param limit: (Optional) maximum number of rows to return
 
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        return self.snapshot().read(table, columns, keyset, index, limit)
+        return self.snapshot().read(
+            table, columns, keyset, index, limit, column_info=column_info
+        )
 
     def execute_sql(
         self,
@@ -262,6 +273,7 @@ class Session(object):
         request_options=None,
         retry=method.DEFAULT,
         timeout=method.DEFAULT,
+        column_info=None,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -301,6 +313,15 @@ class Session(object):
         :type timeout: float
         :param timeout: (Optional) The timeout for this request.
 
+        :type column_info: dict
+        :param column_info: (Optional) dict of mapping between column names and additional column information.
+            An object where column names as keys and custom objects as corresponding
+            values for deserialization. It's specifically useful for data types like
+            protobuf where deserialization logic is on user-specific code. When provided,
+            the custom object enables deserialization of backend-received column data.
+            If not provided, data remains serialized as bytes for Proto Messages and
+            integer for Proto Enums.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
@@ -313,6 +334,7 @@ class Session(object):
             request_options=request_options,
             retry=retry,
             timeout=timeout,
+            column_info=column_info,
         )
 
     def batch(self):
@@ -363,6 +385,12 @@ class Session(object):
                    to continue retrying the transaction.
                    "commit_request_options" will be removed and used to set the
                    request options for the commit request.
+                   "max_commit_delay" will be removed and used to set the max commit delay for the request.
+                   "transaction_tag" will be removed and used to set the transaction tag for the request.
+                   "exclude_txn_from_change_streams" if true, instructs the transaction to be excluded
+                   from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
+                   This does not exclude the transaction from being recorded in the change streams with
+                   the DDL option `allow_txn_exclusion` being false or unset.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -372,13 +400,18 @@ class Session(object):
         """
         deadline = time.time() + kw.pop("timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS)
         commit_request_options = kw.pop("commit_request_options", None)
+        max_commit_delay = kw.pop("max_commit_delay", None)
         transaction_tag = kw.pop("transaction_tag", None)
+        exclude_txn_from_change_streams = kw.pop(
+            "exclude_txn_from_change_streams", None
+        )
         attempts = 0
 
         while True:
             if self._transaction is None:
                 txn = self.transaction()
                 txn.transaction_tag = transaction_tag
+                txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
             else:
                 txn = self._transaction
 
@@ -400,6 +433,7 @@ class Session(object):
                 txn.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=commit_request_options,
+                    max_commit_delay=max_commit_delay,
                 )
             except Aborted as exc:
                 del self._transaction

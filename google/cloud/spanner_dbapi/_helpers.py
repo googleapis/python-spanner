@@ -18,13 +18,13 @@ from google.cloud.spanner_v1 import param_types
 SQL_LIST_TABLES = """
 SELECT table_name
 FROM information_schema.tables
-WHERE table_catalog = '' AND table_schema = ''
+WHERE table_catalog = '' AND table_schema = @table_schema
 """
 
 SQL_GET_TABLE_COLUMN_SCHEMA = """
 SELECT COLUMN_NAME, IS_NULLABLE, SPANNER_TYPE
 FROM INFORMATION_SCHEMA.COLUMNS
-WHERE TABLE_SCHEMA = '' AND TABLE_NAME = @table_name
+WHERE TABLE_SCHEMA = @schema_name AND TABLE_NAME = @table_name
 """
 
 # This table maps spanner_types to Spanner's data type sizes as per
@@ -40,6 +40,7 @@ CODE_TO_DISPLAY_SIZE = {
     param_types.BOOL.code: 1,
     param_types.DATE.code: 4,
     param_types.FLOAT64.code: 8,
+    param_types.FLOAT32.code: 4,
     param_types.INT64.code: 8,
     param_types.TIMESTAMP.code: 12,
 }

@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import transaction as gs_transaction
 from google.cloud.spanner_v1.types import type as gs_type
+from google.protobuf import duration_pb2  # type: ignore
 from google.protobuf import struct_pb2  # type: ignore
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.rpc import status_pb2  # type: ignore
@@ -41,6 +42,7 @@ __protobuf__ = proto.module(
         "ListSessionsResponse",
         "DeleteSessionRequest",
         "RequestOptions",
+        "DirectedReadOptions",
         "ExecuteSqlRequest",
         "ExecuteBatchDmlRequest",
         "ExecuteBatchDmlResponse",
@@ -164,6 +166,16 @@ class Session(proto.Message):
             earlier than the actual last use time.
         creator_role (str):
             The database role which created this session.
+        multiplexed (bool):
+            Optional. If true, specifies a multiplexed session. A
+            multiplexed session may be used for multiple, concurrent
+            read-only operations but can not be used for read-write
+            transactions, partitioned reads, or partitioned queries.
+            Multiplexed sessions can be created via
+            [CreateSession][google.spanner.v1.Spanner.CreateSession] but
+            not via
+            [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions].
+            Multiplexed sessions may not be deleted nor listed.
     """
 
     name: str = proto.Field(
@@ -188,6 +200,10 @@ class Session(proto.Message):
     creator_role: str = proto.Field(
         proto.STRING,
         number=5,
+    )
+    multiplexed: bool = proto.Field(
+        proto.BOOL,
+        number=6,
     )
 
 
@@ -381,6 +397,150 @@ class RequestOptions(proto.Message):
     )
 
 
+class DirectedReadOptions(proto.Message):
+    r"""The DirectedReadOptions can be used to indicate which replicas or
+    regions should be used for non-transactional reads or queries.
+
+    DirectedReadOptions may only be specified for a read-only
+    transaction, otherwise the API will return an ``INVALID_ARGUMENT``
+    error.
+
+    This message has `oneof`_ fields (mutually exclusive fields).
+    For each oneof, at most one member field can be set at the same time.
+    Setting any member of the oneof automatically clears all other
+    members.
+
+    .. _oneof: https://proto-plus-python.readthedocs.io/en/stable/fields.html#oneofs-mutually-exclusive-fields
+
+    Attributes:
+        include_replicas (google.cloud.spanner_v1.types.DirectedReadOptions.IncludeReplicas):
+            Include_replicas indicates the order of replicas (as they
+            appear in this list) to process the request. If
+            auto_failover_disabled is set to true and all replicas are
+            exhausted without finding a healthy replica, Spanner will
+            wait for a replica in the list to become available, requests
+            may fail due to ``DEADLINE_EXCEEDED`` errors.
+
+            This field is a member of `oneof`_ ``replicas``.
+        exclude_replicas (google.cloud.spanner_v1.types.DirectedReadOptions.ExcludeReplicas):
+            Exclude_replicas indicates that specified replicas should be
+            excluded from serving requests. Spanner will not route
+            requests to the replicas in this list.
+
+            This field is a member of `oneof`_ ``replicas``.
+    """
+
+    class ReplicaSelection(proto.Message):
+        r"""The directed read replica selector. Callers must provide one or more
+        of the following fields for replica selection:
+
+        -  ``location`` - The location must be one of the regions within the
+           multi-region configuration of your database.
+        -  ``type`` - The type of the replica.
+
+        Some examples of using replica_selectors are:
+
+        -  ``location:us-east1`` --> The "us-east1" replica(s) of any
+           available type will be used to process the request.
+        -  ``type:READ_ONLY`` --> The "READ_ONLY" type replica(s) in nearest
+           available location will be used to process the request.
+        -  ``location:us-east1 type:READ_ONLY`` --> The "READ_ONLY" type
+           replica(s) in location "us-east1" will be used to process the
+           request.
+
+        Attributes:
+            location (str):
+                The location or region of the serving
+                requests, e.g. "us-east1".
+            type_ (google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection.Type):
+                The type of replica.
+        """
+
+        class Type(proto.Enum):
+            r"""Indicates the type of replica.
+
+            Values:
+                TYPE_UNSPECIFIED (0):
+                    Not specified.
+                READ_WRITE (1):
+                    Read-write replicas support both reads and
+                    writes.
+                READ_ONLY (2):
+                    Read-only replicas only support reads (not
+                    writes).
+            """
+            TYPE_UNSPECIFIED = 0
+            READ_WRITE = 1
+            READ_ONLY = 2
+
+        location: str = proto.Field(
+            proto.STRING,
+            number=1,
+        )
+        type_: "DirectedReadOptions.ReplicaSelection.Type" = proto.Field(
+            proto.ENUM,
+            number=2,
+            enum="DirectedReadOptions.ReplicaSelection.Type",
+        )
+
+    class IncludeReplicas(proto.Message):
+        r"""An IncludeReplicas contains a repeated set of
+        ReplicaSelection which indicates the order in which replicas
+        should be considered.
+
+        Attributes:
+            replica_selections (MutableSequence[google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection]):
+                The directed read replica selector.
+            auto_failover_disabled (bool):
+                If true, Spanner will not route requests to a replica
+                outside the include_replicas list when all of the specified
+                replicas are unavailable or unhealthy. Default value is
+                ``false``.
+        """
+
+        replica_selections: MutableSequence[
+            "DirectedReadOptions.ReplicaSelection"
+        ] = proto.RepeatedField(
+            proto.MESSAGE,
+            number=1,
+            message="DirectedReadOptions.ReplicaSelection",
+        )
+        auto_failover_disabled: bool = proto.Field(
+            proto.BOOL,
+            number=2,
+        )
+
+    class ExcludeReplicas(proto.Message):
+        r"""An ExcludeReplicas contains a repeated set of
+        ReplicaSelection that should be excluded from serving requests.
+
+        Attributes:
+            replica_selections (MutableSequence[google.cloud.spanner_v1.types.DirectedReadOptions.ReplicaSelection]):
+                The directed read replica selector.
+        """
+
+        replica_selections: MutableSequence[
+            "DirectedReadOptions.ReplicaSelection"
+        ] = proto.RepeatedField(
+            proto.MESSAGE,
+            number=1,
+            message="DirectedReadOptions.ReplicaSelection",
+        )
+
+    include_replicas: IncludeReplicas = proto.Field(
+        proto.MESSAGE,
+        number=1,
+        oneof="replicas",
+        message=IncludeReplicas,
+    )
+    exclude_replicas: ExcludeReplicas = proto.Field(
+        proto.MESSAGE,
+        number=2,
+        oneof="replicas",
+        message=ExcludeReplicas,
+    )
+
+
 class ExecuteSqlRequest(proto.Message):
     r"""The request for [ExecuteSql][google.spanner.v1.Spanner.ExecuteSql]
     and
@@ -481,14 +641,16 @@ class ExecuteSqlRequest(proto.Message):
             given query.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
+        directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
+            Directed read options for this request.
         data_boost_enabled (bool):
             If this is for a partitioned query and this field is set to
-            ``true``, the request will be executed via Spanner
+            ``true``, the request is executed with Spanner Data Boost
             independent compute resources.
 
             If the field is set to ``true`` but the request does not set
-            ``partition_token``, the API will return an
-            ``INVALID_ARGUMENT`` error.
+            ``partition_token``, the API returns an ``INVALID_ARGUMENT``
+            error.
     """
 
     class QueryMode(proto.Enum):
@@ -627,6 +789,11 @@ class ExecuteSqlRequest(proto.Message):
         proto.MESSAGE,
         number=11,
         message="RequestOptions",
+    )
+    directed_read_options: "DirectedReadOptions" = proto.Field(
+        proto.MESSAGE,
+        number=15,
+        message="DirectedReadOptions",
     )
     data_boost_enabled: bool = proto.Field(
         proto.BOOL,
@@ -870,14 +1037,15 @@ class PartitionQueryRequest(proto.Message):
         sql (str):
             Required. The query request to generate partitions for. The
             request will fail if the query is not root partitionable.
-            The query plan of a root partitionable query has a single
-            distributed union operator. A distributed union operator
-            conceptually divides one or more tables into multiple
-            splits, remotely evaluates a subquery independently on each
-            split, and then unions all results.
+            For a query to be root partitionable, it needs to satisfy a
+            few conditions. For example, if the query execution plan
+            contains a distributed union operator, then it must be the
+            first operator in the plan. For more information about other
+            conditions, see `Read data in
+            parallel <https://cloud.google.com/spanner/docs/reads#read_data_in_parallel>`__.
 
-            This must not contain DML commands, such as INSERT, UPDATE,
-            or DELETE. Use
+            The query request must not contain DML commands, such as
+            INSERT, UPDATE, or DELETE. Use
             [ExecuteStreamingSql][google.spanner.v1.Spanner.ExecuteStreamingSql]
             with a PartitionedDml transaction for large,
             partition-friendly DML operations.
@@ -1142,14 +1310,16 @@ class ReadRequest(proto.Message):
             create this partition_token.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
+        directed_read_options (google.cloud.spanner_v1.types.DirectedReadOptions):
+            Directed read options for this request.
         data_boost_enabled (bool):
             If this is for a partitioned read and this field is set to
-            ``true``, the request will be executed via Spanner
+            ``true``, the request is executed with Spanner Data Boost
             independent compute resources.
 
             If the field is set to ``true`` but the request does not set
-            ``partition_token``, the API will return an
-            ``INVALID_ARGUMENT`` error.
+            ``partition_token``, the API returns an ``INVALID_ARGUMENT``
+            error.
     """
 
     session: str = proto.Field(
@@ -1194,6 +1364,11 @@ class ReadRequest(proto.Message):
         proto.MESSAGE,
         number=11,
         message="RequestOptions",
+    )
+    directed_read_options: "DirectedReadOptions" = proto.Field(
+        proto.MESSAGE,
+        number=14,
+        message="DirectedReadOptions",
     )
     data_boost_enabled: bool = proto.Field(
         proto.BOOL,
@@ -1275,6 +1450,14 @@ class CommitRequest(proto.Message):
             be included in the
             [CommitResponse][google.spanner.v1.CommitResponse.commit_stats].
             Default value is ``false``.
+        max_commit_delay (google.protobuf.duration_pb2.Duration):
+            Optional. The amount of latency this request
+            is willing to incur in order to improve
+            throughput. If this field is not set, Spanner
+            assumes requests are relatively latency
+            sensitive and automatically determines an
+            appropriate delay time. You can specify a
+            batching delay value between 0 and 500 ms.
         request_options (google.cloud.spanner_v1.types.RequestOptions):
             Common options for this request.
     """
@@ -1302,6 +1485,11 @@ class CommitRequest(proto.Message):
     return_commit_stats: bool = proto.Field(
         proto.BOOL,
         number=5,
+    )
+    max_commit_delay: duration_pb2.Duration = proto.Field(
+        proto.MESSAGE,
+        number=8,
+        message=duration_pb2.Duration,
     )
     request_options: "RequestOptions" = proto.Field(
         proto.MESSAGE,
@@ -1343,6 +1531,23 @@ class BatchWriteRequest(proto.Message):
         mutation_groups (MutableSequence[google.cloud.spanner_v1.types.BatchWriteRequest.MutationGroup]):
             Required. The groups of mutations to be
             applied.
+        exclude_txn_from_change_streams (bool):
+            Optional. When ``exclude_txn_from_change_streams`` is set to
+            ``true``:
+
+            -  Mutations from all transactions in this batch write
+               operation will not be recorded in change streams with DDL
+               option ``allow_txn_exclusion=true`` that are tracking
+               columns modified by these transactions.
+            -  Mutations from all transactions in this batch write
+               operation will be recorded in change streams with DDL
+               option ``allow_txn_exclusion=false or not set`` that are
+               tracking columns modified by these transactions.
+
+            When ``exclude_txn_from_change_streams`` is set to ``false``
+            or not set, mutations from all transactions in this batch
+            write operation will be recorded in all change streams that
+            are tracking columns modified by these transactions.
     """
 
     class MutationGroup(proto.Message):
@@ -1375,6 +1580,10 @@ class BatchWriteRequest(proto.Message):
         proto.MESSAGE,
         number=4,
         message=MutationGroup,
+    )
+    exclude_txn_from_change_streams: bool = proto.Field(
+        proto.BOOL,
+        number=5,
     )
 
 

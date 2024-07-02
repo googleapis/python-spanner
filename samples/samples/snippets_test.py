@@ -15,10 +15,10 @@
 import time
 import uuid
 
+import pytest
 from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
-import pytest
 from test_utils.retry import RetryErrors
 
 import snippets
@@ -42,6 +42,14 @@ CREATE TABLE Albums (
     AlbumTitle   STRING(MAX)
 ) PRIMARY KEY (SingerId, AlbumId),
 INTERLEAVE IN PARENT Singers ON DELETE CASCADE
+"""
+
+CREATE_TABLE_SINGERS_ = """\
+CREATE TABLE Singers (
+    SingerId         INT64 NOT NULL,
+    FirstName        STRING(1024),
+    LastName         STRING(1024),
+    ) PRIMARY KEY (SingerId)
 """
 
 retry_429 = RetryErrors(exceptions.ResourceExhausted, delay=15)
@@ -95,12 +103,26 @@ def default_leader_database_id():
 
 
 @pytest.fixture(scope="module")
+def proto_columns_database_id():
+    return f"test-db-proto-{uuid.uuid4().hex[:10]}"
+
+
+@pytest.fixture(scope="module")
 def database_ddl():
     """Sequence of DDL statements used to set up the database.
 
     Sample testcase modules can override as needed.
     """
     return [CREATE_TABLE_SINGERS, CREATE_TABLE_ALBUMS]
+
+
+@pytest.fixture(scope="module")
+def proto_columns_database_ddl():
+    """Sequence of DDL statements used to set up the database for proto columns.
+
+    Sample testcase modules can override as needed.
+    """
+    return [CREATE_TABLE_SINGERS_, CREATE_TABLE_ALBUMS]
 
 
 @pytest.fixture(scope="module")
@@ -149,6 +171,18 @@ def test_create_instance_with_processing_units(capsys, lci_instance_id):
     out, _ = capsys.readouterr()
     assert lci_instance_id in out
     assert "{} processing units".format(processing_units) in out
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(lci_instance_id)
+    retry_429(instance.delete)()
+
+
+def test_create_instance_with_autoscaling_config(capsys, lci_instance_id):
+    retry_429(snippets.create_instance_with_autoscaling_config)(
+        lci_instance_id,
+    )
+    out, _ = capsys.readouterr()
+    assert lci_instance_id in out
+    assert "autoscaling config" in out
     spanner_client = spanner.Client()
     instance = spanner_client.instance(lci_instance_id)
     retry_429(instance.delete)()
@@ -288,6 +322,13 @@ def test_insert_data(capsys, instance_id, sample_database):
     snippets.insert_data(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Inserted data" in out
+
+
+@pytest.mark.dependency(name="batch_write")
+def test_batch_write(capsys, instance_id, sample_database):
+    snippets.batch_write(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "could not be applied with error" not in out
 
 
 @pytest.mark.dependency(depends=["insert_data"])
@@ -492,6 +533,13 @@ def test_log_commit_stats(capsys, instance_id, sample_database):
     assert "4 mutation(s) in transaction." in out
 
 
+@pytest.mark.dependency(name="set_max_commit_delay")
+def test_set_max_commit_delay(capsys, instance_id, sample_database):
+    snippets.set_max_commit_delay(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "1 record(s) inserted." in out
+
+
 @pytest.mark.dependency(depends=["insert_data"])
 def test_update_data_with_dml(capsys, instance_id, sample_database):
     snippets.update_data_with_dml(instance_id, sample_database.database_id)
@@ -581,7 +629,7 @@ def update_data_with_partitioned_dml(capsys, instance_id, sample_database):
 def test_delete_data_with_partitioned_dml(capsys, instance_id, sample_database):
     snippets.delete_data_with_partitioned_dml(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
-    assert "6 record(s) deleted" in out
+    assert "7 record(s) deleted" in out
 
 
 @pytest.mark.dependency(depends=["add_column"])
@@ -845,3 +893,58 @@ def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
         "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"
         in out
     )
+
+
+@pytest.mark.dependency(depends=["insert_data"])
+def test_directed_read_options(capsys, instance_id, sample_database):
+    snippets.directed_read_options(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+
+
+@pytest.mark.dependency(depends=["insert_data"])
+def test_set_custom_timeout_and_retry(capsys, instance_id, sample_database):
+    snippets.set_custom_timeout_and_retry(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "SingerId: 1, AlbumId: 1, AlbumTitle: Total Junk" in out
+
+
+@pytest.mark.dependency(
+    name="add_proto_types_column",
+)
+def test_add_proto_types_column(capsys, instance_id, proto_columns_database):
+    snippets.add_proto_type_columns(instance_id, proto_columns_database.database_id)
+    out, _ = capsys.readouterr()
+    assert 'Altered table "Singers" on database ' in out
+
+    snippets.insert_data(instance_id, proto_columns_database.database_id)
+
+
+@pytest.mark.dependency(
+    name="update_data_with_proto_message", depends=["add_proto_types_column"]
+)
+def test_update_data_with_proto_types(capsys, instance_id, proto_columns_database):
+    snippets.update_data_with_proto_types(
+        instance_id, proto_columns_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "Data updated" in out
+
+    snippets.update_data_with_proto_types_with_dml(
+        instance_id, proto_columns_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "1 record(s) updated." in out
+
+
+@pytest.mark.dependency(
+    depends=["add_proto_types_column", "update_data_with_proto_message"]
+)
+def test_query_data_with_proto_types_parameter(
+    capsys, instance_id, proto_columns_database
+):
+    snippets.query_data_with_proto_types_parameter(
+        instance_id, proto_columns_database.database_id
+    )
+    out, _ = capsys.readouterr()
+    assert "SingerId: 2, SingerInfo: singer_id: 2" in out

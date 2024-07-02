@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import base64
 import collections
 import datetime
 import decimal
@@ -29,6 +29,7 @@ from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud._helpers import UTC
 from google.cloud.spanner_v1.data_types import JsonObject
+from samples.samples.testdata import singer_pb2
 from tests import _helpers as ot_helpers
 from . import _helpers
 from . import _sample_data
@@ -57,6 +58,8 @@ JSON_1 = JsonObject(
 JSON_2 = JsonObject(
     {"sample_object": {"name": "Anamika", "id": 2635}},
 )
+SINGER_INFO = _sample_data.SINGER_INFO_1
+SINGER_GENRE = _sample_data.SINGER_GENRE_1
 
 COUNTERS_TABLE = "counters"
 COUNTERS_COLUMNS = ("name", "value")
@@ -81,14 +84,20 @@ LIVE_ALL_TYPES_COLUMNS = (
     "numeric_array",
     "json_value",
     "json_array",
+    "proto_message_value",
+    "proto_message_array",
+    "proto_enum_value",
+    "proto_enum_array",
 )
 
-EMULATOR_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:-4]
+EMULATOR_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:-8]
 # ToDo: Clean up generation of POSTGRES_ALL_TYPES_COLUMNS
 POSTGRES_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[:17] + (
     "jsonb_value",
     "jsonb_array",
 )
+
+QUERY_ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS[1:17:2]
 
 AllTypesRowData = collections.namedtuple("AllTypesRowData", LIVE_ALL_TYPES_COLUMNS)
 AllTypesRowData.__new__.__defaults__ = tuple([None for colum in LIVE_ALL_TYPES_COLUMNS])
@@ -120,6 +129,8 @@ LIVE_ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=109, numeric_value=NUMERIC_1),
     AllTypesRowData(pkey=110, json_value=JSON_1),
     AllTypesRowData(pkey=111, json_value=JsonObject([JSON_1, JSON_2])),
+    AllTypesRowData(pkey=112, proto_message_value=SINGER_INFO),
+    AllTypesRowData(pkey=113, proto_enum_value=SINGER_GENRE),
     # empty array values
     AllTypesRowData(pkey=201, int_array=[]),
     AllTypesRowData(pkey=202, bool_array=[]),
@@ -130,6 +141,8 @@ LIVE_ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=207, timestamp_array=[]),
     AllTypesRowData(pkey=208, numeric_array=[]),
     AllTypesRowData(pkey=209, json_array=[]),
+    AllTypesRowData(pkey=210, proto_message_array=[]),
+    AllTypesRowData(pkey=211, proto_enum_array=[]),
     # non-empty array values, including nulls
     AllTypesRowData(pkey=301, int_array=[123, 456, None]),
     AllTypesRowData(pkey=302, bool_array=[True, False, None]),
@@ -142,6 +155,8 @@ LIVE_ALL_TYPES_ROWDATA = (
     AllTypesRowData(pkey=307, timestamp_array=[SOME_TIME, NANO_TIME, None]),
     AllTypesRowData(pkey=308, numeric_array=[NUMERIC_1, NUMERIC_2, None]),
     AllTypesRowData(pkey=309, json_array=[JSON_1, JSON_2, None]),
+    AllTypesRowData(pkey=310, proto_message_array=[SINGER_INFO, None]),
+    AllTypesRowData(pkey=311, proto_enum_array=[SINGER_GENRE, None]),
 )
 EMULATOR_ALL_TYPES_ROWDATA = (
     # all nulls
@@ -211,6 +226,17 @@ POSTGRES_ALL_TYPES_ROWDATA = (
     PostGresAllTypesRowData(pkey=309, jsonb_array=[JSON_1, JSON_2, None]),
 )
 
+QUERY_ALL_TYPES_DATA = (
+    123,
+    False,
+    BYTES_1,
+    SOME_DATE,
+    1.4142136,
+    "VALUE",
+    SOME_TIME,
+    NUMERIC_1,
+)
+
 if _helpers.USE_EMULATOR:
     ALL_TYPES_COLUMNS = EMULATOR_ALL_TYPES_COLUMNS
     ALL_TYPES_ROWDATA = EMULATOR_ALL_TYPES_ROWDATA
@@ -221,9 +247,16 @@ else:
     ALL_TYPES_COLUMNS = LIVE_ALL_TYPES_COLUMNS
     ALL_TYPES_ROWDATA = LIVE_ALL_TYPES_ROWDATA
 
+COLUMN_INFO = {
+    "proto_message_value": singer_pb2.SingerInfo(),
+    "proto_message_array": singer_pb2.SingerInfo(),
+}
+
 
 @pytest.fixture(scope="session")
-def sessions_database(shared_instance, database_operation_timeout, database_dialect):
+def sessions_database(
+    shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
+):
     database_name = _helpers.unique_id("test_sessions", separator="_")
     pool = spanner_v1.BurstyPool(labels={"testcase": "session_api"})
 
@@ -245,6 +278,7 @@ def sessions_database(shared_instance, database_operation_timeout, database_dial
             database_name,
             ddl_statements=_helpers.DDL_STATEMENTS,
             pool=pool,
+            proto_descriptors=proto_descriptor_file,
         )
 
         operation = sessions_database.create()
@@ -458,7 +492,11 @@ def test_batch_insert_then_read_all_datatypes(sessions_database):
         batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
 
     with sessions_database.snapshot(read_timestamp=batch.committed) as snapshot:
-        rows = list(snapshot.read(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, sd.ALL))
+        rows = list(
+            snapshot.read(
+                ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, sd.ALL, column_info=COLUMN_INFO
+            )
+        )
 
     sd._check_rows_data(rows, expected=ALL_TYPES_ROWDATA)
 
@@ -473,6 +511,39 @@ def test_batch_insert_or_update_then_query(sessions_database):
         rows = list(snapshot.execute_sql(sd.SQL))
 
     sd._check_rows_data(rows)
+
+
+def test_batch_insert_then_read_wo_param_types(
+    sessions_database, database_dialect, not_emulator
+):
+    sd = _sample_data
+
+    with sessions_database.batch() as batch:
+        batch.delete(ALL_TYPES_TABLE, sd.ALL)
+        batch.insert(ALL_TYPES_TABLE, ALL_TYPES_COLUMNS, ALL_TYPES_ROWDATA)
+
+    with sessions_database.snapshot(multi_use=True) as snapshot:
+        for column_type, value in list(
+            zip(QUERY_ALL_TYPES_COLUMNS, QUERY_ALL_TYPES_DATA)
+        ):
+            placeholder = (
+                "$1" if database_dialect == DatabaseDialect.POSTGRESQL else "@value"
+            )
+            sql = (
+                "SELECT * FROM "
+                + ALL_TYPES_TABLE
+                + " WHERE "
+                + column_type
+                + " = "
+                + placeholder
+            )
+            param = (
+                {"p1": value}
+                if database_dialect == DatabaseDialect.POSTGRESQL
+                else {"value": value}
+            )
+            rows = list(snapshot.execute_sql(sql, params=param))
+            assert len(rows) == 1
 
 
 def test_batch_insert_w_commit_timestamp(sessions_database, not_postgres):
@@ -1312,6 +1383,20 @@ def _set_up_table(database, row_count):
     return committed
 
 
+def _set_up_proto_table(database):
+    sd = _sample_data
+
+    def _unit_of_work(transaction):
+        transaction.delete(sd.SINGERS_PROTO_TABLE, sd.ALL)
+        transaction.insert(
+            sd.SINGERS_PROTO_TABLE, sd.SINGERS_PROTO_COLUMNS, sd.SINGERS_PROTO_ROW_DATA
+        )
+
+    committed = database.run_in_transaction(_unit_of_work)
+
+    return committed
+
+
 def test_read_with_single_keys_index(sessions_database):
     # [START spanner_test_single_key_index_read]
     sd = _sample_data
@@ -1459,7 +1544,11 @@ def test_multiuse_snapshot_read_isolation_exact_staleness(sessions_database):
 
 
 def test_read_w_index(
-    shared_instance, database_operation_timeout, databases_to_delete, database_dialect
+    shared_instance,
+    database_operation_timeout,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     # Indexed reads cannot return non-indexed columns
     sd = _sample_data
@@ -1487,9 +1576,12 @@ def test_read_w_index(
     else:
         temp_db = shared_instance.database(
             _helpers.unique_id("test_read", separator="_"),
-            ddl_statements=_helpers.DDL_STATEMENTS + extra_ddl,
+            ddl_statements=_helpers.DDL_STATEMENTS
+            + extra_ddl
+            + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
             pool=pool,
             database_dialect=database_dialect,
+            proto_descriptors=proto_descriptor_file,
         )
         operation = temp_db.create()
         operation.result(database_operation_timeout)  # raises on failure / timeout.
@@ -1504,6 +1596,28 @@ def test_read_w_index(
 
     expected = list(reversed([(row[0], row[2]) for row in _row_data(row_count)]))
     sd._check_rows_data(rows, expected)
+
+    # Test indexes on proto column types
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        # Indexed reads cannot return non-indexed columns
+        my_columns = (
+            sd.SINGERS_PROTO_COLUMNS[0],
+            sd.SINGERS_PROTO_COLUMNS[1],
+            sd.SINGERS_PROTO_COLUMNS[4],
+        )
+        committed = _set_up_proto_table(temp_db)
+        with temp_db.snapshot(read_timestamp=committed) as snapshot:
+            rows = list(
+                snapshot.read(
+                    sd.SINGERS_PROTO_TABLE,
+                    my_columns,
+                    spanner_v1.KeySet(keys=[[singer_pb2.Genre.ROCK]]),
+                    index="SingerByGenre",
+                )
+            )
+        row = sd.SINGERS_PROTO_ROW_DATA[0]
+        expected = list([(row[0], row[1], row[4])])
+        sd._check_rows_data(rows, expected)
 
 
 def test_read_w_single_key(sessions_database):
@@ -1913,20 +2027,38 @@ def test_execute_sql_w_manual_consume(sessions_database):
     assert streamed._pending_chunk is None
 
 
+def test_execute_sql_w_to_dict_list(sessions_database):
+    sd = _sample_data
+    row_count = 40
+    _set_up_table(sessions_database, row_count)
+
+    with sessions_database.snapshot() as snapshot:
+        rows = snapshot.execute_sql(sd.SQL).to_dict_list()
+        all_data_rows = list(_row_data(row_count))
+        row_data = [list(row.values()) for row in rows]
+        sd._check_row_data(row_data, all_data_rows)
+        assert all(set(row.keys()) == set(sd.COLUMNS) for row in rows)
+
+
 def _check_sql_results(
     database,
     sql,
     params,
-    param_types,
-    expected,
+    param_types=None,
+    expected=None,
     order=True,
     recurse_into_lists=True,
+    column_info=None,
 ):
     if order and "ORDER" not in sql:
         sql += " ORDER BY pkey"
 
     with database.snapshot() as snapshot:
-        rows = list(snapshot.execute_sql(sql, params=params, param_types=param_types))
+        rows = list(
+            snapshot.execute_sql(
+                sql, params=params, param_types=param_types, column_info=column_info
+            )
+        )
 
     _sample_data._check_rows_data(
         rows, expected=expected, recurse_into_lists=recurse_into_lists
@@ -2020,32 +2152,39 @@ def _bind_test_helper(
     array_value,
     expected_array_value=None,
     recurse_into_lists=True,
+    column_info=None,
+    expected_single_value=None,
 ):
     database.snapshot(multi_use=True)
 
     key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "v"
     placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
 
+    if expected_single_value is None:
+        expected_single_value = single_value
+
     # Bind a non-null <type_name>
     _check_sql_results(
         database,
-        sql=f"SELECT {placeholder}",
+        sql=f"SELECT {placeholder} as column",
         params={key: single_value},
         param_types={key: param_type},
-        expected=[(single_value,)],
+        expected=[(expected_single_value,)],
         order=False,
         recurse_into_lists=recurse_into_lists,
+        column_info=column_info,
     )
 
     # Bind a null <type_name>
     _check_sql_results(
         database,
-        sql=f"SELECT {placeholder}",
+        sql=f"SELECT {placeholder} as column",
         params={key: None},
         param_types={key: param_type},
         expected=[(None,)],
         order=False,
         recurse_into_lists=recurse_into_lists,
+        column_info=column_info,
     )
 
     # Bind an array of <type_name>
@@ -2059,34 +2198,37 @@ def _bind_test_helper(
 
     _check_sql_results(
         database,
-        sql=f"SELECT {placeholder}",
+        sql=f"SELECT {placeholder} as column",
         params={key: array_value},
         param_types={key: array_type},
         expected=[(expected_array_value,)],
         order=False,
         recurse_into_lists=recurse_into_lists,
+        column_info=column_info,
     )
 
     # Bind an empty array of <type_name>
     _check_sql_results(
         database,
-        sql=f"SELECT {placeholder}",
+        sql=f"SELECT {placeholder} as column",
         params={key: []},
         param_types={key: array_type},
         expected=[([],)],
         order=False,
         recurse_into_lists=recurse_into_lists,
+        column_info=column_info,
     )
 
     # Bind a null array of <type_name>
     _check_sql_results(
         database,
-        sql=f"SELECT {placeholder}",
+        sql=f"SELECT {placeholder} as column",
         params={key: None},
         param_types={key: array_type},
         expected=[(None,)],
         order=False,
         recurse_into_lists=recurse_into_lists,
+        column_info=column_info,
     )
 
 
@@ -2152,6 +2294,47 @@ def test_execute_sql_w_float_bindings_transfinite(sessions_database, database_di
         sql=f"SELECT {placeholder}",
         params={key: POS_INF},
         param_types={key: spanner_v1.param_types.FLOAT64},
+        expected=[(POS_INF,)],
+        order=False,
+    )
+
+
+def test_execute_sql_w_float32_bindings(sessions_database, database_dialect):
+    pytest.skip("float32 is not yet supported in production.")
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.FLOAT32,
+        42.3,
+        [12.3, 456.0, 7.89],
+    )
+
+
+def test_execute_sql_w_float32_bindings_transfinite(
+    sessions_database, database_dialect
+):
+    pytest.skip("float32 is not yet supported in production.")
+    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "neg_inf"
+    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
+
+    # Find -inf
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: NEG_INF},
+        param_types={key: spanner_v1.param_types.FLOAT32},
+        expected=[(NEG_INF,)],
+        order=False,
+    )
+
+    key = "p1" if database_dialect == DatabaseDialect.POSTGRESQL else "pos_inf"
+    placeholder = "$1" if database_dialect == DatabaseDialect.POSTGRESQL else f"@{key}"
+    # Find +inf
+    _check_sql_results(
+        sessions_database,
+        sql=f"SELECT {placeholder}",
+        params={key: POS_INF},
+        param_types={key: spanner_v1.param_types.FLOAT32},
         expected=[(POS_INF,)],
         order=False,
     )
@@ -2245,6 +2428,18 @@ def test_execute_sql_w_jsonb_bindings(
         spanner_v1.param_types.PG_JSONB,
         JSON_1,
         [JSON_1, JSON_2],
+    )
+
+
+def test_execute_sql_w_oid_bindings(
+    not_emulator, not_google_standard_sql, sessions_database, database_dialect
+):
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.PG_OID,
+        123,
+        [123, 456],
     )
 
 
@@ -2453,6 +2648,80 @@ def test_execute_sql_w_query_param_struct(sessions_database, not_postgres):
     )
 
 
+def test_execute_sql_w_proto_message_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
+    singer_info = _sample_data.SINGER_INFO_1
+    singer_info_bytes = base64.b64encode(singer_info.SerializeToString())
+
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoMessage(singer_info),
+        singer_info,
+        [singer_info, None],
+        column_info={"column": singer_pb2.SingerInfo()},
+    )
+
+    # Tests compatibility between proto message and bytes column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoMessage(singer_info),
+        singer_info_bytes,
+        [singer_info_bytes, None],
+        expected_single_value=singer_info,
+        expected_array_value=[singer_info, None],
+        column_info={"column": singer_pb2.SingerInfo()},
+    )
+
+    # Tests compatibility between proto message and bytes column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.BYTES,
+        singer_info,
+        [singer_info, None],
+        expected_single_value=singer_info_bytes,
+        expected_array_value=[singer_info_bytes, None],
+    )
+
+
+def test_execute_sql_w_proto_enum_bindings(
+    not_emulator, not_postgres, sessions_database, database_dialect
+):
+    singer_genre = _sample_data.SINGER_GENRE_1
+
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoEnum(singer_pb2.Genre),
+        singer_genre,
+        [singer_genre, None],
+    )
+
+    # Tests compatibility between proto enum and int64 column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.ProtoEnum(singer_pb2.Genre),
+        3,
+        [3, None],
+        expected_single_value="ROCK",
+        expected_array_value=["ROCK", None],
+        column_info={"column": singer_pb2.Genre},
+    )
+
+    # Tests compatibility between proto enum and int64 column types
+    _bind_test_helper(
+        sessions_database,
+        database_dialect,
+        spanner_v1.param_types.INT64,
+        singer_genre,
+        [singer_genre, None],
+    )
+
+
 def test_execute_sql_returning_transfinite_floats(sessions_database, not_postgres):
     with sessions_database.snapshot(multi_use=True) as snapshot:
         # Query returning -inf, +inf, NaN as column values
@@ -2506,6 +2775,59 @@ def test_partition_query(sessions_database, not_emulator):
 
     assert union == all_data_rows
     batch_txn.close()
+
+
+def test_run_partition_query(sessions_database, not_emulator):
+    row_count = 40
+    sql = f"SELECT * FROM {_sample_data.TABLE}"
+    committed = _set_up_table(sessions_database, row_count)
+
+    # Paritioned query does not support ORDER BY
+    all_data_rows = set(_row_data(row_count))
+    union = set()
+    batch_txn = sessions_database.batch_snapshot(read_timestamp=committed)
+    p_results_iter = batch_txn.run_partitioned_query(sql, data_boost_enabled=True)
+    # Lists aren't hashable so the results need to be converted
+    rows = [tuple(result) for result in p_results_iter]
+    union.update(set(rows))
+
+    assert union == all_data_rows
+    batch_txn.close()
+
+
+def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_database):
+    sd = _sample_data
+    num_groups = 3
+    num_mutations_per_group = len(sd.BATCH_WRITE_ROW_DATA) // num_groups
+
+    with sessions_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
+    with sessions_database.mutation_groups() as groups:
+        for i in range(num_groups):
+            group = groups.group()
+            for j in range(num_mutations_per_group):
+                group.insert_or_update(
+                    sd.TABLE,
+                    sd.COLUMNS,
+                    [sd.BATCH_WRITE_ROW_DATA[i * num_mutations_per_group + j]],
+                )
+        # Response indexes received
+        seen = collections.Counter()
+        for response in groups.batch_write():
+            _check_batch_status(response.status.code)
+            assert response.commit_timestamp is not None
+            assert len(response.indexes) > 0
+            seen.update(response.indexes)
+        # All indexes must be in the range [0, num_groups-1] and seen exactly once
+        assert len(seen) == num_groups
+        assert all((0 <= idx < num_groups and ct == 1) for (idx, ct) in seen.items())
+
+    # Verify the writes by reading from the database
+    with sessions_database.snapshot() as snapshot:
+        rows = list(snapshot.execute_sql(sd.SQL))
+
+    sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
 
 
 class FauxCall:

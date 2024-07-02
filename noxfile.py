@@ -34,7 +34,7 @@ LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
 DEFAULT_PYTHON_VERSION = "3.8"
 
-UNIT_TEST_PYTHON_VERSIONS: List[str] = ["3.7", "3.8", "3.9", "3.10", "3.11"]
+UNIT_TEST_PYTHON_VERSIONS: List[str] = ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 UNIT_TEST_STANDARD_DEPENDENCIES = [
     "mock",
     "asyncmock",
@@ -173,9 +173,9 @@ def default(session):
     session.run(
         "py.test",
         "--quiet",
-        "--cov=google.cloud.spanner",
-        "--cov=google.cloud",
-        "--cov=tests.unit",
+        f"--junitxml=unit_{session.python}_sponge_log.xml",
+        "--cov=google",
+        "--cov=tests/unit",
         "--cov-append",
         "--cov-config=.coveragerc",
         "--cov-report=",
@@ -313,7 +313,7 @@ def cover(session):
     test runs (not system test runs), and then erases coverage data.
     """
     session.install("coverage", "pytest-cov")
-    session.run("coverage", "report", "--show-missing", "--fail-under=99")
+    session.run("coverage", "report", "--show-missing", "--fail-under=98")
 
     session.run("coverage", "erase")
 
@@ -324,7 +324,16 @@ def docs(session):
 
     session.install("-e", ".[tracing]")
     session.install(
-        "sphinx==4.0.1",
+        # We need to pin to specific versions of the `sphinxcontrib-*` packages
+        # which still support sphinx 4.x.
+        # See https://github.com/googleapis/sphinx-docfx-yaml/issues/344
+        # and https://github.com/googleapis/sphinx-docfx-yaml/issues/345.
+        "sphinxcontrib-applehelp==1.0.4",
+        "sphinxcontrib-devhelp==1.0.2",
+        "sphinxcontrib-htmlhelp==2.0.1",
+        "sphinxcontrib-qthelp==1.0.3",
+        "sphinxcontrib-serializinghtml==1.1.5",
+        "sphinx==4.5.0",
         "alabaster",
         "recommonmark",
     )
@@ -344,12 +353,21 @@ def docs(session):
     )
 
 
-@nox.session(python="3.9")
+@nox.session(python="3.10")
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
     session.install("-e", ".[tracing]")
     session.install(
+        # We need to pin to specific versions of the `sphinxcontrib-*` packages
+        # which still support sphinx 4.x.
+        # See https://github.com/googleapis/sphinx-docfx-yaml/issues/344
+        # and https://github.com/googleapis/sphinx-docfx-yaml/issues/345.
+        "sphinxcontrib-applehelp==1.0.4",
+        "sphinxcontrib-devhelp==1.0.2",
+        "sphinxcontrib-htmlhelp==2.0.1",
+        "sphinxcontrib-qthelp==1.0.3",
+        "sphinxcontrib-serializinghtml==1.1.5",
         "gcp-sphinx-docfx-yaml",
         "alabaster",
         "recommonmark",

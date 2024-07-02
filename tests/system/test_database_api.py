@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import datetime
 import time
 import uuid
 
@@ -22,6 +23,7 @@ from google.iam.v1 import policy_pb2
 from google.cloud import spanner_v1
 from google.cloud.spanner_v1.pool import FixedSizePool, PingingPool
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
+from google.cloud.spanner_v1 import DirectedReadOptions
 from google.type import expr_pb2
 from . import _helpers
 from . import _sample_data
@@ -31,6 +33,17 @@ DBAPI_OPERATION_TIMEOUT = 240  # seconds
 FKADC_CUSTOMERS_COLUMNS = ("CustomerId", "CustomerName")
 FKADC_SHOPPING_CARTS_COLUMNS = ("CartId", "CustomerId", "CustomerName")
 ALL_KEYSET = spanner_v1.KeySet(all_=True)
+DIRECTED_READ_OPTIONS = {
+    "include_replicas": {
+        "replica_selections": [
+            {
+                "location": "us-west1",
+                "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
+            },
+        ],
+        "auto_failover_disabled": True,
+    },
+}
 
 
 @pytest.fixture(scope="module")
@@ -79,7 +92,11 @@ def test_create_database(shared_instance, databases_to_delete, database_dialect)
 
 
 def test_database_binding_of_fixed_size_pool(
-    not_emulator, shared_instance, databases_to_delete, not_postgres
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    not_postgres,
+    proto_descriptor_file,
 ):
     temp_db_id = _helpers.unique_id("fixed_size_db", separator="_")
     temp_db = shared_instance.database(temp_db_id)
@@ -93,7 +110,9 @@ def test_database_binding_of_fixed_size_pool(
         "CREATE ROLE parent",
         "GRANT SELECT ON TABLE contacts TO ROLE parent",
     ]
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     pool = FixedSizePool(
@@ -106,7 +125,11 @@ def test_database_binding_of_fixed_size_pool(
 
 
 def test_database_binding_of_pinging_pool(
-    not_emulator, shared_instance, databases_to_delete, not_postgres
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    not_postgres,
+    proto_descriptor_file,
 ):
     temp_db_id = _helpers.unique_id("binding_db", separator="_")
     temp_db = shared_instance.database(temp_db_id)
@@ -120,7 +143,9 @@ def test_database_binding_of_pinging_pool(
         "CREATE ROLE parent",
         "GRANT SELECT ON TABLE contacts TO ROLE parent",
     ]
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     pool = PingingPool(
@@ -294,7 +319,7 @@ def test_table_not_found(shared_instance):
 
 
 def test_update_ddl_w_operation_id(
-    shared_instance, databases_to_delete, database_dialect
+    shared_instance, databases_to_delete, database_dialect, proto_descriptor_file
 ):
     # We used to have:
     # @pytest.mark.skip(
@@ -312,7 +337,11 @@ def test_update_ddl_w_operation_id(
 
     # random but shortish always start with letter
     operation_id = f"a{str(uuid.uuid4())[:8]}"
-    operation = temp_db.update_ddl(_helpers.DDL_STATEMENTS, operation_id=operation_id)
+    operation = temp_db.update_ddl(
+        _helpers.DDL_STATEMENTS,
+        operation_id=operation_id,
+        proto_descriptors=proto_descriptor_file,
+    )
 
     assert operation_id == operation.operation.name.split("/")[-1]
 
@@ -328,6 +357,7 @@ def test_update_ddl_w_pitr_invalid(
     not_postgres,
     shared_instance,
     databases_to_delete,
+    proto_descriptor_file,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
     temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
@@ -345,7 +375,7 @@ def test_update_ddl_w_pitr_invalid(
         f" SET OPTIONS (version_retention_period = '{retention_period}')"
     ]
     with pytest.raises(exceptions.InvalidArgument):
-        temp_db.update_ddl(ddl_statements)
+        temp_db.update_ddl(ddl_statements, proto_descriptors=proto_descriptor_file)
 
 
 def test_update_ddl_w_pitr_success(
@@ -353,6 +383,7 @@ def test_update_ddl_w_pitr_success(
     not_postgres,
     shared_instance,
     databases_to_delete,
+    proto_descriptor_file,
 ):
     pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
     temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
@@ -369,7 +400,9 @@ def test_update_ddl_w_pitr_success(
         f"ALTER DATABASE {temp_db_id}"
         f" SET OPTIONS (version_retention_period = '{retention_period}')"
     ]
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     temp_db.reload()
@@ -382,6 +415,7 @@ def test_update_ddl_w_default_leader_success(
     not_postgres,
     multiregion_instance,
     databases_to_delete,
+    proto_descriptor_file,
 ):
     pool = spanner_v1.BurstyPool(
         labels={"testcase": "update_database_ddl_default_leader"},
@@ -401,7 +435,9 @@ def test_update_ddl_w_default_leader_success(
         f"ALTER DATABASE {temp_db_id}"
         f" SET OPTIONS (default_leader = '{default_leader}')"
     ]
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     temp_db.reload()
@@ -410,7 +446,11 @@ def test_update_ddl_w_default_leader_success(
 
 
 def test_create_role_grant_access_success(
-    not_emulator, shared_instance, databases_to_delete, database_dialect
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
@@ -435,7 +475,9 @@ def test_create_role_grant_access_success(
             f"GRANT SELECT ON TABLE contacts TO {creator_role_parent}",
         ]
 
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     # Perform select with orphan role on table contacts.
@@ -470,7 +512,11 @@ def test_create_role_grant_access_success(
 
 
 def test_list_database_role_success(
-    not_emulator, shared_instance, databases_to_delete, database_dialect
+    not_emulator,
+    shared_instance,
+    databases_to_delete,
+    database_dialect,
+    proto_descriptor_file,
 ):
     creator_role_parent = _helpers.unique_id("role_parent", separator="_")
     creator_role_orphan = _helpers.unique_id("role_orphan", separator="_")
@@ -487,7 +533,9 @@ def test_list_database_role_success(
         f"CREATE ROLE {creator_role_parent}",
         f"CREATE ROLE {creator_role_orphan}",
     ]
-    operation = temp_db.update_ddl(ddl_statements)
+    operation = temp_db.update_ddl(
+        ddl_statements, proto_descriptors=proto_descriptor_file
+    )
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
 
     # List database roles.
@@ -740,3 +788,136 @@ def test_update_database_invalid(not_emulator, shared_database):
     # Empty `fields` is not supported.
     with pytest.raises(exceptions.InvalidArgument):
         shared_database.update([])
+
+
+def test_snapshot_read_w_directed_read_options(
+    shared_database, not_postgres, not_emulator
+):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    table = "users_history"
+    columns = ["id", "commit_ts", "name", "email", "deleted"]
+    user_id = 1234
+    name = "phred"
+    email = "phred@example.com"
+    row_data = [[user_id, spanner_v1.COMMIT_TIMESTAMP, name, email, False]]
+    sd = _sample_data
+
+    with shared_database.batch() as batch:
+        batch.delete(table, sd.ALL)
+        batch.insert(table, columns, row_data)
+
+    with shared_database.snapshot() as snapshot:
+        rows = list(
+            snapshot.read(
+                table, columns, sd.ALL, directed_read_options=DIRECTED_READ_OPTIONS
+            )
+        )
+
+    assert len(rows) == 1
+
+
+def test_execute_sql_w_directed_read_options(
+    shared_database, not_postgres, not_emulator
+):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    with shared_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
+    def _unit_of_work(transaction, test):
+        transaction.insert_or_update(test.TABLE, test.COLUMNS, test.ROW_DATA)
+
+    shared_database.run_in_transaction(_unit_of_work, test=sd)
+
+    with shared_database.snapshot() as snapshot:
+        rows = list(
+            snapshot.execute_sql(sd.SQL, directed_read_options=DIRECTED_READ_OPTIONS)
+        )
+    sd._check_rows_data(rows)
+
+
+def test_readwrite_transaction_w_directed_read_options_w_error(
+    shared_database, not_emulator, not_postgres
+):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    def _transaction_read(transaction):
+        list(
+            transaction.read(
+                sd.TABLE,
+                sd.COLUMNS,
+                sd.ALL,
+                directed_read_options=DIRECTED_READ_OPTIONS,
+            )
+        )
+
+    with pytest.raises(exceptions.InvalidArgument):
+        shared_database.run_in_transaction(_transaction_read)
+
+
+def test_db_batch_insert_w_max_commit_delay(shared_database):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    with shared_database.batch(
+        max_commit_delay=datetime.timedelta(milliseconds=100)
+    ) as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+        batch.insert(sd.TABLE, sd.COLUMNS, sd.ROW_DATA)
+
+    with shared_database.snapshot(read_timestamp=batch.committed) as snapshot:
+        from_snap = list(snapshot.read(sd.TABLE, sd.COLUMNS, sd.ALL))
+
+    sd._check_rows_data(from_snap)
+
+
+def test_db_run_in_transaction_w_max_commit_delay(shared_database):
+    _helpers.retry_has_all_dll(shared_database.reload)()
+    sd = _sample_data
+
+    with shared_database.batch() as batch:
+        batch.delete(sd.TABLE, sd.ALL)
+
+    def _unit_of_work(transaction, test):
+        rows = list(transaction.read(test.TABLE, test.COLUMNS, sd.ALL))
+        assert rows == []
+
+        transaction.insert_or_update(test.TABLE, test.COLUMNS, test.ROW_DATA)
+
+    shared_database.run_in_transaction(
+        _unit_of_work, test=sd, max_commit_delay=datetime.timedelta(milliseconds=100)
+    )
+
+    with shared_database.snapshot() as after:
+        rows = list(after.execute_sql(sd.SQL))
+
+    sd._check_rows_data(rows)
+
+
+def test_create_table_with_proto_columns(
+    not_emulator,
+    not_postgres,
+    shared_instance,
+    databases_to_delete,
+    proto_descriptor_file,
+):
+    proto_cols_db_id = _helpers.unique_id("proto-columns")
+    extra_ddl = [
+        "CREATE PROTO BUNDLE (examples.spanner.music.SingerInfo, examples.spanner.music.Genre,)"
+    ]
+
+    proto_cols_database = shared_instance.database(
+        proto_cols_db_id,
+        ddl_statements=extra_ddl + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
+        proto_descriptors=proto_descriptor_file,
+    )
+    operation = proto_cols_database.create()
+    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
+
+    databases_to_delete.append(proto_cols_database)
+
+    proto_cols_database.reload()
+    assert proto_cols_database.proto_descriptors is not None
+    assert any("PROTO BUNDLE" in stmt for stmt in proto_cols_database.ddl_statements)

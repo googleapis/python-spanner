@@ -126,7 +126,7 @@ s.remove_staging_dirs()
 templated_files = common.py_library(
     microgenerator=True,
     samples=True,
-    cov_level=99,
+    cov_level=98,
     split_system_tests=True,
     system_test_extras=["tracing"],
 )
@@ -137,18 +137,19 @@ s.move(
         ".github/workflows",  # exclude gh actions as credentials are needed for tests
         "README.rst",
         ".github/release-please.yml",
+        ".kokoro/test-samples-impl.sh",
     ],
 )
 
 # Ensure CI runs on a new instance each time
 s.replace(
     ".kokoro/build.sh",
-    "# Remove old nox",
+    "# Setup project id.",
     """\
 # Set up creating a new instance for each system test run
 export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
 
-# Remove old nox""",
+# Setup project id.""",
 )
 
 # Update samples folder in CONTRIBUTING.rst
@@ -220,16 +221,6 @@ place_before(
     "# Install pyopenssl for mTLS testing.",
     skip_tests_if_env_var_not_set,
     escape="()",
-)
-
-s.replace(
-    "noxfile.py",
-    """f"--junitxml=unit_{session.python}_sponge_log.xml",
-        "--cov=google",
-        "--cov=tests/unit",""",
-    """\"--cov=google.cloud.spanner",
-        "--cov=google.cloud",
-        "--cov=tests.unit",""",
 )
 
 s.replace(

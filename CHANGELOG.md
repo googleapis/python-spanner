@@ -4,6 +4,133 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.47.0](https://github.com/googleapis/python-spanner/compare/v3.46.0...v3.47.0) (2024-05-22)
+
+
+### Features
+
+* Add support for multi region encryption config ([#1136](https://github.com/googleapis/python-spanner/issues/1136)) ([bc71fe9](https://github.com/googleapis/python-spanner/commit/bc71fe98a5dfb1198a17d0d1a0b14b89f0ae1754))
+* **spanner:** Add support for Proto Columns ([#1084](https://github.com/googleapis/python-spanner/issues/1084)) ([3ca2689](https://github.com/googleapis/python-spanner/commit/3ca2689324406e0bd9a6b872eda4a23999115f0f))
+
+## [3.46.0](https://github.com/googleapis/python-spanner/compare/v3.45.0...v3.46.0) (2024-05-02)
+
+
+### Features
+
+* **spanner:** Adding EXPECTED_FULFILLMENT_PERIOD to the indicate instance creation times (with FULFILLMENT_PERIOD_NORMAL or FULFILLMENT_PERIOD_EXTENDED ENUM) with the extended instance creation time triggered by On-Demand Capacity Feature ([293ecda](https://github.com/googleapis/python-spanner/commit/293ecdad78b51f248f8d5c023bdba3bac998ea5c))
+
+
+### Documentation
+
+* Remove duplicate paramter description ([#1052](https://github.com/googleapis/python-spanner/issues/1052)) ([1164743](https://github.com/googleapis/python-spanner/commit/116474318d42a6f1ea0f9c2f82707e5dde281159))
+
+## [3.45.0](https://github.com/googleapis/python-spanner/compare/v3.44.0...v3.45.0) (2024-04-17)
+
+
+### Features
+
+* Add support for PG.OID in parameterized queries ([#1035](https://github.com/googleapis/python-spanner/issues/1035)) ([ea5efe4](https://github.com/googleapis/python-spanner/commit/ea5efe4d0bc2790b5172e43e1b66fa3997190adf))
+
+
+### Bug Fixes
+
+* Dates before 1000AD should use 4-digit years ([#1132](https://github.com/googleapis/python-spanner/issues/1132)) ([0ef6565](https://github.com/googleapis/python-spanner/commit/0ef65657de631d876636d11756237496b7713e22)), closes [#1131](https://github.com/googleapis/python-spanner/issues/1131)
+
+## [3.44.0](https://github.com/googleapis/python-spanner/compare/v3.43.0...v3.44.0) (2024-03-13)
+
+
+### Features
+
+* Add support of float32 type ([#1113](https://github.com/googleapis/python-spanner/issues/1113)) ([7e0b46a](https://github.com/googleapis/python-spanner/commit/7e0b46aba7c48f7f944c0fca0cb394551b8d60c1))
+* Changes for float32 in dbapi ([#1115](https://github.com/googleapis/python-spanner/issues/1115)) ([c9f4fbf](https://github.com/googleapis/python-spanner/commit/c9f4fbf2a42054ed61916fb544c5aca947a50598))
+
+
+### Bug Fixes
+
+* Correcting name of variable from `table_schema` to `schema_name` ([#1114](https://github.com/googleapis/python-spanner/issues/1114)) ([a92c6d3](https://github.com/googleapis/python-spanner/commit/a92c6d347f2ae84779ec8662280ea894d558a887))
+
+
+### Documentation
+
+* Add sample for managed autoscaler ([#1111](https://github.com/googleapis/python-spanner/issues/1111)) ([e73c671](https://github.com/googleapis/python-spanner/commit/e73c6718b23bf78a8f264419b2ba378f95fa2554))
+
+## [3.43.0](https://github.com/googleapis/python-spanner/compare/v3.42.0...v3.43.0) (2024-03-06)
+
+
+### Features
+
+* Add retry and timeout for batch dml ([#1107](https://github.com/googleapis/python-spanner/issues/1107)) ([4f6340b](https://github.com/googleapis/python-spanner/commit/4f6340b0930bb1b5430209c4a1ff196c42b834d0))
+* Add support for max commit delay ([#1050](https://github.com/googleapis/python-spanner/issues/1050)) ([d5acc26](https://github.com/googleapis/python-spanner/commit/d5acc263d86fcbde7d5f972930255119e2f60e76))
+* Exposing Spanner client in dbapi connection ([#1100](https://github.com/googleapis/python-spanner/issues/1100)) ([9299212](https://github.com/googleapis/python-spanner/commit/9299212fb8aa6ed27ca40367e8d5aaeeba80c675))
+* Include RENAME in DDL regex ([#1075](https://github.com/googleapis/python-spanner/issues/1075)) ([3669303](https://github.com/googleapis/python-spanner/commit/3669303fb50b4207975b380f356227aceaa1189a))
+* Support partitioned dml in dbapi ([#1103](https://github.com/googleapis/python-spanner/issues/1103)) ([3aab0ed](https://github.com/googleapis/python-spanner/commit/3aab0ed5ed3cd078835812dae183a333fe1d3a20))
+* Untyped param ([#1001](https://github.com/googleapis/python-spanner/issues/1001)) ([1750328](https://github.com/googleapis/python-spanner/commit/1750328bbc7f8a1125f8e0c38024ced8e195a1b9))
+
+
+### Documentation
+
+* Samples and tests for admin backup APIs ([#1105](https://github.com/googleapis/python-spanner/issues/1105)) ([5410c32](https://github.com/googleapis/python-spanner/commit/5410c32febbef48d4623d8023a6eb9f07a65c2f5))
+* Samples and tests for admin database APIs ([#1099](https://github.com/googleapis/python-spanner/issues/1099)) ([c25376c](https://github.com/googleapis/python-spanner/commit/c25376c8513af293c9db752ffc1970dbfca1c5b8))
+* Update all public documents to use auto-generated admin clients. ([#1109](https://github.com/googleapis/python-spanner/issues/1109)) ([d683a14](https://github.com/googleapis/python-spanner/commit/d683a14ccc574e49cefd4e2b2f8b6d9bfd3663ec))
+* Use autogenerated methods to get names from admin samples ([#1110](https://github.com/googleapis/python-spanner/issues/1110)) ([3ab74b2](https://github.com/googleapis/python-spanner/commit/3ab74b267b651b430e96712be22088e2859d7e79))
+
+## [3.42.0](https://github.com/googleapis/python-spanner/compare/v3.41.0...v3.42.0) (2024-01-30)
+
+
+### Features
+
+* Add FLOAT32 enum to TypeCode  ([5b94dac](https://github.com/googleapis/python-spanner/commit/5b94dac507cebde2025d412da0a82373afdbdaf5))
+* Add max_commit_delay API ([#1078](https://github.com/googleapis/python-spanner/issues/1078)) ([ec87c08](https://github.com/googleapis/python-spanner/commit/ec87c082570259d6e16834326859a73f6ee8286a))
+* Add proto descriptors for proto and enum types in create/update/get database ddl requests ([5b94dac](https://github.com/googleapis/python-spanner/commit/5b94dac507cebde2025d412da0a82373afdbdaf5))
+* Fixing and refactoring transaction retry logic in dbapi. Also adding interceptors support for testing ([#1056](https://github.com/googleapis/python-spanner/issues/1056)) ([6640888](https://github.com/googleapis/python-spanner/commit/6640888b7845b7e273758ed9a6de3044e281f555))
+* Implementation of run partition query ([#1080](https://github.com/googleapis/python-spanner/issues/1080)) ([f3b23b2](https://github.com/googleapis/python-spanner/commit/f3b23b268766b6ff2704da18945a1b607a6c8909))
+
+
+### Bug Fixes
+
+* Few fixes in DBAPI ([#1085](https://github.com/googleapis/python-spanner/issues/1085)) ([1ed5a47](https://github.com/googleapis/python-spanner/commit/1ed5a47ce9cfe7be0805a2961b24d7b682cda2f3))
+* Small fix in description when metadata is not present in cursor's _result_set ([#1088](https://github.com/googleapis/python-spanner/issues/1088)) ([57643e6](https://github.com/googleapis/python-spanner/commit/57643e66a64d9befeb27fbbad360613ff69bd48c))
+* **spanner:** Add SpannerAsyncClient import to spanner_v1 package ([#1086](https://github.com/googleapis/python-spanner/issues/1086)) ([2d98b54](https://github.com/googleapis/python-spanner/commit/2d98b5478ee201d9fbb2775975f836def2817e33))
+
+
+### Documentation
+
+* Samples and tests for auto-generated createDatabase and createInstance APIs. ([#1065](https://github.com/googleapis/python-spanner/issues/1065)) ([16c510e](https://github.com/googleapis/python-spanner/commit/16c510eeed947beb87a134c64ca83a37f90b03fb))
+
+## [3.41.0](https://github.com/googleapis/python-spanner/compare/v3.40.1...v3.41.0) (2024-01-10)
+
+
+### Features
+
+* Add BatchWrite API ([#1011](https://github.com/googleapis/python-spanner/issues/1011)) ([d0e4ffc](https://github.com/googleapis/python-spanner/commit/d0e4ffccea071feaa2ca012a0e3f60a945ed1a13))
+* Add PG.OID type cod annotation ([#1023](https://github.com/googleapis/python-spanner/issues/1023)) ([2d59dd0](https://github.com/googleapis/python-spanner/commit/2d59dd09b8f14a37c780d8241a76e2f109ba88b0))
+* Add support for Directed Reads ([#1000](https://github.com/googleapis/python-spanner/issues/1000)) ([c4210b2](https://github.com/googleapis/python-spanner/commit/c4210b28466cfd88fffe546140a005a8e0a1af23))
+* Add support for Python 3.12 ([#1040](https://github.com/googleapis/python-spanner/issues/1040)) ([b28dc9b](https://github.com/googleapis/python-spanner/commit/b28dc9b0f97263d3926043fe5dfcb4cdc75ab35a))
+* Batch Write API implementation and samples ([#1027](https://github.com/googleapis/python-spanner/issues/1027)) ([aa36b07](https://github.com/googleapis/python-spanner/commit/aa36b075ebb13fa952045695a8f4eb6d21ae61ff))
+* Implementation for batch dml in dbapi ([#1055](https://github.com/googleapis/python-spanner/issues/1055)) ([7a92315](https://github.com/googleapis/python-spanner/commit/7a92315c8040dbf6f652974e19cd63abfd6cda2f))
+* Implementation for Begin and Rollback clientside statements ([#1041](https://github.com/googleapis/python-spanner/issues/1041)) ([15623cd](https://github.com/googleapis/python-spanner/commit/15623cda0ac1eb5dd71434c9064134cfa7800a79))
+* Implementation for partitioned query in dbapi ([#1067](https://github.com/googleapis/python-spanner/issues/1067)) ([63daa8a](https://github.com/googleapis/python-spanner/commit/63daa8a682824609b5a21699d95b0f41930635ef))
+* Implementation of client side statements that return ([#1046](https://github.com/googleapis/python-spanner/issues/1046)) ([bb5fa1f](https://github.com/googleapis/python-spanner/commit/bb5fa1fb75dba18965cddeacd77b6af0a05b4697))
+* Implementing client side statements in dbapi (starting with commit) ([#1037](https://github.com/googleapis/python-spanner/issues/1037)) ([eb41b0d](https://github.com/googleapis/python-spanner/commit/eb41b0da7c1e60561b46811d7307e879f071c6ce))
+* Introduce compatibility with native namespace packages ([#1036](https://github.com/googleapis/python-spanner/issues/1036)) ([5d80ab0](https://github.com/googleapis/python-spanner/commit/5d80ab0794216cd093a21989be0883b02eaa437a))
+* Return list of dictionaries for execute streaming sql ([#1003](https://github.com/googleapis/python-spanner/issues/1003)) ([b534a8a](https://github.com/googleapis/python-spanner/commit/b534a8aac116a824544d63a24e38f3d484e0d207))
+* **spanner:** Add autoscaling config to the instance proto ([#1022](https://github.com/googleapis/python-spanner/issues/1022)) ([4d490cf](https://github.com/googleapis/python-spanner/commit/4d490cf9de600b16a90a1420f8773b2ae927983d))
+* **spanner:** Add directed_read_option in spanner.proto ([#1030](https://github.com/googleapis/python-spanner/issues/1030)) ([84d662b](https://github.com/googleapis/python-spanner/commit/84d662b056ca4bd4177b3107ba463302b5362ff9))
+
+
+### Bug Fixes
+
+* Executing existing DDL statements on executemany statement execution ([#1032](https://github.com/googleapis/python-spanner/issues/1032)) ([07fbc45](https://github.com/googleapis/python-spanner/commit/07fbc45156a1b42a5e61c9c4b09923f239729aa8))
+* Fix for flaky test_read_timestamp_client_side_autocommit test ([#1071](https://github.com/googleapis/python-spanner/issues/1071)) ([0406ded](https://github.com/googleapis/python-spanner/commit/0406ded8b0abcdc93a7a2422247a14260f5c620c))
+* Require google-cloud-core &gt;= 1.4.4 ([#1015](https://github.com/googleapis/python-spanner/issues/1015)) ([a2f87b9](https://github.com/googleapis/python-spanner/commit/a2f87b9d9591562877696526634f0c7c4dd822dd))
+* Require proto-plus 1.22.2 for python 3.11 ([#880](https://github.com/googleapis/python-spanner/issues/880)) ([7debe71](https://github.com/googleapis/python-spanner/commit/7debe7194b9f56b14daeebb99f48787174a9471b))
+* Use `retry_async` instead of `retry` in async client ([#1044](https://github.com/googleapis/python-spanner/issues/1044)) ([1253ae4](https://github.com/googleapis/python-spanner/commit/1253ae46011daa3a0b939e22e957dd3ab5179210))
+
+
+### Documentation
+
+* Minor formatting ([498dba2](https://github.com/googleapis/python-spanner/commit/498dba26a7c1a1cb710a92c0167272ff5c0eef27))
+
 ## [3.40.1](https://github.com/googleapis/python-spanner/compare/v3.40.0...v3.40.1) (2023-08-17)
 
 

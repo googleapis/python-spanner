@@ -16,15 +16,11 @@
 import time
 import uuid
 
+import pytest
 from google.api_core import exceptions
-
 from google.cloud import spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
-from google.cloud.spanner_v1 import backup
-from google.cloud.spanner_v1 import client
-from google.cloud.spanner_v1 import database
-from google.cloud.spanner_v1 import instance
-import pytest
+from google.cloud.spanner_v1 import backup, client, database, instance
 from test_utils import retry
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
@@ -114,6 +110,17 @@ def multi_region_instance_config(spanner_client):
 
 
 @pytest.fixture(scope="module")
+def proto_descriptor_file():
+    import os
+
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "testdata/descriptors.pb")
+    file = open(filename, "rb")
+    yield file.read()
+    file.close()
+
+
+@pytest.fixture(scope="module")
 def sample_instance(
     spanner_client,
     cleanup_old_instances,
@@ -190,6 +197,29 @@ def database_id():
     Sample testcase modules can override as needed.
     """
     return "my-database-id"
+
+
+@pytest.fixture(scope="module")
+def proto_columns_database(
+    spanner_client,
+    sample_instance,
+    proto_columns_database_id,
+    proto_columns_database_ddl,
+    database_dialect,
+):
+    if database_dialect == DatabaseDialect.GOOGLE_STANDARD_SQL:
+        sample_database = sample_instance.database(
+            proto_columns_database_id,
+            ddl_statements=proto_columns_database_ddl,
+        )
+
+        if not sample_database.exists():
+            operation = sample_database.create()
+            operation.result(OPERATION_TIMEOUT_SECONDS)
+
+        yield sample_database
+
+        sample_database.drop()
 
 
 @pytest.fixture(scope="module")

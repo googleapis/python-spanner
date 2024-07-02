@@ -18,6 +18,8 @@ from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeAnnotationCode
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import StructType
+from google.protobuf.message import Message
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 
 # Scalar parameter types
@@ -26,12 +28,14 @@ BYTES = Type(code=TypeCode.BYTES)
 BOOL = Type(code=TypeCode.BOOL)
 INT64 = Type(code=TypeCode.INT64)
 FLOAT64 = Type(code=TypeCode.FLOAT64)
+FLOAT32 = Type(code=TypeCode.FLOAT32)
 DATE = Type(code=TypeCode.DATE)
 TIMESTAMP = Type(code=TypeCode.TIMESTAMP)
 NUMERIC = Type(code=TypeCode.NUMERIC)
 JSON = Type(code=TypeCode.JSON)
 PG_NUMERIC = Type(code=TypeCode.NUMERIC, type_annotation=TypeAnnotationCode.PG_NUMERIC)
 PG_JSONB = Type(code=TypeCode.JSON, type_annotation=TypeAnnotationCode.PG_JSONB)
+PG_OID = Type(code=TypeCode.INT64, type_annotation=TypeAnnotationCode.PG_OID)
 
 
 def Array(element_type):
@@ -71,3 +75,35 @@ def Struct(fields):
     :returns: the appropriate struct-type protobuf
     """
     return Type(code=TypeCode.STRUCT, struct_type=StructType(fields=fields))
+
+
+def ProtoMessage(proto_message_object):
+    """Construct a proto message type description protobuf.
+
+    :type proto_message_object: :class:`google.protobuf.message.Message`
+    :param proto_message_object: the proto message instance
+
+    :rtype: :class:`type_pb2.Type`
+    :returns: the appropriate proto-message-type protobuf
+    """
+    if not isinstance(proto_message_object, Message):
+        raise ValueError("Expected input object of type Proto Message.")
+    return Type(
+        code=TypeCode.PROTO, proto_type_fqn=proto_message_object.DESCRIPTOR.full_name
+    )
+
+
+def ProtoEnum(proto_enum_object):
+    """Construct a proto enum type description protobuf.
+
+    :type proto_enum_object: :class:`google.protobuf.internal.enum_type_wrapper.EnumTypeWrapper`
+    :param proto_enum_object: the proto enum instance
+
+    :rtype: :class:`type_pb2.Type`
+    :returns: the appropriate proto-enum-type protobuf
+    """
+    if not isinstance(proto_enum_object, EnumTypeWrapper):
+        raise ValueError("Expected input object of type Proto Enum")
+    return Type(
+        code=TypeCode.ENUM, proto_type_fqn=proto_enum_object.DESCRIPTOR.full_name
+    )

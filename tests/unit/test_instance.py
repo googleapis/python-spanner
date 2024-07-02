@@ -556,6 +556,7 @@ class TestInstance(unittest.TestCase):
         pool = _Pool()
         logger = mock.create_autospec(Logger, instance=True)
         encryption_config = {"kms_key_name": "kms_key_name"}
+        proto_descriptors = b""
 
         database = instance.database(
             DATABASE_ID,
@@ -564,6 +565,7 @@ class TestInstance(unittest.TestCase):
             logger=logger,
             encryption_config=encryption_config,
             database_role=DATABASE_ROLE,
+            proto_descriptors=proto_descriptors,
         )
 
         self.assertIsInstance(database, Database)
@@ -575,6 +577,7 @@ class TestInstance(unittest.TestCase):
         self.assertIs(pool._bound, database)
         self.assertIs(database._encryption_config, encryption_config)
         self.assertIs(database.database_role, DATABASE_ROLE)
+        self.assertIs(database._proto_descriptors, proto_descriptors)
 
     def test_list_databases(self):
         from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
@@ -582,7 +585,7 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
         from google.cloud.spanner_admin_database_v1 import ListDatabasesResponse
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -621,7 +624,7 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import ListDatabasesRequest
         from google.cloud.spanner_admin_database_v1 import ListDatabasesResponse
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -700,7 +703,7 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
         from google.cloud.spanner_admin_database_v1 import ListBackupsResponse
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -739,7 +742,7 @@ class TestInstance(unittest.TestCase):
         from google.cloud.spanner_admin_database_v1 import ListBackupsRequest
         from google.cloud.spanner_admin_database_v1 import ListBackupsResponse
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -783,7 +786,7 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -828,7 +831,7 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -880,7 +883,7 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -937,7 +940,7 @@ class TestInstance(unittest.TestCase):
         from google.longrunning import operations_pb2
         from google.protobuf.any_pb2 import Any
 
-        api = DatabaseAdminClient(credentials=mock.Mock())
+        api = DatabaseAdminClient()
         client = _Client(self.PROJECT)
         client.database_admin_api = api
         instance = self._make_one(self.INSTANCE_ID, client)
@@ -1015,6 +1018,7 @@ class _Client(object):
         self.project_name = "projects/" + self.project
         self.timeout_seconds = timeout_seconds
         self.route_to_leader_enabled = True
+        self.directed_read_options = None
 
     def copy(self):
         from copy import deepcopy

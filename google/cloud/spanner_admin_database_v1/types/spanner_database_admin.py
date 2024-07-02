@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2023 Google LLC
+# Copyright 2024 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -126,19 +126,19 @@ class Database(proto.Message):
             For databases that are using Google default or
             other types of encryption, this field is empty.
         encryption_info (MutableSequence[google.cloud.spanner_admin_database_v1.types.EncryptionInfo]):
-            Output only. For databases that are using
-            customer managed encryption, this field contains
-            the encryption information for the database,
-            such as encryption state and the Cloud KMS key
-            versions that are in use.
+            Output only. For databases that are using customer managed
+            encryption, this field contains the encryption information
+            for the database, such as all Cloud KMS key versions that
+            are in use. The
+            ``encryption_status' field inside of each``\ EncryptionInfo\`
+            is not populated.
 
-            For databases that are using Google default or
-            other types of encryption, this field is empty.
+            For databases that are using Google default or other types
+            of encryption, this field is empty.
 
-            This field is propagated lazily from the
-            backend. There might be a delay from when a key
-            version is being used and when it appears in
-            this field.
+            This field is propagated lazily from the backend. There
+            might be a delay from when a key version is being used and
+            when it appears in this field.
         version_retention_period (str):
             Output only. The period in which Cloud Spanner retains all
             versions of data for the database. This is the same as the
@@ -166,8 +166,10 @@ class Database(proto.Message):
             Output only. The dialect of the Cloud Spanner
             Database.
         enable_drop_protection (bool):
-            Whether drop protection is enabled for this
-            database. Defaults to false, if not set.
+            Whether drop protection is enabled for this database.
+            Defaults to false, if not set. For more details, please see
+            how to `prevent accidental database
+            deletion <https://cloud.google.com/spanner/docs/prevent-database-deletion>`__.
         reconciling (bool):
             Output only. If true, the database is being
             updated. If false, there are no ongoing update
@@ -355,6 +357,26 @@ class CreateDatabaseRequest(proto.Message):
         database_dialect (google.cloud.spanner_admin_database_v1.types.DatabaseDialect):
             Optional. The dialect of the Cloud Spanner
             Database.
+        proto_descriptors (bytes):
+            Optional. Proto descriptors used by CREATE/ALTER PROTO
+            BUNDLE statements in 'extra_statements' above. Contains a
+            protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
+            To generate it,
+            `install <https://grpc.io/docs/protoc-installation/>`__ and
+            run ``protoc`` with --include_imports and
+            --descriptor_set_out. For example, to generate for
+            moon/shot/app.proto, run
+
+            ::
+
+               $protoc  --proto_path=/app_path --proto_path=/lib_path \
+                        --include_imports \
+                        --descriptor_set_out=descriptors.data \
+                        moon/shot/app.proto
+
+            For more details, see protobuffer `self
+            description <https://developers.google.com/protocol-buffers/docs/techniques#self-description>`__.
     """
 
     parent: str = proto.Field(
@@ -378,6 +400,10 @@ class CreateDatabaseRequest(proto.Message):
         proto.ENUM,
         number=5,
         enum=common.DatabaseDialect,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=6,
     )
 
 
@@ -521,6 +547,25 @@ class UpdateDatabaseDdlRequest(proto.Message):
             underscore. If the named operation already exists,
             [UpdateDatabaseDdl][google.spanner.admin.database.v1.DatabaseAdmin.UpdateDatabaseDdl]
             returns ``ALREADY_EXISTS``.
+        proto_descriptors (bytes):
+            Optional. Proto descriptors used by CREATE/ALTER PROTO
+            BUNDLE statements. Contains a protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
+            To generate it,
+            `install <https://grpc.io/docs/protoc-installation/>`__ and
+            run ``protoc`` with --include_imports and
+            --descriptor_set_out. For example, to generate for
+            moon/shot/app.proto, run
+
+            ::
+
+               $protoc  --proto_path=/app_path --proto_path=/lib_path \
+                        --include_imports \
+                        --descriptor_set_out=descriptors.data \
+                        moon/shot/app.proto
+
+            For more details, see protobuffer `self
+            description <https://developers.google.com/protocol-buffers/docs/techniques#self-description>`__.
     """
 
     database: str = proto.Field(
@@ -534,6 +579,10 @@ class UpdateDatabaseDdlRequest(proto.Message):
     operation_id: str = proto.Field(
         proto.STRING,
         number=3,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=4,
     )
 
 
@@ -682,11 +731,21 @@ class GetDatabaseDdlResponse(proto.Message):
             A list of formatted DDL statements defining
             the schema of the database specified in the
             request.
+        proto_descriptors (bytes):
+            Proto descriptors stored in the database. Contains a
+            protobuf-serialized
+            `google.protobuf.FileDescriptorSet <https://github.com/protocolbuffers/protobuf/blob/main/src/google/protobuf/descriptor.proto>`__.
+            For more details, see protobuffer `self
+            description <https://developers.google.com/protocol-buffers/docs/techniques#self-description>`__.
     """
 
     statements: MutableSequence[str] = proto.RepeatedField(
         proto.STRING,
         number=1,
+    )
+    proto_descriptors: bytes = proto.Field(
+        proto.BYTES,
+        number=2,
     )
 
 
@@ -883,6 +942,27 @@ class RestoreDatabaseEncryptionConfig(proto.Message):
             [encryption_type][google.spanner.admin.database.v1.RestoreDatabaseEncryptionConfig.encryption_type]
             is ``CUSTOMER_MANAGED_ENCRYPTION``. Values are of the form
             ``projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>``.
+        kms_key_names (MutableSequence[str]):
+            Optional. Specifies the KMS configuration for the one or
+            more keys used to encrypt the database. Values are of the
+            form
+            ``projects/<project>/locations/<location>/keyRings/<key_ring>/cryptoKeys/<kms_key_name>``.
+
+            The keys referenced by kms_key_names must fully cover all
+            regions of the database instance configuration. Some
+            examples:
+
+            -  For single region database instance configs, specify a
+               single regional location KMS key.
+            -  For multi-regional database instance configs of type
+               GOOGLE_MANAGED, either specify a multi-regional location
+               KMS key or multiple regional location KMS keys that cover
+               all regions in the instance config.
+            -  For a database instance config of type USER_MANAGED,
+               please specify only regional location KMS keys to cover
+               each region in the instance config. Multi-regional
+               location KMS keys are not supported for USER_MANAGED
+               instance configs.
     """
 
     class EncryptionType(proto.Enum):
@@ -914,6 +994,10 @@ class RestoreDatabaseEncryptionConfig(proto.Message):
     kms_key_name: str = proto.Field(
         proto.STRING,
         number=2,
+    )
+    kms_key_names: MutableSequence[str] = proto.RepeatedField(
+        proto.STRING,
+        number=3,
     )
 
 
@@ -1035,10 +1119,9 @@ class DatabaseRole(proto.Message):
         name (str):
             Required. The name of the database role. Values are of the
             form
-            ``projects/<project>/instances/<instance>/databases/<database>/databaseRoles/ {role}``,
+            ``projects/<project>/instances/<instance>/databases/<database>/databaseRoles/<role>``
             where ``<role>`` is as specified in the ``CREATE ROLE`` DDL
-            statement. This name can be passed to Get/Set IAMPolicy
-            methods to identify the database role.
+            statement.
     """
 
     name: str = proto.Field(
@@ -1055,7 +1138,7 @@ class ListDatabaseRolesRequest(proto.Message):
         parent (str):
             Required. The database whose roles should be listed. Values
             are of the form
-            ``projects/<project>/instances/<instance>/databases/<database>/databaseRoles``.
+            ``projects/<project>/instances/<instance>/databases/<database>``.
         page_size (int):
             Number of database roles to be returned in
             the response. If 0 or less, defaults to the

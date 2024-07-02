@@ -36,13 +36,13 @@ API Documentation
   spanner_v1/transaction
   spanner_v1/streamed
 
-  spanner_v1/services
-  spanner_v1/types
-  spanner_admin_database_v1/services
-  spanner_admin_database_v1/types
+  spanner_v1/services_
+  spanner_v1/types_
+  spanner_admin_database_v1/services_
+  spanner_admin_database_v1/types_
   spanner_admin_database_v1/database_admin
-  spanner_admin_instance_v1/services
-  spanner_admin_instance_v1/types
+  spanner_admin_instance_v1/services_
+  spanner_admin_instance_v1/types_
   spanner_admin_instance_v1/instance_admin
 
 
@@ -56,3 +56,8 @@ For a list of all ``google-cloud-spanner`` releases:
   :maxdepth: 2
 
   changelog
+
+.. toctree::
+  :hidden:
+
+  summary_overview.md
