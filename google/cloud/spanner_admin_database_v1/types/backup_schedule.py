@@ -26,17 +26,17 @@ from google.protobuf import timestamp_pb2  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package='google.spanner.admin.database.v1',
+    package="google.spanner.admin.database.v1",
     manifest={
-        'BackupScheduleSpec',
-        'BackupSchedule',
-        'CrontabSpec',
-        'CreateBackupScheduleRequest',
-        'GetBackupScheduleRequest',
-        'DeleteBackupScheduleRequest',
-        'ListBackupSchedulesRequest',
-        'ListBackupSchedulesResponse',
-        'UpdateBackupScheduleRequest',
+        "BackupScheduleSpec",
+        "BackupSchedule",
+        "CrontabSpec",
+        "CreateBackupScheduleRequest",
+        "GetBackupScheduleRequest",
+        "DeleteBackupScheduleRequest",
+        "ListBackupSchedulesRequest",
+        "ListBackupSchedulesResponse",
+        "UpdateBackupScheduleRequest",
     },
 )
 
@@ -53,11 +53,11 @@ class BackupScheduleSpec(proto.Message):
             This field is a member of `oneof`_ ``schedule_spec``.
     """
 
-    cron_spec: 'CrontabSpec' = proto.Field(
+    cron_spec: "CrontabSpec" = proto.Field(
         proto.MESSAGE,
         number=1,
-        oneof='schedule_spec',
-        message='CrontabSpec',
+        oneof="schedule_spec",
+        message="CrontabSpec",
     )
 
 
@@ -108,10 +108,10 @@ class BackupSchedule(proto.Message):
         proto.STRING,
         number=1,
     )
-    spec: 'BackupScheduleSpec' = proto.Field(
+    spec: "BackupScheduleSpec" = proto.Field(
         proto.MESSAGE,
         number=6,
-        message='BackupScheduleSpec',
+        message="BackupScheduleSpec",
     )
     retention_duration: duration_pb2.Duration = proto.Field(
         proto.MESSAGE,
@@ -126,7 +126,7 @@ class BackupSchedule(proto.Message):
     full_backup_spec: backup.FullBackupSpec = proto.Field(
         proto.MESSAGE,
         number=7,
-        oneof='backup_type_spec',
+        oneof="backup_type_spec",
         message=backup.FullBackupSpec,
     )
     update_time: timestamp_pb2.Timestamp = proto.Field(
@@ -215,10 +215,10 @@ class CreateBackupScheduleRequest(proto.Message):
         proto.STRING,
         number=2,
     )
-    backup_schedule: 'BackupSchedule' = proto.Field(
+    backup_schedule: "BackupSchedule" = proto.Field(
         proto.MESSAGE,
         number=3,
-        message='BackupSchedule',
+        message="BackupSchedule",
     )
 
 
@@ -309,10 +309,10 @@ class ListBackupSchedulesResponse(proto.Message):
     def raw_page(self):
         return self
 
-    backup_schedules: MutableSequence['BackupSchedule'] = proto.RepeatedField(
+    backup_schedules: MutableSequence["BackupSchedule"] = proto.RepeatedField(
         proto.MESSAGE,
         number=1,
-        message='BackupSchedule',
+        message="BackupSchedule",
     )
     next_page_token: str = proto.Field(
         proto.STRING,
@@ -339,10 +339,10 @@ class UpdateBackupScheduleRequest(proto.Message):
             future fields from being erased accidentally.
     """
 
-    backup_schedule: 'BackupSchedule' = proto.Field(
+    backup_schedule: "BackupSchedule" = proto.Field(
         proto.MESSAGE,
         number=1,
-        message='BackupSchedule',
+        message="BackupSchedule",
     )
     update_mask: field_mask_pb2.FieldMask = proto.Field(
         proto.MESSAGE,
