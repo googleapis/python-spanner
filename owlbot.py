@@ -256,13 +256,32 @@ s.replace(
 
 s.replace("noxfile.py",
     """env={
-[\s]+"PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-[\s]+},""",
+                "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
+            },""",
     """env={
                 "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
                 "SPANNER_DATABASE_DIALECT": database_dialect,
                 "SKIP_BACKUP_TESTS": "true",
-            },"""
+            },""",
+)
+
+s.replace("noxfile.py",
+"""session.run\(
+        "py.test",
+        "tests/unit",
+        env={
+            "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
+        },
+    \)""",
+"""session.run(
+        "py.test",
+        "tests/unit",
+        env={
+            "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
+            "SPANNER_DATABASE_DIALECT": database_dialect,
+            "SKIP_BACKUP_TESTS": "true",
+        },
+    )""",
 )
 
 s.replace(

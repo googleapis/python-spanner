@@ -222,8 +222,6 @@ def unit(session, protobuf_implementation):
         *session.posargs,
         env={
             "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-            "SPANNER_DATABASE_DIALECT": database_dialect,
-            "SKIP_BACKUP_TESTS": "true",
         },
     )
 
