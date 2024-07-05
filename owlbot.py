@@ -241,25 +241,9 @@ def system(session, database_dialect):""",
 
 s.replace(
     "noxfile.py",
-    """system_test_path,
-            \*session.posargs,
+    """\*session.posargs,
         \)""",
-    """system_test_path,
-            *session.posargs,
-            env={
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
-            },
-        )""",
-)
-
-s.replace(
-    "noxfile.py",
-    """system_test_folder_path,
-            \*session.posargs,
-        \)""",
-    """system_test_folder_path,
-            *session.posargs,
+    """*session.posargs,
             env={
                 "SPANNER_DATABASE_DIALECT": database_dialect,
                 "SKIP_BACKUP_TESTS": "true",
