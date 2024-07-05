@@ -162,6 +162,9 @@ def install_unittest_dependencies(session, *constraints):
 
     # XXX Work around Kokoro image's older pip, which borks the OT install.
     session.run("pip", "install", "--upgrade", "pip")
+    constraints_path = str(
+        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
+    )
     session.install("-e", ".[tracing]", "-c", constraints_path)
     # XXX: Dump installed versions to debug OT issue
     session.run("pip", "list")
