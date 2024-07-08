@@ -22,11 +22,11 @@ package_root = os.path.abspath(os.path.dirname(__file__))
 
 name = "google-cloud-spanner"
 
-
 description = "Google Cloud Spanner API client library"
 
 version = {}
-with open(os.path.join(package_root, "google/cloud/spanner_v1/gapic_version.py")) as fp:
+with open(os.path.join(package_root,
+                       "google/cloud/spanner_v1/gapic_version.py")) as fp:
     exec(fp.read(), version)
 version = version["__version__"]
 
