@@ -337,7 +337,7 @@ def cover(session):
 def docs(session):
     """Build the docs for this library."""
 
-    session.install("-e", ".[tracing]")
+    session.install("-e", ".[tracing, testing]")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
         # which still support sphinx 4.x.
@@ -372,7 +372,7 @@ def docs(session):
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
-    session.install("-e", ".[tracing]")
+    session.install("-e", ".[tracing, testing]")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
         # which still support sphinx 4.x.
