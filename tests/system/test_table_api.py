@@ -40,24 +40,11 @@ def test_table_exists_reload_database_dialect(
 
 
 def test_db_list_tables(shared_database):
-    tables = shared_database.list_tables(include_views=False)
-    table_ids = set(table.table_id for table in tables)
-    assert "contacts" in table_ids
-    # assert "contact_phones" in table_ids
-    assert "all_types" in table_ids
-    # assert view "contacts_email_view" is not in table_ids
-    assert "contacts_email_view" not in table_ids
-
-
-def test_db_list_tables_and_view(shared_database):
-    # default: include_views=True
     tables = shared_database.list_tables()
     table_ids = set(table.table_id for table in tables)
     assert "contacts" in table_ids
     # assert "contact_phones" in table_ids
     assert "all_types" in table_ids
-    # assert view "contacts_email_view" is in table_ids
-    assert "contacts_email_view" in table_ids
 
 
 def test_db_list_tables_reload(shared_database):

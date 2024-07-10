@@ -89,9 +89,6 @@ CREATE TABLE Customers (
     CONSTRAINT FKShoppingCartsCustomerId FOREIGN KEY (CustomerId)
     REFERENCES Customers (CustomerId) ON DELETE CASCADE
     ) PRIMARY KEY (CartId);
-CREATE VIEW contacts_email_view
-SQL SECURITY DEFINER
-AS SELECT c.email FROM contacts AS c;
 """
 
 EMULATOR_DDL = """\
@@ -146,9 +143,6 @@ CREATE TABLE users_history (
      email STRING(MAX),
      deleted BOOL NOT NULL )
      PRIMARY KEY(id, commit_ts DESC);
-CREATE VIEW contacts_email_view
-SQL SECURITY DEFINER
-AS SELECT c.email FROM contacts AS c;
 """
 
 PG_DDL = """\
@@ -201,9 +195,6 @@ CREATE TABLE Customers (
     REFERENCES Customers (CustomerId) ON DELETE CASCADE,
     PRIMARY KEY (CartId)
     );
-CREATE VIEW contacts_email_view
-SQL SECURITY DEFINER
-AS SELECT c.email FROM contacts AS c;
 """
 
 PROTO_COLUMNS_DDL = """\
