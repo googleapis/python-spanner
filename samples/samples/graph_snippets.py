@@ -38,42 +38,6 @@ from testdata import singer_pb2
 OPERATION_TIMEOUT_SECONDS = 240
 
 
-# [START spanner_create_instance]
-def create_instance(instance_id):
-    """Creates an instance."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
-
-    spanner_client = spanner.Client()
-
-    config_name = "{}/instanceConfigs/regional-us-central1".format(
-        spanner_client.project_name
-    )
-
-    operation = spanner_client.instance_admin_api.create_instance(
-        parent=spanner_client.project_name,
-        instance_id=instance_id,
-        instance=spanner_instance_admin.Instance(
-            config=config_name,
-            display_name="This is a display name.",
-            node_count=1,
-            labels={
-                "cloud_spanner_samples": "true",
-                "sample_name": "snippets-create_instance-explicit",
-                "created": str(int(time.time())),
-            },
-        ),
-    )
-
-    print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    print("Created instance {}".format(instance_id))
-
-
-# [END spanner_create_instance]
-
-
 # [START spanner_create_database_with_property_graph]
 def create_database_with_property_graph(instance_id, database_id):
     """Creates a database, tables and a property graph for sample data."""
@@ -113,8 +77,7 @@ def create_database_with_property_graph(instance_id, database_id):
             id               INT64 NOT NULL,
             to_id            INT64 NOT NULL,
             amount           FLOAT64,
-            create_time      TIMESTAMP NOT NULL OPTIONS
-                (allow_commit_timestamp=true),
+            create_time      TIMESTAMP NOT NULL,
             order_number     STRING(MAX),
             FOREIGN KEY (to_id) REFERENCES Account (id)
         ) PRIMARY KEY (id, to_id, create_time),
@@ -147,6 +110,37 @@ def create_database_with_property_graph(instance_id, database_id):
 
 
 # [END spanner_create_database_with_property_graph]
+
+
+# [START spanner_update_allow_commit_timestamps]
+def update_allow_commit_timestamps(instance_id, database_id):
+    """Alters table column(s) to support commit timestamps."""
+
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=[
+            """ALTER TABLE AccountTransferAccount
+                 ALTER COLUMN create_time
+                 SET OPTIONS (allow_commit_timestamp = true)"""],
+    )
+
+    operation = database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Updated the AccountTransferAccountTable.")
+
+
+# [END spanner_update_allow_commit_timestamps]
 
 
 # [START spanner_insert_graph_data]
@@ -432,10 +426,11 @@ if __name__ == "__main__":  # noqa: C901
     )
 
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("create_instance", help=create_instance.__doc__)
     subparsers.add_parser(
         "create_database_with_property_graph",
         help=create_database_with_property_graph.__doc__)
+    subparsers.add_parser("update_allow_commit_timestamps",
+        help=update_allow_commit_timestamps.__doc__)
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
@@ -452,6 +447,8 @@ if __name__ == "__main__":  # noqa: C901
 
     if args.command == "create_database_with_property_graph":
         create_database_with_property_graph(args.instance_id, args.database_id)
+    elif args.command == "update_allow_commit_timestamps":
+        update_allow_commit_timestamps(args.instance_id, args.database_id)
     elif args.command == "insert_data":
         insert_data(args.instance_id, args.database_id)
     elif args.command == "insert_data_with_dml":
