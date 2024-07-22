@@ -113,7 +113,8 @@ def create_database_with_property_graph(instance_id, database_id):
             id               INT64 NOT NULL,
             to_id            INT64 NOT NULL,
             amount           FLOAT64,
-            create_time      TIMESTAMP NOT NULL,
+            create_time      TIMESTAMP NOT NULL OPTIONS
+                (allow_commit_timestamp=true),
             order_number     STRING(MAX),
             FOREIGN KEY (to_id) REFERENCES Account (id)
         ) PRIMARY KEY (id, to_id, create_time),
@@ -161,21 +162,45 @@ def insert_data(instance_id, database_id):
 
     with database.batch() as batch:
         batch.insert(
-            table="Person",
-            columns=("id", "name", "country", "city"),
+            table="Account",
+            columns=("id", "create_time", "is_blocked", "nick_name"),
             values=[
-                (1, "Izumi", "USA", "Mountain View"),
-                (2, "Tal", "FR", "Paris"),
+                (7, '2020-01-10T06:22:20.12Z', False, "Vacation Fund"),
+                (16, '2020-01-27T17:55:09.12Z', True, "Vacation Fund"),
+                (20, '2020-02-18T05:44:20.12Z', False, "Rainy Day Fund")
             ],
         )
 
         batch.insert(
-            table="Account",
-            columns=("id", "create_time", "is_blocked", "nick_name"),
+            table="Person",
+            columns=("id", "name", "gender", "birthday", "country", "city"),
             values=[
-                (1, '2014-09-27T11:17:42.18Z', False, "Savings"),
-                (2, '2008-07-11T12:30:00.45Z', False, "Checking"),
+                (1, "Alex", "male", '1991-12-21T00:00:00.12Z', "Australia"," Adelaide"),
+                (2, "Dana", "female", '1980-10-31T00:00:00.12Z',"Czech_Republic", "Moravia"),
+                (3, "Lee", "male", '1986-12-07T00:00:00.12Z', "India", "Kollam")
             ],
+        )
+
+        batch.insert(
+            table="AccountTransferAccount",
+            columns=("id", "to_id", "amount", "create_time", "order_number"),
+            values=[
+                (7, 16, 300.0, '2020-08-29T15:28:58.12Z', "304330008004315"),
+                (7, 16, 100.0, '2020-10-04T16:55:05.12Z', "304120005529714"),
+                (16, 20, 300.0, '2020-09-25T02:36:14.12Z', "103650009791820"),
+                (20, 7, 500.0, '2020-10-04T16:55:05.12Z', "304120005529714"),
+                (20, 16, 200.0, '2020-10-17T03:59:40.12Z', "302290001255747")
+            ],
+        )
+
+        batch.insert(
+            table="PersonOwnAccount",
+            columns=("id", "account_id", "create_time"),
+            values=[
+                (1, 7, '2020-01-10T06:22:20.12Z'),
+                (2, 20, '2020-01-27T17:55:09.12Z'),
+                (3, 16, '2020-02-18T05:44:20.12Z')
+            ]
         )
 
     print("Inserted data.")
@@ -195,32 +220,90 @@ def insert_data_with_dml(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    def insert_owns(transaction):
+    def insert_accounts(transaction):
         row_ct = transaction.execute_update(
-            "INSERT INTO PersonOwnAccount (id, account_id, create_time) "
-            " VALUES"
-            "(1, 1, '2014-09-28T09:23:31.45Z'),"
-            "(2, 2, '2008-07-12T04:31:18.16Z')"
+            "INSERT INTO Account (id, create_time, is_blocked) "
+            "  VALUES"
+            "    (1, CAST('2000-08-10 08:18:48.463959-07:52' AS TIMESTAMP), false),"
+            "    (2, CAST('2000-08-12 08:18:48.463959-07:52' AS TIMESTAMP), true)"
         )
 
-        print("{} record(s) inserted into PersonOwnAccount.".format(row_ct))
+        print("{} record(s) inserted into Account.".format(row_ct))
 
     def insert_transfers(transaction):
         row_ct = transaction.execute_update(
-            "INSERT INTO AccountTransferAccount (id, to_id, amount, create_time, order_number) "
-            " VALUES"
-            "(1, 2, 900, '2024-06-24T10:11:31.26Z', '3LXCTB'),"
-            "(2, 1, 100, '2024-07-01T12:23:28.11Z', '4MYRTQ')"
+            "INSERT INTO AccountTransferAccount (id, to_id, create_time, amount) "
+            "  VALUES"
+            "    (1, 2, PENDING_COMMIT_TIMESTAMP(), 100),"
+            "    (1, 1, PENDING_COMMIT_TIMESTAMP(), 200) "
         )
 
         print("{} record(s) inserted into AccountTransferAccount.".format(row_ct))
 
 
-    database.run_in_transaction(insert_owns)
+    database.run_in_transaction(insert_accounts)
     database.run_in_transaction(insert_transfers)
 
 
 # [END spanner_insert_graph_data_with_dml]
+
+
+# [START spanner_update_graph_data_with_dml]
+def update_data_with_dml(instance_id, database_id):
+    """Updates sample data from the database using a DML statement."""
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    def update_accounts(transaction):
+        row_ct = transaction.execute_update(
+            "UPDATE Account SET is_blocked = false WHERE id = 2"
+        )
+
+        print("{} record(s) updated.".format(row_ct))
+
+    def update_transfers(transaction):
+        row_ct = transaction.execute_update(
+            "UPDATE AccountTransferAccount SET amount = 300 WHERE id = 1 AND to_id = 2"
+        )
+
+        print("{} record(s) updated.".format(row_ct))
+
+    database.run_in_transaction(update_accounts)
+    database.run_in_transaction(update_transfers)
+
+
+# [END spanner_update_graph_data_with_dml]
+
+
+# [START spanner_update_graph_data_with_graph_query_in_dml]
+def update_data_with_graph_query_in_dml(instance_id, database_id):
+    """Updates sample data from the database using a DML statement."""
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    def update_accounts(transaction):
+        row_ct = transaction.execute_update(
+            "UPDATE Account SET is_blocked = true "
+            "WHERE id IN ("
+            "  GRAPH FinGraph"
+            "  MATCH (a:Account WHERE a.id = 1)-[:TRANSFERS]->{1,2}(b:Account)"
+            "  RETURN b.id)"
+        )
+
+        print("{} record(s) updated.".format(row_ct))
+
+    database.run_in_transaction(update_accounts)
+
+
+# [END spanner_update_graph_data_with_graph_query_in_dml
 
 
 # [START spanner_query_graph_data]
@@ -258,7 +341,7 @@ def query_data_with_parameter(instance_id, database_id):
         results = snapshot.execute_sql(
             """Graph FinGraph
             MATCH (a:Person)-[o:Owns]->()-[t:Transfers]->()<-[p:Owns]-(b:Person)
-            WHERE t.amount > @min
+            WHERE t.amount >= @min
             RETURN a.name AS sender, b.name AS receiver, t.amount, t.create_time AS transfer_at""",
             params={"min": 500},
             param_types={"min": spanner.param_types.INT64},
@@ -269,6 +352,38 @@ def query_data_with_parameter(instance_id, database_id):
 
 
 # [END spanner_with_graph_query_data_with_parameter]
+
+
+# [START spanner_delete_graph_data_with_dml]
+def delete_data_with_dml(instance_id, database_id):
+    """Deletes sample data from the database using a DML statement."""
+    
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    def delete_transfers(transaction):
+        row_ct = transaction.execute_update(
+            "DELETE FROM AccountTransferAccount WHERE id = 1 AND to_id = 2"
+        )
+
+        print("{} record(s) deleted.".format(row_ct))
+
+    def delete_accounts(transaction):
+        row_ct = transaction.execute_update(
+            "DELETE FROM Account WHERE id = 2"
+        )
+
+        print("{} record(s) deleted.".format(row_ct))
+
+    database.run_in_transaction(delete_transfers)
+    database.run_in_transaction(delete_accounts)
+
+
+# [END spanner_delete_graph_data_with_dml]
 
 
 # [START spanner_delete_data]
@@ -283,51 +398,28 @@ def delete_data(instance_id, database_id):
     database = instance.database(database_id)
 
     # Delete individual rows
-    ownerships_to_delete = spanner.KeySet(keys=[[1, 1], [2, 2]])
+    ownerships_to_delete = spanner.KeySet(keys=[[1, 7], [2, 20]])
 
-    # Delete a range of rows where the column key is >=3 and <5
-    transfers_range = spanner.KeyRange(start_closed=[1], end_open=[3])
+    # Delete a range of rows where the column key is >=1 and <8
+    transfers_range = spanner.KeyRange(start_closed=[1], end_open=[8])
     transfers_to_delete = spanner.KeySet(ranges=[transfers_range])
+
+    # Delete Account/Person rows, which will also delete the remaining
+    # AccountTransferAccount and PersonOwnAccount rows because
+    # AccountTransferAccount and PersonOwnAccount are defined with
+    # ON DELETE CASCADE
+    remaining_nodes = spanner.KeySet(all_=True)
 
     with database.batch() as batch:
         batch.delete("PersonOwnAccount", ownerships_to_delete)
         batch.delete("AccountTransferAccount", transfers_to_delete)
+        batch.delete("Account", remaining_nodes)
+        batch.delete("Person", remaining_nodes)
 
     print("Deleted data.")
 
 
 # [END spanner_delete_data]
-
-# [START spanner_delete_graph_data_with_dml]
-def delete_data_with_dml(instance_id, database_id):
-    """Deletes sample data from the database using a DML statement."""
-    
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
-
-    spanner_client = spanner.Client()
-    instance = spanner_client.instance(instance_id)
-    database = instance.database(database_id)
-
-    def delete_persons(transaction):
-        row_ct = transaction.execute_update(
-            "DELETE FROM Person WHERE True"
-        )
-
-        print("{} record(s) deleted.".format(row_ct))
-
-    def delete_accounts(transaction):
-        row_ct = transaction.execute_update(
-            "DELETE FROM Account AS a WHERE EXTRACT(YEAR FROM DATE(a.create_time)) >= 2000"
-        )
-
-        print("{} record(s) deleted.".format(row_ct))
-
-    database.run_in_transaction(delete_accounts)
-    database.run_in_transaction(delete_persons)
-
-
-# [END spanner_delete_graph_data_with_dml]
 
 
 if __name__ == "__main__":  # noqa: C901
@@ -346,30 +438,34 @@ if __name__ == "__main__":  # noqa: C901
         help=create_database_with_property_graph.__doc__)
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
+    subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
+    subparsers.add_parser("update_data_with_graph_query_in_dml",
+        help=update_data_with_graph_query_in_dml.__doc__)
     subparsers.add_parser("query_data", help=query_data.__doc__)
     subparsers.add_parser(
         "query_data_with_parameter", help=query_data_with_parameter.__doc__
     )
-
     subparsers.add_parser("delete_data", help=delete_data.__doc__)
     subparsers.add_parser("delete_data_with_dml", help=delete_data_with_dml.__doc__)
 
     args = parser.parse_args()
 
-    if args.command == "create_instance":
-        create_instance(args.instance_id)
-    elif args.command == "create_database_with_property_graph":
+    if args.command == "create_database_with_property_graph":
         create_database_with_property_graph(args.instance_id, args.database_id)
     elif args.command == "insert_data":
         insert_data(args.instance_id, args.database_id)
     elif args.command == "insert_data_with_dml":
         insert_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_dml":
+        update_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "update_data_with_graph_query_in_dml":
+        update_data_with_graph_query_in_dml(args.instance_id, args.database_id)
     elif args.command == "query_data":
         query_data(args.instance_id, args.database_id)
     elif args.command == "query_data_with_parameter":
         query_data_with_parameter(args.instance_id, args.database_id)
-    elif args.command == "delete_data":
-        delete_data(args.instance_id, args.database_id)
     elif args.command == "delete_data_with_dml":
         delete_data_with_dml(args.instance_id, args.database_id)
+    elif args.command == "delete_data":
+        delete_data(args.instance_id, args.database_id)
 
