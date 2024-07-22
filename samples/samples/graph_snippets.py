@@ -292,10 +292,10 @@ def update_data_with_graph_query_in_dml(instance_id, database_id):
     def update_accounts(transaction):
         row_ct = transaction.execute_update(
             "UPDATE Account SET is_blocked = true "
-            "WHERE id IN ("
+            "WHERE id IN {"
             "  GRAPH FinGraph"
             "  MATCH (a:Account WHERE a.id = 1)-[:TRANSFERS]->{1,2}(b:Account)"
-            "  RETURN b.id)"
+            "  RETURN b.id}"
         )
 
         print("{} record(s) updated.".format(row_ct))
