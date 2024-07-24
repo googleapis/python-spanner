@@ -15,6 +15,7 @@
 """Manages OpenTelemetry trace creation and handling"""
 
 from contextlib import contextmanager
+import os
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import SpannerClient
@@ -22,10 +23,29 @@ from google.cloud.spanner_v1 import SpannerClient
 try:
     from opentelemetry import trace
     from opentelemetry.trace.status import Status, StatusCode
+    from opentelemetry.semconv.trace import SpanAttributes
 
     HAS_OPENTELEMETRY_INSTALLED = True
+    DB_SYSTEM = SpanAttributes.DB_SYSTEM
+    DB_NAME = SpanAttributes.DB_NAME
+    DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
+    NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
+    DB_STATEMENT = SpanAttributes.DB_STATEMENT
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
+
+
+EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
+
+
+def annotate_with_sql_statement(span, sql):
+    """
+    annotate_sql_statement will set the attribute DB_STATEMENT
+    to the sql statement, only if SPANNER_ENABLE_EXTENDED_TRACING=true
+    is set in the environment.
+    """
+    if EXTENDED_TRACING_ENABLED:
+        span.set_attribute(DB_STATEMENT, sql)
 
 
 @contextmanager
@@ -39,14 +59,17 @@ def trace_call(name, session, extra_attributes=None):
 
     # Set base attributes that we know for every trace created
     attributes = {
-        "db.type": "spanner",
-        "db.url": SpannerClient.DEFAULT_ENDPOINT,
-        "db.instance": session._database.name,
-        "net.host.name": SpannerClient.DEFAULT_ENDPOINT,
+        DB_SYSTEM: "google.cloud.spanner",
+        DB_CONNECTION_STRING: SpannerClient.DEFAULT_ENDPOINT,
+        DB_NAME: session._database.name,
+        NET_HOST_NAME: SpannerClient.DEFAULT_ENDPOINT,
     }
 
     if extra_attributes:
         attributes.update(extra_attributes)
+
+    if not EXTENDED_TRACING_ENABLED:
+        attributes.pop(DB_STATEMENT, None)
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes

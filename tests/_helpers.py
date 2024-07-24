@@ -10,13 +10,25 @@ try:
     )
     from opentelemetry.trace.status import StatusCode
 
+    from opentelemetry.semconv.trace import SpanAttributes
+
     trace.set_tracer_provider(TracerProvider())
 
     HAS_OPENTELEMETRY_INSTALLED = True
+    
+    DB_SYSTEM = SpanAttributes.DB_SYSTEM
+    DB_NAME = SpanAttributes.DB_NAME
+    DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
+    NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
+
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
 
     StatusCode = mock.Mock()
+    DB_SYSTEM = "db.system"
+    DB_NAME = "db.name"
+    DB_CONNECTION_STRING = "db.connection_string"
+    NET_HOST_NAME = "net.host.name"
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False

@@ -14,7 +14,14 @@
 
 
 import unittest
-from tests._helpers import OpenTelemetryBase, StatusCode
+from tests._helpers import (
+    OpenTelemetryBase,
+    StatusCode,
+    DB_SYSTEM,
+    DB_NAME,
+    DB_CONNECTION_STRING,
+    NET_HOST_NAME,
+)
 from google.cloud.spanner_v1 import RequestOptions
 
 TABLE_NAME = "citizens"
@@ -24,10 +31,10 @@ VALUES = [
     ["bharney@example.com", "Bharney", "Rhubble", 31],
 ]
 BASE_ATTRIBUTES = {
-    "db.type": "spanner",
-    "db.url": "spanner.googleapis.com",
-    "db.instance": "testing",
-    "net.host.name": "spanner.googleapis.com",
+    DB_SYSTEM: "google.cloud.spanner",
+    DB_CONNECTION_STRING: "spanner.googleapis.com",
+    DB_NAME: "testing",
+    NET_HOST_NAME: "spanner.googleapis.com",
 }
 
 

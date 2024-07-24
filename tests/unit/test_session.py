@@ -20,6 +20,10 @@ from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
+    DB_SYSTEM,
+    DB_NAME,
+    DB_CONNECTION_STRING,
+    NET_HOST_NAME,
 )
 
 
@@ -46,12 +50,11 @@ class TestSession(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     DATABASE_ROLE = "dummy-role"
     BASE_ATTRIBUTES = {
-        "db.type": "spanner",
-        "db.url": "spanner.googleapis.com",
-        "db.instance": DATABASE_NAME,
-        "net.host.name": "spanner.googleapis.com",
+        DB_SYSTEM: "google.cloud.spanner",
+        DB_CONNECTION_STRING: "spanner.googleapis.com",
+        DB_NAME: DATABASE_NAME,
+        NET_HOST_NAME: "spanner.googleapis.com",
     }
-
     def _getTargetClass(self):
         from google.cloud.spanner_v1.session import Session
 
