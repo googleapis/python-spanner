@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+from google.api_core import gapic_v1
+from google.api_core import retry as retries
 from typing import (
     Any,
     AsyncIterator,
@@ -22,7 +24,15 @@ from typing import (
     Tuple,
     Optional,
     Iterator,
+    Union,
 )
+
+try:
+    OptionalRetry = Union[retries.Retry, gapic_v1.method._MethodDefault, None]
+    OptionalAsyncRetry = Union[retries.AsyncRetry, gapic_v1.method._MethodDefault, None]
+except AttributeError:  # pragma: NO COVER
+    OptionalRetry = Union[retries.Retry, object, None]  # type: ignore
+    OptionalAsyncRetry = Union[retries.AsyncRetry, object, None]  # type: ignore
 
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.longrunning import operations_pb2  # type: ignore
@@ -52,6 +62,8 @@ class ListInstanceConfigsPager:
         request: spanner_instance_admin.ListInstanceConfigsRequest,
         response: spanner_instance_admin.ListInstanceConfigsResponse,
         *,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiate the pager.
@@ -63,12 +75,17 @@ class ListInstanceConfigsPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsResponse):
                 The initial response object.
+            retry (google.api_core.retry.Retry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstanceConfigsRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -79,7 +96,12 @@ class ListInstanceConfigsPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = self._method(self._request, metadata=self._metadata)
+            self._response = self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __iter__(self) -> Iterator[spanner_instance_admin.InstanceConfig]:
@@ -116,6 +138,8 @@ class ListInstanceConfigsAsyncPager:
         request: spanner_instance_admin.ListInstanceConfigsRequest,
         response: spanner_instance_admin.ListInstanceConfigsResponse,
         *,
+        retry: OptionalAsyncRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiates the pager.
@@ -127,12 +151,17 @@ class ListInstanceConfigsAsyncPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigsResponse):
                 The initial response object.
+            retry (google.api_core.retry.AsyncRetry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstanceConfigsRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -145,7 +174,12 @@ class ListInstanceConfigsAsyncPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = await self._method(self._request, metadata=self._metadata)
+            self._response = await self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __aiter__(self) -> AsyncIterator[spanner_instance_admin.InstanceConfig]:
@@ -186,6 +220,8 @@ class ListInstanceConfigOperationsPager:
         request: spanner_instance_admin.ListInstanceConfigOperationsRequest,
         response: spanner_instance_admin.ListInstanceConfigOperationsResponse,
         *,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiate the pager.
@@ -197,6 +233,9 @@ class ListInstanceConfigOperationsPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigOperationsResponse):
                 The initial response object.
+            retry (google.api_core.retry.Retry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
@@ -205,6 +244,8 @@ class ListInstanceConfigOperationsPager:
             request
         )
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -217,7 +258,12 @@ class ListInstanceConfigOperationsPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = self._method(self._request, metadata=self._metadata)
+            self._response = self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __iter__(self) -> Iterator[operations_pb2.Operation]:
@@ -254,6 +300,8 @@ class ListInstanceConfigOperationsAsyncPager:
         request: spanner_instance_admin.ListInstanceConfigOperationsRequest,
         response: spanner_instance_admin.ListInstanceConfigOperationsResponse,
         *,
+        retry: OptionalAsyncRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiates the pager.
@@ -265,6 +313,9 @@ class ListInstanceConfigOperationsAsyncPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstanceConfigOperationsResponse):
                 The initial response object.
+            retry (google.api_core.retry.AsyncRetry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
@@ -273,6 +324,8 @@ class ListInstanceConfigOperationsAsyncPager:
             request
         )
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -285,7 +338,12 @@ class ListInstanceConfigOperationsAsyncPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = await self._method(self._request, metadata=self._metadata)
+            self._response = await self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __aiter__(self) -> AsyncIterator[operations_pb2.Operation]:
@@ -324,6 +382,8 @@ class ListInstancesPager:
         request: spanner_instance_admin.ListInstancesRequest,
         response: spanner_instance_admin.ListInstancesResponse,
         *,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiate the pager.
@@ -335,12 +395,17 @@ class ListInstancesPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancesResponse):
                 The initial response object.
+            retry (google.api_core.retry.Retry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstancesRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -351,7 +416,12 @@ class ListInstancesPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = self._method(self._request, metadata=self._metadata)
+            self._response = self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __iter__(self) -> Iterator[spanner_instance_admin.Instance]:
@@ -386,6 +456,8 @@ class ListInstancesAsyncPager:
         request: spanner_instance_admin.ListInstancesRequest,
         response: spanner_instance_admin.ListInstancesResponse,
         *,
+        retry: OptionalAsyncRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiates the pager.
@@ -397,12 +469,17 @@ class ListInstancesAsyncPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancesResponse):
                 The initial response object.
+            retry (google.api_core.retry.AsyncRetry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstancesRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -415,7 +492,12 @@ class ListInstancesAsyncPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = await self._method(self._request, metadata=self._metadata)
+            self._response = await self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __aiter__(self) -> AsyncIterator[spanner_instance_admin.Instance]:
@@ -454,6 +536,8 @@ class ListInstancePartitionsPager:
         request: spanner_instance_admin.ListInstancePartitionsRequest,
         response: spanner_instance_admin.ListInstancePartitionsResponse,
         *,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiate the pager.
@@ -465,12 +549,17 @@ class ListInstancePartitionsPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionsResponse):
                 The initial response object.
+            retry (google.api_core.retry.Retry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstancePartitionsRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -481,7 +570,12 @@ class ListInstancePartitionsPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = self._method(self._request, metadata=self._metadata)
+            self._response = self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __iter__(self) -> Iterator[spanner_instance_admin.InstancePartition]:
@@ -518,6 +612,8 @@ class ListInstancePartitionsAsyncPager:
         request: spanner_instance_admin.ListInstancePartitionsRequest,
         response: spanner_instance_admin.ListInstancePartitionsResponse,
         *,
+        retry: OptionalAsyncRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiates the pager.
@@ -529,12 +625,17 @@ class ListInstancePartitionsAsyncPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionsResponse):
                 The initial response object.
+            retry (google.api_core.retry.AsyncRetry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
         self._method = method
         self._request = spanner_instance_admin.ListInstancePartitionsRequest(request)
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -547,7 +648,12 @@ class ListInstancePartitionsAsyncPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = await self._method(self._request, metadata=self._metadata)
+            self._response = await self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __aiter__(self) -> AsyncIterator[spanner_instance_admin.InstancePartition]:
@@ -588,6 +694,8 @@ class ListInstancePartitionOperationsPager:
         request: spanner_instance_admin.ListInstancePartitionOperationsRequest,
         response: spanner_instance_admin.ListInstancePartitionOperationsResponse,
         *,
+        retry: OptionalRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiate the pager.
@@ -599,6 +707,9 @@ class ListInstancePartitionOperationsPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionOperationsResponse):
                 The initial response object.
+            retry (google.api_core.retry.Retry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
@@ -607,6 +718,8 @@ class ListInstancePartitionOperationsPager:
             request
         )
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -619,7 +732,12 @@ class ListInstancePartitionOperationsPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = self._method(self._request, metadata=self._metadata)
+            self._response = self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __iter__(self) -> Iterator[operations_pb2.Operation]:
@@ -657,6 +775,8 @@ class ListInstancePartitionOperationsAsyncPager:
         request: spanner_instance_admin.ListInstancePartitionOperationsRequest,
         response: spanner_instance_admin.ListInstancePartitionOperationsResponse,
         *,
+        retry: OptionalAsyncRetry = gapic_v1.method.DEFAULT,
+        timeout: Union[float, object] = gapic_v1.method.DEFAULT,
         metadata: Sequence[Tuple[str, str]] = ()
     ):
         """Instantiates the pager.
@@ -668,6 +788,9 @@ class ListInstancePartitionOperationsAsyncPager:
                 The initial request object.
             response (google.cloud.spanner_admin_instance_v1.types.ListInstancePartitionOperationsResponse):
                 The initial response object.
+            retry (google.api_core.retry.AsyncRetry): Designation of what errors,
+                if any, should be retried.
+            timeout (float): The timeout for this request.
             metadata (Sequence[Tuple[str, str]]): Strings which should be
                 sent along with the request as metadata.
         """
@@ -676,6 +799,8 @@ class ListInstancePartitionOperationsAsyncPager:
             request
         )
         self._response = response
+        self._retry = retry
+        self._timeout = timeout
         self._metadata = metadata
 
     def __getattr__(self, name: str) -> Any:
@@ -688,7 +813,12 @@ class ListInstancePartitionOperationsAsyncPager:
         yield self._response
         while self._response.next_page_token:
             self._request.page_token = self._response.next_page_token
-            self._response = await self._method(self._request, metadata=self._metadata)
+            self._response = await self._method(
+                self._request,
+                retry=self._retry,
+                timeout=self._timeout,
+                metadata=self._metadata,
+            )
             yield self._response
 
     def __aiter__(self) -> AsyncIterator[operations_pb2.Operation]:
