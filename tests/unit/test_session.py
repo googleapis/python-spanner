@@ -55,6 +55,7 @@ class TestSession(OpenTelemetryBase):
         DB_NAME: DATABASE_NAME,
         NET_HOST_NAME: "spanner.googleapis.com",
     }
+
     def _getTargetClass(self):
         from google.cloud.spanner_v1.session import Session
 

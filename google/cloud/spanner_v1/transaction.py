@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 """Spanner read-write transaction support."""
 import functools
 import threading
@@ -90,20 +91,18 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._check_state()
 
         if self._transaction_id is None:
-            return TransactionSelector(begin=TransactionOptions(
-                read_write=TransactionOptions.ReadWrite(),
-                exclude_txn_from_change_streams=self.
-                exclude_txn_from_change_streams,
-            ))
+            return TransactionSelector(
+                begin=TransactionOptions(
+                    read_write=TransactionOptions.ReadWrite(),
+                    exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+                )
+            )
         else:
             return TransactionSelector(id=self._transaction_id)
 
-    def _execute_request(self,
-                         method,
-                         request,
-                         trace_name=None,
-                         session=None,
-                         attributes=None):
+    def _execute_request(
+        self, method, request, trace_name=None, session=None, attributes=None
+    ):
         """Helper method to execute request after fetching transaction selector.
 
         :type method: callable
@@ -118,9 +117,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             method = functools.partial(method, request=request)
             response = _retry(
                 method,
-                allowed_exceptions={
-                    InternalServerError: _check_rst_stream_error
-                },
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
         return response
@@ -147,12 +144,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
-                _metadata_with_leader_aware_routing(
-                    database._route_to_leader_enabled))
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         txn_options = TransactionOptions(
             read_write=TransactionOptions.ReadWrite(),
-            exclude_txn_from_change_streams=self.
-            exclude_txn_from_change_streams,
+            exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
         )
         with trace_call("CloudSpanner.BeginTransaction", self._session):
             method = functools.partial(
@@ -163,9 +159,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
             response = _retry(
                 method,
-                allowed_exceptions={
-                    InternalServerError: _check_rst_stream_error
-                },
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self._transaction_id = response.id
         return self._transaction_id
@@ -181,7 +175,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             if database._route_to_leader_enabled:
                 metadata.append(
                     _metadata_with_leader_aware_routing(
-                        database._route_to_leader_enabled))
+                        database._route_to_leader_enabled
+                    )
+                )
             with trace_call("CloudSpanner.Rollback", self._session):
                 method = functools.partial(
                     api.rollback,
@@ -191,17 +187,14 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
                 _retry(
                     method,
-                    allowed_exceptions={
-                        InternalServerError: _check_rst_stream_error
-                    },
+                    allowed_exceptions={InternalServerError: _check_rst_stream_error},
                 )
         self.rolled_back = True
         del self._session._transaction
 
-    def commit(self,
-               return_commit_stats=False,
-               request_options=None,
-               max_commit_delay=None):
+    def commit(
+        self, return_commit_stats=False, request_options=None, max_commit_delay=None
+    ):
         """Commit mutations to the database.
 
         :type return_commit_stats: bool
@@ -236,8 +229,8 @@ class Transaction(_SnapshotBase, _BatchBase):
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
-                _metadata_with_leader_aware_routing(
-                    database._route_to_leader_enabled))
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         trace_attributes = {"num_mutations": len(self._mutations)}
 
         if request_options is None:
@@ -258,8 +251,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
-        with trace_call("CloudSpanner.Commit", self._session,
-                        trace_attributes):
+        with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
             method = functools.partial(
                 api.commit,
                 request=request,
@@ -267,9 +259,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
             response = _retry(
                 method,
-                allowed_exceptions={
-                    InternalServerError: _check_rst_stream_error
-                },
+                allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self.committed = response.commit_timestamp
         if return_commit_stats:
@@ -298,10 +288,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             If ``params`` is None but ``param_types`` is not None.
         """
         if params is not None:
-            return Struct(fields={
-                key: _make_value_pb(value)
-                for key, value in params.items()
-            })
+            return Struct(
+                fields={key: _make_value_pb(value) for key, value in params.items()}
+            )
 
         return {}
 
@@ -363,8 +352,8 @@ class Transaction(_SnapshotBase, _BatchBase):
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
-                _metadata_with_leader_aware_routing(
-                    database._route_to_leader_enabled))
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -375,8 +364,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         # Query-level options have higher precedence than client-level and
         # environment-level options
         default_query_options = database._instance._client._query_options
-        query_options = _merge_query_options(default_query_options,
-                                             query_options)
+        query_options = _merge_query_options(default_query_options, query_options)
 
         if request_options is None:
             request_options = RequestOptions()
@@ -416,9 +404,12 @@ class Transaction(_SnapshotBase, _BatchBase):
                     trace_attributes,
                 )
                 # Setting the transaction id because the transaction begin was inlined for first rpc.
-                if (self._transaction_id is None and response is not None
-                        and response.metadata is not None
-                        and response.metadata.transaction is not None):
+                if (
+                    self._transaction_id is None
+                    and response is not None
+                    and response.metadata is not None
+                    and response.metadata.transaction is not None
+                ):
                     self._transaction_id = response.metadata.transaction.id
         else:
             response = self._execute_request(
@@ -481,16 +472,17 @@ class Transaction(_SnapshotBase, _BatchBase):
                 dml, params, param_types = statement
                 params_pb = self._make_params_pb(params, param_types)
                 parsed.append(
-                    ExecuteBatchDmlRequest.Statement(sql=dml,
-                                                     params=params_pb,
-                                                     param_types=param_types))
+                    ExecuteBatchDmlRequest.Statement(
+                        sql=dml, params=params_pb, param_types=param_types
+                    )
+                )
 
         database = self._session._database
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
-                _metadata_with_leader_aware_routing(
-                    database._route_to_leader_enabled))
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         api = database.spanner_api
 
         seqno, self._execute_sql_count = (
@@ -535,9 +527,11 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
                 # Setting the transaction id because the transaction begin was inlined for first rpc.
                 for result_set in response.result_sets:
-                    if (self._transaction_id is None
-                            and result_set.metadata is not None
-                            and result_set.metadata.transaction is not None):
+                    if (
+                        self._transaction_id is None
+                        and result_set.metadata is not None
+                        and result_set.metadata.transaction is not None
+                    ):
                         self._transaction_id = result_set.metadata.transaction.id
                         break
         else:
@@ -550,8 +544,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
 
         row_counts = [
-            result_set.stats.row_count_exact
-            for result_set in response.result_sets
+            result_set.stats.row_count_exact for result_set in response.result_sets
         ]
 
         return response.status, row_counts
