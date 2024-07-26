@@ -1,3 +1,4 @@
+import os
 import unittest
 import mock
 
@@ -32,6 +33,7 @@ except ImportError:
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False
+EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
 
 
 def get_test_ot_exporter():
