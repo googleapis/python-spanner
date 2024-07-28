@@ -60,7 +60,7 @@ class TestTransaction(OpenTelemetryBase):
     TRANSACTION_TAG = "transaction-tag"
 
     BASE_ATTRIBUTES = {
-        DB_SYSTEM: "google.cloud.spanner",
+        DB_SYSTEM: "spanner",
         DB_CONNECTION_STRING: "spanner.googleapis.com",
         DB_NAME: "testing",
         NET_HOST_NAME: "spanner.googleapis.com",

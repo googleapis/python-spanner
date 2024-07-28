@@ -38,16 +38,6 @@ except ImportError:
 EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
 
 
-def annotate_with_sql_statement(span, sql):
-    """
-    annotate_sql_statement will set the attribute DB_STATEMENT
-    to the sql statement, only if SPANNER_ENABLE_EXTENDED_TRACING=true
-    is set in the environment.
-    """
-    if EXTENDED_TRACING_ENABLED:
-        span.set_attribute(DB_STATEMENT, sql)
-
-
 @contextmanager
 def trace_call(name, session, extra_attributes=None):
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
@@ -59,7 +49,7 @@ def trace_call(name, session, extra_attributes=None):
 
     # Set base attributes that we know for every trace created
     attributes = {
-        DB_SYSTEM: "google.cloud.spanner",
+        DB_SYSTEM: "spanner",
         DB_CONNECTION_STRING: SpannerClient.DEFAULT_ENDPOINT,
         DB_NAME: session._database.name,
         NET_HOST_NAME: SpannerClient.DEFAULT_ENDPOINT,

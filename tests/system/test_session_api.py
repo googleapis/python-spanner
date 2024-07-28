@@ -341,7 +341,7 @@ def assert_span_attributes(
 
 def _make_attributes(db_instance, **kwargs):
     attributes = {
-        ot_helpers.DB_SYSTEM: "google.cloud.spanner",
+        ot_helpers.DB_SYSTEM: "spanner",
         ot_helpers.DB_CONNECTION_STRING: "spanner.googleapis.com",
         ot_helpers.DB_NAME: db_instance,
         ot_helpers.NET_HOST_NAME: "spanner.googleapis.com",

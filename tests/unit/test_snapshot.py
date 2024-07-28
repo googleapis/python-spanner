@@ -47,7 +47,7 @@ TXN_ID = b"DEAFBEAD"
 SECONDS = 3
 MICROS = 123456
 BASE_ATTRIBUTES = {
-    DB_SYSTEM: "google.cloud.spanner",
+    DB_SYSTEM: "spanner",
     DB_CONNECTION_STRING: "spanner.googleapis.com",
     DB_NAME: "testing",
     NET_HOST_NAME: "spanner.googleapis.com",
@@ -537,7 +537,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 self.assertEqual(
                     dict(span.attributes),
                     {
-                        DB_SYSTEM: "google.cloud.spanner",
+                        DB_SYSTEM: "spanner",
                         DB_CONNECTION_STRING: "spanner.googleapis.com",
                         DB_NAME: "testing",
                         NET_HOST_NAME: "spanner.googleapis.com",
