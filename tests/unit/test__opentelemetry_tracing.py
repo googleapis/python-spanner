@@ -63,7 +63,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             }
 
             expected_attributes = {
-                DB_SYSTEM: "google.cloud.spanner",
+                DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
             }
@@ -88,7 +88,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             extra_attributes = {DB_NAME: "database_name"}
 
             expected_attributes = {
-                DB_SYSTEM: "google.cloud.spanner",
+                DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
             }
@@ -115,7 +115,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             extra_attributes = {DB_NAME: "database_name"}
 
             expected_attributes = {
-                DB_SYSTEM: "google.cloud.spanner",
+                DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
             }
@@ -139,7 +139,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
             extra_attributes = {DB_NAME: "database_name"}
 
             expected_attributes = {
-                DB_SYSTEM: "google.cloud.spanner",
+                DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
             }

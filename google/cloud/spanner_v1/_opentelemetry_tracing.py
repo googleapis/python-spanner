@@ -59,7 +59,7 @@ def trace_call(name, session, extra_attributes=None):
 
     # Set base attributes that we know for every trace created
     attributes = {
-        DB_SYSTEM: "google.cloud.spanner",
+        DB_SYSTEM: "spanner",
         DB_CONNECTION_STRING: SpannerClient.DEFAULT_ENDPOINT,
         DB_NAME: session._database.name,
         NET_HOST_NAME: SpannerClient.DEFAULT_ENDPOINT,

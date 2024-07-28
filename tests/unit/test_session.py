@@ -50,7 +50,7 @@ class TestSession(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     DATABASE_ROLE = "dummy-role"
     BASE_ATTRIBUTES = {
-        DB_SYSTEM: "google.cloud.spanner",
+        DB_SYSTEM: "spanner",
         DB_CONNECTION_STRING: "spanner.googleapis.com",
         DB_NAME: DATABASE_NAME,
         NET_HOST_NAME: "spanner.googleapis.com",
