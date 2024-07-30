@@ -16,7 +16,6 @@ import time
 import uuid
 
 import pytest
-from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
@@ -196,28 +195,13 @@ def test_create_instance_with_autoscaling_config(capsys, lci_instance_id):
 
 
 def test_create_instance_partition(capsys, instance_partition_instance_id):
-    spanner_client = spanner.Client()
-    operation = spanner_client.instance_admin_api.create_instance(
-        parent=spanner_client.project_name,
-        instance_id=instance_partition_instance_id,
-        instance=spanner_instance_admin.Instance(
-            config="{}/instanceConfigs/regional-us-central1".format(
-                spanner_client.project_name
-            ),
-            display_name="Instance partitions test.",
-            node_count=1,
-            labels={
-                "cloud_spanner_samples": "true",
-                "created": str(int(time.time())),
-            },
-        ),
-    )
-    operation.result(240)
+    snippets.create_instance(instance_partition_instance_id)
     retry_429(snippets.create_instance_partition)(
         instance_partition_instance_id, "my-instance-partition"
     )
     out, _ = capsys.readouterr()
     assert "Created instance partition my-instance-partition" in out
+    spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_partition_instance_id)
     retry_429(instance.delete)()
 
