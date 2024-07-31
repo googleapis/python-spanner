@@ -21,19 +21,8 @@ For more information, see the README.rst under /spanner.
 """
 
 import argparse
-import base64
-import datetime
-import decimal
-import json
-import logging
-import time
 
 from google.cloud import spanner
-from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
-from google.cloud.spanner_v1 import DirectedReadOptions, param_types
-from google.cloud.spanner_v1.data_types import JsonObject
-from google.protobuf import field_mask_pb2  # type: ignore
-from testdata import singer_pb2
 
 OPERATION_TIMEOUT_SECONDS = 240
 
@@ -54,7 +43,6 @@ def create_database_with_property_graph(instance_id, database_id):
             """CREATE TABLE Person (
             id               INT64 NOT NULL,
             name             STRING(MAX),
-            gender           STRING(40),
             birthday         TIMESTAMP,
             country          STRING(MAX),
             city             STRING(MAX),
@@ -167,11 +155,11 @@ def insert_data(instance_id, database_id):
 
         batch.insert(
             table="Person",
-            columns=("id", "name", "gender", "birthday", "country", "city"),
+            columns=("id", "name", "birthday", "country", "city"),
             values=[
-                (1, "Alex", "male", '1991-12-21T00:00:00.12Z', "Australia"," Adelaide"),
-                (2, "Dana", "female", '1980-10-31T00:00:00.12Z',"Czech_Republic", "Moravia"),
-                (3, "Lee", "male", '1986-12-07T00:00:00.12Z', "India", "Kollam")
+                (1, "Alex", '1991-12-21T00:00:00.12Z', "Australia"," Adelaide"),
+                (2, "Dana", '1980-10-31T00:00:00.12Z',"Czech_Republic", "Moravia"),
+                (3, "Lee", '1986-12-07T00:00:00.12Z', "India", "Kollam")
             ],
         )
 
@@ -206,7 +194,7 @@ def insert_data(instance_id, database_id):
 # [START spanner_insert_graph_data_with_dml]
 def insert_data_with_dml(instance_id, database_id):
     """Inserts sample data into the given database using a DML statement."""
-    
+
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
@@ -233,7 +221,6 @@ def insert_data_with_dml(instance_id, database_id):
         )
 
         print("{} record(s) inserted into AccountTransferAccount.".format(row_ct))
-
 
     database.run_in_transaction(insert_accounts)
     database.run_in_transaction(insert_transfers)
@@ -324,7 +311,7 @@ def query_data(instance_id, database_id):
 # [START spanner_with_graph_query_data_with_parameter]
 def query_data_with_parameter(instance_id, database_id):
     """Queries sample data from the database using SQL with a parameter."""
-    
+
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
@@ -351,7 +338,7 @@ def query_data_with_parameter(instance_id, database_id):
 # [START spanner_delete_graph_data_with_dml]
 def delete_data_with_dml(instance_id, database_id):
     """Deletes sample data from the database using a DML statement."""
-    
+
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
@@ -430,12 +417,12 @@ if __name__ == "__main__":  # noqa: C901
         "create_database_with_property_graph",
         help=create_database_with_property_graph.__doc__)
     subparsers.add_parser("update_allow_commit_timestamps",
-        help=update_allow_commit_timestamps.__doc__)
+                          help=update_allow_commit_timestamps.__doc__)
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_graph_query_in_dml",
-        help=update_data_with_graph_query_in_dml.__doc__)
+                          help=update_data_with_graph_query_in_dml.__doc__)
     subparsers.add_parser("query_data", help=query_data.__doc__)
     subparsers.add_parser(
         "query_data_with_parameter", help=query_data_with_parameter.__doc__
@@ -465,4 +452,3 @@ if __name__ == "__main__":  # noqa: C901
         delete_data_with_dml(args.instance_id, args.database_id)
     elif args.command == "delete_data":
         delete_data(args.instance_id, args.database_id)
-
