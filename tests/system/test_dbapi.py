@@ -48,7 +48,7 @@ DDL = """CREATE TABLE contacts (
     PRIMARY KEY (contact_id);
     CREATE VIEW contacts_emails
     SQL SECURITY INVOKER
-    AS 
+    AS
     SELECT c.email
     FROM contacts AS c;"""
 
