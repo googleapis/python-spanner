@@ -1581,3 +1581,8 @@ class TestDbApi:
         assert self._cursor.fetchone() == (1, "first-name")
         assert self._cursor.rowcount == 1
         self._conn.commit()
+
+    def test_invalid_statement_error(self):
+        with pytest.raises(ProgrammingError):
+            self._cursor.execute("-- comment only")
+
