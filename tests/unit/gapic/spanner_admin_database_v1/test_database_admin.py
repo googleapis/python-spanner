@@ -5959,11 +5959,14 @@ def test_get_backup(request_type, transport: str = "grpc"):
             database="database_value",
             name="name_value",
             size_bytes=1089,
+            freeable_size_bytes=2006,
+            exclusive_size_bytes=2168,
             state=backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
             database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             referencing_backups=["referencing_backups_value"],
             backup_schedules=["backup_schedules_value"],
+            incremental_backup_chain_id="incremental_backup_chain_id_value",
         )
         response = client.get_backup(request)
 
@@ -5978,11 +5981,14 @@ def test_get_backup(request_type, transport: str = "grpc"):
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 def test_get_backup_empty_call():
@@ -6084,11 +6090,14 @@ async def test_get_backup_empty_call_async():
                 database="database_value",
                 name="name_value",
                 size_bytes=1089,
+                freeable_size_bytes=2006,
+                exclusive_size_bytes=2168,
                 state=backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
                 database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
                 referencing_backups=["referencing_backups_value"],
                 backup_schedules=["backup_schedules_value"],
+                incremental_backup_chain_id="incremental_backup_chain_id_value",
             )
         )
         response = await client.get_backup()
@@ -6157,11 +6166,14 @@ async def test_get_backup_async(
                 database="database_value",
                 name="name_value",
                 size_bytes=1089,
+                freeable_size_bytes=2006,
+                exclusive_size_bytes=2168,
                 state=backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
                 database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
                 referencing_backups=["referencing_backups_value"],
                 backup_schedules=["backup_schedules_value"],
+                incremental_backup_chain_id="incremental_backup_chain_id_value",
             )
         )
         response = await client.get_backup(request)
@@ -6177,11 +6189,14 @@ async def test_get_backup_async(
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 @pytest.mark.asyncio
@@ -6352,11 +6367,14 @@ def test_update_backup(request_type, transport: str = "grpc"):
             database="database_value",
             name="name_value",
             size_bytes=1089,
+            freeable_size_bytes=2006,
+            exclusive_size_bytes=2168,
             state=gsad_backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
             database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             referencing_backups=["referencing_backups_value"],
             backup_schedules=["backup_schedules_value"],
+            incremental_backup_chain_id="incremental_backup_chain_id_value",
         )
         response = client.update_backup(request)
 
@@ -6371,11 +6389,14 @@ def test_update_backup(request_type, transport: str = "grpc"):
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == gsad_backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 def test_update_backup_empty_call():
@@ -6473,11 +6494,14 @@ async def test_update_backup_empty_call_async():
                 database="database_value",
                 name="name_value",
                 size_bytes=1089,
+                freeable_size_bytes=2006,
+                exclusive_size_bytes=2168,
                 state=gsad_backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
                 database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
                 referencing_backups=["referencing_backups_value"],
                 backup_schedules=["backup_schedules_value"],
+                incremental_backup_chain_id="incremental_backup_chain_id_value",
             )
         )
         response = await client.update_backup()
@@ -6548,11 +6572,14 @@ async def test_update_backup_async(
                 database="database_value",
                 name="name_value",
                 size_bytes=1089,
+                freeable_size_bytes=2006,
+                exclusive_size_bytes=2168,
                 state=gsad_backup.Backup.State.CREATING,
                 referencing_databases=["referencing_databases_value"],
                 database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
                 referencing_backups=["referencing_backups_value"],
                 backup_schedules=["backup_schedules_value"],
+                incremental_backup_chain_id="incremental_backup_chain_id_value",
             )
         )
         response = await client.update_backup(request)
@@ -6568,11 +6595,14 @@ async def test_update_backup_async(
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == gsad_backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 @pytest.mark.asyncio
@@ -15251,6 +15281,8 @@ def test_create_backup_rest(request_type):
         "name": "name_value",
         "create_time": {},
         "size_bytes": 1089,
+        "freeable_size_bytes": 2006,
+        "exclusive_size_bytes": 2168,
         "state": 1,
         "referencing_databases": [
             "referencing_databases_value1",
@@ -15278,6 +15310,8 @@ def test_create_backup_rest(request_type):
         ],
         "max_expire_time": {},
         "backup_schedules": ["backup_schedules_value1", "backup_schedules_value2"],
+        "incremental_backup_chain_id": "incremental_backup_chain_id_value",
+        "oldest_version_time": {},
     }
     # The version of a generated dependency at test runtime may differ from the version used during generation.
     # Delete any fields which are not present in the current runtime dependency
@@ -16012,11 +16046,14 @@ def test_get_backup_rest(request_type):
             database="database_value",
             name="name_value",
             size_bytes=1089,
+            freeable_size_bytes=2006,
+            exclusive_size_bytes=2168,
             state=backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
             database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             referencing_backups=["referencing_backups_value"],
             backup_schedules=["backup_schedules_value"],
+            incremental_backup_chain_id="incremental_backup_chain_id_value",
         )
 
         # Wrap the value into a proper Response obj
@@ -16035,11 +16072,14 @@ def test_get_backup_rest(request_type):
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 def test_get_backup_rest_use_cached_wrapped_rpc():
@@ -16322,6 +16362,8 @@ def test_update_backup_rest(request_type):
         "name": "projects/sample1/instances/sample2/backups/sample3",
         "create_time": {},
         "size_bytes": 1089,
+        "freeable_size_bytes": 2006,
+        "exclusive_size_bytes": 2168,
         "state": 1,
         "referencing_databases": [
             "referencing_databases_value1",
@@ -16349,6 +16391,8 @@ def test_update_backup_rest(request_type):
         ],
         "max_expire_time": {},
         "backup_schedules": ["backup_schedules_value1", "backup_schedules_value2"],
+        "incremental_backup_chain_id": "incremental_backup_chain_id_value",
+        "oldest_version_time": {},
     }
     # The version of a generated dependency at test runtime may differ from the version used during generation.
     # Delete any fields which are not present in the current runtime dependency
@@ -16426,11 +16470,14 @@ def test_update_backup_rest(request_type):
             database="database_value",
             name="name_value",
             size_bytes=1089,
+            freeable_size_bytes=2006,
+            exclusive_size_bytes=2168,
             state=gsad_backup.Backup.State.CREATING,
             referencing_databases=["referencing_databases_value"],
             database_dialect=common.DatabaseDialect.GOOGLE_STANDARD_SQL,
             referencing_backups=["referencing_backups_value"],
             backup_schedules=["backup_schedules_value"],
+            incremental_backup_chain_id="incremental_backup_chain_id_value",
         )
 
         # Wrap the value into a proper Response obj
@@ -16449,11 +16496,14 @@ def test_update_backup_rest(request_type):
     assert response.database == "database_value"
     assert response.name == "name_value"
     assert response.size_bytes == 1089
+    assert response.freeable_size_bytes == 2006
+    assert response.exclusive_size_bytes == 2168
     assert response.state == gsad_backup.Backup.State.CREATING
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.database_dialect == common.DatabaseDialect.GOOGLE_STANDARD_SQL
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.backup_schedules == ["backup_schedules_value"]
+    assert response.incremental_backup_chain_id == "incremental_backup_chain_id_value"
 
 
 def test_update_backup_rest_use_cached_wrapped_rpc():
@@ -18890,6 +18940,7 @@ def test_create_backup_schedule_rest(request_type):
             "kms_key_names": ["kms_key_names_value1", "kms_key_names_value2"],
         },
         "full_backup_spec": {},
+        "incremental_backup_spec": {},
         "update_time": {"seconds": 751, "nanos": 543},
     }
     # The version of a generated dependency at test runtime may differ from the version used during generation.
@@ -19634,6 +19685,7 @@ def test_update_backup_schedule_rest(request_type):
             "kms_key_names": ["kms_key_names_value1", "kms_key_names_value2"],
         },
         "full_backup_spec": {},
+        "incremental_backup_spec": {},
         "update_time": {"seconds": 751, "nanos": 543},
     }
     # The version of a generated dependency at test runtime may differ from the version used during generation.
