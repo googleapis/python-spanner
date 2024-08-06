@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.49.0](https://github.com/googleapis/python-spanner/compare/v3.48.0...v3.49.0) (2024-08-06)
+
+
+### Features
+
+* **spanner:** Add samples for instance partitions ([#1168](https://github.com/googleapis/python-spanner/issues/1168)) ([55f83dc](https://github.com/googleapis/python-spanner/commit/55f83dc5f776d436b30da6056a9cdcad3971ce39))
+
 ## [3.48.0](https://github.com/googleapis/python-spanner/compare/v3.47.0...v3.48.0) (2024-07-30)
 
 
