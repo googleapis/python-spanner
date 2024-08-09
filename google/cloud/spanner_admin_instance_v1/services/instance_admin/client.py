@@ -724,7 +724,7 @@ class InstanceAdminClient(metaclass=InstanceAdminClientMeta):
             transport_init: Union[
                 Type[InstanceAdminTransport], Callable[..., InstanceAdminTransport]
             ] = (
-                type(self).get_transport_class(transport)
+                InstanceAdminClient.get_transport_class(transport)
                 if isinstance(transport, str) or transport is None
                 else cast(Callable[..., InstanceAdminTransport], transport)
             )
