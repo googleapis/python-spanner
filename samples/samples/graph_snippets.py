@@ -30,8 +30,7 @@ OPERATION_TIMEOUT_SECONDS = 240
 # [START spanner_create_database_with_property_graph]
 def create_database_with_property_graph(instance_id, database_id):
     """Creates a database, tables and a property graph for sample data."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -104,8 +103,7 @@ def create_database_with_property_graph(instance_id, database_id):
 def update_allow_commit_timestamps(instance_id, database_id):
     """Alters table column(s) to support commit timestamps."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -117,7 +115,8 @@ def update_allow_commit_timestamps(instance_id, database_id):
         statements=[
             """ALTER TABLE AccountTransferAccount
                  ALTER COLUMN create_time
-                 SET OPTIONS (allow_commit_timestamp = true)"""],
+                 SET OPTIONS (allow_commit_timestamp = true)"""
+        ],
     )
 
     operation = database_admin_api.update_database_ddl(request)
@@ -147,9 +146,9 @@ def insert_data(instance_id, database_id):
             table="Account",
             columns=("id", "create_time", "is_blocked", "nick_name"),
             values=[
-                (7, '2020-01-10T06:22:20.12Z', False, "Vacation Fund"),
-                (16, '2020-01-27T17:55:09.12Z', True, "Vacation Fund"),
-                (20, '2020-02-18T05:44:20.12Z', False, "Rainy Day Fund")
+                (7, "2020-01-10T06:22:20.12Z", False, "Vacation Fund"),
+                (16, "2020-01-27T17:55:09.12Z", True, "Vacation Fund"),
+                (20, "2020-02-18T05:44:20.12Z", False, "Rainy Day Fund"),
             ],
         )
 
@@ -157,9 +156,9 @@ def insert_data(instance_id, database_id):
             table="Person",
             columns=("id", "name", "birthday", "country", "city"),
             values=[
-                (1, "Alex", '1991-12-21T00:00:00.12Z', "Australia"," Adelaide"),
-                (2, "Dana", '1980-10-31T00:00:00.12Z',"Czech_Republic", "Moravia"),
-                (3, "Lee", '1986-12-07T00:00:00.12Z', "India", "Kollam")
+                (1, "Alex", "1991-12-21T00:00:00.12Z", "Australia", " Adelaide"),
+                (2, "Dana", "1980-10-31T00:00:00.12Z", "Czech_Republic", "Moravia"),
+                (3, "Lee", "1986-12-07T00:00:00.12Z", "India", "Kollam"),
             ],
         )
 
@@ -167,11 +166,11 @@ def insert_data(instance_id, database_id):
             table="AccountTransferAccount",
             columns=("id", "to_id", "amount", "create_time", "order_number"),
             values=[
-                (7, 16, 300.0, '2020-08-29T15:28:58.12Z', "304330008004315"),
-                (7, 16, 100.0, '2020-10-04T16:55:05.12Z', "304120005529714"),
-                (16, 20, 300.0, '2020-09-25T02:36:14.12Z', "103650009791820"),
-                (20, 7, 500.0, '2020-10-04T16:55:05.12Z', "304120005529714"),
-                (20, 16, 200.0, '2020-10-17T03:59:40.12Z', "302290001255747")
+                (7, 16, 300.0, "2020-08-29T15:28:58.12Z", "304330008004315"),
+                (7, 16, 100.0, "2020-10-04T16:55:05.12Z", "304120005529714"),
+                (16, 20, 300.0, "2020-09-25T02:36:14.12Z", "103650009791820"),
+                (20, 7, 500.0, "2020-10-04T16:55:05.12Z", "304120005529714"),
+                (20, 16, 200.0, "2020-10-17T03:59:40.12Z", "302290001255747"),
             ],
         )
 
@@ -179,10 +178,10 @@ def insert_data(instance_id, database_id):
             table="PersonOwnAccount",
             columns=("id", "account_id", "create_time"),
             values=[
-                (1, 7, '2020-01-10T06:22:20.12Z'),
-                (2, 20, '2020-01-27T17:55:09.12Z'),
-                (3, 16, '2020-02-18T05:44:20.12Z')
-            ]
+                (1, 7, "2020-01-10T06:22:20.12Z"),
+                (2, 20, "2020-01-27T17:55:09.12Z"),
+                (3, 16, "2020-02-18T05:44:20.12Z"),
+            ],
         )
 
     print("Inserted data.")
@@ -207,7 +206,7 @@ def insert_data_with_dml(instance_id, database_id):
             "INSERT INTO Account (id, create_time, is_blocked) "
             "  VALUES"
             "    (1, CAST('2000-08-10 08:18:48.463959-07:52' AS TIMESTAMP), false),"
-            "    (2, CAST('2000-08-12 08:18:48.463959-07:52' AS TIMESTAMP), true)"
+            "    (2, CAST('2000-08-12 07:13:16.463959-03:41' AS TIMESTAMP), true)"
         )
 
         print("{} record(s) inserted into Account.".format(row_ct))
@@ -216,8 +215,8 @@ def insert_data_with_dml(instance_id, database_id):
         row_ct = transaction.execute_update(
             "INSERT INTO AccountTransferAccount (id, to_id, create_time, amount) "
             "  VALUES"
-            "    (1, 2, PENDING_COMMIT_TIMESTAMP(), 100),"
-            "    (1, 1, PENDING_COMMIT_TIMESTAMP(), 200) "
+            "    (1, 2, CAST('2000-09-11 03:11:18.463959-06:36' AS TIMESTAMP), 100),"
+            "    (1, 1, CAST('2000-09-12 04:09:34.463959-05:12' AS TIMESTAMP), 200) "
         )
 
         print("{} record(s) inserted into AccountTransferAccount.".format(row_ct))
@@ -244,14 +243,14 @@ def update_data_with_dml(instance_id, database_id):
             "UPDATE Account SET is_blocked = false WHERE id = 2"
         )
 
-        print("{} record(s) updated.".format(row_ct))
+        print("{} Account record(s) updated.".format(row_ct))
 
     def update_transfers(transaction):
         row_ct = transaction.execute_update(
             "UPDATE AccountTransferAccount SET amount = 300 WHERE id = 1 AND to_id = 2"
         )
 
-        print("{} record(s) updated.".format(row_ct))
+        print("{} AccountTransferAccount record(s) updated.".format(row_ct))
 
     database.run_in_transaction(update_accounts)
     database.run_in_transaction(update_transfers)
@@ -279,7 +278,7 @@ def update_data_with_graph_query_in_dml(instance_id, database_id):
             "  RETURN b.id}"
         )
 
-        print("{} record(s) updated.".format(row_ct))
+        print("{} Account record(s) updated.".format(row_ct))
 
     database.run_in_transaction(update_accounts)
 
@@ -351,14 +350,12 @@ def delete_data_with_dml(instance_id, database_id):
             "DELETE FROM AccountTransferAccount WHERE id = 1 AND to_id = 2"
         )
 
-        print("{} record(s) deleted.".format(row_ct))
+        print("{} AccountTransferAccount record(s) deleted.".format(row_ct))
 
     def delete_accounts(transaction):
-        row_ct = transaction.execute_update(
-            "DELETE FROM Account WHERE id = 2"
-        )
+        row_ct = transaction.execute_update("DELETE FROM Account WHERE id = 2")
 
-        print("{} record(s) deleted.".format(row_ct))
+        print("{} Account record(s) deleted.".format(row_ct))
 
     database.run_in_transaction(delete_transfers)
     database.run_in_transaction(delete_accounts)
@@ -415,14 +412,18 @@ if __name__ == "__main__":  # noqa: C901
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser(
         "create_database_with_property_graph",
-        help=create_database_with_property_graph.__doc__)
-    subparsers.add_parser("update_allow_commit_timestamps",
-                          help=update_allow_commit_timestamps.__doc__)
+        help=create_database_with_property_graph.__doc__,
+    )
+    subparsers.add_parser(
+        "update_allow_commit_timestamps", help=update_allow_commit_timestamps.__doc__
+    )
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
-    subparsers.add_parser("update_data_with_graph_query_in_dml",
-                          help=update_data_with_graph_query_in_dml.__doc__)
+    subparsers.add_parser(
+        "update_data_with_graph_query_in_dml",
+        help=update_data_with_graph_query_in_dml.__doc__,
+    )
     subparsers.add_parser("query_data", help=query_data.__doc__)
     subparsers.add_parser(
         "query_data_with_parameter", help=query_data_with_parameter.__doc__
