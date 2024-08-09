@@ -38,7 +38,10 @@ from google.cloud.spanner_v1._helpers import (
     _check_rst_stream_error,
     _SessionWrapper,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    trace_call,
+    DB_STATEMENT,
+)
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -488,7 +491,7 @@ class _SnapshotBase(_SessionWrapper):
             timeout=timeout,
         )
 
-        trace_attributes = {"db.statement": sql}
+        trace_attributes = {DB_STATEMENT: sql}
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
@@ -696,7 +699,7 @@ class _SnapshotBase(_SessionWrapper):
             partition_options=partition_options,
         )
 
-        trace_attributes = {"db.statement": sql}
+        trace_attributes = {DB_STATEMENT: sql}
         with trace_call(
             "CloudSpanner.PartitionReadWriteTransaction",
             self._session,

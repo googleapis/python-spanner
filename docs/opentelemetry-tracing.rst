@@ -9,6 +9,7 @@ To take advantage of these traces, we first need to install OpenTelemetry:
 .. code-block:: sh
 
     pip install opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation
+    pip install opentelemetry-exporter-google-cloud
 
     # [Optional] Installs the cloud monitoring exporter, however you can use any exporter of your choice
     pip install opentelemetry-exporter-google-cloud
@@ -19,14 +20,14 @@ We also need to tell OpenTelemetry which exporter to use. To export Spanner trac
 
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.trace.sampling import ProbabilitySampler
+    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
     from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
     # BatchExportSpanProcessor exports spans to Cloud Trace 
     # in a seperate thread to not block on the main thread
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
     # Create and export one trace every 1000 requests
-    sampler = ProbabilitySampler(1/1000)
+    sampler = TraceIdRatioBased(1/1000)
     # Use the default tracer provider
     trace.set_tracer_provider(TracerProvider(sampler=sampler))
     trace.get_tracer_provider().add_span_processor(
@@ -38,3 +39,6 @@ Generated spanner traces should now be available on `Cloud Trace <https://consol
 
 Tracing is most effective when many libraries are instrumented to provide insight over the entire lifespan of a request.
 For a list of libraries that can be instrumented, see the `OpenTelemetry Integrations` section of the `OpenTelemetry Python docs <https://opentelemetry-python.readthedocs.io/en/stable/>`_
+
+To allow for SQL statements to be annotated in your spans, please set
+the environment variable `SPANNER_ENABLE_EXTENDED_TRACING=true`.

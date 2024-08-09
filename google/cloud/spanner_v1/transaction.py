@@ -32,7 +32,10 @@ from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    DB_STATEMENT,
+    trace_call,
+)
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
@@ -369,7 +372,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
-        trace_attributes = {"db.statement": dml}
+        trace_attributes = {DB_STATEMENT: dml}
 
         request = ExecuteSqlRequest(
             session=self._session.name,
@@ -495,7 +498,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
-            "db.statement": ";".join([statement.sql for statement in parsed])
+            DB_STATEMENT: ";".join([statement.sql for statement in parsed])
         }
         request = ExecuteBatchDmlRequest(
             session=self._session.name,
