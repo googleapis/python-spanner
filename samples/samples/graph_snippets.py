@@ -283,7 +283,7 @@ def update_data_with_graph_query_in_dml(instance_id, database_id):
     database.run_in_transaction(update_accounts)
 
 
-# [END spanner_update_graph_data_with_graph_query_in_dml
+# [END spanner_update_graph_data_with_graph_query_in_dml]
 
 
 # [START spanner_query_graph_data]
@@ -307,7 +307,7 @@ def query_data(instance_id, database_id):
 # [END spanner_query_graph_data]
 
 
-# [START spanner_with_graph_query_data_with_parameter]
+# [START spanner_query_graph_data_with_parameter]
 def query_data_with_parameter(instance_id, database_id):
     """Queries sample data from the database using SQL with a parameter."""
 
@@ -331,7 +331,7 @@ def query_data_with_parameter(instance_id, database_id):
             print("sender: {}, receiver: {}, amount: {}, transfer_at: {}".format(*row))
 
 
-# [END spanner_with_graph_query_data_with_parameter]
+# [END spanner_query_graph_data_with_parameter]
 
 
 # [START spanner_delete_graph_data_with_dml]
@@ -364,7 +364,7 @@ def delete_data_with_dml(instance_id, database_id):
 # [END spanner_delete_graph_data_with_dml]
 
 
-# [START spanner_delete_data]
+# [START spanner_delete_graph_data]
 def delete_data(instance_id, database_id):
     """Deletes sample data from the given database.
 
@@ -397,7 +397,7 @@ def delete_data(instance_id, database_id):
     print("Deleted data.")
 
 
-# [END spanner_delete_data]
+# [END spanner_delete_graph_data]
 
 
 if __name__ == "__main__":  # noqa: C901
