@@ -152,7 +152,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
         )
         with trace_call("CloudSpanner.BeginTransaction", self._session,
-                        observability_options=.self._observability_options):
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
@@ -181,7 +181,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                     )
                 )
             with trace_call("CloudSpanner.Rollback", self._session,
-                        observability_options=.self._observability_options):
+                        observability_options=self._observability_options):
                 method = functools.partial(
                     api.rollback,
                     session=self._session.name,
@@ -255,7 +255,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options=request_options,
         )
         with trace_call("CloudSpanner.Commit", self._session, trace_attributes,
-                        observability_options=.self._observability_options):
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.commit,
                 request=request,

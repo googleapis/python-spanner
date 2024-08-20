@@ -75,7 +75,7 @@ from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import FixedSizePool
 from google.cloud.spanner_v1.pool import PingingPool
 from google.cloud.spanner_v1.pool import TransactionPingingPool
-from google.cloud.spanner_v1.tracing import get_tracer
+from google.cloud.spanner_v1._opentelemetry_tracing import get_tracer
 
 
 COMMIT_TIMESTAMP = "spanner.commit_timestamp()"

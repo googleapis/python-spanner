@@ -80,7 +80,11 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if extra_attributes:
         attributes.update(extra_attributes)
 
-    if not EXTENDED_TRACING_ENABLED:
+    extended_tracing = EXTENDED_TRACING_ENABLED or (
+                        observability_options and
+                        observability_options.get('enable_extended_tracing', False))
+
+    if not extended_tracing:
         attributes.pop(DB_STATEMENT, None)
 
     with tracer.start_as_current_span(
