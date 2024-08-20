@@ -25,17 +25,25 @@ from opentelemetry import trace
 
 
 def main():
+    # Setup common variables that'll be used between Spanner and traces.
+    project_id = os.environ.get('SPANNER_PROJECT_ID')
+
     # Setup OpenTelemetry, trace and Cloud Trace exporter.
     sampler = ALWAYS_ON
     tracerProvider = TracerProvider(sampler=sampler)
     tracerProvider.add_span_processor(
-        BatchExportSpanProcessor(CloudTraceSpanExporter()))
+        BatchExportSpanProcessor(CloudTraceSpanExporter(project_id)))
     trace.set_tracer_provider(tracerProvider)
-    tracer = trace.get_tracer(__name__)
+    # Retrieve the set shared tracer.
+    tracer = spanner.get_tracer(tracerProvider)
 
     # Setup the Cloud Spanner Client.
-    project_id = os.environ.get('SPANNER_PROJECT_ID')
     spanner_client = spanner.Client(project_id)
+    # Alternatively you can directly pass in the tracerProvider into the spanner client.
+    if False:
+        opts = dict(tracer_provider=tracerProvider)
+        spanner_client = spanner.Client(project_id, observability_options=opts)
+
     instance = spanner_client.instance('test-instance')
     database = instance.database('test-db')
 

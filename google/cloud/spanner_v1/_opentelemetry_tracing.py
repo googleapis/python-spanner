@@ -19,7 +19,7 @@ import os
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import SpannerClient
-from google.cloud.spanner_v1 import gapic_version as PACKAGE_VERSION
+from google.cloud.spanner_v1 import gapic_version as TRACER_VERSION
 
 try:
     from opentelemetry import trace
@@ -40,6 +40,19 @@ EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '')
 
 TRACER_NAME = 'cloud.google.com/python/spanner'
 
+def get_tracer(tracer_provider=None):
+    """
+    get_tracer is a utility to unify and simplify retrieval of the tracer, without
+    leaking implementation details given that retrieving a tracer requires providing
+    the full qualified library name and version.
+    When the tracer_provider is set, it'll retrieve the tracer from it, otherwise
+    it'll fall back to the global tracer provider and use this library's specific semantics.
+    """
+    if tracer_provider:
+        return tracerProvider.get_tracer(TRACER_NAME, TRACER_VERSION)
+    else:
+        return trace.get_tracer(TRACER_NAME, TRACER_VERSION)
+
 @contextmanager
 def trace_call(name, session, extra_attributes=None, observability_options=None):
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
@@ -51,10 +64,10 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if observability_options:
         tracerProvider = observability_options.get('tracer_provider', None)
         if tracerProvider:
-            tracer = tracerProvider.get_tracer(TRACER_NAME, PACKAGE_VERSION)
+            tracer = get_tracer(tracerProvider)
 
     if tracer is None: # Acquire the global tracer if none was provided.
-        tracer = trace.get_tracer(TRACER_NAME, PACKAGE_VERSION)
+        tracer = get_tracer()
 
     # Set base attributes that we know for every trace created
     attributes = {
