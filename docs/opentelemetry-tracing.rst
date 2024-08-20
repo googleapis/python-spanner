@@ -35,6 +35,29 @@ We also need to tell OpenTelemetry which exporter to use. To export Spanner trac
         BatchExportSpanProcessor(CloudTraceSpanExporter())
     )
 
+
+Alternatively you can pass in a tracer provider into the Cloud Spanner initialization
+
+.. code:: python
+
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
+    from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
+
+    # Create and export one trace every 1000 requests
+    sampler = TraceIdRatioBased(1/1000)
+    tracerProvider = TracerProvider(sampler=sampler)
+    tracerProvider.add_span_processor(
+        # Initialize the cloud tracing exporter
+        BatchExportSpanProcessor(CloudTraceSpanExporter())
+    )
+
+    o11y = dict(tracer_provider=tracerProvider)
+    # Pass the tracer provider while creating the Spanner client.
+    spanner_client = spanner.Client(observability_options=o11y)
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
 Generated spanner traces should now be available on `Cloud Trace <https://console.cloud.google.com/traces>`_.
 
 Tracing is most effective when many libraries are instrumented to provide insight over the entire lifespan of a request.

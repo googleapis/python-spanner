@@ -19,6 +19,7 @@ import os
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1 import gapic_version as PACKAGE_VERSION
 
 try:
     from opentelemetry import trace
@@ -37,15 +38,23 @@ except ImportError:
 
 EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
 
+TRACER_NAME = 'cloud.google.com/python/spanner'
 
 @contextmanager
-def trace_call(name, session, extra_attributes=None):
+def trace_call(name, session, extra_attributes=None, observability_options=None):
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
         # Empty context manager. Users will have to check if the generated value is None or a span
         yield None
         return
 
-    tracer = trace.get_tracer(__name__)
+    tracer = None
+    if observability_options:
+        tracerProvider = observability_options.get('tracer_provider', None)
+        if tracerProvider:
+            tracer = tracerProvider.get_tracer(TRACER_NAME, PACKAGE_VERSION)
+
+    if tracer is None: # Acquire the global tracer if none was provided.
+        tracer = trace.get_tracer(TRACER_NAME, PACKAGE_VERSION)
 
     # Set base attributes that we know for every trace created
     attributes = {

@@ -122,6 +122,7 @@ class Instance(object):
         emulator_host=None,
         labels=None,
         processing_units=None,
+        observability_options=None,
     ):
         self.instance_id = instance_id
         self._client = client
@@ -145,6 +146,7 @@ class Instance(object):
         if labels is None:
             labels = {}
         self.labels = labels
+        self._observability_options = observability_options
 
     def _update_from_pb(self, instance_pb):
         """Refresh self from the server-provided protobuf.
@@ -436,6 +438,7 @@ class Instance(object):
         # should be only set for tests if tests want to use interceptors
         enable_interceptors_in_tests=False,
         proto_descriptors=None,
+        observability_options=None,
     ):
         """Factory to create a database within this instance.
 
@@ -499,6 +502,7 @@ class Instance(object):
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
                 proto_descriptors=proto_descriptors,
+                observability_options=observability_options or self._observability_options,
             )
         else:
             return TestDatabase(
@@ -511,6 +515,7 @@ class Instance(object):
                 database_dialect=database_dialect,
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
+                observability_options=observability_options or self._observability_options,
             )
 
     def list_databases(self, page_size=None):

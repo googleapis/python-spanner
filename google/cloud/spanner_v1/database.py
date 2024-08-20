@@ -156,6 +156,7 @@ class Database(object):
         database_role=None,
         enable_drop_protection=False,
         proto_descriptors=None,
+        observability_options=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -178,6 +179,7 @@ class Database(object):
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
         self._proto_descriptors = proto_descriptors
+        self._observability_options = observability_options
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
