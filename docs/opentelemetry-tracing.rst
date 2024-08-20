@@ -9,10 +9,7 @@ To take advantage of these traces, we first need to install OpenTelemetry:
 .. code-block:: sh
 
     pip install opentelemetry-api opentelemetry-sdk opentelemetry-instrumentation
-    pip install opentelemetry-exporter-google-cloud
-
-    # [Optional] Installs the cloud monitoring exporter, however you can use any exporter of your choice
-    pip install opentelemetry-exporter-google-cloud
+    pip install opentelemetry-exporter-gcp-trace
 
 We also need to tell OpenTelemetry which exporter to use. To export Spanner traces to `Cloud Tracing <https://cloud.google.com/trace>`_, add the following lines to your application:
 
@@ -57,6 +54,12 @@ Alternatively you can pass in a tracer provider into the Cloud Spanner initializ
     spanner_client = spanner.Client(observability_options=o11y)
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
+
+please not that the tracer being used is retrieved by invoking:
+
+.. code:: python
+
+   tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', SPANNER_LIB_VERSION)
 
 Generated spanner traces should now be available on `Cloud Trace <https://console.cloud.google.com/traces>`_.
 
