@@ -87,8 +87,9 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if not extended_tracing:
         attributes.pop(DB_STATEMENT, None)
 
+    span_name = TRACER_NAME + '/' + name
     with tracer.start_as_current_span(
-        name, kind=trace.SpanKind.CLIENT, attributes=attributes
+        span_name, kind=trace.SpanKind.CLIENT, attributes=attributes
     ) as span:
         try:
             span.set_status(Status(StatusCode.OK))

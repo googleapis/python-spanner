@@ -19,23 +19,24 @@ import time
 import google.cloud.spanner as spanner
 from opentelemetry.exporter.cloud_trace import CloudTraceSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry import trace
 
 
 def main():
     # Setup common variables that'll be used between Spanner and traces.
-    project_id = os.environ.get('SPANNER_PROJECT_ID')
+    project_id = os.environ.get('XSPANNER_PROJECT_ID', 'basic-advantage-416211')
 
     # Setup OpenTelemetry, trace and Cloud Trace exporter.
     sampler = ALWAYS_ON
     tracerProvider = TracerProvider(sampler=sampler)
+    traceExporter = CloudTraceSpanExporter(project_id)
     tracerProvider.add_span_processor(
-        BatchExportSpanProcessor(CloudTraceSpanExporter(project_id)))
+        BatchSpanProcessor(traceExporter))
     trace.set_tracer_provider(tracerProvider)
     # Retrieve the set shared tracer.
-    tracer = spanner.get_tracer(tracerProvider)
+    tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', spanner.__version__)
 
     # Setup the Cloud Spanner Client.
     spanner_client = spanner.Client(project_id)
@@ -44,11 +45,11 @@ def main():
         opts = dict(tracer_provider=tracerProvider)
         spanner_client = spanner.Client(project_id, observability_options=opts)
 
-    instance = spanner_client.instance('test-instance')
-    database = instance.database('test-db')
+    instance = spanner_client.instance('afropay-spanner')
+    database = instance.database('afropay-prod')
 
     # Now run our queries
-    with tracer.start_as_current_span('QueryDatabase'):
+    with tracer.start_as_current_span('QueryInformationSchema'):
         with database.snapshot() as snapshot:
             with tracer.start_as_current_span('InformationSchema'):
                 info_schema = snapshot.execute_sql(
@@ -60,7 +61,7 @@ def main():
             with database.snapshot() as snapshot:
                 # Purposefully issue a bad SQL statement to examine exceptions
                 # that get recorded and a ERROR span status.
-                data = snapshot.execute_sql('SELECT CURRENT_TIMESTAMPx()')
+                data = snapshot.execute_sql('SELECT CURRENT_TIMESTAMP()')
                 for row in data:
                     print(row)
 
