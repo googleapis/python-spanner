@@ -23,6 +23,10 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry import trace
 
+# Enable the gRPC instrumentation if you'd like more introspection.
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+grpc_client_instrumentor = GrpcInstrumentorClient()
+grpc_client_instrumentor.instrument()
 
 def main():
     # Setup common variables that'll be used between Spanner and traces.

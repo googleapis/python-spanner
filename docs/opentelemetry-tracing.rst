@@ -55,11 +55,27 @@ Alternatively you can pass in a tracer provider into the Cloud Spanner initializ
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-please not that the tracer being used is retrieved by invoking:
+please note that the tracer being used is retrieved by invoking:
 
 .. code:: python
 
    tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', SPANNER_LIB_VERSION)
+
+
+To get more fine-grained traces from gRPC, you can enable the gRPC instrumentation by the following
+
+.. code-block:: sh
+
+    pip install opentelemetry-instrumentation-grpc
+
+and then in your Python code, please add the following lines:
+
+.. code:: python
+
+   from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+   grpc_client_instrumentor = GrpcInstrumentorClient()
+   grpc_client_instrumentor.instrument()
+
 
 Generated spanner traces should now be available on `Cloud Trace <https://console.cloud.google.com/traces>`_.
 
