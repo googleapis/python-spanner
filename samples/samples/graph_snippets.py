@@ -371,9 +371,6 @@ if __name__ == "__main__":  # noqa: C901
         "create_database_with_property_graph",
         help=create_database_with_property_graph.__doc__,
     )
-    subparsers.add_parser(
-        "update_allow_commit_timestamps", help=update_allow_commit_timestamps.__doc__
-    )
     subparsers.add_parser("insert_data", help=insert_data.__doc__)
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
@@ -392,8 +389,6 @@ if __name__ == "__main__":  # noqa: C901
 
     if args.command == "create_database_with_property_graph":
         create_database_with_property_graph(args.instance_id, args.database_id)
-    elif args.command == "update_allow_commit_timestamps":
-        update_allow_commit_timestamps(args.instance_id, args.database_id)
     elif args.command == "insert_data":
         insert_data(args.instance_id, args.database_id)
     elif args.command == "insert_data_with_dml":
