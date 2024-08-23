@@ -99,37 +99,6 @@ def create_database_with_property_graph(instance_id, database_id):
 # [END spanner_create_database_with_property_graph]
 
 
-# [START spanner_update_allow_commit_timestamps]
-def update_allow_commit_timestamps(instance_id, database_id):
-    """Alters table column(s) to support commit timestamps."""
-
-    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
-
-    spanner_client = spanner.Client()
-    database_admin_api = spanner_client.database_admin_api
-
-    request = spanner_database_admin.UpdateDatabaseDdlRequest(
-        database=database_admin_api.database_path(
-            spanner_client.project, instance_id, database_id
-        ),
-        statements=[
-            """ALTER TABLE AccountTransferAccount
-                 ALTER COLUMN create_time
-                 SET OPTIONS (allow_commit_timestamp = true)"""
-        ],
-    )
-
-    operation = database_admin_api.update_database_ddl(request)
-
-    print("Waiting for operation to complete...")
-    operation.result(OPERATION_TIMEOUT_SECONDS)
-
-    print("Updated the AccountTransferAccountTable.")
-
-
-# [END spanner_update_allow_commit_timestamps]
-
-
 # [START spanner_insert_graph_data]
 def insert_data(instance_id, database_id):
     """Inserts sample data into the given database.
@@ -194,9 +163,6 @@ def insert_data(instance_id, database_id):
 def insert_data_with_dml(instance_id, database_id):
     """Inserts sample data into the given database using a DML statement."""
 
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
-
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -231,8 +197,6 @@ def insert_data_with_dml(instance_id, database_id):
 # [START spanner_update_graph_data_with_dml]
 def update_data_with_dml(instance_id, database_id):
     """Updates sample data from the database using a DML statement."""
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -262,8 +226,6 @@ def update_data_with_dml(instance_id, database_id):
 # [START spanner_update_graph_data_with_graph_query_in_dml]
 def update_data_with_graph_query_in_dml(instance_id, database_id):
     """Updates sample data from the database using a DML statement."""
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
@@ -311,8 +273,6 @@ def query_data(instance_id, database_id):
 def query_data_with_parameter(instance_id, database_id):
     """Queries sample data from the database using SQL with a parameter."""
 
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
@@ -337,9 +297,6 @@ def query_data_with_parameter(instance_id, database_id):
 # [START spanner_delete_graph_data_with_dml]
 def delete_data_with_dml(instance_id, database_id):
     """Deletes sample data from the database using a DML statement."""
-
-    # instance_id = "your-spanner-instance"
-    # database_id = "your-spanner-db-id"
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
