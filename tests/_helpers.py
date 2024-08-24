@@ -21,6 +21,7 @@ try:
     DB_NAME = SpanAttributes.DB_NAME
     DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
     NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
+    DB_STATEMENT = SpanAttributes.DB_STATEMENT
 
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
@@ -30,6 +31,7 @@ except ImportError:
     DB_NAME = "db.name"
     DB_CONNECTION_STRING = "db.connection_string"
     NET_HOST_NAME = "net.host.name"
+    DB_STATEMENT = "db.statement"
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False

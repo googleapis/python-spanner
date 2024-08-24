@@ -83,4 +83,10 @@ Tracing is most effective when many libraries are instrumented to provide insigh
 For a list of libraries that can be instrumented, see the `OpenTelemetry Integrations` section of the `OpenTelemetry Python docs <https://opentelemetry-python.readthedocs.io/en/stable/>`_
 
 To allow for SQL statements to be annotated in your spans, please set
-the environment variable `SPANNER_ENABLE_EXTENDED_TRACING=true` or please set the configuration field `enable_extended_tracing` to `True` when configuring the Cloud Spanner client.
+the environment variable `SPANNER_ENABLE_EXTENDED_TRACING=true` or please set the configuration field `enable_extended_tracing` to `True` when configuring the Cloud Spanner client, like this:
+
+.. code:: python
+
+   tracerProvider = TracerProvider(sampler=sampler)
+   opts = dict(tracer_provider=tracerProvider, enable_extended_tracing=true)
+   spanner_client = spanner.Client(project_id, observability_options=opts)

@@ -47,8 +47,8 @@ dependencies = [
 ]
 extras = {
     "tracing": [
-        "opentelemetry-api >= 1.25.0",
-        "opentelemetry-sdk >= 1.25.0",
+        "opentelemetry-api >= 1.24.0",
+        "opentelemetry-sdk >= 1.24.0",
         "opentelemetry-instrumentation >= 0.46b0",
         "opentelemetry-semantic-conventions >= 0.46b0",
     ],

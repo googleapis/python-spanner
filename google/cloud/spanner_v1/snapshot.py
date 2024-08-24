@@ -310,7 +310,7 @@ class _SnapshotBase(_SessionWrapper):
                 iterator = _restart_on_unavailable(
                     restart,
                     request,
-                    "CloudSpanner.ReadOnlyTransaction",
+                    "Snapshot.read",
                     self._session,
                     trace_attributes,
                     transaction=self,
@@ -326,7 +326,7 @@ class _SnapshotBase(_SessionWrapper):
             iterator = _restart_on_unavailable(
                 restart,
                 request,
-                "CloudSpanner.ReadOnlyTransaction",
+                "Snapshot.read",
                 self._session,
                 trace_attributes,
                 transaction=self,

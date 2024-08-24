@@ -23,6 +23,11 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry import trace
 
+# Enable the gRPC instrumentation if you'd like more introspection.
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
+grpc_client_instrumentor = GrpcInstrumentorClient()
+grpc_client_instrumentor.instrument()
+
 def main():
     # Setup common variables that'll be used between Spanner and traces.
     project_id = os.environ.get('SPANNER_PROJECT_ID')
@@ -38,11 +43,9 @@ def main():
     tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', spanner.__version__)
 
     # Setup the Cloud Spanner Client.
-    spanner_client = spanner.Client(project_id)
-    # Alternatively you can directly pass in the tracerProvider into the spanner client.
-    if False:
-        opts = dict(tracer_provider=tracerProvider)
-        spanner_client = spanner.Client(project_id, observability_options=opts)
+    # Here we directly pass in the tracerProvider into the spanner client.
+    opts = dict(tracer_provider=tracerProvider)
+    spanner_client = spanner.Client(project_id, observability_options=opts)
 
     instance = spanner_client.instance('test-instance')
     database = instance.database('test-db')
@@ -63,7 +66,6 @@ def main():
                 data = snapshot.execute_sql('SELECT CURRENT_TIMESTAMP()')
                 for row in data:
                     print(row)
-
 
 if __name__ == '__main__':
     main()

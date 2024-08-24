@@ -37,7 +37,6 @@ except ImportError:
 
 
 EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
-
 TRACER_NAME = 'cloud.google.com/python/spanner'
 
 def get_tracer(tracer_provider=None):
@@ -69,12 +68,19 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if tracer is None: # Acquire the global tracer if none was provided.
         tracer = get_tracer()
 
+    # It is imperative that we properly record the Cloud Spanner
+    # endpoint tracks whether we are connecting to the emulator
+    # or to production.
+    spanner_endpoint = os.getenv("SPANNER_EMULATOR_HOST")
+    if not spanner_endpoint:
+        spanner_endpoint = SpannerClient.DEFAULT_ENDPOINT
+
     # Set base attributes that we know for every trace created
     attributes = {
         DB_SYSTEM: "spanner",
-        DB_CONNECTION_STRING: SpannerClient.DEFAULT_ENDPOINT,
+        DB_CONNECTION_STRING: spanner_endpoint,
         DB_NAME: session._database.name,
-        NET_HOST_NAME: SpannerClient.DEFAULT_ENDPOINT,
+        NET_HOST_NAME: spanner_endpoint,
     }
 
     if extra_attributes:
@@ -87,9 +93,8 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if not extended_tracing:
         attributes.pop(DB_STATEMENT, None)
 
-    span_name = TRACER_NAME + '/' + name
     with tracer.start_as_current_span(
-        span_name, kind=trace.SpanKind.CLIENT, attributes=attributes
+        name, kind=trace.SpanKind.CLIENT, attributes=attributes
     ) as span:
         try:
             span.set_status(Status(StatusCode.OK))
