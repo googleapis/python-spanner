@@ -18,7 +18,6 @@ import pytest
 
 from google.api_core import exceptions
 
-from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from test_utils.retry import RetryErrors
 
@@ -208,7 +207,7 @@ def test_delete_data_with_graph_query_in_dml(capsys, instance_id, sample_databas
 
 
 @pytest.mark.dependency(depends=["insert_data"])
-def test_delete_data_with_graph_query_in_dml(capsys, instance_id, sample_database):
+def test_delete_data(capsys, instance_id, sample_database):
     graph_snippets.delete_data(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Deleted data." in out
