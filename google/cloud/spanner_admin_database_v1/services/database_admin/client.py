@@ -819,7 +819,7 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             transport_init: Union[
                 Type[DatabaseAdminTransport], Callable[..., DatabaseAdminTransport]
             ] = (
-                type(self).get_transport_class(transport)
+                DatabaseAdminClient.get_transport_class(transport)
                 if isinstance(transport, str) or transport is None
                 else cast(Callable[..., DatabaseAdminTransport], transport)
             )
@@ -949,6 +949,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 
@@ -2912,6 +2914,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 
@@ -3209,6 +3213,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 
@@ -3337,6 +3343,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 
@@ -3456,6 +3464,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 
@@ -4029,6 +4039,8 @@ class DatabaseAdminClient(metaclass=DatabaseAdminClientMeta):
             method=rpc,
             request=request,
             response=response,
+            retry=retry,
+            timeout=timeout,
             metadata=metadata,
         )
 

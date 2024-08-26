@@ -29,7 +29,7 @@ from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud._helpers import UTC
 from google.cloud.spanner_v1.data_types import JsonObject
-from samples.samples.testdata import singer_pb2
+from .testdata import singer_pb2
 from tests import _helpers as ot_helpers
 from . import _helpers
 from . import _sample_data
@@ -2649,7 +2649,7 @@ def test_execute_sql_w_query_param_struct(sessions_database, not_postgres):
 
 
 def test_execute_sql_w_proto_message_bindings(
-    not_emulator, not_postgres, sessions_database, database_dialect
+    not_postgres, sessions_database, database_dialect
 ):
     singer_info = _sample_data.SINGER_INFO_1
     singer_info_bytes = base64.b64encode(singer_info.SerializeToString())
