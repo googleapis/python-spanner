@@ -15,10 +15,10 @@
 import time
 import uuid
 
-import pytest
 from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
+import pytest
 from test_utils.retry import RetryErrors
 
 import snippets
@@ -152,10 +152,13 @@ def base_instance_config_id(spanner_client):
     return "{}/instanceConfigs/{}".format(spanner_client.project_name, "nam7")
 
 
-def test_create_instance_explicit(spanner_client, create_instance_id):
+def test_create_and_update_instance_explicit(spanner_client, create_instance_id):
     # Rather than re-use 'sample_isntance', we create a new instance, to
     # ensure that the 'create_instance' snippet is tested.
     retry_429(snippets.create_instance)(create_instance_id)
+    # Rather than re-use 'sample_isntance', we are using created instance, to
+    # ensure that the 'update_instance' snippet is tested.
+    retry_429(snippets.update_instance)(create_instance_id)
     instance = spanner_client.instance(create_instance_id)
     retry_429(instance.delete)()
 
