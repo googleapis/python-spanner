@@ -13,8 +13,8 @@
 # limitations under the License.
 import uuid
 
-import pytest
 from google.api_core.exceptions import DeadlineExceeded
+import pytest
 from test_utils.retry import RetryErrors
 
 import backup_sample
@@ -74,16 +74,23 @@ def test_copy_backup(capsys, instance_id, spanner_client):
     out, _ = capsys.readouterr()
     assert COPY_BACKUP_ID in out
 
-@pytest.mark.dependency(name="copy_backup_with_multiple_kms_keys", depends=["create_backup"])
-def test_copy_backup_with_multiple_kms_keys(capsys, instance_id, spanner_client, kms_key_names):
-    source_backp_path = (
+
+@pytest.mark.dependency(
+    name="copy_backup_with_multiple_kms_keys", depends=["create_backup"]
+)
+def test_copy_backup_with_multiple_kms_keys(
+    capsys, instance_id, spanner_client, kms_key_names
+):
+    source_backup_path = (
         spanner_client.project_name
         + "/instances/"
         + instance_id
         + "/backups/"
         + BACKUP_ID
     )
-    backup_sample.copy_backup_with_multiple_kms_keys(instance_id, COPY_BACKUP_ID, source_backup_path, kms_key_names)
+    backup_sample.copy_backup_with_multiple_kms_keys(
+        instance_id, COPY_BACKUP_ID, source_backup_path, kms_key_names
+    )
     out, _ = capsys.readouterr()
     assert COPY_BACKUP_ID in out
 
@@ -104,6 +111,7 @@ def test_create_backup_with_encryption_key(
     out, _ = capsys.readouterr()
     assert CMEK_BACKUP_ID in out
     assert kms_key_name in out
+
 
 @pytest.mark.dependency(name="create_backup_with_multiple_kms_keys")
 def test_create_backup_with_multiple_kms_keys(
@@ -150,6 +158,7 @@ def test_restore_database_with_encryption_key(
     assert CMEK_BACKUP_ID in out
     assert kms_key_name in out
 
+
 @pytest.mark.dependency(depends=["restore_database_with_multiple_kms_keys"])
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database_with_multiple_kms_keys(
@@ -159,7 +168,7 @@ def test_restore_database_with_multiple_kms_keys(
     kms_key_names,
 ):
     backup_sample.restore_database_with_multiple_kms_keys(
-        instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_name
+        instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_names
     )
     out, _ = capsys.readouterr()
     assert (sample_database.database_id + " restored to ") in out
