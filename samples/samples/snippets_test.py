@@ -227,6 +227,15 @@ def test_create_database_with_encryption_config(
     assert cmek_database_id in out
     assert kms_key_name in out
 
+def test_spanner_create_database_with_multiple_kms_keys(
+    capsys, instance_id, cmek_database_id, kms_key_names
+):
+    snippets.create_database_with_encryption_key(
+        instance_id, cmek_database_id, kms_key_names
+    )
+    out, _ = capsys.readouterr()
+    assert cmek_database_id in out
+    assert kms_key_names in out
 
 def test_get_instance_config(capsys):
     instance_config = "nam6"

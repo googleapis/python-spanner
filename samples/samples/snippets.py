@@ -341,6 +341,49 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
 
 # [END spanner_create_database_with_encryption_key]
 
+# [START spanner_create_database_with_MR_CMEK]
+def spanner_create_database_with_multiple_kms_keys(instance_id, database_id, kms_key_names):
+    """Creates a database with tables using multiple KMS keys(CMEK)."""
+    from google.cloud.spanner_admin_database_v1 import EncryptionConfig
+    from google.cloud.spanner_admin_database_v1.types import \
+        spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.CreateDatabaseRequest(
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
+        create_statement=f"CREATE DATABASE `{database_id}`",
+        extra_statements=[
+            """CREATE TABLE Singers (
+            SingerId     INT64 NOT NULL,
+            FirstName    STRING(1024),
+            LastName     STRING(1024),
+            SingerInfo   BYTES(MAX)
+        ) PRIMARY KEY (SingerId)""",
+            """CREATE TABLE Albums (
+            SingerId     INT64 NOT NULL,
+            AlbumId      INT64 NOT NULL,
+            AlbumTitle   STRING(MAX)
+        ) PRIMARY KEY (SingerId, AlbumId),
+        INTERLEAVE IN PARENT Singers ON DELETE CASCADE""",
+        ],
+        encryption_config=EncryptionConfig(kms_key_names=kms_key_names),
+    )
+
+    operation = database_admin_api.create_database(request=request)
+
+    print("Waiting for operation to complete...")
+    database = operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print(
+        "Database {} created with multiple KMS keys {}".format(
+            database.name, database.encryption_config.kms_key_names
+        )
+    )
+
+
+# [END spanner_create_database_with_MR_CMEK]
 
 # [START spanner_create_database_with_default_leader]
 def create_database_with_default_leader(instance_id, database_id, default_leader):
