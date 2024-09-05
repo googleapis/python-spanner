@@ -34,7 +34,6 @@ from google.cloud.spanner_admin_database_v1 import ListDatabaseOperationsRequest
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.backup import Backup
 from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.testing.database_test import TestDatabase
 
 _INSTANCE_NAME_RE = re.compile(
     r"^projects/(?P<project>[^/]+)/" r"instances/(?P<instance_id>[a-z][-a-z0-9]*)$"
@@ -501,6 +500,7 @@ class Instance(object):
                 proto_descriptors=proto_descriptors,
             )
         else:
+            from google.cloud.spanner_v1.testing.database_test import TestDatabase
             return TestDatabase(
                 database_id,
                 self,
