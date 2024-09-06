@@ -501,6 +501,7 @@ class Instance(object):
             )
         else:
             from google.cloud.spanner_v1.testing.database_test import TestDatabase
+
             return TestDatabase(
                 database_id,
                 self,
