@@ -151,7 +151,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
         )
-        with trace_call("Transaction.begin", self._session,
+        with trace_call("CloudSpanner.BeginTransaction", self._session,
                         observability_options=self._observability_options):
             method = functools.partial(
                 api.begin_transaction,
@@ -180,7 +180,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                         database._route_to_leader_enabled
                     )
                 )
-            with trace_call("Transaction.Rollback", self._session,
+            with trace_call("CloudSpanner.Rollback", self._session,
                         observability_options=self._observability_options):
                 method = functools.partial(
                     api.rollback,
@@ -254,7 +254,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
-        with trace_call("Transaction.Commit", self._session, trace_attributes,
+        with trace_call("CloudSpanner.Commit", self._session, trace_attributes,
                         observability_options=self._observability_options):
             method = functools.partial(
                 api.commit,
@@ -403,7 +403,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
-                    "Transaction.executeSqlRequest",
+                    "CloudSpanner.ReadWriteTransaction",
                     self._session,
                     trace_attributes,
                 )
@@ -419,7 +419,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
-                "Transaction.executeSqlRequest",
+                "CloudSpanner.ReadWriteTransaction",
                 self._session,
                 trace_attributes,
             )
@@ -525,7 +525,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
-                    "Transaction.executeBatchDML",
+                    "CloudSpanner.DMLTransaction",
                     self._session,
                     trace_attributes,
                 )
@@ -542,7 +542,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
-                "Transaction.executeBatchDML",
+                "CloudSpanner.DMLTransaction",
                 self._session,
                 trace_attributes,
             )

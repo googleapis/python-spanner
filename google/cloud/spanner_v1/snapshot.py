@@ -498,18 +498,18 @@ class _SnapshotBase(_SessionWrapper):
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart, request, trace_attributes, column_info, "Snapshot.execute_sql",
+                    restart, request, trace_attributes, column_info
                 )
         else:
             return self._get_streamed_result_set(
-                restart, request, trace_attributes, column_info, "Snapshot.execute_sql",
+                restart, request, trace_attributes, column_info
             )
 
-    def _get_streamed_result_set(self, restart, request, trace_attributes, column_info, span_name=None):
+    def _get_streamed_result_set(self, restart, request, trace_attributes, column_info):
         iterator = _restart_on_unavailable(
             restart,
             request,
-            span_name or "CloudSpanner.ReadWriteTransaction",
+            "CloudSpanner.ReadWriteTransaction",
             self._session,
             trace_attributes,
             transaction=self,
@@ -602,7 +602,7 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
-            "Snapshot.partitionRead", self._session, trace_attributes,
+            "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes,
             observability_options=self._observability_options,
         ):
             method = functools.partial(
@@ -703,7 +703,7 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {DB_STATEMENT: sql}
         with trace_call(
-            "Snapshot.partitionQuery",
+            "CloudSpanner.PartitionReadWriteTransaction",
             self._session,
             trace_attributes,
             observability_options=self._observability_options,
@@ -852,7 +852,7 @@ class Snapshot(_SnapshotBase):
             )
         txn_selector = self._make_txn_selector()
         opts = self._observability_options
-        with trace_call("Snapshot.begin", self._session, observability_options=opts):
+        with trace_call("CloudSpanner.BeginTransaction", self._session, observability_options=opts):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,

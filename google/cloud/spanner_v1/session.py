@@ -143,7 +143,7 @@ class Session(object):
         if self._labels:
             request.session.labels = self._labels
 
-        with trace_call("Session.create", self, self._labels,
+        with trace_call("CloudSpanner.CreateSession", self, self._labels,
                         observability_options=self._observability_options):
             session_pb = api.create_session(
                 request=request,
@@ -172,7 +172,7 @@ class Session(object):
             )
 
         opts = self._observability_options
-        with trace_call("Session.exists", self, observability_options=opts) as span:
+        with trace_call("CloudSpanner.GetSession", self, observability_options=opts) as span:
             try:
                 api.get_session(name=self.name, metadata=metadata)
                 if span:
@@ -198,7 +198,7 @@ class Session(object):
         api = self._database.spanner_api
         metadata = _metadata_with_prefix(self._database.name)
         opts = self._observability_options
-        with trace_call("Session.delete", self, observability_options=opts):
+        with trace_call("CloudSpanner.DeleteSession", self, observability_options=opts):
             api.delete_session(name=self.name, metadata=metadata)
 
     def ping(self):
