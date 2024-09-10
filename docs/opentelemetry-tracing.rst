@@ -33,7 +33,8 @@ We also need to tell OpenTelemetry which exporter to use. To export Spanner trac
     )
 
 
-Alternatively you can pass in a tracer provider into the Cloud Spanner initialization
+Alternatively you can pass in a tracer provider into the Cloud Spanner
+initialization, otherwise the global tracer will be used:
 
 .. code:: python
 
@@ -49,17 +50,11 @@ Alternatively you can pass in a tracer provider into the Cloud Spanner initializ
         BatchSpanProcessor(CloudTraceSpanExporter())
     )
 
-    o11y = dict(tracer_provider=tracerProvider)
+    options = dict(tracer_provider=tracerProvider)
     # Pass the tracer provider while creating the Spanner client.
-    spanner_client = spanner.Client(observability_options=o11y)
+    spanner_client = spanner.Client(observability_options=options)
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
-
-please note that the tracer being used is retrieved by invoking:
-
-.. code:: python
-
-   tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', SPANNER_LIB_VERSION)
 
 
 To get more fine-grained traces from gRPC, you can enable the gRPC instrumentation by the following
