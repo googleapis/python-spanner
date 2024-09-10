@@ -35,11 +35,12 @@ def main():
         BatchSpanProcessor(traceExporter))
     trace.set_tracer_provider(tracerProvider)
     # Retrieve the set shared tracer.
-    tracer = tracerProvider.get_tracer('cloud.google.com/python/spanner', spanner.__version__)
+    tracer = tracerProvider.get_tracer('MyPackage')
 
     # Setup the Cloud Spanner Client.
     spanner_client = spanner.Client(project_id)
-    # Alternatively you can directly pass in the tracerProvider into the spanner client.
+    # Alternatively you can directly pass in the tracerProvider into
+    # the spanner client, otherwise the global tracer shall be used.
     if False:
         opts = dict(tracer_provider=tracerProvider)
         spanner_client = spanner.Client(project_id, observability_options=opts)

@@ -19,12 +19,16 @@ import os
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import SpannerClient
-from google.cloud.spanner_v1 import gapic_version as TRACER_VERSION
+from google.cloud.spanner_v1 import gapic_version as LIB_VERSION
 
 try:
     from opentelemetry import trace
     from opentelemetry.trace.status import Status, StatusCode
     from opentelemetry.semconv.trace import SpanAttributes
+    from opentelemetry.semconv.attributes import (
+       OTEL_SCOPE_NAME,
+       OTEL_SCOPE_VERSION,
+    )
 
     HAS_OPENTELEMETRY_INSTALLED = True
     DB_SYSTEM = SpanAttributes.DB_SYSTEM
@@ -34,10 +38,13 @@ try:
     DB_STATEMENT = SpanAttributes.DB_STATEMENT
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
+    DB_STATEMENT = 'db.statement'
 
 
 EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
-TRACER_NAME = 'cloud.google.com/python/spanner'
+LIB_FQNAME = 'cloud.google.com/python/spanner'
+TRACER_NAME = LIB_FQNAME
+TRACER_VERSION = LIB_VERSION
 
 def get_tracer(tracer_provider=None):
     """
@@ -81,6 +88,8 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
         DB_CONNECTION_STRING: spanner_endpoint,
         DB_NAME: session._database.name,
         NET_HOST_NAME: spanner_endpoint,
+        OTEL_SCOPE_NAME: LIB_FQNAME,
+        OTEL_SCOPE_VERSION: TRACER_VERSION,
     }
 
     if extra_attributes:
