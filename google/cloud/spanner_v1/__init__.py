@@ -75,7 +75,6 @@ from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import FixedSizePool
 from google.cloud.spanner_v1.pool import PingingPool
 from google.cloud.spanner_v1.pool import TransactionPingingPool
-from google.cloud.spanner_v1._opentelemetry_tracing import get_tracer
 
 
 COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
@@ -89,7 +88,6 @@ __all__ = (
     # google.cloud.spanner_v1
     "__version__",
     "param_types",
-    "get_tracer",
     # google.cloud.spanner_v1.client
     "Client",
     # google.cloud.spanner_v1.keyset

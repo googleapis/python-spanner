@@ -55,7 +55,7 @@ def get_tracer(tracer_provider=None):
     it'll fall back to the global tracer provider and use this library's specific semantics.
     """
     if tracer_provider:
-        return tracerProvider.get_tracer(TRACER_NAME, TRACER_VERSION)
+        return tracer_provider.get_tracer(TRACER_NAME, TRACER_VERSION)
     else:
         return trace.get_tracer(TRACER_NAME, TRACER_VERSION)
 
