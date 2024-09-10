@@ -358,8 +358,9 @@ class _SessionWrapper(object):
     :param session: the session used to perform the commit
     """
 
-    def __init__(self, session):
+    def __init__(self, session, observability_options=None):
         self._session = session
+        self._observability_options = observability_options
 
 
 def _metadata_with_prefix(prefix, **kw):
