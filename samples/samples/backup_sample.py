@@ -704,18 +704,25 @@ def copy_backup_with_multiple_kms_keys(
     """Copies a backup."""
 
     from google.cloud.spanner_admin_database_v1.types import backup as backup_pb
+    from google.cloud.spanner_admin_database_v1 import CopyBackupEncryptionConfig
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
 
+    encryption_config = {
+        "encryption_type": CopyBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+        "kms_key_names": kms_key_names,
+    }
+
     # Create a backup object and wait for copy backup operation to complete.
     expire_time = datetime.utcnow() + timedelta(days=14)
     request = backup_pb.CopyBackupRequest(
-        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, "hkw-nam3"),
+        # parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
         source_backup=source_backup_path,
         expire_time=expire_time,
-        kms_key_names=kms_key_names,
+        encryption_config=encryption_config,
     )
 
     operation = database_admin_api.copy_backup(request)
@@ -727,11 +734,12 @@ def copy_backup_with_multiple_kms_keys(
     assert copy_backup.state == backup_pb.Backup.State.READY
 
     print(
-        "Backup {} of size {} bytes was created at {} with version time {}".format(
+        "Backup {} of size {} bytes was created at {} with version time {} using encryption keys {}".format(
             copy_backup.name,
             copy_backup.size_bytes,
             copy_backup.create_time,
             copy_backup.version_time,
+            copy_backup.encryption_information,
         )
     )
 

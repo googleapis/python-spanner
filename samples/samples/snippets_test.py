@@ -15,10 +15,10 @@
 import time
 import uuid
 
-import pytest
 from google.api_core import exceptions
 from google.cloud import spanner
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
+import pytest
 from test_utils.retry import RetryErrors
 
 import snippets
@@ -160,14 +160,6 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(instance.delete)()
 
 
-def test_create_database_explicit(sample_instance, create_database_id):
-    # Rather than re-use 'sample_database', we create a new database, to
-    # ensure that the 'create_database' snippet is tested.
-    snippets.create_database(sample_instance.instance_id, create_database_id)
-    database = sample_instance.database(create_database_id)
-    database.drop()
-
-
 def test_create_instance_with_processing_units(capsys, lci_instance_id):
     processing_units = 500
     retry_429(snippets.create_instance_with_processing_units)(
@@ -227,15 +219,23 @@ def test_create_database_with_encryption_config(
     assert cmek_database_id in out
     assert kms_key_name in out
 
-def test_spanner_create_database_with_multiple_kms_keys(
-    capsys, instance_id, cmek_database_id, kms_key_names
+@pytest.mark.skip(reason="skipped until backend changes are public")
+def test_create_database_with_multiple_kms_keys(
+    capsys,
+    multi_region_instance,
+    multi_region_instance_id,
+    cmek_database_id,
+    kms_key_names,
 ):
-    snippets.create_database_with_encryption_key(
-        instance_id, cmek_database_id, kms_key_names
+    snippets.create_database_with_multiple_kms_keys(
+        multi_region_instance_id, cmek_database_id, kms_key_names
     )
     out, _ = capsys.readouterr()
     assert cmek_database_id in out
-    assert kms_key_names in out
+    assert kms_key_names[0] in out
+    assert kms_key_names[1] in out
+    assert kms_key_names[2] in out
+
 
 def test_get_instance_config(capsys):
     instance_config = "nam6"

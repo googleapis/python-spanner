@@ -33,6 +33,7 @@ from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import DirectedReadOptions, param_types
 from google.cloud.spanner_v1.data_types import JsonObject
 from google.protobuf import field_mask_pb2  # type: ignore
+
 from testdata import singer_pb2
 
 OPERATION_TIMEOUT_SECONDS = 240
@@ -41,8 +42,7 @@ OPERATION_TIMEOUT_SECONDS = 240
 # [START spanner_create_instance]
 def create_instance(instance_id):
     """Creates an instance."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
+    from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
     spanner_client = spanner.Client()
 
@@ -77,8 +77,7 @@ def create_instance(instance_id):
 # [START spanner_create_instance_with_processing_units]
 def create_instance_with_processing_units(instance_id, processing_units):
     """Creates an instance."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
+    from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
     spanner_client = spanner.Client()
 
@@ -137,8 +136,7 @@ def get_instance_config(instance_config):
 # [START spanner_list_instance_configs]
 def list_instance_config():
     """Lists the available instance configurations."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
+    from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
     spanner_client = spanner.Client()
 
@@ -161,8 +159,7 @@ def list_instance_config():
 # [START spanner_create_instance_partition]
 def create_instance_partition(instance_id, instance_partition_id):
     """Creates an instance partition."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
+    from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
     spanner_client = spanner.Client()
     instance_admin_api = spanner_client.instance_admin_api
@@ -191,8 +188,7 @@ def create_instance_partition(instance_id, instance_partition_id):
 # [START spanner_list_databases]
 def list_databases(instance_id):
     """Lists databases and their leader options."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -215,8 +211,7 @@ def list_databases(instance_id):
 # [START spanner_create_database]
 def create_database(instance_id, database_id):
     """Creates a database and tables for sample data."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -262,8 +257,7 @@ def create_database(instance_id, database_id):
 # [START spanner_update_database]
 def update_database(instance_id, database_id):
     """Updates the drop protection setting for a database."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -301,8 +295,7 @@ def update_database(instance_id, database_id):
 def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
     """Creates a database with tables using a Customer Managed Encryption Key (CMEK)."""
     from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -342,11 +335,10 @@ def create_database_with_encryption_key(instance_id, database_id, kms_key_name):
 # [END spanner_create_database_with_encryption_key]
 
 # [START spanner_create_database_with_MR_CMEK]
-def spanner_create_database_with_multiple_kms_keys(instance_id, database_id, kms_key_names):
+def create_database_with_multiple_kms_keys(instance_id, database_id, kms_key_names):
     """Creates a database with tables using multiple KMS keys(CMEK)."""
     from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -388,8 +380,7 @@ def spanner_create_database_with_multiple_kms_keys(instance_id, database_id, kms
 # [START spanner_create_database_with_default_leader]
 def create_database_with_default_leader(instance_id, database_id, default_leader):
     """Creates a database with tables with a default leader."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -432,8 +423,7 @@ def create_database_with_default_leader(instance_id, database_id, default_leader
 # [START spanner_update_database_with_default_leader]
 def update_database_with_default_leader(instance_id, database_id, default_leader):
     """Updates a database with tables with a default leader."""
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -725,8 +715,7 @@ def query_data_with_new_column(instance_id, database_id):
 def add_index(instance_id, database_id):
     """Adds a simple index to the example database."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -829,8 +818,7 @@ def read_data_with_index(instance_id, database_id):
 def add_storing_index(instance_id, database_id):
     """Adds an storing index to the example database."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -893,8 +881,7 @@ def read_data_with_storing_index(instance_id, database_id):
 def add_column(instance_id, database_id):
     """Adds a new column to the Albums table in the example database."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -1056,8 +1043,7 @@ def read_only_transaction(instance_id, database_id):
 def create_table_with_timestamp(instance_id, database_id):
     """Creates a table with a COMMIT_TIMESTAMP column."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -1124,8 +1110,7 @@ def insert_data_with_timestamp(instance_id, database_id):
 def add_timestamp_column(instance_id, database_id):
     """Adds a new TIMESTAMP column to the Albums table in the example database."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -1228,8 +1213,7 @@ def query_data_with_timestamp(instance_id, database_id):
 def add_numeric_column(instance_id, database_id):
     """Adds a new NUMERIC column to the Venues table in the example database."""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -1296,8 +1280,7 @@ def add_json_column(instance_id, database_id):
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2030,8 +2013,7 @@ def create_table_with_datatypes(instance_id, database_id):
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2625,8 +2607,7 @@ def add_and_drop_database_roles(instance_id, database_id):
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2692,8 +2673,7 @@ def list_database_roles(instance_id, database_id):
     # [START spanner_list_database_roles]
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2775,8 +2755,7 @@ def enable_fine_grained_access(
 def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
     """Creates a table with foreign key delete cascade action"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2823,8 +2802,7 @@ def create_table_with_foreign_key_delete_cascade(instance_id, database_id):
 def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
     """Alters a table with foreign key delete cascade action"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2862,8 +2840,7 @@ def alter_table_with_foreign_key_delete_cascade(instance_id, database_id):
 def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
     """Alter table to drop foreign key delete cascade action"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2898,8 +2875,7 @@ def drop_foreign_key_constraint_delete_cascade(instance_id, database_id):
 def create_sequence(instance_id, database_id):
     """Creates the Sequence and insert data"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -2957,8 +2933,7 @@ def create_sequence(instance_id, database_id):
 def alter_sequence(instance_id, database_id):
     """Alters the Sequence and insert data"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -3012,8 +2987,7 @@ def alter_sequence(instance_id, database_id):
 def drop_sequence(instance_id, database_id):
     """Drops the Sequence"""
 
-    from google.cloud.spanner_admin_database_v1.types import \
-        spanner_database_admin
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
@@ -3162,8 +3136,7 @@ def set_custom_timeout_and_retry(instance_id, database_id):
 # [START spanner_create_instance_with_autoscaling_config]
 def create_instance_with_autoscaling_config(instance_id):
     """Creates a Cloud Spanner instance with an autoscaling configuration."""
-    from google.cloud.spanner_admin_instance_v1.types import \
-        spanner_instance_admin
+    from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
     spanner_client = spanner.Client()
 
@@ -3226,6 +3199,7 @@ def add_proto_type_columns(instance_id, database_id):
     """Adds a new Proto Message column and Proto Enum column to the Singers table."""
 
     import os
+
     from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 
     dirname = os.path.dirname(__file__)

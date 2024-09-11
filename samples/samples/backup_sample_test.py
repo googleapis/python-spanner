@@ -75,26 +75,6 @@ def test_copy_backup(capsys, instance_id, spanner_client):
     assert COPY_BACKUP_ID in out
 
 
-@pytest.mark.dependency(
-    name="copy_backup_with_multiple_kms_keys", depends=["create_backup"]
-)
-def test_copy_backup_with_multiple_kms_keys(
-    capsys, instance_id, spanner_client, kms_key_names
-):
-    source_backup_path = (
-        spanner_client.project_name
-        + "/instances/"
-        + instance_id
-        + "/backups/"
-        + BACKUP_ID
-    )
-    backup_sample.copy_backup_with_multiple_kms_keys(
-        instance_id, COPY_BACKUP_ID, source_backup_path, kms_key_names
-    )
-    out, _ = capsys.readouterr()
-    assert COPY_BACKUP_ID in out
-
-
 @pytest.mark.dependency(name="create_backup_with_encryption_key")
 def test_create_backup_with_encryption_key(
     capsys,
@@ -114,21 +94,44 @@ def test_create_backup_with_encryption_key(
 
 
 @pytest.mark.dependency(name="create_backup_with_multiple_kms_keys")
+@pytest.mark.skip(reason="skipped until backend changes are public")
 def test_create_backup_with_multiple_kms_keys(
     capsys,
-    instance_id,
-    sample_database,
+    multi_region_instance,
+    multi_region_instance_id,
+    sample_multi_region_database,
     kms_key_names,
 ):
     backup_sample.create_backup_with_multiple_kms_keys(
-        instance_id,
-        sample_database.database_id,
+        multi_region_instance_id,
+        sample_multi_region_database.database_id,
         CMEK_BACKUP_ID,
         kms_key_names,
     )
     out, _ = capsys.readouterr()
     assert CMEK_BACKUP_ID in out
-    assert kms_key_names in out
+    assert kms_key_names[0] in out
+    assert kms_key_names[1] in out
+    assert kms_key_names[2] in out
+
+
+@pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
+@pytest.mark.skip(reason="skipped until backend changes are public")
+def test_copy_backup_with_multiple_kms_keys(
+    capsys, multi_region_instance_id, spanner_client, kms_key_names
+):
+    source_backup_path = (
+        spanner_client.project_name
+        + "/instances/"
+        + multi_region_instance_id
+        + "/backups/"
+        + CMEK_BACKUP_ID
+    )
+    backup_sample.copy_backup_with_multiple_kms_keys(
+        multi_region_instance_id, COPY_BACKUP_ID, source_backup_path, kms_key_names
+    )
+    out, _ = capsys.readouterr()
+    assert COPY_BACKUP_ID in out
 
 
 @pytest.mark.dependency(depends=["create_backup"])
@@ -159,22 +162,25 @@ def test_restore_database_with_encryption_key(
     assert kms_key_name in out
 
 
-@pytest.mark.dependency(depends=["restore_database_with_multiple_kms_keys"])
+@pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
+@pytest.mark.skip(reason="skipped until backend changes are public")
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database_with_multiple_kms_keys(
     capsys,
-    instance_id,
-    sample_database,
+    multi_region_instance_id,
+    sample_multi_region_database,
     kms_key_names,
 ):
     backup_sample.restore_database_with_multiple_kms_keys(
-        instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_names
+        multi_region_instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_names
     )
     out, _ = capsys.readouterr()
-    assert (sample_database.database_id + " restored to ") in out
+    assert (sample_multi_region_database.database_id + " restored to ") in out
     assert (CMEK_RESTORE_DB_ID + " from backup ") in out
     assert CMEK_BACKUP_ID in out
-    assert kms_key_names in out
+    assert kms_key_names[0] in out
+    assert kms_key_names[1] in out
+    assert kms_key_names[2] in out
 
 
 @pytest.mark.dependency(depends=["create_backup", "copy_backup"])
