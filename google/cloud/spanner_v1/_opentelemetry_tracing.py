@@ -36,7 +36,7 @@ try:
     DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
     NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
     DB_STATEMENT = SpanAttributes.DB_STATEMENT
-except ImportError:
+except ImportError as e:
     HAS_OPENTELEMETRY_INSTALLED = False
     DB_STATEMENT = 'db.statement'
 
@@ -54,10 +54,12 @@ def get_tracer(tracer_provider=None):
     When the tracer_provider is set, it'll retrieve the tracer from it, otherwise
     it'll fall back to the global tracer provider and use this library's specific semantics.
     """
-    if tracer_provider:
-        return tracer_provider.get_tracer(TRACER_NAME, TRACER_VERSION)
-    else:
-        return trace.get_tracer(TRACER_NAME, TRACER_VERSION)
+    if not tracer_provider:
+        # Acquire the global tracer provider.
+        tracer_provider = trace.get_tracer_provider()
+
+    return tracer_provider.get_tracer(TRACER_NAME, TRACER_VERSION)
+
 
 @contextmanager
 def trace_call(name, session, extra_attributes=None, observability_options=None):

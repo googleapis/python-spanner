@@ -20,6 +20,7 @@ from tests._helpers import (
     DB_CONNECTION_STRING,
     HAS_OPENTELEMETRY_INSTALLED,
     NET_HOST_NAME,
+    OTEL_SCOPE_NAME,
 )
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
@@ -66,6 +67,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
+                OTEL_SCOPE_NAME: "cloud.google.com/python/spanner",
             }
             expected_attributes.update(extra_attributes)
 
@@ -91,6 +93,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
+                OTEL_SCOPE_NAME: "cloud.google.com/python/spanner",
             }
             
             expected_attributes.update(extra_attributes)
@@ -118,6 +121,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
+                OTEL_SCOPE_NAME: "cloud.google.com/python/spanner",
             }
 
             expected_attributes.update(extra_attributes)
@@ -142,6 +146,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 DB_SYSTEM: "spanner",
                 DB_CONNECTION_STRING: "spanner.googleapis.com",
                 NET_HOST_NAME: "spanner.googleapis.com",
+                OTEL_SCOPE_NAME: "cloud.google.com/python/spanner",
             }
 
             expected_attributes.update(extra_attributes)

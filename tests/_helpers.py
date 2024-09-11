@@ -12,6 +12,10 @@ try:
     from opentelemetry.trace.status import StatusCode
 
     from opentelemetry.semconv.trace import SpanAttributes
+    from opentelemetry.semconv.attributes import (
+       OTEL_SCOPE_NAME,
+       OTEL_SCOPE_VERSION,
+    )
 
     trace.set_tracer_provider(TracerProvider())
 
@@ -32,6 +36,8 @@ except ImportError:
     DB_CONNECTION_STRING = "db.connection_string"
     NET_HOST_NAME = "net.host.name"
     DB_STATEMENT = "db.statement"
+    OTEL_SCOPE_NAME = "otel.scope.name"
+    OTEL_SCOPE_VERSION = "otel.scope.version"
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False
