@@ -219,6 +219,7 @@ def test_create_database_with_encryption_config(
     assert cmek_database_id in out
     assert kms_key_name in out
 
+
 @pytest.mark.skip(reason="skipped until backend changes are public")
 def test_create_database_with_multiple_kms_keys(
     capsys,
