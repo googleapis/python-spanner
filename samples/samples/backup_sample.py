@@ -717,8 +717,7 @@ def copy_backup_with_multiple_kms_keys(
     # Create a backup object and wait for copy backup operation to complete.
     expire_time = datetime.utcnow() + timedelta(days=14)
     request = backup_pb.CopyBackupRequest(
-        parent=database_admin_api.instance_path(spanner_client.project, "hkw-nam3"),
-        # parent=database_admin_api.instance_path(spanner_client.project, instance_id),
+        parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
         source_backup=source_backup_path,
         expire_time=expire_time,

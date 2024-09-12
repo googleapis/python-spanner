@@ -160,6 +160,14 @@ def test_create_instance_explicit(spanner_client, create_instance_id):
     retry_429(instance.delete)()
 
 
+def test_create_database_explicit(sample_instance, create_database_id):
+    # Rather than re-use 'sample_database', we create a new database, to
+    # ensure that the 'create_database' snippet is tested.
+    snippets.create_database(sample_instance.instance_id, create_database_id)
+    database = sample_instance.database(create_database_id)
+    database.drop()
+
+
 def test_create_instance_with_processing_units(capsys, lci_instance_id):
     processing_units = 500
     retry_429(snippets.create_instance_with_processing_units)(
@@ -220,7 +228,6 @@ def test_create_database_with_encryption_config(
     assert kms_key_name in out
 
 
-@pytest.mark.skip(reason="skipped until backend changes are public")
 def test_create_database_with_multiple_kms_keys(
     capsys,
     multi_region_instance,

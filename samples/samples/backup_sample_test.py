@@ -94,7 +94,6 @@ def test_create_backup_with_encryption_key(
 
 
 @pytest.mark.dependency(name="create_backup_with_multiple_kms_keys")
-@pytest.mark.skip(reason="skipped until backend changes are public")
 def test_create_backup_with_multiple_kms_keys(
     capsys,
     multi_region_instance,
@@ -116,7 +115,6 @@ def test_create_backup_with_multiple_kms_keys(
 
 
 @pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
-@pytest.mark.skip(reason="skipped until backend changes are public")
 def test_copy_backup_with_multiple_kms_keys(
     capsys, multi_region_instance_id, spanner_client, kms_key_names
 ):
@@ -163,7 +161,6 @@ def test_restore_database_with_encryption_key(
 
 
 @pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
-@pytest.mark.skip(reason="skipped until backend changes are public")
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database_with_multiple_kms_keys(
     capsys,
