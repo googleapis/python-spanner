@@ -1195,7 +1195,9 @@ def test_transaction_batch_update_w_parent_span(
         assert span.parent.span_id == span_list[-1].context.span_id
 
 
-def test_execute_partitioned_dml(not_postgres_emulator, sessions_database, database_dialect):
+def test_execute_partitioned_dml(
+    not_postgres_emulator, sessions_database, database_dialect
+):
     # [START spanner_test_dml_partioned_dml_update]
     sd = _sample_data
     param_types = spanner_v1.param_types
