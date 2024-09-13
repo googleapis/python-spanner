@@ -66,6 +66,11 @@ def not_google_standard_sql(database_dialect):
 
 
 @pytest.fixture(scope="session")
+def not_postgres_emulator(not_postgres, not_emulator):
+    return
+
+
+@pytest.fixture(scope="session")
 def database_dialect():
     return (
         DatabaseDialect[_helpers.DATABASE_DIALECT]
