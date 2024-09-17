@@ -62,7 +62,7 @@ def create_instance(instance_id):
                 "sample_name": "snippets-create_instance-explicit",
                 "created": str(int(time.time())),
             },
-            edition=spanner_instance_admin.Instance.Edition.STANDARD,  # Optional
+            edition=spanner_instance_admin.Instance.Edition.ENTERPRISE_PLUS,  # Optional
         ),
     )
 
