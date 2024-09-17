@@ -32,7 +32,10 @@ from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    DB_STATEMENT,
+    trace_call,
+)
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
@@ -110,7 +113,8 @@ class Transaction(_SnapshotBase, _BatchBase):
         """
         transaction = self._make_txn_selector()
         request.transaction = transaction
-        with trace_call(trace_name, session, attributes):
+        with trace_call(trace_name, session, attributes,
+                        observability_options=self._observability_options):
             method = functools.partial(method, request=request)
             response = _retry(
                 method,
@@ -147,7 +151,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
         )
-        with trace_call("CloudSpanner.BeginTransaction", self._session):
+        with trace_call("CloudSpanner.BeginTransaction", self._session,
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
@@ -175,7 +180,8 @@ class Transaction(_SnapshotBase, _BatchBase):
                         database._route_to_leader_enabled
                     )
                 )
-            with trace_call("CloudSpanner.Rollback", self._session):
+            with trace_call("CloudSpanner.Rollback", self._session,
+                        observability_options=self._observability_options):
                 method = functools.partial(
                     api.rollback,
                     session=self._session.name,
@@ -248,7 +254,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
-        with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
+        with trace_call("CloudSpanner.Commit", self._session, trace_attributes,
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.commit,
                 request=request,
@@ -369,7 +376,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
-        trace_attributes = {"db.statement": dml}
+        trace_attributes = {DB_STATEMENT: dml}
 
         request = ExecuteSqlRequest(
             session=self._session.name,
@@ -495,7 +502,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
-            "db.statement": ";".join([statement.sql for statement in parsed])
+            DB_STATEMENT: ";".join([statement.sql for statement in parsed])
         }
         request = ExecuteBatchDmlRequest(
             session=self._session.name,

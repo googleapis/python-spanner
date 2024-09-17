@@ -20,7 +20,13 @@ from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
+    EXTENDED_TRACING_ENABLED,
     HAS_OPENTELEMETRY_INSTALLED,
+    DB_STATEMENT,
+    DB_SYSTEM,
+    DB_NAME,
+    DB_CONNECTION_STRING,
+    NET_HOST_NAME,
 )
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
@@ -41,10 +47,10 @@ TXN_ID = b"DEAFBEAD"
 SECONDS = 3
 MICROS = 123456
 BASE_ATTRIBUTES = {
-    "db.type": "spanner",
-    "db.url": "spanner.googleapis.com",
-    "db.instance": "testing",
-    "net.host.name": "spanner.googleapis.com",
+    DB_SYSTEM: "spanner",
+    DB_CONNECTION_STRING: "spanner.googleapis.com",
+    DB_NAME: "testing",
+    NET_HOST_NAME: "spanner.googleapis.com",
 }
 DIRECTED_READ_OPTIONS = {
     "include_replicas": {
@@ -531,10 +537,10 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 self.assertEqual(
                     dict(span.attributes),
                     {
-                        "db.type": "spanner",
-                        "db.url": "spanner.googleapis.com",
-                        "db.instance": "testing",
-                        "net.host.name": "spanner.googleapis.com",
+                        DB_SYSTEM: "spanner",
+                        DB_CONNECTION_STRING: "spanner.googleapis.com",
+                        DB_NAME: "testing",
+                        NET_HOST_NAME: "spanner.googleapis.com",
                     },
                 )
 
@@ -862,11 +868,18 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(derived._execute_sql_count, 1)
 
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadWriteTransaction",
-            status=StatusCode.ERROR,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
-        )
+        if EXTENDED_TRACING_ENABLED:
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadWriteTransaction",
+                status=StatusCode.ERROR,
+                attributes=dict(BASE_ATTRIBUTES, **{DB_STATEMENT: SQL_QUERY}),
+            )
+        else:
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadWriteTransaction",
+                status=StatusCode.ERROR,
+                attributes=BASE_ATTRIBUTES,
+            )
 
     def _execute_sql_helper(
         self,
@@ -1018,11 +1031,18 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(derived._execute_sql_count, sql_count + 1)
 
-        self.assertSpanAttributes(
-            "CloudSpanner.ReadWriteTransaction",
-            status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
-        )
+        if EXTENDED_TRACING_ENABLED:
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadWriteTransaction",
+                status=StatusCode.OK,
+                attributes=dict(BASE_ATTRIBUTES, **{DB_STATEMENT: SQL_QUERY_WITH_PARAM}),
+            )
+        else:
+            self.assertSpanAttributes(
+                "CloudSpanner.ReadWriteTransaction",
+                status=StatusCode.OK,
+                attributes=BASE_ATTRIBUTES,
+            )
 
     def test_execute_sql_wo_multi_use(self):
         self._execute_sql_helper(multi_use=False)
@@ -1363,11 +1383,18 @@ class Test_SnapshotBase(OpenTelemetryBase):
             timeout=timeout,
         )
 
-        self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
-        )
+        if EXTENDED_TRACING_ENABLED:
+            self.assertSpanAttributes(
+                "CloudSpanner.PartitionReadWriteTransaction",
+                status=StatusCode.OK,
+                attributes=dict(BASE_ATTRIBUTES, **{DB_STATEMENT: SQL_QUERY_WITH_PARAM}),
+            )
+        else:
+            self.assertSpanAttributes(
+                "CloudSpanner.PartitionReadWriteTransaction",
+                status=StatusCode.OK,
+                attributes=BASE_ATTRIBUTES,
+            )
 
     def test_partition_query_other_error(self):
         database = _Database()
@@ -1381,11 +1408,18 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             list(derived.partition_query(SQL_QUERY))
 
-        self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadWriteTransaction",
-            status=StatusCode.ERROR,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
-        )
+        if EXTENDED_TRACING_ENABLED:
+            self.assertSpanAttributes(
+                "CloudSpanner.PartitionReadWriteTransaction",
+                status=StatusCode.ERROR,
+                attributes=dict(BASE_ATTRIBUTES, **{DB_STATEMENT: SQL_QUERY}),
+            )
+        else:
+            self.assertSpanAttributes(
+                "CloudSpanner.PartitionReadWriteTransaction",
+                status=StatusCode.ERROR,
+                attributes=BASE_ATTRIBUTES,
+            )
 
     def test_partition_query_single_use_raises(self):
         with self.assertRaises(ValueError):

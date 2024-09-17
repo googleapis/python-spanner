@@ -205,7 +205,8 @@ class Batch(_BatchBase):
             max_commit_delay=max_commit_delay,
             request_options=request_options,
         )
-        with trace_call("CloudSpanner.Commit", self._session, trace_attributes):
+        with trace_call("CloudSpanner.Commit", self._session, trace_attributes,
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.commit,
                 request=request,
@@ -318,7 +319,8 @@ class MutationGroups(_SessionWrapper):
             request_options=request_options,
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
         )
-        with trace_call("CloudSpanner.BatchWrite", self._session, trace_attributes):
+        with trace_call("CloudSpanner.BatchWrite", self._session, trace_attributes,
+                        observability_options=self._observability_options):
             method = functools.partial(
                 api.batch_write,
                 request=request,

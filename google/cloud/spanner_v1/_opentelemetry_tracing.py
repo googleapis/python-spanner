@@ -15,38 +15,94 @@
 """Manages OpenTelemetry trace creation and handling"""
 
 from contextlib import contextmanager
+import os
 
 from google.api_core.exceptions import GoogleAPICallError
 from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1 import gapic_version as LIB_VERSION
 
 try:
     from opentelemetry import trace
     from opentelemetry.trace.status import Status, StatusCode
+    from opentelemetry.semconv.trace import SpanAttributes
+    from opentelemetry.semconv.attributes import (
+       OTEL_SCOPE_NAME,
+       OTEL_SCOPE_VERSION,
+    )
 
     HAS_OPENTELEMETRY_INSTALLED = True
-except ImportError:
+    DB_SYSTEM = SpanAttributes.DB_SYSTEM
+    DB_NAME = SpanAttributes.DB_NAME
+    DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
+    NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
+    DB_STATEMENT = SpanAttributes.DB_STATEMENT
+except ImportError as e:
     HAS_OPENTELEMETRY_INSTALLED = False
+    DB_STATEMENT = 'db.statement'
+
+
+EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
+LIB_FQNAME = 'cloud.google.com/python/spanner'
+TRACER_NAME = LIB_FQNAME
+TRACER_VERSION = LIB_VERSION
+
+def get_tracer(tracer_provider=None):
+    """
+    get_tracer is a utility to unify and simplify retrieval of the tracer, without
+    leaking implementation details given that retrieving a tracer requires providing
+    the full qualified library name and version.
+    When the tracer_provider is set, it'll retrieve the tracer from it, otherwise
+    it'll fall back to the global tracer provider and use this library's specific semantics.
+    """
+    if not tracer_provider:
+        # Acquire the global tracer provider.
+        tracer_provider = trace.get_tracer_provider()
+
+    return tracer_provider.get_tracer(TRACER_NAME, TRACER_VERSION)
 
 
 @contextmanager
-def trace_call(name, session, extra_attributes=None):
+def trace_call(name, session, extra_attributes=None, observability_options=None):
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
         # Empty context manager. Users will have to check if the generated value is None or a span
         yield None
         return
 
-    tracer = trace.get_tracer(__name__)
+    tracer = None
+    if observability_options:
+        tracerProvider = observability_options.get('tracer_provider', None)
+        if tracerProvider:
+            tracer = get_tracer(tracerProvider)
+
+    if tracer is None: # Acquire the global tracer if none was provided.
+        tracer = get_tracer()
+
+    # It is imperative that we properly record the Cloud Spanner
+    # endpoint tracks whether we are connecting to the emulator
+    # or to production.
+    spanner_endpoint = os.getenv("SPANNER_EMULATOR_HOST")
+    if not spanner_endpoint:
+        spanner_endpoint = SpannerClient.DEFAULT_ENDPOINT
 
     # Set base attributes that we know for every trace created
     attributes = {
-        "db.type": "spanner",
-        "db.url": SpannerClient.DEFAULT_ENDPOINT,
-        "db.instance": session._database.name,
-        "net.host.name": SpannerClient.DEFAULT_ENDPOINT,
+        DB_SYSTEM: "spanner",
+        DB_CONNECTION_STRING: spanner_endpoint,
+        DB_NAME: session._database.name,
+        NET_HOST_NAME: spanner_endpoint,
+        OTEL_SCOPE_NAME: LIB_FQNAME,
+        OTEL_SCOPE_VERSION: TRACER_VERSION,
     }
 
     if extra_attributes:
         attributes.update(extra_attributes)
+
+    extended_tracing = EXTENDED_TRACING_ENABLED or (
+                        observability_options and
+                        observability_options.get('enable_extended_tracing', False))
+
+    if not extended_tracing:
+        attributes.pop(DB_STATEMENT, None)
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes

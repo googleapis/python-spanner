@@ -1,3 +1,4 @@
+import os
 import unittest
 import mock
 
@@ -10,16 +11,37 @@ try:
     )
     from opentelemetry.trace.status import StatusCode
 
+    from opentelemetry.semconv.trace import SpanAttributes
+    from opentelemetry.semconv.attributes import (
+       OTEL_SCOPE_NAME,
+       OTEL_SCOPE_VERSION,
+    )
+
     trace.set_tracer_provider(TracerProvider())
 
     HAS_OPENTELEMETRY_INSTALLED = True
+    
+    DB_SYSTEM = SpanAttributes.DB_SYSTEM
+    DB_NAME = SpanAttributes.DB_NAME
+    DB_CONNECTION_STRING = SpanAttributes.DB_CONNECTION_STRING
+    NET_HOST_NAME = SpanAttributes.NET_HOST_NAME
+    DB_STATEMENT = SpanAttributes.DB_STATEMENT
+
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
 
     StatusCode = mock.Mock()
+    DB_SYSTEM = "db.system"
+    DB_NAME = "db.name"
+    DB_CONNECTION_STRING = "db.connection_string"
+    NET_HOST_NAME = "net.host.name"
+    DB_STATEMENT = "db.statement"
+    OTEL_SCOPE_NAME = "otel.scope.name"
+    OTEL_SCOPE_VERSION = "otel.scope.version"
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False
+EXTENDED_TRACING_ENABLED = os.environ.get('SPANNER_ENABLE_EXTENDED_TRACING', '') == 'true'
 
 
 def get_test_ot_exporter():

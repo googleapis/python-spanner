@@ -63,12 +63,13 @@ class Session(object):
     _session_id = None
     _transaction = None
 
-    def __init__(self, database, labels=None, database_role=None):
+    def __init__(self, database, labels=None, database_role=None, observability_options=None):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._observability_options = observability_options
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -142,7 +143,8 @@ class Session(object):
         if self._labels:
             request.session.labels = self._labels
 
-        with trace_call("CloudSpanner.CreateSession", self, self._labels):
+        with trace_call("CloudSpanner.CreateSession", self, self._labels,
+                        observability_options=self._observability_options):
             session_pb = api.create_session(
                 request=request,
                 metadata=metadata,
@@ -169,7 +171,8 @@ class Session(object):
                 )
             )
 
-        with trace_call("CloudSpanner.GetSession", self) as span:
+        opts = self._observability_options
+        with trace_call("CloudSpanner.GetSession", self, observability_options=opts) as span:
             try:
                 api.get_session(name=self.name, metadata=metadata)
                 if span:
@@ -194,7 +197,8 @@ class Session(object):
             raise ValueError("Session ID not set by back-end")
         api = self._database.spanner_api
         metadata = _metadata_with_prefix(self._database.name)
-        with trace_call("CloudSpanner.DeleteSession", self):
+        opts = self._observability_options
+        with trace_call("CloudSpanner.DeleteSession", self, observability_options=opts):
             api.delete_session(name=self.name, metadata=metadata)
 
     def ping(self):
@@ -225,6 +229,9 @@ class Session(object):
         """
         if self._session_id is None:
             raise ValueError("Session has not been created.")
+
+        # Pass the observability options in to create the snapshot.
+        kw['observability_options'] = self._observability_options
 
         return Snapshot(self, **kw)
 

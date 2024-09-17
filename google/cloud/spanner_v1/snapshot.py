@@ -38,7 +38,10 @@ from google.cloud.spanner_v1._helpers import (
     _check_rst_stream_error,
     _SessionWrapper,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    trace_call,
+    DB_STATEMENT,
+)
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -56,6 +59,7 @@ def _restart_on_unavailable(
     attributes=None,
     transaction=None,
     transaction_selector=None,
+    observability_options=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -84,7 +88,7 @@ def _restart_on_unavailable(
         )
 
     request.transaction = transaction_selector
-    with trace_call(trace_name, session, attributes):
+    with trace_call(trace_name, session, attributes, observability_options=observability_options):
         iterator = method(request=request)
     while True:
         try:
@@ -104,7 +108,7 @@ def _restart_on_unavailable(
                     break
         except ServiceUnavailable:
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(trace_name, session, attributes, observability_options=observability_options):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -119,7 +123,7 @@ def _restart_on_unavailable(
             if not resumable_error:
                 raise
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(trace_name, session, attributes, observability_options=observability_options):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -306,7 +310,7 @@ class _SnapshotBase(_SessionWrapper):
                 iterator = _restart_on_unavailable(
                     restart,
                     request,
-                    "CloudSpanner.ReadOnlyTransaction",
+                    "Snapshot.read",
                     self._session,
                     trace_attributes,
                     transaction=self,
@@ -322,7 +326,7 @@ class _SnapshotBase(_SessionWrapper):
             iterator = _restart_on_unavailable(
                 restart,
                 request,
-                "CloudSpanner.ReadOnlyTransaction",
+                "Snapshot.read",
                 self._session,
                 trace_attributes,
                 transaction=self,
@@ -488,7 +492,7 @@ class _SnapshotBase(_SessionWrapper):
             timeout=timeout,
         )
 
-        trace_attributes = {"db.statement": sql}
+        trace_attributes = {DB_STATEMENT: sql}
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
@@ -598,7 +602,8 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
-            "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
+            "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes,
+            observability_options=self._observability_options,
         ):
             method = functools.partial(
                 api.partition_read,
@@ -696,11 +701,12 @@ class _SnapshotBase(_SessionWrapper):
             partition_options=partition_options,
         )
 
-        trace_attributes = {"db.statement": sql}
+        trace_attributes = {DB_STATEMENT: sql}
         with trace_call(
             "CloudSpanner.PartitionReadWriteTransaction",
             self._session,
             trace_attributes,
+            observability_options=self._observability_options,
         ):
             method = functools.partial(
                 api.partition_query,
@@ -761,6 +767,7 @@ class Snapshot(_SnapshotBase):
         exact_staleness=None,
         multi_use=False,
         transaction_id=None,
+        observability_options=None,
     ):
         super(Snapshot, self).__init__(session)
         opts = [read_timestamp, min_read_timestamp, max_staleness, exact_staleness]
@@ -784,6 +791,7 @@ class Snapshot(_SnapshotBase):
         self._exact_staleness = exact_staleness
         self._multi_use = multi_use
         self._transaction_id = transaction_id
+        self._observability_options = observability_options
 
     def _make_txn_selector(self):
         """Helper for :meth:`read`."""
@@ -843,7 +851,8 @@ class Snapshot(_SnapshotBase):
                 (_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
             )
         txn_selector = self._make_txn_selector()
-        with trace_call("CloudSpanner.BeginTransaction", self._session):
+        opts = self._observability_options
+        with trace_call("CloudSpanner.BeginTransaction", self._session, observability_options=opts):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
