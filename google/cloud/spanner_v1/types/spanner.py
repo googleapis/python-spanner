@@ -665,12 +665,26 @@ class ExecuteSqlRequest(proto.Message):
                 without any results or execution statistics
                 information.
             PROFILE (2):
-                This mode returns both the query plan and the
-                execution statistics along with the results.
+                This mode returns the query plan, overall
+                execution statistics, operator level execution
+                statistics along with the results. This has a
+                performance overhead compared to the other
+                modes. It is not recommended to use this mode
+                for production traffic.
+            WITH_STATS (3):
+                This mode returns the overall (but not
+                operator-level) execution statistics along with
+                the results.
+            WITH_PLAN_AND_STATS (4):
+                This mode returns the query plan, overall
+                (but not operator-level) execution statistics
+                along with the results.
         """
         NORMAL = 0
         PLAN = 1
         PROFILE = 2
+        WITH_STATS = 3
+        WITH_PLAN_AND_STATS = 4
 
     class QueryOptions(proto.Message):
         r"""Query optimizer configuration.
