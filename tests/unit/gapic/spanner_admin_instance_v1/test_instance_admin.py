@@ -58,6 +58,7 @@ from google.cloud.spanner_admin_instance_v1.services.instance_admin import (
 )
 from google.cloud.spanner_admin_instance_v1.services.instance_admin import pagers
 from google.cloud.spanner_admin_instance_v1.services.instance_admin import transports
+from google.cloud.spanner_admin_instance_v1.types import common
 from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.iam.v1 import iam_policy_pb2  # type: ignore
 from google.iam.v1 import options_pb2  # type: ignore
