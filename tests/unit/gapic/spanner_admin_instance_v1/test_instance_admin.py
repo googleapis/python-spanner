@@ -24,7 +24,7 @@ except ImportError:  # pragma: NO COVER
 
 import grpc
 from grpc.experimental import aio
-from collections.abc import Iterable
+from collections.abc import Iterable, AsyncIterable
 from google.protobuf import json_format
 import json
 import math
@@ -36,6 +36,13 @@ from requests import Response
 from requests import Request, PreparedRequest
 from requests.sessions import Session
 from google.protobuf import json_format
+
+try:
+    from google.auth.aio import credentials as ga_credentials_async
+
+    HAS_GOOGLE_AUTH_AIO = True
+except ImportError:  # pragma: NO COVER
+    HAS_GOOGLE_AUTH_AIO = False
 
 from google.api_core import client_options
 from google.api_core import exceptions as core_exceptions
@@ -72,8 +79,22 @@ from google.type import expr_pb2  # type: ignore
 import google.auth
 
 
+async def mock_async_gen(data, chunk_size=1):
+    for i in range(0, len(data)):  # pragma: NO COVER
+        chunk = data[i : i + chunk_size]
+        yield chunk.encode("utf-8")
+
+
 def client_cert_source_callback():
     return b"cert bytes", b"key bytes"
+
+
+# TODO: use async auth anon credentials by default once the minimum version of google-auth is upgraded.
+# See related issue: https://github.com/googleapis/gapic-generator-python/issues/2107.
+def async_anonymous_credentials():
+    if HAS_GOOGLE_AUTH_AIO:
+        return ga_credentials_async.AnonymousCredentials()
+    return ga_credentials.AnonymousCredentials()
 
 
 # If default endpoint is localhost, then default mtls endpoint will be the same.
@@ -1174,27 +1195,6 @@ def test_list_instance_configs(request_type, transport: str = "grpc"):
     assert response.next_page_token == "next_page_token_value"
 
 
-def test_list_instance_configs_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_configs), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.list_instance_configs()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstanceConfigsRequest()
-
-
 def test_list_instance_configs_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -1268,31 +1268,6 @@ def test_list_instance_configs_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_list_instance_configs_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_configs), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.ListInstanceConfigsResponse(
-                next_page_token="next_page_token_value",
-            )
-        )
-        response = await client.list_instance_configs()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstanceConfigsRequest()
-
-
-@pytest.mark.asyncio
 async def test_list_instance_configs_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -1300,7 +1275,7 @@ async def test_list_instance_configs_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -1340,7 +1315,7 @@ async def test_list_instance_configs_async(
     request_type=spanner_instance_admin.ListInstanceConfigsRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -1410,7 +1385,7 @@ def test_list_instance_configs_field_headers():
 @pytest.mark.asyncio
 async def test_list_instance_configs_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -1484,7 +1459,7 @@ def test_list_instance_configs_flattened_error():
 @pytest.mark.asyncio
 async def test_list_instance_configs_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -1515,7 +1490,7 @@ async def test_list_instance_configs_flattened_async():
 @pytest.mark.asyncio
 async def test_list_instance_configs_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -1631,7 +1606,7 @@ def test_list_instance_configs_pages(transport_name: str = "grpc"):
 @pytest.mark.asyncio
 async def test_list_instance_configs_async_pager():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -1685,7 +1660,7 @@ async def test_list_instance_configs_async_pager():
 @pytest.mark.asyncio
 async def test_list_instance_configs_async_pages():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -1788,27 +1763,6 @@ def test_get_instance_config(request_type, transport: str = "grpc"):
     assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
 
 
-def test_get_instance_config_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.get_instance_config), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.get_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstanceConfigRequest()
-
-
 def test_get_instance_config_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -1879,38 +1833,6 @@ def test_get_instance_config_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_get_instance_config_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.get_instance_config), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.InstanceConfig(
-                name="name_value",
-                display_name="display_name_value",
-                config_type=spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED,
-                base_config="base_config_value",
-                etag="etag_value",
-                leader_options=["leader_options_value"],
-                reconciling=True,
-                state=spanner_instance_admin.InstanceConfig.State.CREATING,
-            )
-        )
-        response = await client.get_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstanceConfigRequest()
-
-
-@pytest.mark.asyncio
 async def test_get_instance_config_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -1918,7 +1840,7 @@ async def test_get_instance_config_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -1958,7 +1880,7 @@ async def test_get_instance_config_async(
     request_type=spanner_instance_admin.GetInstanceConfigRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -2045,7 +1967,7 @@ def test_get_instance_config_field_headers():
 @pytest.mark.asyncio
 async def test_get_instance_config_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -2119,7 +2041,7 @@ def test_get_instance_config_flattened_error():
 @pytest.mark.asyncio
 async def test_get_instance_config_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -2150,7 +2072,7 @@ async def test_get_instance_config_flattened_async():
 @pytest.mark.asyncio
 async def test_get_instance_config_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -2195,27 +2117,6 @@ def test_create_instance_config(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_create_instance_config_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.create_instance_config), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.create_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstanceConfigRequest()
 
 
 def test_create_instance_config_non_empty_request_with_auto_populated_field():
@@ -2296,29 +2197,6 @@ def test_create_instance_config_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_create_instance_config_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.create_instance_config), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.create_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstanceConfigRequest()
-
-
-@pytest.mark.asyncio
 async def test_create_instance_config_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -2326,7 +2204,7 @@ async def test_create_instance_config_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -2371,7 +2249,7 @@ async def test_create_instance_config_async(
     request_type=spanner_instance_admin.CreateInstanceConfigRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -2438,7 +2316,7 @@ def test_create_instance_config_field_headers():
 @pytest.mark.asyncio
 async def test_create_instance_config_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -2522,7 +2400,7 @@ def test_create_instance_config_flattened_error():
 @pytest.mark.asyncio
 async def test_create_instance_config_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -2561,7 +2439,7 @@ async def test_create_instance_config_flattened_async():
 @pytest.mark.asyncio
 async def test_create_instance_config_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -2608,27 +2486,6 @@ def test_update_instance_config(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_update_instance_config_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.update_instance_config), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.update_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstanceConfigRequest()
 
 
 def test_update_instance_config_non_empty_request_with_auto_populated_field():
@@ -2703,29 +2560,6 @@ def test_update_instance_config_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_update_instance_config_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.update_instance_config), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.update_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstanceConfigRequest()
-
-
-@pytest.mark.asyncio
 async def test_update_instance_config_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -2733,7 +2567,7 @@ async def test_update_instance_config_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -2778,7 +2612,7 @@ async def test_update_instance_config_async(
     request_type=spanner_instance_admin.UpdateInstanceConfigRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -2845,7 +2679,7 @@ def test_update_instance_config_field_headers():
 @pytest.mark.asyncio
 async def test_update_instance_config_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -2924,7 +2758,7 @@ def test_update_instance_config_flattened_error():
 @pytest.mark.asyncio
 async def test_update_instance_config_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -2959,7 +2793,7 @@ async def test_update_instance_config_flattened_async():
 @pytest.mark.asyncio
 async def test_update_instance_config_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -3005,27 +2839,6 @@ def test_delete_instance_config(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert response is None
-
-
-def test_delete_instance_config_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.delete_instance_config), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.delete_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstanceConfigRequest()
 
 
 def test_delete_instance_config_non_empty_request_with_auto_populated_field():
@@ -3101,27 +2914,6 @@ def test_delete_instance_config_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_delete_instance_config_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.delete_instance_config), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
-        response = await client.delete_instance_config()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstanceConfigRequest()
-
-
-@pytest.mark.asyncio
 async def test_delete_instance_config_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -3129,7 +2921,7 @@ async def test_delete_instance_config_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -3169,7 +2961,7 @@ async def test_delete_instance_config_async(
     request_type=spanner_instance_admin.DeleteInstanceConfigRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -3234,7 +3026,7 @@ def test_delete_instance_config_field_headers():
 @pytest.mark.asyncio
 async def test_delete_instance_config_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -3306,7 +3098,7 @@ def test_delete_instance_config_flattened_error():
 @pytest.mark.asyncio
 async def test_delete_instance_config_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -3335,7 +3127,7 @@ async def test_delete_instance_config_flattened_async():
 @pytest.mark.asyncio
 async def test_delete_instance_config_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -3383,27 +3175,6 @@ def test_list_instance_config_operations(request_type, transport: str = "grpc"):
     # Establish that the response is the type that we expect.
     assert isinstance(response, pagers.ListInstanceConfigOperationsPager)
     assert response.next_page_token == "next_page_token_value"
-
-
-def test_list_instance_config_operations_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_config_operations), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.list_instance_config_operations()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstanceConfigOperationsRequest()
 
 
 def test_list_instance_config_operations_non_empty_request_with_auto_populated_field():
@@ -3481,31 +3252,6 @@ def test_list_instance_config_operations_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_list_instance_config_operations_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_config_operations), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.ListInstanceConfigOperationsResponse(
-                next_page_token="next_page_token_value",
-            )
-        )
-        response = await client.list_instance_config_operations()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstanceConfigOperationsRequest()
-
-
-@pytest.mark.asyncio
 async def test_list_instance_config_operations_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -3513,7 +3259,7 @@ async def test_list_instance_config_operations_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -3553,7 +3299,7 @@ async def test_list_instance_config_operations_async(
     request_type=spanner_instance_admin.ListInstanceConfigOperationsRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -3625,7 +3371,7 @@ def test_list_instance_config_operations_field_headers():
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -3701,7 +3447,7 @@ def test_list_instance_config_operations_flattened_error():
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -3734,7 +3480,7 @@ async def test_list_instance_config_operations_flattened_async():
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -3850,7 +3596,7 @@ def test_list_instance_config_operations_pages(transport_name: str = "grpc"):
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_async_pager():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -3902,7 +3648,7 @@ async def test_list_instance_config_operations_async_pager():
 @pytest.mark.asyncio
 async def test_list_instance_config_operations_async_pages():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -3988,25 +3734,6 @@ def test_list_instances(request_type, transport: str = "grpc"):
     assert response.unreachable == ["unreachable_value"]
 
 
-def test_list_instances_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.list_instances()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstancesRequest()
-
-
 def test_list_instances_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -4075,30 +3802,6 @@ def test_list_instances_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_list_instances_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.ListInstancesResponse(
-                next_page_token="next_page_token_value",
-                unreachable=["unreachable_value"],
-            )
-        )
-        response = await client.list_instances()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstancesRequest()
-
-
-@pytest.mark.asyncio
 async def test_list_instances_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -4106,7 +3809,7 @@ async def test_list_instances_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -4146,7 +3849,7 @@ async def test_list_instances_async(
     request_type=spanner_instance_admin.ListInstancesRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -4214,7 +3917,7 @@ def test_list_instances_field_headers():
 @pytest.mark.asyncio
 async def test_list_instances_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -4284,7 +3987,7 @@ def test_list_instances_flattened_error():
 @pytest.mark.asyncio
 async def test_list_instances_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -4313,7 +4016,7 @@ async def test_list_instances_flattened_async():
 @pytest.mark.asyncio
 async def test_list_instances_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -4423,7 +4126,7 @@ def test_list_instances_pages(transport_name: str = "grpc"):
 @pytest.mark.asyncio
 async def test_list_instances_async_pager():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -4473,7 +4176,7 @@ async def test_list_instances_async_pager():
 @pytest.mark.asyncio
 async def test_list_instances_async_pages():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -4559,27 +4262,6 @@ def test_list_instance_partitions(request_type, transport: str = "grpc"):
     assert response.unreachable == ["unreachable_value"]
 
 
-def test_list_instance_partitions_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_partitions), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.list_instance_partitions()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstancePartitionsRequest()
-
-
 def test_list_instance_partitions_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -4653,32 +4335,6 @@ def test_list_instance_partitions_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_list_instance_partitions_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_partitions), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.ListInstancePartitionsResponse(
-                next_page_token="next_page_token_value",
-                unreachable=["unreachable_value"],
-            )
-        )
-        response = await client.list_instance_partitions()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.ListInstancePartitionsRequest()
-
-
-@pytest.mark.asyncio
 async def test_list_instance_partitions_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -4686,7 +4342,7 @@ async def test_list_instance_partitions_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -4726,7 +4382,7 @@ async def test_list_instance_partitions_async(
     request_type=spanner_instance_admin.ListInstancePartitionsRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -4798,7 +4454,7 @@ def test_list_instance_partitions_field_headers():
 @pytest.mark.asyncio
 async def test_list_instance_partitions_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -4872,7 +4528,7 @@ def test_list_instance_partitions_flattened_error():
 @pytest.mark.asyncio
 async def test_list_instance_partitions_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -4903,7 +4559,7 @@ async def test_list_instance_partitions_flattened_async():
 @pytest.mark.asyncio
 async def test_list_instance_partitions_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -5021,7 +4677,7 @@ def test_list_instance_partitions_pages(transport_name: str = "grpc"):
 @pytest.mark.asyncio
 async def test_list_instance_partitions_async_pager():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -5075,7 +4731,7 @@ async def test_list_instance_partitions_async_pager():
 @pytest.mark.asyncio
 async def test_list_instance_partitions_async_pages():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -5173,25 +4829,6 @@ def test_get_instance(request_type, transport: str = "grpc"):
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
 
 
-def test_get_instance_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.get_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstanceRequest()
-
-
 def test_get_instance_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -5256,36 +4893,6 @@ def test_get_instance_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_get_instance_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.Instance(
-                name="name_value",
-                config="config_value",
-                display_name="display_name_value",
-                node_count=1070,
-                processing_units=1743,
-                state=spanner_instance_admin.Instance.State.CREATING,
-                endpoint_uris=["endpoint_uris_value"],
-                edition=spanner_instance_admin.Instance.Edition.STANDARD,
-            )
-        )
-        response = await client.get_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstanceRequest()
-
-
-@pytest.mark.asyncio
 async def test_get_instance_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -5293,7 +4900,7 @@ async def test_get_instance_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -5333,7 +4940,7 @@ async def test_get_instance_async(
     request_type=spanner_instance_admin.GetInstanceRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -5413,7 +5020,7 @@ def test_get_instance_field_headers():
 @pytest.mark.asyncio
 async def test_get_instance_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -5483,7 +5090,7 @@ def test_get_instance_flattened_error():
 @pytest.mark.asyncio
 async def test_get_instance_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -5512,7 +5119,7 @@ async def test_get_instance_flattened_async():
 @pytest.mark.asyncio
 async def test_get_instance_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -5555,25 +5162,6 @@ def test_create_instance(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_create_instance_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.create_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstanceRequest()
 
 
 def test_create_instance_non_empty_request_with_auto_populated_field():
@@ -5647,27 +5235,6 @@ def test_create_instance_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_create_instance_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.create_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstanceRequest()
-
-
-@pytest.mark.asyncio
 async def test_create_instance_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -5675,7 +5242,7 @@ async def test_create_instance_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -5720,7 +5287,7 @@ async def test_create_instance_async(
     request_type=spanner_instance_admin.CreateInstanceRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -5783,7 +5350,7 @@ def test_create_instance_field_headers():
 @pytest.mark.asyncio
 async def test_create_instance_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -5863,7 +5430,7 @@ def test_create_instance_flattened_error():
 @pytest.mark.asyncio
 async def test_create_instance_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -5900,7 +5467,7 @@ async def test_create_instance_flattened_async():
 @pytest.mark.asyncio
 async def test_create_instance_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -5945,25 +5512,6 @@ def test_update_instance(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_update_instance_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.update_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstanceRequest()
 
 
 def test_update_instance_non_empty_request_with_auto_populated_field():
@@ -6031,27 +5579,6 @@ def test_update_instance_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_update_instance_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.update_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstanceRequest()
-
-
-@pytest.mark.asyncio
 async def test_update_instance_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -6059,7 +5586,7 @@ async def test_update_instance_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -6104,7 +5631,7 @@ async def test_update_instance_async(
     request_type=spanner_instance_admin.UpdateInstanceRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -6167,7 +5694,7 @@ def test_update_instance_field_headers():
 @pytest.mark.asyncio
 async def test_update_instance_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -6242,7 +5769,7 @@ def test_update_instance_flattened_error():
 @pytest.mark.asyncio
 async def test_update_instance_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -6275,7 +5802,7 @@ async def test_update_instance_flattened_async():
 @pytest.mark.asyncio
 async def test_update_instance_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -6319,25 +5846,6 @@ def test_delete_instance(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert response is None
-
-
-def test_delete_instance_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.delete_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstanceRequest()
 
 
 def test_delete_instance_non_empty_request_with_auto_populated_field():
@@ -6404,25 +5912,6 @@ def test_delete_instance_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_delete_instance_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
-        response = await client.delete_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstanceRequest()
-
-
-@pytest.mark.asyncio
 async def test_delete_instance_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -6430,7 +5919,7 @@ async def test_delete_instance_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -6470,7 +5959,7 @@ async def test_delete_instance_async(
     request_type=spanner_instance_admin.DeleteInstanceRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -6531,7 +6020,7 @@ def test_delete_instance_field_headers():
 @pytest.mark.asyncio
 async def test_delete_instance_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -6599,7 +6088,7 @@ def test_delete_instance_flattened_error():
 @pytest.mark.asyncio
 async def test_delete_instance_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -6626,7 +6115,7 @@ async def test_delete_instance_flattened_async():
 @pytest.mark.asyncio
 async def test_delete_instance_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -6674,25 +6163,6 @@ def test_set_iam_policy(request_type, transport: str = "grpc"):
     assert isinstance(response, policy_pb2.Policy)
     assert response.version == 774
     assert response.etag == b"etag_blob"
-
-
-def test_set_iam_policy_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.set_iam_policy()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.SetIamPolicyRequest()
 
 
 def test_set_iam_policy_non_empty_request_with_auto_populated_field():
@@ -6759,30 +6229,6 @@ def test_set_iam_policy_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_set_iam_policy_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            policy_pb2.Policy(
-                version=774,
-                etag=b"etag_blob",
-            )
-        )
-        response = await client.set_iam_policy()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.SetIamPolicyRequest()
-
-
-@pytest.mark.asyncio
 async def test_set_iam_policy_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -6790,7 +6236,7 @@ async def test_set_iam_policy_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -6829,7 +6275,7 @@ async def test_set_iam_policy_async(
     transport: str = "grpc_asyncio", request_type=iam_policy_pb2.SetIamPolicyRequest
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -6897,7 +6343,7 @@ def test_set_iam_policy_field_headers():
 @pytest.mark.asyncio
 async def test_set_iam_policy_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -6983,7 +6429,7 @@ def test_set_iam_policy_flattened_error():
 @pytest.mark.asyncio
 async def test_set_iam_policy_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -7010,7 +6456,7 @@ async def test_set_iam_policy_flattened_async():
 @pytest.mark.asyncio
 async def test_set_iam_policy_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -7058,25 +6504,6 @@ def test_get_iam_policy(request_type, transport: str = "grpc"):
     assert isinstance(response, policy_pb2.Policy)
     assert response.version == 774
     assert response.etag == b"etag_blob"
-
-
-def test_get_iam_policy_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.get_iam_policy()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.GetIamPolicyRequest()
 
 
 def test_get_iam_policy_non_empty_request_with_auto_populated_field():
@@ -7143,30 +6570,6 @@ def test_get_iam_policy_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_get_iam_policy_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            policy_pb2.Policy(
-                version=774,
-                etag=b"etag_blob",
-            )
-        )
-        response = await client.get_iam_policy()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.GetIamPolicyRequest()
-
-
-@pytest.mark.asyncio
 async def test_get_iam_policy_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -7174,7 +6577,7 @@ async def test_get_iam_policy_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -7213,7 +6616,7 @@ async def test_get_iam_policy_async(
     transport: str = "grpc_asyncio", request_type=iam_policy_pb2.GetIamPolicyRequest
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -7281,7 +6684,7 @@ def test_get_iam_policy_field_headers():
 @pytest.mark.asyncio
 async def test_get_iam_policy_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -7366,7 +6769,7 @@ def test_get_iam_policy_flattened_error():
 @pytest.mark.asyncio
 async def test_get_iam_policy_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -7393,7 +6796,7 @@ async def test_get_iam_policy_flattened_async():
 @pytest.mark.asyncio
 async def test_get_iam_policy_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -7441,27 +6844,6 @@ def test_test_iam_permissions(request_type, transport: str = "grpc"):
     # Establish that the response is the type that we expect.
     assert isinstance(response, iam_policy_pb2.TestIamPermissionsResponse)
     assert response.permissions == ["permissions_value"]
-
-
-def test_test_iam_permissions_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.test_iam_permissions), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.test_iam_permissions()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.TestIamPermissionsRequest()
 
 
 def test_test_iam_permissions_non_empty_request_with_auto_populated_field():
@@ -7534,31 +6916,6 @@ def test_test_iam_permissions_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_test_iam_permissions_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.test_iam_permissions), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            iam_policy_pb2.TestIamPermissionsResponse(
-                permissions=["permissions_value"],
-            )
-        )
-        response = await client.test_iam_permissions()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == iam_policy_pb2.TestIamPermissionsRequest()
-
-
-@pytest.mark.asyncio
 async def test_test_iam_permissions_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -7566,7 +6923,7 @@ async def test_test_iam_permissions_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -7606,7 +6963,7 @@ async def test_test_iam_permissions_async(
     request_type=iam_policy_pb2.TestIamPermissionsRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -7676,7 +7033,7 @@ def test_test_iam_permissions_field_headers():
 @pytest.mark.asyncio
 async def test_test_iam_permissions_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -7774,7 +7131,7 @@ def test_test_iam_permissions_flattened_error():
 @pytest.mark.asyncio
 async def test_test_iam_permissions_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -7809,7 +7166,7 @@ async def test_test_iam_permissions_flattened_async():
 @pytest.mark.asyncio
 async def test_test_iam_permissions_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -7871,27 +7228,6 @@ def test_get_instance_partition(request_type, transport: str = "grpc"):
     assert response.referencing_databases == ["referencing_databases_value"]
     assert response.referencing_backups == ["referencing_backups_value"]
     assert response.etag == "etag_value"
-
-
-def test_get_instance_partition_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.get_instance_partition), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.get_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstancePartitionRequest()
 
 
 def test_get_instance_partition_non_empty_request_with_auto_populated_field():
@@ -7965,37 +7301,6 @@ def test_get_instance_partition_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_get_instance_partition_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.get_instance_partition), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.InstancePartition(
-                name="name_value",
-                config="config_value",
-                display_name="display_name_value",
-                state=spanner_instance_admin.InstancePartition.State.CREATING,
-                referencing_databases=["referencing_databases_value"],
-                referencing_backups=["referencing_backups_value"],
-                etag="etag_value",
-            )
-        )
-        response = await client.get_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.GetInstancePartitionRequest()
-
-
-@pytest.mark.asyncio
 async def test_get_instance_partition_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -8003,7 +7308,7 @@ async def test_get_instance_partition_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -8043,7 +7348,7 @@ async def test_get_instance_partition_async(
     request_type=spanner_instance_admin.GetInstancePartitionRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -8125,7 +7430,7 @@ def test_get_instance_partition_field_headers():
 @pytest.mark.asyncio
 async def test_get_instance_partition_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -8199,7 +7504,7 @@ def test_get_instance_partition_flattened_error():
 @pytest.mark.asyncio
 async def test_get_instance_partition_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -8230,7 +7535,7 @@ async def test_get_instance_partition_flattened_async():
 @pytest.mark.asyncio
 async def test_get_instance_partition_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -8275,27 +7580,6 @@ def test_create_instance_partition(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_create_instance_partition_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.create_instance_partition), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.create_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstancePartitionRequest()
 
 
 def test_create_instance_partition_non_empty_request_with_auto_populated_field():
@@ -8376,29 +7660,6 @@ def test_create_instance_partition_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_create_instance_partition_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.create_instance_partition), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.create_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.CreateInstancePartitionRequest()
-
-
-@pytest.mark.asyncio
 async def test_create_instance_partition_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -8406,7 +7667,7 @@ async def test_create_instance_partition_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -8451,7 +7712,7 @@ async def test_create_instance_partition_async(
     request_type=spanner_instance_admin.CreateInstancePartitionRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -8518,7 +7779,7 @@ def test_create_instance_partition_field_headers():
 @pytest.mark.asyncio
 async def test_create_instance_partition_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -8606,7 +7867,7 @@ def test_create_instance_partition_flattened_error():
 @pytest.mark.asyncio
 async def test_create_instance_partition_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -8647,7 +7908,7 @@ async def test_create_instance_partition_flattened_async():
 @pytest.mark.asyncio
 async def test_create_instance_partition_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -8696,27 +7957,6 @@ def test_delete_instance_partition(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert response is None
-
-
-def test_delete_instance_partition_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.delete_instance_partition), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.delete_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstancePartitionRequest()
 
 
 def test_delete_instance_partition_non_empty_request_with_auto_populated_field():
@@ -8792,27 +8032,6 @@ def test_delete_instance_partition_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_delete_instance_partition_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.delete_instance_partition), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
-        response = await client.delete_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.DeleteInstancePartitionRequest()
-
-
-@pytest.mark.asyncio
 async def test_delete_instance_partition_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -8820,7 +8039,7 @@ async def test_delete_instance_partition_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -8860,7 +8079,7 @@ async def test_delete_instance_partition_async(
     request_type=spanner_instance_admin.DeleteInstancePartitionRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -8925,7 +8144,7 @@ def test_delete_instance_partition_field_headers():
 @pytest.mark.asyncio
 async def test_delete_instance_partition_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -8997,7 +8216,7 @@ def test_delete_instance_partition_flattened_error():
 @pytest.mark.asyncio
 async def test_delete_instance_partition_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -9026,7 +8245,7 @@ async def test_delete_instance_partition_flattened_async():
 @pytest.mark.asyncio
 async def test_delete_instance_partition_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -9071,27 +8290,6 @@ def test_update_instance_partition(request_type, transport: str = "grpc"):
 
     # Establish that the response is the type that we expect.
     assert isinstance(response, future.Future)
-
-
-def test_update_instance_partition_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.update_instance_partition), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.update_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstancePartitionRequest()
 
 
 def test_update_instance_partition_non_empty_request_with_auto_populated_field():
@@ -9166,29 +8364,6 @@ def test_update_instance_partition_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_update_instance_partition_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.update_instance_partition), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.update_instance_partition()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.UpdateInstancePartitionRequest()
-
-
-@pytest.mark.asyncio
 async def test_update_instance_partition_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -9196,7 +8371,7 @@ async def test_update_instance_partition_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -9241,7 +8416,7 @@ async def test_update_instance_partition_async(
     request_type=spanner_instance_admin.UpdateInstancePartitionRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -9308,7 +8483,7 @@ def test_update_instance_partition_field_headers():
 @pytest.mark.asyncio
 async def test_update_instance_partition_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -9391,7 +8566,7 @@ def test_update_instance_partition_flattened_error():
 @pytest.mark.asyncio
 async def test_update_instance_partition_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -9428,7 +8603,7 @@ async def test_update_instance_partition_flattened_async():
 @pytest.mark.asyncio
 async def test_update_instance_partition_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -9487,29 +8662,6 @@ def test_list_instance_partition_operations(request_type, transport: str = "grpc
     assert response.unreachable_instance_partitions == [
         "unreachable_instance_partitions_value"
     ]
-
-
-def test_list_instance_partition_operations_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_partition_operations), "__call__"
-    ) as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.list_instance_partition_operations()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert (
-            args[0] == spanner_instance_admin.ListInstancePartitionOperationsRequest()
-        )
 
 
 def test_list_instance_partition_operations_non_empty_request_with_auto_populated_field():
@@ -9587,36 +8739,6 @@ def test_list_instance_partition_operations_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_list_instance_partition_operations_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(
-        type(client.transport.list_instance_partition_operations), "__call__"
-    ) as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            spanner_instance_admin.ListInstancePartitionOperationsResponse(
-                next_page_token="next_page_token_value",
-                unreachable_instance_partitions=[
-                    "unreachable_instance_partitions_value"
-                ],
-            )
-        )
-        response = await client.list_instance_partition_operations()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert (
-            args[0] == spanner_instance_admin.ListInstancePartitionOperationsRequest()
-        )
-
-
-@pytest.mark.asyncio
 async def test_list_instance_partition_operations_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -9624,7 +8746,7 @@ async def test_list_instance_partition_operations_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -9664,7 +8786,7 @@ async def test_list_instance_partition_operations_async(
     request_type=spanner_instance_admin.ListInstancePartitionOperationsRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -9742,7 +8864,7 @@ def test_list_instance_partition_operations_field_headers():
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -9818,7 +8940,7 @@ def test_list_instance_partition_operations_flattened_error():
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_flattened_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -9851,7 +8973,7 @@ async def test_list_instance_partition_operations_flattened_async():
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_flattened_error_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Attempting to call a method with both a request object and flattened
@@ -9967,7 +9089,7 @@ def test_list_instance_partition_operations_pages(transport_name: str = "grpc"):
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_async_pager():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -10019,7 +9141,7 @@ async def test_list_instance_partition_operations_async_pager():
 @pytest.mark.asyncio
 async def test_list_instance_partition_operations_async_pages():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Mock the actual call within the gRPC stub, and fake the request.
@@ -10100,25 +9222,6 @@ def test_move_instance(request_type, transport: str = "grpc"):
     assert isinstance(response, future.Future)
 
 
-def test_move_instance_empty_call():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.move_instance), "__call__") as call:
-        call.return_value.name = (
-            "foo"  # operation_request.operation in compute client(s) expect a string.
-        )
-        client.move_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.MoveInstanceRequest()
-
-
 def test_move_instance_non_empty_request_with_auto_populated_field():
     # This test is a coverage failsafe to make sure that UUID4 fields are
     # automatically populated, according to AIP-4235, with non-empty requests.
@@ -10190,27 +9293,6 @@ def test_move_instance_use_cached_wrapped_rpc():
 
 
 @pytest.mark.asyncio
-async def test_move_instance_empty_call_async():
-    # This test is a coverage failsafe to make sure that totally empty calls,
-    # i.e. request == None and no flattened fields passed, work.
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
-    )
-
-    # Mock the actual call within the gRPC stub, and fake the request.
-    with mock.patch.object(type(client.transport.move_instance), "__call__") as call:
-        # Designate an appropriate return value for the call.
-        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
-            operations_pb2.Operation(name="operations/spam")
-        )
-        response = await client.move_instance()
-        call.assert_called()
-        _, args, _ = call.mock_calls[0]
-        assert args[0] == spanner_instance_admin.MoveInstanceRequest()
-
-
-@pytest.mark.asyncio
 async def test_move_instance_async_use_cached_wrapped_rpc(
     transport: str = "grpc_asyncio",
 ):
@@ -10218,7 +9300,7 @@ async def test_move_instance_async_use_cached_wrapped_rpc(
     # instead of constructing them on each call
     with mock.patch("google.api_core.gapic_v1.method_async.wrap_method") as wrapper_fn:
         client = InstanceAdminAsyncClient(
-            credentials=ga_credentials.AnonymousCredentials(),
+            credentials=async_anonymous_credentials(),
             transport=transport,
         )
 
@@ -10263,7 +9345,7 @@ async def test_move_instance_async(
     request_type=spanner_instance_admin.MoveInstanceRequest,
 ):
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
         transport=transport,
     )
 
@@ -10326,7 +9408,7 @@ def test_move_instance_field_headers():
 @pytest.mark.asyncio
 async def test_move_instance_field_headers_async():
     client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
+        credentials=async_anonymous_credentials(),
     )
 
     # Any value that is part of the HTTP/1.1 URI should be sent as
@@ -10353,48 +9435,6 @@ async def test_move_instance_field_headers_async():
         "x-goog-request-params",
         "name=name_value",
     ) in kw["metadata"]
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.ListInstanceConfigsRequest,
-        dict,
-    ],
-)
-def test_list_instance_configs_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.ListInstanceConfigsResponse(
-            next_page_token="next_page_token_value",
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.ListInstanceConfigsResponse.pb(
-            return_value
-        )
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.list_instance_configs(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, pagers.ListInstanceConfigsPager)
-    assert response.next_page_token == "next_page_token_value"
 
 
 def test_list_instance_configs_rest_use_cached_wrapped_rpc():
@@ -10538,90 +9578,6 @@ def test_list_instance_configs_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_list_instance_configs_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_list_instance_configs"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_list_instance_configs"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.ListInstanceConfigsRequest.pb(
-            spanner_instance_admin.ListInstanceConfigsRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = (
-            spanner_instance_admin.ListInstanceConfigsResponse.to_json(
-                spanner_instance_admin.ListInstanceConfigsResponse()
-            )
-        )
-
-        request = spanner_instance_admin.ListInstanceConfigsRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
-
-        client.list_instance_configs(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_list_instance_configs_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.ListInstanceConfigsRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.list_instance_configs(request)
-
-
 def test_list_instance_configs_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -10744,63 +9700,6 @@ def test_list_instance_configs_rest_pager(transport: str = "rest"):
         pages = list(client.list_instance_configs(request=sample_request).pages)
         for page_, token in zip(pages, ["abc", "def", "ghi", ""]):
             assert page_.raw_page.next_page_token == token
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.GetInstanceConfigRequest,
-        dict,
-    ],
-)
-def test_get_instance_config_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.InstanceConfig(
-            name="name_value",
-            display_name="display_name_value",
-            config_type=spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED,
-            base_config="base_config_value",
-            etag="etag_value",
-            leader_options=["leader_options_value"],
-            reconciling=True,
-            state=spanner_instance_admin.InstanceConfig.State.CREATING,
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.InstanceConfig.pb(return_value)
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.get_instance_config(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, spanner_instance_admin.InstanceConfig)
-    assert response.name == "name_value"
-    assert response.display_name == "display_name_value"
-    assert (
-        response.config_type
-        == spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED
-    )
-    assert response.base_config == "base_config_value"
-    assert response.etag == "etag_value"
-    assert response.leader_options == ["leader_options_value"]
-    assert response.reconciling is True
-    assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
 
 
 def test_get_instance_config_rest_use_cached_wrapped_rpc():
@@ -10926,88 +9825,6 @@ def test_get_instance_config_rest_unset_required_fields():
     assert set(unset_fields) == (set(()) & set(("name",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_get_instance_config_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_get_instance_config"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_get_instance_config"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.GetInstanceConfigRequest.pb(
-            spanner_instance_admin.GetInstanceConfigRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = spanner_instance_admin.InstanceConfig.to_json(
-            spanner_instance_admin.InstanceConfig()
-        )
-
-        request = spanner_instance_admin.GetInstanceConfigRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.InstanceConfig()
-
-        client.get_instance_config(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_get_instance_config_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.GetInstanceConfigRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.get_instance_config(request)
-
-
 def test_get_instance_config_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -11062,47 +9879,6 @@ def test_get_instance_config_rest_flattened_error(transport: str = "rest"):
             spanner_instance_admin.GetInstanceConfigRequest(),
             name="name_value",
         )
-
-
-def test_get_instance_config_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.CreateInstanceConfigRequest,
-        dict,
-    ],
-)
-def test_create_instance_config_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.create_instance_config(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_create_instance_config_rest_use_cached_wrapped_rpc():
@@ -11244,90 +10020,6 @@ def test_create_instance_config_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_create_instance_config_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_create_instance_config"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_create_instance_config"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.CreateInstanceConfigRequest.pb(
-            spanner_instance_admin.CreateInstanceConfigRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.CreateInstanceConfigRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.create_instance_config(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_create_instance_config_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.CreateInstanceConfigRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.create_instance_config(request)
-
-
 def test_create_instance_config_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -11384,49 +10076,6 @@ def test_create_instance_config_rest_flattened_error(transport: str = "rest"):
             instance_config=spanner_instance_admin.InstanceConfig(name="name_value"),
             instance_config_id="instance_config_id_value",
         )
-
-
-def test_create_instance_config_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.UpdateInstanceConfigRequest,
-        dict,
-    ],
-)
-def test_update_instance_config_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "instance_config": {"name": "projects/sample1/instanceConfigs/sample2"}
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.update_instance_config(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_update_instance_config_rest_use_cached_wrapped_rpc():
@@ -11558,92 +10207,6 @@ def test_update_instance_config_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_update_instance_config_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_update_instance_config"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_update_instance_config"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.UpdateInstanceConfigRequest.pb(
-            spanner_instance_admin.UpdateInstanceConfigRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.UpdateInstanceConfigRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.update_instance_config(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_update_instance_config_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.UpdateInstanceConfigRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "instance_config": {"name": "projects/sample1/instanceConfigs/sample2"}
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.update_instance_config(request)
-
-
 def test_update_instance_config_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -11701,47 +10264,6 @@ def test_update_instance_config_rest_flattened_error(transport: str = "rest"):
             instance_config=spanner_instance_admin.InstanceConfig(name="name_value"),
             update_mask=field_mask_pb2.FieldMask(paths=["paths_value"]),
         )
-
-
-def test_update_instance_config_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.DeleteInstanceConfigRequest,
-        dict,
-    ],
-)
-def test_delete_instance_config_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = None
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = ""
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.delete_instance_config(request)
-
-    # Establish that the response is the type that we expect.
-    assert response is None
 
 
 def test_delete_instance_config_rest_use_cached_wrapped_rpc():
@@ -11880,80 +10402,6 @@ def test_delete_instance_config_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_delete_instance_config_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_delete_instance_config"
-    ) as pre:
-        pre.assert_not_called()
-        pb_message = spanner_instance_admin.DeleteInstanceConfigRequest.pb(
-            spanner_instance_admin.DeleteInstanceConfigRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-
-        request = spanner_instance_admin.DeleteInstanceConfigRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-
-        client.delete_instance_config(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-
-
-def test_delete_instance_config_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.DeleteInstanceConfigRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.delete_instance_config(request)
-
-
 def test_delete_instance_config_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -12006,54 +10454,6 @@ def test_delete_instance_config_rest_flattened_error(transport: str = "rest"):
             spanner_instance_admin.DeleteInstanceConfigRequest(),
             name="name_value",
         )
-
-
-def test_delete_instance_config_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.ListInstanceConfigOperationsRequest,
-        dict,
-    ],
-)
-def test_list_instance_config_operations_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.ListInstanceConfigOperationsResponse(
-            next_page_token="next_page_token_value",
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.ListInstanceConfigOperationsResponse.pb(
-            return_value
-        )
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.list_instance_config_operations(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, pagers.ListInstanceConfigOperationsPager)
-    assert response.next_page_token == "next_page_token_value"
 
 
 def test_list_instance_config_operations_rest_use_cached_wrapped_rpc():
@@ -12203,92 +10603,6 @@ def test_list_instance_config_operations_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_list_instance_config_operations_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_list_instance_config_operations"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_list_instance_config_operations"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.ListInstanceConfigOperationsRequest.pb(
-            spanner_instance_admin.ListInstanceConfigOperationsRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = (
-            spanner_instance_admin.ListInstanceConfigOperationsResponse.to_json(
-                spanner_instance_admin.ListInstanceConfigOperationsResponse()
-            )
-        )
-
-        request = spanner_instance_admin.ListInstanceConfigOperationsRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = (
-            spanner_instance_admin.ListInstanceConfigOperationsResponse()
-        )
-
-        client.list_instance_config_operations(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_list_instance_config_operations_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.ListInstanceConfigOperationsRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.list_instance_config_operations(request)
-
-
 def test_list_instance_config_operations_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -12412,48 +10726,6 @@ def test_list_instance_config_operations_rest_pager(transport: str = "rest"):
         )
         for page_, token in zip(pages, ["abc", "def", "ghi", ""]):
             assert page_.raw_page.next_page_token == token
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.ListInstancesRequest,
-        dict,
-    ],
-)
-def test_list_instances_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.ListInstancesResponse(
-            next_page_token="next_page_token_value",
-            unreachable=["unreachable_value"],
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.ListInstancesResponse.pb(return_value)
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.list_instances(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, pagers.ListInstancesPager)
-    assert response.next_page_token == "next_page_token_value"
-    assert response.unreachable == ["unreachable_value"]
 
 
 def test_list_instances_rest_use_cached_wrapped_rpc():
@@ -12594,89 +10866,6 @@ def test_list_instances_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_list_instances_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_list_instances"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_list_instances"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.ListInstancesRequest.pb(
-            spanner_instance_admin.ListInstancesRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = (
-            spanner_instance_admin.ListInstancesResponse.to_json(
-                spanner_instance_admin.ListInstancesResponse()
-            )
-        )
-
-        request = spanner_instance_admin.ListInstancesRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.ListInstancesResponse()
-
-        client.list_instances(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_list_instances_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.ListInstancesRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.list_instances(request)
-
-
 def test_list_instances_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -12793,50 +10982,6 @@ def test_list_instances_rest_pager(transport: str = "rest"):
         pages = list(client.list_instances(request=sample_request).pages)
         for page_, token in zip(pages, ["abc", "def", "ghi", ""]):
             assert page_.raw_page.next_page_token == token
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.ListInstancePartitionsRequest,
-        dict,
-    ],
-)
-def test_list_instance_partitions_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.ListInstancePartitionsResponse(
-            next_page_token="next_page_token_value",
-            unreachable=["unreachable_value"],
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.ListInstancePartitionsResponse.pb(
-            return_value
-        )
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.list_instance_partitions(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, pagers.ListInstancePartitionsPager)
-    assert response.next_page_token == "next_page_token_value"
-    assert response.unreachable == ["unreachable_value"]
 
 
 def test_list_instance_partitions_rest_use_cached_wrapped_rpc():
@@ -12982,90 +11127,6 @@ def test_list_instance_partitions_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_list_instance_partitions_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_list_instance_partitions"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_list_instance_partitions"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.ListInstancePartitionsRequest.pb(
-            spanner_instance_admin.ListInstancePartitionsRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = (
-            spanner_instance_admin.ListInstancePartitionsResponse.to_json(
-                spanner_instance_admin.ListInstancePartitionsResponse()
-            )
-        )
-
-        request = spanner_instance_admin.ListInstancePartitionsRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.ListInstancePartitionsResponse()
-
-        client.list_instance_partitions(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_list_instance_partitions_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.ListInstancePartitionsRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.list_instance_partitions(request)
-
-
 def test_list_instance_partitions_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -13191,60 +11252,6 @@ def test_list_instance_partitions_rest_pager(transport: str = "rest"):
             assert page_.raw_page.next_page_token == token
 
 
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.GetInstanceRequest,
-        dict,
-    ],
-)
-def test_get_instance_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.Instance(
-            name="name_value",
-            config="config_value",
-            display_name="display_name_value",
-            node_count=1070,
-            processing_units=1743,
-            state=spanner_instance_admin.Instance.State.CREATING,
-            endpoint_uris=["endpoint_uris_value"],
-            edition=spanner_instance_admin.Instance.Edition.STANDARD,
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.Instance.pb(return_value)
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.get_instance(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, spanner_instance_admin.Instance)
-    assert response.name == "name_value"
-    assert response.config == "config_value"
-    assert response.display_name == "display_name_value"
-    assert response.node_count == 1070
-    assert response.processing_units == 1743
-    assert response.state == spanner_instance_admin.Instance.State.CREATING
-    assert response.endpoint_uris == ["endpoint_uris_value"]
-    assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
-
-
 def test_get_instance_rest_use_cached_wrapped_rpc():
     # Clients should use _prep_wrapped_messages to create cached wrapped rpcs,
     # instead of constructing them on each call
@@ -13366,87 +11373,6 @@ def test_get_instance_rest_unset_required_fields():
     assert set(unset_fields) == (set(("fieldMask",)) & set(("name",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_get_instance_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_get_instance"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_get_instance"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.GetInstanceRequest.pb(
-            spanner_instance_admin.GetInstanceRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = spanner_instance_admin.Instance.to_json(
-            spanner_instance_admin.Instance()
-        )
-
-        request = spanner_instance_admin.GetInstanceRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.Instance()
-
-        client.get_instance(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_get_instance_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.GetInstanceRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.get_instance(request)
-
-
 def test_get_instance_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -13500,47 +11426,6 @@ def test_get_instance_rest_flattened_error(transport: str = "rest"):
             spanner_instance_admin.GetInstanceRequest(),
             name="name_value",
         )
-
-
-def test_get_instance_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.CreateInstanceRequest,
-        dict,
-    ],
-)
-def test_create_instance_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.create_instance(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_create_instance_rest_use_cached_wrapped_rpc():
@@ -13677,89 +11562,6 @@ def test_create_instance_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_create_instance_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_create_instance"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_create_instance"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.CreateInstanceRequest.pb(
-            spanner_instance_admin.CreateInstanceRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.CreateInstanceRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.create_instance(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_create_instance_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.CreateInstanceRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.create_instance(request)
-
-
 def test_create_instance_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -13815,47 +11617,6 @@ def test_create_instance_rest_flattened_error(transport: str = "rest"):
             instance_id="instance_id_value",
             instance=spanner_instance_admin.Instance(name="name_value"),
         )
-
-
-def test_create_instance_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.UpdateInstanceRequest,
-        dict,
-    ],
-)
-def test_update_instance_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"instance": {"name": "projects/sample1/instances/sample2"}}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.update_instance(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_update_instance_rest_use_cached_wrapped_rpc():
@@ -13982,89 +11743,6 @@ def test_update_instance_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_update_instance_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_update_instance"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_update_instance"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.UpdateInstanceRequest.pb(
-            spanner_instance_admin.UpdateInstanceRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.UpdateInstanceRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.update_instance(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_update_instance_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.UpdateInstanceRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"instance": {"name": "projects/sample1/instances/sample2"}}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.update_instance(request)
-
-
 def test_update_instance_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -14119,47 +11797,6 @@ def test_update_instance_rest_flattened_error(transport: str = "rest"):
             instance=spanner_instance_admin.Instance(name="name_value"),
             field_mask=field_mask_pb2.FieldMask(paths=["paths_value"]),
         )
-
-
-def test_update_instance_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.DeleteInstanceRequest,
-        dict,
-    ],
-)
-def test_delete_instance_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = None
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = ""
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.delete_instance(request)
-
-    # Establish that the response is the type that we expect.
-    assert response is None
 
 
 def test_delete_instance_rest_use_cached_wrapped_rpc():
@@ -14278,79 +11915,6 @@ def test_delete_instance_rest_unset_required_fields():
     assert set(unset_fields) == (set(()) & set(("name",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_delete_instance_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_delete_instance"
-    ) as pre:
-        pre.assert_not_called()
-        pb_message = spanner_instance_admin.DeleteInstanceRequest.pb(
-            spanner_instance_admin.DeleteInstanceRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-
-        request = spanner_instance_admin.DeleteInstanceRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-
-        client.delete_instance(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-
-
-def test_delete_instance_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.DeleteInstanceRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.delete_instance(request)
-
-
 def test_delete_instance_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -14402,52 +11966,6 @@ def test_delete_instance_rest_flattened_error(transport: str = "rest"):
             spanner_instance_admin.DeleteInstanceRequest(),
             name="name_value",
         )
-
-
-def test_delete_instance_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        iam_policy_pb2.SetIamPolicyRequest,
-        dict,
-    ],
-)
-def test_set_iam_policy_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = policy_pb2.Policy(
-            version=774,
-            etag=b"etag_blob",
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.set_iam_policy(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, policy_pb2.Policy)
-    assert response.version == 774
-    assert response.etag == b"etag_blob"
 
 
 def test_set_iam_policy_rest_use_cached_wrapped_rpc():
@@ -14576,83 +12094,6 @@ def test_set_iam_policy_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_set_iam_policy_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_set_iam_policy"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_set_iam_policy"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = iam_policy_pb2.SetIamPolicyRequest()
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(policy_pb2.Policy())
-
-        request = iam_policy_pb2.SetIamPolicyRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = policy_pb2.Policy()
-
-        client.set_iam_policy(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_set_iam_policy_rest_bad_request(
-    transport: str = "rest", request_type=iam_policy_pb2.SetIamPolicyRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.set_iam_policy(request)
-
-
 def test_set_iam_policy_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -14706,52 +12147,6 @@ def test_set_iam_policy_rest_flattened_error(transport: str = "rest"):
             iam_policy_pb2.SetIamPolicyRequest(),
             resource="resource_value",
         )
-
-
-def test_set_iam_policy_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        iam_policy_pb2.GetIamPolicyRequest,
-        dict,
-    ],
-)
-def test_get_iam_policy_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = policy_pb2.Policy(
-            version=774,
-            etag=b"etag_blob",
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.get_iam_policy(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, policy_pb2.Policy)
-    assert response.version == 774
-    assert response.etag == b"etag_blob"
 
 
 def test_get_iam_policy_rest_use_cached_wrapped_rpc():
@@ -14872,83 +12267,6 @@ def test_get_iam_policy_rest_unset_required_fields():
     assert set(unset_fields) == (set(()) & set(("resource",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_get_iam_policy_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_get_iam_policy"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_get_iam_policy"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = iam_policy_pb2.GetIamPolicyRequest()
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(policy_pb2.Policy())
-
-        request = iam_policy_pb2.GetIamPolicyRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = policy_pb2.Policy()
-
-        client.get_iam_policy(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_get_iam_policy_rest_bad_request(
-    transport: str = "rest", request_type=iam_policy_pb2.GetIamPolicyRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.get_iam_policy(request)
-
-
 def test_get_iam_policy_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -15002,50 +12320,6 @@ def test_get_iam_policy_rest_flattened_error(transport: str = "rest"):
             iam_policy_pb2.GetIamPolicyRequest(),
             resource="resource_value",
         )
-
-
-def test_get_iam_policy_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        iam_policy_pb2.TestIamPermissionsRequest,
-        dict,
-    ],
-)
-def test_test_iam_permissions_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = iam_policy_pb2.TestIamPermissionsResponse(
-            permissions=["permissions_value"],
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.test_iam_permissions(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, iam_policy_pb2.TestIamPermissionsResponse)
-    assert response.permissions == ["permissions_value"]
 
 
 def test_test_iam_permissions_rest_use_cached_wrapped_rpc():
@@ -15182,85 +12456,6 @@ def test_test_iam_permissions_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_test_iam_permissions_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_test_iam_permissions"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_test_iam_permissions"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = iam_policy_pb2.TestIamPermissionsRequest()
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            iam_policy_pb2.TestIamPermissionsResponse()
-        )
-
-        request = iam_policy_pb2.TestIamPermissionsRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = iam_policy_pb2.TestIamPermissionsResponse()
-
-        client.test_iam_permissions(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_test_iam_permissions_rest_bad_request(
-    transport: str = "rest", request_type=iam_policy_pb2.TestIamPermissionsRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"resource": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.test_iam_permissions(request)
-
-
 def test_test_iam_permissions_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -15316,67 +12511,6 @@ def test_test_iam_permissions_rest_flattened_error(transport: str = "rest"):
             resource="resource_value",
             permissions=["permissions_value"],
         )
-
-
-def test_test_iam_permissions_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.GetInstancePartitionRequest,
-        dict,
-    ],
-)
-def test_get_instance_partition_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.InstancePartition(
-            name="name_value",
-            config="config_value",
-            display_name="display_name_value",
-            state=spanner_instance_admin.InstancePartition.State.CREATING,
-            referencing_databases=["referencing_databases_value"],
-            referencing_backups=["referencing_backups_value"],
-            etag="etag_value",
-            node_count=1070,
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = spanner_instance_admin.InstancePartition.pb(return_value)
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.get_instance_partition(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, spanner_instance_admin.InstancePartition)
-    assert response.name == "name_value"
-    assert response.config == "config_value"
-    assert response.display_name == "display_name_value"
-    assert response.state == spanner_instance_admin.InstancePartition.State.CREATING
-    assert response.referencing_databases == ["referencing_databases_value"]
-    assert response.referencing_backups == ["referencing_backups_value"]
-    assert response.etag == "etag_value"
 
 
 def test_get_instance_partition_rest_use_cached_wrapped_rpc():
@@ -15503,90 +12637,6 @@ def test_get_instance_partition_rest_unset_required_fields():
     assert set(unset_fields) == (set(()) & set(("name",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_get_instance_partition_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_get_instance_partition"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_get_instance_partition"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.GetInstancePartitionRequest.pb(
-            spanner_instance_admin.GetInstancePartitionRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = spanner_instance_admin.InstancePartition.to_json(
-            spanner_instance_admin.InstancePartition()
-        )
-
-        request = spanner_instance_admin.GetInstancePartitionRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = spanner_instance_admin.InstancePartition()
-
-        client.get_instance_partition(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_get_instance_partition_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.GetInstancePartitionRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.get_instance_partition(request)
-
-
 def test_get_instance_partition_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -15644,47 +12694,6 @@ def test_get_instance_partition_rest_flattened_error(transport: str = "rest"):
             spanner_instance_admin.GetInstancePartitionRequest(),
             name="name_value",
         )
-
-
-def test_get_instance_partition_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.CreateInstancePartitionRequest,
-        dict,
-    ],
-)
-def test_create_instance_partition_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.create_instance_partition(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_create_instance_partition_rest_use_cached_wrapped_rpc():
@@ -15826,90 +12835,6 @@ def test_create_instance_partition_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_create_instance_partition_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_create_instance_partition"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_create_instance_partition"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.CreateInstancePartitionRequest.pb(
-            spanner_instance_admin.CreateInstancePartitionRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.CreateInstancePartitionRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.create_instance_partition(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_create_instance_partition_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.CreateInstancePartitionRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.create_instance_partition(request)
-
-
 def test_create_instance_partition_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -15971,49 +12896,6 @@ def test_create_instance_partition_rest_flattened_error(transport: str = "rest")
             ),
             instance_partition_id="instance_partition_id_value",
         )
-
-
-def test_create_instance_partition_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.DeleteInstancePartitionRequest,
-        dict,
-    ],
-)
-def test_delete_instance_partition_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = None
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = ""
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.delete_instance_partition(request)
-
-    # Establish that the response is the type that we expect.
-    assert response is None
 
 
 def test_delete_instance_partition_rest_use_cached_wrapped_rpc():
@@ -16139,82 +13021,6 @@ def test_delete_instance_partition_rest_unset_required_fields():
     assert set(unset_fields) == (set(("etag",)) & set(("name",)))
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_delete_instance_partition_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_delete_instance_partition"
-    ) as pre:
-        pre.assert_not_called()
-        pb_message = spanner_instance_admin.DeleteInstancePartitionRequest.pb(
-            spanner_instance_admin.DeleteInstancePartitionRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-
-        request = spanner_instance_admin.DeleteInstancePartitionRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-
-        client.delete_instance_partition(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-
-
-def test_delete_instance_partition_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.DeleteInstancePartitionRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.delete_instance_partition(request)
-
-
 def test_delete_instance_partition_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -16270,51 +13076,6 @@ def test_delete_instance_partition_rest_flattened_error(transport: str = "rest")
             spanner_instance_admin.DeleteInstancePartitionRequest(),
             name="name_value",
         )
-
-
-def test_delete_instance_partition_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.UpdateInstancePartitionRequest,
-        dict,
-    ],
-)
-def test_update_instance_partition_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "instance_partition": {
-            "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-        }
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.update_instance_partition(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_update_instance_partition_rest_use_cached_wrapped_rpc():
@@ -16446,94 +13207,6 @@ def test_update_instance_partition_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_update_instance_partition_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_update_instance_partition"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_update_instance_partition"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.UpdateInstancePartitionRequest.pb(
-            spanner_instance_admin.UpdateInstancePartitionRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.UpdateInstancePartitionRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.update_instance_partition(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_update_instance_partition_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.UpdateInstancePartitionRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {
-        "instance_partition": {
-            "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
-        }
-    }
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.update_instance_partition(request)
-
-
 def test_update_instance_partition_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -16597,60 +13270,6 @@ def test_update_instance_partition_rest_flattened_error(transport: str = "rest")
             ),
             field_mask=field_mask_pb2.FieldMask(paths=["paths_value"]),
         )
-
-
-def test_update_instance_partition_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.ListInstancePartitionOperationsRequest,
-        dict,
-    ],
-)
-def test_list_instance_partition_operations_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = spanner_instance_admin.ListInstancePartitionOperationsResponse(
-            next_page_token="next_page_token_value",
-            unreachable_instance_partitions=["unreachable_instance_partitions_value"],
-        )
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        # Convert return value to protobuf type
-        return_value = (
-            spanner_instance_admin.ListInstancePartitionOperationsResponse.pb(
-                return_value
-            )
-        )
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.list_instance_partition_operations(request)
-
-    # Establish that the response is the type that we expect.
-    assert isinstance(response, pagers.ListInstancePartitionOperationsPager)
-    assert response.next_page_token == "next_page_token_value"
-    assert response.unreachable_instance_partitions == [
-        "unreachable_instance_partitions_value"
-    ]
 
 
 def test_list_instance_partition_operations_rest_use_cached_wrapped_rpc():
@@ -16802,94 +13421,6 @@ def test_list_instance_partition_operations_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_list_instance_partition_operations_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        transports.InstanceAdminRestInterceptor,
-        "post_list_instance_partition_operations",
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor,
-        "pre_list_instance_partition_operations",
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.ListInstancePartitionOperationsRequest.pb(
-            spanner_instance_admin.ListInstancePartitionOperationsRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = (
-            spanner_instance_admin.ListInstancePartitionOperationsResponse.to_json(
-                spanner_instance_admin.ListInstancePartitionOperationsResponse()
-            )
-        )
-
-        request = spanner_instance_admin.ListInstancePartitionOperationsRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = (
-            spanner_instance_admin.ListInstancePartitionOperationsResponse()
-        )
-
-        client.list_instance_partition_operations(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_list_instance_partition_operations_rest_bad_request(
-    transport: str = "rest",
-    request_type=spanner_instance_admin.ListInstancePartitionOperationsRequest,
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"parent": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.list_instance_partition_operations(request)
-
-
 def test_list_instance_partition_operations_rest_flattened():
     client = InstanceAdminClient(
         credentials=ga_credentials.AnonymousCredentials(),
@@ -17017,41 +13548,6 @@ def test_list_instance_partition_operations_rest_pager(transport: str = "rest"):
         )
         for page_, token in zip(pages, ["abc", "def", "ghi", ""]):
             assert page_.raw_page.next_page_token == token
-
-
-@pytest.mark.parametrize(
-    "request_type",
-    [
-        spanner_instance_admin.MoveInstanceRequest,
-        dict,
-    ],
-)
-def test_move_instance_rest(request_type):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a response.
-    with mock.patch.object(type(client.transport._session), "request") as req:
-        # Designate an appropriate value for the returned response.
-        return_value = operations_pb2.Operation(name="operations/spam")
-
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 200
-        json_return_value = json_format.MessageToJson(return_value)
-
-        response_value._content = json_return_value.encode("UTF-8")
-        req.return_value = response_value
-        response = client.move_instance(request)
-
-    # Establish that the response is the type that we expect.
-    assert response.operation.name == "operations/spam"
 
 
 def test_move_instance_rest_use_cached_wrapped_rpc():
@@ -17187,95 +13683,6 @@ def test_move_instance_rest_unset_required_fields():
     )
 
 
-@pytest.mark.parametrize("null_interceptor", [True, False])
-def test_move_instance_rest_interceptors(null_interceptor):
-    transport = transports.InstanceAdminRestTransport(
-        credentials=ga_credentials.AnonymousCredentials(),
-        interceptor=None
-        if null_interceptor
-        else transports.InstanceAdminRestInterceptor(),
-    )
-    client = InstanceAdminClient(transport=transport)
-    with mock.patch.object(
-        type(client.transport._session), "request"
-    ) as req, mock.patch.object(
-        path_template, "transcode"
-    ) as transcode, mock.patch.object(
-        operation.Operation, "_set_result_from_operation"
-    ), mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "post_move_instance"
-    ) as post, mock.patch.object(
-        transports.InstanceAdminRestInterceptor, "pre_move_instance"
-    ) as pre:
-        pre.assert_not_called()
-        post.assert_not_called()
-        pb_message = spanner_instance_admin.MoveInstanceRequest.pb(
-            spanner_instance_admin.MoveInstanceRequest()
-        )
-        transcode.return_value = {
-            "method": "post",
-            "uri": "my_uri",
-            "body": pb_message,
-            "query_params": pb_message,
-        }
-
-        req.return_value = Response()
-        req.return_value.status_code = 200
-        req.return_value.request = PreparedRequest()
-        req.return_value._content = json_format.MessageToJson(
-            operations_pb2.Operation()
-        )
-
-        request = spanner_instance_admin.MoveInstanceRequest()
-        metadata = [
-            ("key", "val"),
-            ("cephalopod", "squid"),
-        ]
-        pre.return_value = request, metadata
-        post.return_value = operations_pb2.Operation()
-
-        client.move_instance(
-            request,
-            metadata=[
-                ("key", "val"),
-                ("cephalopod", "squid"),
-            ],
-        )
-
-        pre.assert_called_once()
-        post.assert_called_once()
-
-
-def test_move_instance_rest_bad_request(
-    transport: str = "rest", request_type=spanner_instance_admin.MoveInstanceRequest
-):
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport=transport,
-    )
-
-    # send a request that will satisfy transcoding
-    request_init = {"name": "projects/sample1/instances/sample2"}
-    request = request_type(**request_init)
-
-    # Mock the http request call within the method and fake a BadRequest error.
-    with mock.patch.object(Session, "request") as req, pytest.raises(
-        core_exceptions.BadRequest
-    ):
-        # Wrap the value into a proper Response obj
-        response_value = Response()
-        response_value.status_code = 400
-        response_value.request = Request()
-        req.return_value = response_value
-        client.move_instance(request)
-
-
-def test_move_instance_rest_error():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
-    )
-
-
 def test_credentials_transport_error():
     # It is an error to provide credentials and a transport instance.
     transport = transports.InstanceAdminGrpcTransport(
@@ -17368,18 +13775,4105 @@ def test_transport_adc(transport_class):
         adc.assert_called_once()
 
 
+def test_transport_kind_grpc():
+    transport = InstanceAdminClient.get_transport_class("grpc")(
+        credentials=ga_credentials.AnonymousCredentials()
+    )
+    assert transport.kind == "grpc"
+
+
+def test_initialize_client_w_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="grpc"
+    )
+    assert client is not None
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_configs_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_configs), "__call__"
+    ) as call:
+        call.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
+        client.list_instance_configs(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_config_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_config), "__call__"
+    ) as call:
+        call.return_value = spanner_instance_admin.InstanceConfig()
+        client.get_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_config_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_config), "__call__"
+    ) as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.create_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_config_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_config), "__call__"
+    ) as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.update_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_config_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_config), "__call__"
+    ) as call:
+        call.return_value = None
+        client.delete_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_config_operations_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_config_operations), "__call__"
+    ) as call:
+        call.return_value = (
+            spanner_instance_admin.ListInstanceConfigOperationsResponse()
+        )
+        client.list_instance_config_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instances_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
+        call.return_value = spanner_instance_admin.ListInstancesResponse()
+        client.list_instances(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancesRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_partitions_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partitions), "__call__"
+    ) as call:
+        call.return_value = spanner_instance_admin.ListInstancePartitionsResponse()
+        client.list_instance_partitions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
+        call.return_value = spanner_instance_admin.Instance()
+        client.get_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.create_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.update_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
+        call.return_value = None
+        client.delete_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_set_iam_policy_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
+        call.return_value = policy_pb2.Policy()
+        client.set_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.SetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_iam_policy_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
+        call.return_value = policy_pb2.Policy()
+        client.get_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.GetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_test_iam_permissions_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.test_iam_permissions), "__call__"
+    ) as call:
+        call.return_value = iam_policy_pb2.TestIamPermissionsResponse()
+        client.test_iam_permissions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.TestIamPermissionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_partition_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_partition), "__call__"
+    ) as call:
+        call.return_value = spanner_instance_admin.InstancePartition()
+        client.get_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_partition_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_partition), "__call__"
+    ) as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.create_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_partition_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_partition), "__call__"
+    ) as call:
+        call.return_value = None
+        client.delete_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_partition_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_partition), "__call__"
+    ) as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.update_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_partition_operations_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partition_operations), "__call__"
+    ) as call:
+        call.return_value = (
+            spanner_instance_admin.ListInstancePartitionOperationsResponse()
+        )
+        client.list_instance_partition_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_move_instance_empty_call_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="grpc",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.move_instance), "__call__") as call:
+        call.return_value = operations_pb2.Operation(name="operations/op")
+        client.move_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.MoveInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+def test_transport_kind_grpc_asyncio():
+    transport = InstanceAdminAsyncClient.get_transport_class("grpc_asyncio")(
+        credentials=async_anonymous_credentials()
+    )
+    assert transport.kind == "grpc_asyncio"
+
+
+def test_initialize_client_w_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(), transport="grpc_asyncio"
+    )
+    assert client is not None
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_list_instance_configs_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_configs), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.ListInstanceConfigsResponse(
+                next_page_token="next_page_token_value",
+            )
+        )
+        await client.list_instance_configs(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_get_instance_config_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_config), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.InstanceConfig(
+                name="name_value",
+                display_name="display_name_value",
+                config_type=spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED,
+                base_config="base_config_value",
+                etag="etag_value",
+                leader_options=["leader_options_value"],
+                reconciling=True,
+                state=spanner_instance_admin.InstanceConfig.State.CREATING,
+            )
+        )
+        await client.get_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_create_instance_config_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_config), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.create_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_update_instance_config_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_config), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.update_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_delete_instance_config_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_config), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
+        await client.delete_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_list_instance_config_operations_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_config_operations), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.ListInstanceConfigOperationsResponse(
+                next_page_token="next_page_token_value",
+            )
+        )
+        await client.list_instance_config_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_list_instances_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.ListInstancesResponse(
+                next_page_token="next_page_token_value",
+                unreachable=["unreachable_value"],
+            )
+        )
+        await client.list_instances(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancesRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_list_instance_partitions_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partitions), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.ListInstancePartitionsResponse(
+                next_page_token="next_page_token_value",
+                unreachable=["unreachable_value"],
+            )
+        )
+        await client.list_instance_partitions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_get_instance_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.Instance(
+                name="name_value",
+                config="config_value",
+                display_name="display_name_value",
+                node_count=1070,
+                processing_units=1743,
+                state=spanner_instance_admin.Instance.State.CREATING,
+                endpoint_uris=["endpoint_uris_value"],
+                edition=spanner_instance_admin.Instance.Edition.STANDARD,
+            )
+        )
+        await client.get_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_create_instance_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.create_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_update_instance_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.update_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_delete_instance_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
+        await client.delete_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_set_iam_policy_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            policy_pb2.Policy(
+                version=774,
+                etag=b"etag_blob",
+            )
+        )
+        await client.set_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.SetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_get_iam_policy_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            policy_pb2.Policy(
+                version=774,
+                etag=b"etag_blob",
+            )
+        )
+        await client.get_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.GetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_test_iam_permissions_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.test_iam_permissions), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            iam_policy_pb2.TestIamPermissionsResponse(
+                permissions=["permissions_value"],
+            )
+        )
+        await client.test_iam_permissions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.TestIamPermissionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_get_instance_partition_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_partition), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.InstancePartition(
+                name="name_value",
+                config="config_value",
+                display_name="display_name_value",
+                state=spanner_instance_admin.InstancePartition.State.CREATING,
+                referencing_databases=["referencing_databases_value"],
+                referencing_backups=["referencing_backups_value"],
+                etag="etag_value",
+            )
+        )
+        await client.get_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_create_instance_partition_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_partition), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.create_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_delete_instance_partition_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_partition), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(None)
+        await client.delete_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_update_instance_partition_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_partition), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.update_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_list_instance_partition_operations_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partition_operations), "__call__"
+    ) as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            spanner_instance_admin.ListInstancePartitionOperationsResponse(
+                next_page_token="next_page_token_value",
+                unreachable_instance_partitions=[
+                    "unreachable_instance_partitions_value"
+                ],
+            )
+        )
+        await client.list_instance_partition_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+@pytest.mark.asyncio
+async def test_move_instance_empty_call_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(),
+        transport="grpc_asyncio",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.move_instance), "__call__") as call:
+        # Designate an appropriate return value for the call.
+        call.return_value = grpc_helpers_async.FakeUnaryUnaryCall(
+            operations_pb2.Operation(name="operations/spam")
+        )
+        await client.move_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.MoveInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+def test_transport_kind_rest():
+    transport = InstanceAdminClient.get_transport_class("rest")(
+        credentials=ga_credentials.AnonymousCredentials()
+    )
+    assert transport.kind == "rest"
+
+
+def test_list_instance_configs_rest_bad_request(
+    request_type=spanner_instance_admin.ListInstanceConfigsRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.list_instance_configs(request)
+
+
 @pytest.mark.parametrize(
-    "transport_name",
+    "request_type",
     [
-        "grpc",
-        "rest",
+        spanner_instance_admin.ListInstanceConfigsRequest,
+        dict,
     ],
 )
-def test_transport_kind(transport_name):
-    transport = InstanceAdminClient.get_transport_class(transport_name)(
-        credentials=ga_credentials.AnonymousCredentials(),
+def test_list_instance_configs_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
     )
-    assert transport.kind == transport_name
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.ListInstanceConfigsResponse(
+            next_page_token="next_page_token_value",
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.ListInstanceConfigsResponse.pb(
+            return_value
+        )
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.list_instance_configs(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, pagers.ListInstanceConfigsPager)
+    assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_list_instance_configs_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_list_instance_configs"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_list_instance_configs"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.ListInstanceConfigsRequest.pb(
+            spanner_instance_admin.ListInstanceConfigsRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.ListInstanceConfigsResponse.to_json(
+            spanner_instance_admin.ListInstanceConfigsResponse()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.ListInstanceConfigsRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
+
+        client.list_instance_configs(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_get_instance_config_rest_bad_request(
+    request_type=spanner_instance_admin.GetInstanceConfigRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.get_instance_config(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.GetInstanceConfigRequest,
+        dict,
+    ],
+)
+def test_get_instance_config_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.InstanceConfig(
+            name="name_value",
+            display_name="display_name_value",
+            config_type=spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED,
+            base_config="base_config_value",
+            etag="etag_value",
+            leader_options=["leader_options_value"],
+            reconciling=True,
+            state=spanner_instance_admin.InstanceConfig.State.CREATING,
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.InstanceConfig.pb(return_value)
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.get_instance_config(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, spanner_instance_admin.InstanceConfig)
+    assert response.name == "name_value"
+    assert response.display_name == "display_name_value"
+    assert (
+        response.config_type
+        == spanner_instance_admin.InstanceConfig.Type.GOOGLE_MANAGED
+    )
+    assert response.base_config == "base_config_value"
+    assert response.etag == "etag_value"
+    assert response.leader_options == ["leader_options_value"]
+    assert response.reconciling is True
+    assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_get_instance_config_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_instance_config"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_get_instance_config"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.GetInstanceConfigRequest.pb(
+            spanner_instance_admin.GetInstanceConfigRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.InstanceConfig.to_json(
+            spanner_instance_admin.InstanceConfig()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.GetInstanceConfigRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.InstanceConfig()
+
+        client.get_instance_config(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_create_instance_config_rest_bad_request(
+    request_type=spanner_instance_admin.CreateInstanceConfigRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.create_instance_config(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.CreateInstanceConfigRequest,
+        dict,
+    ],
+)
+def test_create_instance_config_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.create_instance_config(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_create_instance_config_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_create_instance_config"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_create_instance_config"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.CreateInstanceConfigRequest.pb(
+            spanner_instance_admin.CreateInstanceConfigRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.CreateInstanceConfigRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.create_instance_config(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_update_instance_config_rest_bad_request(
+    request_type=spanner_instance_admin.UpdateInstanceConfigRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {
+        "instance_config": {"name": "projects/sample1/instanceConfigs/sample2"}
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.update_instance_config(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.UpdateInstanceConfigRequest,
+        dict,
+    ],
+)
+def test_update_instance_config_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {
+        "instance_config": {"name": "projects/sample1/instanceConfigs/sample2"}
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.update_instance_config(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_update_instance_config_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_update_instance_config"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_update_instance_config"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.UpdateInstanceConfigRequest.pb(
+            spanner_instance_admin.UpdateInstanceConfigRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.UpdateInstanceConfigRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.update_instance_config(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_delete_instance_config_rest_bad_request(
+    request_type=spanner_instance_admin.DeleteInstanceConfigRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.delete_instance_config(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.DeleteInstanceConfigRequest,
+        dict,
+    ],
+)
+def test_delete_instance_config_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instanceConfigs/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = None
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = ""
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.delete_instance_config(request)
+
+    # Establish that the response is the type that we expect.
+    assert response is None
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_delete_instance_config_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_delete_instance_config"
+    ) as pre:
+        pre.assert_not_called()
+        pb_message = spanner_instance_admin.DeleteInstanceConfigRequest.pb(
+            spanner_instance_admin.DeleteInstanceConfigRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+
+        request = spanner_instance_admin.DeleteInstanceConfigRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+
+        client.delete_instance_config(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+
+
+def test_list_instance_config_operations_rest_bad_request(
+    request_type=spanner_instance_admin.ListInstanceConfigOperationsRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.list_instance_config_operations(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.ListInstanceConfigOperationsRequest,
+        dict,
+    ],
+)
+def test_list_instance_config_operations_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.ListInstanceConfigOperationsResponse(
+            next_page_token="next_page_token_value",
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.ListInstanceConfigOperationsResponse.pb(
+            return_value
+        )
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.list_instance_config_operations(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, pagers.ListInstanceConfigOperationsPager)
+    assert response.next_page_token == "next_page_token_value"
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_list_instance_config_operations_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_list_instance_config_operations"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_list_instance_config_operations"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.ListInstanceConfigOperationsRequest.pb(
+            spanner_instance_admin.ListInstanceConfigOperationsRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = (
+            spanner_instance_admin.ListInstanceConfigOperationsResponse.to_json(
+                spanner_instance_admin.ListInstanceConfigOperationsResponse()
+            )
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.ListInstanceConfigOperationsRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = (
+            spanner_instance_admin.ListInstanceConfigOperationsResponse()
+        )
+
+        client.list_instance_config_operations(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_list_instances_rest_bad_request(
+    request_type=spanner_instance_admin.ListInstancesRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.list_instances(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.ListInstancesRequest,
+        dict,
+    ],
+)
+def test_list_instances_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.ListInstancesResponse(
+            next_page_token="next_page_token_value",
+            unreachable=["unreachable_value"],
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.ListInstancesResponse.pb(return_value)
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.list_instances(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, pagers.ListInstancesPager)
+    assert response.next_page_token == "next_page_token_value"
+    assert response.unreachable == ["unreachable_value"]
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_list_instances_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_list_instances"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_list_instances"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.ListInstancesRequest.pb(
+            spanner_instance_admin.ListInstancesRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.ListInstancesResponse.to_json(
+            spanner_instance_admin.ListInstancesResponse()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.ListInstancesRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.ListInstancesResponse()
+
+        client.list_instances(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_list_instance_partitions_rest_bad_request(
+    request_type=spanner_instance_admin.ListInstancePartitionsRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.list_instance_partitions(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.ListInstancePartitionsRequest,
+        dict,
+    ],
+)
+def test_list_instance_partitions_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.ListInstancePartitionsResponse(
+            next_page_token="next_page_token_value",
+            unreachable=["unreachable_value"],
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.ListInstancePartitionsResponse.pb(
+            return_value
+        )
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.list_instance_partitions(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, pagers.ListInstancePartitionsPager)
+    assert response.next_page_token == "next_page_token_value"
+    assert response.unreachable == ["unreachable_value"]
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_list_instance_partitions_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_list_instance_partitions"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_list_instance_partitions"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.ListInstancePartitionsRequest.pb(
+            spanner_instance_admin.ListInstancePartitionsRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.ListInstancePartitionsResponse.to_json(
+            spanner_instance_admin.ListInstancePartitionsResponse()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.ListInstancePartitionsRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.ListInstancePartitionsResponse()
+
+        client.list_instance_partitions(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_get_instance_rest_bad_request(
+    request_type=spanner_instance_admin.GetInstanceRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.get_instance(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.GetInstanceRequest,
+        dict,
+    ],
+)
+def test_get_instance_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.Instance(
+            name="name_value",
+            config="config_value",
+            display_name="display_name_value",
+            node_count=1070,
+            processing_units=1743,
+            state=spanner_instance_admin.Instance.State.CREATING,
+            endpoint_uris=["endpoint_uris_value"],
+            edition=spanner_instance_admin.Instance.Edition.STANDARD,
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.Instance.pb(return_value)
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.get_instance(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, spanner_instance_admin.Instance)
+    assert response.name == "name_value"
+    assert response.config == "config_value"
+    assert response.display_name == "display_name_value"
+    assert response.node_count == 1070
+    assert response.processing_units == 1743
+    assert response.state == spanner_instance_admin.Instance.State.CREATING
+    assert response.endpoint_uris == ["endpoint_uris_value"]
+    assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_get_instance_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_instance"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_get_instance"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.GetInstanceRequest.pb(
+            spanner_instance_admin.GetInstanceRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.Instance.to_json(
+            spanner_instance_admin.Instance()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.GetInstanceRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.Instance()
+
+        client.get_instance(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_create_instance_rest_bad_request(
+    request_type=spanner_instance_admin.CreateInstanceRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.create_instance(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.CreateInstanceRequest,
+        dict,
+    ],
+)
+def test_create_instance_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.create_instance(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_create_instance_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_create_instance"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_create_instance"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.CreateInstanceRequest.pb(
+            spanner_instance_admin.CreateInstanceRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.CreateInstanceRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.create_instance(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_update_instance_rest_bad_request(
+    request_type=spanner_instance_admin.UpdateInstanceRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"instance": {"name": "projects/sample1/instances/sample2"}}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.update_instance(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.UpdateInstanceRequest,
+        dict,
+    ],
+)
+def test_update_instance_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"instance": {"name": "projects/sample1/instances/sample2"}}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.update_instance(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_update_instance_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_update_instance"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_update_instance"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.UpdateInstanceRequest.pb(
+            spanner_instance_admin.UpdateInstanceRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.UpdateInstanceRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.update_instance(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_delete_instance_rest_bad_request(
+    request_type=spanner_instance_admin.DeleteInstanceRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.delete_instance(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.DeleteInstanceRequest,
+        dict,
+    ],
+)
+def test_delete_instance_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = None
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = ""
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.delete_instance(request)
+
+    # Establish that the response is the type that we expect.
+    assert response is None
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_delete_instance_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_delete_instance"
+    ) as pre:
+        pre.assert_not_called()
+        pb_message = spanner_instance_admin.DeleteInstanceRequest.pb(
+            spanner_instance_admin.DeleteInstanceRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+
+        request = spanner_instance_admin.DeleteInstanceRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+
+        client.delete_instance(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+
+
+def test_set_iam_policy_rest_bad_request(
+    request_type=iam_policy_pb2.SetIamPolicyRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.set_iam_policy(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        iam_policy_pb2.SetIamPolicyRequest,
+        dict,
+    ],
+)
+def test_set_iam_policy_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = policy_pb2.Policy(
+            version=774,
+            etag=b"etag_blob",
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.set_iam_policy(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, policy_pb2.Policy)
+    assert response.version == 774
+    assert response.etag == b"etag_blob"
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_set_iam_policy_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_set_iam_policy"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_set_iam_policy"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = iam_policy_pb2.SetIamPolicyRequest()
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(policy_pb2.Policy())
+        req.return_value.content = return_value
+
+        request = iam_policy_pb2.SetIamPolicyRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = policy_pb2.Policy()
+
+        client.set_iam_policy(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_get_iam_policy_rest_bad_request(
+    request_type=iam_policy_pb2.GetIamPolicyRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.get_iam_policy(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        iam_policy_pb2.GetIamPolicyRequest,
+        dict,
+    ],
+)
+def test_get_iam_policy_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = policy_pb2.Policy(
+            version=774,
+            etag=b"etag_blob",
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.get_iam_policy(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, policy_pb2.Policy)
+    assert response.version == 774
+    assert response.etag == b"etag_blob"
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_get_iam_policy_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_iam_policy"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_get_iam_policy"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = iam_policy_pb2.GetIamPolicyRequest()
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(policy_pb2.Policy())
+        req.return_value.content = return_value
+
+        request = iam_policy_pb2.GetIamPolicyRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = policy_pb2.Policy()
+
+        client.get_iam_policy(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_test_iam_permissions_rest_bad_request(
+    request_type=iam_policy_pb2.TestIamPermissionsRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.test_iam_permissions(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        iam_policy_pb2.TestIamPermissionsRequest,
+        dict,
+    ],
+)
+def test_test_iam_permissions_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"resource": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = iam_policy_pb2.TestIamPermissionsResponse(
+            permissions=["permissions_value"],
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.test_iam_permissions(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, iam_policy_pb2.TestIamPermissionsResponse)
+    assert response.permissions == ["permissions_value"]
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_test_iam_permissions_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_test_iam_permissions"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_test_iam_permissions"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = iam_policy_pb2.TestIamPermissionsRequest()
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(
+            iam_policy_pb2.TestIamPermissionsResponse()
+        )
+        req.return_value.content = return_value
+
+        request = iam_policy_pb2.TestIamPermissionsRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = iam_policy_pb2.TestIamPermissionsResponse()
+
+        client.test_iam_permissions(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_get_instance_partition_rest_bad_request(
+    request_type=spanner_instance_admin.GetInstancePartitionRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {
+        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.get_instance_partition(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.GetInstancePartitionRequest,
+        dict,
+    ],
+)
+def test_get_instance_partition_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {
+        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.InstancePartition(
+            name="name_value",
+            config="config_value",
+            display_name="display_name_value",
+            state=spanner_instance_admin.InstancePartition.State.CREATING,
+            referencing_databases=["referencing_databases_value"],
+            referencing_backups=["referencing_backups_value"],
+            etag="etag_value",
+            node_count=1070,
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = spanner_instance_admin.InstancePartition.pb(return_value)
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.get_instance_partition(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, spanner_instance_admin.InstancePartition)
+    assert response.name == "name_value"
+    assert response.config == "config_value"
+    assert response.display_name == "display_name_value"
+    assert response.state == spanner_instance_admin.InstancePartition.State.CREATING
+    assert response.referencing_databases == ["referencing_databases_value"]
+    assert response.referencing_backups == ["referencing_backups_value"]
+    assert response.etag == "etag_value"
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_get_instance_partition_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_instance_partition"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_get_instance_partition"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.GetInstancePartitionRequest.pb(
+            spanner_instance_admin.GetInstancePartitionRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = spanner_instance_admin.InstancePartition.to_json(
+            spanner_instance_admin.InstancePartition()
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.GetInstancePartitionRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = spanner_instance_admin.InstancePartition()
+
+        client.get_instance_partition(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_create_instance_partition_rest_bad_request(
+    request_type=spanner_instance_admin.CreateInstancePartitionRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.create_instance_partition(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.CreateInstancePartitionRequest,
+        dict,
+    ],
+)
+def test_create_instance_partition_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.create_instance_partition(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_create_instance_partition_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_create_instance_partition"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_create_instance_partition"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.CreateInstancePartitionRequest.pb(
+            spanner_instance_admin.CreateInstancePartitionRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.CreateInstancePartitionRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.create_instance_partition(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_delete_instance_partition_rest_bad_request(
+    request_type=spanner_instance_admin.DeleteInstancePartitionRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {
+        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.delete_instance_partition(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.DeleteInstancePartitionRequest,
+        dict,
+    ],
+)
+def test_delete_instance_partition_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {
+        "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = None
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = ""
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.delete_instance_partition(request)
+
+    # Establish that the response is the type that we expect.
+    assert response is None
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_delete_instance_partition_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_delete_instance_partition"
+    ) as pre:
+        pre.assert_not_called()
+        pb_message = spanner_instance_admin.DeleteInstancePartitionRequest.pb(
+            spanner_instance_admin.DeleteInstancePartitionRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+
+        request = spanner_instance_admin.DeleteInstancePartitionRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+
+        client.delete_instance_partition(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+
+
+def test_update_instance_partition_rest_bad_request(
+    request_type=spanner_instance_admin.UpdateInstancePartitionRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {
+        "instance_partition": {
+            "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+        }
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.update_instance_partition(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.UpdateInstancePartitionRequest,
+        dict,
+    ],
+)
+def test_update_instance_partition_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {
+        "instance_partition": {
+            "name": "projects/sample1/instances/sample2/instancePartitions/sample3"
+        }
+    }
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.update_instance_partition(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_update_instance_partition_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_update_instance_partition"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_update_instance_partition"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.UpdateInstancePartitionRequest.pb(
+            spanner_instance_admin.UpdateInstancePartitionRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.UpdateInstancePartitionRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.update_instance_partition(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_list_instance_partition_operations_rest_bad_request(
+    request_type=spanner_instance_admin.ListInstancePartitionOperationsRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.list_instance_partition_operations(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.ListInstancePartitionOperationsRequest,
+        dict,
+    ],
+)
+def test_list_instance_partition_operations_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"parent": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = spanner_instance_admin.ListInstancePartitionOperationsResponse(
+            next_page_token="next_page_token_value",
+            unreachable_instance_partitions=["unreachable_instance_partitions_value"],
+        )
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+
+        # Convert return value to protobuf type
+        return_value = (
+            spanner_instance_admin.ListInstancePartitionOperationsResponse.pb(
+                return_value
+            )
+        )
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.list_instance_partition_operations(request)
+
+    # Establish that the response is the type that we expect.
+    assert isinstance(response, pagers.ListInstancePartitionOperationsPager)
+    assert response.next_page_token == "next_page_token_value"
+    assert response.unreachable_instance_partitions == [
+        "unreachable_instance_partitions_value"
+    ]
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_list_instance_partition_operations_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_list_instance_partition_operations",
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "pre_list_instance_partition_operations",
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.ListInstancePartitionOperationsRequest.pb(
+            spanner_instance_admin.ListInstancePartitionOperationsRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = (
+            spanner_instance_admin.ListInstancePartitionOperationsResponse.to_json(
+                spanner_instance_admin.ListInstancePartitionOperationsResponse()
+            )
+        )
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.ListInstancePartitionOperationsRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = (
+            spanner_instance_admin.ListInstancePartitionOperationsResponse()
+        )
+
+        client.list_instance_partition_operations(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_move_instance_rest_bad_request(
+    request_type=spanner_instance_admin.MoveInstanceRequest,
+):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a BadRequest error.
+    with mock.patch.object(Session, "request") as req, pytest.raises(
+        core_exceptions.BadRequest
+    ):
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        json_return_value = ""
+        response_value.json = mock.Mock(return_value={})
+        response_value.status_code = 400
+        response_value.request = mock.Mock()
+        req.return_value = response_value
+        client.move_instance(request)
+
+
+@pytest.mark.parametrize(
+    "request_type",
+    [
+        spanner_instance_admin.MoveInstanceRequest,
+        dict,
+    ],
+)
+def test_move_instance_rest_call_success(request_type):
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+
+    # send a request that will satisfy transcoding
+    request_init = {"name": "projects/sample1/instances/sample2"}
+    request = request_type(**request_init)
+
+    # Mock the http request call within the method and fake a response.
+    with mock.patch.object(type(client.transport._session), "request") as req:
+        # Designate an appropriate value for the returned response.
+        return_value = operations_pb2.Operation(name="operations/spam")
+
+        # Wrap the value into a proper Response obj
+        response_value = mock.Mock()
+        response_value.status_code = 200
+        json_return_value = json_format.MessageToJson(return_value)
+        response_value.content = json_return_value.encode("UTF-8")
+        req.return_value = response_value
+        response = client.move_instance(request)
+
+    # Establish that the response is the type that we expect.
+    json_return_value = json_format.MessageToJson(return_value)
+
+
+@pytest.mark.parametrize("null_interceptor", [True, False])
+def test_move_instance_rest_interceptors(null_interceptor):
+    transport = transports.InstanceAdminRestTransport(
+        credentials=ga_credentials.AnonymousCredentials(),
+        interceptor=None
+        if null_interceptor
+        else transports.InstanceAdminRestInterceptor(),
+    )
+    client = InstanceAdminClient(transport=transport)
+
+    with mock.patch.object(
+        type(client.transport._session), "request"
+    ) as req, mock.patch.object(
+        path_template, "transcode"
+    ) as transcode, mock.patch.object(
+        operation.Operation, "_set_result_from_operation"
+    ), mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_move_instance"
+    ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "pre_move_instance"
+    ) as pre:
+        pre.assert_not_called()
+        post.assert_not_called()
+        pb_message = spanner_instance_admin.MoveInstanceRequest.pb(
+            spanner_instance_admin.MoveInstanceRequest()
+        )
+        transcode.return_value = {
+            "method": "post",
+            "uri": "my_uri",
+            "body": pb_message,
+            "query_params": pb_message,
+        }
+
+        req.return_value = mock.Mock()
+        req.return_value.status_code = 200
+        return_value = json_format.MessageToJson(operations_pb2.Operation())
+        req.return_value.content = return_value
+
+        request = spanner_instance_admin.MoveInstanceRequest()
+        metadata = [
+            ("key", "val"),
+            ("cephalopod", "squid"),
+        ]
+        pre.return_value = request, metadata
+        post.return_value = operations_pb2.Operation()
+
+        client.move_instance(
+            request,
+            metadata=[
+                ("key", "val"),
+                ("cephalopod", "squid"),
+            ],
+        )
+
+        pre.assert_called_once()
+        post.assert_called_once()
+
+
+def test_initialize_client_w_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    assert client is not None
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_configs_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_configs), "__call__"
+    ) as call:
+        client.list_instance_configs(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_config_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_config), "__call__"
+    ) as call:
+        client.get_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_config_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_config), "__call__"
+    ) as call:
+        client.create_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_config_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_config), "__call__"
+    ) as call:
+        client.update_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_config_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_config), "__call__"
+    ) as call:
+        client.delete_instance_config(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceConfigRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_config_operations_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_config_operations), "__call__"
+    ) as call:
+        client.list_instance_config_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstanceConfigOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instances_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.list_instances), "__call__") as call:
+        client.list_instances(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancesRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_partitions_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partitions), "__call__"
+    ) as call:
+        client.list_instance_partitions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_instance), "__call__") as call:
+        client.get_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.create_instance), "__call__") as call:
+        client.create_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.update_instance), "__call__") as call:
+        client.update_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.delete_instance), "__call__") as call:
+        client.delete_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_set_iam_policy_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.set_iam_policy), "__call__") as call:
+        client.set_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.SetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_iam_policy_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.get_iam_policy), "__call__") as call:
+        client.get_iam_policy(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.GetIamPolicyRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_test_iam_permissions_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.test_iam_permissions), "__call__"
+    ) as call:
+        client.test_iam_permissions(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = iam_policy_pb2.TestIamPermissionsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_get_instance_partition_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.get_instance_partition), "__call__"
+    ) as call:
+        client.get_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.GetInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_create_instance_partition_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.create_instance_partition), "__call__"
+    ) as call:
+        client.create_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.CreateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_delete_instance_partition_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.delete_instance_partition), "__call__"
+    ) as call:
+        client.delete_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.DeleteInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_update_instance_partition_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.update_instance_partition), "__call__"
+    ) as call:
+        client.update_instance_partition(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.UpdateInstancePartitionRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_list_instance_partition_operations_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(
+        type(client.transport.list_instance_partition_operations), "__call__"
+    ) as call:
+        client.list_instance_partition_operations(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.ListInstancePartitionOperationsRequest()
+
+        assert args[0] == request_msg
+
+
+# This test is a coverage failsafe to make sure that totally empty calls,
+# i.e. request == None and no flattened fields passed, work.
+def test_move_instance_empty_call_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+
+    # Mock the actual call, and fake the request.
+    with mock.patch.object(type(client.transport.move_instance), "__call__") as call:
+        client.move_instance(request=None)
+
+        # Establish that the underlying stub method was called.
+        call.assert_called()
+        _, args, _ = call.mock_calls[0]
+        request_msg = spanner_instance_admin.MoveInstanceRequest()
+
+        assert args[0] == request_msg
+
+
+def test_instance_admin_rest_lro_client():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(),
+        transport="rest",
+    )
+    transport = client.transport
+
+    # Ensure that we have an api-core operations client.
+    assert isinstance(
+        transport.operations_client,
+        operations_v1.AbstractOperationsClient,
+    )
+
+    # Ensure that subsequent calls to the property send the exact same object.
+    assert transport.operations_client is transport.operations_client
 
 
 def test_transport_grpc_default():
@@ -17646,23 +18140,6 @@ def test_instance_admin_http_transport_client_cert_source_for_mtls():
             credentials=cred, client_cert_source_for_mtls=client_cert_source_callback
         )
         mock_configure_mtls_channel.assert_called_once_with(client_cert_source_callback)
-
-
-def test_instance_admin_rest_lro_client():
-    client = InstanceAdminClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="rest",
-    )
-    transport = client.transport
-
-    # Ensure that we have a api-core operations client.
-    assert isinstance(
-        transport.operations_client,
-        operations_v1.AbstractOperationsClient,
-    )
-
-    # Ensure that subsequent calls to the property send the exact same object.
-    assert transport.operations_client is transport.operations_client
 
 
 @pytest.mark.parametrize(
@@ -18151,36 +18628,41 @@ def test_client_with_default_client_info():
         prep.assert_called_once_with(client_info)
 
 
-@pytest.mark.asyncio
-async def test_transport_close_async():
-    client = InstanceAdminAsyncClient(
-        credentials=ga_credentials.AnonymousCredentials(),
-        transport="grpc_asyncio",
+def test_transport_close_grpc():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="grpc"
     )
     with mock.patch.object(
-        type(getattr(client.transport, "grpc_channel")), "close"
+        type(getattr(client.transport, "_grpc_channel")), "close"
+    ) as close:
+        with client:
+            close.assert_not_called()
+        close.assert_called_once()
+
+
+@pytest.mark.asyncio
+async def test_transport_close_grpc_asyncio():
+    client = InstanceAdminAsyncClient(
+        credentials=async_anonymous_credentials(), transport="grpc_asyncio"
+    )
+    with mock.patch.object(
+        type(getattr(client.transport, "_grpc_channel")), "close"
     ) as close:
         async with client:
             close.assert_not_called()
         close.assert_called_once()
 
 
-def test_transport_close():
-    transports = {
-        "rest": "_session",
-        "grpc": "_grpc_channel",
-    }
-
-    for transport, close_name in transports.items():
-        client = InstanceAdminClient(
-            credentials=ga_credentials.AnonymousCredentials(), transport=transport
-        )
-        with mock.patch.object(
-            type(getattr(client.transport, close_name)), "close"
-        ) as close:
-            with client:
-                close.assert_not_called()
-            close.assert_called_once()
+def test_transport_close_rest():
+    client = InstanceAdminClient(
+        credentials=ga_credentials.AnonymousCredentials(), transport="rest"
+    )
+    with mock.patch.object(
+        type(getattr(client.transport, "_session")), "close"
+    ) as close:
+        with client:
+            close.assert_not_called()
+        close.assert_called_once()
 
 
 def test_client_ctx():
