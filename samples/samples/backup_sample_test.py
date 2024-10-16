@@ -93,6 +93,8 @@ def test_create_backup_with_encryption_key(
     assert kms_key_name in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test "
+                         "project")
 @pytest.mark.dependency(name="create_backup_with_multiple_kms_keys")
 def test_create_backup_with_multiple_kms_keys(
     capsys,
@@ -114,6 +116,8 @@ def test_create_backup_with_multiple_kms_keys(
     assert kms_key_names[2] in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test "
+                         "project")
 @pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
 def test_copy_backup_with_multiple_kms_keys(
     capsys, multi_region_instance_id, spanner_client, kms_key_names
@@ -160,6 +164,8 @@ def test_restore_database_with_encryption_key(
     assert kms_key_name in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test "
+                         "project")
 @pytest.mark.dependency(depends=["create_backup_with_multiple_kms_keys"])
 @RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database_with_multiple_kms_keys(

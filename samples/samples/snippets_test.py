@@ -233,6 +233,8 @@ def test_create_database_with_encryption_config(
     assert kms_key_name in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test "
+                         "project")
 def test_create_database_with_multiple_kms_keys(
     capsys,
     multi_region_instance,
