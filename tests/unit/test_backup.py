@@ -27,6 +27,8 @@ class _BaseTest(unittest.TestCase):
     DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
     BACKUP_ID = "backup_id"
     BACKUP_NAME = INSTANCE_NAME + "/backups/" + BACKUP_ID
+    DST_BACKUP_ID = "dst_backup_id"
+    DST_BACKUP_NAME = INSTANCE_NAME + "/backups" + DST_BACKUP_ID
 
     def _make_one(self, *args, **kwargs):
         return self._get_target_class()(*args, **kwargs)
@@ -329,11 +331,45 @@ class TestBackup(_BaseTest):
         )
 
     def test_create_expire_time_not_set(self):
-        instance = _Instance(self.INSTANCE_NAME)
-        backup = self._make_one(self.BACKUP_ID, instance, database=self.DATABASE_NAME)
+        from google.cloud.spanner_admin_database_v1 import Backup
+        from google.cloud.spanner_admin_database_v1 import CreateBackupRequest
+        from datetime import datetime
+        from datetime import timedelta
+        from datetime import timezone
 
-        with self.assertRaises(ValueError):
-            backup.create()
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.create_backup.return_value = op_future
+
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        version_timestamp = datetime.utcnow() - timedelta(minutes=5)
+        version_timestamp = version_timestamp.replace(tzinfo=timezone.utc)
+        backup = self._make_one(
+            self.BACKUP_ID,
+            instance,
+            database=self.DATABASE_NAME,
+            version_time=version_timestamp,
+        )
+
+        backup_pb = Backup(
+            database=self.DATABASE_NAME,
+            version_time=version_timestamp,
+        )
+
+        future = backup.create()
+        self.assertIs(future, op_future)
+
+        request = CreateBackupRequest(
+            parent=self.INSTANCE_NAME,
+            backup_id=self.BACKUP_ID,
+            backup=backup_pb,
+        )
+
+        api.create_backup.assert_called_once_with(
+            request=request,
+            metadata=[("google-cloud-resource-prefix", backup.name)],
+        )
 
     def test_create_database_not_set(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -412,6 +448,141 @@ class TestBackup(_BaseTest):
 
         with self.assertRaises(ValueError):
             backup.create()
+
+    def test_copy_expire_time_not_set(self):
+        from google.cloud.spanner_admin_database_v1 import CopyBackupRequest
+
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.copy_backup.return_value = op_future
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        backup = self._make_one(
+            self.DST_BACKUP_ID,
+            instance,
+            source_backup=self.BACKUP_ID,
+        )
+
+        future = backup.create()
+        self.assertIs(future, op_future)
+
+        request = CopyBackupRequest(
+            parent=self.INSTANCE_NAME,
+            backup_id=self.DST_BACKUP_ID,
+            source_backup=self.BACKUP_ID,
+        )
+
+        api.copy_backup.assert_called_once_with(
+            request=request,
+            metadata=[("google-cloud-resource-prefix", backup.name)],
+        )
+
+    def test_copy_fail_database_and_source_backup_not_set(self):
+        client = _Client()
+        client.database_admin_api = self._make_database_admin_api()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        expire_timestamp = self._make_timestamp()
+        backup = self._make_one(
+            self.DST_BACKUP_ID,
+            instance,
+            expire_time=expire_timestamp,
+        )
+
+        with self.assertRaises(ValueError):
+            backup.create()
+
+    def test_copy_fail_incompatible_encryption_type(self):
+        from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
+        client = _Client()
+        client.database_admin_api = self._make_database_admin_api()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        expire_timestamp = self._make_timestamp()
+        encryption_config = {
+            "encryption_type": CreateBackupEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
+            "kms_key_name": "key_name",
+        }
+        backup = self._make_one(
+            self.DST_BACKUP_ID,
+            instance,
+            source_backup=self.BACKUP_ID,
+            expire_time=expire_timestamp,
+            encryption_config=encryption_config,
+        )
+
+        with self.assertRaises(ValueError):
+            backup.create()
+
+    def test_copy_success(self):
+        from google.cloud.spanner_admin_database_v1 import CopyBackupRequest
+
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.copy_backup.return_value = op_future
+
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        expire_timestamp = self._make_timestamp()
+        backup = self._make_one(
+            self.DST_BACKUP_ID,
+            instance,
+            source_backup=self.BACKUP_ID,
+            expire_time=expire_timestamp,
+        )
+
+        future = backup.create()
+        self.assertIs(future, op_future)
+
+        request = CopyBackupRequest(
+            parent=self.INSTANCE_NAME,
+            backup_id=self.DST_BACKUP_ID,
+            source_backup=self.BACKUP_ID,
+            expire_time=expire_timestamp,
+        )
+
+        api.copy_backup.assert_called_once_with(
+            request=request,
+            metadata=[("google-cloud-resource-prefix", backup.name)],
+        )
+
+    def test_copy_success_with_encryption_params(self):
+        from google.cloud.spanner_admin_database_v1 import CopyBackupRequest
+        from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
+        op_future = object()
+        client = _Client()
+        api = client.database_admin_api = self._make_database_admin_api()
+        api.copy_backup.return_value = op_future
+
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        expire_timestamp = self._make_timestamp()
+        encryption_config = {
+            "encryption_type": CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+            "kms_key_name": "key_name",
+        }
+        backup = self._make_one(
+            self.DST_BACKUP_ID,
+            instance,
+            source_backup=self.BACKUP_ID,
+            expire_time=expire_timestamp,
+            encryption_config=encryption_config,
+        )
+
+        future = backup.create()
+        self.assertIs(future, op_future)
+
+        request = CopyBackupRequest(
+            parent=self.INSTANCE_NAME,
+            backup_id=self.DST_BACKUP_ID,
+            source_backup=self.BACKUP_ID,
+            expire_time=expire_timestamp,
+            encryption_config=encryption_config,
+        )
+
+        api.copy_backup.assert_called_once_with(
+            request=request,
+            metadata=[("google-cloud-resource-prefix", backup.name)],
+        )
 
     def test_exists_grpc_error(self):
         from google.api_core.exceptions import Unknown
