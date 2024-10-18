@@ -92,3 +92,16 @@ class OpenTelemetryBase(unittest.TestCase):
             self.assertEqual(span.name, name)
             self.assertEqual(span.status.status_code, status)
             self.assertEqual(dict(span.attributes), attributes)
+
+    def assertSpanEvents(self, name, wantEventNames=[], span=None):
+        if HAS_OPENTELEMETRY_INSTALLED:
+            if not span:
+                span_list = self.ot_exporter.get_finished_spans()
+                self.assertEqual(len(span_list) > 0, True)
+                span = span_list[0]
+
+            self.assertEqual(span.name, name)
+            actualEventNames = []
+            for event in span.events:
+                actualEventNames.append(event.name)
+            self.assertEqual(actualEventNames, wantEventNames)

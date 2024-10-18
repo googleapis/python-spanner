@@ -78,8 +78,17 @@ def trace_call(name, session, extra_attributes=None):
         try:
             yield span
         except Exception as error:
-            span.set_status(Status(StatusCode.ERROR, str(error)))
-            span.record_exception(error)
+            set_span_error_and_record_exception(span, error)
             raise
         else:
             span.set_status(Status(StatusCode.OK))
+
+
+def set_span_error_and_record_exception(span, exc):
+    if exc and span:
+        span.set_status(Status(StatusCode.ERROR, str(exc)))
+        span.record_exception(exc)
+
+
+def get_current_span():
+    return trace.get_current_span()

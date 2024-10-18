@@ -14,6 +14,7 @@
 
 
 from functools import total_ordering
+import time
 import unittest
 
 import mock
@@ -923,6 +924,8 @@ class _Session(object):
         self.create = mock.Mock()
         self._deleted = False
         self._transaction = transaction
+        # Generate a faux id.
+        self._session_id = f"time.time()"
 
     def __lt__(self, other):
         return id(self) < id(other)
@@ -948,6 +951,10 @@ class _Session(object):
     def transaction(self):
         txn = self._transaction = _make_transaction(self)
         return txn
+
+    @property
+    def session_id(self):
+        return self._session_id
 
 
 class _Database(object):
