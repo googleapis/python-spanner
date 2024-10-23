@@ -679,6 +679,18 @@ class Instance(proto.Message):
             was most recently updated.
         edition (google.cloud.spanner_admin_instance_v1.types.Instance.Edition):
             Optional. The ``Edition`` of the current instance.
+        default_backup_schedule_type (google.cloud.spanner_admin_instance_v1.types.Instance.DefaultBackupScheduleType):
+            Optional. Controls the default backup behavior for new
+            databases within the instance.
+
+            Note that ``AUTOMATIC`` is not permitted for free instances,
+            as backups and backup schedules are not allowed for free
+            instances.
+
+            In the ``GetInstance`` or ``ListInstances`` response, if the
+            value of default_backup_schedule_type is unset or NONE, no
+            default backup schedule will be created for new databases
+            within the instance.
     """
 
     class State(proto.Enum):
@@ -718,6 +730,31 @@ class Instance(proto.Message):
         STANDARD = 1
         ENTERPRISE = 2
         ENTERPRISE_PLUS = 3
+
+    class DefaultBackupScheduleType(proto.Enum):
+        r"""Indicates the default backup behavior for new databases
+        within the instance.
+
+        Values:
+            DEFAULT_BACKUP_SCHEDULE_TYPE_UNSPECIFIED (0):
+                Not specified.
+            NONE (1):
+                No default backup schedule will be created
+                automatically on creation of a database within
+                the instance.
+            AUTOMATIC (2):
+                A default backup schedule will be created
+                automatically on creation of a database within
+                the instance. The default backup schedule
+                creates a full backup every 24 hours and retains
+                the backup for a period of 7 days. Once created,
+                the default backup schedule can be
+                edited/deleted similar to any other backup
+                schedule.
+        """
+        DEFAULT_BACKUP_SCHEDULE_TYPE_UNSPECIFIED = 0
+        NONE = 1
+        AUTOMATIC = 2
 
     name: str = proto.Field(
         proto.STRING,
@@ -779,6 +816,11 @@ class Instance(proto.Message):
         proto.ENUM,
         number=20,
         enum=Edition,
+    )
+    default_backup_schedule_type: DefaultBackupScheduleType = proto.Field(
+        proto.ENUM,
+        number=23,
+        enum=DefaultBackupScheduleType,
     )
 
 

@@ -4808,6 +4808,7 @@ def test_get_instance(request_type, transport: str = "grpc"):
             state=spanner_instance_admin.Instance.State.CREATING,
             endpoint_uris=["endpoint_uris_value"],
             edition=spanner_instance_admin.Instance.Edition.STANDARD,
+            default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
         )
         response = client.get_instance(request)
 
@@ -4827,6 +4828,10 @@ def test_get_instance(request_type, transport: str = "grpc"):
     assert response.state == spanner_instance_admin.Instance.State.CREATING
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
+    assert (
+        response.default_backup_schedule_type
+        == spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE
+    )
 
 
 def test_get_instance_non_empty_request_with_auto_populated_field():
@@ -4961,6 +4966,7 @@ async def test_get_instance_async(
                 state=spanner_instance_admin.Instance.State.CREATING,
                 endpoint_uris=["endpoint_uris_value"],
                 edition=spanner_instance_admin.Instance.Edition.STANDARD,
+                default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
             )
         )
         response = await client.get_instance(request)
@@ -4981,6 +4987,10 @@ async def test_get_instance_async(
     assert response.state == spanner_instance_admin.Instance.State.CREATING
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
+    assert (
+        response.default_backup_schedule_type
+        == spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE
+    )
 
 
 @pytest.mark.asyncio
@@ -14527,6 +14537,7 @@ async def test_get_instance_empty_call_grpc_asyncio():
                 state=spanner_instance_admin.Instance.State.CREATING,
                 endpoint_uris=["endpoint_uris_value"],
                 edition=spanner_instance_admin.Instance.Edition.STANDARD,
+                default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
             )
         )
         await client.get_instance(request=None)
@@ -15903,6 +15914,7 @@ def test_get_instance_rest_call_success(request_type):
             state=spanner_instance_admin.Instance.State.CREATING,
             endpoint_uris=["endpoint_uris_value"],
             edition=spanner_instance_admin.Instance.Edition.STANDARD,
+            default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
         )
 
         # Wrap the value into a proper Response obj
@@ -15926,6 +15938,10 @@ def test_get_instance_rest_call_success(request_type):
     assert response.state == spanner_instance_admin.Instance.State.CREATING
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
+    assert (
+        response.default_backup_schedule_type
+        == spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE
+    )
 
 
 @pytest.mark.parametrize("null_interceptor", [True, False])
