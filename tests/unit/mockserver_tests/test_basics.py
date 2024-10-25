@@ -13,20 +13,28 @@
 # limitations under the License.
 
 import unittest
-from tests.unit.mockserver.mock_spanner import start_mock_server, \
-    SpannerServicer
+from google.cloud.spanner_v1.testing.mock_spanner import (
+    start_mock_server,
+    SpannerServicer,
+)
 import google.cloud.spanner_v1.types.type as spanner_type
 import google.cloud.spanner_v1.types.result_set as result_set
 from google.api_core.client_options import ClientOptions
 from google.auth.credentials import AnonymousCredentials
-from google.cloud.spanner_v1 import Client, FixedSizePool
+from google.cloud.spanner_v1 import (
+    Client,
+    FixedSizePool,
+    BatchCreateSessionsRequest,
+    ExecuteSqlRequest,
+)
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 import grpc
 
+
 class TestBasics(unittest.TestCase):
     server: grpc.Server = None
-    service: SpannerServicer = None
+    spanner_service: SpannerServicer = None
     port: int = None
 
     def __init__(self, *args, **kwargs):
@@ -37,7 +45,11 @@ class TestBasics(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        TestBasics.server, TestBasics.service, TestBasics.port = start_mock_server()
+        (
+            TestBasics.server,
+            TestBasics.spanner_service,
+            TestBasics.port,
+        ) = start_mock_server()
 
     @classmethod
     def tearDownClass(cls):
@@ -53,7 +65,7 @@ class TestBasics(unittest.TestCase):
                 credentials=AnonymousCredentials(),
                 client_options=ClientOptions(
                     api_endpoint="localhost:" + str(TestBasics.port),
-                )
+                ),
             )
         return self._client
 
@@ -67,26 +79,35 @@ class TestBasics(unittest.TestCase):
     def database(self) -> Database:
         if self._database is None:
             self._database = self.instance.database(
-                "test-database",
-                pool=FixedSizePool(size=10)
+                "test-database", pool=FixedSizePool(size=10)
             )
         return self._database
 
     def test_select1(self):
-        result = result_set.ResultSet(dict(
-            metadata=result_set.ResultSetMetadata(dict(
-                row_type=spanner_type.StructType(dict(
-                    fields=[spanner_type.StructType.Field(dict(
-                        name="c",
-                        type=spanner_type.Type(dict(
-                            code=spanner_type.TypeCode.INT64)
-                        ))
-                    )]
-                )))
-            ),
-        ))
+        result = result_set.ResultSet(
+            dict(
+                metadata=result_set.ResultSetMetadata(
+                    dict(
+                        row_type=spanner_type.StructType(
+                            dict(
+                                fields=[
+                                    spanner_type.StructType.Field(
+                                        dict(
+                                            name="c",
+                                            type=spanner_type.Type(
+                                                dict(code=spanner_type.TypeCode.INT64)
+                                            ),
+                                        )
+                                    )
+                                ]
+                            )
+                        )
+                    )
+                ),
+            )
+        )
         result.rows.extend(["1"])
-        TestBasics.service.mock_spanner.add_result("select 1", result)
+        TestBasics.spanner_service.mock_spanner.add_result("select 1", result)
         with self.database.snapshot() as snapshot:
             results = snapshot.execute_sql("select 1")
             result_list = []
@@ -94,4 +115,7 @@ class TestBasics(unittest.TestCase):
                 result_list.append(row)
                 self.assertEqual(1, row[0])
             self.assertEqual(1, len(result_list))
-
+        requests = self.spanner_service.requests
+        self.assertEqual(2, len(requests))
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))

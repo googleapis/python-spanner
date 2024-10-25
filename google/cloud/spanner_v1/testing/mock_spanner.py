@@ -14,13 +14,14 @@
 
 from google.protobuf import empty_pb2  # type: ignore
 from google.protobuf import struct_pb2  # type: ignore
-import google.spanner.v1.spanner_pb2_grpc as spanner_grpc
+import google.cloud.spanner_v1.testing.spanner_pb2_grpc as spanner_grpc
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.transaction as transaction
 import google.cloud.spanner_v1.types.commit_response as commit
 import google.cloud.spanner_v1.types.spanner as spanner
 from concurrent import futures
 import grpc
+
 
 class MockSpanner:
     def __init__(self):
@@ -29,7 +30,9 @@ class MockSpanner:
     def add_result(self, sql: str, result: result_set.ResultSet):
         self.results[sql] = result
 
-    def get_result_as_partial_result_sets(self, sql: str) -> [result_set.PartialResultSet]:
+    def get_result_as_partial_result_sets(
+        self, sql: str
+    ) -> [result_set.PartialResultSet]:
         result: result_set.ResultSet = self.results.get(sql)
         if result is None:
             return []
@@ -38,14 +41,16 @@ class MockSpanner:
         for row in result.rows:
             partial = result_set.PartialResultSet()
             if first:
-                partial.metadata=result.metadata
+                partial.metadata = result.metadata
             partial.values.extend(row)
             partials.append(partial)
         return partials
 
+
+# An in-memory mock Spanner server that can be used for testing.
 class SpannerServicer(spanner_grpc.SpannerServicer):
     def __init__(self):
-        self.requests = []
+        self._requests = []
         self.session_counter = 0
         self.sessions = {}
         self._mock_spanner = MockSpanner()
@@ -54,15 +59,21 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
     def mock_spanner(self):
         return self._mock_spanner
 
+    @property
+    def requests(self):
+        return self._requests
+
     def CreateSession(self, request, context):
-        self.requests.append(request)
+        self._requests.append(request)
         return self.__create_session(request.database, request.session)
 
     def BatchCreateSessions(self, request, context):
-        self.requests.append(request)
+        self._requests.append(request)
         sessions = []
         for i in range(request.session_count):
-            sessions.append(self.__create_session(request.database, request.session_template))
+            sessions.append(
+                self.__create_session(request.database, request.session_template)
+            )
         return spanner.BatchCreateSessionsResponse(dict(session=sessions))
 
     def __create_session(self, database: str, session_template: spanner.Session):
@@ -88,7 +99,7 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
         return result_set.ResultSet()
 
     def ExecuteStreamingSql(self, request, context):
-        self.requests.append(request)
+        self._requests.append(request)
         partials = self.mock_spanner.get_result_as_partial_result_sets(request.sql)
         for result in partials:
             yield result
@@ -122,6 +133,7 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
         for result in [spanner.BatchWriteResponse(), spanner.BatchWriteResponse()]:
             yield result
 
+
 def start_mock_server() -> (grpc.Server, SpannerServicer, int):
     spanner_servicer = SpannerServicer()
     spanner_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
@@ -129,6 +141,7 @@ def start_mock_server() -> (grpc.Server, SpannerServicer, int):
     port = spanner_server.add_insecure_port("[::]:0")
     spanner_server.start()
     return spanner_server, spanner_servicer, port
+
 
 if __name__ == "__main__":
     server, _ = start_mock_server()
