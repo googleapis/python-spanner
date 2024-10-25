@@ -15,6 +15,9 @@
 from google.protobuf import empty_pb2  # type: ignore
 from google.protobuf import struct_pb2  # type: ignore
 import google.cloud.spanner_v1.testing.spanner_pb2_grpc as spanner_grpc
+import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
+from google.cloud.spanner_v1.testing.mock_database_admin import \
+    DatabaseAdminServicer
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.transaction as transaction
 import google.cloud.spanner_v1.types.commit_response as commit
@@ -134,15 +137,17 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
             yield result
 
 
-def start_mock_server() -> (grpc.Server, SpannerServicer, int):
-    spanner_servicer = SpannerServicer()
+def start_mock_server() -> (grpc.Server, SpannerServicer, DatabaseAdminServicer, int):
+    # Create a gRPC server.
     spanner_server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+
+    # Add the Spanner services to the gRPC server.
+    spanner_servicer = SpannerServicer()
     spanner_grpc.add_SpannerServicer_to_server(spanner_servicer, spanner_server)
+    database_admin_servicer = DatabaseAdminServicer()
+    database_admin_grpc.add_DatabaseAdminServicer_to_server(database_admin_servicer, spanner_server)
+
+    # Start the server on a random port.
     port = spanner_server.add_insecure_port("[::]:0")
     spanner_server.start()
-    return spanner_server, spanner_servicer, port
-
-
-if __name__ == "__main__":
-    server, _ = start_mock_server()
-    server.wait_for_termination()
+    return spanner_server, spanner_servicer, database_admin_servicer, port
