@@ -12,34 +12,44 @@
 #     ./google/spanner/admin/database/v1/*.proto
 
 """Client and server classes corresponding to protobuf-defined services."""
-import grpc
-import warnings
-
 from google.iam.v1 import iam_policy_pb2 as google_dot_iam_dot_v1_dot_iam__policy__pb2
 from google.iam.v1 import policy_pb2 as google_dot_iam_dot_v1_dot_policy__pb2
-from google.longrunning import operations_pb2 as google_dot_longrunning_dot_operations__pb2
+from google.longrunning import (
+    operations_pb2 as google_dot_longrunning_dot_operations__pb2,
+)
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
-from google.cloud.spanner_admin_database_v1.types import backup as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2
-from google.cloud.spanner_admin_database_v1.types import backup_schedule as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2
-from google.cloud.spanner_admin_database_v1.types import spanner_database_admin as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2
+import grpc
 
-GRPC_GENERATED_VERSION = '1.67.0'
+from google.cloud.spanner_admin_database_v1.types import (
+    backup as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2,
+)
+from google.cloud.spanner_admin_database_v1.types import (
+    backup_schedule as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2,
+)
+from google.cloud.spanner_admin_database_v1.types import (
+    spanner_database_admin as google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2,
+)
+
+GRPC_GENERATED_VERSION = "1.67.0"
 GRPC_VERSION = grpc.__version__
 _version_not_supported = False
 
 try:
     from grpc._utilities import first_version_is_lower
-    _version_not_supported = first_version_is_lower(GRPC_VERSION, GRPC_GENERATED_VERSION)
+
+    _version_not_supported = first_version_is_lower(
+        GRPC_VERSION, GRPC_GENERATED_VERSION
+    )
 except ImportError:
     _version_not_supported = True
 
 if _version_not_supported:
     raise RuntimeError(
-        f'The grpc package installed is at version {GRPC_VERSION},'
-        + f' but the generated code in google/spanner/admin/database/v1/spanner_database_admin_pb2_grpc.py depends on'
-        + f' grpcio>={GRPC_GENERATED_VERSION}.'
-        + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
-        + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
+        f"The grpc package installed is at version {GRPC_VERSION},"
+        + " but the generated code in google/spanner/admin/database/v1/spanner_database_admin_pb2_grpc.py depends on"
+        + f" grpcio>={GRPC_GENERATED_VERSION}."
+        + f" Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}"
+        + f" or downgrade your generated code using grpcio-tools<={GRPC_VERSION}."
     )
 
 
@@ -54,11 +64,10 @@ class DatabaseAdminServicer(object):
     """
 
     def ListDatabases(self, request, context):
-        """Lists Cloud Spanner databases.
-        """
+        """Lists Cloud Spanner databases."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def CreateDatabase(self, request, context):
         """Creates a new Cloud Spanner database and starts to prepare it for serving.
@@ -71,15 +80,14 @@ class DatabaseAdminServicer(object):
         [Database][google.spanner.admin.database.v1.Database], if successful.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def GetDatabase(self, request, context):
-        """Gets the state of a Cloud Spanner database.
-        """
+        """Gets the state of a Cloud Spanner database."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def UpdateDatabase(self, request, context):
         """Updates a Cloud Spanner database. The returned
@@ -120,8 +128,8 @@ class DatabaseAdminServicer(object):
         [Database][google.spanner.admin.database.v1.Database], if successful.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def UpdateDatabaseDdl(self, request, context):
         """Updates the schema of a Cloud Spanner database by
@@ -134,8 +142,8 @@ class DatabaseAdminServicer(object):
         The operation has no response.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def DropDatabase(self, request, context):
         """Drops (aka deletes) a Cloud Spanner database.
@@ -145,8 +153,8 @@ class DatabaseAdminServicer(object):
         after the database has been deleted.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def GetDatabaseDdl(self, request, context):
         """Returns the schema of a Cloud Spanner database as a list of formatted
@@ -154,8 +162,8 @@ class DatabaseAdminServicer(object):
         be queried using the [Operations][google.longrunning.Operations] API.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def SetIamPolicy(self, request, context):
         """Sets the access control policy on a database or backup resource.
@@ -167,8 +175,8 @@ class DatabaseAdminServicer(object):
         permission on [resource][google.iam.v1.SetIamPolicyRequest.resource].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def GetIamPolicy(self, request, context):
         """Gets the access control policy for a database or backup resource.
@@ -181,8 +189,8 @@ class DatabaseAdminServicer(object):
         permission on [resource][google.iam.v1.GetIamPolicyRequest.resource].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def TestIamPermissions(self, request, context):
         """Returns permissions that the caller has on the specified database or backup
@@ -197,8 +205,8 @@ class DatabaseAdminServicer(object):
         `spanner.backups.list` permission on the containing instance.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def CreateBackup(self, request, context):
         """Starts creating a new Cloud Spanner Backup.
@@ -215,8 +223,8 @@ class DatabaseAdminServicer(object):
         creation of different databases can run concurrently.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def CopyBackup(self, request, context):
         """Starts copying a Cloud Spanner Backup.
@@ -234,32 +242,32 @@ class DatabaseAdminServicer(object):
         source backup.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def GetBackup(self, request, context):
         """Gets metadata on a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def UpdateBackup(self, request, context):
         """Updates a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def DeleteBackup(self, request, context):
         """Deletes a pending or completed
         [Backup][google.spanner.admin.database.v1.Backup].
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListBackups(self, request, context):
         """Lists completed and pending backups.
@@ -267,8 +275,8 @@ class DatabaseAdminServicer(object):
         starting from the most recent `create_time`.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def RestoreDatabase(self, request, context):
         """Create a new database by restoring from a completed backup. The new
@@ -290,8 +298,8 @@ class DatabaseAdminServicer(object):
         first restore to complete.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListDatabaseOperations(self, request, context):
         """Lists database [longrunning-operations][google.longrunning.Operation].
@@ -304,8 +312,8 @@ class DatabaseAdminServicer(object):
         and pending operations.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListBackupOperations(self, request, context):
         """Lists the backup [long-running operations][google.longrunning.Operation] in
@@ -320,187 +328,184 @@ class DatabaseAdminServicer(object):
         from the most recently started operation.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListDatabaseRoles(self, request, context):
-        """Lists Cloud Spanner database roles.
-        """
+        """Lists Cloud Spanner database roles."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def CreateBackupSchedule(self, request, context):
-        """Creates a new backup schedule.
-        """
+        """Creates a new backup schedule."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def GetBackupSchedule(self, request, context):
-        """Gets backup schedule for the input schedule name.
-        """
+        """Gets backup schedule for the input schedule name."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def UpdateBackupSchedule(self, request, context):
-        """Updates a backup schedule.
-        """
+        """Updates a backup schedule."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def DeleteBackupSchedule(self, request, context):
-        """Deletes a backup schedule.
-        """
+        """Deletes a backup schedule."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
     def ListBackupSchedules(self, request, context):
-        """Lists all the backup schedules for the database.
-        """
+        """Lists all the backup schedules for the database."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
+        context.set_details("Method not implemented!")
+        raise NotImplementedError("Method not implemented!")
 
 
 def add_DatabaseAdminServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ListDatabases': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListDatabases,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesResponse.serialize,
-            ),
-            'CreateDatabase': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateDatabase,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.CreateDatabaseRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'GetDatabase': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetDatabase,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.Database.serialize,
-            ),
-            'UpdateDatabase': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateDatabase,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'UpdateDatabaseDdl': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateDatabaseDdl,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseDdlRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'DropDatabase': grpc.unary_unary_rpc_method_handler(
-                    servicer.DropDatabase,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.DropDatabaseRequest.deserialize,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'GetDatabaseDdl': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetDatabaseDdl,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlResponse.serialize,
-            ),
-            'SetIamPolicy': grpc.unary_unary_rpc_method_handler(
-                    servicer.SetIamPolicy,
-                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.FromString,
-                    response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
-            ),
-            'GetIamPolicy': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetIamPolicy,
-                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.FromString,
-                    response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
-            ),
-            'TestIamPermissions': grpc.unary_unary_rpc_method_handler(
-                    servicer.TestIamPermissions,
-                    request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.FromString,
-                    response_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.SerializeToString,
-            ),
-            'CreateBackup': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateBackup,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CreateBackupRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'CopyBackup': grpc.unary_unary_rpc_method_handler(
-                    servicer.CopyBackup,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CopyBackupRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'GetBackup': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetBackup,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.GetBackupRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.serialize,
-            ),
-            'UpdateBackup': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateBackup,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.UpdateBackupRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.serialize,
-            ),
-            'DeleteBackup': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteBackup,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.DeleteBackupRequest.deserialize,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'ListBackups': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListBackups,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsResponse.serialize,
-            ),
-            'RestoreDatabase': grpc.unary_unary_rpc_method_handler(
-                    servicer.RestoreDatabase,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.RestoreDatabaseRequest.deserialize,
-                    response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
-            ),
-            'ListDatabaseOperations': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListDatabaseOperations,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsResponse.serialize,
-            ),
-            'ListBackupOperations': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListBackupOperations,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsResponse.serialize,
-            ),
-            'ListDatabaseRoles': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListDatabaseRoles,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesResponse.serialize,
-            ),
-            'CreateBackupSchedule': grpc.unary_unary_rpc_method_handler(
-                    servicer.CreateBackupSchedule,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.CreateBackupScheduleRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
-            ),
-            'GetBackupSchedule': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetBackupSchedule,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.GetBackupScheduleRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
-            ),
-            'UpdateBackupSchedule': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdateBackupSchedule,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.UpdateBackupScheduleRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
-            ),
-            'DeleteBackupSchedule': grpc.unary_unary_rpc_method_handler(
-                    servicer.DeleteBackupSchedule,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.DeleteBackupScheduleRequest.deserialize,
-                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
-            ),
-            'ListBackupSchedules': grpc.unary_unary_rpc_method_handler(
-                    servicer.ListBackupSchedules,
-                    request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesRequest.deserialize,
-                    response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesResponse.serialize,
-            ),
+        "ListDatabases": grpc.unary_unary_rpc_method_handler(
+            servicer.ListDatabases,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesResponse.serialize,
+        ),
+        "CreateDatabase": grpc.unary_unary_rpc_method_handler(
+            servicer.CreateDatabase,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.CreateDatabaseRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "GetDatabase": grpc.unary_unary_rpc_method_handler(
+            servicer.GetDatabase,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.Database.serialize,
+        ),
+        "UpdateDatabase": grpc.unary_unary_rpc_method_handler(
+            servicer.UpdateDatabase,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "UpdateDatabaseDdl": grpc.unary_unary_rpc_method_handler(
+            servicer.UpdateDatabaseDdl,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseDdlRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "DropDatabase": grpc.unary_unary_rpc_method_handler(
+            servicer.DropDatabase,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.DropDatabaseRequest.deserialize,
+            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        ),
+        "GetDatabaseDdl": grpc.unary_unary_rpc_method_handler(
+            servicer.GetDatabaseDdl,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlResponse.serialize,
+        ),
+        "SetIamPolicy": grpc.unary_unary_rpc_method_handler(
+            servicer.SetIamPolicy,
+            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.FromString,
+            response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
+        ),
+        "GetIamPolicy": grpc.unary_unary_rpc_method_handler(
+            servicer.GetIamPolicy,
+            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.FromString,
+            response_serializer=google_dot_iam_dot_v1_dot_policy__pb2.Policy.SerializeToString,
+        ),
+        "TestIamPermissions": grpc.unary_unary_rpc_method_handler(
+            servicer.TestIamPermissions,
+            request_deserializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.FromString,
+            response_serializer=google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.SerializeToString,
+        ),
+        "CreateBackup": grpc.unary_unary_rpc_method_handler(
+            servicer.CreateBackup,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CreateBackupRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "CopyBackup": grpc.unary_unary_rpc_method_handler(
+            servicer.CopyBackup,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CopyBackupRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "GetBackup": grpc.unary_unary_rpc_method_handler(
+            servicer.GetBackup,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.GetBackupRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.serialize,
+        ),
+        "UpdateBackup": grpc.unary_unary_rpc_method_handler(
+            servicer.UpdateBackup,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.UpdateBackupRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.serialize,
+        ),
+        "DeleteBackup": grpc.unary_unary_rpc_method_handler(
+            servicer.DeleteBackup,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.DeleteBackupRequest.deserialize,
+            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        ),
+        "ListBackups": grpc.unary_unary_rpc_method_handler(
+            servicer.ListBackups,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsResponse.serialize,
+        ),
+        "RestoreDatabase": grpc.unary_unary_rpc_method_handler(
+            servicer.RestoreDatabase,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.RestoreDatabaseRequest.deserialize,
+            response_serializer=google_dot_longrunning_dot_operations__pb2.Operation.SerializeToString,
+        ),
+        "ListDatabaseOperations": grpc.unary_unary_rpc_method_handler(
+            servicer.ListDatabaseOperations,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsResponse.serialize,
+        ),
+        "ListBackupOperations": grpc.unary_unary_rpc_method_handler(
+            servicer.ListBackupOperations,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsResponse.serialize,
+        ),
+        "ListDatabaseRoles": grpc.unary_unary_rpc_method_handler(
+            servicer.ListDatabaseRoles,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesResponse.serialize,
+        ),
+        "CreateBackupSchedule": grpc.unary_unary_rpc_method_handler(
+            servicer.CreateBackupSchedule,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.CreateBackupScheduleRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
+        ),
+        "GetBackupSchedule": grpc.unary_unary_rpc_method_handler(
+            servicer.GetBackupSchedule,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.GetBackupScheduleRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
+        ),
+        "UpdateBackupSchedule": grpc.unary_unary_rpc_method_handler(
+            servicer.UpdateBackupSchedule,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.UpdateBackupScheduleRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.serialize,
+        ),
+        "DeleteBackupSchedule": grpc.unary_unary_rpc_method_handler(
+            servicer.DeleteBackupSchedule,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.DeleteBackupScheduleRequest.deserialize,
+            response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+        ),
+        "ListBackupSchedules": grpc.unary_unary_rpc_method_handler(
+            servicer.ListBackupSchedules,
+            request_deserializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesRequest.deserialize,
+            response_serializer=google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesResponse.serialize,
+        ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
-            'google.spanner.admin.database.v1.DatabaseAdmin', rpc_method_handlers)
+        "google.spanner.admin.database.v1.DatabaseAdmin", rpc_method_handlers
+    )
     server.add_generic_rpc_handlers((generic_handler,))
-    server.add_registered_method_handlers('google.spanner.admin.database.v1.DatabaseAdmin', rpc_method_handlers)
+    server.add_registered_method_handlers(
+        "google.spanner.admin.database.v1.DatabaseAdmin", rpc_method_handlers
+    )
 
 
- # This class is part of an EXPERIMENTAL API.
+# This class is part of an EXPERIMENTAL API.
 class DatabaseAdmin(object):
     """Cloud Spanner Database Admin API
 
@@ -512,20 +517,22 @@ class DatabaseAdmin(object):
     """
 
     @staticmethod
-    def ListDatabases(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListDatabases(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabases',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabases",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabasesResponse.FromString,
             options,
@@ -536,23 +543,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def CreateDatabase(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def CreateDatabase(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/CreateDatabase',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/CreateDatabase",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.CreateDatabaseRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -563,23 +573,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def GetDatabase(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def GetDatabase(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/GetDatabase',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/GetDatabase",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.Database.FromString,
             options,
@@ -590,23 +603,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def UpdateDatabase(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def UpdateDatabase(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/UpdateDatabase',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/UpdateDatabase",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -617,23 +633,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def UpdateDatabaseDdl(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def UpdateDatabaseDdl(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/UpdateDatabaseDdl',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/UpdateDatabaseDdl",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.UpdateDatabaseDdlRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -644,23 +663,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def DropDatabase(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def DropDatabase(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/DropDatabase',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/DropDatabase",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.DropDatabaseRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -671,23 +693,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def GetDatabaseDdl(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def GetDatabaseDdl(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/GetDatabaseDdl',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/GetDatabaseDdl",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.GetDatabaseDdlResponse.FromString,
             options,
@@ -698,23 +723,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def SetIamPolicy(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def SetIamPolicy(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/SetIamPolicy',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/SetIamPolicy",
             google_dot_iam_dot_v1_dot_iam__policy__pb2.SetIamPolicyRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
             options,
@@ -725,23 +753,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def GetIamPolicy(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def GetIamPolicy(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/GetIamPolicy',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/GetIamPolicy",
             google_dot_iam_dot_v1_dot_iam__policy__pb2.GetIamPolicyRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_policy__pb2.Policy.FromString,
             options,
@@ -752,23 +783,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def TestIamPermissions(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def TestIamPermissions(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/TestIamPermissions',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/TestIamPermissions",
             google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsRequest.SerializeToString,
             google_dot_iam_dot_v1_dot_iam__policy__pb2.TestIamPermissionsResponse.FromString,
             options,
@@ -779,23 +813,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def CreateBackup(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def CreateBackup(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/CreateBackup',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/CreateBackup",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CreateBackupRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -806,23 +843,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def CopyBackup(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def CopyBackup(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/CopyBackup',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/CopyBackup",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.CopyBackupRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -833,23 +873,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def GetBackup(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def GetBackup(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/GetBackup',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/GetBackup",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.GetBackupRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.FromString,
             options,
@@ -860,23 +903,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def UpdateBackup(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def UpdateBackup(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/UpdateBackup',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/UpdateBackup",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.UpdateBackupRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.Backup.FromString,
             options,
@@ -887,23 +933,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def DeleteBackup(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def DeleteBackup(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/DeleteBackup',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/DeleteBackup",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.DeleteBackupRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -914,23 +963,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def ListBackups(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListBackups(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListBackups',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListBackups",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupsResponse.FromString,
             options,
@@ -941,23 +993,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def RestoreDatabase(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def RestoreDatabase(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/RestoreDatabase',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/RestoreDatabase",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.RestoreDatabaseRequest.SerializeToString,
             google_dot_longrunning_dot_operations__pb2.Operation.FromString,
             options,
@@ -968,23 +1023,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def ListDatabaseOperations(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListDatabaseOperations(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabaseOperations',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabaseOperations",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseOperationsResponse.FromString,
             options,
@@ -995,23 +1053,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def ListBackupOperations(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListBackupOperations(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListBackupOperations',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListBackupOperations",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__pb2.ListBackupOperationsResponse.FromString,
             options,
@@ -1022,23 +1083,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def ListDatabaseRoles(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListDatabaseRoles(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabaseRoles',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListDatabaseRoles",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_spanner__database__admin__pb2.ListDatabaseRolesResponse.FromString,
             options,
@@ -1049,23 +1113,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def CreateBackupSchedule(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def CreateBackupSchedule(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/CreateBackupSchedule',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/CreateBackupSchedule",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.CreateBackupScheduleRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.FromString,
             options,
@@ -1076,23 +1143,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def GetBackupSchedule(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def GetBackupSchedule(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/GetBackupSchedule',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/GetBackupSchedule",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.GetBackupScheduleRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.FromString,
             options,
@@ -1103,23 +1173,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def UpdateBackupSchedule(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def UpdateBackupSchedule(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/UpdateBackupSchedule',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/UpdateBackupSchedule",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.UpdateBackupScheduleRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.BackupSchedule.FromString,
             options,
@@ -1130,23 +1203,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def DeleteBackupSchedule(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def DeleteBackupSchedule(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/DeleteBackupSchedule',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/DeleteBackupSchedule",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.DeleteBackupScheduleRequest.SerializeToString,
             google_dot_protobuf_dot_empty__pb2.Empty.FromString,
             options,
@@ -1157,23 +1233,26 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )
 
     @staticmethod
-    def ListBackupSchedules(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
+    def ListBackupSchedules(
+        request,
+        target,
+        options=(),
+        channel_credentials=None,
+        call_credentials=None,
+        insecure=False,
+        compression=None,
+        wait_for_ready=None,
+        timeout=None,
+        metadata=None,
+    ):
         return grpc.experimental.unary_unary(
             request,
             target,
-            '/google.spanner.admin.database.v1.DatabaseAdmin/ListBackupSchedules',
+            "/google.spanner.admin.database.v1.DatabaseAdmin/ListBackupSchedules",
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesRequest.SerializeToString,
             google_dot_spanner_dot_admin_dot_database_dot_v1_dot_backup__schedule__pb2.ListBackupSchedulesResponse.FromString,
             options,
@@ -1184,4 +1263,5 @@ class DatabaseAdmin(object):
             wait_for_ready,
             timeout,
             metadata,
-            _registered_method=True)
+            _registered_method=True,
+        )

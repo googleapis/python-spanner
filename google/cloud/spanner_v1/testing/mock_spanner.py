@@ -12,18 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.protobuf import empty_pb2  # type: ignore
-from google.protobuf import struct_pb2  # type: ignore
-import google.cloud.spanner_v1.testing.spanner_pb2_grpc as spanner_grpc
-import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
-from google.cloud.spanner_v1.testing.mock_database_admin import \
-    DatabaseAdminServicer
-import google.cloud.spanner_v1.types.result_set as result_set
-import google.cloud.spanner_v1.types.transaction as transaction
-import google.cloud.spanner_v1.types.commit_response as commit
-import google.cloud.spanner_v1.types.spanner as spanner
 from concurrent import futures
+
+from google.protobuf import empty_pb2
 import grpc
+
+from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
+import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
+import google.cloud.spanner_v1.testing.spanner_pb2_grpc as spanner_grpc
+import google.cloud.spanner_v1.types.commit_response as commit
+import google.cloud.spanner_v1.types.result_set as result_set
+import google.cloud.spanner_v1.types.spanner as spanner
+import google.cloud.spanner_v1.types.transaction as transaction
 
 
 class MockSpanner:
@@ -31,12 +31,12 @@ class MockSpanner:
         self.results = {}
 
     def add_result(self, sql: str, result: result_set.ResultSet):
-        self.results[sql] = result
+        self.results[sql.lower()] = result
 
     def get_result_as_partial_result_sets(
         self, sql: str
     ) -> [result_set.PartialResultSet]:
-        result: result_set.ResultSet = self.results.get(sql)
+        result: result_set.ResultSet = self.results.get(sql.lower())
         if result is None:
             return []
         partials = []
@@ -65,6 +65,9 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
     @property
     def requests(self):
         return self._requests
+
+    def clear_requests(self):
+        self._requests = []
 
     def CreateSession(self, request, context):
         self._requests.append(request)
@@ -145,7 +148,9 @@ def start_mock_server() -> (grpc.Server, SpannerServicer, DatabaseAdminServicer,
     spanner_servicer = SpannerServicer()
     spanner_grpc.add_SpannerServicer_to_server(spanner_servicer, spanner_server)
     database_admin_servicer = DatabaseAdminServicer()
-    database_admin_grpc.add_DatabaseAdminServicer_to_server(database_admin_servicer, spanner_server)
+    database_admin_grpc.add_DatabaseAdminServicer_to_server(
+        database_admin_servicer, spanner_server
+    )
 
     # Start the server on a random port.
     port = spanner_server.add_insecure_port("[::]:0")

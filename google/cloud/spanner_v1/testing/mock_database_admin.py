@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.protobuf import empty_pb2  # type: ignore
-from google.protobuf import any_pb2  # type: ignore
-from google.protobuf import struct_pb2  # type: ignore
-import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
 from google.longrunning import operations_pb2 as operations_pb2
+from google.protobuf import empty_pb2
+
+import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
 
 
 # An in-memory mock DatabaseAdmin server that can be used for testing.
@@ -27,6 +26,9 @@ class DatabaseAdminServicer(database_admin_grpc.DatabaseAdminServicer):
     @property
     def requests(self):
         return self._requests
+
+    def clear_requests(self):
+        self._requests = []
 
     def UpdateDatabaseDdl(self, request, context):
         self._requests.append(request)

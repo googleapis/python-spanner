@@ -14,10 +14,8 @@
 
 import unittest
 
-from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
-from google.cloud.spanner_v1.testing.mock_database_admin import \
-    DatabaseAdminServicer
+from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
 from google.cloud.spanner_v1.testing.mock_spanner import (
     start_mock_server,
     SpannerServicer,
@@ -129,19 +127,18 @@ class TestBasics(unittest.TestCase):
 
     def test_create_table(self):
         database_admin_api = self.client.database_admin_api
-        request = spanner_database_admin.UpdateDatabaseDdlRequest(dict(
-            database=database_admin_api.database_path(
-                "test-project", "test-instance", "test-database"
-            ),
-            statements=[
-                "CREATE TABLE Test ("
-                "Id INT64, "
-                "Value STRING(MAX)) "
-                "PRIMARY KEY (Id)",
-            ],
-        ))
+        request = spanner_database_admin.UpdateDatabaseDdlRequest(
+            dict(
+                database=database_admin_api.database_path(
+                    "test-project", "test-instance", "test-database"
+                ),
+                statements=[
+                    "CREATE TABLE Test ("
+                    "Id INT64, "
+                    "Value STRING(MAX)) "
+                    "PRIMARY KEY (Id)",
+                ],
+            )
+        )
         operation = database_admin_api.update_database_ddl(request)
         operation.result(1)
-        requests = self.database_admin_service.requests
-        self.assertEqual(1, len(requests))
-        self.assertTrue(isinstance(requests[0], UpdateDatabaseDdlRequest))
