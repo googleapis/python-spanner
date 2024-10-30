@@ -16,12 +16,13 @@
 import time
 import uuid
 
-import pytest
 from google.api_core import exceptions
 from google.cloud import spanner_admin_database_v1
 from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 from google.cloud.spanner_v1 import backup, client, database, instance
+import pytest
 from test_utils import retry
+from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 
 INSTANCE_CREATION_TIMEOUT = 560  # seconds
 
@@ -128,17 +129,24 @@ def sample_instance(
     instance_config,
     sample_name,
 ):
-    sample_instance = spanner_client.instance(
-        instance_id,
-        instance_config,
-        labels={
-            "cloud_spanner_samples": "true",
-            "sample_name": sample_name,
-            "created": str(int(time.time())),
-        },
+    operation = spanner_client.instance_admin_api.create_instance(
+        parent=spanner_client.project_name,
+        instance_id=instance_id,
+        instance=spanner_instance_admin.Instance(
+            config=instance_config,
+            display_name="This is a display name.",
+            node_count=1,
+            labels={
+                "cloud_spanner_samples": "true",
+                "sample_name": sample_name,
+                "created": str(int(time.time())),
+            },
+            edition=spanner_instance_admin.Instance.Edition.ENTERPRISE_PLUS,  # Optional
+        ),
     )
-    op = retry_429(sample_instance.create)()
-    op.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
+    operation.result(INSTANCE_CREATION_TIMEOUT)  # block until completion
+
+    sample_instance = spanner_client.instance(instance_id)
 
     # Eventual consistency check
     retry_found = retry.RetryResult(bool)
@@ -240,8 +248,7 @@ def database_ddl():
     return []
 
 
-@pytest.fixture(scope="module")
-def sample_database(
+def create_sample_database(
     spanner_client, sample_instance, database_id, database_ddl, database_dialect
 ):
     if database_dialect == DatabaseDialect.POSTGRESQL:
@@ -279,6 +286,28 @@ def sample_database(
     yield sample_database
 
     sample_database.drop()
+
+
+@pytest.fixture(scope="module")
+def sample_database(
+    spanner_client, sample_instance, database_id, database_ddl, database_dialect
+):
+    yield from create_sample_database(
+        spanner_client, sample_instance, database_id, database_ddl, database_dialect
+    )
+
+
+@pytest.fixture(scope="module")
+def sample_multi_region_database(
+    spanner_client, multi_region_instance, database_id, database_ddl, database_dialect
+):
+    yield from create_sample_database(
+        spanner_client,
+        multi_region_instance,
+        database_id,
+        database_ddl,
+        database_dialect,
+    )
 
 
 @pytest.fixture(scope="module")
@@ -321,3 +350,19 @@ def kms_key_name(spanner_client):
         "spanner-test-keyring",
         "spanner-test-cmek",
     )
+
+
+@pytest.fixture(scope="module")
+def kms_key_names(spanner_client):
+    kms_key_names_list = []
+    # this list of cloud-regions correspond to `nam3`
+    for cloud_region in ["us-east1", "us-east4", "us-central1"]:
+        kms_key_names_list.append(
+            "projects/{}/locations/{}/keyRings/{}/cryptoKeys/{}".format(
+                spanner_client.project,
+                cloud_region,
+                "spanner-test-keyring",
+                "spanner-test-cmek",
+            )
+        )
+    return kms_key_names_list
