@@ -126,6 +126,13 @@ class Client(ClientWithProject):
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas
             or regions should be used for non-transactional reads or queries.
 
+    :type labels: dict (str -> any) or None
+    :param observability_options: (Optional) the configuration to control
+           the tracer's behavior.
+           tracer_provider is the injected tracer provider
+           enable_extended_tracing: :type:boolean when set to true will allow for
+           spans that issue SQL statements to be annotated with SQL.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -146,6 +153,7 @@ class Client(ClientWithProject):
         query_options=None,
         route_to_leader_enabled=True,
         directed_read_options=None,
+        observability_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -187,6 +195,7 @@ class Client(ClientWithProject):
 
         self._route_to_leader_enabled = route_to_leader_enabled
         self._directed_read_options = directed_read_options
+        self._observability_options = observability_options
 
     @property
     def credentials(self):
@@ -371,6 +380,7 @@ class Client(ClientWithProject):
             self._emulator_host,
             labels,
             processing_units,
+            observability_options=self._observability_options,
         )
 
     def list_instances(self, filter_="", page_size=None):

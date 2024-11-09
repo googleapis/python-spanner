@@ -30,7 +30,13 @@ def _make_rpc_error(error_cls, trailing_metadata=None):
 def _make_session():
     from google.cloud.spanner_v1.session import Session
 
-    return mock.Mock(autospec=Session, instance=True)
+    session = mock.Mock(autospec=Session, instance=True)
+    # Setting _observability_options to None is to avoid the nasty spill-over
+    # of mock._tracer_provider spuriously failing tests, because per
+    # unittest.mock.Mock's definition invoking any attribute or method
+    # returns another mock.
+    setattr(session, "_observability_options", None)
+    return session
 
 
 # Skip all of these tests if we don't have OpenTelemetry

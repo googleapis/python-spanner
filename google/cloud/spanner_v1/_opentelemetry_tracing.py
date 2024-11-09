@@ -35,6 +35,20 @@ TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
 
 
+class ObservabilityOptions:
+    def __init__(self, tracer_provider=None, enable_extended_tracing=False):
+        self.__tracer_provider = tracer_provider
+        self.__enable_extended_tracing = enable_extended_tracing
+
+    @property
+    def tracer_provider(self):
+        return self.__tracer_provider
+
+    @property
+    def enable_extended_tracing(self):
+        return self.__enable_extended_tracing
+
+
 def get_tracer(tracer_provider=None):
     """
     get_tracer is a utility to unify and simplify retrieval of the tracer, without
@@ -51,13 +65,21 @@ def get_tracer(tracer_provider=None):
 
 
 @contextmanager
-def trace_call(name, session, extra_attributes=None):
+def trace_call(name, session, extra_attributes=None, observability_options=None):
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
         # Empty context manager. Users will have to check if the generated value is None or a span
         yield None
         return
 
-    tracer = get_tracer()
+    tracer_provider = None
+    enable_extended_tracing = False
+    if getattr(session, "_observability_options", None):
+        opts = session._observability_options
+        if opts:
+            tracer_provider = opts.tracer_provider
+            enable_extended_tracing = opts.enable_extended_tracing
+
+    tracer = get_tracer(tracer_provider)
 
     # Set base attributes that we know for every trace created
     attributes = {
@@ -71,6 +93,13 @@ def trace_call(name, session, extra_attributes=None):
 
     if extra_attributes:
         attributes.update(extra_attributes)
+
+    # TODO(@odeke-em) enable after discussion with team and agreement
+    # over extended tracing changes as the legacy default is always to
+    # record SQL statements on spans.
+    if False and not enable_extended_tracing:
+        attributes.pop("db.statement", False)
+        attributes.pop("sql", False)
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes

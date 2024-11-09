@@ -25,12 +25,16 @@ We also need to tell OpenTelemetry which exporter to use. To export Spanner trac
 
     # Create and export one trace every 1000 requests
     sampler = TraceIdRatioBased(1/1000)
-    # Use the default tracer provider
-    trace.set_tracer_provider(TracerProvider(sampler=sampler))
-    trace.get_tracer_provider().add_span_processor(
+    tracer_provider = TracerProvider(sampler=sampler)
+    tracer_provider.add_span_processor(
         # Initialize the cloud tracing exporter
         BatchSpanProcessor(CloudTraceSpanExporter())
     )
+    observability_options = dict(
+        tracer_provider=tracer_provider,
+        enable_extended_tracing=True,
+    )
+    spanner = spanner.NewClient(project_id, observability_options=observability_options)
 
 
 To get more fine-grained traces from gRPC, you can enable the gRPC instrumentation by the following

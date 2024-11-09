@@ -156,6 +156,7 @@ class Database(object):
         database_role=None,
         enable_drop_protection=False,
         proto_descriptors=None,
+        observability_options=None,
     ):
         self.database_id = database_id
         self._instance = instance
@@ -178,11 +179,16 @@ class Database(object):
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
         self._proto_descriptors = proto_descriptors
+        self._observability_options = observability_options
 
         if pool is None:
-            pool = BurstyPool(database_role=database_role)
+            pool = BurstyPool(
+                database_role=database_role,
+                observability_options=self._observability_options,
+            )
 
         self._pool = pool
+        self._pool._observability_options = observability_options
         pool.bind(self)
 
     @classmethod
@@ -742,7 +748,12 @@ class Database(object):
         # If role is specified in param, then that role is used
         # instead.
         role = database_role or self._database_role
-        return Session(self, labels=labels, database_role=role)
+        return Session(
+            self,
+            labels=labels,
+            database_role=role,
+            observability_options=self._observability_options,
+        )
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.

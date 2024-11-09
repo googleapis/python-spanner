@@ -42,11 +42,12 @@ class AbstractSessionPool(object):
 
     _database = None
 
-    def __init__(self, labels=None, database_role=None):
+    def __init__(self, labels=None, database_role=None, observability_options=None):
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._observability_options = observability_options
 
     @property
     def labels(self):
@@ -178,8 +179,13 @@ class FixedSizePool(AbstractSessionPool):
         default_timeout=DEFAULT_TIMEOUT,
         labels=None,
         database_role=None,
+        observability_options=None,
     ):
-        super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
+        super(FixedSizePool, self).__init__(
+            labels=labels,
+            database_role=database_role,
+            observability_options=observability_options,
+        )
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
@@ -284,8 +290,18 @@ class BurstyPool(AbstractSessionPool):
     :param database_role: (Optional) user-assigned database_role for the session.
     """
 
-    def __init__(self, target_size=10, labels=None, database_role=None):
-        super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
+    def __init__(
+        self,
+        target_size=10,
+        labels=None,
+        database_role=None,
+        observability_options=None,
+    ):
+        super(BurstyPool, self).__init__(
+            labels=labels,
+            database_role=database_role,
+            observability_options=observability_options,
+        )
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
@@ -392,8 +408,13 @@ class PingingPool(AbstractSessionPool):
         ping_interval=3000,
         labels=None,
         database_role=None,
+        observability_options=None,
     ):
-        super(PingingPool, self).__init__(labels=labels, database_role=database_role)
+        super(PingingPool, self).__init__(
+            labels=labels,
+            database_role=database_role,
+            observability_options=observability_options,
+        )
         self.size = size
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)
@@ -546,6 +567,7 @@ class TransactionPingingPool(PingingPool):
         ping_interval=3000,
         labels=None,
         database_role=None,
+        observability_options=None,
     ):
         """This throws a deprecation warning on initialization."""
         warn(
@@ -561,6 +583,7 @@ class TransactionPingingPool(PingingPool):
             ping_interval,
             labels=labels,
             database_role=database_role,
+            observability_options=observability_options,
         )
 
         self.begin_pending_transactions()
