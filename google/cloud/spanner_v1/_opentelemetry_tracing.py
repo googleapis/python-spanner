@@ -19,17 +19,12 @@ from contextlib import contextmanager
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1 import gapic_version
 
-try:
-    from opentelemetry import trace
-    from opentelemetry.trace.status import Status, StatusCode
-    from opentelemetry.semconv.attributes.otel_attributes import (
-        OTEL_SCOPE_NAME,
-        OTEL_SCOPE_VERSION,
-    )
-
-    HAS_OPENTELEMETRY_INSTALLED = True
-except ImportError:
-    HAS_OPENTELEMETRY_INSTALLED = False
+from opentelemetry import trace
+from opentelemetry.trace.status import Status, StatusCode
+from opentelemetry.semconv.attributes.otel_attributes import (
+    OTEL_SCOPE_NAME,
+    OTEL_SCOPE_VERSION,
+)
 
 TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
@@ -51,19 +46,18 @@ def get_tracer(tracer_provider=None):
 
 
 @contextmanager
-def trace_call(name, session, extra_attributes=None):
-    if not HAS_OPENTELEMETRY_INSTALLED or not session:
-        # Empty context manager. Users will have to check if the generated value is None or a span
+def trace_call(name, session, extra_attributes=None, tracer_provider=None):
+    if not name:
         yield None
         return
 
-    tracer = get_tracer()
+    tracer = get_tracer(tracer_provider)
 
     # Set base attributes that we know for every trace created
     attributes = {
         "db.type": "spanner",
         "db.url": SpannerClient.DEFAULT_ENDPOINT,
-        "db.instance": session._database.name,
+        "db.instance": db_name(session),
         "net.host.name": SpannerClient.DEFAULT_ENDPOINT,
         OTEL_SCOPE_NAME: TRACER_NAME,
         OTEL_SCOPE_VERSION: TRACER_VERSION,
@@ -83,3 +77,11 @@ def trace_call(name, session, extra_attributes=None):
             raise
         else:
             span.set_status(Status(StatusCode.OK))
+
+
+def db_name(session):
+    if not session:
+        return ""
+    if not session._database:
+        return ""
+    return session._database.name

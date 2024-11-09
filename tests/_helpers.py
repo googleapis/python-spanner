@@ -5,27 +5,20 @@ from google.cloud.spanner_v1 import gapic_version
 
 LIB_VERSION = gapic_version.__version__
 
-try:
-    from opentelemetry import trace
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-        InMemorySpanExporter,
-    )
-    from opentelemetry.semconv.attributes.otel_attributes import (
-        OTEL_SCOPE_NAME,
-        OTEL_SCOPE_VERSION,
-    )
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
+from opentelemetry.semconv.attributes.otel_attributes import (
+    OTEL_SCOPE_NAME,
+    OTEL_SCOPE_VERSION,
+)
 
-    from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace.status import StatusCode
 
-    trace.set_tracer_provider(TracerProvider())
-
-    HAS_OPENTELEMETRY_INSTALLED = True
-except ImportError:
-    HAS_OPENTELEMETRY_INSTALLED = False
-
-    StatusCode = mock.Mock()
+trace.set_tracer_provider(TracerProvider())
 
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False
@@ -44,9 +37,8 @@ def enrich_with_otel_scope(attrs):
     This helper enriches attrs with OTEL_SCOPE_NAME and OTEL_SCOPE_VERSION
     for the purpose of avoiding cumbersome duplicated imports.
     """
-    if HAS_OPENTELEMETRY_INSTALLED:
-        attrs[OTEL_SCOPE_NAME] = "cloud.google.com/python/spanner"
-        attrs[OTEL_SCOPE_VERSION] = LIB_VERSION
+    attrs[OTEL_SCOPE_NAME] = "cloud.google.com/python/spanner"
+    attrs[OTEL_SCOPE_VERSION] = LIB_VERSION
 
     return attrs
 
@@ -67,28 +59,32 @@ def use_test_ot_exporter():
 class OpenTelemetryBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        if HAS_OPENTELEMETRY_INSTALLED:
-            use_test_ot_exporter()
-            cls.ot_exporter = get_test_ot_exporter()
+        use_test_ot_exporter()
+        cls.ot_exporter = get_test_ot_exporter()
 
     def tearDown(self):
-        if HAS_OPENTELEMETRY_INSTALLED:
-            self.ot_exporter.clear()
+        self.ot_exporter.clear()
 
     def assertNoSpans(self):
-        if HAS_OPENTELEMETRY_INSTALLED:
-            span_list = self.ot_exporter.get_finished_spans()
-            self.assertEqual(len(span_list), 0)
+        span_list = self.ot_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 0, f"Got: {span_names(span_list)}")
 
     def assertSpanAttributes(
         self, name, status=StatusCode.OK, attributes=None, span=None
     ):
-        if HAS_OPENTELEMETRY_INSTALLED:
-            if not span:
-                span_list = self.ot_exporter.get_finished_spans()
-                self.assertEqual(len(span_list), 1)
-                span = span_list[0]
+        if not span:
+            span_list = self.ot_exporter.get_finished_spans()
+            self.assertEqual(len(span_list), 1)
+            span = span_list[0]
 
-            self.assertEqual(span.name, name)
-            self.assertEqual(span.status.status_code, status)
-            self.assertEqual(dict(span.attributes), attributes)
+        self.assertEqual(span.name, name)
+        self.assertEqual(span.status.status_code, status)
+        self.assertEqual(
+            dict(span.attributes),
+            attributes,
+            f"\n\tGot:  {dict(span.attributes)}\n\tWant: {attributes}",
+        )
+
+
+def span_names(span_list):
+    return list((span.name, span.to_json()) for span in span_list)
