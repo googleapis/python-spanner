@@ -312,15 +312,13 @@ class TestSession(OpenTelemetryBase):
             ],
         )
 
+        wantAttributes = dict(session_found=True)
+        wantAttributes.update(TestSession.BASE_ATTRIBUTES)
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
-            attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=True),
+            attributes=wantAttributes,
         )
 
-    @mock.patch(
-        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED",
-        False,
-    )
     def test_exists_hit_wo_span(self):
         session_pb = self._make_session_pb(self.SESSION_NAME)
         gax_api = self._make_spanner_api()
@@ -340,7 +338,13 @@ class TestSession(OpenTelemetryBase):
             ],
         )
 
-        self.assertNoSpans()
+        wantAttributes = dict(session_found=True)
+        wantAttributes.update(TestSession.BASE_ATTRIBUTES)
+        self.assertSpanAttributes(
+            "CloudSpanner.GetSession",
+            status=StatusCode.OK,
+            attributes=wantAttributes,
+        )
 
     def test_exists_miss(self):
         from google.api_core.exceptions import NotFound
@@ -362,15 +366,13 @@ class TestSession(OpenTelemetryBase):
             ],
         )
 
+        wantAttributes = dict(session_found=False)
+        wantAttributes.update(TestSession.BASE_ATTRIBUTES)
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
-            attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=False),
+            attributes=wantAttributes,
         )
 
-    @mock.patch(
-        "google.cloud.spanner_v1._opentelemetry_tracing.HAS_OPENTELEMETRY_INSTALLED",
-        False,
-    )
     def test_exists_miss_wo_span(self):
         from google.api_core.exceptions import NotFound
 
@@ -391,7 +393,13 @@ class TestSession(OpenTelemetryBase):
             ],
         )
 
-        self.assertNoSpans()
+        wantAttributes = dict(session_found=False)
+        wantAttributes.update(TestSession.BASE_ATTRIBUTES)
+        self.assertSpanAttributes(
+            "CloudSpanner.GetSession",
+            status=StatusCode.OK,
+            attributes=wantAttributes,
+        )
 
     def test_exists_error(self):
         from google.api_core.exceptions import Unknown

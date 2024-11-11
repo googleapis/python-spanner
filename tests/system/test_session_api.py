@@ -305,18 +305,14 @@ def sessions_to_delete():
 
 @pytest.fixture(scope="function")
 def ot_exporter():
-    if ot_helpers.HAS_OPENTELEMETRY_INSTALLED:
-        ot_helpers.use_test_ot_exporter()
-        ot_exporter = ot_helpers.get_test_ot_exporter()
+    ot_helpers.use_test_ot_exporter()
+    ot_exporter = ot_helpers.get_test_ot_exporter()
 
-        ot_exporter.clear()  # XXX?
+    ot_exporter.clear()  # XXX?
 
-        yield ot_exporter
+    yield ot_exporter
 
-        ot_exporter.clear()
-
-    else:
-        yield None
+    ot_exporter.clear()
 
 
 def assert_no_spans(ot_exporter):
@@ -1127,10 +1123,6 @@ def test_transaction_batch_update_wo_statements(sessions_database, sessions_to_d
             transaction.batch_update([])
 
 
-@pytest.mark.skipif(
-    not ot_helpers.HAS_OPENTELEMETRY_INSTALLED,
-    reason="trace requires OpenTelemetry",
-)
 def test_transaction_batch_update_w_parent_span(
     sessions_database, sessions_to_delete, ot_exporter, database_dialect
 ):

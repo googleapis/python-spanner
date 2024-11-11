@@ -44,13 +44,11 @@ dependencies = [
     "proto-plus >= 1.22.2, <2.0.0dev; python_version>='3.11'",
     "protobuf>=3.20.2,<6.0.0dev,!=4.21.0,!=4.21.1,!=4.21.2,!=4.21.3,!=4.21.4,!=4.21.5",
     "grpc-interceptor >= 0.15.4",
+    "opentelemetry-api >= 1.22.0",
+    "opentelemetry-sdk >= 1.22.0",
+    "opentelemetry-semantic-conventions >= 0.43b0",
 ]
 extras = {
-    "tracing": [
-        "opentelemetry-api >= 1.22.0",
-        "opentelemetry-sdk >= 1.22.0",
-        "opentelemetry-semantic-conventions >= 0.43b0",
-    ],
     "libcst": "libcst >= 0.2.5",
 }
 

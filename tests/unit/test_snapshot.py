@@ -20,7 +20,6 @@ from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
-    HAS_OPENTELEMETRY_INSTALLED,
     enrich_with_otel_scope,
 )
 from google.cloud.spanner_v1.param_types import INT64
@@ -505,43 +504,42 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
     def test_iteration_w_multiple_span_creation(self):
         from google.api_core.exceptions import ServiceUnavailable
 
-        if HAS_OPENTELEMETRY_INSTALLED:
-            FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
-            SECOND = (self._make_item(2),)  # discarded after 503
-            LAST = (self._make_item(3),)
-            before = _MockIterator(
-                *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
-            )
-            after = _MockIterator(*LAST)
-            request = mock.Mock(test="test", spec=["test", "resume_token"])
-            restart = mock.Mock(spec=[], side_effect=[before, after])
-            name = "TestSpan"
-            database = _Database()
-            database.spanner_api = self._make_spanner_api()
-            session = _Session(database)
-            derived = self._makeDerived(session)
-            resumable = self._call_fut(
-                derived, restart, request, name, _Session(_Database())
-            )
-            self.assertEqual(list(resumable), list(FIRST + LAST))
-            self.assertEqual(len(restart.mock_calls), 2)
-            self.assertEqual(request.resume_token, RESUME_TOKEN)
+        FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
+        SECOND = (self._make_item(2),)  # discarded after 503
+        LAST = (self._make_item(3),)
+        before = _MockIterator(
+            *(FIRST + SECOND), fail_after=True, error=ServiceUnavailable("testing")
+        )
+        after = _MockIterator(*LAST)
+        request = mock.Mock(test="test", spec=["test", "resume_token"])
+        restart = mock.Mock(spec=[], side_effect=[before, after])
+        name = "TestSpan"
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
+        derived = self._makeDerived(session)
+        resumable = self._call_fut(
+            derived, restart, request, name, _Session(_Database())
+        )
+        self.assertEqual(list(resumable), list(FIRST + LAST))
+        self.assertEqual(len(restart.mock_calls), 2)
+        self.assertEqual(request.resume_token, RESUME_TOKEN)
 
-            span_list = self.ot_exporter.get_finished_spans()
-            self.assertEqual(len(span_list), 2)
-            for span in span_list:
-                self.assertEqual(span.name, name)
-                self.assertEqual(
-                    dict(span.attributes),
-                    enrich_with_otel_scope(
-                        {
-                            "db.type": "spanner",
-                            "db.url": "spanner.googleapis.com",
-                            "db.instance": "testing",
-                            "net.host.name": "spanner.googleapis.com",
-                        }
-                    ),
-                )
+        span_list = self.ot_exporter.get_finished_spans()
+        self.assertEqual(len(span_list), 2)
+        for span in span_list:
+            self.assertEqual(span.name, name)
+            self.assertEqual(
+                dict(span.attributes),
+                enrich_with_otel_scope(
+                    {
+                        "db.type": "spanner",
+                        "db.url": "spanner.googleapis.com",
+                        "db.instance": "testing",
+                        "net.host.name": "spanner.googleapis.com",
+                    }
+                ),
+            )
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
