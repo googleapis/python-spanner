@@ -110,13 +110,6 @@ class Instance(object):
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) User-assigned labels for this instance.
-
-    :type labels: dict (str -> any) or None
-    :param observability_options: (Optional) the configuration to control
-           the tracer's behavior.
-           tracer_provider is the injected tracer provider
-           enable_extended_tracing: :type:boolean when set to true will allow for
-           spans that issue SQL statements to be annotated with SQL.
     """
 
     def __init__(
@@ -129,7 +122,6 @@ class Instance(object):
         emulator_host=None,
         labels=None,
         processing_units=None,
-        observability_options=None,
     ):
         self.instance_id = instance_id
         self._client = client
@@ -153,7 +145,6 @@ class Instance(object):
         if labels is None:
             labels = {}
         self.labels = labels
-        self._observability_options = observability_options
 
     def _update_from_pb(self, instance_pb):
         """Refresh self from the server-provided protobuf.
@@ -508,7 +499,6 @@ class Instance(object):
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
                 proto_descriptors=proto_descriptors,
-                observability_options=self._observability_options,
             )
         else:
             return TestDatabase(
@@ -743,3 +733,7 @@ class Instance(object):
         return google.api_core.operation.from_gapic(
             operation_pb, operations_client, response_type, metadata_type=metadata_type
         )
+
+    @property
+    def observability_options(self):
+        return self._client.observability_options

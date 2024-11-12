@@ -35,7 +35,8 @@ def _make_session():
     # of mock._tracer_provider spuriously failing tests, because per
     # unittest.mock.Mock's definition invoking any attribute or method
     # returns another mock.
-    setattr(session, "_observability_options", None)
+    db = session._database
+    setattr(db, "observability_options", None)
     return session
 
 

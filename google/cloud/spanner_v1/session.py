@@ -63,15 +63,12 @@ class Session(object):
     _session_id = None
     _transaction = None
 
-    def __init__(
-        self, database, labels=None, database_role=None, observability_options=None
-    ):
+    def __init__(self, database, labels=None, database_role=None):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
-        self._observability_options = observability_options
 
     def __lt__(self, other):
         return self._session_id < other._session_id

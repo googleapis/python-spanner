@@ -380,7 +380,6 @@ class Client(ClientWithProject):
             self._emulator_host,
             labels,
             processing_units,
-            observability_options=self._observability_options,
         )
 
     def list_instances(self, filter_="", page_size=None):
