@@ -423,10 +423,17 @@ def docfx(session):
 
 @nox.session(python="3.13")
 @nox.parametrize(
-    "protobuf_implementation",
-    ["python", "upb", "cpp"],
+    "protobuf_implementation,database_dialect",
+    [
+        ("python", "GOOGLE_STANDARD_SQL"),
+        ("python", "POSTGRESQL"),
+        ("upb", "GOOGLE_STANDARD_SQL"),
+        ("upb", "POSTGRESQL"),
+        ("cpp", "GOOGLE_STANDARD_SQL"),
+        ("cpp", "POSTGRESQL"),
+    ],
 )
-def prerelease_deps(session, protobuf_implementation):
+def prerelease_deps(session, protobuf_implementation, database_dialect):
     """Run all tests with prerelease versions of dependencies installed."""
 
     if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13"):
