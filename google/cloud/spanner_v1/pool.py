@@ -179,10 +179,7 @@ class FixedSizePool(AbstractSessionPool):
         labels=None,
         database_role=None,
     ):
-        super(FixedSizePool, self).__init__(
-            labels=labels,
-            database_role=database_role,
-        )
+        super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._sessions = queue.LifoQueue(size)
@@ -287,16 +284,8 @@ class BurstyPool(AbstractSessionPool):
     :param database_role: (Optional) user-assigned database_role for the session.
     """
 
-    def __init__(
-        self,
-        target_size=10,
-        labels=None,
-        database_role=None,
-    ):
-        super(BurstyPool, self).__init__(
-            labels=labels,
-            database_role=database_role,
-        )
+    def __init__(self, target_size=10, labels=None, database_role=None):
+        super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
         self.target_size = target_size
         self._database = None
         self._sessions = queue.LifoQueue(target_size)
@@ -404,10 +393,7 @@ class PingingPool(AbstractSessionPool):
         labels=None,
         database_role=None,
     ):
-        super(PingingPool, self).__init__(
-            labels=labels,
-            database_role=database_role,
-        )
+        super(PingingPool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
         self._delta = datetime.timedelta(seconds=ping_interval)

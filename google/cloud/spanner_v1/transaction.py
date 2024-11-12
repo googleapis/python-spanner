@@ -268,7 +268,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             "CloudSpanner.Commit",
             self._session,
             trace_attributes,
-            observability_options=observability_options,
+            observability_options,
         ):
             method = functools.partial(
                 api.commit,
