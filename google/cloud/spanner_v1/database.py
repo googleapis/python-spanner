@@ -180,9 +180,7 @@ class Database(object):
         self._proto_descriptors = proto_descriptors
 
         if pool is None:
-            pool = BurstyPool(
-                database_role=database_role,
-            )
+            pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
         pool.bind(self)
@@ -744,11 +742,7 @@ class Database(object):
         # If role is specified in param, then that role is used
         # instead.
         role = database_role or self._database_role
-        return Session(
-            self,
-            labels=labels,
-            database_role=role,
-        )
+        return Session(self, labels=labels, database_role=role)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.
@@ -1719,7 +1713,7 @@ class BatchSnapshot(object):
 
     @property
     def observability_options(self):
-        return self._instance.observability_options
+        return self._instance._observability_options
 
 
 def _check_ddl_statements(value):

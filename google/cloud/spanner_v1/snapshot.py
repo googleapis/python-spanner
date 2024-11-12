@@ -84,7 +84,14 @@ def _restart_on_unavailable(
         )
 
     request.transaction = transaction_selector
-    with trace_call(trace_name, session, attributes):
+    observability_options = None
+    if session and session._database:
+        observability_options = getattr(
+            session._database, "observability_options", None
+        )
+    with trace_call(
+        trace_name, session, attributes, observability_options=observability_options
+    ):
         iterator = method(request=request)
     while True:
         try:

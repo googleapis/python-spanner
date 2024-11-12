@@ -59,10 +59,6 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
 
     tracer_provider = None
     enable_extended_tracing = False
-    if observability_options is None and getattr(session, "_database", None):
-        observability_options = getattr(
-            session._database, "observability_options", None
-        )
 
     if observability_options:
         tracer_provider = observability_options.tracer_provider
@@ -85,7 +81,9 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
 
     # TODO(@odeke-em) enable after discussion with team and agreement
     # over extended tracing changes as the legacy default is always to
-    # record SQL statements on spans.
+    # record SQL statements on spans, because the prior behavior was
+    # to always record the SQL statement and changing it is 's considered
+    # a breaking change by the Python-Spanner team.
     if False and not enable_extended_tracing:
         attributes.pop("db.statement", False)
         attributes.pop("sql", False)

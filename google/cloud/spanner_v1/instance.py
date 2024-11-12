@@ -733,7 +733,3 @@ class Instance(object):
         return google.api_core.operation.from_gapic(
             operation_pb, operations_client, response_type, metadata_type=metadata_type
         )
-
-    @property
-    def observability_options(self):
-        return self._client.observability_options
