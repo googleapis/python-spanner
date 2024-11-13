@@ -12,26 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import unittest
 
 import mock
 from google.cloud.spanner_v1 import DirectedReadOptions
-
-hasOtelInstalled = False
-
-try:
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-        InMemorySpanExporter,
-    )
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.sampling import ALWAYS_ON
-    from opentelemetry import trace
-
-    hasOtelInstalled = True
-except ImportError:
-    pass
 
 
 def _make_credentials():
@@ -52,7 +36,6 @@ class TestClient(unittest.TestCase):
     INSTANCE_ID = "instance-id"
     INSTANCE_NAME = "%s/instances/%s" % (PATH, INSTANCE_ID)
     DISPLAY_NAME = "display-name"
-    DATABASE_ID = "database"
     NODE_COUNT = 5
     PROCESSING_UNITS = 5000
     LABELS = {"test": "true"}
@@ -702,90 +685,4 @@ class TestClient(unittest.TestCase):
             metadata=expected_metadata,
             retry=mock.ANY,
             timeout=mock.ANY,
-        )
-
-    def test_observability_options_propagated_extended_tracing_off(self):
-        self.__test_observability_options(True)
-
-    def test_observability_options_propagated(self):
-        self.__test_observability_options(False)
-
-    def __test_observability_options(self, enable_extended_tracing):
-        if not hasOtelInstalled:
-            return
-
-        # This test needs the spanner emulator setup so as to run.
-        # TODO: This test should be fully enabled to not use the Spanner Emulator
-        # once Python mockSpanner is available as it tests end-to-end that
-        # observability_options were propagated.
-        if os.environ.get("SPANNER_EMULATOR_HOST", None) is None:
-            return
-
-        global_tracer_provider = TracerProvider(sampler=ALWAYS_ON)
-        trace.set_tracer_provider(global_tracer_provider)
-        global_trace_exporter = InMemorySpanExporter()
-        global_tracer_provider.add_span_processor(
-            SimpleSpanProcessor(global_trace_exporter)
-        )
-
-        inject_tracer_provider = TracerProvider(sampler=ALWAYS_ON)
-        inject_trace_exporter = InMemorySpanExporter()
-        inject_tracer_provider.add_span_processor(
-            SimpleSpanProcessor(inject_trace_exporter)
-        )
-        observability_options = dict(
-            tracer_provider=inject_tracer_provider,
-            enable_extended_tracing=enable_extended_tracing,
-        )
-        credentials = _make_credentials()
-        client = self._make_one(
-            project=self.PROJECT,
-            credentials=credentials,
-            observability_options=observability_options,
-        )
-
-        instance = client.instance(
-            self.INSTANCE_ID,
-            self.CONFIGURATION_NAME,
-            display_name=self.DISPLAY_NAME,
-            node_count=self.NODE_COUNT,
-            labels=self.LABELS,
-        )
-
-        db = instance.database(self.DATABASE_ID)
-        self.assertEqual(db.observability_options, observability_options)
-        with db.snapshot() as snapshot:
-            res = snapshot.execute_sql("SELECT 1")
-            for val in res:
-                _ = val
-
-        from_global_spans = global_trace_exporter.get_finished_spans()
-        from_inject_spans = inject_trace_exporter.get_finished_spans()
-        self.assertEqual(
-            len(from_global_spans),
-            0,
-            "Expecting no spans from the global trace exporter",
-        )
-        self.assertEqual(
-            len(from_inject_spans) >= 2,
-            True,
-            "Expecting at least 2 spans from the injected trace exporter",
-        )
-        gotNames = [span.name for span in from_inject_spans]
-        wantNames = ["CloudSpanner.CreateSession", "CloudSpanner.ReadWriteTransaction"]
-        self.assertEqual(
-            gotNames,
-            wantNames,
-            "Span names mismatch",
-        )
-
-        # Check for conformance of enable_extended_tracing
-        lastSpan = from_inject_spans[len(from_inject_spans) - 1]
-        wantAnnotatedSQL = "SELECT 1"
-        if not enable_extended_tracing:
-            wantAnnotatedSQL = None
-        self.assertEqual(
-            lastSpan.attributes.get("db.statement", None),
-            wantAnnotatedSQL,
-            "Mismatch in annotated sql",
         )

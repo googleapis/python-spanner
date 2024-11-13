@@ -34,7 +34,7 @@ except ImportError:
 
 TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
-extendedTracingGloballyDisabled = (
+extended_tracing_globally_disabled = (
     os.environ.get("SPANNER_ENABLE_EXTENDED_TRACING", "").lower() == "false"
 )
 
@@ -89,7 +89,7 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if extra_attributes:
         attributes.update(extra_attributes)
 
-    if extendedTracingGloballyDisabled:
+    if extended_tracing_globally_disabled:
         enable_extended_tracing = False
 
     if not enable_extended_tracing:
