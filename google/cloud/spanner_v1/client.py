@@ -132,6 +132,9 @@ class Client(ClientWithProject):
            tracer_provider is the injected tracer provider
            enable_extended_tracing: :type:boolean when set to true will allow for
            spans that issue SQL statements to be annotated with SQL.
+           Default `True`, please set it to `False` to turn it off
+           or you can use the environment variable `SPANNER_ENABLE_EXTENDED_TRACING=<boolean>`
+           to control it.
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
