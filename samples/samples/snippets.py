@@ -3238,7 +3238,7 @@ def create_instance_without_default_backup_schedules(instance_id):
           node_count=1,
           default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,  # Optional
       ),
-  )
+    )
 
     print("Waiting for operation to complete...")
     operation.result(OPERATION_TIMEOUT_SECONDS)
