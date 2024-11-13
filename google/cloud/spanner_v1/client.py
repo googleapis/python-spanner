@@ -278,6 +278,15 @@ class Client(ClientWithProject):
         return self._route_to_leader_enabled
 
     @property
+    def observability_options(self):
+        """Getter for observability_options.
+
+        :rtype: dict
+        :returns: The configured observability_options if set.
+        """
+        return self._observability_options
+
+    @property
     def directed_read_options(self):
         """Getter for directed_read_options.
 

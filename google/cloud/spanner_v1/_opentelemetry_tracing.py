@@ -69,8 +69,10 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     enable_extended_tracing = True
 
     if observability_options:
-        tracer_provider = observability_options.tracer_provider
-        enable_extended_tracing = observability_options.enable_extended_tracing
+        tracer_provider = observability_options.get("tracer_provider", None)
+        enable_extended_tracing = observability_options.get(
+            "enable_extended_tracing", enable_extended_tracing
+        )
 
     tracer = get_tracer(tracer_provider)
 

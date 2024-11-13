@@ -718,7 +718,7 @@ class Database(object):
                     method=method,
                     request=request,
                     transaction_selector=txn_selector,
-                    observability_options=getattr(self, "observability_options", None),
+                    observability_options=self.observability_options,
                 )
 
                 result_set = StreamedResultSet(iterator)
@@ -1106,6 +1106,17 @@ class Database(object):
         )
         response = api.set_iam_policy(request=request, metadata=metadata)
         return response
+
+    @property
+    def observability_options(self):
+        """
+        Returns the observability options that you set when creating
+        the SpannerClient.
+        """
+        if not self._instance:
+            return None
+
+        return self._instance._client.observability_options
 
 
 class BatchCheckout(object):
@@ -1711,17 +1722,6 @@ class BatchSnapshot(object):
         """
         if self._session is not None:
             self._session.delete()
-
-    @property
-    def observability_options(self):
-        """
-        Returns the observability options that you set when creating
-        the SpannerClient.
-        """
-        if not self._instance:
-            return None
-
-        return getattr(self._instance._client, "observability_options", None)
 
 
 def _check_ddl_statements(value):
