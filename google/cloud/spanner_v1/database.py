@@ -718,7 +718,7 @@ class Database(object):
                     method=method,
                     request=request,
                     transaction_selector=txn_selector,
-                    observability_options=self.observability_options,
+                    observability_options=getattr(self, "observability_options", None),
                 )
 
                 result_set = StreamedResultSet(iterator)
@@ -1718,7 +1718,10 @@ class BatchSnapshot(object):
         Returns the observability options that you set when creating
         the SpannerClient.
         """
-        return self._instance._client._observability_options
+        if not self._instance:
+            return None
+
+        return getattr(self._instance._client, "observability_options", None)
 
 
 def _check_ddl_statements(value):

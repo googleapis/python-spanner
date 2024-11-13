@@ -324,7 +324,9 @@ class _SnapshotBase(_SessionWrapper):
                     self._session,
                     trace_attributes,
                     transaction=self,
-                    observability_options=session_observability_options(self._session),
+                    observability_options=getattr(
+                        database, "observability_options", None
+                    ),
                 )
                 self._read_request_count += 1
                 if self._multi_use:
@@ -341,7 +343,7 @@ class _SnapshotBase(_SessionWrapper):
                 self._session,
                 trace_attributes,
                 transaction=self,
-                observability_options=session_observability_options(self._session),
+                observability_options=getattr(database, "observability_options", None),
             )
 
         self._read_request_count += 1
@@ -505,19 +507,30 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         trace_attributes = {"db.statement": sql}
+        observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart, request, trace_attributes, column_info
+                    restart,
+                    request,
+                    trace_attributes,
+                    column_info,
+                    observability_options,
                 )
         else:
             return self._get_streamed_result_set(
-                restart, request, trace_attributes, column_info
+                restart,
+                request,
+                trace_attributes,
+                column_info,
+                observability_options,
             )
 
-    def _get_streamed_result_set(self, restart, request, trace_attributes, column_info):
+    def _get_streamed_result_set(
+        self, restart, request, trace_attributes, column_info, observability_options
+    ):
         iterator = _restart_on_unavailable(
             restart,
             request,
@@ -525,7 +538,7 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
             transaction=self,
-            observability_options=session_observability_options(self._session),
+            observability_options=observability_options,
         )
         self._read_request_count += 1
         self._execute_sql_count += 1
@@ -618,7 +631,7 @@ class _SnapshotBase(_SessionWrapper):
             "CloudSpanner.PartitionReadOnlyTransaction",
             self._session,
             trace_attributes,
-            observability_options=observability_options,
+            observability_options=getattr(database, "observability_options", None),
         ):
             method = functools.partial(
                 api.partition_read,
@@ -721,7 +734,7 @@ class _SnapshotBase(_SessionWrapper):
             "CloudSpanner.PartitionReadWriteTransaction",
             self._session,
             trace_attributes,
-            observability_options=observability_options,
+            observability_options=getattr(database, "observability_options", None),
         ):
             method = functools.partial(
                 api.partition_query,
@@ -867,7 +880,7 @@ class Snapshot(_SnapshotBase):
         with trace_call(
             "CloudSpanner.BeginTransaction",
             self._session,
-            observability_options=observability_options,
+            observability_options=getattr(database, "observability_options", None),
         ):
             method = functools.partial(
                 api.begin_transaction,
@@ -882,14 +895,3 @@ class Snapshot(_SnapshotBase):
         self._transaction_id = response.id
         self._transaction_read_timestamp = response.read_timestamp
         return self._transaction_id
-
-
-def session_observability_options(session):
-    if not session:
-        return None
-
-    db = getattr(session, "_database", None)
-    if not db:
-        return None
-
-    return getattr(db, "observability_options", None)
