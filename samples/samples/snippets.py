@@ -3236,7 +3236,7 @@ def create_instance_without_default_backup_schedules(instance_id):
           config=config_name,
           display_name="This is a display name.",
           node_count=1,
-          edition=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,  # Optional
+          default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,  # Optional
       ),
   )
 
@@ -3258,7 +3258,7 @@ def update_instance_default_backup_schedule_type(instance_id):
     operation = spanner_client.instance_admin_api.update_instance(
       instance=spanner_instance_admin.Instance(
           name=name,
-          edition=spanner_instance_admin.Instance.DefaultBackupScheduleType.AUTOMATIC,  # Optional
+          default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.AUTOMATIC,  # Optional
       ),
       field_mask=field_mask_pb2.FieldMask(
           paths=["default_backup_schedule_type"]
