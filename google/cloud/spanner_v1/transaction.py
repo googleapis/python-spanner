@@ -426,7 +426,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                     "CloudSpanner.ReadWriteTransaction",
                     self._session,
                     trace_attributes,
-                    observability_options,
+                    observability_options=observability_options,
                 )
                 # Setting the transaction id because the transaction begin was inlined for first rpc.
                 if (
@@ -443,7 +443,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 "CloudSpanner.ReadWriteTransaction",
                 self._session,
                 trace_attributes,
-                observability_options,
+                observability_options=observability_options,
             )
 
         return response.stats.row_count_exact

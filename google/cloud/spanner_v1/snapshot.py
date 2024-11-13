@@ -313,6 +313,7 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         trace_attributes = {"table_id": table, "columns": columns}
+        observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
@@ -324,9 +325,7 @@ class _SnapshotBase(_SessionWrapper):
                     self._session,
                     trace_attributes,
                     transaction=self,
-                    observability_options=getattr(
-                        database, "observability_options", None
-                    ),
+                    observability_options=observability_options,
                 )
                 self._read_request_count += 1
                 if self._multi_use:
@@ -343,7 +342,7 @@ class _SnapshotBase(_SessionWrapper):
                 self._session,
                 trace_attributes,
                 transaction=self,
-                observability_options=getattr(database, "observability_options", None),
+                observability_options=observability_options,
             )
 
         self._read_request_count += 1
@@ -529,7 +528,12 @@ class _SnapshotBase(_SessionWrapper):
             )
 
     def _get_streamed_result_set(
-        self, restart, request, trace_attributes, column_info, observability_options
+        self,
+        restart,
+        request,
+        trace_attributes,
+        column_info,
+        observability_options=None,
     ):
         iterator = _restart_on_unavailable(
             restart,

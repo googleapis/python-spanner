@@ -38,13 +38,13 @@ except ImportError:
 @pytest.mark.skipif(not HAS_OTEL_INSTALLED, reason="OpenTelemetry needed.")
 @pytest.mark.skipif(not _helpers.USE_EMULATOR, reason="Emulator needed.")
 class TestObservability(unittest.TestCase):
-    PROJECT = "PROJECT"
+    PROJECT = _helpers.EMULATOR_PROJECT
     PATH = "projects/%s" % (PROJECT,)
     CONFIGURATION_NAME = "config-name"
-    INSTANCE_ID = "instance-id"
+    INSTANCE_ID = _helpers.INSTANCE_ID
     INSTANCE_NAME = "%s/instances/%s" % (PATH, INSTANCE_ID)
     DISPLAY_NAME = "display-name"
-    DATABASE_ID = "database"
+    DATABASE_ID = _helpers.unique_id("temp_db")
     NODE_COUNT = 5
     PROCESSING_UNITS = 5000
     LABELS = {"test": "true"}
@@ -100,6 +100,11 @@ class TestObservability(unittest.TestCase):
         )
 
         db = instance.database(self.DATABASE_ID)
+        try:
+            db.create()
+        except:
+            pass
+
         self.assertEqual(db.observability_options, observability_options)
         with db.snapshot() as snapshot:
             res = snapshot.execute_sql("SELECT 1")
@@ -136,6 +141,11 @@ class TestObservability(unittest.TestCase):
             wantAnnotatedSQL,
             "Mismatch in annotated sql",
         )
+
+        try:
+            db.delete()
+        except:
+            pass
 
 
 def _make_credentials():
