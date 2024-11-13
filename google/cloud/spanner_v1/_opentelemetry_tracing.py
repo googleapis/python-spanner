@@ -35,7 +35,7 @@ except ImportError:
 TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
 extendedTracingGloballyDisabled = (
-    os.environ.get("SPANNER_ENABLE_EXTENDED_TRACING", None) == "false"
+    os.environ.get("SPANNER_ENABLE_EXTENDED_TRACING", "").lower() == "false"
 )
 
 
@@ -92,7 +92,6 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
 
     if not enable_extended_tracing:
         attributes.pop("db.statement", False)
-        attributes.pop("sql", False)
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes

@@ -61,3 +61,13 @@ Generated spanner traces should now be available on `Cloud Trace <https://consol
 
 Tracing is most effective when many libraries are instrumented to provide insight over the entire lifespan of a request.
 For a list of libraries that can be instrumented, see the `OpenTelemetry Integrations` section of the `OpenTelemetry Python docs <https://opentelemetry-python.readthedocs.io/en/stable/>`_
+
+Annotating spans with SQL
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default your spans will be annotated with SQL statements where appropriate, but that can be a PII (Personally Identifiable Information)
+leak. Sadly due to legacy behavior, we cannot simply turn off this behavior by default. However you can control this behavior by setting
+
+    SPANNER_ENABLE_EXTENDED_TRACING=false
+
+to turn it off globally or when creating each SpannerClient, please set `observability_options.enable_extended_tracing=false`
