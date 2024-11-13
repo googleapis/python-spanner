@@ -56,6 +56,7 @@ def _restart_on_unavailable(
     attributes=None,
     transaction=None,
     transaction_selector=None,
+    observability_options=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -84,11 +85,7 @@ def _restart_on_unavailable(
         )
 
     request.transaction = transaction_selector
-    observability_options = None
-    if session and session._database:
-        observability_options = getattr(
-            session._database, "observability_options", None
-        )
+
     with trace_call(
         trace_name, session, attributes, observability_options=observability_options
     ):
@@ -111,7 +108,12 @@ def _restart_on_unavailable(
                     break
         except ServiceUnavailable:
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(
+                trace_name,
+                session,
+                attributes,
+                observability_options=observability_options,
+            ):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -126,7 +128,12 @@ def _restart_on_unavailable(
             if not resumable_error:
                 raise
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(
+                trace_name,
+                session,
+                attributes,
+                observability_options=observability_options,
+            ):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -317,6 +324,7 @@ class _SnapshotBase(_SessionWrapper):
                     self._session,
                     trace_attributes,
                     transaction=self,
+                    observability_options=session_observability_options(self._session),
                 )
                 self._read_request_count += 1
                 if self._multi_use:
@@ -333,6 +341,7 @@ class _SnapshotBase(_SessionWrapper):
                 self._session,
                 trace_attributes,
                 transaction=self,
+                observability_options=session_observability_options(self._session),
             )
 
         self._read_request_count += 1
@@ -516,6 +525,7 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
             transaction=self,
+            observability_options=session_observability_options(self._session),
         )
         self._read_request_count += 1
         self._execute_sql_count += 1
@@ -605,7 +615,10 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
-            "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
+            "CloudSpanner.PartitionReadOnlyTransaction",
+            self._session,
+            trace_attributes,
+            observability_options=observability_options,
         ):
             method = functools.partial(
                 api.partition_read,
@@ -708,6 +721,7 @@ class _SnapshotBase(_SessionWrapper):
             "CloudSpanner.PartitionReadWriteTransaction",
             self._session,
             trace_attributes,
+            observability_options=observability_options,
         ):
             method = functools.partial(
                 api.partition_query,
@@ -850,7 +864,11 @@ class Snapshot(_SnapshotBase):
                 (_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
             )
         txn_selector = self._make_txn_selector()
-        with trace_call("CloudSpanner.BeginTransaction", self._session):
+        with trace_call(
+            "CloudSpanner.BeginTransaction",
+            self._session,
+            observability_options=observability_options,
+        ):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
@@ -864,3 +882,14 @@ class Snapshot(_SnapshotBase):
         self._transaction_id = response.id
         self._transaction_read_timestamp = response.read_timestamp
         return self._transaction_id
+
+
+def session_observability_options(session):
+    if not session:
+        return None
+
+    db = getattr(session, "_database", None)
+    if not db:
+        return None
+
+    return getattr(db, "observability_options", None)
