@@ -15,6 +15,7 @@
 """Manages OpenTelemetry trace creation and handling"""
 
 from contextlib import contextmanager
+import os
 
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1 import gapic_version
@@ -33,6 +34,9 @@ except ImportError:
 
 TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
+extendedTracingGloballyDisabled = (
+    os.environ.get("SPANNER_ENABLE_EXTENDED_TRACING", None) == "false"
+)
 
 
 def get_tracer(tracer_provider=None):
@@ -58,7 +62,11 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
         return
 
     tracer_provider = None
-    enable_extended_tracing = False
+
+    # By default enable_extended_tracing=True because in a bid to minimize
+    # breaking changes and preserve legacy behavior, we are keeping it turned
+    # on by default.
+    enable_extended_tracing = True
 
     if observability_options:
         tracer_provider = observability_options.tracer_provider
@@ -79,12 +87,10 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     if extra_attributes:
         attributes.update(extra_attributes)
 
-    # TODO(@odeke-em) enable after discussion with team and agreement
-    # over extended tracing changes as the legacy default is always to
-    # record SQL statements on spans, because the prior behavior was
-    # to always record the SQL statement and changing it is 's considered
-    # a breaking change by the Python-Spanner team.
-    if False and not enable_extended_tracing:
+    if extendedTracingGloballyDisabled:
+        enable_extended_tracing = False
+
+    if not enable_extended_tracing:
         attributes.pop("db.statement", False)
         attributes.pop("sql", False)
 

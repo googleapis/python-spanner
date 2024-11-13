@@ -32,7 +32,12 @@ We also need to tell OpenTelemetry which exporter to use. To export Spanner trac
     )
     observability_options = dict(
         tracer_provider=tracer_provider,
-        enable_extended_tracing=True,
+
+        # By default extended_tracing is set to True due
+        # to legacy reasons to avoid breaking changes, you
+        # can modify it though using the environment variable
+        # SPANNER_ENABLE_EXTENDED_TRACING=false.
+        enable_extended_tracing=False,
     )
     spanner = spanner.NewClient(project_id, observability_options=observability_options)
 
