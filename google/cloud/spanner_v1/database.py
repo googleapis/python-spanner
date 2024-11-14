@@ -1116,7 +1116,7 @@ class Database(object):
         if not (self._instance and self._instance._client):
             return None
 
-        return getattr(self._instance._client, 'observability_options', None)
+        return getattr(self._instance._client, "observability_options", None)
 
 
 class BatchCheckout(object):
