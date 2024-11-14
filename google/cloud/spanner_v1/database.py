@@ -1113,10 +1113,10 @@ class Database(object):
         Returns the observability options that you set when creating
         the SpannerClient.
         """
-        if not self._instance:
+        if not (self._instance and self._instance._client):
             return None
 
-        return self._instance._client.observability_options
+        return getattr(self._instance._client, 'observability_options', None)
 
 
 class BatchCheckout(object):
