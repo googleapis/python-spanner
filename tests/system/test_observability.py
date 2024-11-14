@@ -99,6 +99,11 @@ class TestObservability(unittest.TestCase):
             labels=self.LABELS,
         )
 
+        try:
+            instance.create()
+        except:
+            pass
+
         db = instance.database(self.DATABASE_ID)
         try:
             db.create()
@@ -144,6 +149,7 @@ class TestObservability(unittest.TestCase):
 
         try:
             db.delete()
+            instance.delete()
         except:
             pass
 
