@@ -12,12 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import mock
 import pytest
-import unittest
 
 from . import _helpers
-from google.cloud.spanner_v1 import Client, DirectedReadOptions
+from google.cloud.spanner_v1 import Client
 
 HAS_OTEL_INSTALLED = False
 
@@ -35,32 +33,20 @@ except ImportError:
     pass
 
 
-@pytest.mark.skipif(not HAS_OTEL_INSTALLED, reason="OpenTelemetry needed.")
-@pytest.mark.skipif(not _helpers.USE_EMULATOR, reason="Emulator needed.")
+@pytest.mark.skipif(
+    not HAS_OTEL_INSTALLED, reason="OpenTelemetry is necessary to test traces."
+)
+@pytest.mark.skipif(
+    not _helpers.USE_EMULATOR, reason="mulator is necessary to test traces."
+)
 def test_observability_options_propagation():
     PROJECT = _helpers.EMULATOR_PROJECT
-    PATH = "projects/%s" % (PROJECT,)
     CONFIGURATION_NAME = "config-name"
     INSTANCE_ID = _helpers.INSTANCE_ID
-    INSTANCE_NAME = "%s/instances/%s" % (PATH, INSTANCE_ID)
     DISPLAY_NAME = "display-name"
     DATABASE_ID = _helpers.unique_id("temp_db")
     NODE_COUNT = 5
-    PROCESSING_UNITS = 5000
     LABELS = {"test": "true"}
-    TIMEOUT_SECONDS = 80
-    LEADER_OPTIONS = ["leader1", "leader2"]
-    DIRECTED_READ_OPTIONS = {
-        "include_replicas": {
-            "replica_selections": [
-                {
-                    "location": "us-west1",
-                    "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
-                },
-            ],
-            "auto_failover_disabled": True,
-        },
-    }
 
     def test_propagation(enable_extended_tracing):
         global_tracer_provider = TracerProvider(sampler=ALWAYS_ON)
@@ -95,13 +81,13 @@ def test_observability_options_propagation():
 
         try:
             instance.create()
-        except:
+        except Exception:
             pass
 
         db = instance.database(DATABASE_ID)
         try:
             db.create()
-        except:
+        except Exception:
             pass
 
         assert db.observability_options == observability_options
@@ -134,7 +120,7 @@ def test_observability_options_propagation():
         try:
             db.delete()
             instance.delete()
-        except:
+        except Exception:
             pass
 
     # Test the respective options for enable_extended_tracing
@@ -143,11 +129,6 @@ def test_observability_options_propagation():
 
 
 def _make_credentials():
-    import google.auth.credentials
+    from google.auth.credentials import AnonymousCredentials
 
-    class _CredentialsWithScopes(
-        google.auth.credentials.Credentials, google.auth.credentials.Scoped
-    ):
-        pass
-
-    return mock.Mock(spec=_CredentialsWithScopes)
+    return AnonymousCredentials()

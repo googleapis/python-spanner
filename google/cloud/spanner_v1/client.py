@@ -126,7 +126,7 @@ class Client(ClientWithProject):
             for all ReadRequests and ExecuteSqlRequests that indicates which replicas
             or regions should be used for non-transactional reads or queries.
 
-    :type labels: dict (str -> any) or None
+    :type observability_options: dict (str -> any) or None
     :param observability_options: (Optional) the configuration to control
            the tracer's behavior.
            tracer_provider is the injected tracer provider

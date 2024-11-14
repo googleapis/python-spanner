@@ -35,7 +35,7 @@ except ImportError:
 TRACER_NAME = "cloud.google.com/python/spanner"
 TRACER_VERSION = gapic_version.__version__
 extended_tracing_globally_disabled = (
-    os.environ.get("SPANNER_ENABLE_EXTENDED_TRACING", "").lower() == "false"
+    os.getenv("SPANNER_ENABLE_EXTENDED_TRACING", "").lower() == "false"
 )
 
 
@@ -68,7 +68,7 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     # on by default.
     enable_extended_tracing = True
 
-    if type(observability_options) == dict:  # Avoid false positives with mock.Mock
+    if isinstance(observability_options, dict):  # Avoid false positives with mock.Mock
         tracer_provider = observability_options.get("tracer_provider", None)
         enable_extended_tracing = observability_options.get(
             "enable_extended_tracing", enable_extended_tracing
