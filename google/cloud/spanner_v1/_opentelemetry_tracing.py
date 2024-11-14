@@ -68,7 +68,7 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     # on by default.
     enable_extended_tracing = True
 
-    if observability_options:
+    if type(observability_options) == dict:  # Avoid false positives with mock.Mock
         tracer_provider = observability_options.get("tracer_provider", None)
         enable_extended_tracing = observability_options.get(
             "enable_extended_tracing", enable_extended_tracing
