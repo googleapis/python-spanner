@@ -26,8 +26,8 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
-    add_span_event,
     get_current_span,
+    add_span_event,
     trace_call,
 )
 from warnings import warn
@@ -229,7 +229,11 @@ class FixedSizePool(AbstractSessionPool):
             )
 
         if self._sessions.full():
-            add_span_event(span, "Session pool is already full", span_event_attributes)
+            add_span_event(
+                span,
+                "Session pool is already full",
+                span_event_attributes,
+            )
             return
 
         request = BatchCreateSessionsRequest(
@@ -291,7 +295,11 @@ class FixedSizePool(AbstractSessionPool):
         start_time = time.time()
         current_span = get_current_span()
         span_event_attributes = {"kind": type(self).__name__}
-        add_span_event(current_span, "Acquiring session", span_event_attributes)
+        add_span_event(
+            current_span,
+            "Acquiring session",
+            span_event_attributes,
+        )
 
         session = None
         try:
@@ -318,11 +326,17 @@ class FixedSizePool(AbstractSessionPool):
 
             span_event_attributes["session.id"] = session._session_id
             span_event_attributes["time.elapsed"] = time.time() - start_time
-            add_span_event(current_span, "Acquired session", span_event_attributes)
+            add_span_event(
+                current_span,
+                "Acquired session",
+                span_event_attributes,
+            )
 
         except queue.Empty as e:
             add_span_event(
-                current_span, "No sessions available in the pool", span_event_attributes
+                current_span,
+                "No sessions available in the pool",
+                span_event_attributes,
             )
             raise e
 
@@ -400,7 +414,11 @@ class BurstyPool(AbstractSessionPool):
         """
         current_span = get_current_span()
         span_event_attributes = {"kind": type(self).__name__}
-        add_span_event(current_span, "Acquiring session", span_event_attributes)
+        add_span_event(
+            current_span,
+            "Acquiring session",
+            span_event_attributes,
+        )
 
         try:
             add_span_event(
@@ -545,48 +563,56 @@ class PingingPool(AbstractSessionPool):
 
         add_span_event(
             current_span,
-            f"Requesting {requested_session_count} sessions",
-            span_event_attributes,
-        )
-
-        if created_session_count >= self.size:
-            add_span_event(
-                current_span,
-                "Created no new sessions as sessionPool is full",
-                span_event_attributes,
-            )
-            return
-
-        add_span_event(
-            current_span,
-            f"Creating {request.session_count} sessions",
+            f"Requesting for {requested_session_count} sessions",
             span_event_attributes,
         )
 
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.PingingPool.BatchCreateSessions",
+            "Cloudspanner.PingingPool.BatchCreateSessions",
             observability_options=observability_options,
         ) as span:
-            returned_session_count = 0
             while created_session_count < self.size:
                 resp = api.batch_create_sessions(
                     request=request,
                     metadata=metadata,
                 )
+
+                add_span_event(
+                    span,
+                    f"Created {len(resp.session)} sessions",
+                )
+
                 for session_pb in resp.session:
                     session = self._new_session()
                     session._session_id = session_pb.name.split("/")[-1]
                     self.put(session)
-                    returned_session_count += 1
 
                 created_session_count += len(resp.session)
 
+                if created_session_count >= self.size:
+                    add_span_event(
+                        current_span,
+                        "Created no new sessions as sessionPool is full",
+                        span_event_attributes,
+                    )
+                    return
+
+                add_span_event(
+                    span,
+                    f"Requested for {requested_session_count} sessions, return {returned_session_count}",
+                    span_event_attributes,
+                )
+
             add_span_event(
                 span,
-                f"Requested for {requested_session_count} sessions, returned {returned_session_count}",
-                span_event_attributes,
+                f"Finished creating sessions",
+                dict(
+                    requested_count=request.session_count,
+                    created_count=created_session_count,
+                ),
             )
+            return
 
     def get(self, timeout=None):
         """Check a session out from the pool.
@@ -638,7 +664,11 @@ class PingingPool(AbstractSessionPool):
                 "kind": "pinging_pool",
             }
         )
-        add_span_event(current_span, "Acquired session", span_event_attributes)
+        add_span_event(
+            current_span,
+            "Acquired session",
+            span_event_attributes,
+        )
         return session
 
     def put(self, session):

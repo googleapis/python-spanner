@@ -125,6 +125,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(selector.id, self.TRANSACTION_ID)
 
     def test_begin_already_begun(self):
+        self.reset()
         session = _Session()
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
@@ -134,6 +135,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_begin_already_rolled_back(self):
+        self.reset()
         session = _Session()
         transaction = self._make_one(session)
         transaction.rolled_back = True
@@ -143,6 +145,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_begin_already_committed(self):
+        self.reset()
         session = _Session()
         transaction = self._make_one(session)
         transaction.committed = object()
@@ -152,6 +155,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_begin_w_other_error(self):
+        self.reset()
         database = _Database()
         database.spanner_api = self._make_spanner_api()
         database.spanner_api.begin_transaction.side_effect = RuntimeError()
@@ -161,6 +165,11 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.begin()
 
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.begin"]
+        assert got_span_names == want_span_names
+
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.begin",
             status=StatusCode.ERROR,
@@ -168,6 +177,7 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_begin_ok(self):
+        self.reset()
         from google.cloud.spanner_v1 import Transaction as TransactionPB
 
         transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
@@ -199,6 +209,7 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_begin_w_retry(self):
+        self.reset()
         from google.cloud.spanner_v1 import (
             Transaction as TransactionPB,
         )
@@ -345,10 +356,25 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertIsNone(transaction.committed)
 
+        span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
+
+        got_span_names = [span.name for span in span_list]
+        want_span_names = [
+            "CloudSpanner.Transaction",
+            "CloudSpanner.Transaction",
+            "CloudSpanner.Transaction",
+            "CloudSpanner.Transaction",
+            "CloudSpanner.Transaction.commit",
+        ]
+        print("got_names", got_span_names)
+        assert got_span_names == want_span_names
+
+        txn_commit_span = span_list[-1]
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.commit",
             status=StatusCode.ERROR,
             attributes=dict(TestTransaction.BASE_ATTRIBUTES, num_mutations=1),
+            span=txn_commit_span,
         )
 
     def _commit_helper(
@@ -427,12 +453,15 @@ class TestTransaction(OpenTelemetryBase):
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
 
+        span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
+        txn_commit_span = span_list[-1]
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.commit",
             attributes=dict(
                 TestTransaction.BASE_ATTRIBUTES,
                 num_mutations=len(transaction._mutations),
             ),
+            span=txn_commit_span,
         )
 
     def test_commit_no_mutations(self):

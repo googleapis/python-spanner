@@ -86,7 +86,7 @@ class OpenTelemetryBase(unittest.TestCase):
     ):
         if HAS_OPENTELEMETRY_INSTALLED:
             if not span:
-                span_list = self.ot_exporter.get_finished_spans()
+                span_list = self.get_finished_spans()
                 self.assertEqual(len(span_list) > 0, True)
                 span = span_list[0]
 
