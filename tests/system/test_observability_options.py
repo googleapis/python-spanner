@@ -37,7 +37,7 @@ except ImportError:
     not HAS_OTEL_INSTALLED, reason="OpenTelemetry is necessary to test traces."
 )
 @pytest.mark.skipif(
-    not _helpers.USE_EMULATOR, reason="mulator is necessary to test traces."
+    not _helpers.USE_EMULATOR, reason="emulator is necessary to test traces."
 )
 def test_observability_options_propagation():
     PROJECT = _helpers.EMULATOR_PROJECT
@@ -105,16 +105,21 @@ def test_observability_options_propagation():
             len(from_inject_spans) >= 2
         )  # "Expecting at least 2 spans from the injected trace exporter"
         gotNames = [span.name for span in from_inject_spans]
-        wantNames = ["CloudSpanner.CreateSession", "CloudSpanner.ReadWriteTransaction"]
+        wantNames = [
+            "CloudSpanner.CreateSession",
+            "CloudSpanner.Snapshot.execute_streaming_sql",
+            "CloudSpanner.Database.snapshot",
+        ]
         assert gotNames == wantNames
 
         # Check for conformance of enable_extended_tracing
-        lastSpan = from_inject_spans[len(from_inject_spans) - 1]
+        snapshot_execute_span = from_inject_spans[len(from_inject_spans) - 2]
         wantAnnotatedSQL = "SELECT 1"
         if not enable_extended_tracing:
             wantAnnotatedSQL = None
         assert (
-            lastSpan.attributes.get("db.statement", None) == wantAnnotatedSQL
+            snapshot_execute_span.attributes.get("db.statement", None)
+            == wantAnnotatedSQL
         )  # "Mismatch in annotated sql"
 
         try:
@@ -132,3 +137,48 @@ def _make_credentials():
     from google.auth.credentials import AnonymousCredentials
 
     return AnonymousCredentials()
+
+
+from tests import _helpers as ot_helpers
+
+
+@pytest.mark.skipif(
+    not ot_helpers.HAS_OPENTELEMETRY_INSTALLED,
+    reason="Tracing requires OpenTelemetry",
+)
+def test_trace_call_keeps_span_error_status():
+    # Verifies that after our span's status was set to ERROR
+    # that it doesn't unconditionally get changed to OK
+    # per https://github.com/googleapis/python-spanner/issues/1246
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+    from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+    from opentelemetry.trace.status import Status, StatusCode
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.sampling import ALWAYS_ON
+    from opentelemetry import trace
+
+    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
+    trace_exporter = InMemorySpanExporter()
+    tracer_provider.add_span_processor(SimpleSpanProcessor(trace_exporter))
+    observability_options = dict(tracer_provider=tracer_provider)
+
+    with trace_call(
+        "VerifyBehavior", observability_options=observability_options
+    ) as span:
+        span.set_status(Status(StatusCode.ERROR, "Our error exhibit"))
+
+    span_list = trace_exporter.get_finished_spans()
+    got_statuses = []
+
+    for span in span_list:
+        got_statuses.append(
+            (span.name, span.status.status_code, span.status.description)
+        )
+
+    want_statuses = [
+        ("VerifyBehavior", StatusCode.ERROR, "Our error exhibit"),
+    ]
+    assert got_statuses == want_statuses
