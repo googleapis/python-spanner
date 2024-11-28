@@ -108,7 +108,7 @@ class Connection:
         self._own_pool = True
         self._read_only = read_only
         self._staleness = None
-        self.request_priority = None
+        self._request_options = None
         self._transaction_begin_marked = False
         # whether transaction started at Spanner. This means that we had
         # made atleast one call to Spanner.
@@ -247,11 +247,13 @@ class Connection:
             google.cloud.spanner_v1.RequestOptions:
                 Request options.
         """
-        if self.request_priority is None:
+        if self._request_options is None:
             return
+        if not isinstance(self._request_options, dict):
+            raise ValueError("Request options need to be passed as a dictionary")
 
-        req_opts = RequestOptions(priority=self.request_priority)
-        self.request_priority = None
+        req_opts = RequestOptions(**self._request_options)
+        self._request_options = None
         return req_opts
 
     @property

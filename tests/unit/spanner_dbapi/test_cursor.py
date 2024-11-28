@@ -877,7 +877,7 @@ class TestCursor(unittest.TestCase):
         connection.database.snapshot.return_value.__enter__.return_value = (
             mock_snapshot
         ) = mock.MagicMock()
-        connection.request_priority = 1
+        connection._request_options = {'priority':  1}
 
         cursor = self._make_one(connection)
 

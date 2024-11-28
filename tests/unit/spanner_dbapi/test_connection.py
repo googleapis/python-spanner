@@ -745,7 +745,7 @@ class TestConnection(unittest.TestCase):
 
         connection.database.snapshot.assert_called_with(read_timestamp=timestamp)
 
-    def test_request_priority(self):
+    def test_request_options(self):
         from google.cloud.spanner_dbapi.parsed_statement import Statement
         from google.cloud.spanner_v1 import RequestOptions
 
@@ -753,22 +753,24 @@ class TestConnection(unittest.TestCase):
         params = []
         param_types = {}
         priority = 2
+        request_tag = 'test_request_tag'
+        transaction_tag = 'test_transaction_tag'
 
         connection = self._make_connection()
         connection._spanner_transaction_started = True
         connection._transaction = mock.Mock()
         connection._transaction.execute_sql = mock.Mock()
 
-        connection.request_priority = priority
+        connection._request_options = {'priority': 2, 'request_tag': request_tag, 'transaction_tag': transaction_tag}
 
-        req_opts = RequestOptions(priority=priority)
+        req_opts = RequestOptions(priority=priority, request_tag=request_tag, transaction_tag=transaction_tag)
 
         connection.run_statement(Statement(sql, params, param_types))
 
         connection._transaction.execute_sql.assert_called_with(
             sql, params, param_types=param_types, request_options=req_opts
         )
-        assert connection.request_priority is None
+        assert connection._request_options is None
 
         # check that priority is applied for only one request
         connection.run_statement(Statement(sql, params, param_types))
