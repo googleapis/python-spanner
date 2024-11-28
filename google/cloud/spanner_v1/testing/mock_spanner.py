@@ -102,7 +102,9 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
         return empty_pb2.Empty()
 
     def ExecuteSql(self, request, context):
-        return result_set.ResultSet()
+        self._requests.append(request)
+        result: result_set.ResultSet = self.mock_spanner.results.get(request.sql.lower())
+        return result
 
     def ExecuteStreamingSql(self, request, context):
         self._requests.append(request)

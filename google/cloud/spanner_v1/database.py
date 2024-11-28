@@ -25,6 +25,7 @@ import threading
 import google.auth.credentials
 from google.api_core.retry import Retry
 from google.api_core.retry import if_exception_type
+from google.auth.aio.credentials import AnonymousCredentials
 from google.cloud.exceptions import NotFound
 from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
@@ -41,7 +42,7 @@ from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
 from google.cloud.spanner_v1.transaction import BatchTransactionId
-from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest, SpannerAsyncClient
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import TransactionSelector
@@ -142,7 +143,8 @@ class Database(object):
                               statements in 'ddl_statements' above.
     """
 
-    _spanner_api = None
+    _spanner_api: SpannerClient = None
+    _spanner_async_api: SpannerAsyncClient = None
 
     def __init__(
         self,
@@ -437,6 +439,28 @@ class Database(object):
                 client_options=client_options,
             )
         return self._spanner_api
+
+    @property
+    def spanner_async_api(self):
+        if self._spanner_async_api is None:
+            client_info = self._instance._client._client_info
+            client_options = self._instance._client._client_options
+            if self._instance.emulator_host is not None:
+                channel=grpc.aio.insecure_channel(target=self._instance.emulator_host)
+                transport = SpannerGrpcTransport(channel=channel)
+                self._spanner_async_api = SpannerAsyncClient(
+                    client_info=client_info, transport=transport
+                )
+                return self._spanner_async_api
+            credentials = self._instance._client.credentials
+            if isinstance(credentials, google.auth.credentials.Scoped):
+                credentials = credentials.with_scopes((SPANNER_DATA_SCOPE,))
+            self._spanner_async_api = SpannerAsyncClient(
+                credentials=credentials,
+                client_info=client_info,
+                client_options=client_options,
+            )
+        return self._spanner_async_api
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
