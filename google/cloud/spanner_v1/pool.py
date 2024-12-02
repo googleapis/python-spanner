@@ -17,6 +17,7 @@
 import datetime
 import queue
 import time
+import threading
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
@@ -53,6 +54,8 @@ class AbstractSessionPool(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self.__lock = threading.lock()
+        self._session_id_to_channel_id = dict()
 
     @property
     def labels(self):
@@ -128,9 +131,16 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: new session instance.
         """
-        return self._database.session(
+        session = self._database.session(
             labels=self.labels, database_role=self.database_role
         )
+
+        with self.__lock:
+            channel_id = len(self._session_id_to_channel_id) + 1
+            self._session_id_to_channel_id[session._session.id] = channel_id
+            session._channel_id = channel_id
+
+        return session
 
     def session(self, **kwargs):
         """Check out a session from the pool.

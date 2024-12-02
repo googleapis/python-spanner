@@ -58,6 +58,7 @@ def _restart_on_unavailable(
     transaction=None,
     transaction_selector=None,
     observability_options=None,
+    attempt=0,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -92,6 +93,7 @@ def _restart_on_unavailable(
     ):
         iterator = method(request=request)
     while True:
+        attempt += 1
         try:
             for item in iterator:
                 item_buffer.append(item)

@@ -50,6 +50,7 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
 )
@@ -698,8 +699,15 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
+        nth_request = self._next_nth_request()
+        attempt = AtomicCounter(1)  # It'll be incremented inside _restart_on_unavailable
+
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
+                channel_id = session._channel_id
+                metadata = with_request_id(
+                    self._client._nth_client_id, nth_request, attempt.value, metadata
+                )
                 txn = api.begin_transaction(
                     session=session.name, options=txn_options, metadata=metadata
                 )
@@ -725,6 +733,7 @@ class Database(object):
                     request=request,
                     transaction_selector=txn_selector,
                     observability_options=self.observability_options,
+                    attempt=attempt,
                 )
 
                 result_set = StreamedResultSet(iterator)
@@ -733,6 +742,9 @@ class Database(object):
                 return result_set.stats.row_count_lower_bound
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
+
+    def _next_nth_request(self):
+        return self._instance._client._next_nth_request
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
