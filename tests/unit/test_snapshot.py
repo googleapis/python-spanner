@@ -26,6 +26,11 @@ from tests._helpers import (
 )
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _metadata_with_request_id,
+)
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -295,7 +300,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             fail_after=True,
             error=InternalServerError(
                 "Received unexpected EOS on DATA frame from server"
-            )
+            ),
         )
         after = _MockIterator(*LAST)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
@@ -467,7 +472,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             fail_after=True,
             error=InternalServerError(
                 "Received unexpected EOS on DATA frame from server"
-            )
+            ),
         )
         after = _MockIterator(*SECOND)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
@@ -777,7 +782,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
         api.streaming_read.assert_called_once_with(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
+            ],
             retry=retry,
             timeout=timeout,
         )
@@ -1026,7 +1037,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
         api.execute_streaming_sql.assert_called_once_with(
             request=expected_request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
+            ],
             timeout=timeout,
             retry=retry,
         )
@@ -1199,6 +1216,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=retry,
             timeout=timeout,
@@ -1378,6 +1399,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=retry,
             timeout=timeout,
@@ -1774,7 +1799,13 @@ class TestSnapshot(OpenTelemetryBase):
         api.begin_transaction.assert_called_once_with(
             session=session.name,
             options=expected_txn_options,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
+            ],
         )
 
         self.assertSpanAttributes(
@@ -1810,7 +1841,13 @@ class TestSnapshot(OpenTelemetryBase):
         api.begin_transaction.assert_called_once_with(
             session=session.name,
             options=expected_txn_options,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
+            ],
         )
 
         self.assertSpanAttributes(
@@ -1821,10 +1858,18 @@ class TestSnapshot(OpenTelemetryBase):
 
 
 class _Client(object):
+    NTH_CLIENT = AtomicCounter()
+
     def __init__(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
+        self._nth_client_id = _Client.NTH_CLIENT.increment()
+        self._nth_request = AtomicCounter()
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
 
 
 class _Instance(object):
@@ -1842,6 +1887,27 @@ class _Database(object):
     @property
     def observability_options(self):
         return dict(db_name=self.name)
+
+    def _next_nth_request(self):
+        return self._instance._client._next_nth_request
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        client_id = self._nth_client_id
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
 
 class _Session(object):

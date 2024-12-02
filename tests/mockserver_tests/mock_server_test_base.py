@@ -186,6 +186,8 @@ class MockServerTestBase(unittest.TestCase):
     def database(self) -> Database:
         if self._database is None:
             self._database = self.instance.database(
-                "test-database", pool=FixedSizePool(size=10)
+                "test-database",
+                pool=FixedSizePool(size=10),
+                enable_interceptors_in_tests=True,
             )
         return self._database

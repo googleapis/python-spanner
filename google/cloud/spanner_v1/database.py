@@ -51,8 +51,10 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -150,6 +152,9 @@ class Database(object):
     """
 
     _spanner_api: SpannerClient = None
+
+    __transport_lock = threading.Lock()
+    __transports_to_channel_id = dict()
 
     def __init__(
         self,
@@ -448,6 +453,31 @@ class Database(object):
             )
         return self._spanner_api
 
+    @property
+    def _channel_id(self):
+        """
+        Helper to retrieve the associated channelID for the spanner_api.
+        This property is paramount to x-goog-spanner-request-id.
+        """
+        with self.__transport_lock:
+            api = self.spanner_api
+            channel_id = self.__transports_to_channel_id.get(api._transport, None)
+            if channel_id is None:
+                channel_id = len(self.__transports_to_channel_id) + 1
+                self.__transports_to_channel_id[api._transport] = channel_id
+
+            return channel_id
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        client_id = self._nth_client_id
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
@@ -703,6 +733,12 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
+        # Attempt will be incremented inside _restart_on_unavailable.
+        begin_txn_nth_request = self._next_nth_request
+        begin_txn_attempt = AtomicCounter(1)
+        partial_nth_request = self._next_nth_request
+        partial_attempt = AtomicCounter(0)
+
         def execute_pdml():
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
@@ -711,7 +747,10 @@ class Database(object):
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
-                        session=session.name, options=txn_options, metadata=metadata
+                        session=session.name, options=txn_options,
+                        metadata=self.metadata_with_request_id(
+                            begin_txn_nth_request, begin_txn_attempt.value, metadata
+                        ),
                     )
 
                     txn_selector = TransactionSelector(id=txn.id)
@@ -724,18 +763,25 @@ class Database(object):
                         query_options=query_options,
                         request_options=request_options,
                     )
-                    method = functools.partial(
-                        api.execute_streaming_sql,
-                        metadata=metadata,
-                    )
+
+                    def wrapped_method(*args, **kwargs):
+                        partial_attempt.increment()
+                        method = functools.partial(
+                            api.execute_streaming_sql,
+                            metadata=self.metadata_with_request_id(
+                                partial_nth_request, partial_attempt.value, metadata
+                            ),
+                        )
+                        return method(*args, **kwargs)
 
                     iterator = _restart_on_unavailable(
-                        method=method,
+                        method=wrapped_method,
                         trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
+                        attempt=begin_txn_attempt,
                     )
 
                     result_set = StreamedResultSet(iterator)
@@ -744,6 +790,14 @@ class Database(object):
                     return result_set.stats.row_count_lower_bound
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
+
+    @property
+    def _next_nth_request(self):
+        return self._instance._client._next_nth_request
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
