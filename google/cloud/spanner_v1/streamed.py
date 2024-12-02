@@ -118,9 +118,8 @@ class StreamedResultSet(object):
         :type values: list of :class:`~google.protobuf.struct_pb2.Value`
         :param values: non-chunked values from partial result set.
         """
-        field_types = [field.type_ for field in self.fields]
         decoders = self._decoders
-        width = len(field_types)
+        width = len(self.fields)
         index = len(self._current_row)
         for value in values:
             if self._lazy_decode:
