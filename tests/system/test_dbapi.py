@@ -53,7 +53,7 @@ DDL = """CREATE TABLE contacts (
     AS
     SELECT c.email
     FROM contacts AS c;
-    
+
     CREATE TABLE all_types (
         id int64,
         col_bool bool,
