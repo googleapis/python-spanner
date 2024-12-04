@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import base64
 from concurrent import futures
 
 from google.protobuf import empty_pb2
@@ -31,22 +31,32 @@ class MockSpanner:
         self.results = {}
 
     def add_result(self, sql: str, result: result_set.ResultSet):
-        self.results[sql.lower()] = result
+        self.results[sql.lower().strip()] = result
+
+    def get_result(self, sql: str) -> result_set.ResultSet:
+        result = self.results.get(sql.lower().strip())
+        if result is None:
+            raise ValueError(f"No result found for {sql}")
+        return result
 
     def get_result_as_partial_result_sets(
         self, sql: str
     ) -> [result_set.PartialResultSet]:
-        result: result_set.ResultSet = self.results.get(sql.lower())
-        if result is None:
-            return []
+        result: result_set.ResultSet = self.get_result(sql)
         partials = []
         first = True
-        for row in result.rows:
+        if len(result.rows) == 0:
             partial = result_set.PartialResultSet()
-            if first:
-                partial.metadata = result.metadata
-            partial.values.extend(row)
+            partial.metadata = result.metadata
             partials.append(partial)
+        else:
+            for row in result.rows:
+                partial = result_set.PartialResultSet()
+                if first:
+                    partial.metadata = result.metadata
+                partial.values.extend(row)
+                partials.append(partial)
+        partials[len(partials) - 1].stats = result.stats
         return partials
 
 
@@ -56,6 +66,8 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
         self._requests = []
         self.session_counter = 0
         self.sessions = {}
+        self.transaction_counter = 0
+        self.transactions = {}
         self._mock_spanner = MockSpanner()
 
     @property
@@ -93,18 +105,20 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
         return session
 
     def GetSession(self, request, context):
+        self._requests.append(request)
         return spanner.Session()
 
     def ListSessions(self, request, context):
+        self._requests.append(request)
         return [spanner.Session()]
 
     def DeleteSession(self, request, context):
+        self._requests.append(request)
         return empty_pb2.Empty()
 
     def ExecuteSql(self, request, context):
         self._requests.append(request)
-        result: result_set.ResultSet = self.mock_spanner.results.get(request.sql.lower())
-        return result
+        return result_set.ResultSet()
 
     def ExecuteStreamingSql(self, request, context):
         self._requests.append(request)
@@ -113,31 +127,74 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
             yield result
 
     def ExecuteBatchDml(self, request, context):
-        return spanner.ExecuteBatchDmlResponse()
+        self._requests.append(request)
+        response = spanner.ExecuteBatchDmlResponse()
+        started_transaction = None
+        if not request.transaction.begin == transaction.TransactionOptions():
+            started_transaction = self.__create_transaction(
+                request.session, request.transaction.begin
+            )
+        first = True
+        for statement in request.statements:
+            result = self.mock_spanner.get_result(statement.sql)
+            if first and started_transaction is not None:
+                result = result_set.ResultSet(
+                    self.mock_spanner.get_result(statement.sql)
+                )
+                result.metadata = result_set.ResultSetMetadata(result.metadata)
+                result.metadata.transaction = started_transaction
+            response.result_sets.append(result)
+        return response
 
     def Read(self, request, context):
+        self._requests.append(request)
         return result_set.ResultSet()
 
     def StreamingRead(self, request, context):
+        self._requests.append(request)
         for result in [result_set.PartialResultSet(), result_set.PartialResultSet()]:
             yield result
 
     def BeginTransaction(self, request, context):
-        return transaction.Transaction()
+        self._requests.append(request)
+        return self.__create_transaction(request.session, request.options)
+
+    def __create_transaction(
+        self, session: str, options: transaction.TransactionOptions
+    ) -> transaction.Transaction:
+        session = self.sessions[session]
+        if session is None:
+            raise ValueError(f"Session not found: {session}")
+        self.transaction_counter += 1
+        id_bytes = bytes(
+            f"{session.name}/transactions/{self.transaction_counter}", "UTF-8"
+        )
+        transaction_id = base64.urlsafe_b64encode(id_bytes)
+        self.transactions[transaction_id] = options
+        return transaction.Transaction(dict(id=transaction_id))
 
     def Commit(self, request, context):
+        self._requests.append(request)
+        tx = self.transactions[request.transaction_id]
+        if tx is None:
+            raise ValueError(f"Transaction not found: {request.transaction_id}")
+        del self.transactions[request.transaction_id]
         return commit.CommitResponse()
 
     def Rollback(self, request, context):
+        self._requests.append(request)
         return empty_pb2.Empty()
 
     def PartitionQuery(self, request, context):
+        self._requests.append(request)
         return spanner.PartitionResponse()
 
     def PartitionRead(self, request, context):
+        self._requests.append(request)
         return spanner.PartitionResponse()
 
     def BatchWrite(self, request, context):
+        self._requests.append(request)
         for result in [spanner.BatchWriteResponse(), spanner.BatchWriteResponse()]:
             yield result
 

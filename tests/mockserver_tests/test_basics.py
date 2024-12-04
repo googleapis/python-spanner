@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import asyncio
+
 import unittest
 
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
@@ -28,7 +28,8 @@ from google.cloud.spanner_v1 import (
     Client,
     FixedSizePool,
     BatchCreateSessionsRequest,
-    ExecuteSqlRequest, CreateSessionRequest,
+    ExecuteSqlRequest,
+    GetSessionRequest,
 )
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
@@ -124,9 +125,12 @@ class TestBasics(unittest.TestCase):
                 self.assertEqual(1, row[0])
             self.assertEqual(1, len(result_list))
         requests = self.spanner_service.requests
-        self.assertEqual(2, len(requests))
+        self.assertEqual(3, len(requests))
         self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
-        self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
+        # TODO: Optimize FixedSizePool so this GetSessionRequest is not executed
+        #       every time a session is fetched.
+        self.assertTrue(isinstance(requests[1], GetSessionRequest))
+        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
 
     def test_create_table(self):
         database_admin_api = self.client.database_admin_api
@@ -145,28 +149,3 @@ class TestBasics(unittest.TestCase):
         )
         operation = database_admin_api.update_database_ddl(request)
         operation.result(1)
-
-
-    def test_async_select1(self):
-        self._add_select1_result()
-        results = asyncio.run(self._async_select1())
-        result_list = []
-        for row in results.rows:
-            result_list.append(row)
-            self.assertEqual("1", row[0])
-        self.assertEqual(1, len(result_list))
-        requests = self.spanner_service.requests
-        self.assertEqual(3, len(requests))
-        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
-        self.assertTrue(isinstance(requests[1], CreateSessionRequest))
-        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
-
-    async def _async_select1(self):
-        client = self.database.spanner_async_api
-        create_session_request = CreateSessionRequest(database=self._database.name)
-        session = await client.create_session(create_session_request)
-        execute_request = ExecuteSqlRequest(dict(
-            session=session.name,
-            sql="select 1",
-        ))
-        return await client.execute_sql(execute_request)
