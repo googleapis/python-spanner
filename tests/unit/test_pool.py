@@ -15,7 +15,7 @@
 
 from functools import total_ordering
 import unittest
-from datetime import datetime, UTC, timedelta
+from datetime import datetime, timedelta
 
 import mock
 
@@ -202,7 +202,7 @@ class TestFixedSizePool(unittest.TestCase):
     def test_get_non_expired(self):
         pool = self._make_one(size=4)
         database = _Database("name")
-        last_use_time = datetime.now(UTC) - timedelta(minutes=56)
+        last_use_time = datetime.utcnow() - timedelta(minutes=56)
         SESSIONS = sorted(
             [_Session(database, last_use_time=last_use_time) for i in range(0, 4)]
         )
@@ -219,7 +219,7 @@ class TestFixedSizePool(unittest.TestCase):
     def test_get_expired(self):
         pool = self._make_one(size=4)
         database = _Database("name")
-        last_use_time = datetime.now(UTC) - timedelta(minutes=65)
+        last_use_time = datetime.utcnow() - timedelta(minutes=65)
         SESSIONS = [_Session(database, last_use_time=last_use_time)] * 5
         SESSIONS[0]._exists = False
         database._sessions.extend(SESSIONS)
@@ -516,7 +516,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS = [_Session(database)] * 4
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.now(UTC) - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -538,7 +538,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS[0]._exists = False
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.now(UTC) - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -594,7 +594,7 @@ class TestPingingPool(unittest.TestCase):
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
 
-        now = datetime.datetime.now(UTC)
+        now = datetime.datetime.utcnow()
         database = _Database("name")
         session = _Session(database)
 
@@ -650,7 +650,7 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.now(UTC) + datetime.timedelta(seconds=4000)
+        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -668,7 +668,7 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.now(UTC) + datetime.timedelta(seconds=4000)
+        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -752,7 +752,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
-        NOW = datetime.datetime.now(UTC)
+        NOW = datetime.datetime.utcnow()
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database) for _ in range(10)]
@@ -935,7 +935,7 @@ class _Session(object):
     _transaction = None
 
     def __init__(
-        self, database, exists=True, transaction=None, last_use_time=datetime.now(UTC)
+        self, database, exists=True, transaction=None, last_use_time=datetime.utcnow()
     ):
         self._database = database
         self._exists = exists

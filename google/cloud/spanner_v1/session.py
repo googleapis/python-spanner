@@ -17,7 +17,7 @@
 from functools import total_ordering
 import random
 import time
-from datetime import datetime, UTC
+from datetime import datetime
 
 from google.api_core.exceptions import Aborted
 from google.api_core.exceptions import GoogleAPICallError
@@ -70,7 +70,7 @@ class Session(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
-        self._last_use_time = datetime.now(UTC)
+        self._last_use_time = datetime.utcnow()
 
     def __lt__(self, other):
         return self._session_id < other._session_id

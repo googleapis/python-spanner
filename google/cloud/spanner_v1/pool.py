@@ -26,12 +26,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from warnings import warn
 
-
-def _now():
-    datetime.datetime.now(datetime.UTC)
-
-
-_NOW = _now  # unit tests may replace
+_NOW = datetime.datetime.utcnow  # unit tests may replace
 
 
 class AbstractSessionPool(object):
