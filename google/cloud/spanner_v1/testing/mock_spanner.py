@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
+import grpc
 from concurrent import futures
 
 from google.protobuf import empty_pb2
-import grpc
-
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
 import google.cloud.spanner_v1.testing.spanner_database_admin_pb2_grpc as database_admin_grpc
 import google.cloud.spanner_v1.testing.spanner_pb2_grpc as spanner_grpc
@@ -24,7 +23,6 @@ import google.cloud.spanner_v1.types.commit_response as commit
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.spanner as spanner
 import google.cloud.spanner_v1.types.transaction as transaction
-
 
 class MockSpanner:
     def __init__(self):
