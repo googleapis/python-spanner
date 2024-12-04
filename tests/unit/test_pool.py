@@ -15,6 +15,7 @@
 
 from functools import total_ordering
 import unittest
+from datetime import datetime, UTC, timedelta
 
 import mock
 
@@ -184,10 +185,27 @@ class TestFixedSizePool(unittest.TestCase):
         for session in SESSIONS:
             session.create.assert_not_called()
 
-    def test_get_non_expired(self):
+    def test_get_active(self):
         pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = sorted([_Session(database) for i in range(0, 4)])
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+
+        # check if sessions returned in LIFO order
+        for i in (3, 2, 1, 0):
+            session = pool.get()
+            self.assertIs(session, SESSIONS[i])
+            self.assertFalse(session._exists_checked)
+            self.assertFalse(pool._sessions.full())
+
+    def test_get_non_expired(self):
+        pool = self._make_one(size=4)
+        database = _Database("name")
+        last_use_time = datetime.now(UTC) - timedelta(minutes=56)
+        SESSIONS = sorted(
+            [_Session(database, last_use_time=last_use_time) for i in range(0, 4)]
+        )
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
@@ -201,7 +219,8 @@ class TestFixedSizePool(unittest.TestCase):
     def test_get_expired(self):
         pool = self._make_one(size=4)
         database = _Database("name")
-        SESSIONS = [_Session(database)] * 5
+        last_use_time = datetime.now(UTC) - timedelta(minutes=65)
+        SESSIONS = [_Session(database, last_use_time=last_use_time)] * 5
         SESSIONS[0]._exists = False
         database._sessions.extend(SESSIONS)
         pool.bind(database)
@@ -497,7 +516,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS = [_Session(database)] * 4
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.now(UTC) - datetime.timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -519,7 +538,7 @@ class TestPingingPool(unittest.TestCase):
         SESSIONS[0]._exists = False
         database._sessions.extend(SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.datetime.now(UTC) - datetime.timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -575,7 +594,7 @@ class TestPingingPool(unittest.TestCase):
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
 
-        now = datetime.datetime.utcnow()
+        now = datetime.datetime.now(UTC)
         database = _Database("name")
         session = _Session(database)
 
@@ -631,7 +650,7 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
+        later = datetime.datetime.now(UTC) + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -649,7 +668,7 @@ class TestPingingPool(unittest.TestCase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
+        later = datetime.datetime.now(UTC) + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -733,7 +752,7 @@ class TestTransactionPingingPool(unittest.TestCase):
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
-        NOW = datetime.datetime.utcnow()
+        NOW = datetime.datetime.now(UTC)
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database) for _ in range(10)]
@@ -915,7 +934,9 @@ def _make_transaction(*args, **kw):
 class _Session(object):
     _transaction = None
 
-    def __init__(self, database, exists=True, transaction=None):
+    def __init__(
+        self, database, exists=True, transaction=None, last_use_time=datetime.now(UTC)
+    ):
         self._database = database
         self._exists = exists
         self._exists_checked = False
@@ -923,9 +944,14 @@ class _Session(object):
         self.create = mock.Mock()
         self._deleted = False
         self._transaction = transaction
+        self._last_use_time = last_use_time
 
     def __lt__(self, other):
         return id(self) < id(other)
+
+    @property
+    def last_use_time(self):
+        return self._last_use_time
 
     def exists(self):
         self._exists_checked = True

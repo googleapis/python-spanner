@@ -17,6 +17,7 @@
 from functools import total_ordering
 import random
 import time
+from datetime import datetime, UTC
 
 from google.api_core.exceptions import Aborted
 from google.api_core.exceptions import GoogleAPICallError
@@ -69,6 +70,7 @@ class Session(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._last_use_time = datetime.now(UTC)
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -77,6 +79,14 @@ class Session(object):
     def session_id(self):
         """Read-only ID, set by the back-end during :meth:`create`."""
         return self._session_id
+
+    @property
+    def last_use_time(self):
+        """ "Approximate last use time of this session
+
+        :rtype: datetime
+        :returns: the approximate last use time of this session"""
+        return self._last_use_time
 
     @property
     def database_role(self):
@@ -154,6 +164,7 @@ class Session(object):
                 metadata=metadata,
             )
         self._session_id = session_pb.name.split("/")[-1]
+        self._last_use_time = datetime.now()
 
     def exists(self):
         """Test for the existence of this session.
@@ -181,6 +192,7 @@ class Session(object):
         ) as span:
             try:
                 api.get_session(name=self.name, metadata=metadata)
+                self._last_use_time = datetime.now()
                 if span:
                     span.set_attribute("session_found", True)
             except NotFound:
@@ -222,6 +234,7 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
         request = ExecuteSqlRequest(session=self.name, sql="SELECT 1")
         api.execute_sql(request=request, metadata=metadata)
+        self._last_use_time = datetime.now()
 
     def snapshot(self, **kw):
         """Create a snapshot to perform a set of reads with shared staleness.
@@ -273,6 +286,7 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
+        self._last_use_time = datetime.now()
         return self.snapshot().read(
             table, columns, keyset, index, limit, column_info=column_info
         )
@@ -339,6 +353,7 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
+        self._last_use_time = datetime.now()
         return self.snapshot().execute_sql(
             sql,
             params,
@@ -378,6 +393,7 @@ class Session(object):
             del self._transaction
 
         txn = self._transaction = Transaction(self)
+        self._last_use_time = datetime.now()
         return txn
 
     def run_in_transaction(self, func, *args, **kw):
@@ -444,6 +460,7 @@ class Session(object):
                 raise
 
             try:
+                self._last_use_time = datetime.now()
                 txn.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=commit_request_options,

@@ -24,6 +24,7 @@ import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.spanner as spanner
 import google.cloud.spanner_v1.types.transaction as transaction
 
+
 class MockSpanner:
     def __init__(self):
         self.results = {}
