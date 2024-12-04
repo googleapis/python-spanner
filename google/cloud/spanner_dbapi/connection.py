@@ -653,7 +653,7 @@ def connect(
     pool=None,
     user_agent=None,
     client=None,
-    route_to_leader_enabled=True,
+    route_to_leader_enabled=False,
 ):
     """Creates a connection to a Google Cloud Spanner database.
 
@@ -692,9 +692,11 @@ def connect(
 
     :type route_to_leader_enabled: boolean
     :param route_to_leader_enabled:
-        (Optional) Default True. Set route_to_leader_enabled as False to
+        (Optional) Default False. Set route_to_leader_enabled as False to
         disable leader aware routing. Disabling leader aware routing would
         route all requests in RW/PDML transactions to the closest region.
+        Inline Begin Transaction should be enabled to take advantage of the
+        the option.
 
 
     :rtype: :class:`google.cloud.spanner_dbapi.connection.Connection`
