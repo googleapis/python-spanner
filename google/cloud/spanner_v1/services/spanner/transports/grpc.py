@@ -127,7 +127,7 @@ class SpannerGrpcTransport(SpannerTransport):
         if client_cert_source:
             warnings.warn("client_cert_source is deprecated", DeprecationWarning)
 
-        if isinstance(channel, grpc.Channel):
+        if isinstance(channel, grpc.Channel) or isinstance(channel, grpc.aio.Channel):
             # Ignore credentials if a channel was passed.
             credentials = None
             self._ignore_credentials = True

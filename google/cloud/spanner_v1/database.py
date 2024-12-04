@@ -47,6 +47,7 @@ from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import SpannerAsyncClient
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
@@ -143,6 +144,7 @@ class Database(object):
     """
 
     _spanner_api = None
+    _spanner_async_api: SpannerAsyncClient = None
 
     def __init__(
         self,
@@ -437,6 +439,28 @@ class Database(object):
                 client_options=client_options,
             )
         return self._spanner_api
+
+    @property
+    def spanner_async_api(self):
+        if self._spanner_async_api is None:
+            client_info = self._instance._client._client_info
+            client_options = self._instance._client._client_options
+            if self._instance.emulator_host is not None:
+                channel = grpc.aio.insecure_channel(target=self._instance.emulator_host)
+                transport = SpannerGrpcTransport(channel=channel)
+                self._spanner_async_api = SpannerAsyncClient(
+                    client_info=client_info, transport=transport
+                )
+                return self._spanner_async_api
+            credentials = self._instance._client.credentials
+            if isinstance(credentials, google.auth.credentials.Scoped):
+                credentials = credentials.with_scopes((SPANNER_DATA_SCOPE,))
+            self._spanner_async_api = SpannerAsyncClient(
+                credentials=credentials,
+                client_info=client_info,
+                client_options=client_options,
+            )
+        return self._spanner_async_api
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
