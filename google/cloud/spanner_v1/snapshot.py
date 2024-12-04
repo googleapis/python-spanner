@@ -56,6 +56,7 @@ def _restart_on_unavailable(
     attributes=None,
     transaction=None,
     transaction_selector=None,
+    observability_options=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -84,7 +85,10 @@ def _restart_on_unavailable(
         )
 
     request.transaction = transaction_selector
-    with trace_call(trace_name, session, attributes):
+
+    with trace_call(
+        trace_name, session, attributes, observability_options=observability_options
+    ):
         iterator = method(request=request)
     while True:
         try:
@@ -104,7 +108,12 @@ def _restart_on_unavailable(
                     break
         except ServiceUnavailable:
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(
+                trace_name,
+                session,
+                attributes,
+                observability_options=observability_options,
+            ):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -119,7 +128,12 @@ def _restart_on_unavailable(
             if not resumable_error:
                 raise
             del item_buffer[:]
-            with trace_call(trace_name, session, attributes):
+            with trace_call(
+                trace_name,
+                session,
+                attributes,
+                observability_options=observability_options,
+            ):
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -178,6 +192,7 @@ class _SnapshotBase(_SessionWrapper):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
         column_info=None,
+        lazy_decode=False,
     ):
         """Perform a ``StreamingRead`` API request for rows in a table.
 
@@ -241,6 +256,18 @@ class _SnapshotBase(_SessionWrapper):
             If not provided, data remains serialized as bytes for Proto Messages and
             integer for Proto Enums.
 
+        :type lazy_decode: bool
+        :param lazy_decode:
+            (Optional) If this argument is set to ``true``, the iterator
+            returns the underlying protobuf values instead of decoded Python
+            objects. This reduces the time that is needed to iterate through
+            large result sets. The application is responsible for decoding
+            the data that is needed. The returned row iterator contains two
+            functions that can be used for this. ``iterator.decode_row(row)``
+            decodes all the columns in the given row to an array of Python
+            objects. ``iterator.decode_column(row, column_index)`` decodes one
+            specific column in the given row.
+
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
@@ -299,6 +326,7 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         trace_attributes = {"table_id": table, "columns": columns}
+        observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
@@ -310,14 +338,20 @@ class _SnapshotBase(_SessionWrapper):
                     self._session,
                     trace_attributes,
                     transaction=self,
+                    observability_options=observability_options,
                 )
                 self._read_request_count += 1
                 if self._multi_use:
                     return StreamedResultSet(
-                        iterator, source=self, column_info=column_info
+                        iterator,
+                        source=self,
+                        column_info=column_info,
+                        lazy_decode=lazy_decode,
                     )
                 else:
-                    return StreamedResultSet(iterator, column_info=column_info)
+                    return StreamedResultSet(
+                        iterator, column_info=column_info, lazy_decode=lazy_decode
+                    )
         else:
             iterator = _restart_on_unavailable(
                 restart,
@@ -326,14 +360,19 @@ class _SnapshotBase(_SessionWrapper):
                 self._session,
                 trace_attributes,
                 transaction=self,
+                observability_options=observability_options,
             )
 
         self._read_request_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self, column_info=column_info)
+            return StreamedResultSet(
+                iterator, source=self, column_info=column_info, lazy_decode=lazy_decode
+            )
         else:
-            return StreamedResultSet(iterator, column_info=column_info)
+            return StreamedResultSet(
+                iterator, column_info=column_info, lazy_decode=lazy_decode
+            )
 
     def execute_sql(
         self,
@@ -349,6 +388,7 @@ class _SnapshotBase(_SessionWrapper):
         data_boost_enabled=False,
         directed_read_options=None,
         column_info=None,
+        lazy_decode=False,
     ):
         """Perform an ``ExecuteStreamingSql`` API request.
 
@@ -421,6 +461,18 @@ class _SnapshotBase(_SessionWrapper):
             If not provided, data remains serialized as bytes for Proto Messages and
             integer for Proto Enums.
 
+        :type lazy_decode: bool
+        :param lazy_decode:
+            (Optional) If this argument is set to ``true``, the iterator
+            returns the underlying protobuf values instead of decoded Python
+            objects. This reduces the time that is needed to iterate through
+            large result sets. The application is responsible for decoding
+            the data that is needed. The returned row iterator contains two
+            functions that can be used for this. ``iterator.decode_row(row)``
+            decodes all the columns in the given row to an array of Python
+            objects. ``iterator.decode_column(row, column_index)`` decodes one
+            specific column in the given row.
+
         :raises ValueError:
             for reuse of single-use snapshots, or if a transaction ID is
             already pending for multiple-use snapshots.
@@ -489,19 +541,38 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         trace_attributes = {"db.statement": sql}
+        observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart, request, trace_attributes, column_info
+                    restart,
+                    request,
+                    trace_attributes,
+                    column_info,
+                    observability_options,
+                    lazy_decode=lazy_decode,
                 )
         else:
             return self._get_streamed_result_set(
-                restart, request, trace_attributes, column_info
+                restart,
+                request,
+                trace_attributes,
+                column_info,
+                observability_options,
+                lazy_decode=lazy_decode,
             )
 
-    def _get_streamed_result_set(self, restart, request, trace_attributes, column_info):
+    def _get_streamed_result_set(
+        self,
+        restart,
+        request,
+        trace_attributes,
+        column_info,
+        observability_options=None,
+        lazy_decode=False,
+    ):
         iterator = _restart_on_unavailable(
             restart,
             request,
@@ -509,14 +580,19 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
             transaction=self,
+            observability_options=observability_options,
         )
         self._read_request_count += 1
         self._execute_sql_count += 1
 
         if self._multi_use:
-            return StreamedResultSet(iterator, source=self, column_info=column_info)
+            return StreamedResultSet(
+                iterator, source=self, column_info=column_info, lazy_decode=lazy_decode
+            )
         else:
-            return StreamedResultSet(iterator, column_info=column_info)
+            return StreamedResultSet(
+                iterator, column_info=column_info, lazy_decode=lazy_decode
+            )
 
     def partition_read(
         self,
@@ -598,7 +674,10 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
-            "CloudSpanner.PartitionReadOnlyTransaction", self._session, trace_attributes
+            "CloudSpanner.PartitionReadOnlyTransaction",
+            self._session,
+            trace_attributes,
+            observability_options=getattr(database, "observability_options", None),
         ):
             method = functools.partial(
                 api.partition_read,
@@ -701,6 +780,7 @@ class _SnapshotBase(_SessionWrapper):
             "CloudSpanner.PartitionReadWriteTransaction",
             self._session,
             trace_attributes,
+            observability_options=getattr(database, "observability_options", None),
         ):
             method = functools.partial(
                 api.partition_query,
@@ -843,7 +923,11 @@ class Snapshot(_SnapshotBase):
                 (_metadata_with_leader_aware_routing(database._route_to_leader_enabled))
             )
         txn_selector = self._make_txn_selector()
-        with trace_call("CloudSpanner.BeginTransaction", self._session):
+        with trace_call(
+            "CloudSpanner.BeginTransaction",
+            self._session,
+            observability_options=getattr(database, "observability_options", None),
+        ):
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
