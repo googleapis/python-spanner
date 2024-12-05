@@ -191,7 +191,6 @@ class Session(object):
         ) as span:
             try:
                 api.get_session(name=self.name, metadata=metadata)
-                self._last_use_time = datetime.now()
                 if span:
                     span.set_attribute("session_found", True)
             except NotFound:
