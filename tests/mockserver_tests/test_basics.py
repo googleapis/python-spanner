@@ -16,7 +16,6 @@ from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
     ExecuteSqlRequest,
-    GetSessionRequest,
 )
 
 from tests.mockserver_tests.mock_server_test_base import (
@@ -36,12 +35,9 @@ class TestBasics(MockServerTestBase):
                 self.assertEqual(1, row[0])
             self.assertEqual(1, len(result_list))
         requests = self.spanner_service.requests
-        self.assertEqual(3, len(requests))
+        self.assertEqual(2, len(requests), msg=requests)
         self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
-        # TODO: Optimize FixedSizePool so this GetSessionRequest is not executed
-        #       every time a session is fetched.
-        self.assertTrue(isinstance(requests[1], GetSessionRequest))
-        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
+        self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
 
     def test_create_table(self):
         database_admin_api = self.client.database_admin_api
