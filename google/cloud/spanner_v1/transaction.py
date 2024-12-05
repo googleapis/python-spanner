@@ -13,7 +13,6 @@
 # limitations under the License.
 
 """Spanner read-write transaction support."""
-from datetime import datetime
 import functools
 import threading
 from google.protobuf.struct_pb2 import Struct
