@@ -531,6 +531,48 @@ class TestPingingPool(unittest.TestCase):
         self.assertTrue(SESSIONS[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
 
+    def test_get_hit_w_created(self):
+        import datetime
+
+        pool = self._make_one(size=4)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 4
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+
+        session_max_age = 28 * 24 * 60 * 60
+        SESSIONS[0]._created_at = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=session_max_age + 10
+        )
+
+        session = pool.get()
+
+        self.assertIs(session, SESSIONS[0])
+        self.assertTrue(session._exists_checked)
+        self.assertFalse(pool._sessions.full())
+
+    def test_get_hit_w_created_expired(self):
+        import datetime
+
+        pool = self._make_one(size=4)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 5
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+
+        session_max_age = 28 * 24 * 60 * 60
+        SESSIONS[0]._created_at = datetime.datetime.utcnow() - datetime.timedelta(
+            seconds=session_max_age
+        )
+        SESSIONS[0]._exists = False
+
+        session = pool.get()
+
+        self.assertIs(session, SESSIONS[4])
+        session.create.assert_called()
+        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertFalse(pool._sessions.full())
+
     def test_get_empty_default_timeout(self):
         import queue
 

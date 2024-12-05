@@ -385,6 +385,8 @@ class PingingPool(AbstractSessionPool):
     :param database_role: (Optional) user-assigned database_role for the session.
     """
 
+    SESSION_MAX_AGE = 28 * 24 * 60 * 60
+
     def __init__(
         self,
         size=10,
@@ -448,8 +450,9 @@ class PingingPool(AbstractSessionPool):
             timeout = self.default_timeout
 
         ping_after, session = self._sessions.get(block=True, timeout=timeout)
+        session_age = (_NOW() - session._created_at).total_seconds()
 
-        if _NOW() > ping_after:
+        if _NOW() > ping_after or session_age >= self.SESSION_MAX_AGE:
             # Using session.exists() guarantees the returned session exists.
             # session.ping() uses a cached result in the backend which could
             # result in a recently deleted session being returned.
@@ -480,6 +483,11 @@ class PingingPool(AbstractSessionPool):
                 break
             else:
                 session.delete()
+
+    def _new_session(self):
+        session = super()._new_session()
+        session._created_at = _NOW()
+        return session
 
     def ping(self):
         """Refresh maybe-expired sessions in the pool.
