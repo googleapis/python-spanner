@@ -164,7 +164,6 @@ class Session(object):
                 metadata=metadata,
             )
         self._session_id = session_pb.name.split("/")[-1]
-        self._last_use_time = datetime.now()
 
     def exists(self):
         """Test for the existence of this session.
@@ -286,7 +285,6 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        self._last_use_time = datetime.now()
         return self.snapshot().read(
             table, columns, keyset, index, limit, column_info=column_info
         )
@@ -353,7 +351,6 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        self._last_use_time = datetime.now()
         return self.snapshot().execute_sql(
             sql,
             params,
@@ -393,7 +390,6 @@ class Session(object):
             del self._transaction
 
         txn = self._transaction = Transaction(self)
-        self._last_use_time = datetime.now()
         return txn
 
     def run_in_transaction(self, func, *args, **kw):
@@ -460,7 +456,6 @@ class Session(object):
                 raise
 
             try:
-                self._last_use_time = datetime.now()
                 txn.commit(
                     return_commit_stats=self._database.log_commit_stats,
                     request_options=commit_request_options,
