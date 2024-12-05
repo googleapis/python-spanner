@@ -226,6 +226,14 @@ place_before(
     escape="()",
 )
 
+place_before(
+    "noxfile.py",
+    "# Use pre-release gRPC for system tests."
+    """# Does it ever work?
+""",
+    escape="()",
+)
+
 s.replace(
     "noxfile.py",
     r"""session.install\("-e", "."\)""",
