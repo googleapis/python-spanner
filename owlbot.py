@@ -336,21 +336,20 @@ def mockserver(session):
         *session.posargs,
     )
 
-
 """
 
 place_before(
     "noxfile.py",
     "def install_systemtest_dependencies(session, *constraints):",
     mockserver_test,
-    escape="()",
+    escape="()_*:",
 )
 
 place_before(
     "noxfile.py",
     "UNIT_TEST_PYTHON_VERSIONS: List[str] = [",
     'DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION = "3.12"',
-    escape="()",
+    escape="[]",
 )
 
 s.shell.run(["nox", "-s", "blacken"], hide_output=False)
