@@ -14,6 +14,7 @@
 
 import unittest
 
+from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
 from google.cloud.spanner_v1.testing.mock_spanner import (
     start_mock_server,
@@ -31,6 +32,17 @@ import grpc
 
 def add_result(sql: str, result: result_set.ResultSet):
     MockServerTestBase.spanner_service.mock_spanner.add_result(sql, result)
+
+
+def add_update_count(
+    sql: str, count: int, dml_mode: AutocommitDmlMode = AutocommitDmlMode.TRANSACTIONAL
+):
+    if dml_mode == AutocommitDmlMode.PARTITIONED_NON_ATOMIC:
+        stats = dict(row_count_lower_bound=count)
+    else:
+        stats = dict(row_count_exact=count)
+    result = result_set.ResultSet(dict(stats=result_set.ResultSetStats(stats)))
+    add_result(sql, result)
 
 
 def add_select1_result():

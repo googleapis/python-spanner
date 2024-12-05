@@ -13,14 +13,19 @@
 # limitations under the License.
 
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+from google.cloud.spanner_dbapi import Connection
+from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
 from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
     ExecuteSqlRequest,
+    BeginTransactionRequest,
+    TransactionOptions,
 )
 
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
     add_select1_result,
+    add_update_count,
 )
 
 
@@ -56,3 +61,27 @@ class TestBasics(MockServerTestBase):
         )
         operation = database_admin_api.update_database_ddl(request)
         operation.result(1)
+
+    # TODO: Move this to a separate class once the mock server test setup has
+    #       been re-factored to use a base class for the boiler plate code.
+    def test_dbapi_partitioned_dml(self):
+        sql = "UPDATE singers SET foo='bar' WHERE active = true"
+        add_update_count(sql, 100, AutocommitDmlMode.PARTITIONED_NON_ATOMIC)
+        connection = Connection(self.instance, self.database)
+        connection.autocommit = True
+        connection.set_autocommit_dml_mode(AutocommitDmlMode.PARTITIONED_NON_ATOMIC)
+        with connection.cursor() as cursor:
+            # Note: SQLAlchemy uses [] as the list of parameters for statements
+            # with no parameters.
+            cursor.execute(sql, [])
+            self.assertEqual(100, cursor.rowcount)
+
+        requests = self.spanner_service.requests
+        self.assertEqual(3, len(requests), msg=requests)
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], BeginTransactionRequest))
+        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
+        begin_request: BeginTransactionRequest = requests[1]
+        self.assertEqual(
+            TransactionOptions(dict(partitioned_dml={})), begin_request.options
+        )
