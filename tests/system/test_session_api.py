@@ -437,8 +437,6 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
 
     if ot_exporter is not None:
         span_list = ot_exporter.get_finished_spans()
-        assert len(span_list) == 4
-
         assert_span_attributes(
             ot_exporter,
             "CloudSpanner.GetSession",
@@ -447,21 +445,40 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.Commit",
+            "CloudSpanner.Batch.commit",
             attributes=_make_attributes(db_name, num_mutations=2),
             span=span_list[1],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.GetSession",
-            attributes=_make_attributes(db_name, session_found=True),
+            "CloudSpanner.Batch",
+            attributes=_make_attributes(db_name),
             span=span_list[2],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=_make_attributes(db_name, columns=sd.COLUMNS, table_id=sd.TABLE),
+            "CloudSpanner.Database.batch",
+            attributes=_make_attributes(db_name),
             span=span_list[3],
+        )
+
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.GetSession",
+            attributes=_make_attributes(db_name, session_found=True),
+            span=span_list[4],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Snapshot.read",
+            attributes=_make_attributes(db_name, columns=sd.COLUMNS, table_id=sd.TABLE),
+            span=span_list[5],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Database.snapshot",
+            attributes=_make_attributes(db_name, multi_use=False),
+            span=span_list[6],
         )
 
 
@@ -608,7 +625,6 @@ def test_transaction_read_and_insert_then_rollback(
 
     if ot_exporter is not None:
         span_list = ot_exporter.get_finished_spans()
-        assert len(span_list) == 8
 
         assert_span_attributes(
             ot_exporter,
@@ -624,51 +640,70 @@ def test_transaction_read_and_insert_then_rollback(
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.Commit",
+            "CloudSpanner.Batch.commit",
             attributes=_make_attributes(db_name, num_mutations=1),
             span=span_list[2],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Batch",
             attributes=_make_attributes(db_name),
             span=span_list[3],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.ReadOnlyTransaction",
-            attributes=_make_attributes(
-                db_name,
-                table_id=sd.TABLE,
-                columns=sd.COLUMNS,
-            ),
+            "CloudSpanner.Database.batch",
+            attributes=_make_attributes(db_name),
             span=span_list[4],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.ReadOnlyTransaction",
+            "CloudSpanner.Transaction.begin",
+            attributes=_make_attributes(db_name),
+            span=span_list[5],
+        )
+
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Transaction.read",
             attributes=_make_attributes(
                 db_name,
                 table_id=sd.TABLE,
                 columns=sd.COLUMNS,
             ),
-            span=span_list[5],
-        )
-        assert_span_attributes(
-            ot_exporter,
-            "CloudSpanner.Rollback",
-            attributes=_make_attributes(db_name),
             span=span_list[6],
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.ReadOnlyTransaction",
+            "CloudSpanner.Transaction.read",
             attributes=_make_attributes(
                 db_name,
                 table_id=sd.TABLE,
                 columns=sd.COLUMNS,
             ),
             span=span_list[7],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Transaction.rollback",
+            attributes=_make_attributes(db_name),
+            span=span_list[8],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Transaction",
+            attributes=_make_attributes(db_name),
+            span=span_list[9],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Snapshot.read",
+            attributes=_make_attributes(
+                db_name,
+                table_id=sd.TABLE,
+                columns=sd.COLUMNS,
+            ),
+            span=span_list[10],
         )
 
 
@@ -697,6 +732,159 @@ def test_transaction_read_and_insert_then_exception(sessions_database):
         rows = list(snapshot.read(sd.TABLE, sd.COLUMNS, sd.ALL))
 
     assert rows == []
+
+
+@pytest.mark.skipif(
+    not _helpers.USE_EMULATOR,
+    reason="Emulator needed to run this tests",
+)
+@pytest.mark.skipif(
+    not ot_helpers.HAS_OPENTELEMETRY_INSTALLED,
+    reason="Tracing requires OpenTelemetry",
+)
+def test_transaction_abort_then_retry_spans(sessions_database, ot_exporter):
+    from google.auth.credentials import AnonymousCredentials
+    from google.api_core.exceptions import Aborted
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+    from opentelemetry.trace.status import StatusCode
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.sampling import ALWAYS_ON
+    from opentelemetry import trace
+
+    PROJECT = _helpers.EMULATOR_PROJECT
+    CONFIGURATION_NAME = "config-name"
+    INSTANCE_ID = _helpers.INSTANCE_ID
+    DISPLAY_NAME = "display-name"
+    DATABASE_ID = _helpers.unique_id("temp_db")
+    NODE_COUNT = 5
+    LABELS = {"test": "true"}
+
+    counters = dict(aborted=0)
+    already_aborted = False
+
+    def select_in_txn(txn):
+        from google.rpc import error_details_pb2
+
+        results = txn.execute_sql("SELECT 1")
+        for row in results:
+            _ = row
+
+        if counters["aborted"] == 0:
+            counters["aborted"] = 1
+            raise Aborted(
+                "Thrown from ClientInterceptor for testing",
+                errors=[FauxCall(code_pb2.ABORTED)],
+            )
+
+    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
+    trace_exporter = InMemorySpanExporter()
+    tracer_provider.add_span_processor(SimpleSpanProcessor(trace_exporter))
+    observability_options = dict(
+        tracer_provider=tracer_provider,
+        enable_extended_tracing=True,
+    )
+
+    client = spanner_v1.Client(
+        project=PROJECT,
+        observability_options=observability_options,
+        credentials=AnonymousCredentials(),
+    )
+
+    instance = client.instance(
+        INSTANCE_ID,
+        CONFIGURATION_NAME,
+        display_name=DISPLAY_NAME,
+        node_count=NODE_COUNT,
+        labels=LABELS,
+    )
+
+    try:
+        instance.create()
+    except Exception:
+        pass
+
+    db = instance.database(DATABASE_ID)
+    try:
+        db.create()
+    except Exception:
+        pass
+
+    db.run_in_transaction(select_in_txn)
+
+    span_list = trace_exporter.get_finished_spans()
+    got_span_names = [span.name for span in span_list]
+    want_span_names = [
+        "CloudSpanner.CreateSession",
+        "CloudSpanner.Transaction.execute_streaming_sql",
+        "CloudSpanner.Transaction",
+        "CloudSpanner.Transaction.execute_streaming_sql",
+        "CloudSpanner.Transaction.commit",
+        "CloudSpanner.Transaction",
+        "CloudSpanner.ReadWriteTransaction",
+        "CloudSpanner.Database.run_in_transaction",
+    ]
+
+    assert got_span_names == want_span_names
+
+    # Let's check for the series of events
+    want_events = [
+        ("Creating Transaction", {}),
+        ("Using Transaction", {"attempt": 1}),
+        (
+            "exception",
+            {
+                "exception.type": "google.api_core.exceptions.Aborted",
+                "exception.message": "409 Thrown from ClientInterceptor for testing",
+                "exception.stacktrace": "EPHEMERAL",
+                "exception.escaped": "False",
+            },
+        ),
+        (
+            "Transaction was aborted, retrying",
+            {"delay_seconds": "EPHEMERAL", "attempt": 1},
+        ),
+        ("Creating Transaction", {}),
+        ("Using Transaction", {"attempt": 2}),
+    ]
+    got_events = []
+    got_statuses = []
+
+    # Some event attributes are noisy/highly ephemeral
+    # and can't be directly compared against.
+    imprecise_event_attributes = ["exception.stacktrace", "delay_seconds"]
+    for span in span_list:
+        got_statuses.append(
+            (span.name, span.status.status_code, span.status.description)
+        )
+        for event in span.events:
+            evt_attributes = event.attributes.copy()
+            for attr_name in imprecise_event_attributes:
+                if attr_name in evt_attributes:
+                    evt_attributes[attr_name] = "EPHEMERAL"
+
+            got_events.append((event.name, evt_attributes))
+
+    assert got_events == want_events
+
+    codes = StatusCode
+    want_statuses = [
+        ("CloudSpanner.CreateSession", codes.OK, None),
+        ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
+        ("CloudSpanner.Transaction", codes.UNSET, None),
+        ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
+        ("CloudSpanner.Transaction.commit", codes.OK, None),
+        ("CloudSpanner.Transaction", codes.OK, None),
+        (
+            "CloudSpanner.ReadWriteTransaction",
+            codes.ERROR,
+            "409 Thrown from ClientInterceptor for testing",
+        ),
+        ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
+    ]
+    assert got_statuses == want_statuses
 
 
 @_helpers.retry_mabye_conflict
@@ -1182,19 +1370,67 @@ def test_transaction_batch_update_w_parent_span(
     with tracer.start_as_current_span("Test Span"):
         session.run_in_transaction(unit_of_work)
 
-    span_list = ot_exporter.get_finished_spans()
-    assert len(span_list) == 5
+    span_list = []
+    for span in ot_exporter.get_finished_spans():
+        if span and span.name:
+            span_list.append(span)
+
+    span_list = sorted(span_list, key=lambda v1: v1.start_time)
+
     expected_span_names = [
         "CloudSpanner.CreateSession",
-        "CloudSpanner.Commit",
-        "CloudSpanner.DMLTransaction",
-        "CloudSpanner.Commit",
+        "CloudSpanner.Batch",
+        "CloudSpanner.Batch",
+        "CloudSpanner.Batch.commit",
         "Test Span",
+        "CloudSpanner.ReadWriteTransaction",
+        "CloudSpanner.Transaction",
+        "CloudSpanner.DMLTransaction",
+        "CloudSpanner.Transaction.commit",
     ]
-    assert [span.name for span in span_list] == expected_span_names
-    for span in span_list[2:-1]:
-        assert span.context.trace_id == span_list[-1].context.trace_id
-        assert span.parent.span_id == span_list[-1].context.span_id
+
+    got_span_names = [span.name for span in span_list]
+    assert got_span_names == expected_span_names
+
+    # We expect:
+    # |------CloudSpanner.CreateSession--------
+    #
+    # |---Test Span----------------------------|
+    #  |>--ReadWriteTransaction-----------------
+    #    |>-Transaction-------------------------
+    #      |--------------DMLTransaction--------
+    #
+    #  |>---Batch-------------------------------
+    #
+    # |>----------Batch-------------------------
+    #  |>------------Batch.commit---------------
+
+    # CreateSession should have a trace of its own, with no children
+    # nor being a child of any other span.
+    session_span = span_list[0]
+    test_span = span_list[4]
+    # assert session_span.context.trace_id != test_span.context.trace_id
+    for span in span_list[1:]:
+        if span.parent:
+            assert span.parent.span_id != session_span.context.span_id
+
+    def assert_parent_and_children(parent_span, children):
+        for span in children:
+            assert span.context.trace_id == parent_span.context.trace_id
+            assert span.parent.span_id == parent_span.context.span_id
+
+    # [CreateSession --> Batch] should have their own trace.
+    rw_txn_span = span_list[5]
+    children_of_test_span = [rw_txn_span]
+    assert_parent_and_children(test_span, children_of_test_span)
+
+    children_of_rw_txn_span = [span_list[6]]
+    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
+
+    # Batch_first should have no parent, should be in its own trace.
+    batch_0_span = span_list[2]
+    children_of_batch_0 = [span_list[1]]
+    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
 
 
 def test_execute_partitioned_dml(

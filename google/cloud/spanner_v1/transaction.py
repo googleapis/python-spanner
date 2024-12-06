@@ -32,7 +32,10 @@ from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
-from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    add_event_on_current_span,
+    trace_call,
+)
 from google.cloud.spanner_v1 import RequestOptions
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
@@ -157,7 +160,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.BeginTransaction",
+            f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=observability_options,
         ) as span:
@@ -169,10 +172,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
 
             def beforeNextRetry(nthRetry, delayInSeconds):
-                add_span_event(
-                    span,
+                add_event_on_current_span(
                     "Transaction Begin Attempt Failed. Retrying",
                     {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    span,
                 )
 
             response = _retry(
@@ -199,7 +202,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
             observability_options = getattr(database, "observability_options", None)
             with trace_call(
-                "CloudSpanner.Rollback",
+                f"CloudSpanner.{type(self).__name__}.rollback",
                 self._session,
                 observability_options=observability_options,
             ):
@@ -215,6 +218,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
         self.rolled_back = True
         del self._session._transaction
+        self._discard_on_end()
 
     def commit(
         self, return_commit_stats=False, request_options=None, max_commit_delay=None
@@ -278,12 +282,12 @@ class Transaction(_SnapshotBase, _BatchBase):
         trace_attributes = {"num_mutations": len(self._mutations)}
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.Commit",
+            f"CloudSpanner.{type(self).__name__}.commit",
             self._session,
             trace_attributes,
             observability_options,
         ) as span:
-            add_span_event(span, "Starting Commit")
+            add_event_on_current_span("Starting Commit", span=span)
 
             method = functools.partial(
                 api.commit,
@@ -292,10 +296,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
 
             def beforeNextRetry(nthRetry, delayInSeconds):
-                add_span_event(
-                    span,
+                add_event_on_current_span(
                     "Transaction Commit Attempt Failed. Retrying",
                     {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    span,
                 )
 
             response = _retry(
@@ -304,13 +308,13 @@ class Transaction(_SnapshotBase, _BatchBase):
                 beforeNextRetry=beforeNextRetry,
             )
 
-            add_span_event(span, "Commit Done")
-
-        self.committed = response.commit_timestamp
-        if return_commit_stats:
-            self.commit_stats = response.commit_stats
-        del self._session._transaction
-        return self.committed
+            add_event_on_current_span("Commit Done", span=span)
+            self.committed = response.commit_timestamp
+            if return_commit_stats:
+                self.commit_stats = response.commit_stats
+            del self._session._transaction
+            self._discard_on_end()
+            return self.committed
 
     @staticmethod
     def _make_params_pb(params, param_types):
@@ -447,7 +451,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
-                    "CloudSpanner.ReadWriteTransaction",
+                    f"CloudSpanner.{type(self).__name__}.execute_update",
                     self._session,
                     trace_attributes,
                     observability_options=observability_options,
@@ -464,7 +468,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
-                "CloudSpanner.ReadWriteTransaction",
+                f"CloudSpanner.{type(self).__name__}.execute_update",
                 self._session,
                 trace_attributes,
                 observability_options=observability_options,

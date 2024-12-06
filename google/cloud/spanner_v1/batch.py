@@ -26,7 +26,11 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    add_event_on_current_span,
+    trace_call,
+    trace_call_end_lazily,
+)
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
@@ -46,6 +50,12 @@ class _BatchBase(_SessionWrapper):
     def __init__(self, session):
         super(_BatchBase, self).__init__(session)
         self._mutations = []
+        self.__base_discard_span = trace_call_end_lazily(
+            f"CloudSpanner.{type(self).__name__}",
+            self._session,
+            None,
+            getattr(self._session._database, "observability_options", None),
+        )
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.
@@ -69,6 +79,10 @@ class _BatchBase(_SessionWrapper):
         :type values: list of lists
         :param values: Values to be modified.
         """
+        add_event_on_current_span(
+            "insert mutations added",
+            dict(table=table, columns=columns),
+        )
         self._mutations.append(Mutation(insert=_make_write_pb(table, columns, values)))
 
     def update(self, table, columns, values):
@@ -84,6 +98,10 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(update=_make_write_pb(table, columns, values)))
+        add_event_on_current_span(
+            "update mutations added",
+            dict(table=table, columns=columns),
+        )
 
     def insert_or_update(self, table, columns, values):
         """Insert/update one or more table rows.
@@ -100,6 +118,10 @@ class _BatchBase(_SessionWrapper):
         self._mutations.append(
             Mutation(insert_or_update=_make_write_pb(table, columns, values))
         )
+        add_event_on_current_span(
+            "insert_or_update mutations added",
+            dict(table=table, columns=columns),
+        )
 
     def replace(self, table, columns, values):
         """Replace one or more table rows.
@@ -114,6 +136,10 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(replace=_make_write_pb(table, columns, values)))
+        add_event_on_current_span(
+            "replace mutations added",
+            dict(table=table, columns=columns),
+        )
 
     def delete(self, table, keyset):
         """Delete one or more table rows.
@@ -126,6 +152,21 @@ class _BatchBase(_SessionWrapper):
         """
         delete = Mutation.Delete(table=table, key_set=keyset._to_pb())
         self._mutations.append(Mutation(delete=delete))
+        add_event_on_current_span(
+            "delete mutations added",
+            dict(table=table),
+        )
+
+    def _discard_on_end(self, exc_type=None, exc_val=None, exc_traceback=None):
+        if self.__base_discard_span:
+            self.__base_discard_span(exc_type, exc_val, exc_traceback)
+            self.__base_discard_span = None
+
+    def __exit__(self, exc_type=None, exc_value=None, exc_traceback=None):
+        self._discard_on_end(exc_type, exc_val, exc_traceback)
+
+    def __enter__(self):
+        return self
 
 
 class Batch(_BatchBase):
@@ -207,7 +248,7 @@ class Batch(_BatchBase):
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.Commit",
+            "CloudSpanner.Batch.commit",
             self._session,
             trace_attributes,
             observability_options=observability_options,
@@ -223,11 +264,20 @@ class Batch(_BatchBase):
             )
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
+        self._discard_on_end()
         return self.committed
 
     def __enter__(self):
         """Begin ``with`` block."""
         self._check_state()
+        observability_options = getattr(
+            self._session._database, "observability_options", None
+        )
+        self.__discard_span = trace_call_end_lazily(
+            "CloudSpanner.Batch",
+            self._session,
+            observability_options=observability_options,
+        )
 
         return self
 
@@ -235,6 +285,10 @@ class Batch(_BatchBase):
         """End ``with`` block."""
         if exc_type is None:
             self.commit()
+        if self.__discard_span:
+            self.__discard_span(exc_type, exc_val, exc_tb)
+            self.__discard_span = None
+        self._discard_on_end()
 
 
 class MutationGroup(_BatchBase):
@@ -326,7 +380,7 @@ class MutationGroups(_SessionWrapper):
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.BatchWrite",
+            "CloudSpanner.batch_write",
             self._session,
             trace_attributes,
             observability_options=observability_options,
