@@ -34,6 +34,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
+    record_span_exception_and_status,
     trace_call,
 )
 from google.cloud.spanner_v1.batch import Batch
@@ -243,6 +244,10 @@ class Session(object):
         with trace_call(
             "CloudSpanner.DeleteSession",
             self,
+            extra_attributes={
+                "session.id": self._session_id,
+                "session.name": self.name,
+            },
             observability_options=observability_options,
         ):
             api.delete_session(name=self.name, metadata=metadata)
@@ -458,47 +463,100 @@ class Session(object):
         )
         attempts = 0
 
-        while True:
-            if self._transaction is None:
-                txn = self.transaction()
-                txn.transaction_tag = transaction_tag
-                txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
-            else:
-                txn = self._transaction
-
-            try:
-                attempts += 1
-                return_value = func(txn, *args, **kw)
-            except Aborted as exc:
-                del self._transaction
-                _delay_until_retry(exc, deadline, attempts)
-                continue
-            except GoogleAPICallError:
-                del self._transaction
-                raise
-            except Exception:
-                txn.rollback()
-                raise
-
-            try:
-                txn.commit(
-                    return_commit_stats=self._database.log_commit_stats,
-                    request_options=commit_request_options,
-                    max_commit_delay=max_commit_delay,
-                )
-            except Aborted as exc:
-                del self._transaction
-                _delay_until_retry(exc, deadline, attempts)
-            except GoogleAPICallError:
-                del self._transaction
-                raise
-            else:
-                if self._database.log_commit_stats and txn.commit_stats:
-                    self._database.logger.info(
-                        "CommitStats: {}".format(txn.commit_stats),
-                        extra={"commit_stats": txn.commit_stats},
+        observability_options = getattr(self._database, "observability_options", None)
+        with trace_call(
+            "CloudSpanner.Session.run_in_transaction",
+            self,
+            observability_options=observability_options,
+        ) as span:
+            while True:
+                if self._transaction is None:
+                    add_span_event(span, "Creating Transaction")
+                    txn = self.transaction()
+                    txn.transaction_tag = transaction_tag
+                    txn.exclude_txn_from_change_streams = (
+                        exclude_txn_from_change_streams
                     )
-                return return_value
+                else:
+                    txn = self._transaction
+
+                attempts += 1
+                span_attributes = {"attempt": attempts}
+                txn_id = getattr(txn, "_transaction_id", "") or ""
+                if txn_id:
+                    span_attributes["transaction.id"] = txn_id
+
+                add_span_event(span, "Using Transaction", span_attributes)
+
+                try:
+                    return_value = func(txn, *args, **kw)
+                except Aborted as exc:
+                    del self._transaction
+                    if span:
+                        delay_seconds = _get_retry_delay(exc.errors[0], attempts)
+                        attributes = dict(delay_seconds=delay_seconds)
+                        attributes.update(span_attributes)
+                        record_span_exception_and_status(span, exc)
+                        add_span_event(
+                            span,
+                            "Transaction was aborted, retrying afresh",
+                            attributes,
+                        )
+
+                    _delay_until_retry(exc, deadline, attempts)
+                    continue
+                except GoogleAPICallError:
+                    del self._transaction
+                    add_span_event(
+                        span,
+                        "Transaction.commit failed due to GoogleAPICallError, not retrying",
+                        span_attributes,
+                    )
+                    raise
+                except Exception:
+                    add_span_event(
+                        span,
+                        "Invoking Transaction.rollback(), not retrying",
+                        span_attributes,
+                    )
+                    txn.rollback()
+                    raise
+
+                try:
+                    txn.commit(
+                        return_commit_stats=self._database.log_commit_stats,
+                        request_options=commit_request_options,
+                        max_commit_delay=max_commit_delay,
+                    )
+                except Aborted as exc:
+                    del self._transaction
+                    if span:
+                        delay_seconds = _get_retry_delay(exc.errors[0], attempts)
+                        attributes = dict(delay_seconds=delay_seconds)
+                        attributes.update(span_attributes)
+                        record_span_exception_and_status(span, exc)
+                        add_span_event(
+                            span,
+                            "Transaction was aborted, retrying afresh",
+                            attributes,
+                        )
+
+                    _delay_until_retry(exc, deadline, attempts)
+                except GoogleAPICallError:
+                    del self._transaction
+                    add_span_event(
+                        span,
+                        "Transaction.commit failed due to GoogleAPICallError, not retrying",
+                        span_attributes,
+                    )
+                    raise
+                else:
+                    if self._database.log_commit_stats and txn.commit_stats:
+                        self._database.logger.info(
+                            "CommitStats: {}".format(txn.commit_stats),
+                            extra={"commit_stats": txn.commit_stats},
+                        )
+                    return return_value
 
 
 # Rational:  this function factors out complex shared deadline / retry
