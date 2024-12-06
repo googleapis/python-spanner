@@ -31,6 +31,10 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
 from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import Aborted
+import time
+
+DEFAULT_RETRY_TIMEOUT_SECS = 30
 
 
 class _BatchBase(_SessionWrapper):
@@ -70,6 +74,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(insert=_make_write_pb(table, columns, values)))
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def update(self, table, columns, values):
         """Update one or more existing table rows.
@@ -84,6 +90,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(update=_make_write_pb(table, columns, values)))
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def insert_or_update(self, table, columns, values):
         """Insert/update one or more table rows.
@@ -100,6 +108,8 @@ class _BatchBase(_SessionWrapper):
         self._mutations.append(
             Mutation(insert_or_update=_make_write_pb(table, columns, values))
         )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def replace(self, table, columns, values):
         """Replace one or more table rows.
@@ -114,6 +124,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(replace=_make_write_pb(table, columns, values)))
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def delete(self, table, keyset):
         """Delete one or more table rows.
@@ -126,6 +138,8 @@ class _BatchBase(_SessionWrapper):
         """
         delete = Mutation.Delete(table=table, key_set=keyset._to_pb())
         self._mutations.append(Mutation(delete=delete))
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
 
 class Batch(_BatchBase):
@@ -152,6 +166,7 @@ class Batch(_BatchBase):
         request_options=None,
         max_commit_delay=None,
         exclude_txn_from_change_streams=False,
+        **kwargs,
     ):
         """Commit mutations to the database.
 
@@ -207,7 +222,7 @@ class Batch(_BatchBase):
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.Commit",
+            f"CloudSpanner.{type(self).__name__}.commit",
             self._session,
             trace_attributes,
             observability_options=observability_options,
@@ -217,9 +232,16 @@ class Batch(_BatchBase):
                 request=request,
                 metadata=metadata,
             )
+            deadline = time.time() + kwargs.get(
+                "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
+            )
             response = _retry(
                 method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
+                allowed_exceptions={
+                    InternalServerError: _check_rst_stream_error,
+                    Aborted: no_op_handler,
+                },
+                deadline=deadline,
             )
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
@@ -283,7 +305,9 @@ class MutationGroups(_SessionWrapper):
         self._mutation_groups.append(mutation_group)
         return MutationGroup(self._session, mutation_group.mutations)
 
-    def batch_write(self, request_options=None, exclude_txn_from_change_streams=False):
+    def batch_write(
+        self, request_options=None, exclude_txn_from_change_streams=False, **kwargs
+    ):
         """Executes batch_write.
 
         :type request_options:
@@ -336,9 +360,16 @@ class MutationGroups(_SessionWrapper):
                 request=request,
                 metadata=metadata,
             )
+            deadline = time.time() + kwargs.get(
+                "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
+            )
             response = _retry(
                 method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
+                allowed_exceptions={
+                    InternalServerError: _check_rst_stream_error,
+                    Aborted: no_op_handler,
+                },
+                deadline=deadline,
             )
         self.committed = True
         return response
@@ -362,3 +393,8 @@ def _make_write_pb(table, columns, values):
     return Mutation.Write(
         table=table, columns=columns, values=_make_list_value_pbs(values)
     )
+
+
+def no_op_handler(exc):
+    # No-op (does nothing)
+    pass

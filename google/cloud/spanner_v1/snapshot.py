@@ -86,13 +86,18 @@ def _restart_on_unavailable(
         )
 
     request.transaction = transaction_selector
+    iterator = None
 
-    with trace_call(
-        trace_name, session, attributes, observability_options=observability_options
-    ):
-        iterator = method(request=request)
     while True:
         try:
+            if iterator is None:
+                with trace_call(
+                    trace_name,
+                    session,
+                    attributes,
+                    observability_options=observability_options,
+                ):
+                    iterator = method(request=request)
             for item in iterator:
                 item_buffer.append(item)
                 # Setting the transaction id because the transaction begin was inlined for first rpc.
@@ -335,7 +340,7 @@ class _SnapshotBase(_SessionWrapper):
                 iterator = _restart_on_unavailable(
                     restart,
                     request,
-                    "CloudSpanner.ReadOnlyTransaction",
+                    f"CloudSpanner.{type(self).__name__}.read",
                     self._session,
                     trace_attributes,
                     transaction=self,
@@ -357,7 +362,7 @@ class _SnapshotBase(_SessionWrapper):
             iterator = _restart_on_unavailable(
                 restart,
                 request,
-                "CloudSpanner.ReadOnlyTransaction",
+                f"CloudSpanner.{type(self).__name__}.read",
                 self._session,
                 trace_attributes,
                 transaction=self,
@@ -578,7 +583,7 @@ class _SnapshotBase(_SessionWrapper):
         iterator = _restart_on_unavailable(
             restart,
             request,
-            "CloudSpanner.ReadWriteTransaction",
+            f"CloudSpanner.{type(self).__name__}.execute_streaming_sql",
             self._session,
             trace_attributes,
             transaction=self,
@@ -676,7 +681,7 @@ class _SnapshotBase(_SessionWrapper):
 
         trace_attributes = {"table_id": table, "columns": columns}
         with trace_call(
-            "CloudSpanner.PartitionReadOnlyTransaction",
+            f"CloudSpanner.{type(self).__name__}.partition_read",
             self._session,
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
@@ -926,7 +931,7 @@ class Snapshot(_SnapshotBase):
             )
         txn_selector = self._make_txn_selector()
         with trace_call(
-            "CloudSpanner.BeginTransaction",
+            f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=getattr(database, "observability_options", None),
         ):

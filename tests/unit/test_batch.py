@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
+import time
 import unittest
+from unittest.mock import MagicMock
 from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
@@ -212,7 +214,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             batch.commit()
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit",
+            "CloudSpanner.Batch.commit",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
@@ -261,7 +263,35 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(max_commit_delay, None)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
+        )
+
+    def test_aborted_exception_on_commit_with_retries(self):
+        # Test case to verify that an Aborted exception is raised when
+        # batch.commit() is called and the transaction is aborted internally.
+        from google.api_core.exceptions import Aborted
+
+        database = _Database()
+        # Setup the spanner API which throws Aborted exception when calling commit API.
+        api = database.spanner_api = _FauxSpannerAPI(_aborted_error=True)
+        api.commit = MagicMock(
+            side_effect=Aborted("Transaction was aborted", errors=("Aborted error"))
+        )
+
+        # Create mock session and batch objects
+        session = _Session(database)
+        batch = self._make_one(session)
+        batch.insert(TABLE_NAME, COLUMNS, VALUES)
+
+        # Assertion: Ensure that calling batch.commit() raises the Aborted exception
+        with self.assertRaises(Aborted) as context:
+            batch.commit()
+
+        # Verify additional details about the exception
+        self.assertEqual(str(context.exception), "409 Transaction was aborted")
+        self.assertGreater(
+            api.commit.call_count, 1, "commit should be called more than once"
         )
 
     def _test_commit_with_options(
@@ -327,7 +357,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(actual_request_options, expected_request_options)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
 
         self.assertEqual(max_commit_delay_in, max_commit_delay)
@@ -438,7 +469,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(request_options, RequestOptions())
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
 
     def test_context_mgr_failure(self):
@@ -615,6 +647,36 @@ class _Session(object):
     def session_id(self):
         return self.name
 
+    def run_in_transaction(self, fnc):
+        """
+        Runs a function in a transaction, retrying if an exception occurs.
+        :param fnc: The function to run in the transaction.
+        :param max_retries: Maximum number of retry attempts.
+        :param delay: Delay (in seconds) between retries.
+        :return: The result of the function, or raises the exception after max retries.
+        """
+        from google.api_core.exceptions import Aborted
+
+        attempt = 0
+        max_retries = 3
+        delay = 1
+        while attempt < max_retries:
+            try:
+                result = fnc()
+                return result
+            except Aborted as exc:
+                attempt += 1
+                if attempt < max_retries:
+                    print(
+                        f"Attempt {attempt} failed with Aborted. Retrying in {delay} seconds..."
+                    )
+                    time.sleep(delay)  # Wait before retrying
+                else:
+                    raise exc  # After max retries, raise the exception
+            except Exception as exc:
+                print(f"Unexpected exception occurred: {exc}")
+                raise  # Raise any other unexpected exception immediately
+
 
 class _Database(object):
     name = "testing"
@@ -627,6 +689,7 @@ class _FauxSpannerAPI:
     _committed = None
     _batch_request = None
     _rpc_error = False
+    _aborted_error = False
 
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -637,6 +700,7 @@ class _FauxSpannerAPI:
         metadata=None,
     ):
         from google.api_core.exceptions import Unknown
+        from google.api_core.exceptions import Aborted
 
         max_commit_delay = None
         if type(request).pb(request).HasField("max_commit_delay"):
@@ -653,6 +717,8 @@ class _FauxSpannerAPI:
         )
         if self._rpc_error:
             raise Unknown("error")
+        if self._aborted_error:
+            raise Aborted("Transaction was aborted", errors=("Aborted error"))
         return self._commit_response
 
     def batch_write(
