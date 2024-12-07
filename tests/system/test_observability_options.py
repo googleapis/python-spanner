@@ -105,7 +105,10 @@ def test_observability_options_propagation():
             len(from_inject_spans) >= 2
         )  # "Expecting at least 2 spans from the injected trace exporter"
         gotNames = [span.name for span in from_inject_spans]
-        wantNames = ["CloudSpanner.CreateSession", "CloudSpanner.ReadWriteTransaction"]
+        wantNames = [
+            "CloudSpanner.CreateSession",
+            "CloudSpanner.Snapshot.execute_streaming_sql",
+        ]
         assert gotNames == wantNames
 
         # Check for conformance of enable_extended_tracing
