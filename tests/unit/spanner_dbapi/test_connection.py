@@ -138,6 +138,10 @@ class TestConnection(unittest.TestCase):
         ):
             connection.read_only = False
 
+        # Verify that we can set the value to the same value as it already has.
+        connection.read_only = True
+        self.assertTrue(connection.read_only)
+
         connection._spanner_transaction_started = False
         connection.read_only = False
         self.assertFalse(connection.read_only)
@@ -299,6 +303,19 @@ class TestConnection(unittest.TestCase):
         mock_warn.assert_called_once_with(
             CLIENT_TRANSACTION_NOT_STARTED_WARNING, UserWarning, stacklevel=2
         )
+
+    @mock.patch.object(warnings, "warn")
+    def test_commit_in_autocommit_mode_with_ignore_warnings(self, mock_warn):
+        conn = self._make_connection(
+            DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED,
+            ignore_transaction_warnings=True,
+        )
+        assert conn._ignore_transaction_warnings
+        conn._autocommit = True
+
+        conn.commit()
+
+        assert not mock_warn.warn.called
 
     def test_commit_database_error(self):
         from google.cloud.spanner_dbapi import Connection
@@ -651,6 +668,20 @@ class TestConnection(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             connection.staleness = {"read_timestamp": datetime.datetime(2021, 9, 21)}
+
+    def test_staleness_inside_transaction_same_value(self):
+        """
+        Verify that setting `staleness` to the same value in a transaction is allowed.
+        """
+        connection = self._make_connection()
+        connection.staleness = {"read_timestamp": datetime.datetime(2021, 9, 21)}
+        connection._spanner_transaction_started = True
+        connection._transaction = mock.Mock()
+
+        connection.staleness = {"read_timestamp": datetime.datetime(2021, 9, 21)}
+        self.assertEqual(
+            connection.staleness, {"read_timestamp": datetime.datetime(2021, 9, 21)}
+        )
 
     def test_staleness_multi_use(self):
         """

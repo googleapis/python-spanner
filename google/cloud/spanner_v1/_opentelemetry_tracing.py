@@ -15,6 +15,7 @@
 """Manages OpenTelemetry trace creation and handling"""
 
 from contextlib import contextmanager
+from datetime import datetime
 import os
 
 from google.cloud.spanner_v1 import SpannerClient
@@ -56,6 +57,9 @@ def get_tracer(tracer_provider=None):
 
 @contextmanager
 def trace_call(name, session, extra_attributes=None, observability_options=None):
+    if session:
+        session._last_use_time = datetime.now()
+
     if not HAS_OPENTELEMETRY_INSTALLED or not session:
         # Empty context manager. Users will have to check if the generated value is None or a span
         yield None
@@ -77,10 +81,11 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
     tracer = get_tracer(tracer_provider)
 
     # Set base attributes that we know for every trace created
+    db = session._database
     attributes = {
         "db.type": "spanner",
         "db.url": SpannerClient.DEFAULT_ENDPOINT,
-        "db.instance": session._database.name,
+        "db.instance": "" if not db else db.name,
         "net.host.name": SpannerClient.DEFAULT_ENDPOINT,
         OTEL_SCOPE_NAME: TRACER_NAME,
         OTEL_SCOPE_VERSION: TRACER_VERSION,
@@ -102,7 +107,27 @@ def trace_call(name, session, extra_attributes=None, observability_options=None)
             yield span
         except Exception as error:
             span.set_status(Status(StatusCode.ERROR, str(error)))
-            span.record_exception(error)
+            # OpenTelemetry-Python imposes invoking span.record_exception on __exit__
+            # on any exception. We should file a bug later on with them to only
+            # invoke .record_exception if not already invoked, hence we should not
+            # invoke .record_exception on our own else we shall have 2 exceptions.
             raise
         else:
-            span.set_status(Status(StatusCode.OK))
+            if (not span._status) or span._status.status_code == StatusCode.UNSET:
+                # OpenTelemetry-Python only allows a status change
+                # if the current code is UNSET or ERROR. At the end
+                # of the generator's consumption, only set it to OK
+                # it wasn't previously set otherwise.
+                # https://github.com/googleapis/python-spanner/issues/1246
+                span.set_status(Status(StatusCode.OK))
+
+
+def get_current_span():
+    if not HAS_OPENTELEMETRY_INSTALLED:
+        return None
+    return trace.get_current_span()
+
+
+def add_span_event(span, event_name, event_attributes=None):
+    if span:
+        span.add_event(event_name, event_attributes)

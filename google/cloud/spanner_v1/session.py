@@ -17,6 +17,7 @@
 from functools import total_ordering
 import random
 import time
+from datetime import datetime
 
 from google.api_core.exceptions import Aborted
 from google.api_core.exceptions import GoogleAPICallError
@@ -30,7 +31,11 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    add_span_event,
+    get_current_span,
+    trace_call,
+)
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.transaction import Transaction
@@ -69,6 +74,7 @@ class Session(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._last_use_time = datetime.utcnow()
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -77,6 +83,14 @@ class Session(object):
     def session_id(self):
         """Read-only ID, set by the back-end during :meth:`create`."""
         return self._session_id
+
+    @property
+    def last_use_time(self):
+        """ "Approximate last use time of this session
+
+        :rtype: datetime
+        :returns: the approximate last use time of this session"""
+        return self._last_use_time
 
     @property
     def database_role(self):
@@ -124,6 +138,9 @@ class Session(object):
 
         :raises ValueError: if :attr:`session_id` is already set.
         """
+        current_span = get_current_span()
+        add_span_event(current_span, "Creating Session")
+
         if self._session_id is not None:
             raise ValueError("Session ID already set by back-end")
         api = self._database.spanner_api
@@ -164,8 +181,18 @@ class Session(object):
         :rtype: bool
         :returns: True if the session exists on the back-end, else False.
         """
+        current_span = get_current_span()
         if self._session_id is None:
+            add_span_event(
+                current_span,
+                "Checking session existence: Session does not exist as it has not been created yet",
+            )
             return False
+
+        add_span_event(
+            current_span, "Checking if Session exists", {"session.id": self._session_id}
+        )
+
         api = self._database.spanner_api
         metadata = _metadata_with_prefix(self._database.name)
         if self._database._route_to_leader_enabled:
@@ -199,8 +226,17 @@ class Session(object):
         :raises ValueError: if :attr:`session_id` is not already set.
         :raises NotFound: if the session does not exist
         """
+        current_span = get_current_span()
         if self._session_id is None:
+            add_span_event(
+                current_span, "Deleting Session failed due to unset session_id"
+            )
             raise ValueError("Session ID not set by back-end")
+
+        add_span_event(
+            current_span, "Deleting Session", {"session.id": self._session_id}
+        )
+
         api = self._database.spanner_api
         metadata = _metadata_with_prefix(self._database.name)
         observability_options = getattr(self._database, "observability_options", None)
@@ -222,6 +258,7 @@ class Session(object):
         metadata = _metadata_with_prefix(self._database.name)
         request = ExecuteSqlRequest(session=self.name, sql="SELECT 1")
         api.execute_sql(request=request, metadata=metadata)
+        self._last_use_time = datetime.now()
 
     def snapshot(self, **kw):
         """Create a snapshot to perform a set of reads with shared staleness.
