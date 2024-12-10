@@ -248,17 +248,12 @@ def test_transaction_abort_then_retry_spans():
         ("Starting Commit", {}),
         ("Commit Done", {}),
         (
-            "exception",
-            {
-                "exception.type": "google.api_core.exceptions.Aborted",
-                "exception.message": "409 Thrown from ClientInterceptor for testing",
-                "exception.stacktrace": "EPHEMERAL",
-                "exception.escaped": "False",
-            },
-        ),
-        (
             "Transaction was aborted in user operation, retrying",
-            {"delay_seconds": "EPHEMERAL", "attempt": 1},
+            {
+                "delay_seconds": "EPHEMERAL",
+                "cause": "409 Thrown from ClientInterceptor for testing",
+                "attempt": 1,
+            },
         ),
         ("Acquiring session", {"kind": "BurstyPool"}),
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
@@ -274,11 +269,7 @@ def test_transaction_abort_then_retry_spans():
         ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
         ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
         ("CloudSpanner.Transaction.commit", codes.OK, None),
-        (
-            "CloudSpanner.Session.run_in_transaction",
-            codes.ERROR,
-            "409 Thrown from ClientInterceptor for testing",
-        ),
+        ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
         ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
     ]
     assert got_statuses == want_statuses
