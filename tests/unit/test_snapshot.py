@@ -1697,7 +1697,7 @@ class TestSnapshot(OpenTelemetryBase):
             snapshot.begin()
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.ERROR,
             attributes=BASE_ATTRIBUTES,
         )
@@ -1755,7 +1755,7 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
@@ -1791,7 +1791,7 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )

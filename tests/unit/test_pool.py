@@ -245,11 +245,9 @@ class TestFixedSizePool(OpenTelemetryBase):
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.FixedPool.BatchCreateSessions", "pool.Get"]
-        print("got", got_span_names)
         assert got_span_names == want_span_names
 
         attrs = TestFixedSizePool.BASE_ATTRIBUTES.copy()
-        attrs["db.instance"] = ""
 
         # Check for the overall spans.
         self.assertSpanAttributes(
@@ -492,10 +490,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
-        want_span_names = [
-            "pool.Get",
-        ]
-        print("got_spans", got_span_names)
+        want_span_names = ["pool.Get"]
         assert got_span_names == want_span_names
 
         create_span = span_list[-1]
@@ -836,15 +831,12 @@ class TestPingingPool(OpenTelemetryBase):
         assert got_span_names == want_span_names
 
         attrs = TestPingingPool.BASE_ATTRIBUTES.copy()
-        attrs["db.instance"] = ""
         self.assertSpanAttributes(
             "CloudSpanner.PingingPool.BatchCreateSessions",
             attributes=attrs,
             span=span_list[-1],
         )
-        wantEventNames = [
-            'Requested for 4 sessions, returned 4'
-        ]
+        wantEventNames = ["Requested for 4 sessions, returned 4"]
         self.assertSpanEvents(
             "CloudSpanner.PingingPool.BatchCreateSessions", wantEventNames
         )
@@ -1151,6 +1143,10 @@ class _Database(object):
         # to avoid reversing the order of putting
         # sessions into pool (important for order tests)
         return self._sessions.pop(0)
+
+    @property
+    def observability_options(self):
+        return dict(db_name=self.name)
 
 
 class _Queue(object):

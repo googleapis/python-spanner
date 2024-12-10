@@ -926,7 +926,7 @@ class Snapshot(_SnapshotBase):
             )
         txn_selector = self._make_txn_selector()
         with trace_call(
-            "CloudSpanner.BeginTransaction",
+            f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=getattr(database, "observability_options", None),
         ):

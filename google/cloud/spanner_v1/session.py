@@ -471,7 +471,6 @@ class Session(object):
         ) as span:
             while True:
                 if self._transaction is None:
-                    add_span_event(span, "Creating Transaction")
                     txn = self.transaction()
                     txn.transaction_tag = transaction_tag
                     txn.exclude_txn_from_change_streams = (
@@ -499,7 +498,7 @@ class Session(object):
                         record_span_exception_and_status(span, exc)
                         add_span_event(
                             span,
-                            "Transaction was aborted, retrying afresh",
+                            "Transaction was aborted in user operation, retrying",
                             attributes,
                         )
 
@@ -516,7 +515,7 @@ class Session(object):
                 except Exception:
                     add_span_event(
                         span,
-                        "Invoking Transaction.rollback(), not retrying",
+                        "User operation failed. Invoking Transaction.rollback(), not retrying",
                         span_attributes,
                     )
                     txn.rollback()
@@ -537,7 +536,7 @@ class Session(object):
                         record_span_exception_and_status(span, exc)
                         add_span_event(
                             span,
-                            "Transaction was aborted, retrying afresh",
+                            "Transaction got aborted during commit, retrying afresh",
                             attributes,
                         )
 

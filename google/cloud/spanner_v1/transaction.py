@@ -157,7 +157,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.BeginTransaction",
+            f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=observability_options,
         ) as span:
