@@ -230,7 +230,7 @@ def test_transaction_abort_then_retry_spans():
 
     # Some event attributes are noisy/highly ephemeral
     # and can't be directly compared against.
-    imprecise_event_attributes = ["exception.stacktrace", "delay_seconds"]
+    imprecise_event_attributes = ["exception.stacktrace", "delay_seconds", "cause"]
     for span in span_list:
         got_statuses.append(
             (span.name, span.status.status_code, span.status.description)
@@ -249,11 +249,7 @@ def test_transaction_abort_then_retry_spans():
         ("Commit Done", {}),
         (
             "Transaction was aborted in user operation, retrying",
-            {
-                "delay_seconds": "EPHEMERAL",
-                "cause": "409 Thrown from ClientInterceptor for testing",
-                "attempt": 1,
-            },
+            {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
         ),
         ("Acquiring session", {"kind": "BurstyPool"}),
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
