@@ -34,7 +34,6 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
-    record_span_exception_and_status,
     trace_call,
 )
 from google.cloud.spanner_v1.batch import Batch
@@ -494,9 +493,8 @@ class Session(object):
                     del self._transaction
                     if span:
                         delay_seconds = _get_retry_delay(exc.errors[0], attempts)
-                        attributes = dict(delay_seconds=delay_seconds)
+                        attributes = dict(delay_seconds=delay_seconds, cause=str(exc))
                         attributes.update(span_attributes)
-                        record_span_exception_and_status(span, exc)
                         add_span_event(
                             span,
                             "Transaction was aborted in user operation, retrying",
@@ -509,7 +507,7 @@ class Session(object):
                     del self._transaction
                     add_span_event(
                         span,
-                        "Transaction.commit failed due to GoogleAPICallError, not retrying",
+                        "User operation failed due to GoogleAPICallError, not retrying",
                         span_attributes,
                     )
                     raise
@@ -534,7 +532,6 @@ class Session(object):
                         delay_seconds = _get_retry_delay(exc.errors[0], attempts)
                         attributes = dict(delay_seconds=delay_seconds)
                         attributes.update(span_attributes)
-                        record_span_exception_and_status(span, exc)
                         add_span_event(
                             span,
                             "Transaction got aborted during commit, retrying afresh",
