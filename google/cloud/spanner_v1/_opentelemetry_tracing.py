@@ -62,9 +62,6 @@ def trace_call(name, session=None, extra_attributes=None, observability_options=
         yield None
         return
 
-    if session:
-        session._last_use_time = datetime.now()
-
     tracer_provider = None
 
     # By default enable_extended_tracing=True because in a bid to minimize
@@ -104,16 +101,6 @@ def trace_call(name, session=None, extra_attributes=None, observability_options=
     if not enable_extended_tracing:
         attributes.pop("db.statement", False)
         attributes.pop("sql", False)
-    else:
-        # Otherwise there are places where the annotated sql was inserted
-        # directly from the arguments as "sql", and transform those into "db.statement".
-        db_statement = attributes.get("db.statement", None)
-        if not db_statement:
-            sql = attributes.get("sql", None)
-            if sql:
-                attributes = attributes.copy()
-                attributes.pop("sql", False)
-                attributes["db.statement"] = sql
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes

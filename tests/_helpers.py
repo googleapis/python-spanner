@@ -79,7 +79,6 @@ class OpenTelemetryBase(unittest.TestCase):
     def assertNoSpans(self):
         if HAS_OPENTELEMETRY_INSTALLED:
             span_list = self.get_finished_spans()
-            print("got_spans", [span.name for span in span_list])
             self.assertEqual(len(span_list), 0)
 
     def assertSpanAttributes(

@@ -162,7 +162,7 @@ class TestTransaction(OpenTelemetryBase):
             transaction.begin()
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Transaction.begin",
             status=StatusCode.ERROR,
             attributes=TestTransaction.BASE_ATTRIBUTES,
         )
@@ -195,7 +195,7 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
+            "CloudSpanner.Transaction.begin", attributes=TestTransaction.BASE_ATTRIBUTES
         )
 
     def test_begin_w_retry(self):

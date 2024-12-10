@@ -613,14 +613,13 @@ def test_transaction_read_and_insert_then_rollback(
             "CloudSpanner.CreateSession",
             "CloudSpanner.GetSession",
             "CloudSpanner.Batch.commit",
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Transaction.begin",
             "CloudSpanner.Transaction.read",
             "CloudSpanner.Transaction.read",
-            "CloudSpanner.Rollback",
+            "CloudSpanner.Transaction.rollback",
             "CloudSpanner.Snapshot.read",
         ]
-        print("got_spans", got_span_names)
-        assert len(span_list) == 8
+        assert got_span_names == want_span_names
 
         assert_span_attributes(
             ot_exporter,
@@ -642,7 +641,7 @@ def test_transaction_read_and_insert_then_rollback(
         )
         assert_span_attributes(
             ot_exporter,
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Transaction.begin",
             attributes=_make_attributes(db_name),
             span=span_list[3],
         )
@@ -709,162 +708,6 @@ def test_transaction_read_and_insert_then_exception(sessions_database):
         rows = list(snapshot.read(sd.TABLE, sd.COLUMNS, sd.ALL))
 
     assert rows == []
-
-
-@pytest.mark.skipif(
-    not _helpers.USE_EMULATOR,
-    reason="Emulator needed to run this tests",
-)
-@pytest.mark.skipif(
-    not ot_helpers.HAS_OPENTELEMETRY_INSTALLED,
-    reason="Tracing requires OpenTelemetry",
-)
-def test_transaction_abort_then_retry_spans(sessions_database, ot_exporter):
-    from google.auth.credentials import AnonymousCredentials
-    from google.api_core.exceptions import Aborted
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-        InMemorySpanExporter,
-    )
-    from opentelemetry.trace.status import StatusCode
-    from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.sampling import ALWAYS_ON
-    from opentelemetry import trace
-
-    PROJECT = _helpers.EMULATOR_PROJECT
-    CONFIGURATION_NAME = "config-name"
-    INSTANCE_ID = _helpers.INSTANCE_ID
-    DISPLAY_NAME = "display-name"
-    DATABASE_ID = _helpers.unique_id("temp_db")
-    NODE_COUNT = 5
-    LABELS = {"test": "true"}
-
-    counters = dict(aborted=0)
-    already_aborted = False
-
-    def select_in_txn(txn):
-        from google.rpc import error_details_pb2
-
-        results = txn.execute_sql("SELECT 1")
-        for row in results:
-            _ = row
-
-        if counters["aborted"] == 0:
-            counters["aborted"] = 1
-            raise Aborted(
-                "Thrown from ClientInterceptor for testing",
-                errors=[FauxCall(code_pb2.ABORTED)],
-            )
-
-    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
-    trace_exporter = InMemorySpanExporter()
-    tracer_provider.add_span_processor(SimpleSpanProcessor(trace_exporter))
-    observability_options = dict(
-        tracer_provider=tracer_provider,
-        enable_extended_tracing=True,
-    )
-
-    client = spanner_v1.Client(
-        project=PROJECT,
-        observability_options=observability_options,
-        credentials=AnonymousCredentials(),
-    )
-
-    instance = client.instance(
-        INSTANCE_ID,
-        CONFIGURATION_NAME,
-        display_name=DISPLAY_NAME,
-        node_count=NODE_COUNT,
-        labels=LABELS,
-    )
-
-    try:
-        instance.create()
-    except Exception:
-        pass
-
-    db = instance.database(DATABASE_ID)
-    try:
-        db.create()
-    except Exception:
-        pass
-
-    db.run_in_transaction(select_in_txn)
-
-    span_list = trace_exporter.get_finished_spans()
-    got_span_names = [span.name for span in span_list]
-    want_span_names = [
-        "CloudSpanner.CreateSession",
-        "CloudSpanner.Transaction.execute_streaming_sql",
-        "CloudSpanner.Transaction.execute_streaming_sql",
-        "CloudSpanner.Transaction.commit",
-        "CloudSpanner.Session.run_in_transaction",
-        "CloudSpanner.Database.run_in_transaction",
-    ]
-
-    assert got_span_names == want_span_names
-
-    got_events = []
-    got_statuses = []
-
-    # Some event attributes are noisy/highly ephemeral
-    # and can't be directly compared against.
-    imprecise_event_attributes = ["exception.stacktrace", "delay_seconds"]
-    for span in span_list:
-        got_statuses.append(
-            (span.name, span.status.status_code, span.status.description)
-        )
-        for event in span.events:
-            evt_attributes = event.attributes.copy()
-            for attr_name in imprecise_event_attributes:
-                if attr_name in evt_attributes:
-                    evt_attributes[attr_name] = "EPHEMERAL"
-
-            got_events.append((event.name, evt_attributes))
-
-    # Check for the series of events
-    want_events = [
-        ("Starting Commit", {}),
-        ("Commit Done", {}),
-        ("Creating Transaction", {}),
-        ("Using Transaction", {"attempt": 1}),
-        (
-            "exception",
-            {
-                "exception.type": "google.api_core.exceptions.Aborted",
-                "exception.message": "409 Thrown from ClientInterceptor for testing",
-                "exception.stacktrace": "EPHEMERAL",
-                "exception.escaped": "False",
-            },
-        ),
-        (
-            "Transaction was aborted, retrying afresh",
-            {"delay_seconds": "EPHEMERAL", "attempt": 1},
-        ),
-        ("Creating Transaction", {}),
-        ("Using Transaction", {"attempt": 2}),
-        ("Acquiring session", {"kind": "BurstyPool"}),
-        ("Waiting for a session to become available", {"kind": "BurstyPool"}),
-        ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
-        ("Creating Session", {}),
-    ]
-    assert got_events == want_events
-
-    # Check for the statues.
-    codes = StatusCode
-    want_statuses = [
-        ("CloudSpanner.CreateSession", codes.OK, None),
-        ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
-        ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
-        ("CloudSpanner.Transaction.commit", codes.OK, None),
-        (
-            "CloudSpanner.Session.run_in_transaction",
-            codes.ERROR,
-            "409 Thrown from ClientInterceptor for testing",
-        ),
-        ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
-    ]
-    assert got_statuses == want_statuses
 
 
 @_helpers.retry_mabye_conflict
@@ -3023,31 +2866,13 @@ def test_mutation_groups_insert_or_update_then_query(not_emulator, sessions_data
     sd._check_rows_data(rows, sd.BATCH_WRITE_ROW_DATA)
 
 
-class FauxCall:
-    def __init__(self, code, details="FauxCall"):
-        self._code = code
-        self._details = details
-
-    def initial_metadata(self):
-        return {}
-
-    def trailing_metadata(self):
-        return {}
-
-    def code(self):
-        return self._code
-
-    def details(self):
-        return self._details
-
-
 def _check_batch_status(status_code, expected=code_pb2.OK):
     if status_code != expected:
         _status_code_to_grpc_status_code = {
             member.value[0]: member for member in grpc.StatusCode
         }
         grpc_status_code = _status_code_to_grpc_status_code[status_code]
-        call = FauxCall(status_code)
+        call = _helpers.FauxCall(status_code)
         raise exceptions.from_grpc_status(
             grpc_status_code, "batch_update failed", errors=[call]
         )
