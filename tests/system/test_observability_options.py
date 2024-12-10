@@ -247,7 +247,6 @@ def test_transaction_abort_then_retry_spans():
     want_events = [
         ("Starting Commit", {}),
         ("Commit Done", {}),
-        ("Using Transaction", {"attempt": 1}),
         (
             "exception",
             {
@@ -261,7 +260,6 @@ def test_transaction_abort_then_retry_spans():
             "Transaction was aborted in user operation, retrying",
             {"delay_seconds": "EPHEMERAL", "attempt": 1},
         ),
-        ("Using Transaction", {"attempt": 2}),
         ("Acquiring session", {"kind": "BurstyPool"}),
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),

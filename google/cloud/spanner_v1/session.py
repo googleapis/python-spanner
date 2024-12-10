@@ -485,8 +485,6 @@ class Session(object):
                 if txn_id:
                     span_attributes["transaction.id"] = txn_id
 
-                add_span_event(span, "Using Transaction", span_attributes)
-
                 try:
                     return_value = func(txn, *args, **kw)
                 except Aborted as exc:
