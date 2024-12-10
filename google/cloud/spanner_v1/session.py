@@ -479,14 +479,17 @@ class Session(object):
                 else:
                     txn = self._transaction
 
-                attempts += 1
-                span_attributes = {"attempt": attempts}
-                txn_id = getattr(txn, "_transaction_id", "") or ""
-                if txn_id:
-                    span_attributes["transaction.id"] = txn_id
+                span_attributes = dict()
 
                 try:
+                    attempts += 1
+                    span_attributes["attempt"] = attempts
+                    txn_id = getattr(txn, "_transaction_id", "") or ""
+                    if txn_id:
+                        span_attributes["transaction.id"] = txn_id
+
                     return_value = func(txn, *args, **kw)
+
                 except Aborted as exc:
                     del self._transaction
                     if span:
