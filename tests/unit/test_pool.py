@@ -298,6 +298,19 @@ class TestFixedSizePool(OpenTelemetryBase):
             attributes=TestFixedSizePool.BASE_ATTRIBUTES,
         )
 
+        span_list = self.get_finished_spans()
+        got_all_events = []
+        for span in span_list:
+            for event in span.events:
+                got_all_events.append((event.name, event.attributes))
+        want_all_events = [
+            ("Invalid session pool size(0) <= 0", {"kind": "FixedSizePool"}),
+            ("Acquiring session", {"kind": "FixedSizePool"}),
+            ("Waiting for a session to become available", {"kind": "FixedSizePool"}),
+            ("No sessions available in the pool", {"kind": "FixedSizePool"}),
+        ]
+        assert got_all_events == want_all_events
+
     def test_spans_pool_bind(self):
         # Tests the exception generated from invoking pool.bind when
         # you have an empty pool.
@@ -330,6 +343,45 @@ class TestFixedSizePool(OpenTelemetryBase):
             attributes=TestFixedSizePool.BASE_ATTRIBUTES,
             span=span_list[0],
         )
+
+        got_all_events = []
+
+        # Some event attributes are noisy/highly ephemeral
+        # and can't be directly compared against.
+        imprecise_event_attributes = ["exception.stacktrace", "delay_seconds", "cause"]
+        for span in span_list:
+            for event in span.events:
+                evt_attributes = event.attributes.copy()
+                for attr_name in imprecise_event_attributes:
+                    if attr_name in evt_attributes:
+                        evt_attributes[attr_name] = "EPHEMERAL"
+
+                got_all_events.append((event.name, evt_attributes))
+
+        want_all_events = [
+            ("Requesting 1 sessions", {"kind": "FixedSizePool"}),
+            (
+                "exception",
+                {
+                    "exception.type": "IndexError",
+                    "exception.message": "pop from empty list",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            ),
+            ("Creating 1 sessions", {"kind": "FixedSizePool"}),
+            ("Created sessions", {"count": 1}),
+            (
+                "exception",
+                {
+                    "exception.type": "IndexError",
+                    "exception.message": "pop from empty list",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            ),
+        ]
+        assert got_all_events == want_all_events
 
     def test_get_expired(self):
         pool = self._make_one(size=4)
