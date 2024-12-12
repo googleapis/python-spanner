@@ -50,6 +50,7 @@ Install Dependencies
 
 #. Change to the desired source directory
     .. code-block:: bash
+        
         $ cd ~/python-spanner/samples/samples
 
 #. Create a virtualenv. Samples are compatible with Python 3.6+.
