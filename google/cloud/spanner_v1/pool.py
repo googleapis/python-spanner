@@ -54,7 +54,7 @@ class AbstractSessionPool(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
-        self.__lock = threading.lock()
+        self.__lock = threading.Lock()
         self._session_id_to_channel_id = dict()
 
     @property
@@ -135,10 +135,12 @@ class AbstractSessionPool(object):
             labels=self.labels, database_role=self.database_role
         )
 
-        with self.__lock:
-            channel_id = len(self._session_id_to_channel_id) + 1
-            self._session_id_to_channel_id[session._session.id] = channel_id
-            session._channel_id = channel_id
+        session_id = getattr(session, "_session_id", None)
+        if session_id:
+            with self.__lock:
+                channel_id = len(self._session_id_to_channel_id) + 1
+                self._session_id_to_channel_id[session._session_id] = channel_id
+                session._channel_id = channel_id
 
         return session
 

@@ -26,7 +26,6 @@ In the hierarchy of API concepts
 import grpc
 import os
 import warnings
-import threading
 
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials

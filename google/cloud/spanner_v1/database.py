@@ -53,6 +53,7 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -699,17 +700,18 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
-        nth_request = self._next_nth_request()
+        nth_request = getattr(self, "_next_nth_request", 0)
         attempt = AtomicCounter(1)  # It'll be incremented inside _restart_on_unavailable
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
-                channel_id = session._channel_id
-                metadata = with_request_id(
-                    self._client._nth_client_id, nth_request, attempt.value, metadata
+                channel_id = getattr(session, "_channel_id", 0)
+                client_id = getattr(self, "_nth_client_id", 0)
+                all_metadata = _metadata_with_request_id(
+                    client_id, channel_id, nth_request, attempt.value, metadata
                 )
                 txn = api.begin_transaction(
-                    session=session.name, options=txn_options, metadata=metadata
+                    session=session.name, options=txn_options, metadata=all_metadata
                 )
 
                 txn_selector = TransactionSelector(id=txn.id)
@@ -743,8 +745,13 @@ class Database(object):
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
+    @property
     def _next_nth_request(self):
         return self._instance._client._next_nth_request
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
