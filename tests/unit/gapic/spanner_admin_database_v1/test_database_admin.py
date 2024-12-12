@@ -10985,6 +10985,7 @@ def test_list_databases_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_databases(request)
 
@@ -11038,6 +11039,7 @@ def test_list_databases_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_databases(**mock_args)
 
@@ -11237,6 +11239,7 @@ def test_create_database_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.create_database(request)
 
@@ -11289,6 +11292,7 @@ def test_create_database_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.create_database(**mock_args)
 
@@ -11420,6 +11424,7 @@ def test_get_database_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.get_database(request)
 
@@ -11467,6 +11472,7 @@ def test_get_database_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.get_database(**mock_args)
 
@@ -11596,6 +11602,7 @@ def test_update_database_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.update_database(request)
 
@@ -11650,6 +11657,7 @@ def test_update_database_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.update_database(**mock_args)
 
@@ -11792,6 +11800,7 @@ def test_update_database_ddl_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.update_database_ddl(request)
 
@@ -11846,6 +11855,7 @@ def test_update_database_ddl_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.update_database_ddl(**mock_args)
 
@@ -11975,6 +11985,7 @@ def test_drop_database_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.drop_database(request)
 
@@ -12020,6 +12031,7 @@ def test_drop_database_rest_flattened():
         json_return_value = ""
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.drop_database(**mock_args)
 
@@ -12155,6 +12167,7 @@ def test_get_database_ddl_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.get_database_ddl(request)
 
@@ -12202,6 +12215,7 @@ def test_get_database_ddl_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.get_database_ddl(**mock_args)
 
@@ -12332,6 +12346,7 @@ def test_set_iam_policy_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.set_iam_policy(request)
 
@@ -12385,6 +12400,7 @@ def test_set_iam_policy_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.set_iam_policy(**mock_args)
 
@@ -12515,6 +12531,7 @@ def test_get_iam_policy_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.get_iam_policy(request)
 
@@ -12560,6 +12577,7 @@ def test_get_iam_policy_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.get_iam_policy(**mock_args)
 
@@ -12698,6 +12716,7 @@ def test_test_iam_permissions_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.test_iam_permissions(request)
 
@@ -12752,6 +12771,7 @@ def test_test_iam_permissions_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.test_iam_permissions(**mock_args)
 
@@ -12900,6 +12920,7 @@ def test_create_backup_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.create_backup(request)
 
@@ -12965,6 +12986,7 @@ def test_create_backup_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.create_backup(**mock_args)
 
@@ -13105,6 +13127,7 @@ def test_copy_backup_rest_required_fields(request_type=backup.CopyBackupRequest)
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.copy_backup(request)
 
@@ -13161,6 +13184,7 @@ def test_copy_backup_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.copy_backup(**mock_args)
 
@@ -13293,6 +13317,7 @@ def test_get_backup_rest_required_fields(request_type=backup.GetBackupRequest):
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.get_backup(request)
 
@@ -13338,6 +13363,7 @@ def test_get_backup_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.get_backup(**mock_args)
 
@@ -13466,6 +13492,7 @@ def test_update_backup_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.update_backup(request)
 
@@ -13522,6 +13549,7 @@ def test_update_backup_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.update_backup(**mock_args)
 
@@ -13649,6 +13677,7 @@ def test_delete_backup_rest_required_fields(request_type=backup.DeleteBackupRequ
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.delete_backup(request)
 
@@ -13692,6 +13721,7 @@ def test_delete_backup_rest_flattened():
         json_return_value = ""
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.delete_backup(**mock_args)
 
@@ -13828,6 +13858,7 @@ def test_list_backups_rest_required_fields(request_type=backup.ListBackupsReques
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_backups(request)
 
@@ -13882,6 +13913,7 @@ def test_list_backups_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_backups(**mock_args)
 
@@ -14081,6 +14113,7 @@ def test_restore_database_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.restore_database(request)
 
@@ -14133,6 +14166,7 @@ def test_restore_database_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.restore_database(**mock_args)
 
@@ -14281,6 +14315,7 @@ def test_list_database_operations_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_database_operations(request)
 
@@ -14337,6 +14372,7 @@ def test_list_database_operations_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_database_operations(**mock_args)
 
@@ -14545,6 +14581,7 @@ def test_list_backup_operations_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_backup_operations(request)
 
@@ -14599,6 +14636,7 @@ def test_list_backup_operations_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_backup_operations(**mock_args)
 
@@ -14806,6 +14844,7 @@ def test_list_database_roles_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_database_roles(request)
 
@@ -14861,6 +14900,7 @@ def test_list_database_roles_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_database_roles(**mock_args)
 
@@ -15073,6 +15113,7 @@ def test_create_backup_schedule_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.create_backup_schedule(request)
 
@@ -15137,6 +15178,7 @@ def test_create_backup_schedule_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.create_backup_schedule(**mock_args)
 
@@ -15274,6 +15316,7 @@ def test_get_backup_schedule_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.get_backup_schedule(request)
 
@@ -15321,6 +15364,7 @@ def test_get_backup_schedule_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.get_backup_schedule(**mock_args)
 
@@ -15455,6 +15499,7 @@ def test_update_backup_schedule_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.update_backup_schedule(request)
 
@@ -15513,6 +15558,7 @@ def test_update_backup_schedule_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.update_backup_schedule(**mock_args)
 
@@ -15647,6 +15693,7 @@ def test_delete_backup_schedule_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.delete_backup_schedule(request)
 
@@ -15692,6 +15739,7 @@ def test_delete_backup_schedule_rest_flattened():
         json_return_value = ""
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.delete_backup_schedule(**mock_args)
 
@@ -15835,6 +15883,7 @@ def test_list_backup_schedules_rest_required_fields(
 
             response_value._content = json_return_value.encode("UTF-8")
             req.return_value = response_value
+            req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
             response = client.list_backup_schedules(request)
 
@@ -15890,6 +15939,7 @@ def test_list_backup_schedules_rest_flattened():
         json_return_value = json_format.MessageToJson(return_value)
         response_value._content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         client.list_backup_schedules(**mock_args)
 
@@ -17377,6 +17427,7 @@ def test_list_databases_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_databases(request)
 
 
@@ -17412,6 +17463,7 @@ def test_list_databases_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_databases(request)
 
     # Establish that the response is the type that we expect.
@@ -17452,6 +17504,7 @@ def test_list_databases_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = spanner_database_admin.ListDatabasesResponse.to_json(
             spanner_database_admin.ListDatabasesResponse()
         )
@@ -17498,6 +17551,7 @@ def test_create_database_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.create_database(request)
 
 
@@ -17528,6 +17582,7 @@ def test_create_database_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.create_database(request)
 
     # Establish that the response is the type that we expect.
@@ -17569,6 +17624,7 @@ def test_create_database_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -17613,6 +17669,7 @@ def test_get_database_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_database(request)
 
 
@@ -17654,6 +17711,7 @@ def test_get_database_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.get_database(request)
 
     # Establish that the response is the type that we expect.
@@ -17700,6 +17758,7 @@ def test_get_database_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = spanner_database_admin.Database.to_json(
             spanner_database_admin.Database()
         )
@@ -17748,6 +17807,7 @@ def test_update_database_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.update_database(request)
 
 
@@ -17887,6 +17947,7 @@ def test_update_database_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.update_database(request)
 
     # Establish that the response is the type that we expect.
@@ -17928,6 +17989,7 @@ def test_update_database_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -17972,6 +18034,7 @@ def test_update_database_ddl_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.update_database_ddl(request)
 
 
@@ -18002,6 +18065,7 @@ def test_update_database_ddl_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.update_database_ddl(request)
 
     # Establish that the response is the type that we expect.
@@ -18043,6 +18107,7 @@ def test_update_database_ddl_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -18087,6 +18152,7 @@ def test_drop_database_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.drop_database(request)
 
 
@@ -18117,6 +18183,7 @@ def test_drop_database_rest_call_success(request_type):
         json_return_value = ""
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.drop_database(request)
 
     # Establish that the response is the type that we expect.
@@ -18153,6 +18220,7 @@ def test_drop_database_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         request = spanner_database_admin.DropDatabaseRequest()
         metadata = [
@@ -18193,6 +18261,7 @@ def test_get_database_ddl_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_database_ddl(request)
 
 
@@ -18229,6 +18298,7 @@ def test_get_database_ddl_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.get_database_ddl(request)
 
     # Establish that the response is the type that we expect.
@@ -18270,6 +18340,7 @@ def test_get_database_ddl_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = spanner_database_admin.GetDatabaseDdlResponse.to_json(
             spanner_database_admin.GetDatabaseDdlResponse()
         )
@@ -18316,6 +18387,7 @@ def test_set_iam_policy_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.set_iam_policy(request)
 
 
@@ -18349,6 +18421,7 @@ def test_set_iam_policy_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.set_iam_policy(request)
 
     # Establish that the response is the type that we expect.
@@ -18388,6 +18461,7 @@ def test_set_iam_policy_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(policy_pb2.Policy())
         req.return_value.content = return_value
 
@@ -18432,6 +18506,7 @@ def test_get_iam_policy_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_iam_policy(request)
 
 
@@ -18465,6 +18540,7 @@ def test_get_iam_policy_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.get_iam_policy(request)
 
     # Establish that the response is the type that we expect.
@@ -18504,6 +18580,7 @@ def test_get_iam_policy_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(policy_pb2.Policy())
         req.return_value.content = return_value
 
@@ -18548,6 +18625,7 @@ def test_test_iam_permissions_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.test_iam_permissions(request)
 
 
@@ -18580,6 +18658,7 @@ def test_test_iam_permissions_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.test_iam_permissions(request)
 
     # Establish that the response is the type that we expect.
@@ -18618,6 +18697,7 @@ def test_test_iam_permissions_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(
             iam_policy_pb2.TestIamPermissionsResponse()
         )
@@ -18662,6 +18742,7 @@ def test_create_backup_rest_bad_request(request_type=gsad_backup.CreateBackupReq
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.create_backup(request)
 
 
@@ -18798,6 +18879,7 @@ def test_create_backup_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.create_backup(request)
 
     # Establish that the response is the type that we expect.
@@ -18839,6 +18921,7 @@ def test_create_backup_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -18881,6 +18964,7 @@ def test_copy_backup_rest_bad_request(request_type=backup.CopyBackupRequest):
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.copy_backup(request)
 
 
@@ -18911,6 +18995,7 @@ def test_copy_backup_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.copy_backup(request)
 
     # Establish that the response is the type that we expect.
@@ -18950,6 +19035,7 @@ def test_copy_backup_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -18992,6 +19078,7 @@ def test_get_backup_rest_bad_request(request_type=backup.GetBackupRequest):
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_backup(request)
 
 
@@ -19037,6 +19124,7 @@ def test_get_backup_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.get_backup(request)
 
     # Establish that the response is the type that we expect.
@@ -19085,6 +19173,7 @@ def test_get_backup_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = backup.Backup.to_json(backup.Backup())
         req.return_value.content = return_value
 
@@ -19129,6 +19218,7 @@ def test_update_backup_rest_bad_request(request_type=gsad_backup.UpdateBackupReq
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.update_backup(request)
 
 
@@ -19282,6 +19372,7 @@ def test_update_backup_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.update_backup(request)
 
     # Establish that the response is the type that we expect.
@@ -19332,6 +19423,7 @@ def test_update_backup_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = gsad_backup.Backup.to_json(gsad_backup.Backup())
         req.return_value.content = return_value
 
@@ -19374,6 +19466,7 @@ def test_delete_backup_rest_bad_request(request_type=backup.DeleteBackupRequest)
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.delete_backup(request)
 
 
@@ -19404,6 +19497,7 @@ def test_delete_backup_rest_call_success(request_type):
         json_return_value = ""
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.delete_backup(request)
 
     # Establish that the response is the type that we expect.
@@ -19438,6 +19532,7 @@ def test_delete_backup_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         request = backup.DeleteBackupRequest()
         metadata = [
@@ -19476,6 +19571,7 @@ def test_list_backups_rest_bad_request(request_type=backup.ListBackupsRequest):
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_backups(request)
 
 
@@ -19511,6 +19607,7 @@ def test_list_backups_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_backups(request)
 
     # Establish that the response is the type that we expect.
@@ -19549,6 +19646,7 @@ def test_list_backups_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = backup.ListBackupsResponse.to_json(backup.ListBackupsResponse())
         req.return_value.content = return_value
 
@@ -19593,6 +19691,7 @@ def test_restore_database_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.restore_database(request)
 
 
@@ -19623,6 +19722,7 @@ def test_restore_database_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.restore_database(request)
 
     # Establish that the response is the type that we expect.
@@ -19664,6 +19764,7 @@ def test_restore_database_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = json_format.MessageToJson(operations_pb2.Operation())
         req.return_value.content = return_value
 
@@ -19708,6 +19809,7 @@ def test_list_database_operations_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_database_operations(request)
 
 
@@ -19745,6 +19847,7 @@ def test_list_database_operations_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_database_operations(request)
 
     # Establish that the response is the type that we expect.
@@ -19785,6 +19888,7 @@ def test_list_database_operations_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = spanner_database_admin.ListDatabaseOperationsResponse.to_json(
             spanner_database_admin.ListDatabaseOperationsResponse()
         )
@@ -19831,6 +19935,7 @@ def test_list_backup_operations_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_backup_operations(request)
 
 
@@ -19866,6 +19971,7 @@ def test_list_backup_operations_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_backup_operations(request)
 
     # Establish that the response is the type that we expect.
@@ -19906,6 +20012,7 @@ def test_list_backup_operations_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = backup.ListBackupOperationsResponse.to_json(
             backup.ListBackupOperationsResponse()
         )
@@ -19952,6 +20059,7 @@ def test_list_database_roles_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_database_roles(request)
 
 
@@ -19987,6 +20095,7 @@ def test_list_database_roles_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_database_roles(request)
 
     # Establish that the response is the type that we expect.
@@ -20027,6 +20136,7 @@ def test_list_database_roles_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = spanner_database_admin.ListDatabaseRolesResponse.to_json(
             spanner_database_admin.ListDatabaseRolesResponse()
         )
@@ -20073,6 +20183,7 @@ def test_create_backup_schedule_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.create_backup_schedule(request)
 
 
@@ -20196,6 +20307,7 @@ def test_create_backup_schedule_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.create_backup_schedule(request)
 
     # Establish that the response is the type that we expect.
@@ -20236,6 +20348,7 @@ def test_create_backup_schedule_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = gsad_backup_schedule.BackupSchedule.to_json(
             gsad_backup_schedule.BackupSchedule()
         )
@@ -20284,6 +20397,7 @@ def test_get_backup_schedule_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_backup_schedule(request)
 
 
@@ -20321,6 +20435,7 @@ def test_get_backup_schedule_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.get_backup_schedule(request)
 
     # Establish that the response is the type that we expect.
@@ -20361,6 +20476,7 @@ def test_get_backup_schedule_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = backup_schedule.BackupSchedule.to_json(
             backup_schedule.BackupSchedule()
         )
@@ -20411,6 +20527,7 @@ def test_update_backup_schedule_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.update_backup_schedule(request)
 
 
@@ -20538,6 +20655,7 @@ def test_update_backup_schedule_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.update_backup_schedule(request)
 
     # Establish that the response is the type that we expect.
@@ -20578,6 +20696,7 @@ def test_update_backup_schedule_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = gsad_backup_schedule.BackupSchedule.to_json(
             gsad_backup_schedule.BackupSchedule()
         )
@@ -20626,6 +20745,7 @@ def test_delete_backup_schedule_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.delete_backup_schedule(request)
 
 
@@ -20658,6 +20778,7 @@ def test_delete_backup_schedule_rest_call_success(request_type):
         json_return_value = ""
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.delete_backup_schedule(request)
 
     # Establish that the response is the type that we expect.
@@ -20694,6 +20815,7 @@ def test_delete_backup_schedule_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         request = backup_schedule.DeleteBackupScheduleRequest()
         metadata = [
@@ -20734,6 +20856,7 @@ def test_list_backup_schedules_rest_bad_request(
         response_value.status_code = 400
         response_value.request = mock.Mock()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_backup_schedules(request)
 
 
@@ -20769,6 +20892,7 @@ def test_list_backup_schedules_rest_call_success(request_type):
         json_return_value = json_format.MessageToJson(return_value)
         response_value.content = json_return_value.encode("UTF-8")
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         response = client.list_backup_schedules(request)
 
     # Establish that the response is the type that we expect.
@@ -20809,6 +20933,7 @@ def test_list_backup_schedules_rest_interceptors(null_interceptor):
 
         req.return_value = mock.Mock()
         req.return_value.status_code = 200
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         return_value = backup_schedule.ListBackupSchedulesResponse.to_json(
             backup_schedule.ListBackupSchedulesResponse()
         )
@@ -20860,6 +20985,7 @@ def test_cancel_operation_rest_bad_request(
         response_value.status_code = 400
         response_value.request = Request()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.cancel_operation(request)
 
 
@@ -20892,6 +21018,7 @@ def test_cancel_operation_rest(request_type):
         response_value.content = json_return_value.encode("UTF-8")
 
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         response = client.cancel_operation(request)
 
@@ -20925,6 +21052,7 @@ def test_delete_operation_rest_bad_request(
         response_value.status_code = 400
         response_value.request = Request()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.delete_operation(request)
 
 
@@ -20957,6 +21085,7 @@ def test_delete_operation_rest(request_type):
         response_value.content = json_return_value.encode("UTF-8")
 
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         response = client.delete_operation(request)
 
@@ -20990,6 +21119,7 @@ def test_get_operation_rest_bad_request(
         response_value.status_code = 400
         response_value.request = Request()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.get_operation(request)
 
 
@@ -21022,6 +21152,7 @@ def test_get_operation_rest(request_type):
         response_value.content = json_return_value.encode("UTF-8")
 
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         response = client.get_operation(request)
 
@@ -21053,6 +21184,7 @@ def test_list_operations_rest_bad_request(
         response_value.status_code = 400
         response_value.request = Request()
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
         client.list_operations(request)
 
 
@@ -21085,6 +21217,7 @@ def test_list_operations_rest(request_type):
         response_value.content = json_return_value.encode("UTF-8")
 
         req.return_value = response_value
+        req.return_value.headers = {"header-1": "value-1", "header-2": "value-2"}
 
         response = client.list_operations(request)
 
