@@ -25,6 +25,7 @@ from google.cloud.spanner_v1.services.spanner.transports import (
 from google.cloud.spanner_v1.testing.interceptors import (
     MethodCountInterceptor,
     MethodAbortInterceptor,
+    XGoogRequestIDHeaderInterceptor,
 )
 
 
@@ -60,9 +61,11 @@ class TestDatabase(Database):
 
         self._method_count_interceptor = MethodCountInterceptor()
         self._method_abort_interceptor = MethodAbortInterceptor()
+        self._x_goog_request_id_interceptor = XGoogRequestIDHeaderInterceptor()
         self._interceptors = [
             self._method_count_interceptor,
             self._method_abort_interceptor,
+            self._x_goog_request_id_interceptor,
         ]
 
     @property
