@@ -18,6 +18,7 @@ import threading
 import unittest
 from google.cloud.spanner_v1._helpers import AtomicCounter
 
+
 class TestAtomicCounter(unittest.TestCase):
     def test_initialization(self):
         ac_default = AtomicCounter()
@@ -54,7 +55,6 @@ class TestAtomicCounter(unittest.TestCase):
         assert n == 201
         assert ac.value == 1
 
-
     def test_multiple_threads_incrementing(self):
         ac = AtomicCounter()
         n = 200
@@ -78,4 +78,4 @@ class TestAtomicCounter(unittest.TestCase):
             assert th.is_alive() == False
 
         # Finally the result should be n*m
-        assert ac.value == n*m
+        assert ac.value == n * m

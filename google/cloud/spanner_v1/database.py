@@ -701,7 +701,8 @@ class Database(object):
             )
 
         nth_request = getattr(self, "_next_nth_request", 0)
-        attempt = AtomicCounter(1)  # It'll be incremented inside _restart_on_unavailable
+        # Attempt will be incremented inside _restart_on_unavailable.
+        attempt = AtomicCounter(1)
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
