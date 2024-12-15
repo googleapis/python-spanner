@@ -92,3 +92,16 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
                 self._unary_req_segments.append(x_goog_request_id)
 
         return method(request_or_iterator, call_details)
+
+    @property
+    def unary_request_ids(self):
+        return self._unary_req_segments
+
+    @property
+    def stream_request_ids(self):
+        return self._stream_req_segments
+
+    def reset(self):
+        self._stream_req_segments.clear()
+        self._unary_req_segments.clear()
+        pass
