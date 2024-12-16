@@ -243,7 +243,7 @@ class TestFixedSizePool(OpenTelemetryBase):
         database._sessions.extend(SESSIONS)
         pool.bind(database)
 
-        with trace_call("pool.Get", SESSIONS[0]) as span:
+        with trace_call("pool.Get", SESSIONS[0]):
             pool.get()
 
         span_list = self.get_finished_spans()

@@ -150,7 +150,6 @@ def test_transaction_abort_then_retry_spans():
     from opentelemetry.trace.status import StatusCode
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.sampling import ALWAYS_ON
-    from opentelemetry import trace
 
     PROJECT = _helpers.EMULATOR_PROJECT
     CONFIGURATION_NAME = "config-name"
@@ -161,11 +160,8 @@ def test_transaction_abort_then_retry_spans():
     LABELS = {"test": "true"}
 
     counters = dict(aborted=0)
-    already_aborted = False
 
     def select_in_txn(txn):
-        from google.rpc import error_details_pb2
-
         results = txn.execute_sql("SELECT 1")
         for row in results:
             _ = row
