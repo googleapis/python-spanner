@@ -67,6 +67,9 @@ class MethodAbortInterceptor(ClientInterceptor):
         self._connection = None
 
 
+X_GOOG_REQUEST_ID = "x-goog-spanner-request-id"
+
+
 class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
     def __init__(self):
         self._unary_req_segments = []
@@ -77,12 +80,14 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
         metadata = call_details.metadata
         x_goog_request_id = None
         for key, value in metadata:
-            if key == "x-goog-spanner-request-id":
+            if key == X_GOOG_REQUEST_ID:
                 x_goog_request_id = value
                 break
 
         if not x_goog_request_id:
-            raise Exception("Missing x_goog_request_id header")
+            raise Exception(
+                f"Missing {X_GOOG_REQUEST_ID} header in {call_details.method}"
+            )
 
         response_or_iterator = method(request_or_iterator, call_details)
         streaming = getattr(response_or_iterator, "__iter__", None) is not None
