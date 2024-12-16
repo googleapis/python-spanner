@@ -197,6 +197,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                         database._route_to_leader_enabled
                     )
                 )
+            all_metadata = database.metadata_with_request_id(database._next_nth_request, 1, metadata)
             observability_options = getattr(database, "observability_options", None)
             with trace_call(
                 f"CloudSpanner.{type(self).__name__}.rollback",
@@ -207,7 +208,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                     api.rollback,
                     session=self._session.name,
                     transaction_id=self._transaction_id,
-                    metadata=metadata,
+                    metadata=all_metadata,
                 )
                 _retry(
                     method,
@@ -288,7 +289,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             method = functools.partial(
                 api.commit,
                 request=request,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(database._next_nth_request, 1, metadata),
             )
 
             def beforeNextRetry(nthRetry, delayInSeconds):

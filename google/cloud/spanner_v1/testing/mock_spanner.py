@@ -187,7 +187,7 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
     def Commit(self, request, context):
         self._requests.append(request)
         self.mock_spanner.pop_error(context)
-        tx = self.transactions[request.transaction_id]
+        tx = self.transactions.get(request.transaction_id, None)
         if tx is None:
             raise ValueError(f"Transaction not found: {request.transaction_id}")
         del self.transactions[request.transaction_id]

@@ -24,6 +24,8 @@ from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
     ExecuteSqlRequest,
 )
+from google.api_core.exceptions import Aborted
+from google.rpc import code_pb2
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 
@@ -193,6 +195,45 @@ class TestRequestIDHeader(MockServerTestBase):
         ]
         assert got_stream_segments == want_stream_segments
 
+    def test_retries_on_abort(self):
+        counters = dict(aborted=0)
+        want_failed_attempts = 2
+
+        def select_in_txn(txn):
+            results = txn.execute_sql("select 1")
+            for row in results:
+                _ = row
+
+            if counters["aborted"] < want_failed_attempts:
+                counters["aborted"] += 1
+                raise Aborted(
+                    "Thrown from ClientInterceptor for testing",
+                    errors=[FauxCall(code_pb2.ABORTED)],
+                )
+
+        add_select1_result()
+        if not getattr(self.database, "_interceptors", None):
+            self.database._interceptors = MockServerTestBase._interceptors
+
+        self.database.run_in_transaction(select_in_txn)
+
     def canonicalize_request_id_headers(self):
         src = self.database._x_goog_request_id_interceptor
         return src._stream_req_segments, src._unary_req_segments
+
+class FauxCall:
+    def __init__(self, code, details="FauxCall"):
+        self._code = code
+        self._details = details
+
+    def initial_metadata(self):
+        return {}
+
+    def trailing_metadata(self):
+        return {}
+
+    def code(self):
+        return self._code
+
+    def details(self):
+        return self._details
