@@ -57,6 +57,9 @@ def get_tracer(tracer_provider=None):
 
 @contextmanager
 def trace_call(name, session=None, extra_attributes=None, observability_options=None):
+    if session:
+        session._last_use_time = datetime.now()
+
     if not (HAS_OPENTELEMETRY_INSTALLED and name):
         # Empty context manager. Users will have to check if the generated value is None or a span
         yield None

@@ -24,6 +24,7 @@ from tests._helpers import (
     OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
+    HAS_OPENTELEMETRY_INSTALLED,
 )
 
 
@@ -232,6 +233,9 @@ class TestFixedSizePool(OpenTelemetryBase):
             self.assertFalse(pool._sessions.full())
 
     def test_spans_bind_get(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         # This tests retrieving 1 out of 4 sessions from the session pool.
         pool = self._make_one(size=4)
         database = _Database("name")
@@ -271,6 +275,9 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertSpanEvents("pool.Get", wantEventNames, span_list[-1])
 
     def test_spans_bind_get_empty_pool(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         # Tests trying to invoke pool.get() from an empty pool.
         pool = self._make_one(size=0)
         database = _Database("name")
@@ -312,6 +319,9 @@ class TestFixedSizePool(OpenTelemetryBase):
         assert got_all_events == want_all_events
 
     def test_spans_pool_bind(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         # Tests the exception generated from invoking pool.bind when
         # you have an empty pool.
         pool = self._make_one(size=1)
@@ -524,6 +534,9 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.empty())
 
     def test_spans_get_empty_pool(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         # This scenario tests a pool that hasn't been filled up
         # and pool.get() acquires from a pool, waiting for a session
         # to become available.
@@ -877,6 +890,23 @@ class TestPingingPool(OpenTelemetryBase):
 
         self.assertTrue(pool._sessions.full())
 
+    def test_spans_put_full(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        import queue
+
+        pool = self._make_one(size=4)
+        database = _Database("name")
+        SESSIONS = [_Session(database)] * 4
+        database._sessions.extend(SESSIONS)
+        pool.bind(database)
+
+        with self.assertRaises(queue.Full):
+            pool.put(_Session(database))
+
+        self.assertTrue(pool._sessions.full())
+
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.PingingPool.BatchCreateSessions"]
@@ -991,6 +1021,9 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_spans_get_and_leave_empty_pool(self):
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         # This scenario tests the spans generated from pulling a span
         # out the pool and leaving it empty.
         pool = self._make_one()
