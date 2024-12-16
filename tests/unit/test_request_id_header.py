@@ -17,22 +17,26 @@ from tests.mockserver_tests.mock_server_test_base import (
     add_select1_result,
 )
 from google.cloud.spanner_v1.testing.interceptors import XGoogRequestIDHeaderInterceptor
+from google.cloud.spanner_v1 import (
+    BatchCreateSessionsRequest,
+    ExecuteSqlRequest,
+)
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+
 
 class TestRequestIDHeader(MockServerTestBase):
-    # Firstly inject in the XGoogRequestIdHeader interceptor.
-    x_goog_request_id_interceptor = XGoogRequestIDHeaderInterceptor()
-    MockServerTestBase._interceptors = [x_goog_request_id_interceptor]
-
     def tearDown(self):
-        x_goog_request_id_interceptor.reset()
+        self.database._x_goog_request_id_interceptor.reset()
 
     def test_snapshot_read(self):
         add_select1_result()
+        if not getattr(self.database, "_interceptors", None):
+            self.database._interceptors = MockServerTestBase._interceptors
         with self.database.snapshot() as snapshot:
             results = snapshot.execute_sql("select 1")
             result_list = []
-            for result in results:
-                result_list.append(result)
+            for row in results:
+                result_list.append(row)
                 self.assertEqual(1, row[0])
             self.assertEqual(1, len(result_list))
 
@@ -42,31 +46,23 @@ class TestRequestIDHeader(MockServerTestBase):
         self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
 
         # Now ensure monotonicity of the received request-id segments.
-        stream_segments, unary_segments = self.canonicalize_request_id_headers()
-        assert len(unary_segments) > 1
-        assert len(stream_segments) == 0
+        got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
+        want_unary_segments = [
+            (
+                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                (1, REQ_RAND_PROCESS_ID, 1, 1, 1, 1),
+            )
+        ]
+        want_stream_segments = [
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, 1, 1, 2, 1),
+            )
+        ]
+
+        assert got_unary_segments == want_unary_segments
+        assert got_stream_segments == want_stream_segments
 
     def canonicalize_request_id_headers(self):
-        src = x_goog_request_id_interceptor
-        stream_segments = [
-            parse_request_id(req_id) for req_id in src._stream_req_segments
-        ]
-        unary_segments = [
-            parse_request_id(req_id) for req_id in src._unary_req_segments
-        ]
-        return stream_segments, unary_segments
-
-
-def parse_request_id(request_id_str):
-    splits = request_id_str.split(".")
-    version, rand_process_id, client_id, channel_id, nth_request, nth_attempt = list(
-        map(lambda v: int(v), splits)
-    )
-    return (
-        version,
-        rand_process_id,
-        client_id,
-        channel_id,
-        nth_request,
-        nth_attempt,
-    )
+        src = self.database._x_goog_request_id_interceptor
+        return src._stream_req_segments, src._unary_req_segments

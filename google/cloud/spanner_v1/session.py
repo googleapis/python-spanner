@@ -75,7 +75,6 @@ class Session(object):
         self._labels = labels
         self._database_role = database_role
         self._last_use_time = datetime.utcnow()
-        self.__channel_id = 0
 
     def __lt__(self, other):
         return self._session_id < other._session_id

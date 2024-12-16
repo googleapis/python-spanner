@@ -151,6 +151,9 @@ class Database(object):
 
     _spanner_api: SpannerClient = None
 
+    __transport_lock = threading.Lock()
+    __transports_to_channel_id = dict()
+
     def __init__(
         self,
         database_id,
@@ -445,6 +448,31 @@ class Database(object):
             )
         return self._spanner_api
 
+    @property
+    def _channel_id(self):
+        """
+        Helper to retrieve the associated channelID for the spanner_api.
+        This property is paramount to x-goog-spanner-request-id.
+        """
+        with self.__transport_lock:
+            api = self.spanner_api
+            channel_id = self.__transports_to_channel_id.get(api._transport, None)
+            if channel_id is None:
+                channel_id = len(self.__transports_to_channel_id) + 1
+                self.__transports_to_channel_id[api._transport] = channel_id
+
+            return channel_id
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        client_id = self._nth_client_id
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
             return NotImplemented
@@ -706,10 +734,8 @@ class Database(object):
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
-                channel_id = getattr(session, "_channel_id", 0)
-                client_id = getattr(self, "_nth_client_id", 0)
-                all_metadata = _metadata_with_request_id(
-                    client_id, channel_id, nth_request, attempt.value, metadata
+                all_metadata = self.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
                 )
                 txn = api.begin_transaction(
                     session=session.name, options=txn_options, metadata=all_metadata

@@ -17,7 +17,6 @@
 import datetime
 import queue
 import time
-import threading
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
@@ -54,8 +53,6 @@ class AbstractSessionPool(object):
             labels = {}
         self._labels = labels
         self._database_role = database_role
-        self.__lock = threading.Lock()
-        self._session_id_to_channel_id = dict()
 
     @property
     def labels(self):
@@ -131,18 +128,9 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: new session instance.
         """
-        session = self._database.session(
+        return self._database.session(
             labels=self.labels, database_role=self.database_role
         )
-
-        session_id = getattr(session, "_session_id", None)
-        if session_id:
-            with self.__lock:
-                channel_id = len(self._session_id_to_channel_id) + 1
-                self._session_id_to_channel_id[session._session_id] = channel_id
-                session._channel_id = channel_id
-
-        return session
 
     def session(self, **kwargs):
         """Check out a session from the pool.
@@ -255,6 +243,7 @@ class FixedSizePool(AbstractSessionPool):
             "CloudSpanner.FixedPool.BatchCreateSessions",
             observability_options=observability_options,
         ) as span:
+            attempt = 1
             returned_session_count = 0
             while not self._sessions.full():
                 request.session_count = requested_session_count - self._sessions.qsize()
@@ -263,9 +252,12 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
+                all_metadata = database.metadata_with_request_id(
+                    database._next_nth_request, attempt, metadata
+                )
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=all_metadata,
                 )
 
                 add_span_event(

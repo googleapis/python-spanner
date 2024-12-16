@@ -82,16 +82,28 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
                 break
 
         if not x_goog_request_id:
-            raise Exception(f"Missing {x_goog_request_id}")
+            raise Exception("Missing x_goog_request_id header")
 
-        streaming = hasattr(request_or_iterator, "__iter__", False)
+        response_or_iterator = method(request_or_iterator, call_details)
+        streaming = getattr(response_or_iterator, "__iter__", None) is not None
+        print(
+            "intercept got",
+            x_goog_request_id,
+            call_details.method,
+            "streaming",
+            streaming,
+        )
         with self.__lock:
             if streaming:
-                self._stream_req_segments.append(x_goog_request_id)
+                self._stream_req_segments.append(
+                    (call_details.method, parse_request_id(x_goog_request_id))
+                )
             else:
-                self._unary_req_segments.append(x_goog_request_id)
+                self._unary_req_segments.append(
+                    (call_details.method, parse_request_id(x_goog_request_id))
+                )
 
-        return method(request_or_iterator, call_details)
+        return response_or_iterator
 
     @property
     def unary_request_ids(self):
@@ -105,3 +117,18 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
         self._stream_req_segments.clear()
         self._unary_req_segments.clear()
         pass
+
+
+def parse_request_id(request_id_str):
+    splits = request_id_str.split(".")
+    version, rand_process_id, client_id, channel_id, nth_request, nth_attempt = list(
+        map(lambda v: int(v), splits)
+    )
+    return (
+        version,
+        rand_process_id,
+        client_id,
+        channel_id,
+        nth_request,
+        nth_attempt,
+    )

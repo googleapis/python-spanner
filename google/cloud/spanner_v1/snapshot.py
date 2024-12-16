@@ -328,10 +328,8 @@ class _SnapshotBase(_SessionWrapper):
 
         def wrapped_restart(*args, **kwargs):
             attempt.increment()
-            channel_id = getattr(self._session, "_channel_id", 0)
-            client_id = getattr(database, "_nth_client_id", 0)
-            all_metadata = _metadata_with_request_id(
-                client_id, channel_id, nth_request, attempt.value, metadata
+            all_metadata = database.metadata_with_request_id(
+                nth_request, attempt.value, metadata
             )
 
             restart = functools.partial(
@@ -557,10 +555,8 @@ class _SnapshotBase(_SessionWrapper):
 
         def wrapped_restart(*args, **kwargs):
             attempt.increment()
-            channel_id = getattr(self._session, "_channel_id", 0)
-            client_id = getattr(database, "_nth_client_id", 0)
-            all_metadata = _metadata_with_request_id(
-                client_id, channel_id, nth_request, attempt.value, metadata
+            all_metadata = database.metadata_with_request_id(
+                nth_request, attempt.value, metadata
             )
 
             restart = functools.partial(
@@ -717,10 +713,8 @@ class _SnapshotBase(_SessionWrapper):
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()
-                channel_id = getattr(self._session, "_channel_id", 0)
-                client_id = getattr(database, "_nth_client_id", 0)
-                all_metadata = _metadata_with_request_id(
-                    client_id, channel_id, nth_request, attempt.value, metadata
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
                 )
                 method = functools.partial(
                     api.partition_read,
@@ -832,12 +826,9 @@ class _SnapshotBase(_SessionWrapper):
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()
-                channel_id = getattr(self._session, "_channel_id", 0)
-                client_id = getattr(database, "_nth_client_id", 0)
-                all_metadata = _metadata_with_request_id(
-                    client_id, channel_id, nth_request, attempt.value, metadata
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
                 )
-
                 method = functools.partial(
                     api.partition_query,
                     request=request,
@@ -991,12 +982,9 @@ class Snapshot(_SnapshotBase):
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()
-                channel_id = getattr(self._session, "_channel_id", 0)
-                client_id = getattr(database, "_nth_client_id", 0)
-                all_metadata = _metadata_with_request_id(
-                    client_id, channel_id, nth_request, attempt.value, metadata
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
                 )
-
                 method = functools.partial(
                     api.begin_transaction,
                     session=self._session.name,

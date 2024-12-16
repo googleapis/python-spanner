@@ -118,7 +118,6 @@ class MockServerTestBase(unittest.TestCase):
         self._client = None
         self._instance = None
         self._database = None
-        self._interceptors = None
 
     @classmethod
     def setup_class(cls):
@@ -147,19 +146,11 @@ class MockServerTestBase(unittest.TestCase):
     @property
     def client(self) -> Client:
         if self._client is None:
-            api_endpoint = "localhost:" + str(MockServerTestBase.port)
-            channel = grpc.insecure_channel(api_endpoint)
-            transport = None
-            if self._interceptors and len(self._interceptors) > 0:
-                channel = grpc.intercept_channel(channel, *self._interceptors)
-                transport = SpannerGrpcTransport(channel=channel)
-
             self._client = Client(
                 project="p",
                 credentials=AnonymousCredentials(),
                 client_options=ClientOptions(
-                    transport=transport,
-                    api_endpoint=api_endpoint if transport is None else None,
+                    api_endpoint="localhost:" + str(MockServerTestBase.port),
                 ),
             )
         return self._client
@@ -174,6 +165,8 @@ class MockServerTestBase(unittest.TestCase):
     def database(self) -> Database:
         if self._database is None:
             self._database = self.instance.database(
-                "test-database", pool=FixedSizePool(size=10)
+                "test-database",
+                pool=FixedSizePool(size=10),
+                enable_interceptors_in_tests=True,
             )
         return self._database
