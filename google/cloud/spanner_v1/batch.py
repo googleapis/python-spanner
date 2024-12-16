@@ -26,10 +26,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import (
-    add_event_on_current_span,
-    trace_call,
-)
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
@@ -73,10 +70,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(insert=_make_write_pb(table, columns, values)))
-        add_event_on_current_span(
-            "insert mutations added",
-            dict(table=table, columns=columns),
-        )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def update(self, table, columns, values):
         """Update one or more existing table rows.
@@ -91,10 +86,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(update=_make_write_pb(table, columns, values)))
-        add_event_on_current_span(
-            "update mutations added",
-            dict(table=table, columns=columns),
-        )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def insert_or_update(self, table, columns, values):
         """Insert/update one or more table rows.
@@ -111,10 +104,8 @@ class _BatchBase(_SessionWrapper):
         self._mutations.append(
             Mutation(insert_or_update=_make_write_pb(table, columns, values))
         )
-        add_event_on_current_span(
-            "insert_or_update mutations added",
-            dict(table=table, columns=columns),
-        )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def replace(self, table, columns, values):
         """Replace one or more table rows.
@@ -129,10 +120,8 @@ class _BatchBase(_SessionWrapper):
         :param values: Values to be modified.
         """
         self._mutations.append(Mutation(replace=_make_write_pb(table, columns, values)))
-        add_event_on_current_span(
-            "replace mutations added",
-            dict(table=table, columns=columns),
-        )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
     def delete(self, table, keyset):
         """Delete one or more table rows.
@@ -145,10 +134,8 @@ class _BatchBase(_SessionWrapper):
         """
         delete = Mutation.Delete(table=table, key_set=keyset._to_pb())
         self._mutations.append(Mutation(delete=delete))
-        add_event_on_current_span(
-            "delete mutations added",
-            dict(table=table),
-        )
+        # TODO: Decide if we should add a span event per mutation:
+        # https://github.com/googleapis/python-spanner/issues/1269
 
 
 class Batch(_BatchBase):

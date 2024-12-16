@@ -103,7 +103,6 @@ def trace_call(name, session=None, extra_attributes=None, observability_options=
 
     if not enable_extended_tracing:
         attributes.pop("db.statement", False)
-        attributes.pop("sql", False)
 
     with tracer.start_as_current_span(
         name, kind=trace.SpanKind.CLIENT, attributes=attributes
@@ -136,16 +135,3 @@ def get_current_span():
 def add_span_event(span, event_name, event_attributes=None):
     if span:
         span.add_event(event_name, event_attributes)
-
-
-def add_event_on_current_span(event_name, event_attributes=None, span=None):
-    if not span:
-        span = get_current_span()
-
-    add_span_event(span, event_name, event_attributes)
-
-
-def record_span_exception_and_status(span, exc):
-    if span:
-        span.set_status(Status(StatusCode.ERROR, str(exc)))
-        span.record_exception(exc)
