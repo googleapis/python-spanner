@@ -213,14 +213,16 @@ def test_transaction_abort_then_retry_spans():
     db.run_in_transaction(select_in_txn)
 
     span_list = trace_exporter.get_finished_spans()
+    # Sort the spans by their start time in the hierarchy.
+    span_list = sorted(span_list, key=lambda span: span.start_time)
     got_span_names = [span.name for span in span_list]
     want_span_names = [
+        "CloudSpanner.Database.run_in_transaction",
         "CloudSpanner.CreateSession",
+        "CloudSpanner.Session.run_in_transaction",
         "CloudSpanner.Transaction.execute_streaming_sql",
         "CloudSpanner.Transaction.execute_streaming_sql",
         "CloudSpanner.Transaction.commit",
-        "CloudSpanner.Session.run_in_transaction",
-        "CloudSpanner.Database.run_in_transaction",
     ]
 
     assert got_span_names == want_span_names
@@ -245,28 +247,28 @@ def test_transaction_abort_then_retry_spans():
 
     # Check for the series of events
     want_events = [
-        ("Starting Commit", {}),
-        ("Commit Done", {}),
-        (
-            "Transaction was aborted in user operation, retrying",
-            {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
-        ),
         ("Acquiring session", {"kind": "BurstyPool"}),
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
+        (
+            "Transaction was aborted in user operation, retrying",
+            {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
+        ),
+        ("Starting Commit", {}),
+        ("Commit Done", {}),
     ]
     assert got_events == want_events
 
     # Check for the statues.
     codes = StatusCode
     want_statuses = [
+        ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
         ("CloudSpanner.CreateSession", codes.OK, None),
+        ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
         ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
         ("CloudSpanner.Transaction.execute_streaming_sql", codes.OK, None),
         ("CloudSpanner.Transaction.commit", codes.OK, None),
-        ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
-        ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
     ]
     assert got_statuses == want_statuses
 
