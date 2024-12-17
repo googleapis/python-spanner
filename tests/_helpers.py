@@ -132,3 +132,20 @@ class OpenTelemetryBase(unittest.TestCase):
 
     def reset(self):
         self.tearDown()
+
+    def finished_spans_events_statuses(self):
+        span_list = self.get_finished_spans()
+        # Some event attributes are noisy/highly ephemeral
+        # and can't be directly compared against.
+        got_all_events = []
+        imprecise_event_attributes = ["exception.stacktrace", "delay_seconds", "cause"]
+        for span in span_list:
+            for event in span.events:
+                evt_attributes = event.attributes.copy()
+                for attr_name in imprecise_event_attributes:
+                    if attr_name in evt_attributes:
+                        evt_attributes[attr_name] = "EPHEMERAL"
+
+                got_all_events.append((event.name, evt_attributes))
+
+        return got_all_events
