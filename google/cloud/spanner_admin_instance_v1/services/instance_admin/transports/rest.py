@@ -1116,7 +1116,7 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             Args:
                 request (~.spanner_instance_admin.CreateInstanceConfigRequest):
                     The request object. The request for
-                [CreateInstanceConfigRequest][InstanceAdmin.CreateInstanceConfigRequest].
+                [CreateInstanceConfig][google.spanner.admin.instance.v1.InstanceAdmin.CreateInstanceConfig].
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -1525,7 +1525,7 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             Args:
                 request (~.spanner_instance_admin.DeleteInstanceConfigRequest):
                     The request object. The request for
-                [DeleteInstanceConfigRequest][InstanceAdmin.DeleteInstanceConfigRequest].
+                [DeleteInstanceConfig][google.spanner.admin.instance.v1.InstanceAdmin.DeleteInstanceConfig].
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.
@@ -3827,7 +3827,7 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             Args:
                 request (~.spanner_instance_admin.UpdateInstanceConfigRequest):
                     The request object. The request for
-                [UpdateInstanceConfigRequest][InstanceAdmin.UpdateInstanceConfigRequest].
+                [UpdateInstanceConfig][google.spanner.admin.instance.v1.InstanceAdmin.UpdateInstanceConfig].
                 retry (google.api_core.retry.Retry): Designation of what errors, if any,
                     should be retried.
                 timeout (float): The timeout for this request.

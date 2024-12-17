@@ -1659,6 +1659,9 @@ def test_get_instance_config(request_type, transport: str = "grpc"):
             leader_options=["leader_options_value"],
             reconciling=True,
             state=spanner_instance_admin.InstanceConfig.State.CREATING,
+            free_instance_availability=spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE,
+            quorum_type=spanner_instance_admin.InstanceConfig.QuorumType.REGION,
+            storage_limit_per_processing_unit=3540,
         )
         response = client.get_instance_config(request)
 
@@ -1681,6 +1684,14 @@ def test_get_instance_config(request_type, transport: str = "grpc"):
     assert response.leader_options == ["leader_options_value"]
     assert response.reconciling is True
     assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
+    assert (
+        response.free_instance_availability
+        == spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE
+    )
+    assert (
+        response.quorum_type == spanner_instance_admin.InstanceConfig.QuorumType.REGION
+    )
+    assert response.storage_limit_per_processing_unit == 3540
 
 
 def test_get_instance_config_non_empty_request_with_auto_populated_field():
@@ -1823,6 +1834,9 @@ async def test_get_instance_config_async(
                 leader_options=["leader_options_value"],
                 reconciling=True,
                 state=spanner_instance_admin.InstanceConfig.State.CREATING,
+                free_instance_availability=spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE,
+                quorum_type=spanner_instance_admin.InstanceConfig.QuorumType.REGION,
+                storage_limit_per_processing_unit=3540,
             )
         )
         response = await client.get_instance_config(request)
@@ -1846,6 +1860,14 @@ async def test_get_instance_config_async(
     assert response.leader_options == ["leader_options_value"]
     assert response.reconciling is True
     assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
+    assert (
+        response.free_instance_availability
+        == spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE
+    )
+    assert (
+        response.quorum_type == spanner_instance_admin.InstanceConfig.QuorumType.REGION
+    )
+    assert response.storage_limit_per_processing_unit == 3540
 
 
 @pytest.mark.asyncio
@@ -4726,6 +4748,7 @@ def test_get_instance(request_type, transport: str = "grpc"):
             node_count=1070,
             processing_units=1743,
             state=spanner_instance_admin.Instance.State.CREATING,
+            instance_type=spanner_instance_admin.Instance.InstanceType.PROVISIONED,
             endpoint_uris=["endpoint_uris_value"],
             edition=spanner_instance_admin.Instance.Edition.STANDARD,
             default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
@@ -4746,6 +4769,10 @@ def test_get_instance(request_type, transport: str = "grpc"):
     assert response.node_count == 1070
     assert response.processing_units == 1743
     assert response.state == spanner_instance_admin.Instance.State.CREATING
+    assert (
+        response.instance_type
+        == spanner_instance_admin.Instance.InstanceType.PROVISIONED
+    )
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
     assert (
@@ -4884,6 +4911,7 @@ async def test_get_instance_async(
                 node_count=1070,
                 processing_units=1743,
                 state=spanner_instance_admin.Instance.State.CREATING,
+                instance_type=spanner_instance_admin.Instance.InstanceType.PROVISIONED,
                 endpoint_uris=["endpoint_uris_value"],
                 edition=spanner_instance_admin.Instance.Edition.STANDARD,
                 default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
@@ -4905,6 +4933,10 @@ async def test_get_instance_async(
     assert response.node_count == 1070
     assert response.processing_units == 1743
     assert response.state == spanner_instance_admin.Instance.State.CREATING
+    assert (
+        response.instance_type
+        == spanner_instance_admin.Instance.InstanceType.PROVISIONED
+    )
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
     assert (
@@ -14298,6 +14330,9 @@ async def test_get_instance_config_empty_call_grpc_asyncio():
                 leader_options=["leader_options_value"],
                 reconciling=True,
                 state=spanner_instance_admin.InstanceConfig.State.CREATING,
+                free_instance_availability=spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE,
+                quorum_type=spanner_instance_admin.InstanceConfig.QuorumType.REGION,
+                storage_limit_per_processing_unit=3540,
             )
         )
         await client.get_instance_config(request=None)
@@ -14496,6 +14531,7 @@ async def test_get_instance_empty_call_grpc_asyncio():
                 node_count=1070,
                 processing_units=1743,
                 state=spanner_instance_admin.Instance.State.CREATING,
+                instance_type=spanner_instance_admin.Instance.InstanceType.PROVISIONED,
                 endpoint_uris=["endpoint_uris_value"],
                 edition=spanner_instance_admin.Instance.Edition.STANDARD,
                 default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
@@ -15026,6 +15062,9 @@ def test_get_instance_config_rest_call_success(request_type):
             leader_options=["leader_options_value"],
             reconciling=True,
             state=spanner_instance_admin.InstanceConfig.State.CREATING,
+            free_instance_availability=spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE,
+            quorum_type=spanner_instance_admin.InstanceConfig.QuorumType.REGION,
+            storage_limit_per_processing_unit=3540,
         )
 
         # Wrap the value into a proper Response obj
@@ -15053,6 +15092,14 @@ def test_get_instance_config_rest_call_success(request_type):
     assert response.leader_options == ["leader_options_value"]
     assert response.reconciling is True
     assert response.state == spanner_instance_admin.InstanceConfig.State.CREATING
+    assert (
+        response.free_instance_availability
+        == spanner_instance_admin.InstanceConfig.FreeInstanceAvailability.AVAILABLE
+    )
+    assert (
+        response.quorum_type == spanner_instance_admin.InstanceConfig.QuorumType.REGION
+    )
+    assert response.storage_limit_per_processing_unit == 3540
 
 
 @pytest.mark.parametrize("null_interceptor", [True, False])
@@ -15898,6 +15945,7 @@ def test_get_instance_rest_call_success(request_type):
             node_count=1070,
             processing_units=1743,
             state=spanner_instance_admin.Instance.State.CREATING,
+            instance_type=spanner_instance_admin.Instance.InstanceType.PROVISIONED,
             endpoint_uris=["endpoint_uris_value"],
             edition=spanner_instance_admin.Instance.Edition.STANDARD,
             default_backup_schedule_type=spanner_instance_admin.Instance.DefaultBackupScheduleType.NONE,
@@ -15923,6 +15971,10 @@ def test_get_instance_rest_call_success(request_type):
     assert response.node_count == 1070
     assert response.processing_units == 1743
     assert response.state == spanner_instance_admin.Instance.State.CREATING
+    assert (
+        response.instance_type
+        == spanner_instance_admin.Instance.InstanceType.PROVISIONED
+    )
     assert response.endpoint_uris == ["endpoint_uris_value"]
     assert response.edition == spanner_instance_admin.Instance.Edition.STANDARD
     assert (

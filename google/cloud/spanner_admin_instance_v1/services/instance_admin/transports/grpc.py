@@ -376,6 +376,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
 
         Lists the supported instance configurations for a
         given project.
+        Returns both Google-managed configurations and
+        user-managed configurations.
 
         Returns:
             Callable[[~.ListInstanceConfigsRequest],
@@ -434,8 +436,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the create instance config method over gRPC.
 
         Creates an instance configuration and begins preparing it to be
-        used. The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
+        used. The returned long-running operation can be used to track
         the progress of preparing the new instance configuration. The
         instance configuration name is assigned by the caller. If the
         named instance configuration already exists,
@@ -462,14 +463,12 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            [reconciling][google.spanner.admin.instance.v1.InstanceConfig.reconciling]
            field becomes false. Its state becomes ``READY``.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_config_name>/operations/<operation_id>`` and
         can be used to track creation of the instance configuration. The
-        [metadata][google.longrunning.Operation.metadata] field type is
+        metadata field type is
         [CreateInstanceConfigMetadata][google.spanner.admin.instance.v1.CreateInstanceConfigMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is
+        The response field type is
         [InstanceConfig][google.spanner.admin.instance.v1.InstanceConfig],
         if successful.
 
@@ -503,10 +502,10 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
     ]:
         r"""Return a callable for the update instance config method over gRPC.
 
-        Updates an instance configuration. The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
-        the progress of updating the instance. If the named instance
-        configuration does not exist, returns ``NOT_FOUND``.
+        Updates an instance configuration. The returned long-running
+        operation can be used to track the progress of updating the
+        instance. If the named instance configuration does not exist,
+        returns ``NOT_FOUND``.
 
         Only user-managed configurations can be updated.
 
@@ -538,15 +537,12 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            [reconciling][google.spanner.admin.instance.v1.InstanceConfig.reconciling]
            field becomes false.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_config_name>/operations/<operation_id>`` and
         can be used to track the instance configuration modification.
-        The [metadata][google.longrunning.Operation.metadata] field type
-        is
+        The metadata field type is
         [UpdateInstanceConfigMetadata][google.spanner.admin.instance.v1.UpdateInstanceConfigMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is
+        The response field type is
         [InstanceConfig][google.spanner.admin.instance.v1.InstanceConfig],
         if successful.
 
@@ -618,12 +614,11 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the list instance config
         operations method over gRPC.
 
-        Lists the user-managed instance configuration [long-running
-        operations][google.longrunning.Operation] in the given project.
-        An instance configuration operation has a name of the form
+        Lists the user-managed instance configuration long-running
+        operations in the given project. An instance configuration
+        operation has a name of the form
         ``projects/<project>/instanceConfigs/<instance_config>/operations/<operation>``.
-        The long-running operation
-        [metadata][google.longrunning.Operation.metadata] field type
+        The long-running operation metadata field type
         ``metadata.type_url`` describes the type of the metadata.
         Operations returned include those that have
         completed/failed/canceled within the last 7 days, and pending
@@ -746,9 +741,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the create instance method over gRPC.
 
         Creates an instance and begins preparing it to begin serving.
-        The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
-        the progress of preparing the new instance. The instance name is
+        The returned long-running operation can be used to track the
+        progress of preparing the new instance. The instance name is
         assigned by the caller. If the named instance already exists,
         ``CreateInstance`` returns ``ALREADY_EXISTS``.
 
@@ -774,14 +768,13 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            API.
         -  The instance's state becomes ``READY``.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_name>/operations/<operation_id>`` and can be
-        used to track creation of the instance. The
-        [metadata][google.longrunning.Operation.metadata] field type is
+        used to track creation of the instance. The metadata field type
+        is
         [CreateInstanceMetadata][google.spanner.admin.instance.v1.CreateInstanceMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is [Instance][google.spanner.admin.instance.v1.Instance], if
+        The response field type is
+        [Instance][google.spanner.admin.instance.v1.Instance], if
         successful.
 
         Returns:
@@ -811,10 +804,9 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the update instance method over gRPC.
 
         Updates an instance, and begins allocating or releasing
-        resources as requested. The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
-        the progress of updating the instance. If the named instance
-        does not exist, returns ``NOT_FOUND``.
+        resources as requested. The returned long-running operation can
+        be used to track the progress of updating the instance. If the
+        named instance does not exist, returns ``NOT_FOUND``.
 
         Immediately upon completion of this request:
 
@@ -842,14 +834,13 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            instance's tables.
         -  The instance's new resource levels are readable via the API.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_name>/operations/<operation_id>`` and can be
-        used to track the instance modification. The
-        [metadata][google.longrunning.Operation.metadata] field type is
+        used to track the instance modification. The metadata field type
+        is
         [UpdateInstanceMetadata][google.spanner.admin.instance.v1.UpdateInstanceMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is [Instance][google.spanner.admin.instance.v1.Instance], if
+        The response field type is
+        [Instance][google.spanner.admin.instance.v1.Instance], if
         successful.
 
         Authorization requires ``spanner.instances.update`` permission
@@ -1046,8 +1037,7 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the create instance partition method over gRPC.
 
         Creates an instance partition and begins preparing it to be
-        used. The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
+        used. The returned long-running operation can be used to track
         the progress of preparing the new instance partition. The
         instance partition name is assigned by the caller. If the named
         instance partition already exists, ``CreateInstancePartition``
@@ -1076,14 +1066,12 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            readable via the API.
         -  The instance partition's state becomes ``READY``.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_partition_name>/operations/<operation_id>``
         and can be used to track creation of the instance partition. The
-        [metadata][google.longrunning.Operation.metadata] field type is
+        metadata field type is
         [CreateInstancePartitionMetadata][google.spanner.admin.instance.v1.CreateInstancePartitionMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is
+        The response field type is
         [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
         if successful.
 
@@ -1149,10 +1137,10 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the update instance partition method over gRPC.
 
         Updates an instance partition, and begins allocating or
-        releasing resources as requested. The returned [long-running
-        operation][google.longrunning.Operation] can be used to track
-        the progress of updating the instance partition. If the named
-        instance partition does not exist, returns ``NOT_FOUND``.
+        releasing resources as requested. The returned long-running
+        operation can be used to track the progress of updating the
+        instance partition. If the named instance partition does not
+        exist, returns ``NOT_FOUND``.
 
         Immediately upon completion of this request:
 
@@ -1182,15 +1170,12 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         -  The instance partition's new resource levels are readable via
            the API.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] will have a name of the
+        The returned long-running operation will have a name of the
         format ``<instance_partition_name>/operations/<operation_id>``
         and can be used to track the instance partition modification.
-        The [metadata][google.longrunning.Operation.metadata] field type
-        is
+        The metadata field type is
         [UpdateInstancePartitionMetadata][google.spanner.admin.instance.v1.UpdateInstancePartitionMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is
+        The response field type is
         [InstancePartition][google.spanner.admin.instance.v1.InstancePartition],
         if successful.
 
@@ -1226,12 +1211,10 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the list instance partition
         operations method over gRPC.
 
-        Lists instance partition [long-running
-        operations][google.longrunning.Operation] in the given instance.
-        An instance partition operation has a name of the form
+        Lists instance partition long-running operations in the given
+        instance. An instance partition operation has a name of the form
         ``projects/<project>/instances/<instance>/instancePartitions/<instance_partition>/operations/<operation>``.
-        The long-running operation
-        [metadata][google.longrunning.Operation.metadata] field type
+        The long-running operation metadata field type
         ``metadata.type_url`` describes the type of the metadata.
         Operations returned include those that have
         completed/failed/canceled within the last 7 days, and pending
@@ -1273,9 +1256,8 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
         r"""Return a callable for the move instance method over gRPC.
 
         Moves an instance to the target instance configuration. You can
-        use the returned [long-running
-        operation][google.longrunning.Operation] to track the progress
-        of moving the instance.
+        use the returned long-running operation to track the progress of
+        moving the instance.
 
         ``MoveInstance`` returns ``FAILED_PRECONDITION`` if the instance
         meets any of the following criteria:
@@ -1308,14 +1290,12 @@ class InstanceAdminGrpcTransport(InstanceAdminTransport):
            a higher transaction abort rate. However, moving an instance
            doesn't cause any downtime.
 
-        The returned [long-running
-        operation][google.longrunning.Operation] has a name of the
-        format ``<instance_name>/operations/<operation_id>`` and can be
-        used to track the move instance operation. The
-        [metadata][google.longrunning.Operation.metadata] field type is
+        The returned long-running operation has a name of the format
+        ``<instance_name>/operations/<operation_id>`` and can be used to
+        track the move instance operation. The metadata field type is
         [MoveInstanceMetadata][google.spanner.admin.instance.v1.MoveInstanceMetadata].
-        The [response][google.longrunning.Operation.response] field type
-        is [Instance][google.spanner.admin.instance.v1.Instance], if
+        The response field type is
+        [Instance][google.spanner.admin.instance.v1.Instance], if
         successful. Cancelling the operation sets its metadata's
         [cancel_time][google.spanner.admin.instance.v1.MoveInstanceMetadata.cancel_time].
         Cancellation is not immediate because it involves moving any
