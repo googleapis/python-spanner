@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+import time
 import unittest
 from tests._helpers import (
     OpenTelemetryBase,
@@ -20,6 +21,7 @@ from tests._helpers import (
     enrich_with_otel_scope,
 )
 from google.cloud.spanner_v1 import RequestOptions
+from unittest.mock import patch
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -264,6 +266,71 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             "CloudSpanner.Batch.commit",
             attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
+        
+    
+    def test_aborted_exception_on_commit(self):
+        # Test case to verify that an Aborted exception is raised when
+        # batch.commit() is called and the transaction is aborted internally.
+        import datetime
+        from google.cloud.spanner_v1 import CommitResponse
+        from google.cloud.spanner_v1 import TransactionOptions
+        from google.cloud._helpers import UTC
+        from google.cloud._helpers import _datetime_to_pb_timestamp
+        from google.api_core.exceptions import Aborted
+
+        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now_pb = _datetime_to_pb_timestamp(now)
+        response = CommitResponse(commit_timestamp=now_pb)
+        database = _Database()
+        # Setup the spanner API which throws Aborted exception when calling commit API.
+        api = database.spanner_api = _FauxSpannerAPI(_commit_response=response, _aborted_error = True)
+        
+        # Create mock session and batch objects
+        session = _Session(database)
+        batch = self._make_one(session)
+        batch.insert(TABLE_NAME, COLUMNS, VALUES)
+        
+        # Assertion: Ensure that calling batch.commit() raises the Aborted exception
+        with self.assertRaises(Aborted) as context:
+            batch.commit()
+
+        # Verify additional details about the exception
+        self.assertEqual(str(context.exception), "409 Transaction was aborted")
+        
+    def test_aborted_exception_on_commit_with_retries(self):
+        # Test case to verify that an Aborted exception is raised when
+        # batch.commit() is invoked, the transaction is internally aborted,
+        # and the Spanner commit API calls are retried.
+        import datetime
+        from google.cloud.spanner_v1 import CommitResponse
+        from google.cloud.spanner_v1 import TransactionOptions
+        from google.cloud._helpers import UTC
+        from google.cloud._helpers import _datetime_to_pb_timestamp
+        from google.api_core.exceptions import Aborted
+
+        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now_pb = _datetime_to_pb_timestamp(now)
+        response = CommitResponse(commit_timestamp=now_pb)
+        database = _Database()
+        # Setup the spanner API which throws Aborted exception when calling commit API.
+        api = database.spanner_api = _FauxSpannerAPI(_commit_response=response, _aborted_error = True)
+        
+         # We will patch the commit method of _FauxSpannerAPI to track how many times it's called
+        with patch.object(api, 'commit', wraps=api.commit) as mock_commit:
+            # Set up a mock session and batch
+            session = _Session(database)
+            batch = self._make_one(session)
+            batch.insert(TABLE_NAME, COLUMNS, VALUES)
+            
+            # Try committing the batch, which should call api.commit() and raise an Aborted exception
+            # The retry logic should call commit() again after handling the Aborted exception
+            try:
+                batch.commit()
+            except Aborted:
+                pass 
+            
+            # Verify that commit was called more than once (due to retry)
+            self.assertGreater(mock_commit.call_count, 1, "api.commit() was not called more than once on retry")
 
     def _test_commit_with_options(
         self,
@@ -617,6 +684,33 @@ class _Session(object):
     @property
     def session_id(self):
         return self.name
+    
+    def run_in_transaction(self, fnc):
+        """
+        Runs a function in a transaction, retrying if an exception occurs.
+        :param fnc: The function to run in the transaction.
+        :param max_retries: Maximum number of retry attempts.
+        :param delay: Delay (in seconds) between retries.
+        :return: The result of the function, or raises the exception after max retries.
+        """
+        from google.api_core.exceptions import Aborted
+        attempt = 0
+        max_retries = 3
+        delay = 1
+        while attempt < max_retries:
+            try:
+                result = fnc()
+                return result
+            except Aborted as exc:
+                attempt += 1
+                if attempt < max_retries:
+                    print(f"Attempt {attempt} failed with Aborted. Retrying in {delay} seconds...")
+                    time.sleep(delay)  # Wait before retrying
+                else:
+                    raise exc  # After max retries, raise the exception
+            except Exception as exc:
+                print(f"Unexpected exception occurred: {exc}")
+                raise  # Raise any other unexpected exception immediately
 
 
 class _Database(object):
@@ -630,6 +724,7 @@ class _FauxSpannerAPI:
     _committed = None
     _batch_request = None
     _rpc_error = False
+    _aborted_error = False
 
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -640,6 +735,7 @@ class _FauxSpannerAPI:
         metadata=None,
     ):
         from google.api_core.exceptions import Unknown
+        from google.api_core.exceptions import Aborted
 
         max_commit_delay = None
         if type(request).pb(request).HasField("max_commit_delay"):
@@ -656,6 +752,8 @@ class _FauxSpannerAPI:
         )
         if self._rpc_error:
             raise Unknown("error")
+        if self._aborted_error:
+            raise Aborted("Transaction was aborted")
         return self._commit_response
 
     def batch_write(
