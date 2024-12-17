@@ -4,6 +4,19 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.52.0](https://github.com/googleapis/python-spanner/compare/v3.51.0...v3.52.0) (2024-12-17)
+
+
+### Features
+
+* Add additional opentelemetry span events for session pool ([a6811af](https://github.com/googleapis/python-spanner/commit/a6811afefa6739caa20203048635d94f9b85c4c8))
+* Add updated span events + trace more methods ([#1259](https://github.com/googleapis/python-spanner/issues/1259)) ([ad69c48](https://github.com/googleapis/python-spanner/commit/ad69c48f01b09cbc5270b9cefde23715d5ac54b6))
+
+
+### Bug Fixes
+
+* **tracing:** Only set span.status=OK if UNSET ([#1248](https://github.com/googleapis/python-spanner/issues/1248)) ([1d393fe](https://github.com/googleapis/python-spanner/commit/1d393fedf3be8b36c91d0f52a5f23cfa5c05f835)), closes [#1246](https://github.com/googleapis/python-spanner/issues/1246)
+
 ## [3.51.0](https://github.com/googleapis/python-spanner/compare/v3.50.1...v3.51.0) (2024-12-05)
 
 
