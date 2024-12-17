@@ -32,8 +32,9 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
-    add_span_event,
     get_current_span,
+    add_event_on_current_span,
+    record_span_exception_and_status,
     trace_call,
 )
 from google.cloud.spanner_v1.batch import Batch
@@ -139,7 +140,7 @@ class Session(object):
         :raises ValueError: if :attr:`session_id` is already set.
         """
         current_span = get_current_span()
-        add_span_event(current_span, "Creating Session")
+        add_event_on_current_span("Creating Session", span=current_span)
 
         if self._session_id is not None:
             raise ValueError("Session ID already set by back-end")
@@ -183,14 +184,16 @@ class Session(object):
         """
         current_span = get_current_span()
         if self._session_id is None:
-            add_span_event(
-                current_span,
+            add_event_on_current_span(
                 "Checking session existence: Session does not exist as it has not been created yet",
+                span=current_span,
             )
             return False
 
-        add_span_event(
-            current_span, "Checking if Session exists", {"session.id": self._session_id}
+        add_event_on_current_span(
+            "Checking if Session exists",
+            {"session.id": self._session_id},
+            current_span,
         )
 
         api = self._database.spanner_api
@@ -228,13 +231,16 @@ class Session(object):
         """
         current_span = get_current_span()
         if self._session_id is None:
-            add_span_event(
-                current_span, "Deleting Session failed due to unset session_id"
+            add_event_on_current_span(
+                "Deleting Session failed due to unset session_id",
+                current_span,
             )
             raise ValueError("Session ID not set by back-end")
 
-        add_span_event(
-            current_span, "Deleting Session", {"session.id": self._session_id}
+        add_event_on_current_span(
+            "Deleting Session",
+            {"session.id": self._session_id},
+            current_span,
         )
 
         api = self._database.spanner_api
@@ -470,6 +476,7 @@ class Session(object):
         ) as span:
             while True:
                 if self._transaction is None:
+                    add_event_on_current_span("Creating Transaction", span=span)
                     txn = self.transaction()
                     txn.transaction_tag = transaction_tag
                     txn.exclude_txn_from_change_streams = (
@@ -532,10 +539,10 @@ class Session(object):
                         delay_seconds = _get_retry_delay(exc.errors[0], attempts)
                         attributes = dict(delay_seconds=delay_seconds)
                         attributes.update(span_attributes)
-                        add_span_event(
-                            span,
-                            "Transaction got aborted during commit, retrying afresh",
+                        add_event_on_current_span(
+                            "Transaction.commit was aborted, retrying afresh",
                             attributes,
+                            span,
                         )
 
                     _delay_until_retry(exc, deadline, attempts)
