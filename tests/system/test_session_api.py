@@ -437,7 +437,6 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
 
     if ot_exporter is not None:
         span_list = ot_exporter.get_finished_spans()
-        assert len(span_list) == 4
 
         assert_span_attributes(
             ot_exporter,
@@ -462,6 +461,25 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             "CloudSpanner.Snapshot.read",
             attributes=_make_attributes(db_name, columns=sd.COLUMNS, table_id=sd.TABLE),
             span=span_list[3],
+        )
+
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.GetSession",
+            attributes=_make_attributes(db_name, session_found=True),
+            span=span_list[4],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Snapshot.read",
+            attributes=_make_attributes(db_name, columns=sd.COLUMNS, table_id=sd.TABLE),
+            span=span_list[5],
+        )
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.Database.snapshot",
+            attributes=_make_attributes(db_name, multi_use=False),
+            span=span_list[6],
         )
 
 
@@ -1193,9 +1211,14 @@ def test_transaction_batch_update_w_parent_span(
     with tracer.start_as_current_span("Test Span"):
         session.run_in_transaction(unit_of_work)
 
-    span_list = ot_exporter.get_finished_spans()
+    span_list = []
+    for span in ot_exporter.get_finished_spans():
+        if span and span.name:
+            span_list.append(span)
+
+    span_list = sorted(span_list, key=lambda v1: v1.start_time)
     got_span_names = [span.name for span in span_list]
-    want_span_names = [
+    expected_span_names = [
         "CloudSpanner.CreateSession",
         "CloudSpanner.Batch.commit",
         "CloudSpanner.DMLTransaction",
@@ -1203,20 +1226,47 @@ def test_transaction_batch_update_w_parent_span(
         "CloudSpanner.Session.run_in_transaction",
         "Test Span",
     ]
-    assert got_span_names == want_span_names
+    assert got_span_names == expected_span_names
 
-    def assert_parent_hierarchy(parent, children):
-        for child in children:
-            assert child.context.trace_id == parent.context.trace_id
-            assert child.parent.span_id == parent.context.span_id
+    # We expect:
+    # |------CloudSpanner.CreateSession--------
+    #
+    # |---Test Span----------------------------|
+    #  |>--ReadWriteTransaction-----------------
+    #    |>-Transaction-------------------------
+    #      |--------------DMLTransaction--------
+    #
+    #  |>---Batch-------------------------------
+    #
+    # |>----------Batch-------------------------
+    #  |>------------Batch.commit---------------
 
-    test_span = span_list[-1]
-    test_span_children = [span_list[-2]]
-    assert_parent_hierarchy(test_span, test_span_children)
+    # CreateSession should have a trace of its own, with no children
+    # nor being a child of any other span.
+    session_span = span_list[0]
+    test_span = span_list[4]
+    # assert session_span.context.trace_id != test_span.context.trace_id
+    for span in span_list[1:]:
+        if span.parent:
+            assert span.parent.span_id != session_span.context.span_id
 
-    session_run_in_txn = span_list[-2]
-    session_run_in_txn_children = span_list[2:-2]
-    assert_parent_hierarchy(session_run_in_txn, session_run_in_txn_children)
+    def assert_parent_and_children(parent_span, children):
+        for span in children:
+            assert span.context.trace_id == parent_span.context.trace_id
+            assert span.parent.span_id == parent_span.context.span_id
+
+    # [CreateSession --> Batch] should have their own trace.
+    rw_txn_span = span_list[5]
+    children_of_test_span = [rw_txn_span]
+    assert_parent_and_children(test_span, children_of_test_span)
+
+    children_of_rw_txn_span = [span_list[6]]
+    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
+
+    # Batch_first should have no parent, should be in its own trace.
+    batch_0_span = span_list[2]
+    children_of_batch_0 = [span_list[1]]
+    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
 
 
 def test_execute_partitioned_dml(
