@@ -37,7 +37,7 @@ except ImportError:
     not HAS_OTEL_INSTALLED, reason="OpenTelemetry is necessary to test traces."
 )
 @pytest.mark.skipif(
-    not _helpers.USE_EMULATOR, reason="mulator is necessary to test traces."
+    not _helpers.USE_EMULATOR, reason="Emulator is necessary to test traces."
 )
 def test_observability_options_propagation():
     PROJECT = _helpers.EMULATOR_PROJECT
@@ -108,6 +108,7 @@ def test_observability_options_propagation():
         wantNames = [
             "CloudSpanner.CreateSession",
             "CloudSpanner.Snapshot.execute_streaming_sql",
+            "CloudSpanner.Database.snapshot",
         ]
         assert gotNames == wantNames
 

@@ -161,6 +161,11 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.begin()
 
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.begin"]
+        assert got_span_names == want_span_names
+
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.begin",
             status=StatusCode.ERROR,
@@ -345,10 +350,21 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertIsNone(transaction.committed)
 
+        span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
+        got_span_names = [span.name for span in span_list]
+        want_span_names = [
+            "CloudSpanner.Transaction.commit",
+        ]
+        print("got_names", got_span_names)
+        assert got_span_names == want_span_names
+
+        txn_commit_span = span_list[-1]
+
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.commit",
             status=StatusCode.ERROR,
             attributes=dict(TestTransaction.BASE_ATTRIBUTES, num_mutations=1),
+            span=txn_commit_span,
         )
 
     def _commit_helper(
@@ -427,12 +443,15 @@ class TestTransaction(OpenTelemetryBase):
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
 
+        span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
+        txn_commit_span = span_list[-1]
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.commit",
             attributes=dict(
                 TestTransaction.BASE_ATTRIBUTES,
                 num_mutations=len(transaction._mutations),
             ),
+            span=txn_commit_span,
         )
 
     def test_commit_no_mutations(self):

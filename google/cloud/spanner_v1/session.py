@@ -470,6 +470,7 @@ class Session(object):
         ) as span:
             while True:
                 if self._transaction is None:
+                    add_span_event(span, "Creating Transaction")
                     txn = self.transaction()
                     txn.transaction_tag = transaction_tag
                     txn.exclude_txn_from_change_streams = (
