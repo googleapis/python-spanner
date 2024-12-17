@@ -355,7 +355,6 @@ class TestTransaction(OpenTelemetryBase):
         want_span_names = [
             "CloudSpanner.Transaction.commit",
         ]
-        print("got_names", got_span_names)
         assert got_span_names == want_span_names
 
         txn_commit_span = span_list[-1]
