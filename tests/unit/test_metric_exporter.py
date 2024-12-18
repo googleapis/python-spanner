@@ -66,6 +66,10 @@ class TestMetricsExporter(unittest.TestCase):
             unit="counts",
         )
 
+    def test_default_ctor(self):
+        exporter = CloudMonitoringMetricsExporter()
+        self.assertIsNotNone(exporter.project_id)
+
     def test_normalize_label_key(self):
         """Test label key normalization"""
         test_cases = [
@@ -125,6 +129,19 @@ class TestMetricsExporter(unittest.TestCase):
             CloudMonitoringMetricsExporter._to_metric_kind(metric_histogram),
             MetricDescriptor.MetricKind.CUMULATIVE,
         )
+
+        # Test Unknown data type warns
+        metric_unknown = Mock(data=Mock())
+        with self.assertLogs(
+            "google.cloud.spanner_v1.metrics.metrics_exporter", level="WARNING"
+        ) as log:
+            self.assertIsNone(
+                CloudMonitoringMetricsExporter._to_metric_kind(metric_unknown)
+            )
+            self.assertIn(
+                "WARNING:google.cloud.spanner_v1.metrics.metrics_exporter:Unsupported metric data type Mock, ignoring it",
+                log.output,
+            )
 
     def test_extract_metric_labels(self):
         """Test extraction of metric and resource labels"""
@@ -304,3 +321,42 @@ class TestMetricsExporter(unittest.TestCase):
 
         # Verify the mock was called with the correct arguments
         self.assertEqual(len(mockClient.create_service_time_series.mock_calls), 2)
+
+    @patch(
+        "google.cloud.spanner_v1.metrics.metrics_exporter.HAS_DEPENDENCIES_INSTALLED",
+        False,
+    )
+    def test_export_early_exit_if_extras_not_installed(self):
+        """Verify that Export will early exit and return None if OpenTelemetry and/or Google Cloud Monitoring extra modules are not installed."""
+        # Suppress expected warning log
+        with self.assertLogs(
+            "google.cloud.spanner_v1.metrics.metrics_exporter", level="WARNING"
+        ) as log:
+            exporter = CloudMonitoringMetricsExporter(PROJECT_ID)
+            self.assertFalse(exporter.export([]))
+            self.assertIn(
+                "WARNING:google.cloud.spanner_v1.metrics.metrics_exporter:Metric exporter called without dependencies installed.",
+                log.output,
+            )
+
+    def test_force_flush(self):
+        """Verify that the unimplemented force flush can be called."""
+        exporter = CloudMonitoringMetricsExporter(PROJECT_ID)
+        self.assertTrue(exporter.force_flush())
+
+    def test_shutdown(self):
+        """Verify that the unimplemented shutdown can be called."""
+        exporter = CloudMonitoringMetricsExporter()
+        try:
+            exporter.shutdown()
+        except Exception as e:
+            self.fail(f"Shutdown() raised an exception: {e}")
+
+    def test_data_point_to_timeseries_early_exit(self):
+        """Early exit function if an unknown metric name is supplied"""
+        metric = Mock(name="TestMetricName")
+        self.assertIsNone(
+            CloudMonitoringMetricsExporter._data_point_to_timeseries_pb(
+                None, metric, None, None
+            )
+        )

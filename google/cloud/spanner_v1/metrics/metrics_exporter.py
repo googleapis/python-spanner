@@ -355,8 +355,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         :return: MetricExportResult
         """
         if not HAS_DEPENDENCIES_INSTALLED:
-            logger.warn("Metric exporter called without dependencies installed.")
-            return
+            logger.warning("Metric exporter called without dependencies installed.")
+            return False
 
         time_series_list = self._resource_metrics_to_timeseries_pb(metrics_data)
         self._batch_write(time_series_list, timeout_millis)
