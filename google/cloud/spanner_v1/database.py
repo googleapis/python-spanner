@@ -728,17 +728,20 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
-        nth_request = getattr(self, "_next_nth_request", 0)
         # Attempt will be incremented inside _restart_on_unavailable.
-        attempt = AtomicCounter(1)
+        begin_txn_nth_request = self._next_nth_request
+        begin_txn_attempt = AtomicCounter(1)
+        partial_nth_request = self._next_nth_request
+        partial_attempt = AtomicCounter(0)
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
-                all_metadata = self.metadata_with_request_id(
-                    nth_request, attempt.value, metadata
-                )
                 txn = api.begin_transaction(
-                    session=session.name, options=txn_options, metadata=all_metadata
+                    session=session.name,
+                    options=txn_options,
+                    metadata=self.metadata_with_request_id(
+                        begin_txn_nth_request, begin_txn_attempt.value, metadata
+                    ),
                 )
 
                 txn_selector = TransactionSelector(id=txn.id)
@@ -751,18 +754,24 @@ class Database(object):
                     query_options=query_options,
                     request_options=request_options,
                 )
-                method = functools.partial(
-                    api.execute_streaming_sql,
-                    metadata=metadata,
-                )
+
+                def wrapped_method(*args, **kwargs):
+                    partial_attempt.increment()
+                    method = functools.partial(
+                        api.execute_streaming_sql,
+                        metadata=self.metadata_with_request_id(
+                            partial_nth_request, partial_attempt.value, metadata
+                        ),
+                    )
+                    return method(*args, **kwargs)
 
                 iterator = _restart_on_unavailable(
-                    method=method,
+                    method=wrapped_method,
                     trace_name="CloudSpanner.ExecuteStreamingSql",
                     request=request,
                     transaction_selector=txn_selector,
                     observability_options=self.observability_options,
-                    attempt=attempt,
+                    attempt=begin_txn_attempt,
                 )
 
                 result_set = StreamedResultSet(iterator)

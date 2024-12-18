@@ -22,6 +22,7 @@ from tests.mockserver_tests.mock_server_test_base import (
 from google.cloud.spanner_v1.testing.interceptors import XGoogRequestIDHeaderInterceptor
 from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
+    BeginTransactionRequest,
     ExecuteSqlRequest,
 )
 from google.api_core.exceptions import Aborted
@@ -195,7 +196,7 @@ class TestRequestIDHeader(MockServerTestBase):
         ]
         assert got_stream_segments == want_stream_segments
 
-    def test_retries_on_abort(self):
+    def test_database_run_in_transaction_retries_on_abort(self):
         counters = dict(aborted=0)
         want_failed_attempts = 2
 
@@ -217,9 +218,156 @@ class TestRequestIDHeader(MockServerTestBase):
 
         self.database.run_in_transaction(select_in_txn)
 
+    def test_database_execute_partitioned_dml_request_id(self):
+        add_select1_result()
+        if not getattr(self.database, "_interceptors", None):
+            self.database._interceptors = MockServerTestBase._interceptors
+        _ = self.database.execute_partitioned_dml("select 1")
+
+        requests = self.spanner_service.requests
+        self.assertEqual(3, len(requests), msg=requests)
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], BeginTransactionRequest))
+        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
+
+        # Now ensure monotonicity of the received request-id segments.
+        got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
+        want_unary_segments = [
+            (
+                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                (1, REQ_RAND_PROCESS_ID, 1, 1, 1, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/BeginTransaction",
+                (1, REQ_RAND_PROCESS_ID, 1, 1, 2, 1),
+            ),
+        ]
+        want_stream_segments = [
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, 1, 1, 3, 1),
+            )
+        ]
+
+        assert got_unary_segments == want_unary_segments
+        assert got_stream_segments == want_stream_segments
+
+    def test_snapshot_read(self):
+        add_select1_result()
+        if not getattr(self.database, "_interceptors", None):
+            self.database._interceptors = MockServerTestBase._interceptors
+        with self.database.snapshot() as snapshot:
+            results = snapshot.read("select 1")
+            result_list = []
+            for row in results:
+                result_list.append(row)
+                self.assertEqual(1, row[0])
+            self.assertEqual(1, len(result_list))
+
+        requests = self.spanner_service.requests
+        self.assertEqual(2, len(requests), msg=requests)
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
+
+        requests = self.spanner_service.requests
+        self.assertEqual(n * 2, len(requests), msg=requests)
+
+        client_id = self.database._nth_client_id
+        channel_id = self.database._channel_id
+        got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
+
+        want_unary_segments = [
+            (
+                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 1, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 3, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 5, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 7, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 9, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 11, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 13, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 15, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 17, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/GetSession",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 19, 1),
+            ),
+        ]
+        assert got_unary_segments == want_unary_segments
+
+        want_stream_segments = [
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 2, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 4, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 6, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 8, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 10, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 12, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 14, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 16, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 18, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 20, 1),
+            ),
+        ]
+        assert got_stream_segments == want_stream_segments
+
     def canonicalize_request_id_headers(self):
         src = self.database._x_goog_request_id_interceptor
         return src._stream_req_segments, src._unary_req_segments
+
 
 class FauxCall:
     def __init__(self, code, details="FauxCall"):
