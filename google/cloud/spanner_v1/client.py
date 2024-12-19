@@ -48,6 +48,7 @@ from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
+from google.cloud.spanner_v1._helpers import AtomicCounter
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
@@ -147,6 +148,8 @@ class Client(ClientWithProject):
     SCOPE = (SPANNER_ADMIN_SCOPE,)
     """The scopes required for Google Cloud Spanner."""
 
+    NTH_CLIENT = AtomicCounter()
+
     def __init__(
         self,
         project=None,
@@ -199,6 +202,12 @@ class Client(ClientWithProject):
         self._route_to_leader_enabled = route_to_leader_enabled
         self._directed_read_options = directed_read_options
         self._observability_options = observability_options
+        self._nth_client_id = Client.NTH_CLIENT.increment()
+        self._nth_request = AtomicCounter()
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
 
     @property
     def credentials(self):

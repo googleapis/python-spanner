@@ -243,6 +243,7 @@ class FixedSizePool(AbstractSessionPool):
             "CloudSpanner.FixedPool.BatchCreateSessions",
             observability_options=observability_options,
         ) as span:
+            attempt = 1
             returned_session_count = 0
             while not self._sessions.full():
                 request.session_count = requested_session_count - self._sessions.qsize()
@@ -251,9 +252,12 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
+                all_metadata = database.metadata_with_request_id(
+                    database._next_nth_request, attempt, metadata
+                )
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=all_metadata,
                 )
 
                 add_span_event(
