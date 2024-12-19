@@ -31,6 +31,7 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
+from google.cloud.spanner_v1.request_id_header import with_request_id
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (

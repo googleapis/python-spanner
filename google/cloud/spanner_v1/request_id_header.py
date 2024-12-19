@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-import threading
 
 REQ_ID_VERSION = 1  # The version of the x-goog-spanner-request-id spec.
 REQ_ID_HEADER_KEY = "x-goog-spanner-request-id"
@@ -38,5 +37,6 @@ REQ_RAND_PROCESS_ID = generate_rand_uint64()
 
 def with_request_id(client_id, channel_id, nth_request, attempt, other_metadata=[]):
     req_id = f"{REQ_ID_VERSION}.{REQ_RAND_PROCESS_ID}.{client_id}.{channel_id}.{nth_request}.{attempt}"
-    other_metadata.append((REQ_ID_HEADER_KEY, req_id))
-    return other_metadata
+    all_metadata = other_metadata.copy()
+    all_metadata.append((REQ_ID_HEADER_KEY, req_id))
+    return all_metadata

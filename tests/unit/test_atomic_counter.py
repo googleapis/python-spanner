@@ -75,7 +75,7 @@ class TestAtomicCounter(unittest.TestCase):
         random.shuffle(threads)
         for th in threads:
             th.join()
-            assert th.is_alive() == False
+            assert not th.is_alive()
 
         # Finally the result should be n*m
         assert ac.value == n * m
