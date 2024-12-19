@@ -70,8 +70,6 @@ class TestAtomicCounter(unittest.TestCase):
             threads.append(th)
             th.start()
 
-        time.sleep(0.3)
-
         random.shuffle(threads)
         for th in threads:
             th.join()
