@@ -163,6 +163,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             observability_options=observability_options,
         ) as span:
             attempt = AtomicCounter(0)
+            nth_request = database._next_nth_request
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()

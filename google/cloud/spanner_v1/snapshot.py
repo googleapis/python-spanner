@@ -555,14 +555,12 @@ class _SnapshotBase(_SessionWrapper):
 
         def wrapped_restart(*args, **kwargs):
             attempt.increment()
-            all_metadata = database.metadata_with_request_id(
-                nth_request, attempt.value, metadata
-            )
-
             restart = functools.partial(
                 api.execute_streaming_sql,
                 request=request,
-                metadata=all_metadata,
+                metadata=database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
+                ),
                 retry=retry,
                 timeout=timeout,
             )
