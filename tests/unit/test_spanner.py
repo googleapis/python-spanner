@@ -1172,7 +1172,7 @@ class TestTransaction(OpenTelemetryBase):
                 (
                     "x-goog-spanner-request-id",
                     f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
-                )
+                ),
             ],
             timeout=TIMEOUT,
             retry=RETRY,
