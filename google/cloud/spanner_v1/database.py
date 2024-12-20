@@ -520,7 +520,10 @@ class Database(object):
             database_dialect=self._database_dialect,
             proto_descriptors=self._proto_descriptors,
         )
-        future = api.create_database(request=request, metadata=metadata)
+        future = api.create_database(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def exists(self):
@@ -536,7 +539,12 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         try:
-            api.get_database_ddl(database=self.name, metadata=metadata)
+            api.get_database_ddl(
+                database=self.name,
+                metadata=self.metadata_with_request_id(
+                    self._next_nth_request, 1, metadata
+                ),
+            )
         except NotFound:
             return False
         return True
@@ -553,10 +561,16 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        response = api.get_database_ddl(database=self.name, metadata=metadata)
+        response = api.get_database_ddl(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._ddl_statements = tuple(response.statements)
         self._proto_descriptors = response.proto_descriptors
-        response = api.get_database(name=self.name, metadata=metadata)
+        response = api.get_database(
+            name=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._state = DatabasePB.State(response.state)
         self._create_time = response.create_time
         self._restore_info = response.restore_info
@@ -601,7 +615,10 @@ class Database(object):
             proto_descriptors=proto_descriptors,
         )
 
-        future = api.update_database_ddl(request=request, metadata=metadata)
+        future = api.update_database_ddl(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def update(self, fields):
@@ -639,7 +656,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         future = api.update_database(
-            database=database_pb, update_mask=field_mask, metadata=metadata
+            database=database_pb,
+            update_mask=field_mask,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
 
         return future
@@ -652,7 +671,10 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        api.drop_database(database=self.name, metadata=metadata)
+        api.drop_database(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def execute_partitioned_dml(
         self,
@@ -1019,7 +1041,7 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
-            metadata=metadata,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future
 
@@ -1088,7 +1110,10 @@ class Database(object):
             parent=self.name,
             page_size=page_size,
         )
-        return api.list_database_roles(request=request, metadata=metadata)
+        return api.list_database_roles(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def table(self, table_id):
         """Factory to create a table object within this database.
@@ -1172,7 +1197,10 @@ class Database(object):
                 requested_policy_version=policy_version
             ),
         )
-        response = api.get_iam_policy(request=request, metadata=metadata)
+        response = api.get_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     def set_iam_policy(self, policy):
@@ -1194,7 +1222,10 @@ class Database(object):
             resource=self.name,
             policy=policy,
         )
-        response = api.set_iam_policy(request=request, metadata=metadata)
+        response = api.set_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     @property
