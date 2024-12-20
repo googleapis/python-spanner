@@ -168,7 +168,9 @@ class Session(object):
         ):
             session_pb = api.create_session(
                 request=request,
-                metadata=metadata,
+                metadata=self._database.metadata_with_request_id(
+                    self._database._next_nth_request, 1, metadata
+                ),
             )
         self._session_id = session_pb.name.split("/")[-1]
 
@@ -257,7 +259,12 @@ class Session(object):
             },
             observability_options=observability_options,
         ):
-            api.delete_session(name=self.name, metadata=metadata)
+            api.delete_session(
+                name=self.name,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request, 1, metadata
+                ),
+            )
 
     def ping(self):
         """Ping the session to keep it alive by executing "SELECT 1".
@@ -266,13 +273,18 @@ class Session(object):
         """
         if self._session_id is None:
             raise ValueError("Session ID not set by back-end")
-        api = self._database.spanner_api
         database = self._database
-        metadata = database.metadata_with_request_id(
-            database._next_nth_request, 1, _metadata_with_prefix(database.name)
-        )
+        api = database.spanner_api
+        database = self._database
         request = ExecuteSqlRequest(session=self.name, sql="SELECT 1")
-        api.execute_sql(request=request, metadata=metadata)
+        api.execute_sql(
+            request=request,
+            metadata=database.metadata_with_request_id(
+                database._next_nth_request,
+                1,
+                _metadata_with_prefix(database.name),
+            ),
+        )
         self._last_use_time = datetime.now()
 
     def snapshot(self, **kw):
