@@ -1817,7 +1817,7 @@ class TestBatchCheckout(_BaseTest):
         api = database.spanner_api = self._make_spanner_client()
         api.commit.return_value = response
         pool = database._pool = _Pool()
-        session = _Session(database)
+        session = _Session(database, run_transaction_function = True)
         pool.put(session)
         checkout = self._make_one(
             database, request_options={"transaction_tag": self.TRANSACTION_TAG}
@@ -1866,7 +1866,7 @@ class TestBatchCheckout(_BaseTest):
         api = database.spanner_api = self._make_spanner_client()
         api.commit.return_value = response
         pool = database._pool = _Pool()
-        session = _Session(database)
+        session = _Session(database, run_transaction_function = True)
         pool.put(session)
         checkout = self._make_one(database)
 
@@ -1910,7 +1910,7 @@ class TestBatchCheckout(_BaseTest):
         api = database.spanner_api = self._make_spanner_client()
         api.commit.side_effect = Unknown("testing")
         pool = database._pool = _Pool()
-        session = _Session(database)
+        session = _Session(database, run_transaction_function = True)
         pool.put(session)
         checkout = self._make_one(database)
 
@@ -1946,7 +1946,7 @@ class TestBatchCheckout(_BaseTest):
 
         database = _Database(self.DATABASE_NAME)
         pool = database._pool = _Pool()
-        session = _Session(database)
+        session = _Session(database, run_transaction_function = True)
         pool.put(session)
         checkout = self._make_one(database)
 
@@ -3094,7 +3094,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         self.assertEqual(pool._session, session)
         pool._new_session.assert_not_called()
 
-
 def _make_instance_api():
     from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 
@@ -3181,10 +3180,11 @@ class _Session(object):
         self._database = database
         self.name = name
         self._run_transaction_function = run_transaction_function
+        self._committed = False
 
     def run_in_transaction(self, func, *args, **kw):
         if self._run_transaction_function:
-            func(*args, **kw)
+            return func(*args, **kw)
         self._retried = (func, args, kw)
         return self._committed
 

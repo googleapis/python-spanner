@@ -227,10 +227,7 @@ class Batch(_BatchBase):
                 request=request,
                 metadata=metadata,
             )
-            response = _retry(
-                method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
-            )
+            response = self._session.run_in_transaction(method)
         self.committed = response.commit_timestamp
         self.commit_stats = response.commit_stats
         return self.committed
