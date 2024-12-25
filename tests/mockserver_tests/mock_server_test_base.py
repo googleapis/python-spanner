@@ -155,6 +155,9 @@ class MockServerTestBase(unittest.TestCase):
         if MockServerTestBase.server is not None:
             MockServerTestBase.server.stop(grace=None)
             MockServerTestBase.server = None
+        self.reset()
+
+    def reset(self):
         Client.NTH_CLIENT.reset()
 
     def setup_method(self, *args, **kwargs):
