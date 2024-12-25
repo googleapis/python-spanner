@@ -25,7 +25,6 @@ In the hierarchy of API concepts
 """
 import grpc
 import os
-import sys
 import warnings
 
 from google.api_core.gapic_v1 import client_info
@@ -208,7 +207,6 @@ class Client(ClientWithProject):
 
     @property
     def _next_nth_request(self):
-        print("next_nth_request called by", sys._getframe().f_back.f_code.co_name)
         return self._nth_request.increment()
 
     @property
