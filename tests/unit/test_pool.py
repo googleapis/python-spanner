@@ -1250,7 +1250,6 @@ class _Database(object):
         return self.NTH_CLIENT_ID.increment()
 
     def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
-        client_id = self._nth_client_id
         return _metadata_with_request_id(
             self._nth_client_id,
             self._channel_id,

@@ -91,13 +91,6 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
 
         response_or_iterator = method(request_or_iterator, call_details)
         streaming = getattr(response_or_iterator, "__iter__", None) is not None
-        print(
-            "intercept got",
-            x_goog_request_id,
-            call_details.method,
-            "streaming",
-            streaming,
-        )
         with self.__lock:
             if streaming:
                 self._stream_req_segments.append(

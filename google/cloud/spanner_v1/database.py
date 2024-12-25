@@ -749,14 +749,15 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
-        # Attempt will be incremented inside _restart_on_unavailable.
         begin_txn_nth_request = self._next_nth_request
-        begin_txn_attempt = AtomicCounter(1)
+        begin_txn_attempt = AtomicCounter(0)
         partial_nth_request = self._next_nth_request
+        # partial_attempt will be incremented inside _restart_on_unavailable.
         partial_attempt = AtomicCounter(0)
 
         def execute_pdml():
             with SessionCheckout(self._pool) as session:
+                begin_txn_attempt.increment()
                 txn = api.begin_transaction(
                     session=session.name,
                     options=txn_options,
@@ -792,7 +793,6 @@ class Database(object):
                     request=request,
                     transaction_selector=txn_selector,
                     observability_options=self.observability_options,
-                    attempt=begin_txn_attempt,
                 )
 
                 result_set = StreamedResultSet(iterator)
