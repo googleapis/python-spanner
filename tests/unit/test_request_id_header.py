@@ -50,18 +50,20 @@ class TestRequestIDHeader(MockServerTestBase):
         self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
         self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
 
+        NTH_CLIENT = self.database._nth_client_id
+        CHANNEL_ID = self.database._channel_id
         # Now ensure monotonicity of the received request-id segments.
         got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
         want_unary_segments = [
             (
                 "/google.spanner.v1.Spanner/BatchCreateSessions",
-                (1, REQ_RAND_PROCESS_ID, 1, 1, 1, 1),
+                (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 1, 1),
             )
         ]
         want_stream_segments = [
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, 1, 1, 2, 1),
+                (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 2, 1),
             )
         ]
 
@@ -229,20 +231,22 @@ class TestRequestIDHeader(MockServerTestBase):
 
         # Now ensure monotonicity of the received request-id segments.
         got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
+        NTH_CLIENT = self.database._nth_client_id
+        CHANNEL_ID = self.database._channel_id
         want_unary_segments = [
             (
                 "/google.spanner.v1.Spanner/BatchCreateSessions",
-                (1, REQ_RAND_PROCESS_ID, 1, 1, 1, 1),
+                (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 1, 1),
             ),
             (
                 "/google.spanner.v1.Spanner/BeginTransaction",
-                (1, REQ_RAND_PROCESS_ID, 1, 1, 2, 1),
+                (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 2, 1),
             ),
         ]
         want_stream_segments = [
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, 1, 1, 3, 1),
+                (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 3, 1),
             )
         ]
 
