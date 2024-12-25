@@ -259,6 +259,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                ),
             ],
         )
         self.assertEqual(request_options, RequestOptions())
@@ -577,6 +581,10 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                ),
             ],
         )
         if request_options is None:

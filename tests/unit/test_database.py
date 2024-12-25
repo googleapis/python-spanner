@@ -1204,7 +1204,7 @@ class TestDatabase(_BaseTest):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -3217,6 +3217,7 @@ class _Client(object):
         self.directed_read_options = directed_read_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
+        self.credentials = {}
 
     @property
     def _next_nth_request(self):
