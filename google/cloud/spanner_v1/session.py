@@ -259,12 +259,7 @@ class Session(object):
             },
             observability_options=observability_options,
         ):
-            api.delete_session(
-                name=self.name,
-                metadata=database.metadata_with_request_id(
-                    database._next_nth_request, 1, metadata
-                ),
-            )
+            api.delete_session(name=self.name, metadata=metadata)
 
     def ping(self):
         """Ping the session to keep it alive by executing "SELECT 1".
