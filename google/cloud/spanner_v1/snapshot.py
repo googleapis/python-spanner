@@ -35,7 +35,6 @@ from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
-    _metadata_with_request_id,
     _retry,
     _check_rst_stream_error,
     _SessionWrapper,
@@ -63,7 +62,6 @@ def _restart_on_unavailable(
     transaction=None,
     transaction_selector=None,
     observability_options=None,
-    attempt=0,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -95,7 +93,6 @@ def _restart_on_unavailable(
     iterator = None
 
     while True:
-        attempt += 1
         try:
             if iterator is None:
                 with trace_call(

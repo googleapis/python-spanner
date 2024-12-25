@@ -501,7 +501,6 @@ class Instance(object):
                 proto_descriptors=proto_descriptors,
             )
         else:
-            print("enabled interceptors")
             return TestDatabase(
                 database_id,
                 self,

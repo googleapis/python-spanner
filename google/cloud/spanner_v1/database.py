@@ -754,10 +754,10 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
-        # Attempt will be incremented inside _restart_on_unavailable.
         begin_txn_nth_request = self._next_nth_request
-        begin_txn_attempt = AtomicCounter(1)
+        begin_txn_attempt = AtomicCounter(0)
         partial_nth_request = self._next_nth_request
+        # partial_attempt will be incremented inside _restart_on_unavailable.
         partial_attempt = AtomicCounter(0)
 
         def execute_pdml():
@@ -767,6 +767,7 @@ class Database(object):
             ) as span, MetricsCapture():
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
+                    begin_txn_attempt.increment()
                     txn = api.begin_transaction(
                         session=session.name, options=txn_options,
                         metadata=self.metadata_with_request_id(
@@ -804,6 +805,18 @@ class Database(object):
                         observability_options=self.observability_options,
                         attempt=begin_txn_attempt,
                     )
+<<<<<<< HEAD
+=======
+                    return method(*args, **kwargs)
+
+                iterator = _restart_on_unavailable(
+                    method=wrapped_method,
+                    trace_name="CloudSpanner.ExecuteStreamingSql",
+                    request=request,
+                    transaction_selector=txn_selector,
+                    observability_options=self.observability_options,
+                )
+>>>>>>> 54df502... Update tests
 
                     result_set = StreamedResultSet(iterator)
                     list(result_set)  # consume all partials

@@ -256,7 +256,7 @@ class FixedSizePool(AbstractSessionPool):
                     span_event_attributes,
                 )
                 all_metadata = database.metadata_with_request_id(
-                    database._next_nth_request, attempt, metadata
+                    database._next_nth_request, 1, metadata
                 )
                 resp = api.batch_create_sessions(
                     request=request,
