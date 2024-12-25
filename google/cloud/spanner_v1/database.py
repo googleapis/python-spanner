@@ -827,7 +827,9 @@ class Database(object):
 
     @property
     def _next_nth_request(self):
-        return self._instance._client._next_nth_request
+        if self._instance and self._instance._client:
+            return self._instance._client._next_nth_request
+        return 1
 
     @property
     def _nth_client_id(self):

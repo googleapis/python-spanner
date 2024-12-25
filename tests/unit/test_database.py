@@ -3261,11 +3261,15 @@ class _Database(object):
 
     @property
     def _next_nth_request(self):
-        return self._instance._client._next_nth_request
+        if self._instance and self._instance._client:
+            return self._instance._client._next_nth_request
+        return 1
 
     @property
     def _nth_client_id(self):
-        return self._instance._client._nth_client_id
+        if self._instance and self._instance._client:
+            return self._instance._client._nth_client_id
+        return 1
 
     def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
         return _metadata_with_request_id(
