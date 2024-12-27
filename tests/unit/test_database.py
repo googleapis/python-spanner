@@ -554,6 +554,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -583,6 +587,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -611,6 +619,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -649,6 +661,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -688,6 +704,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -725,6 +745,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -745,6 +769,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -764,6 +792,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -785,6 +817,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -805,6 +841,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -825,6 +865,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -886,12 +930,20 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         api.get_database.assert_called_once_with(
             name=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -920,6 +972,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -948,6 +1004,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -977,6 +1037,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1006,6 +1070,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1034,6 +1102,10 @@ class TestDatabase(_BaseTest):
             update_mask=field_mask,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1064,6 +1136,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1084,6 +1160,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1104,6 +1184,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1123,6 +1207,10 @@ class TestDatabase(_BaseTest):
             database=self.DATABASE_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1196,22 +1284,34 @@ class TestDatabase(_BaseTest):
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
         )
 
-        api.begin_transaction.assert_called_with(
-            session=session.name,
-            options=txn_options,
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
-                ),
-            ],
-        )
         if retried:
             self.assertEqual(api.begin_transaction.call_count, 2)
+            api.begin_transaction.assert_called_with(
+                session=session.name,
+                options=txn_options,
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.2",
+                    ),
+                ],
+            )
         else:
             self.assertEqual(api.begin_transaction.call_count, 1)
+            api.begin_transaction.assert_called_with(
+                session=session.name,
+                options=txn_options,
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                    ),
+                ],
+            )
 
         if params:
             expected_params = Struct(
@@ -1249,7 +1349,7 @@ class TestDatabase(_BaseTest):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -1271,6 +1371,10 @@ class TestDatabase(_BaseTest):
                 metadata=[
                     ("google-cloud-resource-prefix", database.name),
                     ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.2",
+                    ),
                 ],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 2)
@@ -1547,6 +1651,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1575,6 +1683,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1614,6 +1726,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1657,6 +1773,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1806,6 +1926,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1829,6 +1953,10 @@ class TestDatabase(_BaseTest):
             request=expected_request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertIsNotNone(resp)

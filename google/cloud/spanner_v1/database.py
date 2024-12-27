@@ -188,6 +188,7 @@ class Database(object):
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
         self._proto_descriptors = proto_descriptors
+        self._channel_id = 0  # It'll be created when _spanner_api is created.
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -446,22 +447,16 @@ class Database(object):
                 client_info=client_info,
                 client_options=client_options,
             )
+
+            with self.__transport_lock:
+                transport = self._spanner_api._transport
+                channel_id = self.__transports_to_channel_id.get(transport, None)
+                if channel_id is None:
+                    channel_id = len(self.__transports_to_channel_id) + 1
+                    self.__transports_to_channel_id[transport] = channel_id
+                self._channel_id = channel_id
+
         return self._spanner_api
-
-    @property
-    def _channel_id(self):
-        """
-        Helper to retrieve the associated channelID for the spanner_api.
-        This property is paramount to x-goog-spanner-request-id.
-        """
-        with self.__transport_lock:
-            api = self.spanner_api
-            channel_id = self.__transports_to_channel_id.get(api._transport, None)
-            if channel_id is None:
-                channel_id = len(self.__transports_to_channel_id) + 1
-                self.__transports_to_channel_id[api._transport] = channel_id
-
-            return channel_id
 
     def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
         return _metadata_with_request_id(
