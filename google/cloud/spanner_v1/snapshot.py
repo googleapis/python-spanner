@@ -88,6 +88,9 @@ def _restart_on_unavailable(
 
     request.transaction = transaction_selector
 
+    # TODO: Handle UNAVAILABLE errors for this call.
+    #       The lack of error handling here is probably the root cause of
+    #       https://github.com/googleapis/python-spanner/issues/1150
     with trace_call(
         trace_name, session, attributes, observability_options=observability_options
     ):
