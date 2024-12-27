@@ -355,6 +355,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertEqual(actual_request_options, expected_request_options)
