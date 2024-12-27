@@ -154,11 +154,8 @@ class MockServerTestBase(unittest.TestCase):
     def teardown_class(cls):
         if MockServerTestBase.server is not None:
             MockServerTestBase.server.stop(grace=None)
+            Client.NTH_CLIENT.reset()
             MockServerTestBase.server = None
-        self.reset()
-
-    def reset(self):
-        Client.NTH_CLIENT.reset()
 
     def setup_method(self, *args, **kwargs):
         self._client = None
