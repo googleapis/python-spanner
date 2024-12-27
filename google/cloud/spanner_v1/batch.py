@@ -25,6 +25,7 @@ from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
@@ -222,13 +223,24 @@ class Batch(_BatchBase):
             trace_attributes,
             observability_options=observability_options,
         ):
-            method = functools.partial(
-                api.commit,
-                request=request,
-                metadata=metadata,
-            )
+            attempt = AtomicCounter(0)
+            next_nth_request = database._next_nth_request
+
+            def wrapped_method(*args, **kwargs):
+                all_metadata = database.metadata_with_request_id(
+                    next_nth_request,
+                    attempt.increment(),
+                    metadata,
+                )
+                method = functools.partial(
+                    api.commit,
+                    request=request,
+                    metadata=all_metadata,
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self.committed = response.commit_timestamp
@@ -341,13 +353,24 @@ class MutationGroups(_SessionWrapper):
             trace_attributes,
             observability_options=observability_options,
         ):
-            method = functools.partial(
-                api.batch_write,
-                request=request,
-                metadata=metadata,
-            )
+            attempt = AtomicCounter(0)
+            next_nth_request = database._next_nth_request
+
+            def wrapped_method(*args, **kwargs):
+                all_metadata = database.metadata_with_request_id(
+                    next_nth_request,
+                    attempt.increment(),
+                    metadata,
+                )
+                method = functools.partial(
+                    api.batch_write,
+                    request=request,
+                    metadata=all_metadata,
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self.committed = True

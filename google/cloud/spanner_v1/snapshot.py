@@ -38,6 +38,7 @@ from google.cloud.spanner_v1._helpers import (
     _retry,
     _check_rst_stream_error,
     _SessionWrapper,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -87,6 +88,9 @@ def _restart_on_unavailable(
 
     request.transaction = transaction_selector
 
+    # TODO: Handle UNAVAILABLE errors for this call.
+    #       The lack of error handling here is probably the root cause of
+    #       https://github.com/googleapis/python-spanner/issues/1150
     with trace_call(
         trace_name, session, attributes, observability_options=observability_options
     ):
@@ -318,13 +322,24 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
-        restart = functools.partial(
-            api.streaming_read,
-            request=request,
-            metadata=metadata,
-            retry=retry,
-            timeout=timeout,
-        )
+
+        nth_request = getattr(database, "_next_nth_request", 0)
+        attempt = AtomicCounter(0)
+
+        def wrapped_restart(*args, **kwargs):
+            attempt.increment()
+            all_metadata = database.metadata_with_request_id(
+                nth_request, attempt.value, metadata
+            )
+
+            restart = functools.partial(
+                api.streaming_read,
+                request=request,
+                metadata=all_metadata,
+                retry=retry,
+                timeout=timeout,
+            )
+            return restart(*args, **kwargs)
 
         trace_attributes = {"table_id": table, "columns": columns}
         observability_options = getattr(database, "observability_options", None)
@@ -333,7 +348,7 @@ class _SnapshotBase(_SessionWrapper):
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 iterator = _restart_on_unavailable(
-                    restart,
+                    wrapped_restart,
                     request,
                     f"CloudSpanner.{type(self).__name__}.read",
                     self._session,
@@ -355,7 +370,7 @@ class _SnapshotBase(_SessionWrapper):
                     )
         else:
             iterator = _restart_on_unavailable(
-                restart,
+                wrapped_restart,
                 request,
                 f"CloudSpanner.{type(self).__name__}.read",
                 self._session,
@@ -534,13 +549,23 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
-        restart = functools.partial(
-            api.execute_streaming_sql,
-            request=request,
-            metadata=metadata,
-            retry=retry,
-            timeout=timeout,
-        )
+
+        nth_request = getattr(database, "_next_nth_request", 0)
+        attempt = AtomicCounter(0)
+
+        def wrapped_restart(*args, **kwargs):
+            attempt.increment()
+            restart = functools.partial(
+                api.execute_streaming_sql,
+                request=request,
+                metadata=database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
+                ),
+                retry=retry,
+                timeout=timeout,
+            )
+
+            return restart(*args, **kwargs)
 
         trace_attributes = {"db.statement": sql}
         observability_options = getattr(database, "observability_options", None)
@@ -549,7 +574,7 @@ class _SnapshotBase(_SessionWrapper):
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart,
+                    wrapped_restart,
                     request,
                     trace_attributes,
                     column_info,
@@ -558,7 +583,7 @@ class _SnapshotBase(_SessionWrapper):
                 )
         else:
             return self._get_streamed_result_set(
-                restart,
+                wrapped_restart,
                 request,
                 trace_attributes,
                 column_info,
@@ -681,15 +706,25 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
         ):
-            method = functools.partial(
-                api.partition_read,
-                request=request,
-                metadata=metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter(0)
+
+            def wrapped_method(*args, **kwargs):
+                attempt.increment()
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
+                )
+                method = functools.partial(
+                    api.partition_read,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -784,15 +819,25 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
         ):
-            method = functools.partial(
-                api.partition_query,
-                request=request,
-                metadata=metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter(0)
+
+            def wrapped_method(*args, **kwargs):
+                attempt.increment()
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
+                )
+                method = functools.partial(
+                    api.partition_query,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -930,14 +975,24 @@ class Snapshot(_SnapshotBase):
             self._session,
             observability_options=getattr(database, "observability_options", None),
         ):
-            method = functools.partial(
-                api.begin_transaction,
-                session=self._session.name,
-                options=txn_selector.begin,
-                metadata=metadata,
-            )
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter(0)
+
+            def wrapped_method(*args, **kwargs):
+                attempt.increment()
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, attempt.value, metadata
+                )
+                method = functools.partial(
+                    api.begin_transaction,
+                    session=self._session.name,
+                    options=txn_selector.begin,
+                    metadata=all_metadata,
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self._transaction_id = response.id

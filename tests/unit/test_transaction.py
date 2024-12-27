@@ -20,6 +20,11 @@ from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.api_core.retry import Retry
 from google.api_core import gapic_v1
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _metadata_with_request_id,
+)
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 from tests._helpers import (
     OpenTelemetryBase,
@@ -191,6 +196,10 @@ class TestTransaction(OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -295,6 +304,10 @@ class TestTransaction(OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -420,6 +433,10 @@ class TestTransaction(OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
         self.assertEqual(actual_request_options, expected_request_options)
@@ -582,6 +599,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -768,6 +789,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=retry,
             timeout=timeout,
@@ -883,6 +908,10 @@ class TestTransaction(OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
         )
 
@@ -913,11 +942,19 @@ class TestTransaction(OpenTelemetryBase):
 
 
 class _Client(object):
+    NTH_CLIENT = AtomicCounter()
+
     def __init__(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.directed_read_options = None
+        self._nth_client_id = _Client.NTH_CLIENT.increment()
+        self._nth_request = AtomicCounter()
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
 
 
 class _Instance(object):
@@ -931,6 +968,27 @@ class _Database(object):
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None
+
+    @property
+    def _next_nth_request(self):
+        return self._instance._client._next_nth_request
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
 
 class _Session(object):

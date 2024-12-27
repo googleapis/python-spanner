@@ -20,6 +20,10 @@ from tests._helpers import (
     enrich_with_otel_scope,
 )
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_request_id,
+)
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -255,6 +259,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                ),
             ],
         )
         self.assertEqual(request_options, RequestOptions())
@@ -323,6 +331,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertEqual(actual_request_options, expected_request_options)
@@ -435,6 +447,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Database.NTH_CLIENT}.1.1.1",
+                ),
             ],
         )
         self.assertEqual(request_options, RequestOptions())
@@ -569,6 +585,10 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                ),
             ],
         )
         if request_options is None:
@@ -622,6 +642,32 @@ class _Session(object):
 class _Database(object):
     name = "testing"
     _route_to_leader_enabled = True
+    NTH_CLIENT = 1
+
+    def __init__(self):
+        self._nth_request = 0
+
+    @property
+    def _next_nth_request(self):
+        self._nth_request += 1
+        return self._nth_request
+
+    @property
+    def _nth_client_id(self):
+        return 1
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
 
 class _FauxSpannerAPI:
