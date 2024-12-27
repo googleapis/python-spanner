@@ -105,6 +105,7 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
 
     def BatchCreateSessions(self, request, context):
         self._requests.append(request)
+        self.mock_spanner.pop_error(context)
         sessions = []
         for i in range(request.session_count):
             sessions.append(
