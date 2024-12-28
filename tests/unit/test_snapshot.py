@@ -1708,6 +1708,9 @@ class TestSnapshot(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             snapshot.begin()
 
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.Snapshot.begin"]

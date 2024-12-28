@@ -22,6 +22,7 @@ from google.api_core.retry import Retry
 from google.api_core import gapic_v1
 
 from tests._helpers import (
+    HAS_OPENTELEMETRY_INSTALLED,
     OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
@@ -160,6 +161,9 @@ class TestTransaction(OpenTelemetryBase):
 
         with self.assertRaises(RuntimeError):
             transaction.begin()
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
 
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
@@ -350,6 +354,9 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertIsNone(transaction.committed)
 
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
         span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
         got_span_names = [span.name for span in span_list]
         want_span_names = [
@@ -441,6 +448,9 @@ class TestTransaction(OpenTelemetryBase):
 
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
 
         span_list = sorted(self.get_finished_spans(), key=lambda v: v.start_time)
         txn_commit_span = span_list[-1]
