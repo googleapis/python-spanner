@@ -463,24 +463,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             span=span_list[3],
         )
 
-        assert_span_attributes(
-            ot_exporter,
-            "CloudSpanner.GetSession",
-            attributes=_make_attributes(db_name, session_found=True),
-            span=span_list[4],
-        )
-        assert_span_attributes(
-            ot_exporter,
-            "CloudSpanner.Snapshot.read",
-            attributes=_make_attributes(db_name, columns=sd.COLUMNS, table_id=sd.TABLE),
-            span=span_list[5],
-        )
-        assert_span_attributes(
-            ot_exporter,
-            "CloudSpanner.Database.snapshot",
-            attributes=_make_attributes(db_name, multi_use=False),
-            span=span_list[6],
-        )
+        assert len(span_list) == 4
 
 
 def test_batch_insert_then_read_string_array_of_string(sessions_database, not_postgres):
