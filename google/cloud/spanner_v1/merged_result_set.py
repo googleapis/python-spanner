@@ -17,6 +17,8 @@ from queue import Queue
 from typing import Any, TYPE_CHECKING
 from threading import Lock, Event
 
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+
 if TYPE_CHECKING:
     from google.cloud.spanner_v1.database import BatchSnapshot
 
