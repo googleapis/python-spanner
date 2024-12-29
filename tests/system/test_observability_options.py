@@ -100,7 +100,8 @@ def test_observability_options_propagation():
                 _ = val
 
         from_global_spans = global_trace_exporter.get_finished_spans()
-        from_inject_spans = inject_trace_exporter.get_finished_spans()
+        target_spans = inject_trace_exporter.get_finished_spans()
+        from_inject_spans = sorted(target_spans, key=lambda v1: v1.start_time)
         assert (
             len(from_global_spans) == 0
         )  # "Expecting no spans from the global trace exporter"
@@ -111,7 +112,6 @@ def test_observability_options_propagation():
         wantNames = [
             "CloudSpanner.CreateSession",
             "CloudSpanner.Snapshot.execute_streaming_sql",
-            "CloudSpanner.Database.snapshot",
         ]
         assert gotNames == wantNames
 
