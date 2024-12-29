@@ -18,7 +18,6 @@ from . import _helpers
 from google.cloud.spanner_v1 import Client
 from google.api_core.exceptions import Aborted
 from google.auth.credentials import AnonymousCredentials
-from google.api_core.exceptions import Aborted
 from google.rpc import code_pb2
 
 HAS_OTEL_INSTALLED = False
@@ -141,7 +140,6 @@ def create_db_trace_exporter():
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
         InMemorySpanExporter,
     )
-    from opentelemetry.trace.status import StatusCode
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 

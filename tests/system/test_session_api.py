@@ -1221,10 +1221,10 @@ def test_transaction_batch_update_w_parent_span(
     expected_span_names = [
         "CloudSpanner.CreateSession",
         "CloudSpanner.Batch.commit",
+        "Test Span",
+        "CloudSpanner.Session.run_in_transaction",
         "CloudSpanner.DMLTransaction",
         "CloudSpanner.Transaction.commit",
-        "CloudSpanner.Session.run_in_transaction",
-        "Test Span",
     ]
     assert got_span_names == expected_span_names
 
@@ -1232,19 +1232,15 @@ def test_transaction_batch_update_w_parent_span(
     # |------CloudSpanner.CreateSession--------
     #
     # |---Test Span----------------------------|
-    #  |>--ReadWriteTransaction-----------------
-    #    |>-Transaction-------------------------
-    #      |--------------DMLTransaction--------
+    #  |>--Session.run_in_transaction----------|
+    #     |---------DMLTransaction-------|
     #
-    #  |>---Batch-------------------------------
-    #
-    # |>----------Batch-------------------------
-    #  |>------------Batch.commit---------------
+    #               |>----Transaction.commit---|
 
     # CreateSession should have a trace of its own, with no children
     # nor being a child of any other span.
     session_span = span_list[0]
-    test_span = span_list[4]
+    test_span = span_list[2]
     # assert session_span.context.trace_id != test_span.context.trace_id
     for span in span_list[1:]:
         if span.parent:
@@ -1256,17 +1252,16 @@ def test_transaction_batch_update_w_parent_span(
             assert span.parent.span_id == parent_span.context.span_id
 
     # [CreateSession --> Batch] should have their own trace.
-    rw_txn_span = span_list[5]
-    children_of_test_span = [rw_txn_span]
+    session_run_in_txn_span = span_list[3]
+    children_of_test_span = [session_run_in_txn_span]
     assert_parent_and_children(test_span, children_of_test_span)
 
-    children_of_rw_txn_span = [span_list[6]]
-    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
-
-    # Batch_first should have no parent, should be in its own trace.
-    batch_0_span = span_list[2]
-    children_of_batch_0 = [span_list[1]]
-    assert_parent_and_children(rw_txn_span, children_of_rw_txn_span)
+    dml_txn_span = span_list[4]
+    batch_commit_txn_span = span_list[5]
+    children_of_session_run_in_txn_span = [dml_txn_span, batch_commit_txn_span]
+    assert_parent_and_children(
+        session_run_in_txn_span, children_of_session_run_in_txn_span
+    )
 
 
 def test_execute_partitioned_dml(
