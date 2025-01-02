@@ -293,6 +293,9 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertGreater(
             api.commit.call_count, 1, "commit should be called more than once"
         )
+        # Verify that commit was called exactly 3 times (replace 3 with the expected number of retries)
+        # Since we are using exponential backoff here and default timeout is set to 30 sec 2^x <= 30. So value for x will be 4
+        self.assertEqual(api.commit.call_count, 4, "commit should be called exactly 4 times")
 
     def _test_commit_with_options(
         self,
