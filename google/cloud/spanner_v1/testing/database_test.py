@@ -79,7 +79,6 @@ class TestDatabase(Database):
                 channel = grpc.insecure_channel(self._instance.emulator_host)
                 self._x_goog_request_id_interceptor = XGoogRequestIDHeaderInterceptor()
                 self._interceptors.append(self._x_goog_request_id_interceptor)
-                # print("self._interceptors", self._interceptors)
                 channel = grpc.intercept_channel(channel, *self._interceptors)
                 transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
