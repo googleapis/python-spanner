@@ -90,7 +90,9 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
             )
 
         response_or_iterator = method(request_or_iterator, call_details)
+        print("call_details", call_details, "\n", response_or_iterator)
         streaming = getattr(response_or_iterator, "__iter__", None) is not None
+        print("x_append", call_details.method, x_goog_request_id)
         with self.__lock:
             if streaming:
                 self._stream_req_segments.append(
@@ -114,7 +116,6 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
     def reset(self):
         self._stream_req_segments.clear()
         self._unary_req_segments.clear()
-        pass
 
 
 def parse_request_id(request_id_str):

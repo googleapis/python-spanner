@@ -364,6 +364,7 @@ class _SnapshotBase(_SessionWrapper):
                     trace_attributes,
                     transaction=self,
                     observability_options=observability_options,
+                    attempt=attempt,
                 )
                 self._read_request_count += 1
                 if self._multi_use:
@@ -387,6 +388,7 @@ class _SnapshotBase(_SessionWrapper):
                 trace_attributes,
                 transaction=self,
                 observability_options=observability_options,
+                attempt=attempt,
             )
 
         self._read_request_count += 1
@@ -579,12 +581,11 @@ class _SnapshotBase(_SessionWrapper):
         attempt = AtomicCounter(0)
 
         def wrapped_restart(*args, **kwargs):
-            attempt.increment()
             restart = functools.partial(
                 api.execute_streaming_sql,
                 request=request,
                 metadata=database.metadata_with_request_id(
-                    nth_request, attempt.value, metadata
+                    nth_request, attempt.increment(), metadata
                 ),
                 retry=retry,
                 timeout=timeout,

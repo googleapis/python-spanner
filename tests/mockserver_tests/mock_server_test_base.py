@@ -57,6 +57,7 @@ def aborted_status() -> _Status:
     )
     return status
 
+
 # Creates an UNAVAILABLE status with the smallest possible retry delay.
 def unavailable_status() -> _Status:
     error = status_pb2.Status(

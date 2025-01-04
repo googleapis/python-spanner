@@ -24,7 +24,10 @@ from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
-    add_select1_result, aborted_status, add_error, unavailable_status,
+    add_select1_result,
+    aborted_status,
+    add_error,
+    unavailable_status,
 )
 
 
@@ -70,6 +73,13 @@ class TestRequestIDHeader(MockServerTestBase):
         assert got_stream_segments == want_stream_segments
 
     def test_snapshot_read_concurrent(self):
+        # Trigger BatchCreateSessions firstly.
+        with self.database.snapshot() as snapshot:
+            rows = snapshot.execute_sql("select 1")
+            for row in rows:
+                _ = row
+
+        # The other requests can then proceed.
         def select1():
             with self.database.snapshot() as snapshot:
                 rows = snapshot.execute_sql("select 1")
@@ -100,7 +110,7 @@ class TestRequestIDHeader(MockServerTestBase):
                 break
 
         requests = self.spanner_service.requests
-        self.assertEqual(n + 1, len(requests), msg=requests)
+        self.assertEqual(2 + n * 2, len(requests), msg=requests)
 
         client_id = self.database._nth_client_id
         channel_id = self.database._channel_id
@@ -112,6 +122,7 @@ class TestRequestIDHeader(MockServerTestBase):
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 1, 1),
             ),
         ]
+        print("got_unary", got_unary_segments)
         assert got_unary_segments == want_unary_segments
 
         want_stream_segments = [
@@ -254,15 +265,13 @@ class TestRequestIDHeader(MockServerTestBase):
             )
         ]
 
+        print("got_unary_segments", got_unary_segments)
         assert got_unary_segments == want_unary_segments
         assert got_stream_segments == want_stream_segments
 
     def test_streaming_retryable_error(self):
         add_select1_result()
-        # TODO: UNAVAILABLE errors are not correctly handled by the client lib.
-        #       This is probably the reason behind
-        #       https://github.com/googleapis/python-spanner/issues/1150.
-        # The fix
+        add_error(SpannerServicer.ExecuteStreamingSql.__name__, unavailable_status())
         add_error(SpannerServicer.ExecuteStreamingSql.__name__, unavailable_status())
 
         if not getattr(self.database, "_interceptors", None):
