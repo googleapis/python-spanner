@@ -1931,12 +1931,13 @@ class TestBatchCheckout(_BaseTest):
             return_commit_stats=True,
             request_options=RequestOptions(),
         )
-        api.commit.assert_called_once_with(
+        self.assertEqual(api.commit.call_count, 2)
+        api.commit.assert_any_call(
             request=request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
-            ],
+            ]
         )
 
         database.logger.info.assert_not_called()

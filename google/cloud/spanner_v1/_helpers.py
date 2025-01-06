@@ -464,20 +464,43 @@ def _metadata_with_prefix(prefix, **kw):
     return [("google-cloud-resource-prefix", prefix)]
 
 
+def _retry_on_aborted_exception(
+    func,
+    deadline,
+    allowed_exceptions=None,
+):
+    """
+    Handles retry logic for Aborted exceptions, considering the deadline.
+    Retries the function in case of Aborted exceptions and other allowed exceptions.
+    """
+    attempts = 0
+    while True:
+        try:
+            attempts += 1
+            return func()
+        except Aborted as exc:
+            _delay_until_retry(exc, deadline=deadline, attempts=attempts)
+            continue
+        except Exception as exc:
+            try:
+                retry_result = _retry(func=func, allowed_exceptions=allowed_exceptions)
+                if retry_result is not None:
+                    return retry_result
+                else:
+                    raise exc
+            except Aborted:
+                continue
+
+
 def _retry(
     func,
     retry_count=5,
     delay=2,
     allowed_exceptions=None,
     beforeNextRetry=None,
-    deadline=None,
 ):
     """
-    Retry a specified function with different logic based on the type of exception raised.
-
-    If the exception is of type google.api_core.exceptions.Aborted,
-    apply an alternate retry strategy that relies on the provided deadline value instead of a fixed number of retries.
-    For all other exceptions, retry the function up to a specified number of times.
+    Retry a function with a specified number of retries, delay between retries, and list of allowed exceptions.
 
     Args:
         func: The function to be retried.
@@ -491,21 +514,13 @@ def _retry(
         The result of the function if it is successful, or raises the last exception if all retries fail.
     """
     retries = 0
-    while True:
+    while retries <= retry_count:
         if retries > 0 and beforeNextRetry:
             beforeNextRetry(retries, delay)
 
         try:
             return func()
         except Exception as exc:
-            if isinstance(exc, Aborted) and deadline is not None:
-                if (
-                    allowed_exceptions is not None
-                    and allowed_exceptions.get(exc.__class__) is not None
-                ):
-                    retries += 1
-                    _delay_until_retry(exc, deadline=deadline, attempts=retries)
-                    continue
             if (
                 allowed_exceptions is None or exc.__class__ in allowed_exceptions
             ) and retries < retry_count:
@@ -568,7 +583,6 @@ def _delay_until_retry(exc, deadline, attempts):
         raise
 
     delay = _get_retry_delay(cause, attempts)
-    print(now, delay, deadline)
     if delay is not None:
         if now + delay > deadline:
             raise

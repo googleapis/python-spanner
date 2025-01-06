@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-import time
 import unittest
 from unittest.mock import MagicMock
 from tests._helpers import (
@@ -650,36 +649,6 @@ class _Session(object):
     @property
     def session_id(self):
         return self.name
-
-    def run_in_transaction(self, fnc):
-        """
-        Runs a function in a transaction, retrying if an exception occurs.
-        :param fnc: The function to run in the transaction.
-        :param max_retries: Maximum number of retry attempts.
-        :param delay: Delay (in seconds) between retries.
-        :return: The result of the function, or raises the exception after max retries.
-        """
-        from google.api_core.exceptions import Aborted
-
-        attempt = 0
-        max_retries = 3
-        delay = 1
-        while attempt < max_retries:
-            try:
-                result = fnc()
-                return result
-            except Aborted as exc:
-                attempt += 1
-                if attempt < max_retries:
-                    print(
-                        f"Attempt {attempt} failed with Aborted. Retrying in {delay} seconds..."
-                    )
-                    time.sleep(delay)  # Wait before retrying
-                else:
-                    raise exc  # After max retries, raise the exception
-            except Exception as exc:
-                print(f"Unexpected exception occurred: {exc}")
-                raise  # Raise any other unexpected exception immediately
 
 
 class _Database(object):
