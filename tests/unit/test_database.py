@@ -1937,7 +1937,7 @@ class TestBatchCheckout(_BaseTest):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
-            ]
+            ],
         )
 
         database.logger.info.assert_not_called()
