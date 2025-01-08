@@ -237,9 +237,6 @@ class Batch(_BatchBase):
             )
             response = _retry_on_aborted_exception(
                 method,
-                allowed_exceptions={
-                    InternalServerError: _check_rst_stream_error,
-                },
                 deadline=deadline,
             )
         self.committed = response.commit_timestamp
@@ -304,9 +301,7 @@ class MutationGroups(_SessionWrapper):
         self._mutation_groups.append(mutation_group)
         return MutationGroup(self._session, mutation_group.mutations)
 
-    def batch_write(
-        self, request_options=None, exclude_txn_from_change_streams=False, **kwargs
-    ):
+    def batch_write(self, request_options=None, exclude_txn_from_change_streams=False):
         """Executes batch_write.
 
         :type request_options:

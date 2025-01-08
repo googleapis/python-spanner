@@ -467,11 +467,9 @@ def _metadata_with_prefix(prefix, **kw):
 def _retry_on_aborted_exception(
     func,
     deadline,
-    allowed_exceptions=None,
 ):
     """
     Handles retry logic for Aborted exceptions, considering the deadline.
-    Retries the function in case of Aborted exceptions and other allowed exceptions.
     """
     attempts = 0
     while True:
@@ -481,15 +479,6 @@ def _retry_on_aborted_exception(
         except Aborted as exc:
             _delay_until_retry(exc, deadline=deadline, attempts=attempts)
             continue
-        except Exception as exc:
-            try:
-                retry_result = _retry(func=func, allowed_exceptions=allowed_exceptions)
-                if retry_result is not None:
-                    return retry_result
-                else:
-                    raise exc
-            except Aborted:
-                continue
 
 
 def _retry(
@@ -505,7 +494,6 @@ def _retry(
     Args:
         func: The function to be retried.
         retry_count: The maximum number of times to retry the function.
-        deadline: This will be used in case of Aborted transactions.
         delay: The delay in seconds between retries.
         allowed_exceptions: A tuple of exceptions that are allowed to occur without triggering a retry.
                             Passing allowed_exceptions as None will lead to retrying for all exceptions.
