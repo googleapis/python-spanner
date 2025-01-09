@@ -22,6 +22,7 @@ from google.api_core.retry import Retry
 from google.api_core import gapic_v1
 
 from tests._helpers import (
+    HAS_OPENTELEMETRY_INSTALLED,
     OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
@@ -226,9 +227,8 @@ class TestTransaction(OpenTelemetryBase):
         transaction.rollback()
         self.assertTrue(transaction.rolled_back)
 
-        # Since there was no transaction to be rolled back, rollbacl rpc is not called.
+        # Since there was no transaction to be rolled back, rollback rpc is not called.
         api.rollback.assert_not_called()
-
         self.assertNoSpans()
 
     def test_rollback_already_committed(self):
@@ -298,10 +298,17 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
-        self.assertSpanAttributes(
-            "CloudSpanner.Transaction.rollback",
-            attributes=TestTransaction.BASE_ATTRIBUTES,
-        )
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.rollback"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = []
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_not_begun(self):
         session = _Session()
@@ -309,7 +316,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is not begun",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_committed(self):
         session = _Session()
@@ -319,7 +346,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is already committed",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_rolled_back(self):
         session = _Session()
@@ -329,7 +376,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is already rolled back",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_w_other_error(self):
         database = _Database()
@@ -434,6 +501,18 @@ class TestTransaction(OpenTelemetryBase):
                 num_mutations=len(transaction._mutations),
             ),
         )
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [("Starting Commit", {}), ("Commit Done", {})]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_no_mutations(self):
         self._commit_helper(mutate=False)
@@ -586,6 +665,18 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertEqual(transaction._execute_sql_count, count + 1)
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            pass
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.execute_update"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = []
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_execute_update_new_transaction(self):
         self._execute_update_helper()
