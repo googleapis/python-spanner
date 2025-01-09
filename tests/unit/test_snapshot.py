@@ -1230,9 +1230,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
 
-        if not HAS_OPENTELEMETRY_INSTALLED:
-            return
-
         self.assertSpanAttributes(
             "CloudSpanner._Derived.partition_read",
             status=StatusCode.ERROR,
