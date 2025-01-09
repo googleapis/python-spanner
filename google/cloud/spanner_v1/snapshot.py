@@ -686,6 +686,7 @@ class _SnapshotBase(_SessionWrapper):
 
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.partition_read",
+            self._session,
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
         ):

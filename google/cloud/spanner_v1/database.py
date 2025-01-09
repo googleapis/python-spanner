@@ -699,46 +699,43 @@ class Database(object):
             )
 
         def execute_pdml():
-            def do_execute_pdml(session, span):
-                add_span_event(span, "Starting BeginTransaction")
-                txn = api.begin_transaction(
-                    session=session.name, options=txn_options, metadata=metadata
-                )
-
-                txn_selector = TransactionSelector(id=txn.id)
-
-                request = ExecuteSqlRequest(
-                    session=session.name,
-                    sql=dml,
-                    params=params_pb,
-                    param_types=param_types,
-                    query_options=query_options,
-                    request_options=request_options,
-                )
-                method = functools.partial(
-                    api.execute_streaming_sql,
-                    metadata=metadata,
-                )
-
-                iterator = _restart_on_unavailable(
-                    method=method,
-                    trace_name="CloudSpanner.ExecuteStreamingSql",
-                    request=request,
-                    transaction_selector=txn_selector,
-                    observability_options=self.observability_options,
-                )
-
-                result_set = StreamedResultSet(iterator)
-                list(result_set)  # consume all partials
-
-                return result_set.stats.row_count_lower_bound
-
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
             ) as span:
                 with SessionCheckout(self._pool) as session:
-                    return do_execute_pdml(session, span)
+                    add_span_event(span, "Starting BeginTransaction")
+                    txn = api.begin_transaction(
+                        session=session.name, options=txn_options, metadata=metadata
+                    )
+
+                    txn_selector = TransactionSelector(id=txn.id)
+
+                    request = ExecuteSqlRequest(
+                        session=session.name,
+                        sql=dml,
+                        params=params_pb,
+                        param_types=param_types,
+                        query_options=query_options,
+                        request_options=request_options,
+                    )
+                    method = functools.partial(
+                        api.execute_streaming_sql,
+                        metadata=metadata,
+                    )
+
+                    iterator = _restart_on_unavailable(
+                        method=method,
+                        trace_name="CloudSpanner.ExecuteStreamingSql",
+                        request=request,
+                        transaction_selector=txn_selector,
+                        observability_options=self.observability_options,
+                    )
+
+                    result_set = StreamedResultSet(iterator)
+                    list(result_set)  # consume all partials
+
+                    return result_set.stats.row_count_lower_bound
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
@@ -1539,7 +1536,7 @@ class BatchSnapshot(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        observability_options = self.observability_options or {}
+        observability_options = self.observability_options
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_read_batch",
             observability_options=observability_options,

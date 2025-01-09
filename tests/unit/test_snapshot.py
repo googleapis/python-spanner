@@ -1233,15 +1233,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
-        want_span_attributes = dict(
-            BASE_ATTRIBUTES,
-            table_id=TABLE_NAME,
-            columns=tuple(COLUMNS),
-        )
         self.assertSpanAttributes(
             "CloudSpanner._Derived.partition_read",
             status=StatusCode.ERROR,
-            attributes=want_span_attributes,
+            attributes=dict(
+                BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
+            ),
         )
 
     def test_partition_read_w_retry(self):
@@ -1379,11 +1376,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
             timeout=timeout,
         )
 
-        attributes = dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM})
         self.assertSpanAttributes(
             "CloudSpanner._Derived.partition_query",
             status=StatusCode.OK,
-            attributes=attributes,
+            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
     def test_partition_query_other_error(self):

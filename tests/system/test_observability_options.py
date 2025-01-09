@@ -224,12 +224,10 @@ def test_transaction_abort_then_retry_spans():
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
-        ("Creating Transaction", {}),
         (
             "Transaction was aborted in user operation, retrying",
             {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
         ),
-        ("Creating Transaction", {}),
         ("Starting Commit", {}),
         ("Commit Done", {}),
     ]
@@ -283,7 +281,7 @@ def finished_spans_statuses(trace_exporter):
     not HAS_OTEL_INSTALLED,
     reason="Tracing requires OpenTelemetry",
 )
-def test_database_partitioned():
+def test_database_partitioned_error():
     from opentelemetry.trace.status import StatusCode
 
     db, trace_exporter = create_db_trace_exporter()
