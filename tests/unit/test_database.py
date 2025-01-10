@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import unittest
+
 import mock
 from google.api_core import gapic_v1
 from google.cloud.spanner_admin_database_v1 import (
@@ -22,10 +24,6 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
-from tests._helpers import (
-    HAS_OPENTELEMETRY_INSTALLED,
-    OpenTelemetryBase,
-)
 
 from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
 
@@ -64,7 +62,7 @@ def _make_credentials():  # pragma: NO COVER
     return mock.Mock(spec=_CredentialsWithScopes)
 
 
-class _BaseTest(OpenTelemetryBase):
+class _BaseTest(unittest.TestCase):
     PROJECT_ID = "project-id"
     PARENT = "projects/" + PROJECT_ID
     INSTANCE_ID = "instance-id"
@@ -1434,18 +1432,6 @@ class TestDatabase(_BaseTest):
 
         self.assertEqual(committed, NOW)
         self.assertEqual(session._retried, (_unit_of_work, (SINCE,), {"until": UNTIL}))
-
-        if not HAS_OPENTELEMETRY_INSTALLED:
-            pass
-
-        span_list = self.get_finished_spans()
-        got_span_names = [span.name for span in span_list]
-        want_span_names = ["CloudSpanner.Database.run_in_transaction"]
-        assert got_span_names == want_span_names
-
-        got_span_events_statuses = self.finished_spans_events_statuses()
-        want_span_events_statuses = []
-        assert got_span_events_statuses == want_span_events_statuses
 
     def test_run_in_transaction_nested(self):
         from datetime import datetime

@@ -302,7 +302,7 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     LABELS = {"test": "true"}
 
     def tx_update(txn):
-        txn.update(
+        txn.insert(
             "Singers",
             columns=["SingerId", "FirstName"],
             values=[["1", "Bryan"], ["2", "Slash"]],
@@ -439,18 +439,13 @@ def test_database_partitioned_error():
             codes.ERROR,
             "InvalidArgument: 400 Table not found: NonExistent [at 1:8]\nUPDATE NonExistent SET name = 'foo' WHERE id > 1\n       ^",
         ),
-        (
-            "CloudSpanner.CreateSession",
-            codes.OK,
-            None,
-        ),
+        ("CloudSpanner.CreateSession", codes.OK, None),
         (
             "CloudSpanner.ExecuteStreamingSql",
             codes.ERROR,
             "InvalidArgument: 400 Table not found: NonExistent [at 1:8]\nUPDATE NonExistent SET name = 'foo' WHERE id > 1\n       ^",
         ),
     ]
-    print("got_statuses", got_statuses)
     assert got_statuses == want_statuses
 
 
