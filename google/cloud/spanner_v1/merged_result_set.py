@@ -46,7 +46,7 @@ class PartitionExecutor:
             "CloudSpanner.PartitionExecutor.run",
             observability_options=observability_options,
         ):
-            return self.__run()
+            self.__run()
 
     def __run(self):
         results = None
