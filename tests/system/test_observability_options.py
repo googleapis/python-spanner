@@ -289,7 +289,6 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
         InMemorySpanExporter,
     )
-    from opentelemetry.trace.status import StatusCode
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 
