@@ -68,6 +68,32 @@ class TestTags(MockServerTestBase):
         self.assertEqual("my_tag", request.request_options.request_tag)
         self.assertEqual("", request.request_options.transaction_tag)
 
+    def test_select_read_only_transaction_with_transaction_tag(self):
+        connection = Connection(self.instance, self.database)
+        connection.autocommit = False
+        connection.read_only = True
+        connection.transaction_tag = "my_transaction_tag"
+        self._execute_and_verify_select_singers(connection)
+        self._execute_and_verify_select_singers(connection)
+
+        # Read-only transactions do not support tags, so the transaction_tag is
+        # also not cleared from the connection when a read-only transaction is
+        # executed.
+        self.assertEqual("my_transaction_tag", connection.transaction_tag)
+
+        # Read-only transactions do not need to be committed or rolled back on
+        # Spanner, but dbapi requires this to end the transaction.
+        connection.commit()
+        requests = self.spanner_service.requests
+        self.assertEqual(4, len(requests))
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], BeginTransactionRequest))
+        self.assertTrue(isinstance(requests[2], ExecuteSqlRequest))
+        self.assertTrue(isinstance(requests[3], ExecuteSqlRequest))
+        # Transaction tags are not supported for read-only transactions.
+        self.assertEqual("", requests[2].request_options.transaction_tag)
+        self.assertEqual("", requests[3].request_options.transaction_tag)
+
     def test_select_read_write_transaction_no_tags(self):
         connection = Connection(self.instance, self.database)
         connection.autocommit = False
