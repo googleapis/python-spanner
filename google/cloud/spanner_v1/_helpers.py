@@ -32,10 +32,11 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
-from google.cloud.spanner_v1.request_id_header import with_request_id
+from google.cloud.spanner_v1.request_id_header import REQ_ID_HEADER_KEY, with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
 
 import random
+from typing import Callable
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -641,6 +642,40 @@ class AtomicCounter:
         """
         return self.__add__(n)
 
+    def reset(self):
+        with self.__lock:
+            self.__value = 0
+
 
 def _metadata_with_request_id(*args, **kwargs):
     return with_request_id(*args, **kwargs)
+
+
+class InterceptingHeaderInjector:
+    def __init__(self, original_callable: Callable):
+        self._original_callable = original_callable
+
+    def __call__(self, *args, **kwargs):
+        metadata = kwargs.get("metadata", [])
+        # Find all the headers that match the x-goog-spanner-request-id
+        # header an on each retry increment the value.
+        all_metadata = []
+        for key, value in metadata:
+            if key is REQ_ID_HEADER_KEY:
+                # Otherwise now increment the count for the attempt number.
+                splits = value.split(".")
+                attempt_plus_one = int(splits[-1]) + 1
+                splits[-1] = str(attempt_plus_one)
+                value_before = value
+                value = ".".join(splits)
+                print("incrementing value on retry from", value_before, "to", value)
+
+            all_metadata.append(
+                (
+                    key,
+                    value,
+                )
+            )
+
+        kwargs["metadata"] = all_metadata
+        return self._original_callable(*args, **kwargs)

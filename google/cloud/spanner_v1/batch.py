@@ -25,6 +25,7 @@ from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
@@ -227,11 +228,20 @@ class Batch(_BatchBase):
             trace_attributes,
             observability_options=observability_options,
         ):
+            attempt = AtomicCounter(0)
+            next_nth_request = database._next_nth_request
+
+            all_metadata = database.metadata_with_request_id(
+                next_nth_request,
+                attempt.increment(),
+                metadata,
+            )
             method = functools.partial(
                 api.commit,
                 request=request,
-                metadata=metadata,
+                metadata=all_metadata,
             )
+
             deadline = time.time() + kwargs.get(
                 "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
             )
@@ -349,11 +359,18 @@ class MutationGroups(_SessionWrapper):
             trace_attributes,
             observability_options=observability_options,
         ):
+            next_nth_request = database._next_nth_request
+            all_metadata = database.metadata_with_request_id(
+                next_nth_request,
+                0,
+                metadata,
+            )
             method = functools.partial(
                 api.batch_write,
                 request=request,
-                metadata=metadata,
+                metadata=all_metadata,
             )
+
             response = _retry(
                 method,
                 allowed_exceptions={

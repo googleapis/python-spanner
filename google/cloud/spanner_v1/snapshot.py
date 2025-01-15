@@ -38,6 +38,7 @@ from google.cloud.spanner_v1._helpers import (
     _retry,
     _check_rst_stream_error,
     _SessionWrapper,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -323,10 +324,16 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
+
+        nth_request = getattr(database, "_next_nth_request", 0)
+        all_metadata = database.metadata_with_request_id(
+            nth_request, 1, metadata
+        )
+
         restart = functools.partial(
             api.streaming_read,
             request=request,
-            metadata=metadata,
+            metadata=all_metadata,
             retry=retry,
             timeout=timeout,
         )
@@ -539,10 +546,17 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
+
+        nth_request = getattr(database, "_next_nth_request", 0)
+        if not isinstance(nth_request, int):
+            raise Exception(f"failed to get an integer back: {nth_request}")
+
         restart = functools.partial(
             api.execute_streaming_sql,
             request=request,
-            metadata=metadata,
+            metadata=database.metadata_with_request_id(
+                nth_request, 1, metadata
+            ),
             retry=retry,
             timeout=timeout,
         )
@@ -690,13 +704,18 @@ class _SnapshotBase(_SessionWrapper):
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
         ):
+            nth_request = getattr(database, "_next_nth_request", 0)
+            all_metadata = database.metadata_with_request_id(
+                nth_request, 1, metadata
+            )
             method = functools.partial(
                 api.partition_read,
                 request=request,
-                metadata=metadata,
+                metadata=all_metadata,
                 retry=retry,
                 timeout=timeout,
             )
+
             response = _retry(
                 method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
@@ -793,13 +812,18 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
         ):
+            nth_request = getattr(database, "_next_nth_request", 0)
+            all_metadata = database.metadata_with_request_id(
+                nth_request, 1, metadata
+            )
             method = functools.partial(
                 api.partition_query,
                 request=request,
-                metadata=metadata,
+                metadata=all_metadata,
                 retry=retry,
                 timeout=timeout,
             )
+
             response = _retry(
                 method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
@@ -939,12 +963,17 @@ class Snapshot(_SnapshotBase):
             self._session,
             observability_options=getattr(database, "observability_options", None),
         ):
+            nth_request = getattr(database, "_next_nth_request", 0)
+            all_metadata = database.metadata_with_request_id(
+                nth_request, 1, metadata
+            )
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
                 options=txn_selector.begin,
-                metadata=metadata,
+                metadata=all_metadata,
             )
+
             response = _retry(
                 method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
