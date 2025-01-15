@@ -1888,6 +1888,7 @@ class _Database(object):
     def observability_options(self):
         return dict(db_name=self.name)
 
+    @property
     def _next_nth_request(self):
         return self._instance._client._next_nth_request
 

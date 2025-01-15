@@ -55,6 +55,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,
+    InterceptingHeaderInjector,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -433,6 +434,43 @@ class Database(object):
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
+        api = self._generate_spanner_api()
+        if not api:
+            return api
+
+        # Now wrap each method's __call__ method with our wrapped one.
+        # This is how to deal with the fact that there are no proper gRPC
+        # interceptors for Python hence the remedy is to replace callables
+        # with our custom wrapper.
+        attrs = dir(api)
+        for attr_name in attrs:
+            mangled = attr_name.startswith("__")
+            if mangled:
+                continue
+
+            non_public = attr_name.startswith("_")
+            if non_public:
+                continue
+
+            attr = getattr(api, attr_name)
+            callable_attr = callable(attr)
+            if callable_attr is None:
+                continue
+
+            # We should only be looking at bound methods to SpannerClient
+            # as those are the RPC invoking methods that need to be wrapped
+
+            is_method = type(attr).__name__ == "method"
+            if not is_method:
+                continue
+
+            print("attr_name", attr_name, "callable_attr", attr)
+            setattr(api, attr_name, InterceptingHeaderInjector(attr))
+
+        return api
+
+    def _generate_spanner_api(self):
+        """Helper for session-related API calls."""
         if self._spanner_api is None:
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
@@ -762,11 +800,11 @@ class Database(object):
             ) as span, MetricsCapture():
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
-                    begin_txn_attempt.increment()
                     txn = api.begin_transaction(
-                        session=session.name, options=txn_options,
+                        session=session.name,
+                        options=txn_options,
                         metadata=self.metadata_with_request_id(
-                            begin_txn_nth_request, begin_txn_attempt.value, metadata
+                            begin_txn_nth_request, begin_txn_attempt.increment(), metadata
                         ),
                     )
 
@@ -781,37 +819,21 @@ class Database(object):
                         request_options=request_options,
                     )
 
-                    def wrapped_method(*args, **kwargs):
-                        partial_attempt.increment()
-                        method = functools.partial(
-                            api.execute_streaming_sql,
-                            metadata=self.metadata_with_request_id(
-                                partial_nth_request, partial_attempt.value, metadata
-                            ),
-                        )
-                        return method(*args, **kwargs)
+                    method = functools.partial(
+                        api.execute_streaming_sql,
+                        metadata=self.metadata_with_request_id(
+                            partial_nth_request, partial_attempt.increment(), metadata
+                        ),
+                    )
 
                     iterator = _restart_on_unavailable(
-                        method=wrapped_method,
+                        method=method,
                         trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
-                        attempt=begin_txn_attempt,
                     )
-<<<<<<< HEAD
-=======
-                    return method(*args, **kwargs)
-
-                iterator = _restart_on_unavailable(
-                    method=wrapped_method,
-                    trace_name="CloudSpanner.ExecuteStreamingSql",
-                    request=request,
-                    transaction_selector=txn_selector,
-                    observability_options=self.observability_options,
-                )
->>>>>>> 54df502... Update tests
 
                     result_set = StreamedResultSet(iterator)
                     list(result_set)  # consume all partials

@@ -266,11 +266,6 @@ class FixedSizePool(AbstractSessionPool):
                     return api.batch_create_sessions(
                         request=request,
                         metadata=all_metadata,
-                        # Manually passing retry=None because otherwise any
-                        # UNAVAILABLE retry will be retried without replenishing
-                        # the metadata, hence this allows us to manually update
-                        # the metadata using retry_on_unavailable.
-                        retry=None,
                     )
 
                 resp = retry_on_unavailable(create_sessions)
@@ -584,13 +579,6 @@ class PingingPool(AbstractSessionPool):
                     return api.batch_create_sessions(
                         request=request,
                         metadata=all_metadata,
-                        # Manually passing retry=None because otherwise any
-                        # UNAVAILABLE retry will be retried without replenishing
-                        # the metadata, hence this allows us to manually update
-                        # the metadata using retry_on_unavailable.
-                        # TODO: Figure out how to intercept and monkey patch the internals
-                        # of the gRPC transport.
-                        retry=None,
                     )
 
                 resp = retry_on_unavailable(create_sessions)
