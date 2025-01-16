@@ -177,10 +177,10 @@ class MetricsTracer:
     """
 
     _client_attributes: Dict[str, str]
-    _instrument_attempt_counter: Counter
-    _instrument_attempt_latency: Histogram
-    _instrument_operation_counter: Counter
-    _instrument_operation_latency: Histogram
+    _instrument_attempt_counter: "Counter"
+    _instrument_attempt_latency: "Histogram"
+    _instrument_operation_counter: "Counter"
+    _instrument_operation_latency: "Histogram"
     current_op: MetricOpTracer
     enabled: bool
     method: str
@@ -188,10 +188,10 @@ class MetricsTracer:
     def __init__(
         self,
         enabled: bool,
-        instrument_attempt_latency: Histogram,
-        instrument_attempt_counter: Counter,
-        instrument_operation_latency: Histogram,
-        instrument_operation_counter: Counter,
+        instrument_attempt_latency: "Histogram",
+        instrument_attempt_counter: "Counter",
+        instrument_operation_latency: "Histogram",
+        instrument_operation_counter: "Counter",
         client_attributes: Dict[str, str],
     ):
         """
@@ -251,7 +251,7 @@ class MetricsTracer:
         return self._client_attributes
 
     @property
-    def instrument_attempt_counter(self) -> Counter:
+    def instrument_attempt_counter(self) -> "Counter":
         """
         Return the instrument for counting attempts.
 
@@ -264,7 +264,7 @@ class MetricsTracer:
         return self._instrument_attempt_counter
 
     @property
-    def instrument_attempt_latency(self) -> Histogram:
+    def instrument_attempt_latency(self) -> "Histogram":
         """
         Return the instrument for measuring attempt latency.
 
@@ -277,7 +277,7 @@ class MetricsTracer:
         return self._instrument_attempt_latency
 
     @property
-    def instrument_operation_counter(self) -> Counter:
+    def instrument_operation_counter(self) -> "Counter":
         """
         Return the instrument for counting operations.
 
@@ -290,7 +290,7 @@ class MetricsTracer:
         return self._instrument_operation_counter
 
     @property
-    def instrument_operation_latency(self) -> Histogram:
+    def instrument_operation_latency(self) -> "Histogram":
         """
         Return the instrument for measuring operation latency.
 
@@ -394,9 +394,9 @@ class MetricsTracer:
         """
         if not self.enabled:
             return {}
-
-        self._client_attributes[METRIC_LABEL_KEY_STATUS] = self.current_op.status
-        return self._client_attributes
+        attributes = self._client_attributes.copy()
+        attributes[METRIC_LABEL_KEY_STATUS] = self.current_op.status
+        return attributes
 
     def _create_attempt_otel_attributes(self) -> dict:
         """
@@ -408,11 +408,13 @@ class MetricsTracer:
         if not self.enabled:
             return {}
 
-        attributes = {}
-        # Short circuit out if we don't have an attempt
-        if self.current_op.current_attempt is not None:
-            attributes[METRIC_LABEL_KEY_STATUS] = self.current_op.current_attempt.status
+        attributes = self._client_attributes.copy()
 
+        # Short circuit out if we don't have an attempt
+        if self.current_op.current_attempt is None:
+            return attributes
+
+        attributes[METRIC_LABEL_KEY_STATUS] = self.current_op.current_attempt.status
         return attributes
 
     def set_project(self, project: str) -> "MetricsTracer":

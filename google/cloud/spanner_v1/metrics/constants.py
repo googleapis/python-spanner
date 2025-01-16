@@ -15,6 +15,12 @@
 BUILT_IN_METRICS_METER_NAME = "gax-python"
 NATIVE_METRICS_PREFIX = "spanner.googleapis.com/internal/client"
 SPANNER_RESOURCE_TYPE = "spanner_instance_client"
+SPANNER_SERVICE_NAME = "spanner-python"
+GOOGLE_CLOUD_RESOURCE_KEY = "google-cloud-resource-prefix"
+GOOGLE_CLOUD_REGION_KEY = "cloud.region"
+GOOGLE_CLOUD_REGION_GLOBAL = "global"
+SPANNER_METHOD_PREFIX = "/google.spanner.v1."
+ENABLE_SPANNER_METRICS_ENV_VAR = "SPANNER_ENABLE_BUILTIN_METRICS"
 
 # Monitored resource labels
 MONITORED_RES_LABEL_KEY_PROJECT = "project_id"

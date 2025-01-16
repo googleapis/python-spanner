@@ -50,26 +50,26 @@ class MetricsTracerFactory:
     """Factory class for creating MetricTracer instances. This class facilitates the creation of MetricTracer objects, which are responsible for collecting and tracing metrics."""
 
     enabled: bool
-    _instrument_attempt_latency: Histogram
-    _instrument_attempt_counter: Counter
-    _instrument_operation_latency: Histogram
-    _instrument_operation_counter: Counter
+    _instrument_attempt_latency: "Histogram"
+    _instrument_attempt_counter: "Counter"
+    _instrument_operation_latency: "Histogram"
+    _instrument_operation_counter: "Counter"
     _client_attributes: Dict[str, str]
 
     @property
-    def instrument_attempt_latency(self) -> Histogram:
+    def instrument_attempt_latency(self) -> "Histogram":
         return self._instrument_attempt_latency
 
     @property
-    def instrument_attempt_counter(self) -> Counter:
+    def instrument_attempt_counter(self) -> "Counter":
         return self._instrument_attempt_counter
 
     @property
-    def instrument_operation_latency(self) -> Histogram:
+    def instrument_operation_latency(self) -> "Histogram":
         return self._instrument_operation_latency
 
     @property
-    def instrument_operation_counter(self) -> Counter:
+    def instrument_operation_counter(self) -> "Counter":
         return self._instrument_operation_counter
 
     def __init__(self, enabled: bool, service_name: str):
