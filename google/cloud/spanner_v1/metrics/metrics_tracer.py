@@ -56,7 +56,7 @@ class MetricAttemptTracer:
     direct_path_used: bool
     status: str
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize a MetricAttemptTracer instance with default values.
 
@@ -181,8 +181,11 @@ class MetricsTracer:
     _instrument_attempt_latency: "Histogram"
     _instrument_operation_counter: "Counter"
     _instrument_operation_latency: "Histogram"
+    _instrument_gfe_latency: "Histogram"
+    _instrument_gfe_missing_header_count: "Counter"
     current_op: MetricOpTracer
     enabled: bool
+    gfe_enabled: bool
     method: str
 
     def __init__(
@@ -193,21 +196,23 @@ class MetricsTracer:
         instrument_operation_latency: "Histogram",
         instrument_operation_counter: "Counter",
         client_attributes: Dict[str, str],
+        gfe_enabled: bool = False,
     ):
         """
         Initialize a MetricsTracer instance with the given parameters.
 
-        This constructor initializes a MetricsTracer instance with the provided method name, enabled status, direct path enabled status,
-        instrumented metrics for attempt latency, attempt counter, operation latency, operation counter, and client attributes.
-        It sets up the necessary metrics tracing infrastructure for recording metrics related to RPC operations.
+        This constructor sets up a MetricsTracer instance with the specified parameters, including the enabled status,
+        instruments for measuring and counting attempt and operation metrics, and client attributes. It prepares the
+        infrastructure needed for recording metrics related to RPC operations.
 
         Args:
-            enabled (bool): A flag indicating if metrics tracing is enabled.
-            instrument_attempt_latency (Histogram): The instrument for measuring attempt latency.
-            instrument_attempt_counter (Counter): The instrument for counting attempts.
-            instrument_operation_latency (Histogram): The instrument for measuring operation latency.
-            instrument_operation_counter (Counter): The instrument for counting operations.
-            client_attributes (dict[str, str]): A dictionary of client attributes used for metrics tracing.
+            enabled (bool): Indicates if metrics tracing is enabled.
+            instrument_attempt_latency (Histogram): Instrument for measuring attempt latency.
+            instrument_attempt_counter (Counter): Instrument for counting attempts.
+            instrument_operation_latency (Histogram): Instrument for measuring operation latency.
+            instrument_operation_counter (Counter): Instrument for counting operations.
+            client_attributes (Dict[str, str]): Dictionary of client attributes used for metrics tracing.
+            gfe_enabled (bool, optional): Indicates if GFE metrics are enabled. Defaults to False.
         """
         self.current_op = MetricOpTracer()
         self._client_attributes = client_attributes
@@ -216,6 +221,7 @@ class MetricsTracer:
         self._instrument_operation_latency = instrument_operation_latency
         self._instrument_operation_counter = instrument_operation_counter
         self.enabled = enabled
+        self.gfe_enabled = gfe_enabled
 
     @staticmethod
     def _get_ms_time_diff(start: datetime, end: datetime) -> float:
@@ -322,7 +328,7 @@ class MetricsTracer:
 
         If metrics tracing is not enabled, this method does not perform any operations.
         """
-        if not self.enabled:
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED:
             return
         self.current_op.current_attempt.status = status
 
@@ -347,7 +353,7 @@ class MetricsTracer:
         It is used to track the start time of an operation, which is essential for calculating operation latency and other metrics.
         If metrics tracing is not enabled, this method does not perform any operations.
         """
-        if not self.enabled:
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED:
             return
         self.current_op.start()
 
@@ -360,7 +366,7 @@ class MetricsTracer:
         Additionally, it increments the operation count and records the attempt count for the operation.
         If metrics tracing is not enabled, this method does not perform any operations.
         """
-        if not self.enabled:
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED:
             return
         end_time = datetime.now()
         # Build Attributes
@@ -385,6 +391,29 @@ class MetricsTracer:
             self.current_op.attempt_count, attributes=attempt_attributes
         )
 
+    def record_gfe_latency(self, latency: int) -> None:
+        """
+        Records the GFE latency using the Histogram instrument.
+
+        Args:
+            latency (int): The latency duration to be recorded.
+        """
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED or not self.gfe_enabled:
+            return
+        self._instrument_gfe_latency.record(
+            amount=latency, attributes=self.client_attributes
+        )
+
+    def record_gfe_missing_header_count(self) -> None:
+        """
+        Increments the counter for missing GFE headers.
+        """
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED or not self.gfe_enabled:
+            return
+        self._instrument_gfe_missing_header_count.add(
+            amount=1, attributes=self.client_attributes
+        )
+
     def _create_operation_otel_attributes(self) -> dict:
         """
         Create additional attributes for operation metrics tracing.
@@ -392,7 +421,7 @@ class MetricsTracer:
         This method populates the client attributes dictionary with the operation status if metrics tracing is enabled.
         It returns the updated client attributes dictionary.
         """
-        if not self.enabled:
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED:
             return {}
         attributes = self._client_attributes.copy()
         attributes[METRIC_LABEL_KEY_STATUS] = self.current_op.status
@@ -405,7 +434,7 @@ class MetricsTracer:
         This method populates the attributes dictionary with the attempt status if metrics tracing is enabled and an attempt exists.
         It returns the updated attributes dictionary.
         """
-        if not self.enabled:
+        if not self.enabled or not HAS_OPENTELEMETRY_INSTALLED:
             return {}
 
         attributes = self._client_attributes.copy()

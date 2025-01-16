@@ -26,6 +26,7 @@ from .constants import (
 
 try:
     from opentelemetry.resourcedetector import gcp_resource_detector
+
     # Overwrite the requests timeout for the detector.
     # This is necessary as the client will wait the full timeout if the
     # code is not run in a GCP environment, with the location endpoints available.
@@ -48,8 +49,23 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
     _metrics_tracer_factory: "SpannerMetricsTracerFactory" = None
     current_metrics_tracer: MetricsTracer = None
 
-    def __new__(cls, enabled: bool = True) -> "SpannerMetricsTracerFactory":
-        """Create a new instance of SpannerMetricsTracerFactory if it doesn't already exist."""
+    def __new__(
+        cls, enabled: bool = True, gfe_enabled: bool = False
+    ) -> "SpannerMetricsTracerFactory":
+        """
+        Create a new instance of SpannerMetricsTracerFactory if it doesn't already exist.
+
+        This method implements the singleton pattern for the SpannerMetricsTracerFactory class.
+        It initializes the factory with the necessary client attributes and configuration settings
+        if it hasn't been created yet.
+
+        Args:
+            enabled (bool): A flag indicating whether metrics tracing is enabled. Defaults to True.
+            gfe_enabled (bool): A flag indicating whether GFE metrics are enabled. Defaults to False.
+
+        Returns:
+            SpannerMetricsTracerFactory: The singleton instance of SpannerMetricsTracerFactory.
+        """
         if cls._metrics_tracer_factory is None:
             cls._metrics_tracer_factory = MetricsTracerFactory(
                 enabled, SPANNER_SERVICE_NAME
@@ -63,11 +79,19 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
                 cls._generate_client_hash(client_uid)
             )
             cls._metrics_tracer_factory.set_location(cls._get_location())
+            cls._metrics_tracer_factory.gfe_enabled = gfe_enabled
         return cls._metrics_tracer_factory
 
     @staticmethod
     def _generate_client_uid() -> str:
-        """Generate a client UID in the form of uuidv4@pid@hostname."""
+        """Generate a client UID in the form of uuidv4@pid@hostname.
+
+        This method generates a unique client identifier (UID) by combining a UUID version 4,
+        the process ID (PID), and the hostname. The PID is limited to the first 10 characters.
+
+        Returns:
+            str: A string representing the client UID in the format uuidv4@pid@hostname.
+        """
         try:
             hostname = os.uname()[1]
             pid = str(os.getpid())[0:10]  # Limit PID to 10 characters
@@ -92,11 +116,17 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
         """
         Generate a 6-digit zero-padded lowercase hexadecimal hash using the 10 most significant bits of a 64-bit hash value.
 
-            The primary purpose of this function is to generate a hash value for the `client_hash`
-            resource label using `client_uid` metric field. The range of values is chosen to be small
-            enough to keep the cardinality of the Resource targets under control. Note: If at later time
-            the range needs to be increased, it can be done by increasing the value of `kPrefixLength` to
-            up to 24 bits without changing the format of the returned value.
+        The primary purpose of this function is to generate a hash value for the `client_hash`
+        resource label using `client_uid` metric field. The range of values is chosen to be small
+        enough to keep the cardinality of the Resource targets under control. Note: If at later time
+        the range needs to be increased, it can be done by increasing the value of `kPrefixLength` to
+        up to 24 bits without changing the format of the returned value.
+
+        Args:
+            client_uid (str): The client UID used to generate the hash.
+
+        Returns:
+            str: A 6-digit zero-padded lowercase hexadecimal hash.
         """
         if not client_uid:
             return "000000"
@@ -114,11 +144,16 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
 
     @staticmethod
     def _get_location() -> str:
-        """Get the location of the resource."""
+        """Get the location of the resource.
+
+        Returns:
+            str: The location of the resource. If OpenTelemetry is not installed, returns a global region.
+        """
         if not HAS_OPENTELEMETRY_INSTALLED:
             return GOOGLE_CLOUD_REGION_GLOBAL
         detector = gcp_resource_detector.GoogleCloudResourceDetector()
         resources = detector.detect()
+
         if GOOGLE_CLOUD_REGION_KEY not in resources.attributes:
             return GOOGLE_CLOUD_REGION_GLOBAL
         else:

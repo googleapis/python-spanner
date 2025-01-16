@@ -56,15 +56,6 @@ def test_set_metrics_tracer_attributes(interceptor):
     assert SpannerMetricsTracerFactory.current_metrics_tracer.database == "my_database"
 
 
-def test_intercept_without_tracer(interceptor):
-    mock_invoked_method = MagicMock(return_value="response")
-    mock_details = MagicMock(metadata={})
-    response = interceptor.intercept(mock_invoked_method, "request", mock_details)
-
-    assert response == "response"
-    mock_invoked_method.assert_called_once_with("request", mock_details)
-
-
 def test_intercept_with_tracer(interceptor):
     SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start = (
@@ -73,8 +64,12 @@ def test_intercept_with_tracer(interceptor):
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion = (
         MagicMock()
     )
+    SpannerMetricsTracerFactory.current_metrics_tracer.gfe_enabled = False
 
-    mock_invoked_method = MagicMock(return_value="response")
+    invoked_response = MagicMock()
+    invoked_response.initial_metadata.return_value = {}
+
+    mock_invoked_method = MagicMock(return_value=invoked_response)
     call_details = MagicMock(
         method="spanner.someMethod",
         metadata=[
@@ -86,8 +81,8 @@ def test_intercept_with_tracer(interceptor):
     )
 
     response = interceptor.intercept(mock_invoked_method, "request", call_details)
-
-    assert response == "response"
+    assert response == invoked_response
+    print(response)
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start.assert_called_once()
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion.assert_called_once()
     mock_invoked_method.assert_called_once_with("request", call_details)

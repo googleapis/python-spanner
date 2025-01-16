@@ -32,6 +32,8 @@ from google.cloud.spanner_v1.metrics.constants import (
     METRIC_LABEL_KEY_DATABASE,
     METRIC_LABEL_KEY_DIRECT_PATH_ENABLED,
     BUILT_IN_METRICS_METER_NAME,
+    METRIC_NAME_GFE_LATENCY,
+    METRIC_NAME_GFE_MISSING_HEADER_COUNT,
 )
 
 from typing import Dict
@@ -50,10 +52,13 @@ class MetricsTracerFactory:
     """Factory class for creating MetricTracer instances. This class facilitates the creation of MetricTracer objects, which are responsible for collecting and tracing metrics."""
 
     enabled: bool
+    gfe_enabled: bool
     _instrument_attempt_latency: "Histogram"
     _instrument_attempt_counter: "Counter"
     _instrument_operation_latency: "Histogram"
     _instrument_operation_counter: "Counter"
+    _instrument_gfe_latency: "Histogram"
+    _instrument_gfe_missing_header_count: "Counter"
     _client_attributes: Dict[str, str]
 
     @property
@@ -306,4 +311,16 @@ class MetricsTracerFactory:
             name=METRIC_NAME_OPERATION_COUNT,
             unit="1",
             description="Number of operations.",
+        )
+
+        self._instrument_gfe_latency = meter.create_histogram(
+            name=METRIC_NAME_GFE_LATENCY,
+            unit="ms",
+            description="GFE Latency.",
+        )
+
+        self._instrument_gfe_missing_header_count = meter.create_counter(
+            name=METRIC_NAME_GFE_MISSING_HEADER_COUNT,
+            unit="1",
+            description="GFE missing header count.",
         )
