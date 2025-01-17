@@ -27,6 +27,7 @@ from google.cloud.spanner_v1.testing.interceptors import (
     MethodAbortInterceptor,
     XGoogRequestIDHeaderInterceptor,
 )
+from google.cloud.spanner_v1._helpers import inject_retry_header_control
 
 
 class TestDatabase(Database):
@@ -70,6 +71,14 @@ class TestDatabase(Database):
 
     @property
     def spanner_api(self):
+        api = self.__generate_spanner_api()
+        if not api:
+            return api
+
+        inject_retry_header_control(api)
+        return api
+
+    def __generate_spanner_api(self):
         """Helper for session-related API calls."""
         if self._spanner_api is None:
             client = self._instance._client

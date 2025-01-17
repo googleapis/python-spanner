@@ -309,6 +309,7 @@ class TestRequestIDHeader(MockServerTestBase):
             )
         ]
 
+        print("got_unaries", got_unary_segments)
         assert got_unary_segments == want_unary_segments
         assert got_stream_segments == want_stream_segments
 

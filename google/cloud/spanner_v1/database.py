@@ -55,7 +55,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,
-    InterceptingHeaderInjector,
+    inject_retry_header_control,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -434,42 +434,14 @@ class Database(object):
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
-        api = self._generate_spanner_api()
+        api = self.__generate_spanner_api()
         if not api:
             return api
 
-        # Now wrap each method's __call__ method with our wrapped one.
-        # This is how to deal with the fact that there are no proper gRPC
-        # interceptors for Python hence the remedy is to replace callables
-        # with our custom wrapper.
-        attrs = dir(api)
-        for attr_name in attrs:
-            mangled = attr_name.startswith("__")
-            if mangled:
-                continue
-
-            non_public = attr_name.startswith("_")
-            if non_public:
-                continue
-
-            attr = getattr(api, attr_name)
-            callable_attr = callable(attr)
-            if callable_attr is None:
-                continue
-
-            # We should only be looking at bound methods to SpannerClient
-            # as those are the RPC invoking methods that need to be wrapped
-
-            is_method = type(attr).__name__ == "method"
-            if not is_method:
-                continue
-
-            print("attr_name", attr_name, "callable_attr", attr)
-            setattr(api, attr_name, InterceptingHeaderInjector(attr))
-
+        inject_retry_header_control(api)
         return api
 
-    def _generate_spanner_api(self):
+    def __generate_spanner_api(self):
         """Helper for session-related API calls."""
         if self._spanner_api is None:
             client_info = self._instance._client._client_info
@@ -804,7 +776,9 @@ class Database(object):
                         session=session.name,
                         options=txn_options,
                         metadata=self.metadata_with_request_id(
-                            begin_txn_nth_request, begin_txn_attempt.increment(), metadata
+                            begin_txn_nth_request,
+                            begin_txn_attempt.increment(),
+                            metadata,
                         ),
                     )
 

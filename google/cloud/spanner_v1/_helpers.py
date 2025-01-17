@@ -737,27 +737,73 @@ class InterceptingHeaderInjector:
     def __init__(self, original_callable: Callable):
         self._original_callable = original_callable
 
-    def __call__(self, *args, **kwargs):
-        metadata = kwargs.get("metadata", [])
-        # Find all the headers that match the x-goog-spanner-request-id
-        # header an on each retry increment the value.
-        all_metadata = []
-        for key, value in metadata:
-            if key is REQ_ID_HEADER_KEY:
-                # Otherwise now increment the count for the attempt number.
-                splits = value.split(".")
-                attempt_plus_one = int(splits[-1]) + 1
-                splits[-1] = str(attempt_plus_one)
-                value_before = value
-                value = ".".join(splits)
-                print("incrementing value on retry from", value_before, "to", value)
 
-            all_metadata.append(
-                (
-                    key,
-                    value,
-                )
-            )
+patched = {}
 
-        kwargs["metadata"] = all_metadata
-        return self._original_callable(*args, **kwargs)
+
+def inject_retry_header_control(api):
+    # For each method, add an _attempt value that'll then be
+    # retrieved for each retry.
+    # 1. Patch the __getattribute__ method to match items in our manifest.
+    target = type(api)
+    hex_id = hex(id(target))
+    if patched.get(hex_id, None) is not None:
+        return
+
+    orig_getattribute = getattr(target, "__getattribute__")
+
+    def patched_getattribute(*args, **kwargs):
+        attr = orig_getattribute(*args, **kwargs)
+
+        # 0. If we already patched it, we can return immediately.
+        if getattr(attr, "_patched", None) is not None:
+            return attr
+
+        # 1. Skip over non-methods.
+        if not callable(attr):
+            return attr
+
+        # 2. Skip modifying private and mangled methods.
+        mangled_or_private = attr.__name__.startswith("_")
+        if mangled_or_private:
+            return attr
+
+        print("\033[35mattr", attr, "hex_id", hex(id(attr)), "\033[00m")
+
+        # 3. Wrap the callable attribute and then capture its metadata keyed argument.
+        def wrapped_attr(*args, **kwargs):
+            metadata = kwargs.get("metadata", [])
+            if not metadata:
+                # Increment the reinvocation count.
+                print("not metatadata", attr.__name__)
+                wrapped_attr._attempt += 1
+                return attr(*args, **kwargs)
+
+            # 4. Find all the headers that match the target header key.
+            all_metadata = []
+            for key, value in metadata:
+                if key is REQ_ID_HEADER_KEY:
+                    print("key", key, "value", value, "attempt", wrapped_attr._attempt)
+                    # 5. Increment the original_attempt with that of our re-invocation count.
+                    splits = value.split(".")
+                    hdr_attempt_plus_reinvocation = (
+                        int(splits[-1]) + wrapped_attr._attempt
+                    )
+                    splits[-1] = str(hdr_attempt_plus_reinvocation)
+                    value = ".".join(splits)
+
+                all_metadata.append((key, value))
+
+            # Increment the reinvocation count.
+            wrapped_attr._attempt += 1
+
+            kwargs["metadata"] = all_metadata
+            print("\033[34mwrap_callable", hex(id(attr)), attr.__name__, "\033[00m")
+            return attr(*args, **kwargs)
+
+        wrapped_attr._attempt = 0
+        wrapped_attr._patched = True
+        return wrapped_attr
+
+    setattr(target, "__getattribute__", patched_getattribute)
+    patched[hex_id] = True

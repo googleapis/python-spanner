@@ -268,7 +268,8 @@ class FixedSizePool(AbstractSessionPool):
                         metadata=all_metadata,
                     )
 
-                resp = retry_on_unavailable(create_sessions)
+                resp = retry_on_unavailable(create_sessions, "fixedpool")
+                # print("resp.FixedPool", resp)
 
                 add_span_event(
                     span,
@@ -581,7 +582,8 @@ class PingingPool(AbstractSessionPool):
                         metadata=all_metadata,
                     )
 
-                resp = retry_on_unavailable(create_sessions)
+                resp = retry_on_unavailable(create_sessions, "pingpool")
+                print("resp.PingingPool", resp)
 
                 add_span_event(
                     span,
@@ -822,7 +824,7 @@ class SessionCheckout(object):
         self._pool.put(self._session)
 
 
-def retry_on_unavailable(fn, max=6):
+def retry_on_unavailable(fn, kind, max=6):
     """
     Retries `fn` to a maximum of `max` times on encountering UNAVAILABLE exceptions,
     each time passing in the iteration's ordinal number to signal
@@ -830,12 +832,15 @@ def retry_on_unavailable(fn, max=6):
     """
     last_exc = None
     for i in range(max):
+        print("retry_on_unavailable", kind, i)
         try:
             return fn(i + 1)
         except ServiceUnavailable as exc:
+            print("exc", exc)
             last_exc = exc
             time.sleep(i**2 + random.random())
-        except:
+        except Exception as e:
+            print("got exception", e)
             raise
 
     raise last_exc

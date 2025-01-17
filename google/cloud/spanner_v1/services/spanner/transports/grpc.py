@@ -413,7 +413,9 @@ class SpannerGrpcTransport(SpannerTransport):
                 request_serializer=spanner.BatchCreateSessionsRequest.serialize,
                 response_deserializer=spanner.BatchCreateSessionsResponse.deserialize,
             )
-        return self._stubs["batch_create_sessions"]
+        fn = self._stubs["batch_create_sessions"]
+        print("\033[32minvoking batch_create_sessionhex_id", hex(id(fn)), "\033[00m")
+        return fn
 
     @property
     def get_session(self) -> Callable[[spanner.GetSessionRequest], spanner.Session]:
