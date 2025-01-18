@@ -257,19 +257,13 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
-                nth_req = database._next_nth_request
 
-                def create_sessions(attempt):
-                    all_metadata = database.metadata_with_request_id(
-                        nth_req, attempt, metadata
-                    )
-                    return api.batch_create_sessions(
-                        request=request,
-                        metadata=all_metadata,
-                    )
-
-                resp = retry_on_unavailable(create_sessions, "fixedpool")
-                # print("resp.FixedPool", resp)
+                resp = api.batch_create_sessions(
+                    request=request,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
+                )
 
                 add_span_event(
                     span,
@@ -569,21 +563,14 @@ class PingingPool(AbstractSessionPool):
             observability_options=observability_options,
             metadata=metadata,
         ) as span, MetricsCapture():
-            created_session_count = 0
-            while created_session_count < self.size:
-                nth_req = database._next_nth_request
-
-                def create_sessions(attempt):
-                    all_metadata = database.metadata_with_request_id(
-                        nth_req, attempt, metadata
-                    )
-                    return api.batch_create_sessions(
-                        request=request,
-                        metadata=all_metadata,
-                    )
-
-                resp = retry_on_unavailable(create_sessions, "pingpool")
-                print("resp.PingingPool", resp)
+            returned_session_count = 0
+            while returned_session_count < self.size:
+                resp = api.batch_create_sessions(
+                    request=request,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
+                )
 
                 add_span_event(
                     span,
@@ -592,14 +579,13 @@ class PingingPool(AbstractSessionPool):
 
                 for session_pb in resp.session:
                     session = self._new_session()
+                    returned_session_count += 1
                     session._session_id = session_pb.name.split("/")[-1]
                     self.put(session)
 
-                created_session_count += len(resp.session)
-
             add_span_event(
                 span,
-                f"Requested for {requested_session_count} sessions, returned {created_session_count}",
+                f"Requested for {requested_session_count} sessions, returned {returned_session_count}",
                 span_event_attributes,
             )
 
@@ -822,25 +808,3 @@ class SessionCheckout(object):
 
     def __exit__(self, *ignored):
         self._pool.put(self._session)
-
-
-def retry_on_unavailable(fn, kind, max=6):
-    """
-    Retries `fn` to a maximum of `max` times on encountering UNAVAILABLE exceptions,
-    each time passing in the iteration's ordinal number to signal
-    the nth attempt. It retries with exponential backoff with jitter.
-    """
-    last_exc = None
-    for i in range(max):
-        print("retry_on_unavailable", kind, i)
-        try:
-            return fn(i + 1)
-        except ServiceUnavailable as exc:
-            print("exc", exc)
-            last_exc = exc
-            time.sleep(i**2 + random.random())
-        except Exception as e:
-            print("got exception", e)
-            raise
-
-    raise last_exc
