@@ -15,12 +15,10 @@
 """Pools managing shared Session objects."""
 
 import datetime
-import random
 import queue
 import time
 
 from google.cloud.exceptions import NotFound
-from google.api_core.exceptions import ServiceUnavailable
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
@@ -257,7 +255,6 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
-
                 resp = api.batch_create_sessions(
                     request=request,
                     metadata=database.metadata_with_request_id(

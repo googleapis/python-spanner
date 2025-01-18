@@ -792,7 +792,6 @@ class Database(object):
                         query_options=query_options,
                         request_options=request_options,
                     )
-
                     method = functools.partial(
                         api.execute_streaming_sql,
                         metadata=self.metadata_with_request_id(

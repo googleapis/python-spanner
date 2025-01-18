@@ -250,20 +250,15 @@ class Batch(_BatchBase):
             observability_options=observability_options,
             metadata=metadata,
         ), MetricsCapture():
-            attempt = AtomicCounter(0)
-            next_nth_request = database._next_nth_request
-
-            all_metadata = database.metadata_with_request_id(
-                next_nth_request,
-                attempt.increment(),
-                metadata,
-            )
             method = functools.partial(
                 api.commit,
                 request=request,
-                metadata=all_metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                ),
             )
-
             deadline = time.time() + kwargs.get(
                 "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
             )
@@ -382,18 +377,15 @@ class MutationGroups(_SessionWrapper):
             observability_options=observability_options,
             metadata=metadata,
         ), MetricsCapture():
-            next_nth_request = database._next_nth_request
-            all_metadata = database.metadata_with_request_id(
-                next_nth_request,
-                0,
-                metadata,
-            )
             method = functools.partial(
                 api.batch_write,
                 request=request,
-                metadata=all_metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                ),
             )
-
             response = _retry(
                 method,
                 allowed_exceptions={

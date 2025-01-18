@@ -752,8 +752,12 @@ def inject_retry_header_control(api):
 
     orig_getattribute = getattr(target, "__getattribute__")
 
-    def patched_getattribute(*args, **kwargs):
-        attr = orig_getattribute(*args, **kwargs)
+    def patched_getattribute(obj, key, *args, **kwargs):
+        if key.startswith("_"):
+            return orig_getattribute(obj, key, *args, **kwargs)
+
+        attr = orig_getattribute(obj, key, *args, **kwargs)
+        print("args", args, "attr.dir", dir(attr))
 
         # 0. If we already patched it, we can return immediately.
         if getattr(attr, "_patched", None) is not None:
