@@ -34,6 +34,10 @@ try:
 
     import mmh3
 
+    # Override Resource detector logging to not warn when GCP resources are not detected
+    import logging
+    logging.getLogger("opentelemetry.resourcedetector.gcp_resource_detector").setLevel(logging.ERROR)
+
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:  # pragma: NO COVER
     HAS_OPENTELEMETRY_INSTALLED = False

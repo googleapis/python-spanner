@@ -82,7 +82,6 @@ def test_intercept_with_tracer(interceptor):
 
     response = interceptor.intercept(mock_invoked_method, "request", call_details)
     assert response == invoked_response
-    print(response)
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start.assert_called_once()
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion.assert_called_once()
     mock_invoked_method.assert_called_once_with("request", call_details)
