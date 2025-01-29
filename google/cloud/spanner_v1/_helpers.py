@@ -32,10 +32,11 @@ from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
-from google.cloud.spanner_v1.request_id_header import with_request_id
+from google.cloud.spanner_v1.request_id_header import REQ_ID_HEADER_KEY, with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
 
 import random
+from typing import Callable
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -641,6 +642,85 @@ class AtomicCounter:
         """
         return self.__add__(n)
 
+    def reset(self):
+        with self.__lock:
+            self.__value = 0
+
 
 def _metadata_with_request_id(*args, **kwargs):
     return with_request_id(*args, **kwargs)
+
+
+patched = {}
+
+
+def inject_retry_header_control(api):
+    # For each method, add an _attempt value that'll then be
+    # retrieved for each retry.
+    # 1. Patch the __getattribute__ method to match items in our manifest.
+    target = type(api)
+    hex_id = hex(id(target))
+    if patched.get(hex_id, None) is not None:
+        return
+
+    orig_getattribute = getattr(target, "__getattribute__")
+
+    def patched_getattribute(obj, key, *args, **kwargs):
+        if key.startswith("_"):
+            return orig_getattribute(obj, key, *args, **kwargs)
+
+        attr = orig_getattribute(obj, key, *args, **kwargs)
+        print("args", args, "attr.dir", dir(attr))
+
+        # 0. If we already patched it, we can return immediately.
+        if getattr(attr, "_patched", None) is not None:
+            return attr
+
+        # 1. Skip over non-methods.
+        if not callable(attr):
+            return attr
+
+        # 2. Skip modifying private and mangled methods.
+        mangled_or_private = attr.__name__.startswith("_")
+        if mangled_or_private:
+            return attr
+
+        print("\033[35mattr", attr, "hex_id", hex(id(attr)), "\033[00m")
+
+        # 3. Wrap the callable attribute and then capture its metadata keyed argument.
+        def wrapped_attr(*args, **kwargs):
+            metadata = kwargs.get("metadata", [])
+            if not metadata:
+                # Increment the reinvocation count.
+                print("not metatadata", attr.__name__)
+                wrapped_attr._attempt += 1
+                return attr(*args, **kwargs)
+
+            # 4. Find all the headers that match the target header key.
+            all_metadata = []
+            for key, value in metadata:
+                if key is REQ_ID_HEADER_KEY:
+                    print("key", key, "value", value, "attempt", wrapped_attr._attempt)
+                    # 5. Increment the original_attempt with that of our re-invocation count.
+                    splits = value.split(".")
+                    hdr_attempt_plus_reinvocation = (
+                        int(splits[-1]) + wrapped_attr._attempt
+                    )
+                    splits[-1] = str(hdr_attempt_plus_reinvocation)
+                    value = ".".join(splits)
+
+                all_metadata.append((key, value))
+
+            # Increment the reinvocation count.
+            wrapped_attr._attempt += 1
+
+            kwargs["metadata"] = all_metadata
+            print("\033[34mwrap_callable", hex(id(attr)), attr.__name__, "\033[00m")
+            return attr(*args, **kwargs)
+
+        wrapped_attr._attempt = 0
+        wrapped_attr._patched = True
+        return wrapped_attr
+
+    setattr(target, "__getattribute__", patched_getattribute)
+    patched[hex_id] = True

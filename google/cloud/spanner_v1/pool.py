@@ -253,7 +253,9 @@ class FixedSizePool(AbstractSessionPool):
                 )
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
                 )
 
                 add_span_event(
@@ -557,8 +559,12 @@ class PingingPool(AbstractSessionPool):
             while returned_session_count < self.size:
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
                 )
+
+                print("resp.PingingPool", resp)
 
                 add_span_event(
                     span,
