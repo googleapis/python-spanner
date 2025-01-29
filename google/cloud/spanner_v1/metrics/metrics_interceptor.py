@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,8 +137,8 @@ class MetricsInterceptor(ClientInterceptor):
         method_name = self._remove_prefix(
             call_details.method, SPANNER_METHOD_PREFIX
         ).replace("/", ".")
-        SpannerMetricsTracerFactory.current_metrics_tracer.set_method(method_name)
 
+        SpannerMetricsTracerFactory.current_metrics_tracer.set_method(method_name)
         SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start()
         response = invoked_method(request_or_iterator, call_details)
         SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion()
@@ -150,5 +149,4 @@ class MetricsInterceptor(ClientInterceptor):
             SpannerMetricsTracerFactory.current_metrics_trace.record_gfe_metrics(
                 metadata
             )
-
         return response

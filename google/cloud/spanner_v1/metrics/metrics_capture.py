@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -41,7 +40,6 @@ class MetricsCapture:
             MetricsCapture: The instance of the context manager.
         """
         factory = SpannerMetricsTracerFactory()
-
         # Define a new metrics tracer for the new operation
         SpannerMetricsTracerFactory.current_metrics_tracer = (
             factory.create_metrics_tracer()

@@ -124,6 +124,7 @@ class SpannerGrpcTransport(SpannerTransport):
         self._grpc_channel = None
         self._ssl_channel_credentials = ssl_channel_credentials
         self._stubs: Dict[str, Callable] = {}
+        self._metrics_interceptor = None
 
         if api_mtls_endpoint:
             warnings.warn("api_mtls_endpoint is deprecated", DeprecationWarning)
@@ -192,6 +193,7 @@ class SpannerGrpcTransport(SpannerTransport):
 
         # Wrap the gRPC channel with the metric interceptor
         if metrics_interceptor is not None:
+            self._metrics_interceptor = metrics_interceptor
             self._grpc_channel = grpc.intercept_channel(
                 self._grpc_channel, metrics_interceptor
             )

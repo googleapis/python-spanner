@@ -48,7 +48,10 @@ from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1.metrics.constants import ENABLE_SPANNER_METRICS_ENV_VAR
+from google.cloud.spanner_v1.metrics.constants import (
+    ENABLE_SPANNER_METRICS_ENV_VAR,
+    METRIC_EXPORT_INTERVAL_MS,
+)
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
@@ -227,7 +230,10 @@ class Client(ClientWithProject):
             if not _get_spanner_emulator_host():
                 meter_provider = MeterProvider(
                     metric_readers=[
-                        PeriodicExportingMetricReader(CloudMonitoringMetricsExporter())
+                        PeriodicExportingMetricReader(
+                            CloudMonitoringMetricsExporter(),
+                            export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
+                        )
                     ]
                 )
             metrics.set_meter_provider(meter_provider)

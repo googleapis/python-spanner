@@ -1,4 +1,3 @@
-﻿# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -68,3 +67,5 @@ METRIC_NAMES = [
     METRIC_NAME_OPERATION_COUNT,
     METRIC_NAME_ATTEMPT_COUNT,
 ]
+
+METRIC_EXPORT_INTERVAL_MS = 60000  # 1 Minute

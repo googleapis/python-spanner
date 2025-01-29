@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -36,7 +35,10 @@ try:
 
     # Override Resource detector logging to not warn when GCP resources are not detected
     import logging
-    logging.getLogger("opentelemetry.resourcedetector.gcp_resource_detector").setLevel(logging.ERROR)
+
+    logging.getLogger("opentelemetry.resourcedetector.gcp_resource_detector").setLevel(
+        logging.ERROR
+    )
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:  # pragma: NO COVER

@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -351,7 +350,6 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         if not HAS_OPENTELEMETRY_INSTALLED:
             logger.warning("Metric exporter called without dependencies installed.")
             return False
-
         time_series_list = self._resource_metrics_to_timeseries_pb(metrics_data)
         self._batch_write(time_series_list, timeout_millis)
         return True
