@@ -85,6 +85,14 @@ class DatabaseAdminRestInterceptor:
 
     .. code-block:: python
         class MyCustomDatabaseAdminInterceptor(DatabaseAdminRestInterceptor):
+            def pre_add_split_points(self, request, metadata):
+                logging.log(f"Received request: {request}")
+                return request, metadata
+
+            def post_add_split_points(self, response):
+                logging.log(f"Received response: {response}")
+                return response
+
             def pre_copy_backup(self, request, metadata):
                 logging.log(f"Received request: {request}")
                 return request, metadata
@@ -278,6 +286,32 @@ class DatabaseAdminRestInterceptor:
 
 
     """
+
+    def pre_add_split_points(
+        self,
+        request: spanner_database_admin.AddSplitPointsRequest,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.AddSplitPointsRequest,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Pre-rpc interceptor for add_split_points
+
+        Override in a subclass to manipulate the request or metadata
+        before they are sent to the DatabaseAdmin server.
+        """
+        return request, metadata
+
+    def post_add_split_points(
+        self, response: spanner_database_admin.AddSplitPointsResponse
+    ) -> spanner_database_admin.AddSplitPointsResponse:
+        """Post-rpc interceptor for add_split_points
+
+        Override in a subclass to manipulate the response
+        after it is returned by the DatabaseAdmin server but before
+        it is returned to user code.
+        """
+        return response
 
     def pre_copy_backup(
         self,
@@ -1161,6 +1195,159 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
 
         # Return the client from cache.
         return self._operations_client
+
+    class _AddSplitPoints(
+        _BaseDatabaseAdminRestTransport._BaseAddSplitPoints, DatabaseAdminRestStub
+    ):
+        def __hash__(self):
+            return hash("DatabaseAdminRestTransport.AddSplitPoints")
+
+        @staticmethod
+        def _get_response(
+            host,
+            metadata,
+            query_params,
+            session,
+            timeout,
+            transcoded_request,
+            body=None,
+        ):
+            uri = transcoded_request["uri"]
+            method = transcoded_request["method"]
+            headers = dict(metadata)
+            headers["Content-Type"] = "application/json"
+            response = getattr(session, method)(
+                "{host}{uri}".format(host=host, uri=uri),
+                timeout=timeout,
+                headers=headers,
+                params=rest_helpers.flatten_query_params(query_params, strict=True),
+                data=body,
+            )
+            return response
+
+        def __call__(
+            self,
+            request: spanner_database_admin.AddSplitPointsRequest,
+            *,
+            retry: OptionalRetry = gapic_v1.method.DEFAULT,
+            timeout: Optional[float] = None,
+            metadata: Sequence[Tuple[str, Union[str, bytes]]] = (),
+        ) -> spanner_database_admin.AddSplitPointsResponse:
+            r"""Call the add split points method over HTTP.
+
+            Args:
+                request (~.spanner_database_admin.AddSplitPointsRequest):
+                    The request object. The request for
+                [AddSplitPoints][google.spanner.admin.database.v1.DatabaseAdmin.AddSplitPoints].
+                retry (google.api_core.retry.Retry): Designation of what errors, if any,
+                    should be retried.
+                timeout (float): The timeout for this request.
+                metadata (Sequence[Tuple[str, Union[str, bytes]]]): Key/value pairs which should be
+                    sent along with the request as metadata. Normally, each value must be of type `str`,
+                    but for metadata keys ending with the suffix `-bin`, the corresponding values must
+                    be of type `bytes`.
+
+            Returns:
+                ~.spanner_database_admin.AddSplitPointsResponse:
+                    The response for
+                [AddSplitPoints][google.spanner.admin.database.v1.DatabaseAdmin.AddSplitPoints].
+
+            """
+
+            http_options = (
+                _BaseDatabaseAdminRestTransport._BaseAddSplitPoints._get_http_options()
+            )
+
+            request, metadata = self._interceptor.pre_add_split_points(
+                request, metadata
+            )
+            transcoded_request = _BaseDatabaseAdminRestTransport._BaseAddSplitPoints._get_transcoded_request(
+                http_options, request
+            )
+
+            body = _BaseDatabaseAdminRestTransport._BaseAddSplitPoints._get_request_body_json(
+                transcoded_request
+            )
+
+            # Jsonify the query params
+            query_params = _BaseDatabaseAdminRestTransport._BaseAddSplitPoints._get_query_params_json(
+                transcoded_request
+            )
+
+            if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
+                logging.DEBUG
+            ):  # pragma: NO COVER
+                request_url = "{host}{uri}".format(
+                    host=self._host, uri=transcoded_request["uri"]
+                )
+                method = transcoded_request["method"]
+                try:
+                    request_payload = type(request).to_json(request)
+                except:
+                    request_payload = None
+                http_request = {
+                    "payload": request_payload,
+                    "requestMethod": method,
+                    "requestUrl": request_url,
+                    "headers": dict(metadata),
+                }
+                _LOGGER.debug(
+                    f"Sending request for google.spanner.admin.database_v1.DatabaseAdminClient.AddSplitPoints",
+                    extra={
+                        "serviceName": "google.spanner.admin.database.v1.DatabaseAdmin",
+                        "rpcName": "AddSplitPoints",
+                        "httpRequest": http_request,
+                        "metadata": http_request["headers"],
+                    },
+                )
+
+            # Send the request
+            response = DatabaseAdminRestTransport._AddSplitPoints._get_response(
+                self._host,
+                metadata,
+                query_params,
+                self._session,
+                timeout,
+                transcoded_request,
+                body,
+            )
+
+            # In case of error, raise the appropriate core_exceptions.GoogleAPICallError exception
+            # subclass.
+            if response.status_code >= 400:
+                raise core_exceptions.from_http_response(response)
+
+            # Return the response
+            resp = spanner_database_admin.AddSplitPointsResponse()
+            pb_resp = spanner_database_admin.AddSplitPointsResponse.pb(resp)
+
+            json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
+
+            resp = self._interceptor.post_add_split_points(resp)
+            if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
+                logging.DEBUG
+            ):  # pragma: NO COVER
+                try:
+                    response_payload = (
+                        spanner_database_admin.AddSplitPointsResponse.to_json(response)
+                    )
+                except:
+                    response_payload = None
+                http_response = {
+                    "payload": response_payload,
+                    "headers": dict(response.headers),
+                    "status": response.status_code,
+                }
+                _LOGGER.debug(
+                    "Received response for google.spanner.admin.database_v1.DatabaseAdminClient.add_split_points",
+                    extra={
+                        "serviceName": "google.spanner.admin.database.v1.DatabaseAdmin",
+                        "rpcName": "AddSplitPoints",
+                        "metadata": http_response["headers"],
+                        "httpResponse": http_response,
+                    },
+                )
+            return resp
 
     class _CopyBackup(
         _BaseDatabaseAdminRestTransport._BaseCopyBackup, DatabaseAdminRestStub
@@ -4908,6 +5095,17 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
                     },
                 )
             return resp
+
+    @property
+    def add_split_points(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.AddSplitPointsRequest],
+        spanner_database_admin.AddSplitPointsResponse,
+    ]:
+        # The return type is fine, but mypy isn't sophisticated enough to determine what's going on here.
+        # In C++ this would require a dynamic_cast
+        return self._AddSplitPoints(self._session, self._host, self._interceptor)  # type: ignore
 
     @property
     def copy_backup(

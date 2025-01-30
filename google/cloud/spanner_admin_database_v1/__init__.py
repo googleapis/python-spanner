@@ -51,6 +51,8 @@ from .types.common import EncryptionConfig
 from .types.common import EncryptionInfo
 from .types.common import OperationProgress
 from .types.common import DatabaseDialect
+from .types.spanner_database_admin import AddSplitPointsRequest
+from .types.spanner_database_admin import AddSplitPointsResponse
 from .types.spanner_database_admin import CreateDatabaseMetadata
 from .types.spanner_database_admin import CreateDatabaseRequest
 from .types.spanner_database_admin import Database
@@ -71,6 +73,7 @@ from .types.spanner_database_admin import RestoreDatabaseEncryptionConfig
 from .types.spanner_database_admin import RestoreDatabaseMetadata
 from .types.spanner_database_admin import RestoreDatabaseRequest
 from .types.spanner_database_admin import RestoreInfo
+from .types.spanner_database_admin import SplitPoints
 from .types.spanner_database_admin import UpdateDatabaseDdlMetadata
 from .types.spanner_database_admin import UpdateDatabaseDdlRequest
 from .types.spanner_database_admin import UpdateDatabaseMetadata
@@ -79,6 +82,8 @@ from .types.spanner_database_admin import RestoreSourceType
 
 __all__ = (
     "DatabaseAdminAsyncClient",
+    "AddSplitPointsRequest",
+    "AddSplitPointsResponse",
     "Backup",
     "BackupInfo",
     "BackupSchedule",
@@ -129,6 +134,7 @@ __all__ = (
     "RestoreDatabaseRequest",
     "RestoreInfo",
     "RestoreSourceType",
+    "SplitPoints",
     "UpdateBackupRequest",
     "UpdateBackupScheduleRequest",
     "UpdateDatabaseDdlMetadata",

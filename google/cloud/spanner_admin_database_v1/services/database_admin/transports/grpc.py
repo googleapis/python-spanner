@@ -1053,6 +1053,36 @@ class DatabaseAdminGrpcTransport(DatabaseAdminTransport):
         return self._stubs["list_database_roles"]
 
     @property
+    def add_split_points(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.AddSplitPointsRequest],
+        spanner_database_admin.AddSplitPointsResponse,
+    ]:
+        r"""Return a callable for the add split points method over gRPC.
+
+        Adds split points to specified tables, indexes of a
+        database.
+
+        Returns:
+            Callable[[~.AddSplitPointsRequest],
+                    ~.AddSplitPointsResponse]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "add_split_points" not in self._stubs:
+            self._stubs["add_split_points"] = self._logged_channel.unary_unary(
+                "/google.spanner.admin.database.v1.DatabaseAdmin/AddSplitPoints",
+                request_serializer=spanner_database_admin.AddSplitPointsRequest.serialize,
+                response_deserializer=spanner_database_admin.AddSplitPointsResponse.deserialize,
+            )
+        return self._stubs["add_split_points"]
+
+    @property
     def create_backup_schedule(
         self,
     ) -> Callable[

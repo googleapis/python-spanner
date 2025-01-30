@@ -1074,6 +1074,36 @@ class DatabaseAdminGrpcAsyncIOTransport(DatabaseAdminTransport):
         return self._stubs["list_database_roles"]
 
     @property
+    def add_split_points(
+        self,
+    ) -> Callable[
+        [spanner_database_admin.AddSplitPointsRequest],
+        Awaitable[spanner_database_admin.AddSplitPointsResponse],
+    ]:
+        r"""Return a callable for the add split points method over gRPC.
+
+        Adds split points to specified tables, indexes of a
+        database.
+
+        Returns:
+            Callable[[~.AddSplitPointsRequest],
+                    Awaitable[~.AddSplitPointsResponse]]:
+                A function that, when called, will call the underlying RPC
+                on the server.
+        """
+        # Generate a "stub function" on-the-fly which will actually make
+        # the request.
+        # gRPC handles serialization and deserialization, so we just need
+        # to pass in the functions for each.
+        if "add_split_points" not in self._stubs:
+            self._stubs["add_split_points"] = self._logged_channel.unary_unary(
+                "/google.spanner.admin.database.v1.DatabaseAdmin/AddSplitPoints",
+                request_serializer=spanner_database_admin.AddSplitPointsRequest.serialize,
+                response_deserializer=spanner_database_admin.AddSplitPointsResponse.deserialize,
+            )
+        return self._stubs["add_split_points"]
+
+    @property
     def create_backup_schedule(
         self,
     ) -> Callable[
@@ -1447,6 +1477,21 @@ class DatabaseAdminGrpcAsyncIOTransport(DatabaseAdminTransport):
             ),
             self.list_database_roles: self._wrap_method(
                 self.list_database_roles,
+                default_retry=retries.AsyncRetry(
+                    initial=1.0,
+                    maximum=32.0,
+                    multiplier=1.3,
+                    predicate=retries.if_exception_type(
+                        core_exceptions.DeadlineExceeded,
+                        core_exceptions.ServiceUnavailable,
+                    ),
+                    deadline=3600.0,
+                ),
+                default_timeout=3600.0,
+                client_info=client_info,
+            ),
+            self.add_split_points: self._wrap_method(
+                self.add_split_points,
                 default_retry=retries.AsyncRetry(
                     initial=1.0,
                     maximum=32.0,

@@ -50,6 +50,8 @@ from .common import (
     DatabaseDialect,
 )
 from .spanner_database_admin import (
+    AddSplitPointsRequest,
+    AddSplitPointsResponse,
     CreateDatabaseMetadata,
     CreateDatabaseRequest,
     Database,
@@ -70,6 +72,7 @@ from .spanner_database_admin import (
     RestoreDatabaseMetadata,
     RestoreDatabaseRequest,
     RestoreInfo,
+    SplitPoints,
     UpdateDatabaseDdlMetadata,
     UpdateDatabaseDdlRequest,
     UpdateDatabaseMetadata,
@@ -108,6 +111,8 @@ __all__ = (
     "EncryptionInfo",
     "OperationProgress",
     "DatabaseDialect",
+    "AddSplitPointsRequest",
+    "AddSplitPointsResponse",
     "CreateDatabaseMetadata",
     "CreateDatabaseRequest",
     "Database",
@@ -128,6 +133,7 @@ __all__ = (
     "RestoreDatabaseMetadata",
     "RestoreDatabaseRequest",
     "RestoreInfo",
+    "SplitPoints",
     "UpdateDatabaseDdlMetadata",
     "UpdateDatabaseDdlRequest",
     "UpdateDatabaseMetadata",
