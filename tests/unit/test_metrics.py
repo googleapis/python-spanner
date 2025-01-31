@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pytest
 from unittest.mock import MagicMock
 from google.api_core.exceptions import ServiceUnavailable
 from google.cloud.spanner_v1.client import Client
@@ -20,6 +21,10 @@ from grpc._interceptor import _UnaryOutcome
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
+
+pytest.importorskip("opentelemetry")
+# Skip if semconv attributes are not present, as tracing wont' be enabled either
+# pytest.importorskip("opentelemetry.semconv.attributes.otel_attributes")
 
 
 def test_metrics_emission_with_failure_attempt(monkeypatch):
