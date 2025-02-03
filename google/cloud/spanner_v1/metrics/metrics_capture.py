@@ -44,7 +44,8 @@ class MetricsCapture:
         SpannerMetricsTracerFactory.current_metrics_tracer = (
             factory.create_metrics_tracer()
         )
-        SpannerMetricsTracerFactory.current_metrics_tracer.record_operation_start()
+        if SpannerMetricsTracerFactory.current_metrics_tracer:
+            SpannerMetricsTracerFactory.current_metrics_tracer.record_operation_start()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -61,5 +62,6 @@ class MetricsCapture:
         Returns:
             bool: False to propagate the exception if any occurred.
         """
-        SpannerMetricsTracerFactory.current_metrics_tracer.record_operation_completion()
+        if SpannerMetricsTracerFactory.current_metrics_tracer:
+            SpannerMetricsTracerFactory.current_metrics_tracer.record_operation_completion()
         return False  # Propagate the exception if any

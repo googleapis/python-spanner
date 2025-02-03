@@ -76,6 +76,8 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
             cls._metrics_tracer_factory = MetricsTracerFactory(
                 enabled, SPANNER_SERVICE_NAME
             )
+            if not HAS_OPENTELEMETRY_INSTALLED:
+                return cls._metrics_tracer_factory
 
             client_uid = cls._generate_client_uid()
             cls._metrics_tracer_factory.set_client_uid(client_uid)

@@ -259,6 +259,9 @@ class MetricsTracerFactory:
         Returns:
             MetricsTracer: A MetricsTracer instance with default settings and client attributes.
         """
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return None
+
         metrics_tracer = MetricsTracer(
             enabled=self.enabled and HAS_OPENTELEMETRY_INSTALLED,
             instrument_attempt_latency=self._instrument_attempt_latency,
