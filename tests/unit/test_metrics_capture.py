@@ -16,10 +16,14 @@ import pytest
 from unittest import mock
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.metrics.metrics_tracer_factory import MetricsTracerFactory
+from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
+    SpannerMetricsTracerFactory,
+)
 
 
 @pytest.fixture
 def mock_tracer_factory():
+    SpannerMetricsTracerFactory(enabled=True)
     with mock.patch.object(
         MetricsTracerFactory, "create_metrics_tracer"
     ) as mock_create:

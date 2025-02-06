@@ -29,9 +29,17 @@ pytest.importorskip("opentelemetry")
 
 def test_metrics_emission_with_failure_attempt(monkeypatch):
     monkeypatch.setenv("SPANNER_ENABLE_BUILTIN_METRICS", "true")
+
+    # Remove the Tracer factory to avoid previously disabled factory polluting from other tests
+    if SpannerMetricsTracerFactory._metrics_tracer_factory is not None:
+        SpannerMetricsTracerFactory._metrics_tracer_factory = None
+
     client = Client()
     instance = client.instance("test-instance")
     database = instance.database("example-db")
+    factory = SpannerMetricsTracerFactory()
+
+    assert factory.enabled
 
     transport = database.spanner_api._transport
     metrics_interceptor = transport._metrics_interceptor

@@ -39,7 +39,11 @@ class MetricsCapture:
         Returns:
             MetricsCapture: The instance of the context manager.
         """
+        # Short circuit out if metrics are disabled
         factory = SpannerMetricsTracerFactory()
+        if not factory.enabled:
+            return self
+
         # Define a new metrics tracer for the new operation
         SpannerMetricsTracerFactory.current_metrics_tracer = (
             factory.create_metrics_tracer()
@@ -62,6 +66,10 @@ class MetricsCapture:
         Returns:
             bool: False to propagate the exception if any occurred.
         """
+        # Short circuit out if metrics are disable
+        if not SpannerMetricsTracerFactory().enabled:
+            return False
+
         if SpannerMetricsTracerFactory.current_metrics_tracer:
             SpannerMetricsTracerFactory.current_metrics_tracer.record_operation_completion()
         return False  # Propagate the exception if any

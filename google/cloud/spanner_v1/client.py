@@ -220,7 +220,6 @@ class Client(ClientWithProject):
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
-
         # Check flag to enable Spanner builtin metrics
         if (
             _get_spanner_enable_builtin_metrics()
@@ -238,6 +237,8 @@ class Client(ClientWithProject):
                 )
             metrics.set_meter_provider(meter_provider)
             SpannerMetricsTracerFactory()
+        else:
+            SpannerMetricsTracerFactory(enabled=False)
 
         self._route_to_leader_enabled = route_to_leader_enabled
         self._directed_read_options = directed_read_options

@@ -22,6 +22,7 @@ from unittest.mock import MagicMock
 
 @pytest.fixture
 def interceptor():
+    SpannerMetricsTracerFactory(enabled=True)
     return MetricsInterceptor()
 
 

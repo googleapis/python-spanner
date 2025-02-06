@@ -88,6 +88,10 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
             )
             cls._metrics_tracer_factory.set_location(cls._get_location())
             cls._metrics_tracer_factory.gfe_enabled = gfe_enabled
+
+            if cls._metrics_tracer_factory.enabled != enabled:
+                cls._metrics_tracer_factory.enabeld = enabled
+
         return cls._metrics_tracer_factory
 
     @staticmethod

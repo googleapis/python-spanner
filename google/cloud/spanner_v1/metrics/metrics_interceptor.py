@@ -125,7 +125,11 @@ class MetricsInterceptor(ClientInterceptor):
         Returns:
             The RPC response
         """
-        if SpannerMetricsTracerFactory.current_metrics_tracer is None:
+        factory = SpannerMetricsTracerFactory()
+        if (
+            SpannerMetricsTracerFactory.current_metrics_tracer is None
+            or not factory.enabled
+        ):
             return invoked_method(request_or_iterator, call_details)
 
         # Setup Metric Tracer attributes from call details
