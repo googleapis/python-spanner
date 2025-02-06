@@ -261,11 +261,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_instance
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_instance_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_instance` interceptor runs
+        before the `post_create_instance_with_metadata` interceptor.
         """
         return response
+
+    def post_create_instance_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_instance
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_instance_with_metadata`
+        interceptor in new development instead of the `post_create_instance` interceptor.
+        When both interceptors are used, this `post_create_instance_with_metadata` interceptor runs after the
+        `post_create_instance` interceptor. The (possibly modified) response returned by
+        `post_create_instance` will be passed to
+        `post_create_instance_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_instance_config(
         self,
@@ -287,11 +310,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_instance_config
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_instance_config_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_instance_config` interceptor runs
+        before the `post_create_instance_config_with_metadata` interceptor.
         """
         return response
+
+    def post_create_instance_config_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_instance_config
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_instance_config_with_metadata`
+        interceptor in new development instead of the `post_create_instance_config` interceptor.
+        When both interceptors are used, this `post_create_instance_config_with_metadata` interceptor runs after the
+        `post_create_instance_config` interceptor. The (possibly modified) response returned by
+        `post_create_instance_config` will be passed to
+        `post_create_instance_config_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_instance_partition(
         self,
@@ -313,11 +359,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_instance_partition
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_instance_partition_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_instance_partition` interceptor runs
+        before the `post_create_instance_partition_with_metadata` interceptor.
         """
         return response
+
+    def post_create_instance_partition_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_instance_partition
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_instance_partition_with_metadata`
+        interceptor in new development instead of the `post_create_instance_partition` interceptor.
+        When both interceptors are used, this `post_create_instance_partition_with_metadata` interceptor runs after the
+        `post_create_instance_partition` interceptor. The (possibly modified) response returned by
+        `post_create_instance_partition` will be passed to
+        `post_create_instance_partition_with_metadata`.
+        """
+        return response, metadata
 
     def pre_delete_instance(
         self,
@@ -381,11 +450,34 @@ class InstanceAdminRestInterceptor:
     def post_get_iam_policy(self, response: policy_pb2.Policy) -> policy_pb2.Policy:
         """Post-rpc interceptor for get_iam_policy
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_iam_policy_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_iam_policy` interceptor runs
+        before the `post_get_iam_policy_with_metadata` interceptor.
         """
         return response
+
+    def post_get_iam_policy_with_metadata(
+        self,
+        response: policy_pb2.Policy,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[policy_pb2.Policy, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for get_iam_policy
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_iam_policy_with_metadata`
+        interceptor in new development instead of the `post_get_iam_policy` interceptor.
+        When both interceptors are used, this `post_get_iam_policy_with_metadata` interceptor runs after the
+        `post_get_iam_policy` interceptor. The (possibly modified) response returned by
+        `post_get_iam_policy` will be passed to
+        `post_get_iam_policy_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_instance(
         self,
@@ -407,11 +499,36 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.Instance:
         """Post-rpc interceptor for get_instance
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_instance_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_instance` interceptor runs
+        before the `post_get_instance_with_metadata` interceptor.
         """
         return response
+
+    def post_get_instance_with_metadata(
+        self,
+        response: spanner_instance_admin.Instance,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.Instance, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for get_instance
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_instance_with_metadata`
+        interceptor in new development instead of the `post_get_instance` interceptor.
+        When both interceptors are used, this `post_get_instance_with_metadata` interceptor runs after the
+        `post_get_instance` interceptor. The (possibly modified) response returned by
+        `post_get_instance` will be passed to
+        `post_get_instance_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_instance_config(
         self,
@@ -433,11 +550,36 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.InstanceConfig:
         """Post-rpc interceptor for get_instance_config
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_instance_config_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_instance_config` interceptor runs
+        before the `post_get_instance_config_with_metadata` interceptor.
         """
         return response
+
+    def post_get_instance_config_with_metadata(
+        self,
+        response: spanner_instance_admin.InstanceConfig,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.InstanceConfig, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for get_instance_config
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_instance_config_with_metadata`
+        interceptor in new development instead of the `post_get_instance_config` interceptor.
+        When both interceptors are used, this `post_get_instance_config_with_metadata` interceptor runs after the
+        `post_get_instance_config` interceptor. The (possibly modified) response returned by
+        `post_get_instance_config` will be passed to
+        `post_get_instance_config_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_instance_partition(
         self,
@@ -459,11 +601,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.InstancePartition:
         """Post-rpc interceptor for get_instance_partition
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_instance_partition_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_instance_partition` interceptor runs
+        before the `post_get_instance_partition_with_metadata` interceptor.
         """
         return response
+
+    def post_get_instance_partition_with_metadata(
+        self,
+        response: spanner_instance_admin.InstancePartition,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.InstancePartition,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for get_instance_partition
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_instance_partition_with_metadata`
+        interceptor in new development instead of the `post_get_instance_partition` interceptor.
+        When both interceptors are used, this `post_get_instance_partition_with_metadata` interceptor runs after the
+        `post_get_instance_partition` interceptor. The (possibly modified) response returned by
+        `post_get_instance_partition` will be passed to
+        `post_get_instance_partition_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_instance_config_operations(
         self,
@@ -485,11 +653,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.ListInstanceConfigOperationsResponse:
         """Post-rpc interceptor for list_instance_config_operations
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_instance_config_operations_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_instance_config_operations` interceptor runs
+        before the `post_list_instance_config_operations_with_metadata` interceptor.
         """
         return response
+
+    def post_list_instance_config_operations_with_metadata(
+        self,
+        response: spanner_instance_admin.ListInstanceConfigOperationsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstanceConfigOperationsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_instance_config_operations
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_instance_config_operations_with_metadata`
+        interceptor in new development instead of the `post_list_instance_config_operations` interceptor.
+        When both interceptors are used, this `post_list_instance_config_operations_with_metadata` interceptor runs after the
+        `post_list_instance_config_operations` interceptor. The (possibly modified) response returned by
+        `post_list_instance_config_operations` will be passed to
+        `post_list_instance_config_operations_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_instance_configs(
         self,
@@ -511,11 +705,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.ListInstanceConfigsResponse:
         """Post-rpc interceptor for list_instance_configs
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_instance_configs_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_instance_configs` interceptor runs
+        before the `post_list_instance_configs_with_metadata` interceptor.
         """
         return response
+
+    def post_list_instance_configs_with_metadata(
+        self,
+        response: spanner_instance_admin.ListInstanceConfigsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstanceConfigsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_instance_configs
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_instance_configs_with_metadata`
+        interceptor in new development instead of the `post_list_instance_configs` interceptor.
+        When both interceptors are used, this `post_list_instance_configs_with_metadata` interceptor runs after the
+        `post_list_instance_configs` interceptor. The (possibly modified) response returned by
+        `post_list_instance_configs` will be passed to
+        `post_list_instance_configs_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_instance_partition_operations(
         self,
@@ -537,11 +757,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.ListInstancePartitionOperationsResponse:
         """Post-rpc interceptor for list_instance_partition_operations
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_instance_partition_operations_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_instance_partition_operations` interceptor runs
+        before the `post_list_instance_partition_operations_with_metadata` interceptor.
         """
         return response
+
+    def post_list_instance_partition_operations_with_metadata(
+        self,
+        response: spanner_instance_admin.ListInstancePartitionOperationsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstancePartitionOperationsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_instance_partition_operations
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_instance_partition_operations_with_metadata`
+        interceptor in new development instead of the `post_list_instance_partition_operations` interceptor.
+        When both interceptors are used, this `post_list_instance_partition_operations_with_metadata` interceptor runs after the
+        `post_list_instance_partition_operations` interceptor. The (possibly modified) response returned by
+        `post_list_instance_partition_operations` will be passed to
+        `post_list_instance_partition_operations_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_instance_partitions(
         self,
@@ -563,11 +809,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.ListInstancePartitionsResponse:
         """Post-rpc interceptor for list_instance_partitions
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_instance_partitions_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_instance_partitions` interceptor runs
+        before the `post_list_instance_partitions_with_metadata` interceptor.
         """
         return response
+
+    def post_list_instance_partitions_with_metadata(
+        self,
+        response: spanner_instance_admin.ListInstancePartitionsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstancePartitionsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_instance_partitions
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_instance_partitions_with_metadata`
+        interceptor in new development instead of the `post_list_instance_partitions` interceptor.
+        When both interceptors are used, this `post_list_instance_partitions_with_metadata` interceptor runs after the
+        `post_list_instance_partitions` interceptor. The (possibly modified) response returned by
+        `post_list_instance_partitions` will be passed to
+        `post_list_instance_partitions_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_instances(
         self,
@@ -589,11 +861,37 @@ class InstanceAdminRestInterceptor:
     ) -> spanner_instance_admin.ListInstancesResponse:
         """Post-rpc interceptor for list_instances
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_instances_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_instances` interceptor runs
+        before the `post_list_instances_with_metadata` interceptor.
         """
         return response
+
+    def post_list_instances_with_metadata(
+        self,
+        response: spanner_instance_admin.ListInstancesResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_instance_admin.ListInstancesResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_instances
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_instances_with_metadata`
+        interceptor in new development instead of the `post_list_instances` interceptor.
+        When both interceptors are used, this `post_list_instances_with_metadata` interceptor runs after the
+        `post_list_instances` interceptor. The (possibly modified) response returned by
+        `post_list_instances` will be passed to
+        `post_list_instances_with_metadata`.
+        """
+        return response, metadata
 
     def pre_move_instance(
         self,
@@ -615,11 +913,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for move_instance
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_move_instance_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_move_instance` interceptor runs
+        before the `post_move_instance_with_metadata` interceptor.
         """
         return response
+
+    def post_move_instance_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for move_instance
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_move_instance_with_metadata`
+        interceptor in new development instead of the `post_move_instance` interceptor.
+        When both interceptors are used, this `post_move_instance_with_metadata` interceptor runs after the
+        `post_move_instance` interceptor. The (possibly modified) response returned by
+        `post_move_instance` will be passed to
+        `post_move_instance_with_metadata`.
+        """
+        return response, metadata
 
     def pre_set_iam_policy(
         self,
@@ -638,11 +959,34 @@ class InstanceAdminRestInterceptor:
     def post_set_iam_policy(self, response: policy_pb2.Policy) -> policy_pb2.Policy:
         """Post-rpc interceptor for set_iam_policy
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_set_iam_policy_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_set_iam_policy` interceptor runs
+        before the `post_set_iam_policy_with_metadata` interceptor.
         """
         return response
+
+    def post_set_iam_policy_with_metadata(
+        self,
+        response: policy_pb2.Policy,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[policy_pb2.Policy, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for set_iam_policy
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_set_iam_policy_with_metadata`
+        interceptor in new development instead of the `post_set_iam_policy` interceptor.
+        When both interceptors are used, this `post_set_iam_policy_with_metadata` interceptor runs after the
+        `post_set_iam_policy` interceptor. The (possibly modified) response returned by
+        `post_set_iam_policy` will be passed to
+        `post_set_iam_policy_with_metadata`.
+        """
+        return response, metadata
 
     def pre_test_iam_permissions(
         self,
@@ -664,11 +1008,37 @@ class InstanceAdminRestInterceptor:
     ) -> iam_policy_pb2.TestIamPermissionsResponse:
         """Post-rpc interceptor for test_iam_permissions
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_test_iam_permissions_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_test_iam_permissions` interceptor runs
+        before the `post_test_iam_permissions_with_metadata` interceptor.
         """
         return response
+
+    def post_test_iam_permissions_with_metadata(
+        self,
+        response: iam_policy_pb2.TestIamPermissionsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        iam_policy_pb2.TestIamPermissionsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for test_iam_permissions
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_test_iam_permissions_with_metadata`
+        interceptor in new development instead of the `post_test_iam_permissions` interceptor.
+        When both interceptors are used, this `post_test_iam_permissions_with_metadata` interceptor runs after the
+        `post_test_iam_permissions` interceptor. The (possibly modified) response returned by
+        `post_test_iam_permissions` will be passed to
+        `post_test_iam_permissions_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_instance(
         self,
@@ -690,11 +1060,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_instance
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_instance_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_instance` interceptor runs
+        before the `post_update_instance_with_metadata` interceptor.
         """
         return response
+
+    def post_update_instance_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_instance
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_instance_with_metadata`
+        interceptor in new development instead of the `post_update_instance` interceptor.
+        When both interceptors are used, this `post_update_instance_with_metadata` interceptor runs after the
+        `post_update_instance` interceptor. The (possibly modified) response returned by
+        `post_update_instance` will be passed to
+        `post_update_instance_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_instance_config(
         self,
@@ -716,11 +1109,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_instance_config
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_instance_config_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_instance_config` interceptor runs
+        before the `post_update_instance_config_with_metadata` interceptor.
         """
         return response
+
+    def post_update_instance_config_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_instance_config
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_instance_config_with_metadata`
+        interceptor in new development instead of the `post_update_instance_config` interceptor.
+        When both interceptors are used, this `post_update_instance_config_with_metadata` interceptor runs after the
+        `post_update_instance_config` interceptor. The (possibly modified) response returned by
+        `post_update_instance_config` will be passed to
+        `post_update_instance_config_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_instance_partition(
         self,
@@ -742,11 +1158,34 @@ class InstanceAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_instance_partition
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_instance_partition_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the InstanceAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_instance_partition` interceptor runs
+        before the `post_update_instance_partition_with_metadata` interceptor.
         """
         return response
+
+    def post_update_instance_partition_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_instance_partition
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the InstanceAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_instance_partition_with_metadata`
+        interceptor in new development instead of the `post_update_instance_partition` interceptor.
+        When both interceptors are used, this `post_update_instance_partition_with_metadata` interceptor runs after the
+        `post_update_instance_partition` interceptor. The (possibly modified) response returned by
+        `post_update_instance_partition` will be passed to
+        `post_update_instance_partition_with_metadata`.
+        """
+        return response, metadata
 
 
 @dataclasses.dataclass
@@ -1051,6 +1490,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_instance(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_instance_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1201,6 +1644,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_instance_config(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_instance_config_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1354,6 +1801,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_instance_partition(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_instance_partition_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1903,6 +2354,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_iam_policy(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_iam_policy_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2049,6 +2504,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_instance(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_instance_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2196,6 +2655,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_instance_config(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_instance_config_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2344,6 +2807,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_instance_partition(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_instance_partition_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2497,6 +2964,13 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_instance_config_operations(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            (
+                resp,
+                _,
+            ) = self._interceptor.post_list_instance_config_operations_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2644,6 +3118,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_instance_configs(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_instance_configs_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2800,6 +3278,13 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_instance_partition_operations(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            (
+                resp,
+                _,
+            ) = self._interceptor.post_list_instance_partition_operations_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2948,6 +3433,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_instance_partitions(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_instance_partitions_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3095,6 +3584,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_instances(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_instances_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3245,6 +3738,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_move_instance(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_move_instance_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3466,6 +3963,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_set_iam_policy(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_set_iam_policy_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3614,6 +4115,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_test_iam_permissions(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_test_iam_permissions_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3762,6 +4267,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_instance(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_instance_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3912,6 +4421,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_instance_config(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_instance_config_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4065,6 +4578,10 @@ class InstanceAdminRestTransport(_BaseInstanceAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_instance_partition(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_instance_partition_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER

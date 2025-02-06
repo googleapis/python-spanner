@@ -72,6 +72,14 @@ from google.rpc import status_pb2  # type: ignore
 import google.auth
 
 
+CRED_INFO_JSON = {
+    "credential_source": "/path/to/file",
+    "credential_type": "service account credentials",
+    "principal": "service-account@example.com",
+}
+CRED_INFO_STRING = json.dumps(CRED_INFO_JSON)
+
+
 async def mock_async_gen(data, chunk_size=1):
     for i in range(0, len(data)):  # pragma: NO COVER
         chunk = data[i : i + chunk_size]
@@ -292,6 +300,49 @@ def test__get_universe_domain():
     with pytest.raises(ValueError) as excinfo:
         SpannerClient._get_universe_domain("", None)
     assert str(excinfo.value) == "Universe Domain cannot be an empty string."
+
+
+@pytest.mark.parametrize(
+    "error_code,cred_info_json,show_cred_info",
+    [
+        (401, CRED_INFO_JSON, True),
+        (403, CRED_INFO_JSON, True),
+        (404, CRED_INFO_JSON, True),
+        (500, CRED_INFO_JSON, False),
+        (401, None, False),
+        (403, None, False),
+        (404, None, False),
+        (500, None, False),
+    ],
+)
+def test__add_cred_info_for_auth_errors(error_code, cred_info_json, show_cred_info):
+    cred = mock.Mock(["get_cred_info"])
+    cred.get_cred_info = mock.Mock(return_value=cred_info_json)
+    client = SpannerClient(credentials=cred)
+    client._transport._credentials = cred
+
+    error = core_exceptions.GoogleAPICallError("message", details=["foo"])
+    error.code = error_code
+
+    client._add_cred_info_for_auth_errors(error)
+    if show_cred_info:
+        assert error.details == ["foo", CRED_INFO_STRING]
+    else:
+        assert error.details == ["foo"]
+
+
+@pytest.mark.parametrize("error_code", [401, 403, 404, 500])
+def test__add_cred_info_for_auth_errors_no_get_cred_info(error_code):
+    cred = mock.Mock([])
+    assert not hasattr(cred, "get_cred_info")
+    client = SpannerClient(credentials=cred)
+    client._transport._credentials = cred
+
+    error = core_exceptions.GoogleAPICallError("message", details=[])
+    error.code = error_code
+
+    client._add_cred_info_for_auth_errors(error)
+    assert error.details == []
 
 
 @pytest.mark.parametrize(
@@ -9684,10 +9735,13 @@ def test_create_session_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_create_session"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_create_session_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_create_session"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.CreateSessionRequest.pb(spanner.CreateSessionRequest())
         transcode.return_value = {
             "method": "post",
@@ -9709,6 +9763,7 @@ def test_create_session_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.Session()
+        post_with_metadata.return_value = spanner.Session(), metadata
 
         client.create_session(
             request,
@@ -9720,6 +9775,7 @@ def test_create_session_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_batch_create_sessions_rest_bad_request(
@@ -9799,10 +9855,13 @@ def test_batch_create_sessions_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_batch_create_sessions"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_batch_create_sessions_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_batch_create_sessions"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.BatchCreateSessionsRequest.pb(
             spanner.BatchCreateSessionsRequest()
         )
@@ -9828,6 +9887,10 @@ def test_batch_create_sessions_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.BatchCreateSessionsResponse()
+        post_with_metadata.return_value = (
+            spanner.BatchCreateSessionsResponse(),
+            metadata,
+        )
 
         client.batch_create_sessions(
             request,
@@ -9839,6 +9902,7 @@ def test_batch_create_sessions_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_get_session_rest_bad_request(request_type=spanner.GetSessionRequest):
@@ -9927,10 +9991,13 @@ def test_get_session_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_get_session"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_get_session_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_get_session"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.GetSessionRequest.pb(spanner.GetSessionRequest())
         transcode.return_value = {
             "method": "post",
@@ -9952,6 +10019,7 @@ def test_get_session_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.Session()
+        post_with_metadata.return_value = spanner.Session(), metadata
 
         client.get_session(
             request,
@@ -9963,6 +10031,7 @@ def test_get_session_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_list_sessions_rest_bad_request(request_type=spanner.ListSessionsRequest):
@@ -10043,10 +10112,13 @@ def test_list_sessions_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_list_sessions"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_list_sessions_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_list_sessions"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ListSessionsRequest.pb(spanner.ListSessionsRequest())
         transcode.return_value = {
             "method": "post",
@@ -10070,6 +10142,7 @@ def test_list_sessions_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.ListSessionsResponse()
+        post_with_metadata.return_value = spanner.ListSessionsResponse(), metadata
 
         client.list_sessions(
             request,
@@ -10081,6 +10154,7 @@ def test_list_sessions_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_delete_session_rest_bad_request(request_type=spanner.DeleteSessionRequest):
@@ -10269,10 +10343,13 @@ def test_execute_sql_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_execute_sql"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_execute_sql_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_execute_sql"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ExecuteSqlRequest.pb(spanner.ExecuteSqlRequest())
         transcode.return_value = {
             "method": "post",
@@ -10294,6 +10371,7 @@ def test_execute_sql_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = result_set.ResultSet()
+        post_with_metadata.return_value = result_set.ResultSet(), metadata
 
         client.execute_sql(
             request,
@@ -10305,6 +10383,7 @@ def test_execute_sql_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_execute_streaming_sql_rest_bad_request(request_type=spanner.ExecuteSqlRequest):
@@ -10395,10 +10474,13 @@ def test_execute_streaming_sql_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_execute_streaming_sql"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_execute_streaming_sql_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_execute_streaming_sql"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ExecuteSqlRequest.pb(spanner.ExecuteSqlRequest())
         transcode.return_value = {
             "method": "post",
@@ -10422,6 +10504,7 @@ def test_execute_streaming_sql_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = result_set.PartialResultSet()
+        post_with_metadata.return_value = result_set.PartialResultSet(), metadata
 
         client.execute_streaming_sql(
             request,
@@ -10433,6 +10516,7 @@ def test_execute_streaming_sql_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_execute_batch_dml_rest_bad_request(
@@ -10516,10 +10600,13 @@ def test_execute_batch_dml_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_execute_batch_dml"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_execute_batch_dml_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_execute_batch_dml"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ExecuteBatchDmlRequest.pb(spanner.ExecuteBatchDmlRequest())
         transcode.return_value = {
             "method": "post",
@@ -10543,6 +10630,7 @@ def test_execute_batch_dml_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.ExecuteBatchDmlResponse()
+        post_with_metadata.return_value = spanner.ExecuteBatchDmlResponse(), metadata
 
         client.execute_batch_dml(
             request,
@@ -10554,6 +10642,7 @@ def test_execute_batch_dml_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_read_rest_bad_request(request_type=spanner.ReadRequest):
@@ -10635,10 +10724,13 @@ def test_read_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_read"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_read_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_read"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ReadRequest.pb(spanner.ReadRequest())
         transcode.return_value = {
             "method": "post",
@@ -10660,6 +10752,7 @@ def test_read_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = result_set.ResultSet()
+        post_with_metadata.return_value = result_set.ResultSet(), metadata
 
         client.read(
             request,
@@ -10671,6 +10764,7 @@ def test_read_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_streaming_read_rest_bad_request(request_type=spanner.ReadRequest):
@@ -10761,10 +10855,13 @@ def test_streaming_read_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_streaming_read"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_streaming_read_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_streaming_read"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.ReadRequest.pb(spanner.ReadRequest())
         transcode.return_value = {
             "method": "post",
@@ -10788,6 +10885,7 @@ def test_streaming_read_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = result_set.PartialResultSet()
+        post_with_metadata.return_value = result_set.PartialResultSet(), metadata
 
         client.streaming_read(
             request,
@@ -10799,6 +10897,7 @@ def test_streaming_read_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_begin_transaction_rest_bad_request(
@@ -10885,10 +10984,13 @@ def test_begin_transaction_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_begin_transaction"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_begin_transaction_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_begin_transaction"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.BeginTransactionRequest.pb(
             spanner.BeginTransactionRequest()
         )
@@ -10912,6 +11014,7 @@ def test_begin_transaction_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = transaction.Transaction()
+        post_with_metadata.return_value = transaction.Transaction(), metadata
 
         client.begin_transaction(
             request,
@@ -10923,6 +11026,7 @@ def test_begin_transaction_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_commit_rest_bad_request(request_type=spanner.CommitRequest):
@@ -11004,10 +11108,13 @@ def test_commit_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_commit"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_commit_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_commit"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.CommitRequest.pb(spanner.CommitRequest())
         transcode.return_value = {
             "method": "post",
@@ -11031,6 +11138,7 @@ def test_commit_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = commit_response.CommitResponse()
+        post_with_metadata.return_value = commit_response.CommitResponse(), metadata
 
         client.commit(
             request,
@@ -11042,6 +11150,7 @@ def test_commit_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_rollback_rest_bad_request(request_type=spanner.RollbackRequest):
@@ -11230,10 +11339,13 @@ def test_partition_query_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_partition_query"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_partition_query_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_partition_query"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.PartitionQueryRequest.pb(spanner.PartitionQueryRequest())
         transcode.return_value = {
             "method": "post",
@@ -11255,6 +11367,7 @@ def test_partition_query_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.PartitionResponse()
+        post_with_metadata.return_value = spanner.PartitionResponse(), metadata
 
         client.partition_query(
             request,
@@ -11266,6 +11379,7 @@ def test_partition_query_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_partition_read_rest_bad_request(request_type=spanner.PartitionReadRequest):
@@ -11347,10 +11461,13 @@ def test_partition_read_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_partition_read"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_partition_read_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_partition_read"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.PartitionReadRequest.pb(spanner.PartitionReadRequest())
         transcode.return_value = {
             "method": "post",
@@ -11372,6 +11489,7 @@ def test_partition_read_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.PartitionResponse()
+        post_with_metadata.return_value = spanner.PartitionResponse(), metadata
 
         client.partition_read(
             request,
@@ -11383,6 +11501,7 @@ def test_partition_read_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_batch_write_rest_bad_request(request_type=spanner.BatchWriteRequest):
@@ -11471,10 +11590,13 @@ def test_batch_write_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.SpannerRestInterceptor, "post_batch_write"
     ) as post, mock.patch.object(
+        transports.SpannerRestInterceptor, "post_batch_write_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.SpannerRestInterceptor, "pre_batch_write"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner.BatchWriteRequest.pb(spanner.BatchWriteRequest())
         transcode.return_value = {
             "method": "post",
@@ -11496,6 +11618,7 @@ def test_batch_write_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner.BatchWriteResponse()
+        post_with_metadata.return_value = spanner.BatchWriteResponse(), metadata
 
         client.batch_write(
             request,
@@ -11507,6 +11630,7 @@ def test_batch_write_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_initialize_client_w_rest():

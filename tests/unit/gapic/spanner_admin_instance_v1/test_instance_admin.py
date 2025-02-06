@@ -79,6 +79,14 @@ from google.type import expr_pb2  # type: ignore
 import google.auth
 
 
+CRED_INFO_JSON = {
+    "credential_source": "/path/to/file",
+    "credential_type": "service account credentials",
+    "principal": "service-account@example.com",
+}
+CRED_INFO_STRING = json.dumps(CRED_INFO_JSON)
+
+
 async def mock_async_gen(data, chunk_size=1):
     for i in range(0, len(data)):  # pragma: NO COVER
         chunk = data[i : i + chunk_size]
@@ -330,6 +338,49 @@ def test__get_universe_domain():
     with pytest.raises(ValueError) as excinfo:
         InstanceAdminClient._get_universe_domain("", None)
     assert str(excinfo.value) == "Universe Domain cannot be an empty string."
+
+
+@pytest.mark.parametrize(
+    "error_code,cred_info_json,show_cred_info",
+    [
+        (401, CRED_INFO_JSON, True),
+        (403, CRED_INFO_JSON, True),
+        (404, CRED_INFO_JSON, True),
+        (500, CRED_INFO_JSON, False),
+        (401, None, False),
+        (403, None, False),
+        (404, None, False),
+        (500, None, False),
+    ],
+)
+def test__add_cred_info_for_auth_errors(error_code, cred_info_json, show_cred_info):
+    cred = mock.Mock(["get_cred_info"])
+    cred.get_cred_info = mock.Mock(return_value=cred_info_json)
+    client = InstanceAdminClient(credentials=cred)
+    client._transport._credentials = cred
+
+    error = core_exceptions.GoogleAPICallError("message", details=["foo"])
+    error.code = error_code
+
+    client._add_cred_info_for_auth_errors(error)
+    if show_cred_info:
+        assert error.details == ["foo", CRED_INFO_STRING]
+    else:
+        assert error.details == ["foo"]
+
+
+@pytest.mark.parametrize("error_code", [401, 403, 404, 500])
+def test__add_cred_info_for_auth_errors_no_get_cred_info(error_code):
+    cred = mock.Mock([])
+    assert not hasattr(cred, "get_cred_info")
+    client = InstanceAdminClient(credentials=cred)
+    client._transport._credentials = cred
+
+    error = core_exceptions.GoogleAPICallError("message", details=[])
+    error.code = error_code
+
+    client._add_cred_info_for_auth_errors(error)
+    assert error.details == []
 
 
 @pytest.mark.parametrize(
@@ -14967,10 +15018,14 @@ def test_list_instance_configs_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_list_instance_configs"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_list_instance_configs_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_list_instance_configs"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.ListInstanceConfigsRequest.pb(
             spanner_instance_admin.ListInstanceConfigsRequest()
         )
@@ -14996,6 +15051,10 @@ def test_list_instance_configs_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.ListInstanceConfigsResponse()
+        post_with_metadata.return_value = (
+            spanner_instance_admin.ListInstanceConfigsResponse(),
+            metadata,
+        )
 
         client.list_instance_configs(
             request,
@@ -15007,6 +15066,7 @@ def test_list_instance_configs_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_get_instance_config_rest_bad_request(
@@ -15119,10 +15179,14 @@ def test_get_instance_config_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_get_instance_config"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_get_instance_config_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_get_instance_config"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.GetInstanceConfigRequest.pb(
             spanner_instance_admin.GetInstanceConfigRequest()
         )
@@ -15148,6 +15212,10 @@ def test_get_instance_config_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.InstanceConfig()
+        post_with_metadata.return_value = (
+            spanner_instance_admin.InstanceConfig(),
+            metadata,
+        )
 
         client.get_instance_config(
             request,
@@ -15159,6 +15227,7 @@ def test_get_instance_config_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_create_instance_config_rest_bad_request(
@@ -15239,10 +15308,14 @@ def test_create_instance_config_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_create_instance_config"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_create_instance_config_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_create_instance_config"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.CreateInstanceConfigRequest.pb(
             spanner_instance_admin.CreateInstanceConfigRequest()
         )
@@ -15266,6 +15339,7 @@ def test_create_instance_config_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.create_instance_config(
             request,
@@ -15277,6 +15351,7 @@ def test_create_instance_config_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_update_instance_config_rest_bad_request(
@@ -15361,10 +15436,14 @@ def test_update_instance_config_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_update_instance_config"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_update_instance_config_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_update_instance_config"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.UpdateInstanceConfigRequest.pb(
             spanner_instance_admin.UpdateInstanceConfigRequest()
         )
@@ -15388,6 +15467,7 @@ def test_update_instance_config_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.update_instance_config(
             request,
@@ -15399,6 +15479,7 @@ def test_update_instance_config_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_delete_instance_config_rest_bad_request(
@@ -15594,10 +15675,14 @@ def test_list_instance_config_operations_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_list_instance_config_operations"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_list_instance_config_operations_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_list_instance_config_operations"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.ListInstanceConfigOperationsRequest.pb(
             spanner_instance_admin.ListInstanceConfigOperationsRequest()
         )
@@ -15627,6 +15712,10 @@ def test_list_instance_config_operations_rest_interceptors(null_interceptor):
         post.return_value = (
             spanner_instance_admin.ListInstanceConfigOperationsResponse()
         )
+        post_with_metadata.return_value = (
+            spanner_instance_admin.ListInstanceConfigOperationsResponse(),
+            metadata,
+        )
 
         client.list_instance_config_operations(
             request,
@@ -15638,6 +15727,7 @@ def test_list_instance_config_operations_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_list_instances_rest_bad_request(
@@ -15724,10 +15814,13 @@ def test_list_instances_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_list_instances"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_list_instances_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_list_instances"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.ListInstancesRequest.pb(
             spanner_instance_admin.ListInstancesRequest()
         )
@@ -15753,6 +15846,10 @@ def test_list_instances_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.ListInstancesResponse()
+        post_with_metadata.return_value = (
+            spanner_instance_admin.ListInstancesResponse(),
+            metadata,
+        )
 
         client.list_instances(
             request,
@@ -15764,6 +15861,7 @@ def test_list_instances_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_list_instance_partitions_rest_bad_request(
@@ -15852,10 +15950,14 @@ def test_list_instance_partitions_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_list_instance_partitions"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_list_instance_partitions_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_list_instance_partitions"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.ListInstancePartitionsRequest.pb(
             spanner_instance_admin.ListInstancePartitionsRequest()
         )
@@ -15881,6 +15983,10 @@ def test_list_instance_partitions_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.ListInstancePartitionsResponse()
+        post_with_metadata.return_value = (
+            spanner_instance_admin.ListInstancePartitionsResponse(),
+            metadata,
+        )
 
         client.list_instance_partitions(
             request,
@@ -15892,6 +15998,7 @@ def test_list_instance_partitions_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_get_instance_rest_bad_request(
@@ -16000,10 +16107,13 @@ def test_get_instance_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_get_instance"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_instance_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_get_instance"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.GetInstanceRequest.pb(
             spanner_instance_admin.GetInstanceRequest()
         )
@@ -16029,6 +16139,7 @@ def test_get_instance_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.Instance()
+        post_with_metadata.return_value = spanner_instance_admin.Instance(), metadata
 
         client.get_instance(
             request,
@@ -16040,6 +16151,7 @@ def test_get_instance_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_create_instance_rest_bad_request(
@@ -16120,10 +16232,13 @@ def test_create_instance_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_create_instance"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_create_instance_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_create_instance"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.CreateInstanceRequest.pb(
             spanner_instance_admin.CreateInstanceRequest()
         )
@@ -16147,6 +16262,7 @@ def test_create_instance_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.create_instance(
             request,
@@ -16158,6 +16274,7 @@ def test_create_instance_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_update_instance_rest_bad_request(
@@ -16238,10 +16355,13 @@ def test_update_instance_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_update_instance"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_update_instance_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_update_instance"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.UpdateInstanceRequest.pb(
             spanner_instance_admin.UpdateInstanceRequest()
         )
@@ -16265,6 +16385,7 @@ def test_update_instance_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.update_instance(
             request,
@@ -16276,6 +16397,7 @@ def test_update_instance_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_delete_instance_rest_bad_request(
@@ -16468,10 +16590,13 @@ def test_set_iam_policy_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_set_iam_policy"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_set_iam_policy_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_set_iam_policy"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = iam_policy_pb2.SetIamPolicyRequest()
         transcode.return_value = {
             "method": "post",
@@ -16493,6 +16618,7 @@ def test_set_iam_policy_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = policy_pb2.Policy()
+        post_with_metadata.return_value = policy_pb2.Policy(), metadata
 
         client.set_iam_policy(
             request,
@@ -16504,6 +16630,7 @@ def test_set_iam_policy_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_get_iam_policy_rest_bad_request(
@@ -16587,10 +16714,13 @@ def test_get_iam_policy_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_get_iam_policy"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_get_iam_policy_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_get_iam_policy"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = iam_policy_pb2.GetIamPolicyRequest()
         transcode.return_value = {
             "method": "post",
@@ -16612,6 +16742,7 @@ def test_get_iam_policy_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = policy_pb2.Policy()
+        post_with_metadata.return_value = policy_pb2.Policy(), metadata
 
         client.get_iam_policy(
             request,
@@ -16623,6 +16754,7 @@ def test_get_iam_policy_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_test_iam_permissions_rest_bad_request(
@@ -16704,10 +16836,14 @@ def test_test_iam_permissions_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_test_iam_permissions"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_test_iam_permissions_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_test_iam_permissions"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = iam_policy_pb2.TestIamPermissionsRequest()
         transcode.return_value = {
             "method": "post",
@@ -16731,6 +16867,10 @@ def test_test_iam_permissions_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = iam_policy_pb2.TestIamPermissionsResponse()
+        post_with_metadata.return_value = (
+            iam_policy_pb2.TestIamPermissionsResponse(),
+            metadata,
+        )
 
         client.test_iam_permissions(
             request,
@@ -16742,6 +16882,7 @@ def test_test_iam_permissions_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_get_instance_partition_rest_bad_request(
@@ -16843,10 +16984,14 @@ def test_get_instance_partition_rest_interceptors(null_interceptor):
     ) as transcode, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_get_instance_partition"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_get_instance_partition_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_get_instance_partition"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.GetInstancePartitionRequest.pb(
             spanner_instance_admin.GetInstancePartitionRequest()
         )
@@ -16872,6 +17017,10 @@ def test_get_instance_partition_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = spanner_instance_admin.InstancePartition()
+        post_with_metadata.return_value = (
+            spanner_instance_admin.InstancePartition(),
+            metadata,
+        )
 
         client.get_instance_partition(
             request,
@@ -16883,6 +17032,7 @@ def test_get_instance_partition_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_create_instance_partition_rest_bad_request(
@@ -16963,10 +17113,14 @@ def test_create_instance_partition_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_create_instance_partition"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_create_instance_partition_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_create_instance_partition"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.CreateInstancePartitionRequest.pb(
             spanner_instance_admin.CreateInstancePartitionRequest()
         )
@@ -16990,6 +17144,7 @@ def test_create_instance_partition_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.create_instance_partition(
             request,
@@ -17001,6 +17156,7 @@ def test_create_instance_partition_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_delete_instance_partition_rest_bad_request(
@@ -17202,10 +17358,14 @@ def test_update_instance_partition_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_update_instance_partition"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
+        "post_update_instance_partition_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_update_instance_partition"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.UpdateInstancePartitionRequest.pb(
             spanner_instance_admin.UpdateInstancePartitionRequest()
         )
@@ -17229,6 +17389,7 @@ def test_update_instance_partition_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.update_instance_partition(
             request,
@@ -17240,6 +17401,7 @@ def test_update_instance_partition_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_list_instance_partition_operations_rest_bad_request(
@@ -17334,10 +17496,14 @@ def test_list_instance_partition_operations_rest_interceptors(null_interceptor):
         "post_list_instance_partition_operations",
     ) as post, mock.patch.object(
         transports.InstanceAdminRestInterceptor,
+        "post_list_instance_partition_operations_with_metadata",
+    ) as post_with_metadata, mock.patch.object(
+        transports.InstanceAdminRestInterceptor,
         "pre_list_instance_partition_operations",
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.ListInstancePartitionOperationsRequest.pb(
             spanner_instance_admin.ListInstancePartitionOperationsRequest()
         )
@@ -17367,6 +17533,10 @@ def test_list_instance_partition_operations_rest_interceptors(null_interceptor):
         post.return_value = (
             spanner_instance_admin.ListInstancePartitionOperationsResponse()
         )
+        post_with_metadata.return_value = (
+            spanner_instance_admin.ListInstancePartitionOperationsResponse(),
+            metadata,
+        )
 
         client.list_instance_partition_operations(
             request,
@@ -17378,6 +17548,7 @@ def test_list_instance_partition_operations_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_move_instance_rest_bad_request(
@@ -17458,10 +17629,13 @@ def test_move_instance_rest_interceptors(null_interceptor):
     ), mock.patch.object(
         transports.InstanceAdminRestInterceptor, "post_move_instance"
     ) as post, mock.patch.object(
+        transports.InstanceAdminRestInterceptor, "post_move_instance_with_metadata"
+    ) as post_with_metadata, mock.patch.object(
         transports.InstanceAdminRestInterceptor, "pre_move_instance"
     ) as pre:
         pre.assert_not_called()
         post.assert_not_called()
+        post_with_metadata.assert_not_called()
         pb_message = spanner_instance_admin.MoveInstanceRequest.pb(
             spanner_instance_admin.MoveInstanceRequest()
         )
@@ -17485,6 +17659,7 @@ def test_move_instance_rest_interceptors(null_interceptor):
         ]
         pre.return_value = request, metadata
         post.return_value = operations_pb2.Operation()
+        post_with_metadata.return_value = operations_pb2.Operation(), metadata
 
         client.move_instance(
             request,
@@ -17496,6 +17671,7 @@ def test_move_instance_rest_interceptors(null_interceptor):
 
         pre.assert_called_once()
         post.assert_called_once()
+        post_with_metadata.assert_called_once()
 
 
 def test_initialize_client_w_rest():

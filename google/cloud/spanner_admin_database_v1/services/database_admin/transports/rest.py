@@ -307,11 +307,37 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.AddSplitPointsResponse:
         """Post-rpc interceptor for add_split_points
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_add_split_points_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_add_split_points` interceptor runs
+        before the `post_add_split_points_with_metadata` interceptor.
         """
         return response
+
+    def post_add_split_points_with_metadata(
+        self,
+        response: spanner_database_admin.AddSplitPointsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.AddSplitPointsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for add_split_points
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_add_split_points_with_metadata`
+        interceptor in new development instead of the `post_add_split_points` interceptor.
+        When both interceptors are used, this `post_add_split_points_with_metadata` interceptor runs after the
+        `post_add_split_points` interceptor. The (possibly modified) response returned by
+        `post_add_split_points` will be passed to
+        `post_add_split_points_with_metadata`.
+        """
+        return response, metadata
 
     def pre_copy_backup(
         self,
@@ -330,11 +356,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for copy_backup
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_copy_backup_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_copy_backup` interceptor runs
+        before the `post_copy_backup_with_metadata` interceptor.
         """
         return response
+
+    def post_copy_backup_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for copy_backup
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_copy_backup_with_metadata`
+        interceptor in new development instead of the `post_copy_backup` interceptor.
+        When both interceptors are used, this `post_copy_backup_with_metadata` interceptor runs after the
+        `post_copy_backup` interceptor. The (possibly modified) response returned by
+        `post_copy_backup` will be passed to
+        `post_copy_backup_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_backup(
         self,
@@ -355,11 +404,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_backup
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_backup_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_backup` interceptor runs
+        before the `post_create_backup_with_metadata` interceptor.
         """
         return response
+
+    def post_create_backup_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_backup
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_backup_with_metadata`
+        interceptor in new development instead of the `post_create_backup` interceptor.
+        When both interceptors are used, this `post_create_backup_with_metadata` interceptor runs after the
+        `post_create_backup` interceptor. The (possibly modified) response returned by
+        `post_create_backup` will be passed to
+        `post_create_backup_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_backup_schedule(
         self,
@@ -381,11 +453,36 @@ class DatabaseAdminRestInterceptor:
     ) -> gsad_backup_schedule.BackupSchedule:
         """Post-rpc interceptor for create_backup_schedule
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_backup_schedule_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_backup_schedule` interceptor runs
+        before the `post_create_backup_schedule_with_metadata` interceptor.
         """
         return response
+
+    def post_create_backup_schedule_with_metadata(
+        self,
+        response: gsad_backup_schedule.BackupSchedule,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        gsad_backup_schedule.BackupSchedule, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for create_backup_schedule
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_backup_schedule_with_metadata`
+        interceptor in new development instead of the `post_create_backup_schedule` interceptor.
+        When both interceptors are used, this `post_create_backup_schedule_with_metadata` interceptor runs after the
+        `post_create_backup_schedule` interceptor. The (possibly modified) response returned by
+        `post_create_backup_schedule` will be passed to
+        `post_create_backup_schedule_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_database(
         self,
@@ -407,11 +504,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for create_database
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_database_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_database` interceptor runs
+        before the `post_create_database_with_metadata` interceptor.
         """
         return response
+
+    def post_create_database_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_database
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_create_database_with_metadata`
+        interceptor in new development instead of the `post_create_database` interceptor.
+        When both interceptors are used, this `post_create_database_with_metadata` interceptor runs after the
+        `post_create_database` interceptor. The (possibly modified) response returned by
+        `post_create_database` will be passed to
+        `post_create_database_with_metadata`.
+        """
+        return response, metadata
 
     def pre_delete_backup(
         self,
@@ -470,11 +590,32 @@ class DatabaseAdminRestInterceptor:
     def post_get_backup(self, response: backup.Backup) -> backup.Backup:
         """Post-rpc interceptor for get_backup
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_backup_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_backup` interceptor runs
+        before the `post_get_backup_with_metadata` interceptor.
         """
         return response
+
+    def post_get_backup_with_metadata(
+        self, response: backup.Backup, metadata: Sequence[Tuple[str, Union[str, bytes]]]
+    ) -> Tuple[backup.Backup, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for get_backup
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_backup_with_metadata`
+        interceptor in new development instead of the `post_get_backup` interceptor.
+        When both interceptors are used, this `post_get_backup_with_metadata` interceptor runs after the
+        `post_get_backup` interceptor. The (possibly modified) response returned by
+        `post_get_backup` will be passed to
+        `post_get_backup_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_backup_schedule(
         self,
@@ -496,11 +637,34 @@ class DatabaseAdminRestInterceptor:
     ) -> backup_schedule.BackupSchedule:
         """Post-rpc interceptor for get_backup_schedule
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_backup_schedule_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_backup_schedule` interceptor runs
+        before the `post_get_backup_schedule_with_metadata` interceptor.
         """
         return response
+
+    def post_get_backup_schedule_with_metadata(
+        self,
+        response: backup_schedule.BackupSchedule,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[backup_schedule.BackupSchedule, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for get_backup_schedule
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_backup_schedule_with_metadata`
+        interceptor in new development instead of the `post_get_backup_schedule` interceptor.
+        When both interceptors are used, this `post_get_backup_schedule_with_metadata` interceptor runs after the
+        `post_get_backup_schedule` interceptor. The (possibly modified) response returned by
+        `post_get_backup_schedule` will be passed to
+        `post_get_backup_schedule_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_database(
         self,
@@ -522,11 +686,36 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.Database:
         """Post-rpc interceptor for get_database
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_database_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_database` interceptor runs
+        before the `post_get_database_with_metadata` interceptor.
         """
         return response
+
+    def post_get_database_with_metadata(
+        self,
+        response: spanner_database_admin.Database,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.Database, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for get_database
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_database_with_metadata`
+        interceptor in new development instead of the `post_get_database` interceptor.
+        When both interceptors are used, this `post_get_database_with_metadata` interceptor runs after the
+        `post_get_database` interceptor. The (possibly modified) response returned by
+        `post_get_database` will be passed to
+        `post_get_database_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_database_ddl(
         self,
@@ -548,11 +737,37 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.GetDatabaseDdlResponse:
         """Post-rpc interceptor for get_database_ddl
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_database_ddl_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_database_ddl` interceptor runs
+        before the `post_get_database_ddl_with_metadata` interceptor.
         """
         return response
+
+    def post_get_database_ddl_with_metadata(
+        self,
+        response: spanner_database_admin.GetDatabaseDdlResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.GetDatabaseDdlResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for get_database_ddl
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_database_ddl_with_metadata`
+        interceptor in new development instead of the `post_get_database_ddl` interceptor.
+        When both interceptors are used, this `post_get_database_ddl_with_metadata` interceptor runs after the
+        `post_get_database_ddl` interceptor. The (possibly modified) response returned by
+        `post_get_database_ddl` will be passed to
+        `post_get_database_ddl_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_iam_policy(
         self,
@@ -571,11 +786,34 @@ class DatabaseAdminRestInterceptor:
     def post_get_iam_policy(self, response: policy_pb2.Policy) -> policy_pb2.Policy:
         """Post-rpc interceptor for get_iam_policy
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_iam_policy_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_iam_policy` interceptor runs
+        before the `post_get_iam_policy_with_metadata` interceptor.
         """
         return response
+
+    def post_get_iam_policy_with_metadata(
+        self,
+        response: policy_pb2.Policy,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[policy_pb2.Policy, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for get_iam_policy
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_get_iam_policy_with_metadata`
+        interceptor in new development instead of the `post_get_iam_policy` interceptor.
+        When both interceptors are used, this `post_get_iam_policy_with_metadata` interceptor runs after the
+        `post_get_iam_policy` interceptor. The (possibly modified) response returned by
+        `post_get_iam_policy` will be passed to
+        `post_get_iam_policy_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_backup_operations(
         self,
@@ -596,11 +834,36 @@ class DatabaseAdminRestInterceptor:
     ) -> backup.ListBackupOperationsResponse:
         """Post-rpc interceptor for list_backup_operations
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_backup_operations_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_backup_operations` interceptor runs
+        before the `post_list_backup_operations_with_metadata` interceptor.
         """
         return response
+
+    def post_list_backup_operations_with_metadata(
+        self,
+        response: backup.ListBackupOperationsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        backup.ListBackupOperationsResponse, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for list_backup_operations
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_backup_operations_with_metadata`
+        interceptor in new development instead of the `post_list_backup_operations` interceptor.
+        When both interceptors are used, this `post_list_backup_operations_with_metadata` interceptor runs after the
+        `post_list_backup_operations` interceptor. The (possibly modified) response returned by
+        `post_list_backup_operations` will be passed to
+        `post_list_backup_operations_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_backups(
         self,
@@ -619,11 +882,34 @@ class DatabaseAdminRestInterceptor:
     ) -> backup.ListBackupsResponse:
         """Post-rpc interceptor for list_backups
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_backups_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_backups` interceptor runs
+        before the `post_list_backups_with_metadata` interceptor.
         """
         return response
+
+    def post_list_backups_with_metadata(
+        self,
+        response: backup.ListBackupsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[backup.ListBackupsResponse, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for list_backups
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_backups_with_metadata`
+        interceptor in new development instead of the `post_list_backups` interceptor.
+        When both interceptors are used, this `post_list_backups_with_metadata` interceptor runs after the
+        `post_list_backups` interceptor. The (possibly modified) response returned by
+        `post_list_backups` will be passed to
+        `post_list_backups_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_backup_schedules(
         self,
@@ -645,11 +931,37 @@ class DatabaseAdminRestInterceptor:
     ) -> backup_schedule.ListBackupSchedulesResponse:
         """Post-rpc interceptor for list_backup_schedules
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_backup_schedules_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_backup_schedules` interceptor runs
+        before the `post_list_backup_schedules_with_metadata` interceptor.
         """
         return response
+
+    def post_list_backup_schedules_with_metadata(
+        self,
+        response: backup_schedule.ListBackupSchedulesResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        backup_schedule.ListBackupSchedulesResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_backup_schedules
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_backup_schedules_with_metadata`
+        interceptor in new development instead of the `post_list_backup_schedules` interceptor.
+        When both interceptors are used, this `post_list_backup_schedules_with_metadata` interceptor runs after the
+        `post_list_backup_schedules` interceptor. The (possibly modified) response returned by
+        `post_list_backup_schedules` will be passed to
+        `post_list_backup_schedules_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_database_operations(
         self,
@@ -671,11 +983,37 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.ListDatabaseOperationsResponse:
         """Post-rpc interceptor for list_database_operations
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_database_operations_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_database_operations` interceptor runs
+        before the `post_list_database_operations_with_metadata` interceptor.
         """
         return response
+
+    def post_list_database_operations_with_metadata(
+        self,
+        response: spanner_database_admin.ListDatabaseOperationsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.ListDatabaseOperationsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_database_operations
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_database_operations_with_metadata`
+        interceptor in new development instead of the `post_list_database_operations` interceptor.
+        When both interceptors are used, this `post_list_database_operations_with_metadata` interceptor runs after the
+        `post_list_database_operations` interceptor. The (possibly modified) response returned by
+        `post_list_database_operations` will be passed to
+        `post_list_database_operations_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_database_roles(
         self,
@@ -697,11 +1035,37 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.ListDatabaseRolesResponse:
         """Post-rpc interceptor for list_database_roles
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_database_roles_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_database_roles` interceptor runs
+        before the `post_list_database_roles_with_metadata` interceptor.
         """
         return response
+
+    def post_list_database_roles_with_metadata(
+        self,
+        response: spanner_database_admin.ListDatabaseRolesResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.ListDatabaseRolesResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_database_roles
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_database_roles_with_metadata`
+        interceptor in new development instead of the `post_list_database_roles` interceptor.
+        When both interceptors are used, this `post_list_database_roles_with_metadata` interceptor runs after the
+        `post_list_database_roles` interceptor. The (possibly modified) response returned by
+        `post_list_database_roles` will be passed to
+        `post_list_database_roles_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_databases(
         self,
@@ -723,11 +1087,37 @@ class DatabaseAdminRestInterceptor:
     ) -> spanner_database_admin.ListDatabasesResponse:
         """Post-rpc interceptor for list_databases
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_databases_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_databases` interceptor runs
+        before the `post_list_databases_with_metadata` interceptor.
         """
         return response
+
+    def post_list_databases_with_metadata(
+        self,
+        response: spanner_database_admin.ListDatabasesResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner_database_admin.ListDatabasesResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for list_databases
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_list_databases_with_metadata`
+        interceptor in new development instead of the `post_list_databases` interceptor.
+        When both interceptors are used, this `post_list_databases_with_metadata` interceptor runs after the
+        `post_list_databases` interceptor. The (possibly modified) response returned by
+        `post_list_databases` will be passed to
+        `post_list_databases_with_metadata`.
+        """
+        return response, metadata
 
     def pre_restore_database(
         self,
@@ -749,11 +1139,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for restore_database
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_restore_database_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_restore_database` interceptor runs
+        before the `post_restore_database_with_metadata` interceptor.
         """
         return response
+
+    def post_restore_database_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for restore_database
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_restore_database_with_metadata`
+        interceptor in new development instead of the `post_restore_database` interceptor.
+        When both interceptors are used, this `post_restore_database_with_metadata` interceptor runs after the
+        `post_restore_database` interceptor. The (possibly modified) response returned by
+        `post_restore_database` will be passed to
+        `post_restore_database_with_metadata`.
+        """
+        return response, metadata
 
     def pre_set_iam_policy(
         self,
@@ -772,11 +1185,34 @@ class DatabaseAdminRestInterceptor:
     def post_set_iam_policy(self, response: policy_pb2.Policy) -> policy_pb2.Policy:
         """Post-rpc interceptor for set_iam_policy
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_set_iam_policy_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_set_iam_policy` interceptor runs
+        before the `post_set_iam_policy_with_metadata` interceptor.
         """
         return response
+
+    def post_set_iam_policy_with_metadata(
+        self,
+        response: policy_pb2.Policy,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[policy_pb2.Policy, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for set_iam_policy
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_set_iam_policy_with_metadata`
+        interceptor in new development instead of the `post_set_iam_policy` interceptor.
+        When both interceptors are used, this `post_set_iam_policy_with_metadata` interceptor runs after the
+        `post_set_iam_policy` interceptor. The (possibly modified) response returned by
+        `post_set_iam_policy` will be passed to
+        `post_set_iam_policy_with_metadata`.
+        """
+        return response, metadata
 
     def pre_test_iam_permissions(
         self,
@@ -798,11 +1234,37 @@ class DatabaseAdminRestInterceptor:
     ) -> iam_policy_pb2.TestIamPermissionsResponse:
         """Post-rpc interceptor for test_iam_permissions
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_test_iam_permissions_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_test_iam_permissions` interceptor runs
+        before the `post_test_iam_permissions_with_metadata` interceptor.
         """
         return response
+
+    def post_test_iam_permissions_with_metadata(
+        self,
+        response: iam_policy_pb2.TestIamPermissionsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        iam_policy_pb2.TestIamPermissionsResponse,
+        Sequence[Tuple[str, Union[str, bytes]]],
+    ]:
+        """Post-rpc interceptor for test_iam_permissions
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_test_iam_permissions_with_metadata`
+        interceptor in new development instead of the `post_test_iam_permissions` interceptor.
+        When both interceptors are used, this `post_test_iam_permissions_with_metadata` interceptor runs after the
+        `post_test_iam_permissions` interceptor. The (possibly modified) response returned by
+        `post_test_iam_permissions` will be passed to
+        `post_test_iam_permissions_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_backup(
         self,
@@ -821,11 +1283,34 @@ class DatabaseAdminRestInterceptor:
     def post_update_backup(self, response: gsad_backup.Backup) -> gsad_backup.Backup:
         """Post-rpc interceptor for update_backup
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_backup_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_backup` interceptor runs
+        before the `post_update_backup_with_metadata` interceptor.
         """
         return response
+
+    def post_update_backup_with_metadata(
+        self,
+        response: gsad_backup.Backup,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[gsad_backup.Backup, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_backup
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_backup_with_metadata`
+        interceptor in new development instead of the `post_update_backup` interceptor.
+        When both interceptors are used, this `post_update_backup_with_metadata` interceptor runs after the
+        `post_update_backup` interceptor. The (possibly modified) response returned by
+        `post_update_backup` will be passed to
+        `post_update_backup_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_backup_schedule(
         self,
@@ -847,11 +1332,36 @@ class DatabaseAdminRestInterceptor:
     ) -> gsad_backup_schedule.BackupSchedule:
         """Post-rpc interceptor for update_backup_schedule
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_backup_schedule_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_backup_schedule` interceptor runs
+        before the `post_update_backup_schedule_with_metadata` interceptor.
         """
         return response
+
+    def post_update_backup_schedule_with_metadata(
+        self,
+        response: gsad_backup_schedule.BackupSchedule,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        gsad_backup_schedule.BackupSchedule, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for update_backup_schedule
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_backup_schedule_with_metadata`
+        interceptor in new development instead of the `post_update_backup_schedule` interceptor.
+        When both interceptors are used, this `post_update_backup_schedule_with_metadata` interceptor runs after the
+        `post_update_backup_schedule` interceptor. The (possibly modified) response returned by
+        `post_update_backup_schedule` will be passed to
+        `post_update_backup_schedule_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_database(
         self,
@@ -873,11 +1383,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_database
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_database_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_database` interceptor runs
+        before the `post_update_database_with_metadata` interceptor.
         """
         return response
+
+    def post_update_database_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_database
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_database_with_metadata`
+        interceptor in new development instead of the `post_update_database` interceptor.
+        When both interceptors are used, this `post_update_database_with_metadata` interceptor runs after the
+        `post_update_database` interceptor. The (possibly modified) response returned by
+        `post_update_database` will be passed to
+        `post_update_database_with_metadata`.
+        """
+        return response, metadata
 
     def pre_update_database_ddl(
         self,
@@ -899,11 +1432,34 @@ class DatabaseAdminRestInterceptor:
     ) -> operations_pb2.Operation:
         """Post-rpc interceptor for update_database_ddl
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_update_database_ddl_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the DatabaseAdmin server but before
-        it is returned to user code.
+        it is returned to user code. This `post_update_database_ddl` interceptor runs
+        before the `post_update_database_ddl_with_metadata` interceptor.
         """
         return response
+
+    def post_update_database_ddl_with_metadata(
+        self,
+        response: operations_pb2.Operation,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[operations_pb2.Operation, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for update_database_ddl
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the DatabaseAdmin server but before it is returned to user code.
+
+        We recommend only using this `post_update_database_ddl_with_metadata`
+        interceptor in new development instead of the `post_update_database_ddl` interceptor.
+        When both interceptors are used, this `post_update_database_ddl_with_metadata` interceptor runs after the
+        `post_update_database_ddl` interceptor. The (possibly modified) response returned by
+        `post_update_database_ddl` will be passed to
+        `post_update_database_ddl_with_metadata`.
+        """
+        return response, metadata
 
     def pre_cancel_operation(
         self,
@@ -1324,6 +1880,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_add_split_points(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_add_split_points_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1480,6 +2040,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_copy_backup(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_copy_backup_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1628,6 +2192,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_backup(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_backup_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1780,6 +2348,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_backup_schedule(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_backup_schedule_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1930,6 +2502,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_database(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_database_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2398,6 +2974,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_backup(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_backup_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2544,6 +3124,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_backup_schedule(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_backup_schedule_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2687,6 +3271,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_database(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_database_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2832,6 +3420,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_database_ddl(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_database_ddl_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3055,6 +3647,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_iam_policy(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_iam_policy_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3200,6 +3796,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_backup_operations(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_backup_operations_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3347,6 +3947,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_backups(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_backups_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3492,6 +4096,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_backup_schedules(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_backup_schedules_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3640,6 +4248,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_database_operations(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_database_operations_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3789,6 +4401,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_database_roles(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_database_roles_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -3936,6 +4552,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_databases(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_databases_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4088,6 +4708,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_restore_database(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_restore_database_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4309,6 +4933,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_set_iam_policy(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_set_iam_policy_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4457,6 +5085,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_test_iam_permissions(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_test_iam_permissions_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4604,6 +5236,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_backup(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_backup_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4756,6 +5392,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_backup_schedule(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_backup_schedule_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -4906,6 +5546,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_database(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_database_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -5073,6 +5717,10 @@ class DatabaseAdminRestTransport(_BaseDatabaseAdminRestTransport):
             json_format.Parse(response.content, resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_update_database_ddl(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_update_database_ddl_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER

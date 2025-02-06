@@ -223,11 +223,36 @@ class SpannerRestInterceptor:
     ) -> spanner.BatchCreateSessionsResponse:
         """Post-rpc interceptor for batch_create_sessions
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_batch_create_sessions_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_batch_create_sessions` interceptor runs
+        before the `post_batch_create_sessions_with_metadata` interceptor.
         """
         return response
+
+    def post_batch_create_sessions_with_metadata(
+        self,
+        response: spanner.BatchCreateSessionsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner.BatchCreateSessionsResponse, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for batch_create_sessions
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_batch_create_sessions_with_metadata`
+        interceptor in new development instead of the `post_batch_create_sessions` interceptor.
+        When both interceptors are used, this `post_batch_create_sessions_with_metadata` interceptor runs after the
+        `post_batch_create_sessions` interceptor. The (possibly modified) response returned by
+        `post_batch_create_sessions` will be passed to
+        `post_batch_create_sessions_with_metadata`.
+        """
+        return response, metadata
 
     def pre_batch_write(
         self,
@@ -246,11 +271,36 @@ class SpannerRestInterceptor:
     ) -> rest_streaming.ResponseIterator:
         """Post-rpc interceptor for batch_write
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_batch_write_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_batch_write` interceptor runs
+        before the `post_batch_write_with_metadata` interceptor.
         """
         return response
+
+    def post_batch_write_with_metadata(
+        self,
+        response: rest_streaming.ResponseIterator,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        rest_streaming.ResponseIterator, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for batch_write
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_batch_write_with_metadata`
+        interceptor in new development instead of the `post_batch_write` interceptor.
+        When both interceptors are used, this `post_batch_write_with_metadata` interceptor runs after the
+        `post_batch_write` interceptor. The (possibly modified) response returned by
+        `post_batch_write` will be passed to
+        `post_batch_write_with_metadata`.
+        """
+        return response, metadata
 
     def pre_begin_transaction(
         self,
@@ -271,11 +321,34 @@ class SpannerRestInterceptor:
     ) -> transaction.Transaction:
         """Post-rpc interceptor for begin_transaction
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_begin_transaction_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_begin_transaction` interceptor runs
+        before the `post_begin_transaction_with_metadata` interceptor.
         """
         return response
+
+    def post_begin_transaction_with_metadata(
+        self,
+        response: transaction.Transaction,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[transaction.Transaction, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for begin_transaction
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_begin_transaction_with_metadata`
+        interceptor in new development instead of the `post_begin_transaction` interceptor.
+        When both interceptors are used, this `post_begin_transaction_with_metadata` interceptor runs after the
+        `post_begin_transaction` interceptor. The (possibly modified) response returned by
+        `post_begin_transaction` will be passed to
+        `post_begin_transaction_with_metadata`.
+        """
+        return response, metadata
 
     def pre_commit(
         self,
@@ -294,11 +367,34 @@ class SpannerRestInterceptor:
     ) -> commit_response.CommitResponse:
         """Post-rpc interceptor for commit
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_commit_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_commit` interceptor runs
+        before the `post_commit_with_metadata` interceptor.
         """
         return response
+
+    def post_commit_with_metadata(
+        self,
+        response: commit_response.CommitResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[commit_response.CommitResponse, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for commit
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_commit_with_metadata`
+        interceptor in new development instead of the `post_commit` interceptor.
+        When both interceptors are used, this `post_commit_with_metadata` interceptor runs after the
+        `post_commit` interceptor. The (possibly modified) response returned by
+        `post_commit` will be passed to
+        `post_commit_with_metadata`.
+        """
+        return response, metadata
 
     def pre_create_session(
         self,
@@ -315,11 +411,34 @@ class SpannerRestInterceptor:
     def post_create_session(self, response: spanner.Session) -> spanner.Session:
         """Post-rpc interceptor for create_session
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_create_session_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_create_session` interceptor runs
+        before the `post_create_session_with_metadata` interceptor.
         """
         return response
+
+    def post_create_session_with_metadata(
+        self,
+        response: spanner.Session,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[spanner.Session, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for create_session
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_create_session_with_metadata`
+        interceptor in new development instead of the `post_create_session` interceptor.
+        When both interceptors are used, this `post_create_session_with_metadata` interceptor runs after the
+        `post_create_session` interceptor. The (possibly modified) response returned by
+        `post_create_session` will be passed to
+        `post_create_session_with_metadata`.
+        """
+        return response, metadata
 
     def pre_delete_session(
         self,
@@ -350,11 +469,36 @@ class SpannerRestInterceptor:
     ) -> spanner.ExecuteBatchDmlResponse:
         """Post-rpc interceptor for execute_batch_dml
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_execute_batch_dml_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_execute_batch_dml` interceptor runs
+        before the `post_execute_batch_dml_with_metadata` interceptor.
         """
         return response
+
+    def post_execute_batch_dml_with_metadata(
+        self,
+        response: spanner.ExecuteBatchDmlResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        spanner.ExecuteBatchDmlResponse, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for execute_batch_dml
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_execute_batch_dml_with_metadata`
+        interceptor in new development instead of the `post_execute_batch_dml` interceptor.
+        When both interceptors are used, this `post_execute_batch_dml_with_metadata` interceptor runs after the
+        `post_execute_batch_dml` interceptor. The (possibly modified) response returned by
+        `post_execute_batch_dml` will be passed to
+        `post_execute_batch_dml_with_metadata`.
+        """
+        return response, metadata
 
     def pre_execute_sql(
         self,
@@ -371,11 +515,34 @@ class SpannerRestInterceptor:
     def post_execute_sql(self, response: result_set.ResultSet) -> result_set.ResultSet:
         """Post-rpc interceptor for execute_sql
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_execute_sql_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_execute_sql` interceptor runs
+        before the `post_execute_sql_with_metadata` interceptor.
         """
         return response
+
+    def post_execute_sql_with_metadata(
+        self,
+        response: result_set.ResultSet,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[result_set.ResultSet, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for execute_sql
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_execute_sql_with_metadata`
+        interceptor in new development instead of the `post_execute_sql` interceptor.
+        When both interceptors are used, this `post_execute_sql_with_metadata` interceptor runs after the
+        `post_execute_sql` interceptor. The (possibly modified) response returned by
+        `post_execute_sql` will be passed to
+        `post_execute_sql_with_metadata`.
+        """
+        return response, metadata
 
     def pre_execute_streaming_sql(
         self,
@@ -394,11 +561,36 @@ class SpannerRestInterceptor:
     ) -> rest_streaming.ResponseIterator:
         """Post-rpc interceptor for execute_streaming_sql
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_execute_streaming_sql_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_execute_streaming_sql` interceptor runs
+        before the `post_execute_streaming_sql_with_metadata` interceptor.
         """
         return response
+
+    def post_execute_streaming_sql_with_metadata(
+        self,
+        response: rest_streaming.ResponseIterator,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        rest_streaming.ResponseIterator, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for execute_streaming_sql
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_execute_streaming_sql_with_metadata`
+        interceptor in new development instead of the `post_execute_streaming_sql` interceptor.
+        When both interceptors are used, this `post_execute_streaming_sql_with_metadata` interceptor runs after the
+        `post_execute_streaming_sql` interceptor. The (possibly modified) response returned by
+        `post_execute_streaming_sql` will be passed to
+        `post_execute_streaming_sql_with_metadata`.
+        """
+        return response, metadata
 
     def pre_get_session(
         self,
@@ -415,11 +607,34 @@ class SpannerRestInterceptor:
     def post_get_session(self, response: spanner.Session) -> spanner.Session:
         """Post-rpc interceptor for get_session
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_get_session_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_get_session` interceptor runs
+        before the `post_get_session_with_metadata` interceptor.
         """
         return response
+
+    def post_get_session_with_metadata(
+        self,
+        response: spanner.Session,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[spanner.Session, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for get_session
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_get_session_with_metadata`
+        interceptor in new development instead of the `post_get_session` interceptor.
+        When both interceptors are used, this `post_get_session_with_metadata` interceptor runs after the
+        `post_get_session` interceptor. The (possibly modified) response returned by
+        `post_get_session` will be passed to
+        `post_get_session_with_metadata`.
+        """
+        return response, metadata
 
     def pre_list_sessions(
         self,
@@ -438,11 +653,34 @@ class SpannerRestInterceptor:
     ) -> spanner.ListSessionsResponse:
         """Post-rpc interceptor for list_sessions
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_list_sessions_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_list_sessions` interceptor runs
+        before the `post_list_sessions_with_metadata` interceptor.
         """
         return response
+
+    def post_list_sessions_with_metadata(
+        self,
+        response: spanner.ListSessionsResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[spanner.ListSessionsResponse, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for list_sessions
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_list_sessions_with_metadata`
+        interceptor in new development instead of the `post_list_sessions` interceptor.
+        When both interceptors are used, this `post_list_sessions_with_metadata` interceptor runs after the
+        `post_list_sessions` interceptor. The (possibly modified) response returned by
+        `post_list_sessions` will be passed to
+        `post_list_sessions_with_metadata`.
+        """
+        return response, metadata
 
     def pre_partition_query(
         self,
@@ -461,11 +699,34 @@ class SpannerRestInterceptor:
     ) -> spanner.PartitionResponse:
         """Post-rpc interceptor for partition_query
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_partition_query_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_partition_query` interceptor runs
+        before the `post_partition_query_with_metadata` interceptor.
         """
         return response
+
+    def post_partition_query_with_metadata(
+        self,
+        response: spanner.PartitionResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[spanner.PartitionResponse, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for partition_query
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_partition_query_with_metadata`
+        interceptor in new development instead of the `post_partition_query` interceptor.
+        When both interceptors are used, this `post_partition_query_with_metadata` interceptor runs after the
+        `post_partition_query` interceptor. The (possibly modified) response returned by
+        `post_partition_query` will be passed to
+        `post_partition_query_with_metadata`.
+        """
+        return response, metadata
 
     def pre_partition_read(
         self,
@@ -484,11 +745,34 @@ class SpannerRestInterceptor:
     ) -> spanner.PartitionResponse:
         """Post-rpc interceptor for partition_read
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_partition_read_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_partition_read` interceptor runs
+        before the `post_partition_read_with_metadata` interceptor.
         """
         return response
+
+    def post_partition_read_with_metadata(
+        self,
+        response: spanner.PartitionResponse,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[spanner.PartitionResponse, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for partition_read
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_partition_read_with_metadata`
+        interceptor in new development instead of the `post_partition_read` interceptor.
+        When both interceptors are used, this `post_partition_read_with_metadata` interceptor runs after the
+        `post_partition_read` interceptor. The (possibly modified) response returned by
+        `post_partition_read` will be passed to
+        `post_partition_read_with_metadata`.
+        """
+        return response, metadata
 
     def pre_read(
         self,
@@ -505,11 +789,34 @@ class SpannerRestInterceptor:
     def post_read(self, response: result_set.ResultSet) -> result_set.ResultSet:
         """Post-rpc interceptor for read
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_read_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_read` interceptor runs
+        before the `post_read_with_metadata` interceptor.
         """
         return response
+
+    def post_read_with_metadata(
+        self,
+        response: result_set.ResultSet,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[result_set.ResultSet, Sequence[Tuple[str, Union[str, bytes]]]]:
+        """Post-rpc interceptor for read
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_read_with_metadata`
+        interceptor in new development instead of the `post_read` interceptor.
+        When both interceptors are used, this `post_read_with_metadata` interceptor runs after the
+        `post_read` interceptor. The (possibly modified) response returned by
+        `post_read` will be passed to
+        `post_read_with_metadata`.
+        """
+        return response, metadata
 
     def pre_rollback(
         self,
@@ -540,11 +847,36 @@ class SpannerRestInterceptor:
     ) -> rest_streaming.ResponseIterator:
         """Post-rpc interceptor for streaming_read
 
-        Override in a subclass to manipulate the response
+        DEPRECATED. Please use the `post_streaming_read_with_metadata`
+        interceptor instead.
+
+        Override in a subclass to read or manipulate the response
         after it is returned by the Spanner server but before
-        it is returned to user code.
+        it is returned to user code. This `post_streaming_read` interceptor runs
+        before the `post_streaming_read_with_metadata` interceptor.
         """
         return response
+
+    def post_streaming_read_with_metadata(
+        self,
+        response: rest_streaming.ResponseIterator,
+        metadata: Sequence[Tuple[str, Union[str, bytes]]],
+    ) -> Tuple[
+        rest_streaming.ResponseIterator, Sequence[Tuple[str, Union[str, bytes]]]
+    ]:
+        """Post-rpc interceptor for streaming_read
+
+        Override in a subclass to read or manipulate the response or metadata after it
+        is returned by the Spanner server but before it is returned to user code.
+
+        We recommend only using this `post_streaming_read_with_metadata`
+        interceptor in new development instead of the `post_streaming_read` interceptor.
+        When both interceptors are used, this `post_streaming_read_with_metadata` interceptor runs after the
+        `post_streaming_read` interceptor. The (possibly modified) response returned by
+        `post_streaming_read` will be passed to
+        `post_streaming_read_with_metadata`.
+        """
+        return response, metadata
 
 
 @dataclasses.dataclass
@@ -764,6 +1096,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_batch_create_sessions(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_batch_create_sessions_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -913,6 +1249,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             resp = rest_streaming.ResponseIterator(response, spanner.BatchWriteResponse)
 
             resp = self._interceptor.post_batch_write(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_batch_write_with_metadata(
+                resp, response_metadata
+            )
             return resp
 
     class _BeginTransaction(
@@ -1047,6 +1387,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_begin_transaction(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_begin_transaction_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1194,6 +1538,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_commit(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_commit_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1343,6 +1691,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_create_session(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_create_session_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1645,6 +1997,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_execute_batch_dml(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_execute_batch_dml_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1795,6 +2151,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_execute_sql(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_execute_sql_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -1950,6 +2310,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             )
 
             resp = self._interceptor.post_execute_streaming_sql(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_execute_streaming_sql_with_metadata(
+                resp, response_metadata
+            )
             return resp
 
     class _GetSession(_BaseSpannerRestTransport._BaseGetSession, SpannerRestStub):
@@ -2070,6 +2434,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_get_session(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_get_session_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2215,6 +2583,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_list_sessions(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_list_sessions_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2370,6 +2742,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_partition_query(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_partition_query_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2523,6 +2899,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_partition_read(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_partition_read_with_metadata(
+                resp, response_metadata
+            )
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2671,6 +3051,8 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             json_format.Parse(response.content, pb_resp, ignore_unknown_fields=True)
 
             resp = self._interceptor.post_read(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_read_with_metadata(resp, response_metadata)
             if CLIENT_LOGGING_SUPPORTED and _LOGGER.isEnabledFor(
                 logging.DEBUG
             ):  # pragma: NO COVER
@@ -2939,6 +3321,10 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
             )
 
             resp = self._interceptor.post_streaming_read(resp)
+            response_metadata = [(k, str(v)) for k, v in response.headers.items()]
+            resp, _ = self._interceptor.post_streaming_read_with_metadata(
+                resp, response_metadata
+            )
             return resp
 
     @property
