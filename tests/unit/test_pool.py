@@ -487,6 +487,9 @@ class TestBurstyPool(OpenTelemetryBase):
         "db.url": "spanner.googleapis.com",
         "db.instance": "name",
         "net.host.name": "spanner.googleapis.com",
+        "gcp.client.service": "spanner",
+        "gcp.client.version": LIB_VERSION,
+        "gcp.client.repo": "googleapis/python-spanner",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
 
@@ -725,6 +728,9 @@ class TestPingingPool(OpenTelemetryBase):
         "db.url": "spanner.googleapis.com",
         "db.instance": "name",
         "net.host.name": "spanner.googleapis.com",
+        "gcp.client.service": "spanner",
+        "gcp.client.version": LIB_VERSION,
+        "gcp.client.repo": "googleapis/python-spanner",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
 
