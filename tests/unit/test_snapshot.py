@@ -537,14 +537,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 self.assertEqual(span.name, name)
                 self.assertEqual(
                     dict(span.attributes),
-                    enrich_with_otel_scope(
-                        {
-                            "db.type": "spanner",
-                            "db.url": "spanner.googleapis.com",
-                            "db.instance": "testing",
-                            "net.host.name": "spanner.googleapis.com",
-                        }
-                    ),
+                    enrich_with_otel_scope(BASE_ATTRIBUTES),
                 )
 
 
