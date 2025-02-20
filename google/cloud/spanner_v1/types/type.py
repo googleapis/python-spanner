@@ -125,6 +125,7 @@ class TypeCode(proto.Enum):
     PROTO = 13
     ENUM = 14
     INTERVAL = 16
+    UUID = 17
 
 
 class TypeAnnotationCode(proto.Enum):
