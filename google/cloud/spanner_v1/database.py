@@ -50,8 +50,11 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_request_id,
+    inject_retry_header_control,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -149,6 +152,9 @@ class Database(object):
 
     _spanner_api: SpannerClient = None
 
+    __transport_lock = threading.Lock()
+    __transports_to_channel_id = dict()
+
     def __init__(
         self,
         database_id,
@@ -183,6 +189,7 @@ class Database(object):
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
         self._proto_descriptors = proto_descriptors
+        self._channel_id = 0  # It'll be created when _spanner_api is created.
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
@@ -422,6 +429,15 @@ class Database(object):
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
+        api = self.__generate_spanner_api()
+        if not api:
+            return api
+
+        inject_retry_header_control(api)
+        return api
+
+    def __generate_spanner_api(self):
+        """Helper for session-related API calls."""
         if self._spanner_api is None:
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
@@ -441,7 +457,25 @@ class Database(object):
                 client_info=client_info,
                 client_options=client_options,
             )
+
+            with self.__transport_lock:
+                transport = self._spanner_api._transport
+                channel_id = self.__transports_to_channel_id.get(transport, None)
+                if channel_id is None:
+                    channel_id = len(self.__transports_to_channel_id) + 1
+                    self.__transports_to_channel_id[transport] = channel_id
+                self._channel_id = channel_id
+
         return self._spanner_api
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -485,7 +519,10 @@ class Database(object):
             database_dialect=self._database_dialect,
             proto_descriptors=self._proto_descriptors,
         )
-        future = api.create_database(request=request, metadata=metadata)
+        future = api.create_database(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def exists(self):
@@ -501,7 +538,12 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         try:
-            api.get_database_ddl(database=self.name, metadata=metadata)
+            api.get_database_ddl(
+                database=self.name,
+                metadata=self.metadata_with_request_id(
+                    self._next_nth_request, 1, metadata
+                ),
+            )
         except NotFound:
             return False
         return True
@@ -518,10 +560,16 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        response = api.get_database_ddl(database=self.name, metadata=metadata)
+        response = api.get_database_ddl(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._ddl_statements = tuple(response.statements)
         self._proto_descriptors = response.proto_descriptors
-        response = api.get_database(name=self.name, metadata=metadata)
+        response = api.get_database(
+            name=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._state = DatabasePB.State(response.state)
         self._create_time = response.create_time
         self._restore_info = response.restore_info
@@ -566,7 +614,10 @@ class Database(object):
             proto_descriptors=proto_descriptors,
         )
 
-        future = api.update_database_ddl(request=request, metadata=metadata)
+        future = api.update_database_ddl(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def update(self, fields):
@@ -604,7 +655,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         future = api.update_database(
-            database=database_pb, update_mask=field_mask, metadata=metadata
+            database=database_pb,
+            update_mask=field_mask,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
 
         return future
@@ -617,7 +670,10 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        api.drop_database(database=self.name, metadata=metadata)
+        api.drop_database(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def execute_partitioned_dml(
         self,
@@ -698,6 +754,12 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
+        begin_txn_nth_request = self._next_nth_request
+        begin_txn_attempt = AtomicCounter(0)
+        partial_nth_request = self._next_nth_request
+        # partial_attempt will be incremented inside _restart_on_unavailable.
+        partial_attempt = AtomicCounter(0)
+
         def execute_pdml():
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
@@ -706,7 +768,13 @@ class Database(object):
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
-                        session=session.name, options=txn_options, metadata=metadata
+                        session=session.name,
+                        options=txn_options,
+                        metadata=self.metadata_with_request_id(
+                            begin_txn_nth_request,
+                            begin_txn_attempt.increment(),
+                            metadata,
+                        ),
                     )
 
                     txn_selector = TransactionSelector(id=txn.id)
@@ -721,7 +789,9 @@ class Database(object):
                     )
                     method = functools.partial(
                         api.execute_streaming_sql,
-                        metadata=metadata,
+                        metadata=self.metadata_with_request_id(
+                            partial_nth_request, partial_attempt.increment(), metadata
+                        ),
                     )
 
                     iterator = _restart_on_unavailable(
@@ -738,6 +808,16 @@ class Database(object):
                     return result_set.stats.row_count_lower_bound
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
+
+    @property
+    def _next_nth_request(self):
+        if self._instance and self._instance._client:
+            return self._instance._client._next_nth_request
+        return 1
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
@@ -950,7 +1030,7 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
-            metadata=metadata,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future
 
@@ -1019,7 +1099,10 @@ class Database(object):
             parent=self.name,
             page_size=page_size,
         )
-        return api.list_database_roles(request=request, metadata=metadata)
+        return api.list_database_roles(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def table(self, table_id):
         """Factory to create a table object within this database.
@@ -1103,7 +1186,10 @@ class Database(object):
                 requested_policy_version=policy_version
             ),
         )
-        response = api.get_iam_policy(request=request, metadata=metadata)
+        response = api.get_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     def set_iam_policy(self, policy):
@@ -1125,7 +1211,10 @@ class Database(object):
             resource=self.name,
             policy=policy,
         )
-        response = api.set_iam_policy(request=request, metadata=metadata)
+        response = api.set_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     @property
