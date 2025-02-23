@@ -14,8 +14,10 @@
 
 
 import unittest
+from unittest.mock import MagicMock
 from tests._helpers import (
     OpenTelemetryBase,
+    LIB_VERSION,
     StatusCode,
     enrich_with_otel_scope,
 )
@@ -32,6 +34,9 @@ BASE_ATTRIBUTES = {
     "db.url": "spanner.googleapis.com",
     "db.instance": "testing",
     "net.host.name": "spanner.googleapis.com",
+    "gcp.client.service": "spanner",
+    "gcp.client.version": LIB_VERSION,
+    "gcp.client.repo": "googleapis/python-spanner",
 }
 enrich_with_otel_scope(BASE_ATTRIBUTES)
 
@@ -212,7 +217,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             batch.commit()
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit",
+            "CloudSpanner.Batch.commit",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
@@ -261,7 +266,39 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(max_commit_delay, None)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
+        )
+
+    def test_aborted_exception_on_commit_with_retries(self):
+        # Test case to verify that an Aborted exception is raised when
+        # batch.commit() is called and the transaction is aborted internally.
+        from google.api_core.exceptions import Aborted
+
+        database = _Database()
+        # Setup the spanner API which throws Aborted exception when calling commit API.
+        api = database.spanner_api = _FauxSpannerAPI(_aborted_error=True)
+        api.commit = MagicMock(
+            side_effect=Aborted("Transaction was aborted", errors=("Aborted error"))
+        )
+
+        # Create mock session and batch objects
+        session = _Session(database)
+        batch = self._make_one(session)
+        batch.insert(TABLE_NAME, COLUMNS, VALUES)
+
+        # Assertion: Ensure that calling batch.commit() raises the Aborted exception
+        with self.assertRaises(Aborted) as context:
+            batch.commit()
+
+        # Verify additional details about the exception
+        self.assertEqual(str(context.exception), "409 Transaction was aborted")
+        self.assertGreater(
+            api.commit.call_count, 1, "commit should be called more than once"
+        )
+        # Since we are using exponential backoff here and default timeout is set to 30 sec 2^x <= 30. So value for x will be 4
+        self.assertEqual(
+            api.commit.call_count, 4, "commit should be called exactly 4 times"
         )
 
     def _test_commit_with_options(
@@ -327,7 +364,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(actual_request_options, expected_request_options)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
 
         self.assertEqual(max_commit_delay_in, max_commit_delay)
@@ -438,7 +476,8 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(request_options, RequestOptions())
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit", attributes=dict(BASE_ATTRIBUTES, num_mutations=1)
+            "CloudSpanner.Batch.commit",
+            attributes=dict(BASE_ATTRIBUTES, num_mutations=1),
         )
 
     def test_context_mgr_failure(self):
@@ -492,7 +531,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
         group.delete(TABLE_NAME, keyset=keyset)
         groups.batch_write()
         self.assertSpanAttributes(
-            "CloudSpanner.BatchWrite",
+            "CloudSpanner.batch_write",
             status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, num_mutation_groups=1),
         )
@@ -518,7 +557,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
             groups.batch_write()
 
         self.assertSpanAttributes(
-            "CloudSpanner.BatchWrite",
+            "CloudSpanner.batch_write",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, num_mutation_groups=1),
         )
@@ -580,7 +619,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BatchWrite",
+            "CloudSpanner.batch_write",
             status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, num_mutation_groups=1),
         )
@@ -627,6 +666,7 @@ class _FauxSpannerAPI:
     _committed = None
     _batch_request = None
     _rpc_error = False
+    _aborted_error = False
 
     def __init__(self, **kwargs):
         self.__dict__.update(**kwargs)
@@ -637,6 +677,7 @@ class _FauxSpannerAPI:
         metadata=None,
     ):
         from google.api_core.exceptions import Unknown
+        from google.api_core.exceptions import Aborted
 
         max_commit_delay = None
         if type(request).pb(request).HasField("max_commit_delay"):
@@ -653,6 +694,8 @@ class _FauxSpannerAPI:
         )
         if self._rpc_error:
             raise Unknown("error")
+        if self._aborted_error:
+            raise Aborted("Transaction was aborted", errors=("Aborted error"))
         return self._commit_response
 
     def batch_write(

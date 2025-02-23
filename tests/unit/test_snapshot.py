@@ -19,6 +19,7 @@ import mock
 from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
 from tests._helpers import (
     OpenTelemetryBase,
+    LIB_VERSION,
     StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
     enrich_with_otel_scope,
@@ -46,6 +47,9 @@ BASE_ATTRIBUTES = {
     "db.url": "spanner.googleapis.com",
     "db.instance": "testing",
     "net.host.name": "spanner.googleapis.com",
+    "gcp.client.service": "spanner",
+    "gcp.client.version": LIB_VERSION,
+    "gcp.client.repo": "googleapis/python-spanner",
 }
 enrich_with_otel_scope(BASE_ATTRIBUTES)
 
@@ -533,14 +537,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 self.assertEqual(span.name, name)
                 self.assertEqual(
                     dict(span.attributes),
-                    enrich_with_otel_scope(
-                        {
-                            "db.type": "spanner",
-                            "db.url": "spanner.googleapis.com",
-                            "db.instance": "testing",
-                            "net.host.name": "spanner.googleapis.com",
-                        }
-                    ),
+                    enrich_with_otel_scope(BASE_ATTRIBUTES),
                 )
 
 
@@ -616,7 +613,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             list(derived.read(TABLE_NAME, COLUMNS, keyset))
 
         self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
+            "CloudSpanner._Derived.read",
             status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
@@ -773,7 +770,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.ReadOnlyTransaction",
+            "CloudSpanner._Derived.read",
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
             ),
@@ -868,7 +865,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertEqual(derived._execute_sql_count, 1)
 
         self.assertSpanAttributes(
-            "CloudSpanner.ReadWriteTransaction",
+            "CloudSpanner._Derived.execute_sql",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
@@ -1024,7 +1021,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertEqual(derived._execute_sql_count, sql_count + 1)
 
         self.assertSpanAttributes(
-            "CloudSpanner.ReadWriteTransaction",
+            "CloudSpanner._Derived.execute_sql",
             status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
@@ -1194,12 +1191,17 @@ class Test_SnapshotBase(OpenTelemetryBase):
             timeout=timeout,
         )
 
+        want_span_attributes = dict(
+            BASE_ATTRIBUTES,
+            table_id=TABLE_NAME,
+            columns=tuple(COLUMNS),
+        )
+        if index:
+            want_span_attributes["index"] = index
         self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadOnlyTransaction",
+            "CloudSpanner._Derived.partition_read",
             status=StatusCode.OK,
-            attributes=dict(
-                BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
-            ),
+            attributes=want_span_attributes,
         )
 
     def test_partition_read_single_use_raises(self):
@@ -1226,7 +1228,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
 
         self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadOnlyTransaction",
+            "CloudSpanner._Derived.partition_read",
             status=StatusCode.ERROR,
             attributes=dict(
                 BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
@@ -1369,7 +1371,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadWriteTransaction",
+            "CloudSpanner._Derived.partition_query",
             status=StatusCode.OK,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
@@ -1387,7 +1389,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             list(derived.partition_query(SQL_QUERY))
 
         self.assertSpanAttributes(
-            "CloudSpanner.PartitionReadWriteTransaction",
+            "CloudSpanner._Derived.partition_query",
             status=StatusCode.ERROR,
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
         )
@@ -1696,8 +1698,16 @@ class TestSnapshot(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             snapshot.begin()
 
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Snapshot.begin"]
+        assert got_span_names == want_span_names
+
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.ERROR,
             attributes=BASE_ATTRIBUTES,
         )
@@ -1755,7 +1765,7 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
@@ -1791,7 +1801,7 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
             attributes=BASE_ATTRIBUTES,
         )
@@ -1815,6 +1825,10 @@ class _Database(object):
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = directed_read_options
+
+    @property
+    def observability_options(self):
+        return dict(db_name=self.name)
 
 
 class _Session(object):

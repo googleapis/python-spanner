@@ -22,6 +22,8 @@ from google.api_core.retry import Retry
 from google.api_core import gapic_v1
 
 from tests._helpers import (
+    HAS_OPENTELEMETRY_INSTALLED,
+    LIB_VERSION,
     OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
@@ -61,6 +63,9 @@ class TestTransaction(OpenTelemetryBase):
         "db.url": "spanner.googleapis.com",
         "db.instance": "testing",
         "net.host.name": "spanner.googleapis.com",
+        "gcp.client.service": "spanner",
+        "gcp.client.version": LIB_VERSION,
+        "gcp.client.repo": "googleapis/python-spanner",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
 
@@ -162,7 +167,7 @@ class TestTransaction(OpenTelemetryBase):
             transaction.begin()
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction",
+            "CloudSpanner.Transaction.begin",
             status=StatusCode.ERROR,
             attributes=TestTransaction.BASE_ATTRIBUTES,
         )
@@ -195,7 +200,7 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.BeginTransaction", attributes=TestTransaction.BASE_ATTRIBUTES
+            "CloudSpanner.Transaction.begin", attributes=TestTransaction.BASE_ATTRIBUTES
         )
 
     def test_begin_w_retry(self):
@@ -226,7 +231,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction.rollback()
         self.assertTrue(transaction.rolled_back)
 
-        # Since there was no transaction to be rolled back, rollbacl rpc is not called.
+        # Since there was no transaction to be rolled back, rollback rpc is not called.
         api.rollback.assert_not_called()
 
         self.assertNoSpans()
@@ -266,7 +271,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertFalse(transaction.rolled_back)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Rollback",
+            "CloudSpanner.Transaction.rollback",
             status=StatusCode.ERROR,
             attributes=TestTransaction.BASE_ATTRIBUTES,
         )
@@ -299,7 +304,8 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.Rollback", attributes=TestTransaction.BASE_ATTRIBUTES
+            "CloudSpanner.Transaction.rollback",
+            attributes=TestTransaction.BASE_ATTRIBUTES,
         )
 
     def test_commit_not_begun(self):
@@ -308,7 +314,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is not begun",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_committed(self):
         session = _Session()
@@ -318,7 +344,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is already committed",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_rolled_back(self):
         session = _Session()
@@ -328,7 +374,27 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             transaction.commit()
 
-        self.assertNoSpans()
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [
+            (
+                "exception",
+                {
+                    "exception.type": "ValueError",
+                    "exception.message": "Transaction is already rolled back",
+                    "exception.stacktrace": "EPHEMERAL",
+                    "exception.escaped": "False",
+                },
+            )
+        ]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_w_other_error(self):
         database = _Database()
@@ -345,7 +411,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertIsNone(transaction.committed)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit",
+            "CloudSpanner.Transaction.commit",
             status=StatusCode.ERROR,
             attributes=dict(TestTransaction.BASE_ATTRIBUTES, num_mutations=1),
         )
@@ -427,12 +493,24 @@ class TestTransaction(OpenTelemetryBase):
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
 
         self.assertSpanAttributes(
-            "CloudSpanner.Commit",
+            "CloudSpanner.Transaction.commit",
             attributes=dict(
                 TestTransaction.BASE_ATTRIBUTES,
                 num_mutations=len(transaction._mutations),
             ),
         )
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        span_list = self.get_finished_spans()
+        got_span_names = [span.name for span in span_list]
+        want_span_names = ["CloudSpanner.Transaction.commit"]
+        assert got_span_names == want_span_names
+
+        got_span_events_statuses = self.finished_spans_events_statuses()
+        want_span_events_statuses = [("Starting Commit", {}), ("Commit Done", {})]
+        assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_no_mutations(self):
         self._commit_helper(mutate=False)
@@ -585,6 +663,13 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertEqual(transaction._execute_sql_count, count + 1)
+        want_span_attributes = dict(TestTransaction.BASE_ATTRIBUTES)
+        want_span_attributes["db.statement"] = DML_QUERY_WITH_PARAM
+        self.assertSpanAttributes(
+            "CloudSpanner.Transaction.execute_update",
+            status=StatusCode.OK,
+            attributes=want_span_attributes,
+        )
 
     def test_execute_update_new_transaction(self):
         self._execute_update_helper()

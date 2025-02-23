@@ -28,6 +28,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
+    trace_call,
 )
 from warnings import warn
 
@@ -237,29 +238,41 @@ class FixedSizePool(AbstractSessionPool):
             session_template=Session(creator_role=self.database_role),
         )
 
-        returned_session_count = 0
-        while not self._sessions.full():
-            request.session_count = requested_session_count - self._sessions.qsize()
+        observability_options = getattr(self._database, "observability_options", None)
+        with trace_call(
+            "CloudSpanner.FixedPool.BatchCreateSessions",
+            observability_options=observability_options,
+        ) as span:
+            returned_session_count = 0
+            while not self._sessions.full():
+                request.session_count = requested_session_count - self._sessions.qsize()
+                add_span_event(
+                    span,
+                    f"Creating {request.session_count} sessions",
+                    span_event_attributes,
+                )
+                resp = api.batch_create_sessions(
+                    request=request,
+                    metadata=metadata,
+                )
+
+                add_span_event(
+                    span,
+                    "Created sessions",
+                    dict(count=len(resp.session)),
+                )
+
+                for session_pb in resp.session:
+                    session = self._new_session()
+                    session._session_id = session_pb.name.split("/")[-1]
+                    self._sessions.put(session)
+                    returned_session_count += 1
+
             add_span_event(
                 span,
-                f"Creating {request.session_count} sessions",
+                f"Requested for {requested_session_count} sessions, returned {returned_session_count}",
                 span_event_attributes,
             )
-            resp = api.batch_create_sessions(
-                request=request,
-                metadata=metadata,
-            )
-            for session_pb in resp.session:
-                session = self._new_session()
-                session._session_id = session_pb.name.split("/")[-1]
-                self._sessions.put(session)
-                returned_session_count += 1
-
-        add_span_event(
-            span,
-            f"Requested for {requested_session_count} sessions, returned {returned_session_count}",
-            span_event_attributes,
-        )
 
     def get(self, timeout=None):
         """Check a session out from the pool.
@@ -510,12 +523,11 @@ class PingingPool(AbstractSessionPool):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        created_session_count = 0
         self._database_role = self._database_role or self._database.database_role
 
         request = BatchCreateSessionsRequest(
             database=database.name,
-            session_count=self.size - created_session_count,
+            session_count=self.size,
             session_template=Session(creator_role=self.database_role),
         )
 
@@ -536,39 +548,34 @@ class PingingPool(AbstractSessionPool):
             span_event_attributes,
         )
 
-        if created_session_count >= self.size:
+        observability_options = getattr(self._database, "observability_options", None)
+        with trace_call(
+            "CloudSpanner.PingingPool.BatchCreateSessions",
+            observability_options=observability_options,
+        ) as span:
+            returned_session_count = 0
+            while returned_session_count < self.size:
+                resp = api.batch_create_sessions(
+                    request=request,
+                    metadata=metadata,
+                )
+
+                add_span_event(
+                    span,
+                    f"Created {len(resp.session)} sessions",
+                )
+
+                for session_pb in resp.session:
+                    session = self._new_session()
+                    returned_session_count += 1
+                    session._session_id = session_pb.name.split("/")[-1]
+                    self.put(session)
+
             add_span_event(
-                current_span,
-                "Created no new sessions as sessionPool is full",
+                span,
+                f"Requested for {requested_session_count} sessions, returned {returned_session_count}",
                 span_event_attributes,
             )
-            return
-
-        add_span_event(
-            current_span,
-            f"Creating {request.session_count} sessions",
-            span_event_attributes,
-        )
-
-        returned_session_count = 0
-        while created_session_count < self.size:
-            resp = api.batch_create_sessions(
-                request=request,
-                metadata=metadata,
-            )
-            for session_pb in resp.session:
-                session = self._new_session()
-                session._session_id = session_pb.name.split("/")[-1]
-                self.put(session)
-                returned_session_count += 1
-
-            created_session_count += len(resp.session)
-
-        add_span_event(
-            current_span,
-            f"Requested for {requested_session_count} sessions, return {returned_session_count}",
-            span_event_attributes,
-        )
 
     def get(self, timeout=None):
         """Check a session out from the pool.

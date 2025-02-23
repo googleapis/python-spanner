@@ -19,6 +19,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 import mock
 from tests._helpers import (
     OpenTelemetryBase,
+    LIB_VERSION,
     StatusCode,
     enrich_with_otel_scope,
 )
@@ -46,6 +47,9 @@ class TestSession(OpenTelemetryBase):
         "db.url": "spanner.googleapis.com",
         "db.instance": DATABASE_NAME,
         "net.host.name": "spanner.googleapis.com",
+        "gcp.client.service": "spanner",
+        "gcp.client.version": LIB_VERSION,
+        "gcp.client.repo": "googleapis/python-spanner",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
 
@@ -558,8 +562,11 @@ class TestSession(OpenTelemetryBase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
+        attrs = {"session.id": session._session_id, "session.name": session.name}
+        attrs.update(TestSession.BASE_ATTRIBUTES)
         self.assertSpanAttributes(
-            "CloudSpanner.DeleteSession", attributes=TestSession.BASE_ATTRIBUTES
+            "CloudSpanner.DeleteSession",
+            attributes=attrs,
         )
 
     def test_delete_miss(self):
@@ -580,10 +587,13 @@ class TestSession(OpenTelemetryBase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
+        attrs = {"session.id": session._session_id, "session.name": session.name}
+        attrs.update(TestSession.BASE_ATTRIBUTES)
+
         self.assertSpanAttributes(
             "CloudSpanner.DeleteSession",
             status=StatusCode.ERROR,
-            attributes=TestSession.BASE_ATTRIBUTES,
+            attributes=attrs,
         )
 
     def test_delete_error(self):
@@ -604,10 +614,13 @@ class TestSession(OpenTelemetryBase):
             metadata=[("google-cloud-resource-prefix", database.name)],
         )
 
+        attrs = {"session.id": session._session_id, "session.name": session.name}
+        attrs.update(TestSession.BASE_ATTRIBUTES)
+
         self.assertSpanAttributes(
             "CloudSpanner.DeleteSession",
             status=StatusCode.ERROR,
-            attributes=TestSession.BASE_ATTRIBUTES,
+            attributes=attrs,
         )
 
     def test_snapshot_not_created(self):
@@ -1902,7 +1915,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_delay_helper_w_no_delay(self):
-        from google.cloud.spanner_v1.session import _delay_until_retry
+        from google.cloud.spanner_v1._helpers import _delay_until_retry
 
         metadata_mock = mock.Mock()
         metadata_mock.trailing_metadata.return_value = {}
@@ -1919,7 +1932,7 @@ class TestSession(OpenTelemetryBase):
 
         with mock.patch("time.time", _time_func):
             with mock.patch(
-                "google.cloud.spanner_v1.session._get_retry_delay"
+                "google.cloud.spanner_v1._helpers._get_retry_delay"
             ) as get_retry_delay_mock:
                 with mock.patch("time.sleep") as sleep_mock:
                     get_retry_delay_mock.return_value = None
