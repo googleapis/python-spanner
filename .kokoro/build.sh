@@ -46,6 +46,22 @@ if [[ $KOKORO_BUILD_ARTIFACTS_SUBDIR = *"continuous"* ]]; then
   trap cleanup EXIT HUP
 fi
 
+if [[ $USE_AIRLOCK = 'true' ]]; then
+cat > $HOME/.pypirc <<EOL
+[distutils]
+index-servers =
+    python-3p-trusted
+
+[python-3p-trusted]
+repository = https://us-python.pkg.dev/artifact-foundry-prod/python-3p-trusted/
+EOL
+  mkdir -p $HOME/.config/pip
+  cat > $HOME/.config/pip/pip.conf <<EOL
+[global]
+index-url = https://us-python.pkg.dev/artifact-foundry-prod/python-3p-trusted/simple/
+EOL
+fi
+
 # If NOX_SESSION is set, it only runs the specified session,
 # otherwise run all the sessions.
 if [[ -n "${NOX_SESSION:-}" ]]; then
