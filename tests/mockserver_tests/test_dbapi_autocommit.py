@@ -51,7 +51,7 @@ class TestDbapiAutoCommit(MockServerTestBase):
         )
         self.assertEqual(1, len(requests))
         self.assertFalse(requests[0].last_statement, requests[0])
-        self.assertIsNotNone(requests[0].transaction, requests[0]);
+        self.assertIsNotNone(requests[0].transaction, requests[0])
         self.assertIsNotNone(requests[0].transaction.single_use, requests[0])
         self.assertTrue(requests[0].transaction.single_use.read_only, requests[0])
 
