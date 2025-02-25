@@ -21,7 +21,6 @@ import struct
 import threading
 import time
 import uuid
-
 import pytest
 
 import grpc

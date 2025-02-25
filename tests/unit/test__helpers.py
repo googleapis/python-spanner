@@ -15,7 +15,6 @@
 
 import unittest
 import uuid
-
 import mock
 
 from opentelemetry.sdk.resources import Resource
