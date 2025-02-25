@@ -10435,6 +10435,7 @@ def test_execute_streaming_sql_rest_call_success(request_type):
         return_value = result_set.PartialResultSet(
             chunked_value=True,
             resume_token=b"resume_token_blob",
+            last=True,
         )
 
         # Wrap the value into a proper Response obj
@@ -10457,6 +10458,7 @@ def test_execute_streaming_sql_rest_call_success(request_type):
     assert isinstance(response, result_set.PartialResultSet)
     assert response.chunked_value is True
     assert response.resume_token == b"resume_token_blob"
+    assert response.last is True
 
 
 @pytest.mark.parametrize("null_interceptor", [True, False])
@@ -10816,6 +10818,7 @@ def test_streaming_read_rest_call_success(request_type):
         return_value = result_set.PartialResultSet(
             chunked_value=True,
             resume_token=b"resume_token_blob",
+            last=True,
         )
 
         # Wrap the value into a proper Response obj
@@ -10838,6 +10841,7 @@ def test_streaming_read_rest_call_success(request_type):
     assert isinstance(response, result_set.PartialResultSet)
     assert response.chunked_value is True
     assert response.resume_token == b"resume_token_blob"
+    assert response.last is True
 
 
 @pytest.mark.parametrize("null_interceptor", [True, False])
