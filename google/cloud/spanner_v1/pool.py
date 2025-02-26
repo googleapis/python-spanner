@@ -242,6 +242,7 @@ class FixedSizePool(AbstractSessionPool):
         with trace_call(
             "CloudSpanner.FixedPool.BatchCreateSessions",
             observability_options=observability_options,
+            metadata=metadata,
         ) as span:
             returned_session_count = 0
             while not self._sessions.full():
@@ -552,6 +553,7 @@ class PingingPool(AbstractSessionPool):
         with trace_call(
             "CloudSpanner.PingingPool.BatchCreateSessions",
             observability_options=observability_options,
+            metadata=metadata,
         ) as span:
             returned_session_count = 0
             while returned_session_count < self.size:
