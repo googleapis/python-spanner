@@ -34,8 +34,12 @@ from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1.request_id_header import with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
-from opentelemetry.propagate import inject
-from opentelemetry.propagators.textmap import Setter, Getter
+try:
+    from opentelemetry.propagate import inject
+    from opentelemetry.propagators.textmap import Setter
+    HAS_OPENTELEMETRY_INSTALLED = True
+except ImportError:
+    HAS_OPENTELEMETRY_INSTALLED = False
 from typing import List, Tuple
 import random
 
@@ -583,8 +587,9 @@ def _metadata_with_span_context(metadata: List[Tuple[str, str]], **kw) -> None:
     Returns:
         None
     """
-    metadata.append(("x-goog-spanner-end-to-end-tracing", "true"))
-    inject(setter=OpenTelemetryContextSetter(), carrier=metadata)
+    if HAS_OPENTELEMETRY_INSTALLED:
+        metadata.append(("x-goog-spanner-end-to-end-tracing", "true"))
+        inject(setter=OpenTelemetryContextSetter(), carrier=metadata)
 
 
 def _delay_until_retry(exc, deadline, attempts):
