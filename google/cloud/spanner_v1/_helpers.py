@@ -55,25 +55,27 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
 )
 
 
-class OpenTelemetryContextSetter(Setter):
-    """
-    Used by Open Telemetry for context propagation.
-    """
+if HAS_OPENTELEMETRY_INSTALLED:
 
-    def set(self, carrier: List[Tuple[str, str]], key: str, value: str) -> None:
+    class OpenTelemetryContextSetter(Setter):
         """
-        Injects trace context into Spanner metadata
-
-        Args:
-            carrier(PubsubMessage): The Pub/Sub message which is the carrier of Open Telemetry
-            data.
-            key(str): The key for which the Open Telemetry context data needs to be set.
-            value(str): The Open Telemetry context value to be set.
-
-        Returns:
-            None
+        Used by Open Telemetry for context propagation.
         """
-        carrier.append((key, value))
+
+        def set(self, carrier: List[Tuple[str, str]], key: str, value: str) -> None:
+            """
+            Injects trace context into Spanner metadata
+
+            Args:
+                carrier(PubsubMessage): The Pub/Sub message which is the carrier of Open Telemetry
+                data.
+                key(str): The key for which the Open Telemetry context data needs to be set.
+                value(str): The Open Telemetry context value to be set.
+
+            Returns:
+                None
+            """
+            carrier.append((key, value))
 
 
 def _try_to_coerce_bytes(bytestring):
