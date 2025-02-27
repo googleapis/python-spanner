@@ -101,6 +101,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self,
         method,
         request,
+        metadata,
         trace_name=None,
         session=None,
         attributes=None,
@@ -117,7 +118,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         request.transaction = transaction
         with trace_call(
-            trace_name, session, attributes, observability_options=observability_options
+            trace_name,
+            session,
+            attributes,
+            observability_options=observability_options,
+            metadata=metadata,
         ):
             method = functools.partial(method, request=request)
             response = _retry(
@@ -160,6 +165,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=observability_options,
+            metadata=metadata,
         ) as span:
             method = functools.partial(
                 api.begin_transaction,
@@ -202,6 +208,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 f"CloudSpanner.{type(self).__name__}.rollback",
                 self._session,
                 observability_options=observability_options,
+                metadata=metadata,
             ):
                 method = functools.partial(
                     api.rollback,
@@ -245,26 +252,24 @@ class Transaction(_SnapshotBase, _BatchBase):
         database = self._session._database
         trace_attributes = {"num_mutations": len(self._mutations)}
         observability_options = getattr(database, "observability_options", None)
+        api = database.spanner_api
+        metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.commit",
             self._session,
             trace_attributes,
             observability_options,
+            metadata=metadata,
         ) as span:
             self._check_state()
             if self._transaction_id is None and len(self._mutations) > 0:
                 self.begin()
             elif self._transaction_id is None and len(self._mutations) == 0:
                 raise ValueError("Transaction is not begun")
-
-            api = database.spanner_api
-            metadata = _metadata_with_prefix(database.name)
-            if database._route_to_leader_enabled:
-                metadata.append(
-                    _metadata_with_leader_aware_routing(
-                        database._route_to_leader_enabled
-                    )
-                )
 
             if request_options is None:
                 request_options = RequestOptions()
@@ -464,6 +469,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
+                    metadata,
                     f"CloudSpanner.{type(self).__name__}.execute_update",
                     self._session,
                     trace_attributes,
@@ -481,6 +487,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
+                metadata,
                 f"CloudSpanner.{type(self).__name__}.execute_update",
                 self._session,
                 trace_attributes,
@@ -604,6 +611,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
+                    metadata,
                     "CloudSpanner.DMLTransaction",
                     self._session,
                     trace_attributes,
@@ -622,6 +630,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
+                metadata,
                 "CloudSpanner.DMLTransaction",
                 self._session,
                 trace_attributes,
