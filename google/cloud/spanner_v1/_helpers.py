@@ -34,9 +34,11 @@ from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1.request_id_header import with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
+
 try:
     from opentelemetry.propagate import inject
     from opentelemetry.propagators.textmap import Setter
+
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
