@@ -638,7 +638,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
 
     def test_batch_write_no_request_options(self):
         self._test_batch_write_with_request_options()
-        
+
     def test_batch_write_end_to_end_tracing_enabled(self):
         self._test_batch_write_with_request_options(enable_end_to_end_tracing=True)
 
