@@ -25,7 +25,9 @@ from google.cloud.spanner_v1.services.spanner.transports import (
 from google.cloud.spanner_v1.testing.interceptors import (
     MethodCountInterceptor,
     MethodAbortInterceptor,
+    XGoogRequestIDHeaderInterceptor,
 )
+from google.cloud.spanner_v1._helpers import inject_retry_header_control
 
 
 class TestDatabase(Database):
@@ -33,6 +35,8 @@ class TestDatabase(Database):
     system testing as there is no support for interceptors in grpc client
     currently, and we don't want to make changes in the Database class for
     testing purpose as this is a hack to use interceptors in tests."""
+
+    _interceptors = []
 
     def __init__(
         self,
@@ -67,6 +71,14 @@ class TestDatabase(Database):
 
     @property
     def spanner_api(self):
+        api = self.__generate_spanner_api()
+        if not api:
+            return api
+
+        inject_retry_header_control(api)
+        return api
+
+    def __generate_spanner_api(self):
         """Helper for session-related API calls."""
         if self._spanner_api is None:
             client = self._instance._client
@@ -74,6 +86,8 @@ class TestDatabase(Database):
             client_options = client._client_options
             if self._instance.emulator_host is not None:
                 channel = grpc.insecure_channel(self._instance.emulator_host)
+                self._x_goog_request_id_interceptor = XGoogRequestIDHeaderInterceptor()
+                self._interceptors.append(self._x_goog_request_id_interceptor)
                 channel = grpc.intercept_channel(channel, *self._interceptors)
                 transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
@@ -110,3 +124,7 @@ class TestDatabase(Database):
             client_options=client_options,
             transport=transport,
         )
+
+    def reset(self):
+        if self._x_goog_request_id_interceptor:
+            self._x_goog_request_id_interceptor.reset()
