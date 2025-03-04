@@ -59,6 +59,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     _lock = threading.Lock()
     _read_only = False
     exclude_txn_from_change_streams = False
+    isolation_level = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
 
     def __init__(self, session):
         if session._transaction is not None:
@@ -93,6 +94,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 begin=TransactionOptions(
                     read_write=TransactionOptions.ReadWrite(),
                     exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+                    isolation_level=self.isolation_level,
                 )
             )
         else:
@@ -160,6 +162,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         txn_options = TransactionOptions(
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+            isolation_level=self.isolation_level,
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(

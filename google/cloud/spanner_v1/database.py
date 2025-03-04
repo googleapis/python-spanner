@@ -183,6 +183,9 @@ class Database(object):
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
+        self.default_transaction_options = (
+            self._instance._client.default_transaction_options
+        )
         self._proto_descriptors = proto_descriptors
 
         if pool is None:
@@ -782,6 +785,7 @@ class Database(object):
         request_options=None,
         max_commit_delay=None,
         exclude_txn_from_change_streams=False,
+        isolation_level=None,
         **kw,
     ):
         """Return an object which wraps a batch.
@@ -809,14 +813,28 @@ class Database(object):
           being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
           unset.
 
+        :type isolation_level:
+            :class:`google.cloud.spanner_v1.types.TransactionOptions.IsolationLevel`
+        :param isolation_level:
+                (Optional) Sets isolation level for the transaction and overrides the isolation level set at the client.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
         """
+
+        # Set isolation level
+        if isolation_level is None:
+            isolation_level = (
+                self.default_transaction_options.isolation_level
+                if isinstance(self.default_transaction_options, TransactionOptions)
+                else TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
+            )
         return BatchCheckout(
             self,
             request_options,
             max_commit_delay,
             exclude_txn_from_change_streams,
+            isolation_level,
             **kw,
         )
 
@@ -888,6 +906,7 @@ class Database(object):
                    from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
                    This does not exclude the transaction from being recorded in the change streams with
                    the DDL option `allow_txn_exclusion` being false or unset.
+                   "isolation_level" sets the isolation level for transaction.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -1178,6 +1197,7 @@ class BatchCheckout(object):
         request_options=None,
         max_commit_delay=None,
         exclude_txn_from_change_streams=False,
+        isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         **kw,
     ):
         self._database = database
@@ -1190,6 +1210,7 @@ class BatchCheckout(object):
             self._request_options = request_options
         self._max_commit_delay = max_commit_delay
         self._exclude_txn_from_change_streams = exclude_txn_from_change_streams
+        self._isolation_level = isolation_level
         self._kw = kw
 
     def __enter__(self):
@@ -1211,7 +1232,7 @@ class BatchCheckout(object):
                     request_options=self._request_options,
                     max_commit_delay=self._max_commit_delay,
                     exclude_txn_from_change_streams=self._exclude_txn_from_change_streams,
-                    **self._kw,
+                    isolation_level=self._isolation_level,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
