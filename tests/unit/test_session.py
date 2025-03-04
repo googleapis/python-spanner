@@ -70,6 +70,7 @@ class TestSession(OpenTelemetryBase):
         database.log_commit_stats = False
         database.database_role = database_role
         database._route_to_leader_enabled = True
+        database.default_transaction_options = None
         return database
 
     @staticmethod

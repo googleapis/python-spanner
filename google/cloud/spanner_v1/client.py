@@ -41,6 +41,7 @@ from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
+from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
@@ -161,6 +162,11 @@ class Client(ClientWithProject):
            or you can use the environment variable `SPANNER_ENABLE_EXTENDED_TRACING=<boolean>`
            to control it.
 
+    :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
+        or :class:`dict`
+    :param default_transaction_options: (Optional) Client options used to set the default_transaction_options
+            used for all Read Write Transactions.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -182,6 +188,7 @@ class Client(ClientWithProject):
         route_to_leader_enabled=True,
         directed_read_options=None,
         observability_options=None,
+        default_transaction_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -243,6 +250,7 @@ class Client(ClientWithProject):
         self._route_to_leader_enabled = route_to_leader_enabled
         self._directed_read_options = directed_read_options
         self._observability_options = observability_options
+        self._default_transaction_options = default_transaction_options
 
     @property
     def credentials(self):
@@ -332,6 +340,17 @@ class Client(ClientWithProject):
         :returns: The configured observability_options if set.
         """
         return self._observability_options
+
+    @property
+    def default_transaction_options(self):
+        """Getter for default_transaction_options.
+
+        :rtype:
+            :class:`~google.cloud.spanner_v1.TransactionOptions`
+            or :class:`dict`
+        :returns: The default_transaction_options for the client.
+        """
+        return self._default_transaction_options
 
     @property
     def directed_read_options(self):
@@ -478,3 +497,19 @@ class Client(ClientWithProject):
             or regions should be used for non-transactional reads or queries.
         """
         self._directed_read_options = directed_read_options
+
+    @default_transaction_options.setter
+    def default_transaction_options(self, default_transaction_options):
+        """Sets default_transaction_options for the client
+        :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
+            or :class:`dict`
+        :param default_transaction_options: Client options used to set the default_transaction_options
+            used for all Read Write Transactions.
+        """
+        if default_transaction_options is not None and not isinstance(
+            default_transaction_options, TransactionOptions
+        ):
+            raise TypeError(
+                "default_transaction_option must be a TransactionOptions instance"
+            )
+        self._default_transaction_options = default_transaction_options
