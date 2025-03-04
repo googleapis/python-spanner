@@ -14,6 +14,7 @@
 
 
 import unittest
+from tests import _helpers as ot_helpers
 from unittest.mock import MagicMock
 from tests._helpers import (
     OpenTelemetryBase,
@@ -608,7 +609,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
             ("x-goog-spanner-route-to-leader", "true"),
         ]
 
-        if enable_end_to_end_tracing:
+        if enable_end_to_end_tracing and ot_helpers.HAS_OPENTELEMETRY_INSTALLED:
             expected_metadata.append(("x-goog-spanner-end-to-end-tracing", "true"))
             self.assertTrue(
                 any(key == "traceparent" for key, _ in metadata),
