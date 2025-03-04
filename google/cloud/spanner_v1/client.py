@@ -510,10 +510,4 @@ class Client(ClientWithProject):
         :param default_transaction_options: Client options used to set the default_transaction_options
             used for all Read Write Transactions.
         """
-        if default_transaction_options is not None and not isinstance(
-            default_transaction_options, TransactionOptions
-        ):
-            raise TypeError(
-                "default_transaction_option must be a TransactionOptions instance"
-            )
         self._default_transaction_options = default_transaction_options

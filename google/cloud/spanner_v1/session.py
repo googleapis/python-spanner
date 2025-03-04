@@ -473,7 +473,12 @@ class Session(object):
 
         if isolation_level is None:
             isolation_level = (
-                self._database.default_transaction_options.isolation_level
+                self._database.default_transaction_options.get(
+                    "isolation_level",
+                    TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+                )
+                if isinstance(self._database.default_transaction_options, dict)
+                else self._database.default_transaction_options.isolation_level
                 if isinstance(
                     self._database.default_transaction_options, TransactionOptions
                 )

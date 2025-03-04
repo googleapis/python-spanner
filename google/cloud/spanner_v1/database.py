@@ -825,7 +825,12 @@ class Database(object):
         # Set isolation level
         if isolation_level is None:
             isolation_level = (
-                self.default_transaction_options.isolation_level
+                self.default_transaction_options.get(
+                    "isolation_level",
+                    TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+                )
+                if isinstance(self.default_transaction_options, dict)
+                else self.default_transaction_options.isolation_level
                 if isinstance(self.default_transaction_options, TransactionOptions)
                 else TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
             )
