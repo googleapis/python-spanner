@@ -1915,6 +1915,44 @@ class TestSession(OpenTelemetryBase):
             * 2,
         )
 
+    def test_run_in_transaction_w_isolation_level(self):
+        from google.cloud.spanner_v1 import (
+            Transaction as TransactionPB,
+            TransactionOptions,
+        )
+        from google.cloud.spanner_v1.transaction import Transaction
+
+        gax_api = self._make_spanner_api()
+        gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
+        database = self._make_database()
+        database.spanner_api = gax_api
+        session = self._make_one(database)
+        session._session_id = self.SESSION_ID
+
+        def unit_of_work(txn, *args, **kw):
+            txn.insert("test", [], [])
+            return 42
+
+        return_value = session.run_in_transaction(
+            unit_of_work, "abc", isolation_level="SERIALIZABLE"
+        )
+
+        self.assertIsNone(session._transaction)
+        self.assertEqual(return_value, 42)
+
+        expected_options = TransactionOptions(
+            read_write=TransactionOptions.ReadWrite(),
+            isolation_level="SERIALIZABLE",
+        )
+        gax_api.begin_transaction.assert_called_once_with(
+            session=self.SESSION_NAME,
+            options=expected_options,
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+            ],
+        )
+
     def test_delay_helper_w_no_delay(self):
         from google.cloud.spanner_v1._helpers import _delay_until_retry
 
