@@ -238,7 +238,17 @@ s.replace(
     """@nox.session\(python=SYSTEM_TEST_PYTHON_VERSIONS\)
 def system\(session\):""",
     """@nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-@nox.parametrize("database_dialect", ["GOOGLE_STANDARD_SQL", "POSTGRESQL"])
+@nox.parametrize(
+    "protobuf_implementation,database_dialect",
+    [
+        ("python", "GOOGLE_STANDARD_SQL"),
+        ("python", "POSTGRESQL"),
+        ("upb", "GOOGLE_STANDARD_SQL"),
+        ("upb", "POSTGRESQL"),
+        ("cpp", "GOOGLE_STANDARD_SQL"),
+        ("cpp", "POSTGRESQL"),
+    ],
+)
 def system(session, database_dialect):""",
 )
 
@@ -248,6 +258,7 @@ s.replace(
         \)""",
     """*session.posargs,
             env={
+                "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
                 "SPANNER_DATABASE_DIALECT": database_dialect,
                 "SKIP_BACKUP_TESTS": "true",
             },
