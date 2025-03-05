@@ -249,7 +249,7 @@ def system\(session\):""",
         ("cpp", "POSTGRESQL"),
     ],
 )
-def system(session, database_dialect):""",
+def system(session, protobuf_implementation, database_dialect):""",
 )
 
 s.replace(
