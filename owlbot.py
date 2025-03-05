@@ -356,6 +356,19 @@ place_before(
     escape="()_*:",
 )
 
+s.replace(
+    "noxfile.py",
+    "install_systemtest_dependencies\(session, \"-c\", constraints_path\)",
+    """install_systemtest_dependencies(session, "-c", constraints_path)
+
+    # TODO(https://github.com/googleapis/synthtool/issues/1976):
+    # Remove the 'cpp' implementation once support for Protobuf 3.x is dropped.
+    # The 'cpp' implementation requires Protobuf<4.
+    if protobuf_implementation == "cpp":
+        session.install("protobuf<4")
+"""
+)
+
 place_before(
     "noxfile.py",
     "UNIT_TEST_PYTHON_VERSIONS: List[str] = [",
