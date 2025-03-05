@@ -305,7 +305,7 @@ def install_systemtest_dependencies(session, *constraints):
         ("cpp", "POSTGRESQL"),
     ],
 )
-def system(session, database_dialect):
+def system(session, protobuf_implementation, database_dialect):
     """Run the system test suite."""
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
