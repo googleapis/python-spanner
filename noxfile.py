@@ -339,6 +339,12 @@ def system(session, protobuf_implementation, database_dialect):
 
     install_systemtest_dependencies(session, "-c", constraints_path)
 
+    # TODO(https://github.com/googleapis/synthtool/issues/1976):
+    # Remove the 'cpp' implementation once support for Protobuf 3.x is dropped.
+    # The 'cpp' implementation requires Protobuf<4.
+    if protobuf_implementation == "cpp":
+        session.install("protobuf<4")
+
     # Run py.test against the system tests.
     if system_test_exists:
         session.run(
