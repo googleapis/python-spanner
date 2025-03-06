@@ -816,7 +816,7 @@ class Database(object):
         :type isolation_level:
             :class:`google.cloud.spanner_v1.types.TransactionOptions.IsolationLevel`
         :param isolation_level:
-                (Optional) Sets isolation level for the transaction and overrides the isolation level set at the client.
+                (Optional) Sets the isolation level for this transaction. This overrides any default isolation level set for the client.
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchCheckout`
         :returns: new wrapper
@@ -1238,6 +1238,7 @@ class BatchCheckout(object):
                     max_commit_delay=self._max_commit_delay,
                     exclude_txn_from_change_streams=self._exclude_txn_from_change_streams,
                     isolation_level=self._isolation_level,
+                    **self._kw,
                 )
         finally:
             if self._database.log_commit_stats and self._batch.commit_stats:
