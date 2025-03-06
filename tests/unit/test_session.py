@@ -94,11 +94,31 @@ class TestSession(OpenTelemetryBase):
         database.database_role = database_role
         database._route_to_leader_enabled = True
         database.default_transaction_options = default_transaction_options
+
+        # Define side_effect function to use injected default_transaction_options
+        def get_default_isolation_level_side_effect():
+            if isinstance(database.default_transaction_options, dict):
+                return database.default_transaction_options.get(
+                    "isolation_level",
+                    TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+                )
+
+            return getattr(
+                database.default_transaction_options,
+                "isolation_level",
+                TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+            )
+
+        # Mock get_default_isolation_level method
+        database.get_default_isolation_level = mock.Mock(
+            side_effect=get_default_isolation_level_side_effect
+        )
+
         return database
 
     @staticmethod
     def _make_session_pb(name, labels=None, database_role=None):
-        return Session(name=name, labels=labels, creator_role=database_role)
+        return SessionRequestProto(name=name, labels=labels, creator_role=database_role)
 
     def _make_spanner_api(self):
         return mock.Mock(autospec=SpannerClient, instance=True)
