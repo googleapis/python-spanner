@@ -39,8 +39,6 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.transaction import Transaction
-from google.cloud.spanner_v1 import TransactionOptions
-
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
 

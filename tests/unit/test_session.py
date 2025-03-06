@@ -28,7 +28,6 @@ from google.cloud.spanner_v1 import (
     Session as SessionRequestProto,
     ExecuteSqlRequest,
     TypeCode,
-    Transaction as TransactionPB,
 )
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _delay_until_retry
@@ -44,7 +43,6 @@ from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.transaction import Transaction
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from google.api_core.exceptions import Unknown, Aborted, NotFound, Cancelled

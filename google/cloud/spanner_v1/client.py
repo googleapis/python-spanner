@@ -41,7 +41,6 @@ from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
