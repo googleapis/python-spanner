@@ -167,6 +167,7 @@ class Batch(_BatchBase):
         request_options=None,
         max_commit_delay=None,
         exclude_txn_from_change_streams=False,
+        isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         **kwargs,
     ):
         """Commit mutations to the database.
@@ -187,6 +188,18 @@ class Batch(_BatchBase):
                 (Optional) The amount of latency this request is willing to incur
                 in order to improve throughput.
 
+        :type exclude_txn_from_change_streams: bool
+        :param exclude_txn_from_change_streams:
+          (Optional) If true, instructs the transaction to be excluded from being recorded in change streams
+          with the DDL option `allow_txn_exclusion=true`. This does not exclude the transaction from
+          being recorded in the change streams with the DDL option `allow_txn_exclusion` being false or
+          unset.
+
+        :type isolation_level:
+            :class:`google.cloud.spanner_v1.types.TransactionOptions.IsolationLevel`
+        :param isolation_level:
+                (Optional) Sets isolation level for the transaction.
+
         :rtype: datetime
         :returns: timestamp of the committed changes.
         """
@@ -201,6 +214,7 @@ class Batch(_BatchBase):
         txn_options = TransactionOptions(
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
+            isolation_level=isolation_level,
         )
         trace_attributes = {"num_mutations": len(self._mutations)}
 

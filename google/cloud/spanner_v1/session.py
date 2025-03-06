@@ -39,7 +39,6 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.transaction import Transaction
-
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
 
@@ -448,6 +447,7 @@ class Session(object):
                    from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
                    This does not exclude the transaction from being recorded in the change streams with
                    the DDL option `allow_txn_exclusion` being false or unset.
+                   "isolation_level" sets the isolation level for transaction.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -462,6 +462,10 @@ class Session(object):
         exclude_txn_from_change_streams = kw.pop(
             "exclude_txn_from_change_streams", None
         )
+        isolation_level = kw.pop("isolation_level", None)
+
+        if isolation_level is None:
+            isolation_level = self._database.get_default_isolation_level()
         attempts = 0
 
         observability_options = getattr(self._database, "observability_options", None)
@@ -477,6 +481,7 @@ class Session(object):
                     txn.exclude_txn_from_change_streams = (
                         exclude_txn_from_change_streams
                     )
+                    txn.isolation_level = isolation_level
                 else:
                     txn = self._transaction
 
