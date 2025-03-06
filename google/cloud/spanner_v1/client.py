@@ -169,6 +169,7 @@ class Client(ClientWithProject):
     :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all read/write transactions.
+        Any fields other than `isolation_level` will be ignored.
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
@@ -507,5 +508,6 @@ class Client(ClientWithProject):
         :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
             or :class:`dict`
         :param default_transaction_options: Default options to use for all read/write transactions.
+            Any fields other than `isolation_level` will be ignored.
         """
         self._default_transaction_options = default_transaction_options

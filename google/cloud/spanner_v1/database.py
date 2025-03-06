@@ -824,16 +824,7 @@ class Database(object):
 
         # Set isolation level
         if isolation_level is None:
-            isolation_level = (
-                self.default_transaction_options.get(
-                    "isolation_level",
-                    TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
-                )
-                if isinstance(self.default_transaction_options, dict)
-                else self.default_transaction_options.isolation_level
-                if isinstance(self.default_transaction_options, TransactionOptions)
-                else TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
-            )
+            isolation_level = self.get_default_isolation_level()
         return BatchCheckout(
             self,
             request_options,
@@ -1153,6 +1144,23 @@ class Database(object):
         )
         response = api.set_iam_policy(request=request, metadata=metadata)
         return response
+
+    def get_default_isolation_level(self):
+        """
+        Returns the isolation level set in default transaction options when creating
+        the SpannerClient.
+        """
+        if isinstance(self.default_transaction_options, dict):
+            return self.default_transaction_options.get(
+                "isolation_level",
+                TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+            )
+
+        return getattr(
+            self.default_transaction_options,
+            "isolation_level",
+            TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+        )
 
     @property
     def observability_options(self):
