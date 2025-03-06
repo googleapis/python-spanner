@@ -165,6 +165,7 @@ class Session(object):
             self,
             self._labels,
             observability_options=observability_options,
+            metadata=metadata,
         ):
             session_pb = api.create_session(
                 request=request,
@@ -204,7 +205,10 @@ class Session(object):
 
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
-            "CloudSpanner.GetSession", self, observability_options=observability_options
+            "CloudSpanner.GetSession",
+            self,
+            observability_options=observability_options,
+            metadata=metadata,
         ) as span:
             try:
                 api.get_session(name=self.name, metadata=metadata)
@@ -248,6 +252,7 @@ class Session(object):
                 "session.name": self.name,
             },
             observability_options=observability_options,
+            metadata=metadata,
         ):
             api.delete_session(name=self.name, metadata=metadata)
 
