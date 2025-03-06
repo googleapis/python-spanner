@@ -164,8 +164,7 @@ class Client(ClientWithProject):
 
     :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
         or :class:`dict`
-    :param default_transaction_options: (Optional) Client options used to set the default_transaction_options
-            used for all Read Write Transactions.
+    :param default_transaction_options: (Optional) Default options to use for all read/write transactions.
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
@@ -348,7 +347,7 @@ class Client(ClientWithProject):
         :rtype:
             :class:`~google.cloud.spanner_v1.TransactionOptions`
             or :class:`dict`
-        :returns: The default_transaction_options for the client.
+        :returns: The default transaction options that are used by this client for all read/write transactions.
         """
         return self._default_transaction_options
 
@@ -503,7 +502,6 @@ class Client(ClientWithProject):
         """Sets default_transaction_options for the client
         :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
             or :class:`dict`
-        :param default_transaction_options: Client options used to set the default_transaction_options
-            used for all Read Write Transactions.
+        :param default_transaction_options: Default options to use for all read/write transactions.
         """
         self._default_transaction_options = default_transaction_options
