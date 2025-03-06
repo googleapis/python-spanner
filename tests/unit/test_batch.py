@@ -293,7 +293,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         request_options=None,
         max_commit_delay_in=None,
         exclude_txn_from_change_streams=False,
-        isolation_level=None,
+        isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
     ):
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -308,6 +308,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             request_options=request_options,
             max_commit_delay=max_commit_delay_in,
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
+            isolation_level=isolation_level,
         )
 
         self.assertEqual(committed, now)
@@ -335,6 +336,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         self.assertEqual(
             single_use_txn.exclude_txn_from_change_streams,
             exclude_txn_from_change_streams,
+        )
+        self.assertEqual(
+            single_use_txn.isolation_level,
+            isolation_level,
         )
         self.assertEqual(
             metadata,
@@ -395,6 +400,15 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         )
         self._test_commit_with_options(
             request_options=request_options, exclude_txn_from_change_streams=True
+        )
+
+    def test_commit_w_isolation_level(self):
+        request_options = RequestOptions(
+            request_tag="tag-1",
+        )
+        self._test_commit_with_options(
+            request_options=request_options,
+            isolation_level=TransactionOptions.IsolationLevel.REPEATABLE_READ,
         )
 
     def test_context_mgr_already_committed(self):
