@@ -170,7 +170,7 @@ class Client(ClientWithProject):
     :type default_transaction_options: :class:`~google.cloud.spanner_v1.DefaultTransactionOptions`
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all transactions.
-    
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -192,7 +192,7 @@ class Client(ClientWithProject):
         route_to_leader_enabled=True,
         directed_read_options=None,
         observability_options=None,
-        default_transaction_options: Optional[DefaultTransactionOptions] =None,
+        default_transaction_options: Optional[DefaultTransactionOptions] = None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -257,7 +257,9 @@ class Client(ClientWithProject):
         if default_transaction_options is None:
             default_transaction_options = DefaultTransactionOptions()
         elif not isinstance(default_transaction_options, DefaultTransactionOptions):
-            raise TypeError("default_transaction_options must be an instance of DefaultTransactionOptions")
+            raise TypeError(
+                "default_transaction_options must be an instance of DefaultTransactionOptions"
+            )
 
         self._default_transaction_options = default_transaction_options
 
@@ -508,7 +510,9 @@ class Client(ClientWithProject):
         self._directed_read_options = directed_read_options
 
     @default_transaction_options.setter
-    def default_transaction_options(self, default_transaction_options:DefaultTransactionOptions):
+    def default_transaction_options(
+        self, default_transaction_options: DefaultTransactionOptions
+    ):
         """Sets default_transaction_options for the client
         :type default_transaction_options: :class:`~google.cloud.spanner_v1.DefaultTransactionOptions`
             or :class:`dict`
@@ -517,6 +521,8 @@ class Client(ClientWithProject):
         if default_transaction_options is None:
             default_transaction_options = DefaultTransactionOptions()
         elif not isinstance(default_transaction_options, DefaultTransactionOptions):
-            raise TypeError("default_transaction_options must be an instance of DefaultTransactionOptions")
+            raise TypeError(
+                "default_transaction_options must be an instance of DefaultTransactionOptions"
+            )
 
         self._default_transaction_options = default_transaction_options

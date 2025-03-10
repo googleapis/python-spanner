@@ -25,7 +25,11 @@ from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
 
-from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions, DefaultTransactionOptions
+from google.cloud.spanner_v1 import (
+    RequestOptions,
+    DirectedReadOptions,
+    DefaultTransactionOptions,
+)
 
 DML_WO_PARAM = """
 DELETE FROM citizens

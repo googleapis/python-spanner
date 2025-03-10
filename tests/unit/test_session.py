@@ -85,7 +85,9 @@ class TestSession(OpenTelemetryBase):
 
     @staticmethod
     def _make_database(
-        name=DATABASE_NAME, database_role=None, default_transaction_options=DefaultTransactionOptions()
+        name=DATABASE_NAME,
+        database_role=None,
+        default_transaction_options=DefaultTransactionOptions(),
     ):
         database = mock.create_autospec(Database, instance=True)
         database.name = name
@@ -1776,7 +1778,9 @@ class TestSession(OpenTelemetryBase):
         gax_api = self._make_spanner_api()
         gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database(
-            default_transaction_options=DefaultTransactionOptions(isolation_level="SERIALIZABLE")
+            default_transaction_options=DefaultTransactionOptions(
+                isolation_level="SERIALIZABLE"
+            )
         )
         database.spanner_api = gax_api
         session = self._make_one(database)
