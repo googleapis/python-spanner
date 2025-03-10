@@ -34,6 +34,7 @@ from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from google.cloud.spanner_v1.batch import _BatchBase
 from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
 from dataclasses import dataclass
@@ -118,7 +119,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         request.transaction = transaction
         with trace_call(
             trace_name, session, attributes, observability_options=observability_options
-        ):
+        ), MetricsCapture():
             method = functools.partial(method, request=request)
             response = _retry(
                 method,
@@ -160,7 +161,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=observability_options,
-        ) as span:
+        ) as span, MetricsCapture():
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
@@ -202,7 +203,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 f"CloudSpanner.{type(self).__name__}.rollback",
                 self._session,
                 observability_options=observability_options,
-            ):
+            ), MetricsCapture():
                 method = functools.partial(
                     api.rollback,
                     session=self._session.name,
@@ -250,7 +251,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             self._session,
             trace_attributes,
             observability_options,
-        ) as span:
+        ) as span, MetricsCapture():
             self._check_state()
             if self._transaction_id is None and len(self._mutations) > 0:
                 self.begin()
@@ -349,6 +350,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         query_mode=None,
         query_options=None,
         request_options=None,
+        last_statement=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -384,6 +386,19 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :type last_statement: bool
+        :param last_statement:
+                If set to true, this option marks the end of the transaction. The
+                transaction should be committed or aborted after this statement
+                executes, and attempts to execute any other requests against this
+                transaction (including reads and queries) will be rejected. Mixing
+                mutations with statements that are marked as the last statement is
+                not allowed.
+                For DML statements, setting this option may cause some error
+                reporting to be deferred until commit time (e.g. validation of
+                unique constraints). Given this, successful execution of a DML
+                statement should not be assumed until the transaction commits.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -433,6 +448,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             query_options=query_options,
             seqno=seqno,
             request_options=request_options,
+            last_statement=last_statement,
         )
 
         method = functools.partial(
@@ -478,6 +494,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self,
         statements,
         request_options=None,
+        last_statement=False,
         *,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -501,6 +518,19 @@ class Transaction(_SnapshotBase, _BatchBase):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :type last_statement: bool
+        :param last_statement:
+                If set to true, this option marks the end of the transaction. The
+                transaction should be committed or aborted after this statement
+                executes, and attempts to execute any other requests against this
+                transaction (including reads and queries) will be rejected. Mixing
+                mutations with statements that are marked as the last statement is
+                not allowed.
+                For DML statements, setting this option may cause some error
+                reporting to be deferred until commit time (e.g. validation of
+                unique constraints). Given this, successful execution of a DML
+                statement should not be assumed until the transaction commits.
 
         :type retry: :class:`~google.api_core.retry.Retry`
         :param retry: (Optional) The retry settings for this request.
@@ -558,6 +588,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             statements=parsed,
             seqno=seqno,
             request_options=request_options,
+            last_statements=last_statement,
         )
 
         method = functools.partial(

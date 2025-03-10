@@ -43,6 +43,8 @@ from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
+from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",
     "Received unexpected EOS on DATA frame from server",
@@ -96,7 +98,7 @@ def _restart_on_unavailable(
                     session,
                     attributes,
                     observability_options=observability_options,
-                ):
+                ), MetricsCapture():
                     iterator = method(request=request)
             for item in iterator:
                 item_buffer.append(item)
@@ -119,7 +121,7 @@ def _restart_on_unavailable(
                 session,
                 attributes,
                 observability_options=observability_options,
-            ):
+            ), MetricsCapture():
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -139,7 +141,7 @@ def _restart_on_unavailable(
                 session,
                 attributes,
                 observability_options=observability_options,
-            ):
+            ), MetricsCapture():
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
@@ -389,6 +391,7 @@ class _SnapshotBase(_SessionWrapper):
         query_mode=None,
         query_options=None,
         request_options=None,
+        last_statement=False,
         partition=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
@@ -431,6 +434,19 @@ class _SnapshotBase(_SessionWrapper):
                 (Optional) Common options for this request.
                 If a dict is provided, it must be of the same form as the protobuf
                 message :class:`~google.cloud.spanner_v1.types.RequestOptions`.
+
+        :type last_statement: bool
+        :param last_statement:
+                If set to true, this option marks the end of the transaction. The
+                transaction should be committed or aborted after this statement
+                executes, and attempts to execute any other requests against this
+                transaction (including reads and queries) will be rejected. Mixing
+                mutations with statements that are marked as the last statement is
+                not allowed.
+                For DML statements, setting this option may cause some error
+                reporting to be deferred until commit time (e.g. validation of
+                unique constraints). Given this, successful execution of a DML
+                statement should not be assumed until the transaction commits.
 
         :type partition: bytes
         :param partition: (Optional) one of the partition tokens returned
@@ -536,6 +552,7 @@ class _SnapshotBase(_SessionWrapper):
             seqno=self._execute_sql_count,
             query_options=query_options,
             request_options=request_options,
+            last_statement=last_statement,
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
@@ -689,7 +706,7 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
-        ):
+        ), MetricsCapture():
             method = functools.partial(
                 api.partition_read,
                 request=request,
@@ -792,7 +809,7 @@ class _SnapshotBase(_SessionWrapper):
             self._session,
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
-        ):
+        ), MetricsCapture():
             method = functools.partial(
                 api.partition_query,
                 request=request,
@@ -938,7 +955,7 @@ class Snapshot(_SnapshotBase):
             f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=getattr(database, "observability_options", None),
-        ):
+        ), MetricsCapture():
             method = functools.partial(
                 api.begin_transaction,
                 session=self._session.name,
