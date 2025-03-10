@@ -664,3 +664,7 @@ class BatchTransactionId:
     transaction_id: str
     session_id: str
     read_timestamp: Any
+
+@dataclass
+class DefaultTransactionOptions:
+    isolation_level: TransactionOptions.IsolationLevel = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED

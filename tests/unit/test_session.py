@@ -48,6 +48,7 @@ from google.rpc.error_details_pb2 import RetryInfo
 from google.api_core.exceptions import Unknown, Aborted, NotFound, Cancelled
 from google.protobuf.struct_pb2 import Struct, Value
 from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner_v1 import DefaultTransactionOptions
 
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
@@ -84,7 +85,7 @@ class TestSession(OpenTelemetryBase):
 
     @staticmethod
     def _make_database(
-        name=DATABASE_NAME, database_role=None, default_transaction_options=None
+        name=DATABASE_NAME, database_role=None, default_transaction_options=DefaultTransactionOptions()
     ):
         database = mock.create_autospec(Database, instance=True)
         database.name = name
@@ -92,25 +93,6 @@ class TestSession(OpenTelemetryBase):
         database.database_role = database_role
         database._route_to_leader_enabled = True
         database.default_transaction_options = default_transaction_options
-
-        # Define side_effect function to use injected default_transaction_options
-        def get_default_isolation_level_side_effect():
-            if isinstance(database.default_transaction_options, dict):
-                return database.default_transaction_options.get(
-                    "isolation_level",
-                    TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
-                )
-
-            return getattr(
-                database.default_transaction_options,
-                "isolation_level",
-                TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
-            )
-
-        # Mock get_default_isolation_level method
-        database.get_default_isolation_level = mock.Mock(
-            side_effect=get_default_isolation_level_side_effect
-        )
 
         return database
 
@@ -1794,7 +1776,7 @@ class TestSession(OpenTelemetryBase):
         gax_api = self._make_spanner_api()
         gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database(
-            default_transaction_options={"isolation_level": "SERIALIZABLE"}
+            default_transaction_options=DefaultTransactionOptions(isolation_level="SERIALIZABLE")
         )
         database.spanner_api = gax_api
         session = self._make_one(database)

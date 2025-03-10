@@ -31,6 +31,7 @@ from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
 import google.api_core.client_options
 from google.cloud.client import ClientWithProject
+from typing import Optional
 
 
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
@@ -45,6 +46,7 @@ from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
@@ -165,11 +167,10 @@ class Client(ClientWithProject):
            or you can use the environment variable `SPANNER_ENABLE_END_TO_END_TRACING=<boolean>`
            to control it.
 
-    :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
+    :type default_transaction_options: :class:`~google.cloud.spanner_v1.DefaultTransactionOptions`
         or :class:`dict`
-    :param default_transaction_options: (Optional) Default options to use for all read/write transactions.
-        Any fields other than `isolation_level` will be ignored.
-
+    :param default_transaction_options: (Optional) Default options to use for all transactions.
+    
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -191,7 +192,7 @@ class Client(ClientWithProject):
         route_to_leader_enabled=True,
         directed_read_options=None,
         observability_options=None,
-        default_transaction_options=None,
+        default_transaction_options: Optional[DefaultTransactionOptions] =None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -253,6 +254,11 @@ class Client(ClientWithProject):
         self._route_to_leader_enabled = route_to_leader_enabled
         self._directed_read_options = directed_read_options
         self._observability_options = observability_options
+        if default_transaction_options is None:
+            default_transaction_options = DefaultTransactionOptions()
+        elif not isinstance(default_transaction_options, DefaultTransactionOptions):
+            raise TypeError("default_transaction_options must be an instance of DefaultTransactionOptions")
+
         self._default_transaction_options = default_transaction_options
 
     @property
@@ -349,9 +355,9 @@ class Client(ClientWithProject):
         """Getter for default_transaction_options.
 
         :rtype:
-            :class:`~google.cloud.spanner_v1.TransactionOptions`
+            :class:`~google.cloud.spanner_v1.DefaultTransactionOptions`
             or :class:`dict`
-        :returns: The default transaction options that are used by this client for all read/write transactions.
+        :returns: The default transaction options that are used by this client for all transactions.
         """
         return self._default_transaction_options
 
@@ -502,11 +508,15 @@ class Client(ClientWithProject):
         self._directed_read_options = directed_read_options
 
     @default_transaction_options.setter
-    def default_transaction_options(self, default_transaction_options):
+    def default_transaction_options(self, default_transaction_options:DefaultTransactionOptions):
         """Sets default_transaction_options for the client
-        :type default_transaction_options: :class:`~google.cloud.spanner_v1.TransactionOptions`
+        :type default_transaction_options: :class:`~google.cloud.spanner_v1.DefaultTransactionOptions`
             or :class:`dict`
-        :param default_transaction_options: Default options to use for all read/write transactions.
-            Any fields other than `isolation_level` will be ignored.
+        :param default_transaction_options: Default options to use for transactions.
         """
+        if default_transaction_options is None:
+            default_transaction_options = DefaultTransactionOptions()
+        elif not isinstance(default_transaction_options, DefaultTransactionOptions):
+            raise TypeError("default_transaction_options must be an instance of DefaultTransactionOptions")
+
         self._default_transaction_options = default_transaction_options

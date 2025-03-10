@@ -25,7 +25,7 @@ from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
 
-from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
+from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions, DefaultTransactionOptions
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -3116,7 +3116,7 @@ class _Client(object):
         project=TestDatabase.PROJECT_ID,
         route_to_leader_enabled=True,
         directed_read_options=None,
-        default_transaction_options=None,
+        default_transaction_options=DefaultTransactionOptions(),
     ):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
@@ -3157,7 +3157,7 @@ class _Database(object):
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
-        self._directed_read_options = None
+        self._directed_read_options = DefaultTransactionOptions()
         self.default_transaction_options = None
 
 

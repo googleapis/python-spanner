@@ -16,7 +16,11 @@ import unittest
 
 import os
 import mock
-from google.cloud.spanner_v1 import DirectedReadOptions
+from google.cloud.spanner_v1 import (
+    DirectedReadOptions,
+    DefaultTransactionOptions
+)
+
 
 
 def _make_credentials():
@@ -53,7 +57,7 @@ class TestClient(unittest.TestCase):
             "auto_failover_disabled": True,
         },
     }
-    DEFAULT_TRANSACTION_OPTIONS = {"isolation_level": "SERIALIZABLE"}
+    DEFAULT_TRANSACTION_OPTIONS = DefaultTransactionOptions(isolation_level="SERIALIZABLE")
 
     def _get_target_class(self):
         from google.cloud import spanner

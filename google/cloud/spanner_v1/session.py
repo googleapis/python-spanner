@@ -470,7 +470,7 @@ class Session(object):
         isolation_level = kw.pop("isolation_level", None)
 
         if isolation_level is None:
-            isolation_level = self._database.get_default_isolation_level()
+            isolation_level = self._database.default_transaction_options.isolation_level
         attempts = 0
 
         observability_options = getattr(self._database, "observability_options", None)

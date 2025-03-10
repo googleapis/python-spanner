@@ -46,6 +46,7 @@ from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import TransactionSelector
 from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
@@ -183,7 +184,7 @@ class Database(object):
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
         self._directed_read_options = self._instance._client.directed_read_options
-        self.default_transaction_options = (
+        self.default_transaction_options: DefaultTransactionOptions = (
             self._instance._client.default_transaction_options
         )
         self._proto_descriptors = proto_descriptors
@@ -824,7 +825,7 @@ class Database(object):
 
         # Set isolation level
         if isolation_level is None:
-            isolation_level = self.get_default_isolation_level()
+            isolation_level = self.default_transaction_options.isolation_level
         return BatchCheckout(
             self,
             request_options,
@@ -1144,23 +1145,6 @@ class Database(object):
         )
         response = api.set_iam_policy(request=request, metadata=metadata)
         return response
-
-    def get_default_isolation_level(self):
-        """
-        Returns the isolation level set in default transaction options when creating
-        the SpannerClient.
-        """
-        if isinstance(self.default_transaction_options, dict):
-            return self.default_transaction_options.get(
-                "isolation_level",
-                TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
-            )
-
-        return getattr(
-            self.default_transaction_options,
-            "isolation_level",
-            TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
-        )
 
     @property
     def observability_options(self):

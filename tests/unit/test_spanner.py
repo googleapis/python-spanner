@@ -32,6 +32,7 @@ from google.cloud.spanner_v1 import (
     ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
     param_types,
+    DefaultTransactionOptions,
 )
 from google.cloud.spanner_v1.types import transaction as transaction_type
 from google.cloud.spanner_v1.keyset import KeySet
@@ -1090,7 +1091,7 @@ class _Client(object):
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.directed_read_options = None
-        self.default_transaction_options = None
+        self.default_transaction_options = DefaultTransactionOptions()
 
 
 class _Instance(object):
