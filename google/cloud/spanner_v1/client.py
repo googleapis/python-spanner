@@ -70,6 +70,7 @@ try:
 except ImportError:  # pragma: NO COVER
     HAS_GOOGLE_CLOUD_MONITORING_INSTALLED = False
 
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
@@ -171,6 +172,9 @@ class Client(ClientWithProject):
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all transactions.
 
+    :type session_options: :class:`~google.cloud.spanner_v1.SessionOptions`
+    :param session_options: (Optional) Options for client sessions.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -193,6 +197,7 @@ class Client(ClientWithProject):
         directed_read_options=None,
         observability_options=None,
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
+        session_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -261,6 +266,8 @@ class Client(ClientWithProject):
                 "default_transaction_options must be an instance of DefaultTransactionOptions"
             )
         self._default_transaction_options = default_transaction_options
+
+        self._session_options = session_options or SessionOptions()
 
     @property
     def credentials(self):
@@ -525,3 +532,12 @@ class Client(ClientWithProject):
             )
 
         self._default_transaction_options = default_transaction_options
+
+    @property
+    def session_options(self):
+        """Returns the session options for the client.
+
+        :rtype: :class:`~google.cloud.spanner_v1.SessionOptions`
+        :returns: The session options for the client.
+        """
+        return self._session_options

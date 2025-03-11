@@ -60,8 +60,8 @@ class Test_connect(unittest.TestCase):
 
         self.assertIs(connection.database, database)
         instance.database.assert_called_once_with(DATABASE, pool=None)
-        # Datbase constructs its own pool
-        self.assertIsNotNone(connection.database._pool)
+        # Database constructs its own pool
+        self.assertIsNotNone(connection.database._session_manager._pool)
         self.assertTrue(connection.instance._client.route_to_leader_enabled)
 
     def test_w_explicit(self, mock_client):

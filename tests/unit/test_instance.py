@@ -539,10 +539,9 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(database.database_id, DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
-        self.assertIsInstance(database._pool, BurstyPool)
+        self.assertIsInstance(database._session_manager._pool, BurstyPool)
         self.assertIsNone(database._logger)
-        pool = database._pool
-        self.assertIs(pool._database, database)
+        self.assertIs(database._session_manager._pool._database, database)
         self.assertIsNone(database.database_role)
 
     def test_database_factory_explicit(self):
@@ -573,7 +572,7 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(database.database_id, DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), DDL_STATEMENTS)
-        self.assertIs(database._pool, pool)
+        self.assertIs(database._session_manager._pool, pool)
         self.assertIs(database._logger, logger)
         self.assertIs(pool._bound, database)
         self.assertIs(database._encryption_config, encryption_config)

@@ -330,8 +330,13 @@ class Connection:
         """
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
+
         if not self._session:
-            self._session = self.database._pool.get()
+            self._session = (
+                self.database._session_manager.get_session_for_read_only()
+                if self.read_only
+                else self.database._session_manager.get_session_for_read_write()
+            )
 
         return self._session
 
@@ -344,7 +349,7 @@ class Connection:
             return
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self.database._pool.put(self._session)
+        self.database._session_manager.put_session(self._session)
         self._session = None
 
     def transaction_checkout(self):
@@ -400,7 +405,7 @@ class Connection:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
-            self.database._pool.clear()
+            self.database._session_manager._pool.clear()
 
         self.is_closed = True
 
