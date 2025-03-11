@@ -1105,6 +1105,7 @@ class _Database(object):
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None
+        self.default_transaction_options = DefaultTransactionOptions()
 
 
 class _Session(object):

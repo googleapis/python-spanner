@@ -3161,8 +3161,8 @@ class _Database(object):
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
-        self._directed_read_options = DefaultTransactionOptions()
-        self.default_transaction_options = None
+        self._directed_read_options = None
+        self.default_transaction_options = DefaultTransactionOptions()
 
 
 class _Pool(object):

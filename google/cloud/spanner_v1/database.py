@@ -786,7 +786,7 @@ class Database(object):
         request_options=None,
         max_commit_delay=None,
         exclude_txn_from_change_streams=False,
-        isolation_level=None,
+        isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         **kw,
     ):
         """Return an object which wraps a batch.
@@ -823,9 +823,6 @@ class Database(object):
         :returns: new wrapper
         """
 
-        # Set isolation level
-        if isolation_level is None:
-            isolation_level = self.default_transaction_options.isolation_level
         return BatchCheckout(
             self,
             request_options,

@@ -25,6 +25,7 @@ from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _merge_Transaction_Options,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
@@ -215,6 +216,11 @@ class Batch(_BatchBase):
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
             isolation_level=isolation_level,
+        )
+
+        txn_options = _merge_Transaction_Options(
+            database.default_transaction_options.default_read_write_transaction_options,
+            txn_options,
         )
         trace_attributes = {"num_mutations": len(self._mutations)}
 

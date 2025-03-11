@@ -28,6 +28,7 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
     Mutation,
     BatchWriteResponse,
+    DefaultTransactionOptions,
 )
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 import datetime
@@ -643,6 +644,7 @@ class _Database(object):
         self._route_to_leader_enabled = True
         if enable_end_to_end_tracing:
             self.observability_options = dict(enable_end_to_end_tracing=True)
+        self.default_transaction_options = DefaultTransactionOptions()
 
 
 class _FauxSpannerAPI:
