@@ -724,4 +724,5 @@ def _merge_Transaction_Options(
     # Merge transactionOptions, ensuring it overrides default values
     merged_pb.MergeFrom(mergeTransactionOptions._pb)
 
-    return merged_pb
+    # Convert protobuf object back into a TransactionOptions instance
+    return TransactionOptions(merged_pb)

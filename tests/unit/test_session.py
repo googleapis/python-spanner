@@ -1812,7 +1812,9 @@ class TestSession(OpenTelemetryBase):
         gax_api = self._make_spanner_api()
         gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database(
-            default_transaction_options={"isolation_level": "SERIALIZABLE"}
+            default_transaction_options=DefaultTransactionOptions(
+                isolation_level="SERIALIZABLE"
+            )
         )
         database.spanner_api = gax_api
         session = self._make_one(database)
