@@ -452,7 +452,7 @@ class Session(object):
                    from being recorded in change streams with the DDL option `allow_txn_exclusion=true`.
                    This does not exclude the transaction from being recorded in the change streams with
                    the DDL option `allow_txn_exclusion` being false or unset.
-                   "isolation_level" sets the isolation level for transaction.
+                   "isolation_level" sets the isolation level for the transaction.
 
         :rtype: Any
         :returns: The return value of ``func``.

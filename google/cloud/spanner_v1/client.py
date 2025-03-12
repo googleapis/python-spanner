@@ -260,7 +260,6 @@ class Client(ClientWithProject):
             raise TypeError(
                 "default_transaction_options must be an instance of DefaultTransactionOptions"
             )
-
         self._default_transaction_options = default_transaction_options
 
     @property
