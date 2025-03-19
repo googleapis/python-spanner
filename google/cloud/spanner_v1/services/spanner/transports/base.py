@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,7 +30,6 @@ from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
-from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 from google.protobuf import empty_pb2  # type: ignore
 
 DEFAULT_CLIENT_INFO = gapic_v1.client_info.ClientInfo(
@@ -59,7 +58,6 @@ class SpannerTransport(abc.ABC):
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
         always_use_jwt_access: Optional[bool] = False,
         api_audience: Optional[str] = None,
-        metrics_interceptor: Optional[MetricsInterceptor] = None,
         **kwargs,
     ) -> None:
         """Instantiate the transport.
