@@ -192,7 +192,9 @@ class Database(object):
             pool = BurstyPool(database_role=database_role)
         pool.bind(self)
 
-        self._session_manager = DatabaseSessionsManager(database=self, pool=pool)
+        self._session_manager = DatabaseSessionsManager(
+            database=self, pool=pool, logger=self.logger
+        )
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):

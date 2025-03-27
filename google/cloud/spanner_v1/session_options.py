@@ -11,8 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import datetime
 import os
+
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    get_current_span,
+    add_span_event,
+)
 
 
 class SessionOptions(object):
@@ -22,9 +26,12 @@ class SessionOptions(object):
     * read-only transactions (:meth:`use_multiplexed_for_read_only`)
     * partitioned transactions (:meth:`use_multiplexed_for_partitioned`)
     * read/write transactions (:meth:`use_multiplexed_for_read_write`).
-    """
 
-    MULTIPLEXED_SESSIONS_REFRESH_INTERVAL = datetime.timedelta(days=7)
+    The use of multiplexed session can be disabled for corresponding transaction types by calling:
+    * :meth:`disable_multiplexed_for_read_only`
+    * :meth:`disable_multiplexed_for_partitioned`
+    * :meth:`disable_multiplexed_for_read_write`.
+    """
 
     # Environment variables for multiplexed sessions
     ENV_VAR_ENABLE_MULTIPLEXED = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS"
@@ -61,6 +68,13 @@ class SessionOptions(object):
 
     def disable_multiplexed_for_read_only(self) -> None:
         """Disables the use of multiplexed sessions for read-only transactions."""
+
+        current_span = get_current_span()
+        add_span_event(
+            current_span,
+            "Disabling use of multiplexed session for read-only transactions",
+        )
+
         self._is_multiplexed_enabled_for_read_only = False
 
     def use_multiplexed_for_partitioned(self) -> bool:
@@ -81,6 +95,13 @@ class SessionOptions(object):
 
     def disable_multiplexed_for_partitioned(self) -> None:
         """Disables the use of multiplexed sessions for read-only transactions."""
+
+        current_span = get_current_span()
+        add_span_event(
+            current_span,
+            "Disabling use of multiplexed session for partitioned transactions",
+        )
+
         self._is_multiplexed_enabled_for_partitioned = False
 
     def use_multiplexed_for_read_write(self) -> bool:
@@ -101,6 +122,13 @@ class SessionOptions(object):
 
     def disable_multiplexed_for_read_write(self) -> None:
         """Disables the use of multiplexed sessions for read/write transactions."""
+
+        current_span = get_current_span()
+        add_span_event(
+            current_span,
+            "Disabling use of multiplexed session for read/write transactions",
+        )
+
         self._is_multiplexed_enabled_for_read_write = False
 
     @staticmethod
@@ -108,5 +136,5 @@ class SessionOptions(object):
         """Returns the value of the given environment variable as a boolean.
         True values are '1' and 'true' (case-insensitive); all other values are considered false.
         """
-        env_var = os.getenv(name, "").lower()
+        env_var = os.getenv(name, "").lower().strip()
         return env_var in ["1", "true"]
