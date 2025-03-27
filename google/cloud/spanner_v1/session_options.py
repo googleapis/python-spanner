@@ -12,25 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
+from enum import Enum
+from logging import Logger
 
-from google.cloud.spanner_v1._opentelemetry_tracing import (
-    get_current_span,
-    add_span_event,
-)
+
+class TransactionType(Enum):
+    """Transaction types for session options."""
+
+    READ_ONLY = "read-only"
+    PARTITIONED = "partitioned"
+    READ_WRITE = "read/write"
 
 
 class SessionOptions(object):
     """Represents the session options for the Cloud Spanner Python client.
 
-    We can use ::class::`SessionOptions` to determine whether multiplexed sessions should be used for:
-    * read-only transactions (:meth:`use_multiplexed_for_read_only`)
-    * partitioned transactions (:meth:`use_multiplexed_for_partitioned`)
-    * read/write transactions (:meth:`use_multiplexed_for_read_write`).
-
-    The use of multiplexed session can be disabled for corresponding transaction types by calling:
-    * :meth:`disable_multiplexed_for_read_only`
-    * :meth:`disable_multiplexed_for_partitioned`
-    * :meth:`disable_multiplexed_for_read_write`.
+    We can use ::class::`SessionOptions` to determine whether multiplexed sessions
+    should be used for a specific transaction type with :meth:`use_multiplexed`. The use
+    of multiplexed session can be disabled for a specific transaction type or for all
+    transaction types with :meth:`disable_multiplexed`.
     """
 
     # Environment variables for multiplexed sessions
@@ -48,93 +48,106 @@ class SessionOptions(object):
     def __init__(self):
         # Internal overrides to disable the use of multiplexed
         # sessions in case of runtime errors.
-        self._is_multiplexed_enabled_for_read_only = True
-        self._is_multiplexed_enabled_for_partitioned = True
-        self._is_multiplexed_enabled_for_read_write = True
+        self._is_multiplexed_enabled = {
+            TransactionType.READ_ONLY: True,
+            TransactionType.PARTITIONED: True,
+            TransactionType.READ_WRITE: True,
+        }
 
-    def use_multiplexed_for_read_only(self) -> bool:
-        """Returns whether to use multiplexed sessions for read-only transactions.
+    def use_multiplexed(self, transaction_type: TransactionType) -> bool:
+        """Returns whether to use multiplexed sessions for the given transaction type.
+
         Multiplexed sessions are enabled for read-only transactions if:
         * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
         * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
-        * multiplexed sessions have not been disabled for read-only transactions (see 'disable_multiplexed_for_read_only').
-        """
+        * multiplexed sessions have not been disabled for read-only transactions.
 
-        return (
-            self._is_multiplexed_enabled_for_read_only
-            and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
-            and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
-        )
-
-    def disable_multiplexed_for_read_only(self) -> None:
-        """Disables the use of multiplexed sessions for read-only transactions."""
-
-        current_span = get_current_span()
-        add_span_event(
-            current_span,
-            "Disabling use of multiplexed session for read-only transactions",
-        )
-
-        self._is_multiplexed_enabled_for_read_only = False
-
-    def use_multiplexed_for_partitioned(self) -> bool:
-        """Returns whether to use multiplexed sessions for partitioned transactions.
         Multiplexed sessions are enabled for partitioned transactions if:
         * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
         * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true;
         * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
-        * multiplexed sessions have not been disabled for partitioned transactions (see 'disable_multiplexed_for_partitioned').
-        """
+        * multiplexed sessions have not been disabled for partitioned transactions.
 
-        return (
-            self._is_multiplexed_enabled_for_partitioned
-            and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
-            and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED)
-            and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
-        )
-
-    def disable_multiplexed_for_partitioned(self) -> None:
-        """Disables the use of multiplexed sessions for read-only transactions."""
-
-        current_span = get_current_span()
-        add_span_event(
-            current_span,
-            "Disabling use of multiplexed session for partitioned transactions",
-        )
-
-        self._is_multiplexed_enabled_for_partitioned = False
-
-    def use_multiplexed_for_read_write(self) -> bool:
-        """Returns whether to use multiplexed sessions for read/write transactions.
         Multiplexed sessions are enabled for read/write transactions if:
         * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
         * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true;
         * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
-        * multiplexed sessions have not been disabled for read/write transactions (see 'disable_multiplexed_for_read_write').
+        * multiplexed sessions have not been disabled for read/write transactions.
+
+        :type transaction_type: :class:`TransactionType`
+        :param transaction_type: the type of transaction to check whether
+            multiplexed sessions should be used.
         """
 
-        return (
-            self._is_multiplexed_enabled_for_read_write
-            and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
-            and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE)
-            and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
+        if transaction_type is TransactionType.READ_ONLY:
+            return (
+                self._is_multiplexed_enabled[transaction_type]
+                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
+                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
+            )
+
+        elif transaction_type is TransactionType.PARTITIONED:
+            return (
+                self._is_multiplexed_enabled[transaction_type]
+                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
+                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED)
+                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
+            )
+
+        elif transaction_type is TransactionType.READ_WRITE:
+            return (
+                self._is_multiplexed_enabled[transaction_type]
+                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
+                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE)
+                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
+            )
+
+        raise ValueError(f"Transaction type {transaction_type} is not supported.")
+
+    def disable_multiplexed(
+        self, logger: Logger = None, transaction_type: TransactionType = None
+    ) -> None:
+        """Disables the use of multiplexed sessions for the given transaction type.
+        If no transaction type is specified, disables the use of multiplexed sessions
+        for all transaction types.
+
+        :type logger: :class:`Logger`
+        :param logger: logger to use for logging the disabling the use of multiplexed
+            sessions.
+
+        :type transaction_type: :class:`TransactionType`
+        :param transaction_type: (Optional) the type of transaction for which to disable
+            the use of multiplexed sessions.
+        """
+
+        disable_multiplexed_log_msg_fstring = (
+            "Disabling multiplexed sessions for {transaction_type_value} transactions"
         )
 
-    def disable_multiplexed_for_read_write(self) -> None:
-        """Disables the use of multiplexed sessions for read/write transactions."""
+        if transaction_type is None:
+            logger.warning(
+                disable_multiplexed_log_msg_fstring.format(transaction_type_value="all")
+            )
+            for transaction_type in TransactionType:
+                self._is_multiplexed_enabled[transaction_type] = False
+            return
 
-        current_span = get_current_span()
-        add_span_event(
-            current_span,
-            "Disabling use of multiplexed session for read/write transactions",
-        )
+        elif transaction_type in self._is_multiplexed_enabled.keys():
+            logger.warning(
+                disable_multiplexed_log_msg_fstring.format(
+                    transaction_type_value=transaction_type.value
+                )
+            )
+            self._is_multiplexed_enabled[transaction_type] = False
+            return
 
-        self._is_multiplexed_enabled_for_read_write = False
+        raise ValueError(f"Transaction type '{transaction_type}' is not supported.")
 
     @staticmethod
     def _getenv(name: str) -> bool:
         """Returns the value of the given environment variable as a boolean.
-        True values are '1' and 'true' (case-insensitive); all other values are considered false.
+        True values are '1' and 'true' (case-insensitive); all other values are
+        considered false.
         """
         env_var = os.getenv(name, "").lower().strip()
         return env_var in ["1", "true"]

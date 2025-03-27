@@ -540,7 +540,6 @@ class TestInstance(unittest.TestCase):
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
         self.assertIsInstance(database._session_manager._pool, BurstyPool)
-        self.assertIsNone(database._logger)
         self.assertIs(database._session_manager._pool._database, database)
         self.assertIsNone(database.database_role)
 

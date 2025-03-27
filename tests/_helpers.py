@@ -1,7 +1,9 @@
+import os
 import unittest
 import mock
 
 from google.cloud.spanner_v1 import gapic_version
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 LIB_VERSION = gapic_version.__version__
 
@@ -149,3 +151,20 @@ class OpenTelemetryBase(unittest.TestCase):
                 got_all_events.append((event.name, evt_attributes))
 
         return got_all_events
+
+
+def enable_multiplexed_sessions() -> None:
+    """Sets environment variables to enable multiplexed sessions for all transaction types.
+    The caller is responsible for resetting the environment variables after use."""
+
+    os.environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED] = "true"
+    os.environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED] = "true"
+    os.environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE] = "true"
+    os.environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
+
+
+def disable_multiplexed_sessions() -> None:
+    """Sets environment variables to disable multiplexed sessions for all transactions types.
+    The caller is responsible for resetting the environment variables after use."""
+
+    os.environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "true"

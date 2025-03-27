@@ -26,6 +26,7 @@ from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Stateme
 from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
 from google.cloud.spanner_dbapi.cursor import Cursor
 from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
+from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi.exceptions import (
@@ -356,11 +357,12 @@ class Connection:
             raise ValueError("Database needs to be passed for this operation")
 
         if not self._session:
-            self._session = (
-                self.database._session_manager.get_session_for_read_only()
+            transaction_type = (
+                TransactionType.READ_ONLY
                 if self.read_only
-                else self.database._session_manager.get_session_for_read_write()
+                else TransactionType.READ_WRITE
             )
+            self._session = self.database._session_manager.get_session(transaction_type)
 
         return self._session
 
@@ -628,7 +630,6 @@ class Connection:
         self._partitioned_query_validation(partitioned_query, statement)
 
         batch_snapshot = self._database.batch_snapshot()
-        partition_ids = []
         partitions = list(
             batch_snapshot.generate_query_batches(
                 partitioned_query,
@@ -639,6 +640,8 @@ class Connection:
         )
 
         batch_transaction_id = batch_snapshot.get_batch_transaction_id()
+
+        partition_ids = []
         for partition in partitions:
             partition_ids.append(
                 partition_helper.encode_to_string(batch_transaction_id, partition)

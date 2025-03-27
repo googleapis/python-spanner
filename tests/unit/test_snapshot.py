@@ -11,21 +11,27 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-
 from google.api_core import gapic_v1
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
+from google.cloud.spanner_v1 import (
+    RequestOptions,
+    DirectedReadOptions,
+    SpannerClient,
+    KeySet,
+)
+from google.cloud.spanner_v1.session_options import TransactionType
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
     StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
     enrich_with_otel_scope,
+    enable_multiplexed_sessions,
 )
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
+from tests._builders import build_session
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -79,7 +85,7 @@ def _makeTimestamp():
     import datetime
     from google.cloud._helpers import UTC
 
-    return datetime.datetime.utcnow().replace(tzinfo=UTC)
+    return datetime.datetime.now(tz=UTC)
 
 
 class Test_restart_on_unavailable(OpenTelemetryBase):
@@ -111,8 +117,6 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         return _Derived(session)
 
     def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
         return mock.create_autospec(SpannerClient, instance=True)
 
     def _call_fut(
@@ -128,12 +132,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 
         return _restart_on_unavailable(
-            restart,
-            request,
-            metadata,
-            span_name,
-            session,
-            attributes,
+            method=restart,
+            request=request,
+            session=session,
+            metadata=metadata,
+            trace_name=span_name,
+            attributes=attributes,
             transaction=derived,
         )
 
@@ -594,8 +598,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         return _Derived(session)
 
     def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
         return mock.create_autospec(SpannerClient, instance=True)
 
     def test_ctor(self):
@@ -612,9 +614,25 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(NotImplementedError):
             base._make_txn_selector()
 
-    def test_read_other_error(self):
-        from google.cloud.spanner_v1.keyset import KeySet
+    def test_read_partitioned_not_implemented_for_multiplexed(self):
+        enable_multiplexed_sessions()
 
+        database = (
+            self._build_database_with_partitioned_not_implemented_for_multiplexed()
+        )
+
+        session = build_session(database=database)
+        session.create()
+        derived = self._makeDerived(session)
+
+        with self.assertRaises(NotImplementedError):
+            list(derived.read(TABLE_NAME, COLUMNS, KeySet(all_=True)))
+
+        self.assertFalse(
+            database.session_options.use_multiplexed(TransactionType.READ_ONLY)
+        )
+
+    def test_read_other_error(self):
         keyset = KeySet(all_=True)
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -658,7 +676,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import ReadRequest
         from google.cloud.spanner_v1 import Type, StructType
         from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         VALUES = [["bharney", 31], ["phred", 32]]
@@ -863,6 +880,24 @@ class Test_SnapshotBase(OpenTelemetryBase):
             multi_use=False,
             directed_read_options=DIRECTED_READ_OPTIONS,
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
+        )
+
+    def test_execute_sql_partitioned_not_implemented_for_multiplexed(self):
+        enable_multiplexed_sessions()
+
+        database = (
+            self._build_database_with_partitioned_not_implemented_for_multiplexed()
+        )
+
+        session = build_session(database=database)
+        session.create()
+        derived = self._makeDerived(session)
+
+        with self.assertRaises(NotImplementedError):
+            list(derived.execute_sql(SQL_QUERY))
+
+        self.assertFalse(
+            database.session_options.use_multiplexed(TransactionType.READ_ONLY)
         )
 
     def test_execute_sql_other_error(self):
@@ -1137,7 +1172,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
-        from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud.spanner_v1 import Partition
         from google.cloud.spanner_v1 import PartitionOptions
         from google.cloud.spanner_v1 import PartitionReadRequest
@@ -1225,9 +1259,27 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             self._partition_read_helper(multi_use=True, w_txn=False)
 
-    def test_partition_read_other_error(self):
-        from google.cloud.spanner_v1.keyset import KeySet
+    def test_partition_read_multiplexed_not_implemented_error(self):
+        enable_multiplexed_sessions()
 
+        database = (
+            self._build_database_with_partitioned_not_implemented_for_multiplexed()
+        )
+
+        session = build_session(database=database)
+        session.create()
+        derived = self._makeDerived(session)
+        derived._multi_use = True
+        derived._transaction_id = TXN_ID
+
+        with self.assertRaises(NotImplementedError):
+            list(derived.partition_read(TABLE_NAME, COLUMNS, KeySet(all_=True)))
+
+        self.assertFalse(
+            database.session_options.use_multiplexed(TransactionType.READ_ONLY)
+        )
+
+    def test_partition_read_other_error(self):
         keyset = KeySet(all_=True)
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -1249,7 +1301,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
     def test_partition_read_w_retry(self):
-        from google.cloud.spanner_v1.keyset import KeySet
         from google.api_core.exceptions import InternalServerError
         from google.cloud.spanner_v1 import Partition
         from google.cloud.spanner_v1 import PartitionResponse
@@ -1389,6 +1440,26 @@ class Test_SnapshotBase(OpenTelemetryBase):
             attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
         )
 
+    def test_partition_query_partitioned_not_implemented_for_multiplexed(self):
+        enable_multiplexed_sessions()
+
+        database = (
+            self._build_database_with_partitioned_not_implemented_for_multiplexed()
+        )
+
+        session = build_session(database=database)
+        session.create()
+        derived = self._makeDerived(session)
+        derived._multi_use = True
+        derived._transaction_id = TXN_ID
+
+        with self.assertRaises(NotImplementedError):
+            list(derived.partition_query(SQL_QUERY_WITH_PARAM, PARAMS, PARAM_TYPES))
+
+        self.assertFalse(
+            database.session_options.use_multiplexed(TransactionType.READ_ONLY)
+        )
+
     def test_partition_query_other_error(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -1437,6 +1508,25 @@ class Test_SnapshotBase(OpenTelemetryBase):
             multi_use=True, w_txn=True, retry=Retry(deadline=60), timeout=2.0
         )
 
+    @staticmethod
+    def _build_database_with_partitioned_not_implemented_for_multiplexed():
+        """Builds and returns a database for testing that raises errors for
+        partitioned operations not being supported for multiplexed sessions."""
+        from tests._builders import build_database
+
+        database = build_database()
+
+        error_msg = "Partitioned operations are not supported with multiplexed sessions"
+        not_implemented_error = NotImplementedError(error_msg)
+
+        api = database.spanner_api
+        api.streaming_read.side_effect = not_implemented_error
+        api.execute_streaming_sql.side_effect = not_implemented_error
+        api.partition_read.side_effect = not_implemented_error
+        api.partition_query.side_effect = not_implemented_error
+
+        return database
+
 
 class TestSnapshot(OpenTelemetryBase):
     PROJECT_ID = "project-id"
@@ -1456,8 +1546,6 @@ class TestSnapshot(OpenTelemetryBase):
         return self._getTargetClass()(*args, **kwargs)
 
     def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
         return mock.create_autospec(SpannerClient, instance=True)
 
     def _makeDuration(self, seconds=1, microseconds=0):
