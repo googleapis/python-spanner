@@ -793,25 +793,19 @@ class Database(object):
                         request_options=request_options,
                     )
 
-                    def wrapped_method(*args, **kwargs):
-                        print("\033[34mwrapped_method\033[00m")
-                        method = functools.partial(
-                            api.execute_streaming_sql,
-                            metadata=self.metadata_with_request_id(
-                                partial_nth_request,
-                                partial_attempt.increment(),
-                                metadata,
-                            ),
-                        )
-                        return method(*args, **kwargs)
+                    method = functools.partial(
+                        api.execute_streaming_sql,
+                        metadata=metadata,
+                    )
 
                     iterator = _restart_on_unavailable(
-                        method=wrapped_method,
+                        method=method,
                         trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
+                        request_id_manager=self,
                     )
 
                     result_set = StreamedResultSet(iterator)
@@ -1051,6 +1045,7 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
+            # TODO: Infer the channel_id being used.
             metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future
