@@ -757,7 +757,6 @@ def inject_retry_header_control(api):
             return orig_getattribute(obj, key, *args, **kwargs)
 
         attr = orig_getattribute(obj, key, *args, **kwargs)
-        print("args", args, "attr.dir", dir(attr))
 
         # 0. If we already patched it, we can return immediately.
         if getattr(attr, "_patched", None) is not None:
@@ -772,14 +771,11 @@ def inject_retry_header_control(api):
         if mangled_or_private:
             return attr
 
-        print("\033[35mattr", attr, "hex_id", hex(id(attr)), "\033[00m")
-
         # 3. Wrap the callable attribute and then capture its metadata keyed argument.
         def wrapped_attr(*args, **kwargs):
             metadata = kwargs.get("metadata", [])
             if not metadata:
                 # Increment the reinvocation count.
-                print("not metatadata", attr.__name__)
                 wrapped_attr._attempt += 1
                 return attr(*args, **kwargs)
 
@@ -787,7 +783,6 @@ def inject_retry_header_control(api):
             all_metadata = []
             for key, value in metadata:
                 if key is REQ_ID_HEADER_KEY:
-                    print("key", key, "value", value, "attempt", wrapped_attr._attempt)
                     # 5. Increment the original_attempt with that of our re-invocation count.
                     splits = value.split(".")
                     hdr_attempt_plus_reinvocation = (
@@ -802,7 +797,6 @@ def inject_retry_header_control(api):
             wrapped_attr._attempt += 1
 
             kwargs["metadata"] = all_metadata
-            print("\033[34mwrap_callable", hex(id(attr)), attr.__name__, "\033[00m")
             return attr(*args, **kwargs)
 
         wrapped_attr._attempt = 0

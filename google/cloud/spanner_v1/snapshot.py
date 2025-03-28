@@ -586,6 +586,10 @@ class _SnapshotBase(_SessionWrapper):
             )
             return restart(*args, **kwargs)
 
+        # The initial request should contain the request-id.
+        augmented_metadata = database.metadata_with_request_id(
+            nth_request, attempt.increment(), metadata
+        )
         trace_attributes = {"db.statement": sql}
         observability_options = getattr(database, "observability_options", None)
 
@@ -595,7 +599,7 @@ class _SnapshotBase(_SessionWrapper):
                 return self._get_streamed_result_set(
                     wrapped_restart,
                     request,
-                    metadata,
+                    augmented_metadata,
                     trace_attributes,
                     column_info,
                     observability_options,
@@ -605,7 +609,7 @@ class _SnapshotBase(_SessionWrapper):
             return self._get_streamed_result_set(
                 wrapped_restart,
                 request,
-                metadata,
+                augmented_metadata,
                 trace_attributes,
                 column_info,
                 observability_options,

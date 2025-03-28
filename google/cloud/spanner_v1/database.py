@@ -792,15 +792,21 @@ class Database(object):
                         query_options=query_options,
                         request_options=request_options,
                     )
-                    method = functools.partial(
-                        api.execute_streaming_sql,
-                        metadata=self.metadata_with_request_id(
-                            partial_nth_request, partial_attempt.increment(), metadata
-                        ),
-                    )
+
+                    def wrapped_method(*args, **kwargs):
+                        print("\033[34mwrapped_method\033[00m")
+                        method = functools.partial(
+                            api.execute_streaming_sql,
+                            metadata=self.metadata_with_request_id(
+                                partial_nth_request,
+                                partial_attempt.increment(),
+                                metadata,
+                            ),
+                        )
+                        return method(*args, **kwargs)
 
                     iterator = _restart_on_unavailable(
-                        method=method,
+                        method=wrapped_method,
                         trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
                         metadata=metadata,

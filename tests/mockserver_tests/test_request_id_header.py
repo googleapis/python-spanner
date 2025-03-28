@@ -316,7 +316,6 @@ class TestRequestIDHeader(MockServerTestBase):
     def test_streaming_retryable_error(self):
         add_select1_result()
         add_error(SpannerServicer.ExecuteStreamingSql.__name__, unavailable_status())
-        add_error(SpannerServicer.ExecuteStreamingSql.__name__, unavailable_status())
 
         if not getattr(self.database, "_interceptors", None):
             self.database._interceptors = MockServerTestBase._interceptors
