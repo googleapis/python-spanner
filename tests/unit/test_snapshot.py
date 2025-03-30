@@ -140,6 +140,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             session,
             attributes,
             transaction=derived,
+            request_id_manager=session._database,
         )
 
     def _make_item(self, value, resume_token=b"", metadata=None):
@@ -158,9 +159,18 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), [])
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
+
         self.assertNoSpans()
 
     def test_iteration_w_non_empty_raw(self):
@@ -172,9 +182,17 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(ITEMS))
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
         self.assertNoSpans()
 
     def test_iteration_w_raw_w_resume_tken(self):
@@ -191,9 +209,17 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(ITEMS))
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_no_token(self):
@@ -212,7 +238,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(ITEMS))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, b"")
@@ -239,7 +265,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(ITEMS))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, b"")
@@ -261,10 +287,18 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable(self):
@@ -283,7 +317,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(FIRST + LAST))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, RESUME_TOKEN)
@@ -309,7 +343,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(FIRST + LAST))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, RESUME_TOKEN)
@@ -331,10 +365,18 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_unavailable_after_token(self):
@@ -352,7 +394,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, RESUME_TOKEN)
@@ -375,7 +417,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(FIRST))
         self.assertEqual(len(restart.mock_calls), 1)
         begin_count = sum(
@@ -406,7 +448,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
         begin_count = sum(
@@ -445,7 +487,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         derived = self._makeDerived(session)
         derived._multi_use = True
 
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
 
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
@@ -481,7 +523,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, RESUME_TOKEN)
@@ -502,10 +544,18 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
-        resumable = self._call_fut(derived, restart, request)
+        resumable = self._call_fut(derived, restart, request, session=session)
         with self.assertRaises(InternalServerError):
             list(resumable)
-        restart.assert_called_once_with(request=request, metadata=None)
+        restart.assert_called_once_with(
+            request=request,
+            metadata=[
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                )
+            ],
+        )
         self.assertNoSpans()
 
     def test_iteration_w_span_creation(self):

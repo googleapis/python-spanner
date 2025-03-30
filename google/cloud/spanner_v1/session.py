@@ -268,9 +268,7 @@ class Session(object):
         ), MetricsCapture():
             api.delete_session(
                 name=self.name,
-                metadata=database.metadata_with_request_id(
-                    database._next_nth_request, 1, metadata
-                ),
+                metadata=metadata,
             )
 
     def ping(self):

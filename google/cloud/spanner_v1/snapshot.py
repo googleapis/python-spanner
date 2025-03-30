@@ -355,13 +355,10 @@ class _SnapshotBase(_SessionWrapper):
             directed_read_options=directed_read_options,
         )
 
-        nth_request = getattr(database, "_next_nth_request", 0)
-        all_metadata = database.metadata_with_request_id(nth_request, 1, metadata)
-
         restart = functools.partial(
             api.streaming_read,
             request=request,
-            metadata=all_metadata,
+            metadata=metadata,
             retry=retry,
             timeout=timeout,
         )
@@ -751,17 +748,24 @@ class _SnapshotBase(_SessionWrapper):
             metadata=metadata,
         ), MetricsCapture():
             nth_request = getattr(database, "_next_nth_request", 0)
-            all_metadata = database.metadata_with_request_id(nth_request, 1, metadata)
-            method = functools.partial(
-                api.partition_read,
-                request=request,
-                metadata=all_metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+            counters = dict(attempt=0)
+
+            def attempt_tracking_method():
+                counters["attempt"] += 1
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, counters["attempt"], metadata
+                )
+                method = functools.partial(
+                    api.partition_read,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method()
 
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -858,17 +862,24 @@ class _SnapshotBase(_SessionWrapper):
             metadata=metadata,
         ), MetricsCapture():
             nth_request = getattr(database, "_next_nth_request", 0)
-            all_metadata = database.metadata_with_request_id(nth_request, 1, metadata)
-            method = functools.partial(
-                api.partition_query,
-                request=request,
-                metadata=all_metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+            counters = dict(attempt=0)
+
+            def attempt_tracking_method():
+                counters["attempt"] += 1
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, counters["attempt"], metadata
+                )
+                method = functools.partial(
+                    api.partition_query,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method()
 
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -1008,16 +1019,23 @@ class Snapshot(_SnapshotBase):
             metadata=metadata,
         ), MetricsCapture():
             nth_request = getattr(database, "_next_nth_request", 0)
-            all_metadata = database.metadata_with_request_id(nth_request, 1, metadata)
-            method = functools.partial(
-                api.begin_transaction,
-                session=self._session.name,
-                options=txn_selector.begin,
-                metadata=all_metadata,
-            )
+            counters = dict(attempt=0)
+
+            def attempt_tracking_method():
+                counters["attempt"] += 1
+                all_metadata = database.metadata_with_request_id(
+                    nth_request, counters["attempt"], metadata
+                )
+                method = functools.partial(
+                    api.begin_transaction,
+                    session=self._session.name,
+                    options=txn_selector.begin,
+                    metadata=all_metadata,
+                )
+                return method()
 
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self._transaction_id = response.id

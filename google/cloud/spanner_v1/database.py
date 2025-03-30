@@ -759,12 +759,6 @@ class Database(object):
                 _metadata_with_leader_aware_routing(self._route_to_leader_enabled)
             )
 
-        begin_txn_nth_request = self._next_nth_request
-        begin_txn_attempt = AtomicCounter(0)
-        partial_nth_request = self._next_nth_request
-        # partial_attempt will be incremented inside _restart_on_unavailable.
-        partial_attempt = AtomicCounter(0)
-
         def execute_pdml():
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
@@ -772,6 +766,8 @@ class Database(object):
             ) as span, MetricsCapture():
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
+                    begin_txn_nth_request = self._next_nth_request
+                    begin_txn_attempt = AtomicCounter(0)
                     txn = api.begin_transaction(
                         session=session.name,
                         options=txn_options,

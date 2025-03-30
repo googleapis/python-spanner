@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import sys
+import traceback
 import threading
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
@@ -644,6 +646,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -1226,6 +1232,12 @@ class _Client(object):
     def _next_nth_request(self):
         return self._nth_request.increment()
 
+    def get_next_request(self):
+        # This method exists because somehow Python isn't able to
+        # call the property method "_next_nth_request" and that's
+        # needlessly stalled progress.
+        return self._nth_request.increment()
+
 
 class _Instance(object):
     def __init__(self):
@@ -1242,7 +1254,7 @@ class _Database(object):
 
     @property
     def _next_nth_request(self):
-        return self._instance._client._next_nth_request
+        return self._instance._client.get_next_request()
 
     @property
     def _nth_client_id(self):

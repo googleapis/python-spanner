@@ -590,10 +590,6 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
         expected_metadata = [
             ("google-cloud-resource-prefix", database.name),
             ("x-goog-spanner-route-to-leader", "true"),
-            (
-                "x-goog-spanner-request-id",
-                f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
-            ),
         ]
 
         if enable_end_to_end_tracing and ot_helpers.HAS_OPENTELEMETRY_INSTALLED:
@@ -603,6 +599,12 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
                 "traceparent is missing in metadata",
             )
 
+        expected_metadata.append(
+            (
+                "x-goog-spanner-request-id",
+                f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+            )
+        )
         # Remove traceparent from actual metadata for comparison
         filtered_metadata = [item for item in metadata if item[0] != "traceparent"]
 
