@@ -94,6 +94,7 @@ def _restart_on_unavailable(
 
     request.transaction = transaction_selector
     iterator = None
+    attempt = 0
 
     while True:
         try:
