@@ -1298,7 +1298,8 @@ class TestDatabase(_BaseTest):
                     ("x-goog-spanner-route-to-leader", "true"),
                     (
                         "x-goog-spanner-request-id",
-                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.2",
+                        # Please note that this try was by an abort and not from service unavailable.
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
                     ),
                 ],
             )
@@ -1370,6 +1371,22 @@ class TestDatabase(_BaseTest):
                 query_options=expected_query_options,
                 request_options=expected_request_options,
             )
+
+            api.begin_transaction.assert_called_with(
+                session=self.SESSION_NAME,
+                options=txn_options,
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        # Retrying on an aborted response involves creating the transaction afresh
+                        # and also re-invoking execute_streaming_sql, hence the fresh request 4.1.
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                    ),
+                ],
+            )
+
             api.execute_streaming_sql.assert_called_with(
                 request=expected_request,
                 metadata=[
@@ -1377,7 +1394,9 @@ class TestDatabase(_BaseTest):
                     ("x-goog-spanner-route-to-leader", "true"),
                     (
                         "x-goog-spanner-request-id",
-                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.2",
+                        # Retrying on an aborted response involves creating the transaction afresh
+                        # and also re-invoking execute_streaming_sql, hence the fresh request 4.1.
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
                     ),
                 ],
             )

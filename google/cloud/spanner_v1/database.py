@@ -766,14 +766,12 @@ class Database(object):
             ) as span, MetricsCapture():
                 with SessionCheckout(self._pool) as session:
                     add_span_event(span, "Starting BeginTransaction")
-                    begin_txn_nth_request = self._next_nth_request
-                    begin_txn_attempt = AtomicCounter(0)
                     txn = api.begin_transaction(
                         session=session.name,
                         options=txn_options,
                         metadata=self.metadata_with_request_id(
-                            begin_txn_nth_request,
-                            begin_txn_attempt.increment(),
+                            self._next_nth_request,
+                            1,
                             metadata,
                         ),
                     )
