@@ -4,6 +4,18 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.54.0](https://github.com/googleapis/python-spanner/compare/v3.53.0...v3.54.0) (2025-04-03)
+
+
+### Features
+
+* Support transaction isolation level in dbapi ([#1327](https://github.com/googleapis/python-spanner/issues/1327)) ([03400c4](https://github.com/googleapis/python-spanner/commit/03400c40f1c1cc73e51733f2a28910a8dd78e7d9))
+
+
+### Bug Fixes
+
+* Improve client-side regex statement parser ([#1328](https://github.com/googleapis/python-spanner/issues/1328)) ([b3c259d](https://github.com/googleapis/python-spanner/commit/b3c259deec817812fd8e4940faacf4a927d0d69c))
+
 ## [3.53.0](https://github.com/googleapis/python-spanner/compare/v3.52.0...v3.53.0) (2025-03-12)
 
 
