@@ -246,6 +246,7 @@ class FixedSizePool(AbstractSessionPool):
             observability_options=observability_options,
             metadata=metadata,
         ) as span, MetricsCapture():
+            attempt = 1
             returned_session_count = 0
             while not self._sessions.full():
                 request.session_count = requested_session_count - self._sessions.qsize()
@@ -256,7 +257,9 @@ class FixedSizePool(AbstractSessionPool):
                 )
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
                 )
 
                 add_span_event(
@@ -561,7 +564,9 @@ class PingingPool(AbstractSessionPool):
             while returned_session_count < self.size:
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request, 1, metadata
+                    ),
                 )
 
                 add_span_event(
