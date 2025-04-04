@@ -40,6 +40,7 @@ from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConf
 from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
+from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
 from google.cloud.spanner_v1.transaction import BatchTransactionId
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import Type
@@ -59,7 +60,6 @@ from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 from google.cloud.spanner_v1.snapshot import Snapshot
@@ -70,7 +70,6 @@ from google.cloud.spanner_v1.services.spanner.transports.grpc import (
 from google.cloud.spanner_v1.table import Table
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
-    get_current_span,
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
@@ -191,9 +190,9 @@ class Database(object):
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
-
-        self._pool = pool
         pool.bind(self)
+
+        self._session_manager = DatabaseSessionsManager(database=self, pool=pool)
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -708,7 +707,7 @@ class Database(object):
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
             ) as span, MetricsCapture():
-                with SessionCheckout(self._pool) as session:
+                with SessionCheckout(self) as session:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
                         session=session.name, options=txn_options, metadata=metadata
@@ -923,7 +922,7 @@ class Database(object):
             # Check out a session and run the function in a transaction; once
             # done, flip the sanity check bit back.
             try:
-                with SessionCheckout(self._pool) as session:
+                with SessionCheckout(self) as session:
                     return session.run_in_transaction(func, *args, **kw)
             finally:
                 self._local.transaction_running = False
@@ -1160,6 +1159,35 @@ class Database(object):
         return opts
 
 
+class SessionCheckout(object):
+    """Context manager for using a session from a database.
+
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :param database: database to use the session from
+    """
+
+    _session = None  # Not checked out until '__enter__'.
+
+    def __init__(self, database):
+        if not isinstance(database, Database):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=Database.__name__,
+                    actual_class_name=database.__class__.__name__,
+                )
+            )
+
+        self._database = database
+
+    def __enter__(self):
+        self._session = self._database._session_manager.get_session_for_read_write()
+        return self._session
+
+    def __exit__(self, *ignored):
+        self._database._session_manager.put_session(self._session)
+
+
 class BatchCheckout(object):
     """Context manager for using a batch from a database.
 
@@ -1194,6 +1222,15 @@ class BatchCheckout(object):
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         **kw,
     ):
+        if not isinstance(database, Database):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=Database.__name__,
+                    actual_class_name=database.__class__.__name__,
+                )
+            )
+
         self._database = database
         self._session = self._batch = None
         if request_options is None:
@@ -1209,10 +1246,8 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        current_span = get_current_span()
-        session = self._session = self._database._pool.get()
-        add_span_event(current_span, "Using session", {"id": session.session_id})
-        batch = self._batch = Batch(session)
+        self._session = self._database._session_manager.get_session_for_read_only()
+        batch = self._batch = Batch(self._session)
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
         return batch
@@ -1235,13 +1270,7 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            self._database._pool.put(self._session)
-            current_span = get_current_span()
-            add_span_event(
-                current_span,
-                "Returned session to pool",
-                {"id": self._session.session_id},
-            )
+            self._database._session_manager.put_session(self._session)
 
 
 class MutationGroupsCheckout(object):
@@ -1258,23 +1287,26 @@ class MutationGroupsCheckout(object):
     """
 
     def __init__(self, database):
+        if not isinstance(database, Database):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=Database.__name__,
+                    actual_class_name=database.__class__.__name__,
+                )
+            )
+
         self._database = database
         self._session = None
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
-        return MutationGroups(session)
+        self._session = self._database._session_manager.get_session_for_read_write()
+        return MutationGroups(self._session)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
-        self._database._pool.put(self._session)
+        self._database._session_manager.put_session(self._session)
 
 
 class SnapshotCheckout(object):
@@ -1296,24 +1328,27 @@ class SnapshotCheckout(object):
     """
 
     def __init__(self, database, **kw):
+        if not isinstance(database, Database):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=Database.__name__,
+                    actual_class_name=database.__class__.__name__,
+                )
+            )
+
         self._database = database
         self._session = None
         self._kw = kw
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
-        return Snapshot(session, **self._kw)
+        self._session = self._database._session_manager.get_session_for_read_only()
+        return Snapshot(self._session, **self._kw)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
-        self._database._pool.put(self._session)
+        self._database._session_manager.put_session(self._session)
 
 
 class BatchSnapshot(object):

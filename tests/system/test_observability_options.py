@@ -11,9 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from unittest.mock import patch, PropertyMock
 
 import pytest
 
+from google.cloud.spanner_v1.session import Session
 from . import _helpers
 from google.cloud.spanner_v1 import Client
 from google.api_core.exceptions import Aborted
@@ -195,8 +197,14 @@ def create_db_trace_exporter():
     not HAS_OTEL_INSTALLED,
     reason="Tracing requires OpenTelemetry",
 )
-def test_transaction_abort_then_retry_spans():
+@patch.object(Session, "session_id", new_callable=PropertyMock)
+@patch.object(Session, "is_multiplexed", new_callable=PropertyMock)
+def test_transaction_abort_then_retry_spans(mock_session_multiplexed, mock_session_id):
     from opentelemetry.trace.status import StatusCode
+
+    # Mock session properties for testing.
+    mock_session_multiplexed.return_value = session_multiplexed = False
+    mock_session_id.return_value = session_id = "session-id"
 
     db, trace_exporter = create_db_trace_exporter()
 
@@ -224,6 +232,8 @@ def test_transaction_abort_then_retry_spans():
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
+        ("Using session", {"id": session_id, "multiplexed": session_multiplexed}),
+        ("Returned session", {"id": session_id, "multiplexed": session_multiplexed}),
         (
             "Transaction was aborted in user operation, retrying",
             {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
@@ -391,8 +401,14 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     not HAS_OTEL_INSTALLED,
     reason="Tracing requires OpenTelemetry",
 )
-def test_database_partitioned_error():
+@patch.object(Session, "session_id", new_callable=PropertyMock)
+@patch.object(Session, "is_multiplexed", new_callable=PropertyMock)
+def test_database_partitioned_error(mock_session_multiplexed, mock_session_id):
     from opentelemetry.trace.status import StatusCode
+
+    # Mock session properties for testing.
+    mock_session_multiplexed.return_value = session_multiplexed = False
+    mock_session_id.return_value = session_id = "session-id"
 
     db, trace_exporter = create_db_trace_exporter()
 
@@ -408,7 +424,9 @@ def test_database_partitioned_error():
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
+        ("Using session", {"id": session_id, "multiplexed": session_multiplexed}),
         ("Starting BeginTransaction", {}),
+        ("Returned session", {"id": session_id, "multiplexed": session_multiplexed}),
         (
             "exception",
             {

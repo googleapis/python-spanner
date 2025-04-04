@@ -134,18 +134,6 @@ class AbstractSessionPool(object):
             labels=self.labels, database_role=self.database_role
         )
 
-    def session(self, **kwargs):
-        """Check out a session from the pool.
-
-        :param kwargs: (optional) keyword arguments, passed through to
-                       the returned checkout.
-
-        :rtype: :class:`~google.cloud.spanner_v1.session.SessionCheckout`
-        :returns: a checkout instance, to be used as a context manager for
-                  accessing the session and returning it to the pool.
-        """
-        return SessionCheckout(self, **kwargs)
-
 
 class FixedSizePool(AbstractSessionPool):
     """Concrete session pool implementation:
@@ -308,13 +296,12 @@ class FixedSizePool(AbstractSessionPool):
             age = _NOW() - session.last_use_time
 
             if age >= self._max_age and not session.exists():
-                if not session.exists():
-                    add_span_event(
-                        current_span,
-                        "Session is not valid, recreating it",
-                        span_event_attributes,
-                    )
-                session = self._database.session()
+                add_span_event(
+                    current_span,
+                    "Session is not valid, recreating it",
+                    span_event_attributes,
+                )
+                session = self._new_session()
                 session.create()
                 # Replacing with the updated session.id.
                 span_event_attributes["session.id"] = session._session_id
@@ -776,27 +763,3 @@ class TransactionPingingPool(PingingPool):
         while not self._pending_sessions.empty():
             session = self._pending_sessions.get()
             super(TransactionPingingPool, self).put(session)
-
-
-class SessionCheckout(object):
-    """Context manager: hold session checked out from a pool.
-
-    :type pool: concrete subclass of
-        :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
-    :param pool: Pool from which to check out a session.
-
-    :param kwargs: extra keyword arguments to be passed to :meth:`pool.get`.
-    """
-
-    _session = None  # Not checked out until '__enter__'.
-
-    def __init__(self, pool, **kwargs):
-        self._pool = pool
-        self._kwargs = kwargs.copy()
-
-    def __enter__(self):
-        self._session = self._pool.get(**self._kwargs)
-        return self._session
-
-    def __exit__(self, *ignored):
-        self._pool.put(self._session)
