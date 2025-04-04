@@ -1009,3 +1009,9 @@ def test_query_data_with_proto_types_parameter(
     )
     out, _ = capsys.readouterr()
     assert "SingerId: 2, SingerInfo: singer_id: 2" in out
+
+@pytest.mark.dependency(name="add_split_points")
+def test_insert_data(capsys, instance_id, sample_database):
+    snippets.add_split_points(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added split points." in out
