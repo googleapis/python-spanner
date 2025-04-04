@@ -41,12 +41,17 @@ Install Dependencies
 
     .. code-block:: bash
 
-        $ git clone https://github.com/GoogleCloudPlatform/python-docs-samples.git
+        $ git clone https://github.com/googleapis/python-spanner.git
 
 #. Install `pip`_ and `virtualenv`_ if you do not already have them. You may want to refer to the `Python Development Environment Setup Guide`_ for Google Cloud Platform for instructions.
 
    .. _Python Development Environment Setup Guide:
        https://cloud.google.com/python/setup
+
+#. Change to the desired source directory
+    .. code-block:: bash
+        
+        $ cd ~/python-spanner/samples/samples
 
 #. Create a virtualenv. Samples are compatible with Python 3.6+.
 
