@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,7 +74,6 @@ from .transports.base import SpannerTransport, DEFAULT_CLIENT_INFO
 from .transports.grpc import SpannerGrpcTransport
 from .transports.grpc_asyncio import SpannerGrpcAsyncIOTransport
 from .transports.rest import SpannerRestTransport
-from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 
 
 class SpannerClientMeta(type):
@@ -715,7 +714,6 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 client_info=client_info,
                 always_use_jwt_access=True,
                 api_audience=self._client_options.api_audience,
-                metrics_interceptor=MetricsInterceptor(),
             )
 
         if "async" not in str(self._transport):
@@ -822,7 +820,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([database])
+        flattened_params = [database]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -945,7 +946,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([database, session_count])
+        flattened_params = [database, session_count]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1052,7 +1056,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([name])
+        flattened_params = [name]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1161,7 +1168,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([database])
+        flattened_params = [database]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1270,7 +1280,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([name])
+        flattened_params = [name]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -1915,7 +1928,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([session, options])
+        flattened_params = [session, options]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -2072,8 +2088,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any(
-            [session, transaction_id, mutations, single_use_transaction]
+        flattened_params = [session, transaction_id, mutations, single_use_transaction]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
         )
         if request is not None and has_flattened_params:
             raise ValueError(
@@ -2194,7 +2211,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([session, transaction_id])
+        flattened_params = [session, transaction_id]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "
@@ -2532,7 +2552,10 @@ class SpannerClient(metaclass=SpannerClientMeta):
         # Create or coerce a protobuf request object.
         # - Quick check: If we got a request object, we should *not* have
         #   gotten any keyword arguments that map to the request.
-        has_flattened_params = any([session, mutation_groups])
+        flattened_params = [session, mutation_groups]
+        has_flattened_params = (
+            len([param for param in flattened_params if param is not None]) > 0
+        )
         if request is not None and has_flattened_params:
             raise ValueError(
                 "If the `request` argument is set, then none of "

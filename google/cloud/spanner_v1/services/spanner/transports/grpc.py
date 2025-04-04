@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Copyright 2024 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,8 +34,6 @@ from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
-
-from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 from google.protobuf import empty_pb2  # type: ignore
 from .base import SpannerTransport, DEFAULT_CLIENT_INFO
 
@@ -149,7 +147,6 @@ class SpannerGrpcTransport(SpannerTransport):
         client_info: gapic_v1.client_info.ClientInfo = DEFAULT_CLIENT_INFO,
         always_use_jwt_access: Optional[bool] = False,
         api_audience: Optional[str] = None,
-        metrics_interceptor: Optional[MetricsInterceptor] = None,
     ) -> None:
         """Instantiate the transport.
 
@@ -205,7 +202,6 @@ class SpannerGrpcTransport(SpannerTransport):
         self._grpc_channel = None
         self._ssl_channel_credentials = ssl_channel_credentials
         self._stubs: Dict[str, Callable] = {}
-        self._metrics_interceptor = None
 
         if api_mtls_endpoint:
             warnings.warn("api_mtls_endpoint is deprecated", DeprecationWarning)
@@ -270,13 +266,6 @@ class SpannerGrpcTransport(SpannerTransport):
                     ("grpc.max_send_message_length", -1),
                     ("grpc.max_receive_message_length", -1),
                 ],
-            )
-
-        # Wrap the gRPC channel with the metric interceptor
-        if metrics_interceptor is not None:
-            self._metrics_interceptor = metrics_interceptor
-            self._grpc_channel = grpc.intercept_channel(
-                self._grpc_channel, metrics_interceptor
             )
 
         self._interceptor = _LoggingClientInterceptor()
