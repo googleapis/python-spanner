@@ -3508,6 +3508,72 @@ def query_data_with_proto_types_parameter(instance_id, database_id):
             )
     # [END spanner_query_with_proto_types_parameter]
 
+# [START spanner_database_add_split_points]
+def add_split_points(instance_id, database_id):
+    """Adds split points to table and index."""
+
+    from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
+
+    spanner_client = spanner.Client()
+    database_admin_api = spanner_client.database_admin_api
+
+    request = spanner_database_admin.UpdateDatabaseDdlRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        statements=["CREATE INDEX IF NOT EXISTS SingersByFirstLastName ON Singers(FirstName, LastName)"],
+    )
+
+    operation = database_admin_api.update_database_ddl(request)
+
+    print("Waiting for operation to complete...")
+    operation.result(OPERATION_TIMEOUT_SECONDS)
+
+    print("Added the SingersByFirstLastName index.")
+
+    addSplitPointRequest = spanner_database_admin.addSplitPointRequest(
+        database=database_admin_api.database_path(
+            spanner_client.project, instance_id, database_id
+        ),
+        # Table split
+        # Index split without table key part
+        # Index split with table key part
+        split_points=[
+            spanner_database_admin.SplitPoints(
+                table="Singers"
+                keys=[
+                    spanner_database_admin.SplitPoints.Key(
+                        key_parts=struct_pb2.ListValue("42")
+                    )
+                ]
+            ),
+            spanner_database_admin.SplitPoints(
+                index="SingersByFirstLastName"
+                keys=[
+                    spanner_database_admin.SplitPoints.Key(
+                        key_parts=struct_pb2.ListValue("John","Doe")
+                    )
+                ]                
+            ),
+            spanner_database_admin.SplitPoints(
+                index="SingersByFirstLastName"
+                keys=[
+                    spanner_database_admin.SplitPoints.Key(
+                        key_parts=struct_pb2.ListValue("38")
+                    ),
+                    spanner_database_admin.SplitPoints.Key(
+                        key_parts=struct_pb2.ListValue("Jane","Doe")
+                    )
+                ]               
+            ),
+
+        ]
+    )
+
+    operation = database_admin_api.add_split_points(request)
+
+    print("Added split points.")
+# [END spanner_database_add_split_points]
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
@@ -3666,6 +3732,10 @@ if __name__ == "__main__":  # noqa: C901
         "query_data_with_proto_types_parameter",
         help=query_data_with_proto_types_parameter.__doc__,
     )
+    subparsers.add_parser(
+        "add_split_points",
+        help=add_split_points.__doc__,
+    )    
 
     args = parser.parse_args()
 
@@ -3815,3 +3885,5 @@ if __name__ == "__main__":  # noqa: C901
         update_data_with_proto_types_with_dml(args.instance_id, args.database_id)
     elif args.command == "query_data_with_proto_types_parameter":
         query_data_with_proto_types_parameter(args.instance_id, args.database_id)
+    elif args.command == "add_split_points":
+        add_split_points(args.instance_id, args.database_id)
