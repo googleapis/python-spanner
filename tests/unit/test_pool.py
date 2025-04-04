@@ -121,26 +121,6 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertIs(new_session, session)
         database.session.assert_called_once_with(labels={}, database_role=database_role)
 
-    def test_session_wo_kwargs(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
-
-        pool = self._make_one()
-        checkout = pool.session()
-        self.assertIsInstance(checkout, SessionCheckout)
-        self.assertIs(checkout._pool, pool)
-        self.assertIsNone(checkout._session)
-        self.assertEqual(checkout._kwargs, {})
-
-    def test_session_w_kwargs(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
-
-        pool = self._make_one()
-        checkout = pool.session(foo="bar")
-        self.assertIsInstance(checkout, SessionCheckout)
-        self.assertIs(checkout._pool, pool)
-        self.assertIsNone(checkout._session)
-        self.assertEqual(checkout._kwargs, {"foo": "bar"})
-
 
 class TestFixedSizePool(OpenTelemetryBase):
     BASE_ATTRIBUTES = {
@@ -1073,73 +1053,6 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertSpanEvents("pool.Get", wantEventNames, span_list[-1])
 
 
-class TestSessionCheckout(unittest.TestCase):
-    def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
-
-        return SessionCheckout
-
-    def _make_one(self, *args, **kwargs):
-        return self._getTargetClass()(*args, **kwargs)
-
-    def test_ctor_wo_kwargs(self):
-        pool = _Pool()
-        checkout = self._make_one(pool)
-        self.assertIs(checkout._pool, pool)
-        self.assertIsNone(checkout._session)
-        self.assertEqual(checkout._kwargs, {})
-
-    def test_ctor_w_kwargs(self):
-        pool = _Pool()
-        checkout = self._make_one(pool, foo="bar", database_role="dummy-role")
-        self.assertIs(checkout._pool, pool)
-        self.assertIsNone(checkout._session)
-        self.assertEqual(
-            checkout._kwargs, {"foo": "bar", "database_role": "dummy-role"}
-        )
-
-    def test_context_manager_wo_kwargs(self):
-        session = object()
-        pool = _Pool(session)
-        checkout = self._make_one(pool)
-
-        self.assertEqual(len(pool._items), 1)
-        self.assertIs(pool._items[0], session)
-
-        with checkout as borrowed:
-            self.assertIs(borrowed, session)
-            self.assertEqual(len(pool._items), 0)
-
-        self.assertEqual(len(pool._items), 1)
-        self.assertIs(pool._items[0], session)
-        self.assertEqual(pool._got, {})
-
-    def test_context_manager_w_kwargs(self):
-        session = object()
-        pool = _Pool(session)
-        checkout = self._make_one(pool, foo="bar")
-
-        self.assertEqual(len(pool._items), 1)
-        self.assertIs(pool._items[0], session)
-
-        with checkout as borrowed:
-            self.assertIs(borrowed, session)
-            self.assertEqual(len(pool._items), 0)
-
-        self.assertEqual(len(pool._items), 1)
-        self.assertIs(pool._items[0], session)
-        self.assertEqual(pool._got, {"foo": "bar"})
-
-
-def _make_transaction(*args, **kw):
-    from google.cloud.spanner_v1.transaction import Transaction
-
-    txn = mock.create_autospec(Transaction)(*args, **kw)
-    txn.committed = None
-    txn.rolled_back = False
-    return txn
-
-
 @total_ordering
 class _Session(object):
     _transaction = None
@@ -1182,14 +1095,6 @@ class _Session(object):
         self._deleted = True
         if not self._exists:
             raise NotFound("unknown session")
-
-    def transaction(self):
-        txn = self._transaction = _make_transaction(self)
-        return txn
-
-    @property
-    def session_id(self):
-        return self._session_id
 
 
 class _Database(object):

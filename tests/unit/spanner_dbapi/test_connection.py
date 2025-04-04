@@ -37,6 +37,11 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     AutocommitDmlMode,
 )
 
+from google.cloud.spanner_v1.client import Client
+from google.cloud.spanner_v1.instance import Instance
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.session import Session
+
 PROJECT = "test-project"
 INSTANCE = "test-instance"
 DATABASE = "test-database"
@@ -64,9 +69,6 @@ class TestConnection(unittest.TestCase):
     def _make_connection(
         self, database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED, **kwargs
     ):
-        from google.cloud.spanner_v1.instance import Instance
-        from google.cloud.spanner_v1.client import Client
-
         # We don't need a real Client object to test the constructor
         client = Client()
         instance = Instance(INSTANCE, client=client)
@@ -97,22 +99,16 @@ class TestConnection(unittest.TestCase):
         self.assertTrue(connection._autocommit)
 
     def test_property_database(self):
-        from google.cloud.spanner_v1.database import Database
-
         connection = self._make_connection()
         self.assertIsInstance(connection.database, Database)
         self.assertEqual(connection.database, connection._database)
 
     def test_property_instance(self):
-        from google.cloud.spanner_v1.instance import Instance
-
         connection = self._make_connection()
         self.assertIsInstance(connection.instance, Instance)
         self.assertEqual(connection.instance, connection._instance)
 
     def test_property_current_schema_google_sql_dialect(self):
-        from google.cloud.spanner_v1.database import Database
-
         connection = self._make_connection(
             database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL
         )
@@ -120,8 +116,6 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(connection.current_schema, "")
 
     def test_property_current_schema_postgres_sql_dialect(self):
-        from google.cloud.spanner_v1.database import Database
-
         connection = self._make_connection(database_dialect=DatabaseDialect.POSTGRESQL)
         self.assertIsInstance(connection.database, Database)
         self.assertEqual(connection.current_schema, "public")
@@ -146,25 +140,39 @@ class TestConnection(unittest.TestCase):
         connection.read_only = False
         self.assertFalse(connection.read_only)
 
-    @staticmethod
-    def _make_pool():
-        from google.cloud.spanner_v1.pool import AbstractSessionPool
+    def test__session_checkout_read_only(self):
+        client = Client()
+        instance = Instance(instance_id="instance-id", client=client)
+        database = Database(database_id="database-id", instance=instance)
+        session_manager = database._session_manager
 
-        return mock.create_autospec(AbstractSessionPool)
+        session = Session(database=database)
+        session_manager.get_session_for_read_only = mock.Mock(return_value=session)
 
-    @mock.patch("google.cloud.spanner_v1.database.Database")
-    def test__session_checkout(self, mock_database):
-        pool = self._make_pool()
-        mock_database._pool = pool
-        connection = Connection(INSTANCE, mock_database)
+        read_only_connection = Connection(
+            instance="instance-id", database=database, read_only=True
+        )
+        read_only_connection._session_checkout()
 
-        connection._session_checkout()
-        pool.get.assert_called_once_with()
-        self.assertEqual(connection._session, pool.get.return_value)
+        session_manager.get_session_for_read_only.assert_called_once_with()
+        self.assertEqual(read_only_connection._session, session)
 
-        connection._session = "db_session"
-        connection._session_checkout()
-        self.assertEqual(connection._session, "db_session")
+    def test__session_checkout_read_write(self):
+        client = Client()
+        instance = Instance(instance_id="instance-id", client=client)
+        database = Database(database_id="database-id", instance=instance)
+        session_manager = database._session_manager
+
+        session = Session(database=database)
+        session_manager.get_session_for_read_write = mock.Mock(return_value=session)
+
+        read_write_connection = Connection(
+            instance="instance-id", database=database, read_only=False
+        )
+        read_write_connection._session_checkout()
+
+        session_manager.get_session_for_read_write.assert_called_once_with()
+        self.assertEqual(read_write_connection._session, session)
 
     def test_session_checkout_database_error(self):
         connection = Connection(INSTANCE)
@@ -172,15 +180,20 @@ class TestConnection(unittest.TestCase):
         with pytest.raises(ValueError):
             connection._session_checkout()
 
-    @mock.patch("google.cloud.spanner_v1.database.Database")
-    def test__release_session(self, mock_database):
-        pool = self._make_pool()
-        mock_database._pool = pool
-        connection = Connection(INSTANCE, mock_database)
-        connection._session = "session"
+    def test__release_session(self):
+        client = Client()
+        instance = Instance(instance_id="instance-id", client=client)
+        database = Database(database_id="database-id", instance=instance)
+        connection = Connection(instance="instance-id", database=database)
+
+        # Mock connection session and session manager.
+        session = Session(database=database)
+        connection._session = session
+        session_manager = database._session_manager
+        session_manager.put_session = mock.Mock()
 
         connection._release_session()
-        pool.put.assert_called_once_with("session")
+        session_manager.put_session.assert_called_once_with(session)
         self.assertIsNone(connection._session)
 
     def test_release_session_database_error(self):

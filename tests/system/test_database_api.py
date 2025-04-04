@@ -121,7 +121,7 @@ def test_database_binding_of_fixed_size_pool(
         database_role="parent",
     )
     database = shared_instance.database(temp_db_id, pool=pool)
-    assert database._pool.database_role == "parent"
+    assert database._session_manager._pool.database_role == "parent"
 
 
 def test_database_binding_of_pinging_pool(
@@ -155,7 +155,7 @@ def test_database_binding_of_pinging_pool(
         database_role="parent",
     )
     database = shared_instance.database(temp_db_id, pool=pool)
-    assert database._pool.database_role == "parent"
+    assert database._session_manager._pool.database_role == "parent"
 
 
 def test_create_database_pitr_invalid_retention_period(
