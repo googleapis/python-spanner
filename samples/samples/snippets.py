@@ -33,6 +33,7 @@ from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import DirectedReadOptions, param_types
 from google.cloud.spanner_v1.data_types import JsonObject
 from google.protobuf import field_mask_pb2  # type: ignore
+from google.protobuf import struct_pb2  # type: ignore
 
 from testdata import singer_pb2
 
@@ -3540,7 +3541,7 @@ def add_split_points(instance_id, database_id):
         # Index split with table key part
         split_points=[
             spanner_database_admin.SplitPoints(
-                table="Singers"
+                table="Singers",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue("42")
@@ -3548,7 +3549,7 @@ def add_split_points(instance_id, database_id):
                 ]
             ),
             spanner_database_admin.SplitPoints(
-                index="SingersByFirstLastName"
+                index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue("John","Doe")
@@ -3556,7 +3557,7 @@ def add_split_points(instance_id, database_id):
                 ]                
             ),
             spanner_database_admin.SplitPoints(
-                index="SingersByFirstLastName"
+                index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue("38")
@@ -3565,9 +3566,8 @@ def add_split_points(instance_id, database_id):
                         key_parts=struct_pb2.ListValue("Jane","Doe")
                     )
                 ]               
-            ),
-
-        ]
+            )
+    ]
     )
 
     operation = database_admin_api.add_split_points(request)
