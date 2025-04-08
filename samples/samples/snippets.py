@@ -3555,7 +3555,7 @@ def add_split_points(instance_id, database_id):
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue("John", "Doe")
                     )
-                ]  
+                ]
             ),
             spanner_database_admin.SplitPoints(
                 index="SingersByFirstLastName",
