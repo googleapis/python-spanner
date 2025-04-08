@@ -3555,7 +3555,7 @@ def add_split_points(instance_id, database_id):
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue("John", "Doe")
                     )
-                ]          
+                ]  
             ),
             spanner_database_admin.SplitPoints(
                 index="SingersByFirstLastName",
@@ -3568,7 +3568,7 @@ def add_split_points(instance_id, database_id):
                     )
                 ]
             )
-    ]
+        ]
     )
 
     operation = database_admin_api.add_split_points(addSplitPointRequest)
@@ -3737,7 +3737,7 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser(
         "add_split_points",
         help=add_split_points.__doc__,
-    )    
+    )
 
     args = parser.parse_args()
 
