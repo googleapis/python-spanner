@@ -3509,6 +3509,7 @@ def query_data_with_proto_types_parameter(instance_id, database_id):
             )
     # [END spanner_query_with_proto_types_parameter]
 
+
 # [START spanner_database_add_split_points]
 def add_split_points(instance_id, database_id):
     """Adds split points to table and index."""
@@ -3552,9 +3553,9 @@ def add_split_points(instance_id, database_id):
                 index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("John","Doe")
+                        key_parts=struct_pb2.ListValue("John", "Doe")
                     )
-                ]                
+                ]          
             ),
             spanner_database_admin.SplitPoints(
                 index="SingersByFirstLastName",
@@ -3563,17 +3564,18 @@ def add_split_points(instance_id, database_id):
                         key_parts=struct_pb2.ListValue("38")
                     ),
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("Jane","Doe")
+                        key_parts=struct_pb2.ListValue("Jane", "Doe")
                     )
-                ]               
+                ]
             )
     ]
     )
 
-    operation = database_admin_api.add_split_points(request)
+    operation = database_admin_api.add_split_points(addSplitPointRequest)
 
     print("Added split points.")
 # [END spanner_database_add_split_points]
+
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
