@@ -3532,7 +3532,7 @@ def add_split_points(instance_id, database_id):
 
     print("Added the SingersByFirstLastName index.")
 
-    addSplitPointRequest = spanner_database_admin.addSplitPointRequest(
+    addSplitPointRequest = spanner_database_admin.AddSplitPointsRequest(
         database=database_admin_api.database_path(
             spanner_client.project, instance_id, database_id
         ),
