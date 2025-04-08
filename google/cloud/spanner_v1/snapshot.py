@@ -591,13 +591,16 @@ class _SnapshotBase(_SessionWrapper):
             directed_read_options=directed_read_options,
         )
 
-        restart = functools.partial(
-            api.execute_streaming_sql,
-            request=request,
-            metadata=metadata,
-            retry=retry,
-            timeout=timeout,
-        )
+        def wrapped_restart(*args, **kwargs):
+            restart = functools.partial(
+                api.execute_streaming_sql,
+                request=request,
+                metadata=kwargs.get('metadata', metadata),
+                retry=retry,
+                timeout=timeout,
+            )
+            return restart(*args, **kwargs)
+
         trace_attributes = {"db.statement": sql}
         observability_options = getattr(database, "observability_options", None)
 
@@ -605,7 +608,7 @@ class _SnapshotBase(_SessionWrapper):
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart,
+                    wrapped_restart,
                     request,
                     metadata,
                     trace_attributes,
@@ -615,7 +618,7 @@ class _SnapshotBase(_SessionWrapper):
                 )
         else:
             return self._get_streamed_result_set(
-                restart,
+                wrapped_restart,
                 request,
                 metadata,
                 trace_attributes,
