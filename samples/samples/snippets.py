@@ -3545,7 +3545,7 @@ def add_split_points(instance_id, database_id):
                 table="Singers",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("42")
+                        key_parts=struct_pb2.ListValue().values.add(string_value="42")
                     )
                 ]
             ),
@@ -3553,7 +3553,10 @@ def add_split_points(instance_id, database_id):
                 index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("John", "Doe")
+                        key_parts=struct_pb2.ListValue().values.extend([
+                                                struct_pb2.Value(string_value="John"),
+                                                struct_pb2.Value(string_value="Doe")
+                                    ])
                     )
                 ]
             ),
@@ -3561,10 +3564,13 @@ def add_split_points(instance_id, database_id):
                 index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("38")
+                        key_parts=struct_pb2.ListValue().values.add(string_value="38")
                     ),
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue("Jane", "Doe")
+                         key_parts=struct_pb2.ListValue().values.extend([
+                                                struct_pb2.Value(string_value="Jane"),
+                                                struct_pb2.Value(string_value="Doe")
+                                    ])
                     )
                 ]
             )
