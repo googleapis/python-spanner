@@ -3539,7 +3539,7 @@ def add_split_points(instance_id, database_id):
         ),
         # Table split
         # Index split without table key part
-        # Index split with table key part
+        # Index split with table key part: first key is the index key and second the table key
         split_points=[
             spanner_database_admin.SplitPoints(
                 table="Singers",
