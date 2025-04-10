@@ -3569,17 +3569,18 @@ def add_split_points(instance_id, database_id):
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
                         key_parts=struct_pb2.ListValue(
-                            values=[struct_pb2.Value(string_value="38")]
-                        )
-                    ),
-                    spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue(
                             values=[
                                 struct_pb2.Value(string_value="Jane"),
                                 struct_pb2.Value(string_value="Doe"),
                             ]
                         )
+                    ),                    
+                    spanner_database_admin.SplitPoints.Key(
+                        key_parts=struct_pb2.ListValue(
+                            values=[struct_pb2.Value(string_value="38")]
+                        )
                     ),
+
                 ],
             ),
         ],
