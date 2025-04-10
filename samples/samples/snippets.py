@@ -3545,41 +3545,51 @@ def add_split_points(instance_id, database_id):
                 table="Singers",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue().values.add(struct_pb2.Value(string_value="42"))
+                        key_parts=struct_pb2.ListValue(
+                            values=[struct_pb2.Value(string_value="42")]
+                        )
                     )
-                ]
+                ],
             ),
             spanner_database_admin.SplitPoints(
                 index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue().values.extend([
-                                                struct_pb2.Value(string_value="John"),
-                                                struct_pb2.Value(string_value="Doe")
-                                    ])
+                        key_parts=struct_pb2.ListValue(
+                            values=[
+                                struct_pb2.Value(string_value="John"),
+                                struct_pb2.Value(string_value="Doe"),
+                            ]
+                        )
                     )
-                ]
+                ],
             ),
             spanner_database_admin.SplitPoints(
                 index="SingersByFirstLastName",
                 keys=[
                     spanner_database_admin.SplitPoints.Key(
-                        key_parts=struct_pb2.ListValue().values.add(struct_pb2.Value(string_value="38"))
+                        key_parts=struct_pb2.ListValue(
+                            values=[struct_pb2.Value(string_value="38")]
+                        )
                     ),
                     spanner_database_admin.SplitPoints.Key(
-                         key_parts=struct_pb2.ListValue().values.extend([
-                                                struct_pb2.Value(string_value="Jane"),
-                                                struct_pb2.Value(string_value="Doe")
-                                    ])
-                    )
-                ]
-            )
-        ]
+                        key_parts=struct_pb2.ListValue(
+                            values=[
+                                struct_pb2.Value(string_value="Jane"),
+                                struct_pb2.Value(string_value="Doe"),
+                            ]
+                        )
+                    ),
+                ],
+            ),
+        ],
     )
 
     operation = database_admin_api.add_split_points(addSplitPointRequest)
 
     print("Added split points.")
+
+
 # [END spanner_database_add_split_points]
 
 
