@@ -85,6 +85,7 @@ for library in get_staging_dirs(spanner_default_version, "spanner"):
         excludes=[
             "google/cloud/spanner/**",
             "*.*",
+            "noxfile.py",
             "docs/index.rst",
             "google/cloud/spanner_v1/__init__.py",
             "**/gapic_version.py",
@@ -102,7 +103,7 @@ for library in get_staging_dirs(
     )
     s.move(
         library,
-        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "**/gapic_version.py", "testing/constraints-3.7.txt",],
+        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
     )
 
 for library in get_staging_dirs(
@@ -115,7 +116,7 @@ for library in get_staging_dirs(
     )
     s.move(
         library,
-        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "**/gapic_version.py", "testing/constraints-3.7.txt",],
+        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
     )
 
 s.remove_staging_dirs()
