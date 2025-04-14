@@ -35,6 +35,7 @@ LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 DEFAULT_PYTHON_VERSION = "3.8"
 
 DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION = "3.12"
+DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION = "3.12"
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.7",
     "3.8",
@@ -193,6 +194,30 @@ def install_unittest_dependencies(session, *constraints):
         *session.posargs,
     )
 
+    # XXX Work around Kokoro image's older pip, which borks the OT install.
+    session.run("pip", "install", "--upgrade", "pip")
+    constraints_path = str(
+        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
+    )
+    session.install("-e", ".[tracing]", "-c", constraints_path)
+    # XXX: Dump installed versions to debug OT issue
+    session.run("pip", "list")
+
+    # Run py.test against the unit tests with OpenTelemetry.
+    session.run(
+        "py.test",
+        "--quiet",
+        "--cov=google.cloud.spanner",
+        "--cov=google.cloud",
+        "--cov=tests.unit",
+        "--cov-append",
+        "--cov-config=.coveragerc",
+        "--cov-report=",
+        "--cov-fail-under=0",
+        os.path.join("tests", "unit"),
+        *session.posargs,
+    )
+
 
 @nox.session(python=UNIT_TEST_PYTHON_VERSIONS)
 @nox.parametrize(
@@ -232,6 +257,34 @@ def unit(session, protobuf_implementation):
         env={
             "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
         },
+    )
+
+
+@nox.session(python=DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION)
+def mockserver(session):
+    # Install all test dependencies, then install this package in-place.
+
+    constraints_path = str(
+        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
+    )
+    # install_unittest_dependencies(session, "-c", constraints_path)
+    standard_deps = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_DEPENDENCIES
+    session.install(*standard_deps, "-c", constraints_path)
+    session.install("-e", ".", "-c", constraints_path)
+
+    # Run py.test against the mockserver tests.
+    session.run(
+        "py.test",
+        "--quiet",
+        f"--junitxml=unit_{session.python}_sponge_log.xml",
+        "--cov=google",
+        "--cov=tests/unit",
+        "--cov-append",
+        "--cov-config=.coveragerc",
+        "--cov-report=",
+        "--cov-fail-under=0",
+        os.path.join("tests", "mockserver_tests"),
+        *session.posargs,
     )
 
 
@@ -327,6 +380,17 @@ def system(session, protobuf_implementation, database_dialect):
     if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
         session.skip("Postgresql is not supported by Emulator yet.")
 
+    # Sanity check: Only run tests if the environment variable is set.
+    if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "") and not os.environ.get(
+        "SPANNER_EMULATOR_HOST", ""
+    ):
+        session.skip(
+            "Credentials or emulator host must be set via environment variable"
+        )
+    # If POSTGRESQL tests and Emulator, skip the tests
+    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
+        session.skip("Postgresql is not supported by Emulator yet.")
+
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
         session.install("pyopenssl")
@@ -338,6 +402,12 @@ def system(session, protobuf_implementation, database_dialect):
         session.skip("System tests were not found")
 
     install_systemtest_dependencies(session, "-c", constraints_path)
+
+    # TODO(https://github.com/googleapis/synthtool/issues/1976):
+    # Remove the 'cpp' implementation once support for Protobuf 3.x is dropped.
+    # The 'cpp' implementation requires Protobuf<4.
+    if protobuf_implementation == "cpp":
+        session.install("protobuf<4")
 
     # TODO(https://github.com/googleapis/synthtool/issues/1976):
     # Remove the 'cpp' implementation once support for Protobuf 3.x is dropped.
