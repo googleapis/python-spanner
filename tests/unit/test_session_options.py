@@ -87,7 +87,7 @@ class TestSessionOptions(TestCase):
 
         os.environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
 
-        true_values = ["1", "true", "True", "TRUE"]
+        true_values = ["1", " 1", " 1", "true", "True", "TRUE", " true "]
         for value in true_values:
             os.environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED] = value
             self.assertTrue(session_options.use_multiplexed_for_read_only())
