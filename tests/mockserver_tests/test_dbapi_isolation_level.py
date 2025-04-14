@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from google.api_core.exceptions import Unknown
 from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_v1 import (
     BeginTransactionRequest,
@@ -141,3 +142,9 @@ class TestDbapiIsolationLevel(MockServerTestBase):
             self.assertEqual(1, len(begin_requests))
             self.assertEqual(begin_requests[0].options.isolation_level, level)
             MockServerTestBase.spanner_service.clear_requests()
+
+    def test_begin_invalid_isolation_level(self):
+        connection = Connection(self.instance, self.database)
+        with connection.cursor() as cursor:
+            with self.assertRaises(Unknown):
+                cursor.execute("begin isolation level does_not_exist")
