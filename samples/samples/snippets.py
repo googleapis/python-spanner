@@ -3205,6 +3205,7 @@ def create_instance_with_autoscaling_config(instance_id):
                 "sample_name": "snippets-create_instance_with_autoscaling_config",
                 "created": str(int(time.time())),
             },
+            edition=spanner_instance_admin.Instance.Edition.ENTERPRISE,  # Optional
         ),
     )
 
