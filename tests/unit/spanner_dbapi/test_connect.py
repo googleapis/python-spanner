@@ -59,7 +59,9 @@ class Test_connect(unittest.TestCase):
         )
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=None)
+        instance.database.assert_called_once_with(
+            DATABASE, pool=None, database_role=None
+        )
         # Datbase constructs its own pool
         self.assertIsNotNone(connection.database._pool)
         self.assertTrue(connection.instance._client.route_to_leader_enabled)
@@ -75,6 +77,7 @@ class Test_connect(unittest.TestCase):
         client = mock_client.return_value
         instance = client.instance.return_value
         database = instance.database.return_value
+        role = "some_role"
 
         connection = connect(
             INSTANCE,
@@ -82,6 +85,7 @@ class Test_connect(unittest.TestCase):
             PROJECT,
             credentials,
             pool=pool,
+            database_role=role,
             user_agent=USER_AGENT,
             route_to_leader_enabled=False,
         )
@@ -102,7 +106,9 @@ class Test_connect(unittest.TestCase):
         client.instance.assert_called_once_with(INSTANCE)
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=pool)
+        instance.database.assert_called_once_with(
+            DATABASE, pool=pool, database_role=role
+        )
 
     def test_w_credential_file_path(self, mock_client):
         from google.cloud.spanner_dbapi import connect

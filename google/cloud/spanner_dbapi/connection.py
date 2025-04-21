@@ -720,6 +720,7 @@ def connect(
     user_agent=None,
     client=None,
     route_to_leader_enabled=True,
+    database_role=None,
     **kwargs,
 ):
     """Creates a connection to a Google Cloud Spanner database.
@@ -763,6 +764,10 @@ def connect(
         disable leader aware routing. Disabling leader aware routing would
         route all requests in RW/PDML transactions to the closest region.
 
+    :type database_role: str
+    :param database_role: (Optional) The database role to connect as when using
+        fine-grained access controls.
+
     **kwargs: Initial value for connection variables.
 
 
@@ -797,7 +802,9 @@ def connect(
     instance = client.instance(instance_id)
     database = None
     if database_id:
-        database = instance.database(database_id, pool=pool)
+        database = instance.database(
+            database_id, pool=pool, database_role=database_role
+        )
     conn = Connection(instance, database)
     if pool is not None:
         conn._own_pool = False
