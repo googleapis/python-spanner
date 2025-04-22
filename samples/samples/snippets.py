@@ -91,7 +91,7 @@ def update_instance(instance_id):
             labels={
                 "sample_name": "snippets-update_instance-explicit",
             },
-            edition=spanner_instance_admin.Instance.Edition.ENTERPRISE,  # Optional
+            edition=spanner_instance_admin.Instance.Edition.STANDARD,  # Optional
         ),
         field_mask=field_mask_pb2.FieldMask(paths=["labels", "edition"]),
     )
