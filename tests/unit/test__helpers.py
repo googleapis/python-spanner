@@ -1221,6 +1221,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_full_interval_with_all_components(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "P1Y2M3DT12H12M6.789000123S"
         expected_months = 14
         expected_days = 3
@@ -1647,6 +1648,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_interval_with_years_months(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "P1Y2M"
         expected_months = 14
         expected_days = 0
@@ -1659,6 +1661,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_interval_with_days(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "P3D"
         expected_months = 0
         expected_days = 3
@@ -1671,6 +1674,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_interval_with_time(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "PT12H12M6.789000123S"
         expected_months = 0
         expected_days = 0
@@ -1683,6 +1687,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_interval_with_negative_components(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "P-1Y-2M-3DT-12H-12M-6.789000123S"
         expected_months = -14
         expected_days = -3
@@ -1695,6 +1700,7 @@ class Test_parse_interval(unittest.TestCase):
 
     def test_interval_with_zero_components(self):
         from google.protobuf.struct_pb2 import Value
+
         input_str = "P0Y0M0DT0H0M0S"
         expected_months = 0
         expected_days = 0
