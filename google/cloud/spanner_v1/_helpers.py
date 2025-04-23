@@ -343,6 +343,7 @@ class Interval:
 
         return cls(months=total_months, days=days, nanos=nanos)
 
+
 def _make_value_pb(value):
     """Helper for :func:`_make_list_value_pbs`.
 

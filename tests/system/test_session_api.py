@@ -2912,9 +2912,9 @@ def _check_batch_status(status_code, expected=code_pb2.OK):
 def get_param_info(param_names, database_dialect):
     keys = [f"p{i + 1}" for i in range(len(param_names))]
     if database_dialect == DatabaseDialect.POSTGRESQL:
-        placeholders = [f"${i+1}" for i in range(len(param_names))]
+        placeholders = [f"${i + 1}" for i in range(len(param_names))]
     else:
-        placeholders = [f"@p{i+1}" for i in range(len(param_names))]
+        placeholders = [f"@p{i + 1}" for i in range(len(param_names))]
     return keys, placeholders
 
 
@@ -2996,10 +2996,9 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         results = list(
             transaction.execute_sql(
                 f"""
-                SELECT expiry_within_month, interval_array_len 
-                FROM IntervalTable 
-                WHERE key = {placeholders[0]}
-                """,
+                SELECT expiry_within_month, interval_array_len
+                FROM IntervalTable
+                WHERE key = {placeholders[0]}""",
                 params={keys[0]: "test1"},
                 param_types={keys[0]: spanner_v1.param_types.STRING},
             )
@@ -3077,7 +3076,6 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         assert intervals[2].nanos == -14706000000000
 
         assert intervals[3] is None
-
 
     def test_interval_array_cast(transaction):
         results = list(

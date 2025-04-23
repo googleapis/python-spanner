@@ -1046,156 +1046,117 @@ class Test_interval(unittest.TestCase):
 
     def test_basic_interval(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=14, days=3, nanos=43926789000123)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P1Y2M3DT12H12M6.789000123S")
 
     def test_months_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=10, days=0, nanos=0)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P10M")
 
     def test_days_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=10, nanos=0)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P10D")
 
     def test_seconds_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=0, nanos=10000000000)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "PT10S")
 
     def test_milliseconds_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=0, nanos=10000000)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "PT0.010S")
 
     def test_microseconds_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=0, nanos=10000)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "PT0.000010S")
 
     def test_nanoseconds_only(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=0, nanos=10)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "PT0.000000010S")
 
     def test_mixed_components(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=10, days=20, nanos=1030)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P10M20DT0.000001030S")
 
     def test_mixed_components_with_negative_nanos(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=10, days=20, nanos=-1030)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P10M20DT-0.000001030S")
 
     def test_negative_interval(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=-14, days=-3, nanos=-43926789000123)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P-1Y-2M-3DT-12H-12M-6.789000123S")
 
     def test_mixed_signs(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=10, days=3, nanos=-41401234000000)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P10M3DT-11H-30M-1.234S")
 
     def test_large_values(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=25, days=15, nanos=316223999999999999999)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P2Y1M15DT87839999H59M59.999999999S")
 
     def test_zero_interval(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import Interval
 
         interval = Interval(months=0, days=0, nanos=0)
-        field_type = Type(code=TypeCode.INTERVAL)
         value_pb = self._callFUT(interval)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P0Y")
