@@ -2973,7 +2973,9 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         )
 
     def insert_test2(transaction):
-        keys, placeholders = get_param_info(["key", "create_time", "expiry_time"], database_dialect)
+        keys, placeholders = get_param_info(
+            ["key", "create_time", "expiry_time"], database_dialect
+        )
         transaction.execute_update(
             f"""
             INSERT INTO IntervalTable (key, create_time, expiry_time)
