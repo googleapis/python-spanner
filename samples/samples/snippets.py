@@ -1578,6 +1578,7 @@ def insert_data_with_dml(instance_id, database_id):
     database.run_in_transaction(insert_singers)
     # [END spanner_dml_standard_insert]
 
+
 # [START spanner_get_commit_stats]
 def log_commit_stats(instance_id, database_id):
     """Inserts sample data using DML and displays the commit statistics."""
