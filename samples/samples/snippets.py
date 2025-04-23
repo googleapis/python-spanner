@@ -33,6 +33,7 @@ from google.cloud.spanner_admin_instance_v1.types import spanner_instance_admin
 from google.cloud.spanner_v1 import DirectedReadOptions, param_types
 from google.cloud.spanner_v1.data_types import JsonObject
 from google.protobuf import field_mask_pb2  # type: ignore
+from google.cloud.spanner_v1.transaction import Transaction
 
 from testdata import singer_pb2
 
@@ -1576,7 +1577,6 @@ def insert_data_with_dml(instance_id, database_id):
 
     database.run_in_transaction(insert_singers)
     # [END spanner_dml_standard_insert]
-
 
 # [START spanner_get_commit_stats]
 def log_commit_stats(instance_id, database_id):
@@ -3508,6 +3508,32 @@ def query_data_with_proto_types_parameter(instance_id, database_id):
             )
     # [END spanner_query_with_proto_types_parameter]
 
+def dml_last_statement_option(instance_id, database_id):
+    """Inserts and updates using DML where the update set the last statement option."""
+    # [START spanner_dml_last_statement]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    def insert_and_update_singers(transaction):
+        insert_row_ct = transaction.execute_update(
+            "INSERT INTO Singers (SingerId, FirstName, LastName) "
+            " VALUES (54213, 'John', 'Do')"
+        )
+
+        print("{} record(s) inserted.".format(insert_row_ct))
+
+        update_row_ct = transaction.execute_update(
+            "UPDATE Singers SET LastName = 'Doe' WHERE SingerId = 54213",
+            last_statement=True)
+
+        print("{} record(s) updated.".format(update_row_ct))
+
+    database.run_in_transaction(insert_and_update_singers)
+    # [END  spanner_dml_last_statement]
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
@@ -3666,6 +3692,7 @@ if __name__ == "__main__":  # noqa: C901
         "query_data_with_proto_types_parameter",
         help=query_data_with_proto_types_parameter.__doc__,
     )
+    subparsers.add_parser("dml_last_statement_option", help=dml_last_statement_option.__doc__)
 
     args = parser.parse_args()
 
@@ -3815,3 +3842,5 @@ if __name__ == "__main__":  # noqa: C901
         update_data_with_proto_types_with_dml(args.instance_id, args.database_id)
     elif args.command == "query_data_with_proto_types_parameter":
         query_data_with_proto_types_parameter(args.instance_id, args.database_id)
+    elif args.command == "dml_last_statement_option":
+        dml_last_statement_option(args.instance_id, args.database_id)
