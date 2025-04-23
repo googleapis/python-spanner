@@ -2919,7 +2919,7 @@ def get_param_info(param_names, database_dialect):
 
 
 def test_interval(sessions_database, database_dialect, not_emulator):
-    from google.cloud.spanner_v1._helpers import Interval
+    from google.cloud.spanner_v1 import Interval
 
     def setup_table():
         if database_dialect == DatabaseDialect.POSTGRESQL:
