@@ -2955,7 +2955,7 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         keys, placeholders = get_param_info(
             ["key", "create_time", "expiry_time"], database_dialect
         )
-        transaction.execute_sql(
+        transaction.execute_update(
             f"""
             INSERT INTO IntervalTable (key, create_time, expiry_time)
             VALUES ({placeholders[0]}, {placeholders[1]}, {placeholders[2]})
@@ -2963,6 +2963,25 @@ def test_interval(sessions_database, database_dialect, not_emulator):
             params={
                 keys[0]: "test1",
                 keys[1]: datetime.datetime(2004, 11, 30, 4, 53, 54, tzinfo=UTC),
+                keys[2]: datetime.datetime(2004, 12, 15, 4, 53, 54, tzinfo=UTC),
+            },
+            param_types={
+                keys[0]: spanner_v1.param_types.STRING,
+                keys[1]: spanner_v1.param_types.TIMESTAMP,
+                keys[2]: spanner_v1.param_types.TIMESTAMP,
+            },
+        )
+
+    def insert_test2(transaction):
+        keys, placeholders = get_param_info(["key", "create_time", "expiry_time"], database_dialect)
+        transaction.execute_update(
+            f"""
+            INSERT INTO IntervalTable (key, create_time, expiry_time)
+            VALUES ({placeholders[0]}, {placeholders[1]}, {placeholders[2]})
+            """,
+            params={
+                keys[0]: "test2",
+                keys[1]: datetime.datetime(2004, 8, 30, 4, 53, 54, tzinfo=UTC),
                 keys[2]: datetime.datetime(2004, 12, 15, 4, 53, 54, tzinfo=UTC),
             },
             param_types={
@@ -3003,34 +3022,13 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         assert interval.days == 1
         assert interval.nanos == 0
 
-    def insert_test2(transaction):
-        keys, placeholders = get_param_info(
-            ["key", "create_time", "expiry_time"], database_dialect
-        )
-        transaction.execute_sql(
-            f"""
-            INSERT INTO IntervalTable (key, create_time, expiry_time)
-            VALUES ({placeholders[0]}, {placeholders[1]}, {placeholders[2]})
-            """,
-            params={
-                keys[0]: "test2",
-                keys[1]: datetime.datetime(2004, 8, 30, 4, 53, 54, tzinfo=UTC),
-                keys[2]: datetime.datetime(2004, 12, 15, 4, 53, 54, tzinfo=UTC),
-            },
-            param_types={
-                keys[0]: spanner_v1.param_types.STRING,
-                keys[1]: spanner_v1.param_types.TIMESTAMP,
-                keys[2]: spanner_v1.param_types.TIMESTAMP,
-            },
-        )
-
     def test_interval_timestamp_comparison(transaction):
         timestamp = "2004-11-30T10:23:54+0530"
         keys, placeholders = get_param_info(["interval"], database_dialect)
         if database_dialect == DatabaseDialect.POSTGRESQL:
-            query = f"SELECT COUNT(*) FROM IntervalTable WHERE create_time < TIMESTAMPTZ %s - {placeholders[0]}"
+            query = f"SELECT COUNT(*) FROM IntervalTable WHERE create_time < TIMESTAMPTZ '%s' - {placeholders[0]}"
         else:
-            query = f"SELECT COUNT(*) FROM IntervalTable WHERE create_time < TIMESTAMP(%s) - {placeholders[0]}"
+            query = f"SELECT COUNT(*) FROM IntervalTable WHERE create_time < TIMESTAMP('%s') - {placeholders[0]}"
 
         results = list(
             transaction.execute_sql(
@@ -3042,12 +3040,12 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         assert len(results) == 1
         assert results[0][0] == 1
 
-    def test_interval_array_param(transaction, database_dialect):
+    def test_interval_array_param(transaction):
         intervals = [
             Interval(months=14, days=3, nanos=14706000000000),
             Interval(),
             Interval(months=-14, days=-3, nanos=-14706000000000),
-            Interval(),
+            None,
         ]
         keys, placeholders = get_param_info(["intervals"], database_dialect)
         array_type = spanner_v1.Type(
@@ -3066,26 +3064,20 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         intervals = row[0]
         assert len(intervals) == 4
 
-        # Check first interval
-        assert intervals[0].valid is True
-        assert intervals[0].interval.months == 14
-        assert intervals[0].interval.days == 3
-        assert intervals[0].interval.nanos == 14706000000000
+        assert intervals[0].months == 14
+        assert intervals[0].days == 3
+        assert intervals[0].nanos == 14706000000000
 
-        assert intervals[1].valid is True
-        assert intervals[1].interval.months == 0
-        assert intervals[1].interval.days == 0
-        assert intervals[1].interval.nanos == 0
+        assert intervals[1].months == 0
+        assert intervals[1].days == 0
+        assert intervals[1].nanos == 0
 
-        assert intervals[2].valid is True
-        assert intervals[2].interval.months == -14
-        assert intervals[2].interval.days == -3
-        assert intervals[2].interval.nanos == -14706000000000
+        assert intervals[2].months == -14
+        assert intervals[2].days == -3
+        assert intervals[2].nanos == -14706000000000
 
-        assert intervals[3].valid is True
-        assert intervals[3].interval.months == 0
-        assert intervals[3].interval.days == 0
-        assert intervals[3].interval.nanos == 0
+        assert intervals[3] is None
+
 
     def test_interval_array_cast(transaction):
         results = list(
@@ -3104,17 +3096,15 @@ def test_interval(sessions_database, database_dialect, not_emulator):
         intervals = row[0]
         assert len(intervals) == 3
 
-        assert intervals[0].valid is True
-        assert intervals[0].interval.months == 14  # 1 year + 2 months
-        assert intervals[0].interval.days == 3
-        assert intervals[0].interval.nanos == 14706789123000  # 4h5m6.789123s in nanos
+        assert intervals[0].months == 14  # 1 year + 2 months
+        assert intervals[0].days == 3
+        assert intervals[0].nanos == 14706789123000  # 4h5m6.789123s in nanos
 
-        assert intervals[1].valid is False
+        assert intervals[1] is None
 
-        assert intervals[2].valid is True
-        assert intervals[2].interval.months == -14
-        assert intervals[2].interval.days == -3
-        assert intervals[2].interval.nanos == -14706789123000
+        assert intervals[2].months == -14
+        assert intervals[2].days == -3
+        assert intervals[2].nanos == -14706789123000
 
     setup_table()
     sessions_database.run_in_transaction(insert_test1)

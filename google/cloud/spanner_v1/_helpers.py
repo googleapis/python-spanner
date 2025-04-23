@@ -343,23 +343,6 @@ class Interval:
 
         return cls(months=total_months, days=days, nanos=nanos)
 
-
-@dataclass
-class NullInterval:
-    """Represents a Spanner INTERVAL that may be NULL."""
-
-    interval: Interval
-    valid: bool = True
-
-    def is_null(self) -> bool:
-        return not self.valid
-
-    def __str__(self) -> str:
-        if not self.valid:
-            return "NULL"
-        return str(self.interval)
-
-
 def _make_value_pb(value):
     """Helper for :func:`_make_list_value_pbs`.
 
@@ -417,10 +400,6 @@ def _make_value_pb(value):
             return Value(string_value=base64.b64encode(value))
     if isinstance(value, Interval):
         return Value(string_value=str(value))
-    if isinstance(value, NullInterval):
-        if value.is_null():
-            return Value(null_value="NULL_VALUE")
-        return Value(string_value=str(value.interval))
 
     raise ValueError("Unknown type: %s" % (value,))
 

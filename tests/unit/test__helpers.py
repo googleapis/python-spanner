@@ -1200,18 +1200,6 @@ class Test_interval(unittest.TestCase):
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "P0Y")
 
-    def test_null_interval(self):
-        from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1._helpers import NullInterval, Interval
-
-        interval = NullInterval(interval=Interval(), valid=False)
-        field_type = Type(code=TypeCode.INTERVAL)
-        value_pb = self._callFUT(interval)
-        self.assertIsInstance(value_pb, Value)
-        self.assertTrue(value_pb.HasField("null_value"))
-
 
 class Test_parse_interval(unittest.TestCase):
     def _callFUT(self, *args, **kw):
