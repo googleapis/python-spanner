@@ -1010,6 +1010,13 @@ def test_query_data_with_proto_types_parameter(
     out, _ = capsys.readouterr()
     assert "SingerId: 2, SingerInfo: singer_id: 2" in out
 
+
+@pytest.mark.dependency(name="add_split_points", depends=["insert_data"])
+def test_add_split_points(capsys, instance_id, sample_database):
+    snippets.add_split_points(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "Added split points." in out
+
 def test_dml_last_statement_option(capsys, instance_id, sample_database):
     snippets.dml_last_statement_option(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
