@@ -152,12 +152,16 @@ def instance_config(instance_configs):
         raise ValueError("No instance configs found.")
 
     import random
+
     us_configs = [
-        config for config in instance_configs 
+        config
+        for config in instance_configs
         if config.display_name in ["us-south1", "us-east4", "us-west1"]
     ]
-    
-    config = random.choice(us_configs) if us_configs else random.choice(instance_configs)
+
+    config = (
+        random.choice(us_configs) if us_configs else random.choice(instance_configs)
+    )
     yield config
 
 
