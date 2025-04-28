@@ -117,6 +117,7 @@ def scrub_instance_ignore_not_found(to_scrub):
 
     for database_pb in to_scrub.list_databases():
         db = to_scrub.database(database_pb.name.split("/")[-1])
+        db.reload()
         try:
             if db.enable_drop_protection:
                 db.enable_drop_protection = False
