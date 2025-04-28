@@ -156,7 +156,7 @@ def instance_config(instance_configs):
     us_configs = [
         config
         for config in instance_configs
-        if config.display_name in ["us-south1", "us-east4", "us-west1"]
+        if config.display_name in ["us-south1", "us-east4"]
     ]
 
     config = (
