@@ -11,23 +11,35 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import datetime
 
-
-import mock
-
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1 import Type
-from google.cloud.spanner_v1 import TypeCode
 from google.api_core.retry import Retry
 from google.api_core import gapic_v1
 
+from google.cloud.spanner_v1 import (
+    CommitRequest,
+    CommitResponse,
+    RequestOptions,
+    TransactionOptions,
+    Type,
+    TypeCode,
+    ResultSetStats,
+)
+
+from google.cloud.spanner_v1.transaction import Transaction
+
+from tests._builders import (
+    build_precommit_token_pb,
+    build_result_set_metadata_pb,
+    build_result_set_pb,
+    build_transaction,
+    build_transaction_pb,
+)
 from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
     LIB_VERSION,
     OpenTelemetryBase,
     StatusCode,
-    enrich_with_otel_scope,
 )
 
 TABLE_NAME = "citizens"
@@ -47,225 +59,220 @@ VALUES ("Phred", "Phlyntstone", @age)
 PARAMS = {"age": 30}
 PARAM_TYPES = {"age": Type(code=TypeCode.INT64)}
 
+TRANSACTION_ID = b"transaction-id"
+
+PRECOMMIT_TOKEN_0 = build_precommit_token_pb(precommit_token=b"0", seq_num=0)
+PRECOMMIT_TOKEN_1 = build_precommit_token_pb(precommit_token=b"1", seq_num=1)
+PRECOMMIT_TOKEN_2 = build_precommit_token_pb(precommit_token=b"2", seq_num=2)
+
+TRANSACTION_TAG = "transaction-tag"
+
 
 class TestTransaction(OpenTelemetryBase):
-    PROJECT_ID = "project-id"
-    INSTANCE_ID = "instance-id"
-    INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
-    DATABASE_ID = "database-id"
-    DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
-    SESSION_ID = "session-id"
-    SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
-    TRANSACTION_ID = b"DEADBEEF"
-    TRANSACTION_TAG = "transaction-tag"
-
-    BASE_ATTRIBUTES = {
-        "db.type": "spanner",
-        "db.url": "spanner.googleapis.com",
-        "db.instance": "testing",
-        "net.host.name": "spanner.googleapis.com",
-        "gcp.client.service": "spanner",
-        "gcp.client.version": LIB_VERSION,
-        "gcp.client.repo": "googleapis/python-spanner",
-    }
-    enrich_with_otel_scope(BASE_ATTRIBUTES)
-
-    def _getTargetClass(self):
-        from google.cloud.spanner_v1.transaction import Transaction
-
-        return Transaction
-
-    def _make_one(self, session, *args, **kwargs):
-        transaction = self._getTargetClass()(session, *args, **kwargs)
-        session._transaction = transaction
-        return transaction
-
-    def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
-        return mock.create_autospec(SpannerClient, instance=True)
-
     def test_ctor_session_w_existing_txn(self):
-        session = _Session()
-        session._transaction = object()
+        transaction = build_transaction()
         with self.assertRaises(ValueError):
-            self._make_one(session)
+            Transaction(transaction._session)
 
     def test_ctor_defaults(self):
-        session = _Session()
-        transaction = self._make_one(session)
+        from tests._builders import build_session
+
+        session = build_session()
+        transaction = Transaction(session=session)
+
         self.assertIs(transaction._session, session)
         self.assertIsNone(transaction._transaction_id)
         self.assertIsNone(transaction.committed)
         self.assertFalse(transaction.rolled_back)
         self.assertTrue(transaction._multi_use)
-        self.assertEqual(transaction._execute_sql_count, 0)
+        self.assertEqual(transaction._execute_sql_request_count, 0)
 
     def test__check_state_already_committed(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.committed = object()
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.commit()
+
         with self.assertRaises(ValueError):
             transaction._check_state()
 
     def test__check_state_already_rolled_back(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.rolled_back = True
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.rollback()
+
         with self.assertRaises(ValueError):
             transaction._check_state()
 
     def test__check_state_ok(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+        transaction._check_state()  # does not raise
+
+        transaction.begin()
         transaction._check_state()  # does not raise
 
     def test__make_txn_selector(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+
+        begin_transaction = transaction._session._database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(id=TRANSACTION_ID)
+
+        transaction.begin()
+
         selector = transaction._make_txn_selector()
-        self.assertEqual(selector.id, self.TRANSACTION_ID)
+        self.assertEqual(selector.id, TRANSACTION_ID)
 
     def test_begin_already_begun(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+        transaction.begin()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.begin()
 
         self.assertNoSpans()
 
     def test_begin_already_rolled_back(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction.rolled_back = True
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.rollback()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.begin()
 
         self.assertNoSpans()
 
     def test_begin_already_committed(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction.committed = object()
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.commit()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.begin()
 
         self.assertNoSpans()
 
     def test_begin_w_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
+        transaction = build_transaction()
 
+        database = transaction._session._database
+        database.spanner_api.begin_transaction.side_effect = RuntimeError()
+
+        self.reset()
         with self.assertRaises(RuntimeError):
             transaction.begin()
 
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.begin",
             status=StatusCode.ERROR,
-            attributes=TestTransaction.BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
 
     def test_begin_ok(self):
-        from google.cloud.spanner_v1 import Transaction as TransactionPB
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
 
-        transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(
-            _begin_transaction_response=transaction_pb
-        )
-        session = _Session(database)
-        transaction = self._make_one(session)
+        api = database.spanner_api
+        begin_transaction = api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(id=TRANSACTION_ID)
 
-        txn_id = transaction.begin()
+        self.reset()
+        transaction_id = transaction.begin()
 
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(transaction._transaction_id, self.TRANSACTION_ID)
+        self.assertEqual(transaction_id, TRANSACTION_ID)
+        self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
+        self.assertIsNone(transaction._precommit_token)
 
-        session_id, txn_options, metadata = api._begun
-        self.assertEqual(session_id, session.name)
-        self.assertTrue(type(txn_options).pb(txn_options).HasField("read_write"))
-        self.assertEqual(
-            metadata,
-            [
+        begin_transaction.assert_called_once_with(
+            session=session.name,
+            options=TransactionOptions(read_write=TransactionOptions.ReadWrite()),
+            metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
             ],
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.Transaction.begin", attributes=TestTransaction.BASE_ATTRIBUTES
+            "CloudSpanner.Transaction.begin",
+            attributes=_build_base_attributes(database),
         )
 
     def test_begin_w_retry(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-        )
         from google.api_core.exceptions import InternalServerError
 
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = [
+        transaction = build_transaction()
+
+        api = transaction._session._database.spanner_api
+        begin_transaction = api.begin_transaction
+        begin_transaction.side_effect = [
             InternalServerError("Received unexpected EOS on DATA frame from server"),
-            TransactionPB(id=self.TRANSACTION_ID),
+            build_transaction_pb(id=TRANSACTION_ID),
         ]
 
-        session = _Session(database)
-        transaction = self._make_one(session)
+        transaction_id = transaction.begin()
+
+        self.assertEqual(begin_transaction.call_count, 2)
+        self.assertEqual(transaction_id, TRANSACTION_ID)
+        self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
+
+    def test_begin_w_precommit_token(self):
+        transaction = build_transaction()
+
+        api = transaction._session._database.spanner_api
+        api.begin_transaction.return_value = build_transaction_pb(
+            id=TRANSACTION_ID, precommit_token=PRECOMMIT_TOKEN_0
+        )
+
         transaction.begin()
 
-        self.assertEqual(api.begin_transaction.call_count, 2)
+        self.assertEqual(transaction._precommit_token, PRECOMMIT_TOKEN_0)
 
     def test_rollback_not_begun(self):
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        session = _Session(database)
-        transaction = self._make_one(session)
+        transaction = build_transaction()
 
+        self.reset()
         transaction.rollback()
         self.assertTrue(transaction.rolled_back)
 
         # Since there was no transaction to be rolled back, rollback rpc is not called.
+        api = transaction._session._database.spanner_api
         api.rollback.assert_not_called()
 
         self.assertNoSpans()
 
     def test_rollback_already_committed(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.committed = object()
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.commit()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.rollback()
 
         self.assertNoSpans()
 
     def test_rollback_already_rolled_back(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.rolled_back = True
+        transaction = build_transaction()
+        transaction.rollback()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.rollback()
 
         self.assertNoSpans()
 
     def test_rollback_w_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.rollback.side_effect = RuntimeError("other error")
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+
+        transaction.begin()
         transaction.insert(TABLE_NAME, COLUMNS, VALUES)
 
+        database = transaction._session._database
+        database.spanner_api.rollback.side_effect = RuntimeError()
+
+        self.reset()
         with self.assertRaises(RuntimeError):
             transaction.rollback()
 
@@ -274,31 +281,28 @@ class TestTransaction(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.rollback",
             status=StatusCode.ERROR,
-            attributes=TestTransaction.BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
 
     def test_rollback_ok(self):
-        from google.protobuf.empty_pb2 import Empty
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
+        api = database.spanner_api
 
-        empty_pb = Empty()
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(_rollback_response=empty_pb)
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction.begin()
         transaction.replace(TABLE_NAME, COLUMNS, VALUES)
 
+        self.reset()
         transaction.rollback()
 
         self.assertTrue(transaction.rolled_back)
         self.assertIsNone(session._transaction)
 
-        session_id, txn_id, metadata = api._rolled_back
-        self.assertEqual(session_id, session.name)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(
-            metadata,
-            [
+        api.rollback.assert_called_once_with(
+            session=session.name,
+            transaction_id=transaction._transaction_id,
+            metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
             ],
@@ -306,14 +310,13 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.rollback",
-            attributes=TestTransaction.BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
 
     def test_commit_not_begun(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        session = _Session(database)
-        transaction = self._make_one(session)
+        transaction = build_transaction()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.commit()
 
@@ -340,12 +343,11 @@ class TestTransaction(OpenTelemetryBase):
         assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_committed(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.committed = object()
+        transaction = build_transaction()
+        transaction.begin()
+        transaction.commit()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.commit()
 
@@ -372,12 +374,10 @@ class TestTransaction(OpenTelemetryBase):
         assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_rolled_back(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.rolled_back = True
+        transaction = build_transaction()
+        transaction.rollback()
+
+        self.reset()
         with self.assertRaises(ValueError):
             transaction.commit()
 
@@ -404,14 +404,15 @@ class TestTransaction(OpenTelemetryBase):
         assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_w_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.commit.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+
+        transaction.begin()
         transaction.replace(TABLE_NAME, COLUMNS, VALUES)
 
+        database = transaction._session._database
+        database.spanner_api.commit.side_effect = RuntimeError()
+
+        self.reset()
         with self.assertRaises(RuntimeError):
             transaction.commit()
 
@@ -420,7 +421,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.commit",
             status=StatusCode.ERROR,
-            attributes=dict(TestTransaction.BASE_ATTRIBUTES, num_mutations=1),
+            attributes=dict(_build_base_attributes(database), num_mutations=1),
         )
 
     def _commit_helper(
@@ -432,80 +433,89 @@ class TestTransaction(OpenTelemetryBase):
     ):
         import datetime
 
+        from google.cloud.spanner_v1 import CommitRequest
         from google.cloud.spanner_v1 import CommitResponse
         from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud._helpers import UTC
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
-        keys = [[0], [1], [2]]
-        keyset = KeySet(keys=keys)
+        # [A] Build transaction
+        # ---------------------
+
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
+        api = database.spanner_api
+
+        transaction.transaction_tag = TRANSACTION_TAG
+
+        # Build response
+        # --------------
+
+        now = datetime.datetime.now(tz=UTC)
+
+        # TODO - test retry where precommit token is returned
         response = CommitResponse(commit_timestamp=now)
         if return_commit_stats:
             response.commit_stats.mutation_count = 4
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(_commit_response=response)
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
+
+        commit = api.commit
+        commit.return_value = response
+
+        # [C] Execute commit
+        # ------------------
+
+        transaction.begin()
 
         if mutate:
+            keys = [[0], [1], [2]]
+            keyset = KeySet(keys=keys)
             transaction.delete(TABLE_NAME, keyset)
 
+        self.reset()
         transaction.commit(
             return_commit_stats=return_commit_stats,
             request_options=request_options,
             max_commit_delay=max_commit_delay_in,
         )
 
+        # [D] Verify results
+        # ------------------
+
         self.assertEqual(transaction.committed, now)
         self.assertIsNone(session._transaction)
 
-        (
-            session_id,
-            mutations,
-            txn_id,
-            actual_request_options,
-            max_commit_delay,
-            metadata,
-        ) = api._committed
-
         if request_options is None:
-            expected_request_options = RequestOptions(
-                transaction_tag=self.TRANSACTION_TAG
-            )
+            expected_request_options = RequestOptions(transaction_tag=TRANSACTION_TAG)
         elif type(request_options) is dict:
             expected_request_options = RequestOptions(request_options)
-            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.transaction_tag = TRANSACTION_TAG
             expected_request_options.request_tag = None
         else:
             expected_request_options = request_options
-            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.transaction_tag = TRANSACTION_TAG
             expected_request_options.request_tag = None
 
-        self.assertEqual(max_commit_delay_in, max_commit_delay)
-        self.assertEqual(session_id, session.name)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(mutations, transaction._mutations)
-        self.assertEqual(
-            metadata,
-            [
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-            ],
+        expected_request = CommitRequest(
+            session=session.name,
+            transaction_id=transaction._transaction_id,
+            mutations=transaction._mutations,
+            return_commit_stats=return_commit_stats,
+            max_commit_delay=max_commit_delay_in,
+            request_options=expected_request_options,
+            precommit_token=transaction._precommit_token,
         )
-        self.assertEqual(actual_request_options, expected_request_options)
+        expected_metadata = [
+            ("google-cloud-resource-prefix", database.name),
+            ("x-goog-spanner-route-to-leader", "true"),
+        ]
+
+        commit.assert_called_once_with(
+            request=expected_request,
+            metadata=expected_metadata,
+        )
 
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)
-
-        self.assertSpanAttributes(
-            "CloudSpanner.Transaction.commit",
-            attributes=dict(
-                TestTransaction.BASE_ATTRIBUTES,
-                num_mutations=len(transaction._mutations),
-            ),
-        )
 
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
@@ -565,9 +575,7 @@ class TestTransaction(OpenTelemetryBase):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
-        session = _Session()
-        transaction = self._make_one(session)
-
+        transaction = build_transaction()
         params_pb = transaction._make_params_pb(PARAMS, PARAM_TYPES)
 
         expected_params = Struct(
@@ -576,13 +584,13 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(params_pb, expected_params)
 
     def test_execute_update_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.execute_sql.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+        transaction.begin()
 
+        api = transaction._session._database.spanner_api
+        api.execute_sql.side_effect = RuntimeError()
+
+        self.reset()
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
 
@@ -593,10 +601,11 @@ class TestTransaction(OpenTelemetryBase):
         request_options=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        begin=True,
+        use_multiplexed=False,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
-            ResultSet,
             ResultSetStats,
         )
         from google.cloud.spanner_v1 import TransactionSelector
@@ -606,22 +615,47 @@ class TestTransaction(OpenTelemetryBase):
         )
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
+        # [A] Build transaction
+        # ---------------------
+
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
+        api = database.spanner_api
+
+        transaction.transaction_tag = TRANSACTION_TAG
+        transaction._execute_sql_request_count = count
+
+        if begin:
+            transaction.begin()
+
+        # [B] Build results
+        # -----------------
+
+        # If the transaction had not already begun, the first result set will include
+        # metadata with information about the transaction. Precommit tokens will be
+        # included in the result sets if the transaction is on a multiplexed session.
+        transaction_id = TRANSACTION_ID if not begin else None
+        metadata_pb = build_result_set_metadata_pb(transaction={"id": transaction_id})
+        precommit_token_pb = PRECOMMIT_TOKEN_0 if use_multiplexed else None
+
+        api.execute_sql.return_value = build_result_set_pb(
+            stats=ResultSetStats(row_count_exact=1),
+            metadata=metadata_pb,
+            precommit_token=precommit_token_pb,
+        )
+
+        # [C] Execute SQL
+        # ---------------
+
         MODE = 2  # PROFILE
-        stats_pb = ResultSetStats(row_count_exact=1)
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        api.execute_sql.return_value = ResultSet(stats=stats_pb)
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
-        transaction._execute_sql_count = count
 
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
+        self.reset()
         row_count = transaction.execute_update(
             DML_QUERY_WITH_PARAM,
             PARAMS,
@@ -633,9 +667,19 @@ class TestTransaction(OpenTelemetryBase):
             timeout=timeout,
         )
 
+        # [D] Verify results
+        # ------------------
+
         self.assertEqual(row_count, 1)
 
-        expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
+        expected_transaction_selector_pb = (
+            TransactionSelector(id=transaction._transaction_id)
+            if begin
+            else TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
+        )
+
         expected_params = Struct(
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
         )
@@ -646,12 +690,12 @@ class TestTransaction(OpenTelemetryBase):
                 expected_query_options, query_options
             )
         expected_request_options = request_options
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        expected_request_options.transaction_tag = TRANSACTION_TAG
 
         expected_request = ExecuteSqlRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             sql=DML_QUERY_WITH_PARAM,
-            transaction=expected_transaction,
+            transaction=expected_transaction_selector_pb,
             params=expected_params,
             param_types=PARAM_TYPES,
             query_mode=MODE,
@@ -669,8 +713,8 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
-        self.assertEqual(transaction._execute_sql_count, count + 1)
-        want_span_attributes = dict(TestTransaction.BASE_ATTRIBUTES)
+        self.assertEqual(transaction._execute_sql_request_count, count + 1)
+        want_span_attributes = dict(_build_base_attributes(database))
         want_span_attributes["db.statement"] = DML_QUERY_WITH_PARAM
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.execute_update",
@@ -678,8 +722,14 @@ class TestTransaction(OpenTelemetryBase):
             attributes=want_span_attributes,
         )
 
-    def test_execute_update_new_transaction(self):
-        self._execute_update_helper()
+        if not begin:
+            self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
+
+        if use_multiplexed:
+            self.assertEqual(transaction._precommit_token, PRECOMMIT_TOKEN_0)
+
+    def test_execute_update_wo_begin(self):
+        self._execute_update_helper(begin=False)
 
     def test_execute_update_w_request_tag_success(self):
         request_options = RequestOptions(
@@ -722,17 +772,15 @@ class TestTransaction(OpenTelemetryBase):
         self._execute_update_helper(retry=Retry(deadline=60), timeout=2.0)
 
     def test_execute_update_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.execute_sql.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction = build_transaction()
+
+        api = transaction._session._database.spanner_api
+        api.execute_sql.side_effect = RuntimeError()
 
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
 
-        self.assertEqual(transaction._execute_sql_count, 1)
+        self.assertEqual(transaction._execute_sql_request_count, 1)
 
     def test_execute_update_w_query_options(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
@@ -748,16 +796,8 @@ class TestTransaction(OpenTelemetryBase):
             )
         )
 
-    def test_batch_update_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.execute_batch_dml.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-
-        with self.assertRaises(RuntimeError):
-            transaction.batch_update(statements=[DML_QUERY])
+    def test_execute_update_w_precommit_token(self):
+        self._execute_update_helper(use_multiplexed=True)
 
     def _batch_update_helper(
         self,
@@ -766,16 +806,33 @@ class TestTransaction(OpenTelemetryBase):
         request_options=None,
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
+        begin=True,
+        use_multiplexed=False,
     ):
         from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import param_types
-        from google.cloud.spanner_v1 import ResultSet
-        from google.cloud.spanner_v1 import ResultSetStats
         from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
         from google.cloud.spanner_v1 import ExecuteBatchDmlResponse
         from google.cloud.spanner_v1 import TransactionSelector
         from google.cloud.spanner_v1._helpers import _make_value_pb
+
+        # [A] Build transaction
+        # ---------------------
+
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
+        api = database.spanner_api
+
+        transaction.transaction_tag = TRANSACTION_TAG
+        transaction._execute_sql_request_count = count
+
+        if begin:
+            transaction.begin()
+
+        # [B] Build results
+        # -----------------
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
@@ -789,11 +846,15 @@ class TestTransaction(OpenTelemetryBase):
             delete_dml,
         ]
 
+        # These precommit tokens are intentionally returned with sequence numbers out of order.
+        precommit_tokens = [PRECOMMIT_TOKEN_2, PRECOMMIT_TOKEN_0, PRECOMMIT_TOKEN_1]
+
         stats_pbs = [
             ResultSetStats(row_count_exact=1),
             ResultSetStats(row_count_exact=2),
             ResultSetStats(row_count_exact=3),
         ]
+
         if error_after is not None:
             stats_pbs = stats_pbs[:error_after]
             expected_status = Status(code=400)
@@ -801,24 +862,38 @@ class TestTransaction(OpenTelemetryBase):
             expected_status = Status(code=200)
         expected_row_counts = [stats.row_count_exact for stats in stats_pbs]
 
-        response = ExecuteBatchDmlResponse(
+        result_sets = []
+        for i in range(len(stats_pbs)):
+            result_set_args = {"stats": stats_pbs[i]}
+
+            # If the transaction had not already begun, the first result
+            # set will include metadata with information about the transaction.
+            if not begin and i == 0:
+                result_set_args["metadata"] = build_result_set_metadata_pb(
+                    transaction={"id": TRANSACTION_ID}
+                )
+
+            # Precommit tokens will be included in the result
+            # sets if the transaction is on a multiplexed session.
+            if use_multiplexed:
+                result_set_args["precommit_token"] = precommit_tokens[i]
+
+            result_sets.append(build_result_set_pb(**result_set_args))
+
+        api.execute_batch_dml.return_value = ExecuteBatchDmlResponse(
             status=expected_status,
-            result_sets=[ResultSet(stats=stats_pb) for stats_pb in stats_pbs],
+            result_sets=result_sets,
         )
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        api.execute_batch_dml.return_value = response
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
-        transaction._execute_sql_count = count
+
+        # [C] Execute batch DML
+        # ---------------------
 
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
+        self.reset()
         status, row_counts = transaction.batch_update(
             dml_statements,
             request_options=request_options,
@@ -826,10 +901,20 @@ class TestTransaction(OpenTelemetryBase):
             timeout=timeout,
         )
 
+        # [D] Verify results
+        # ------------------
+
         self.assertEqual(status, expected_status)
         self.assertEqual(row_counts, expected_row_counts)
 
-        expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
+        expected_transaction_selector_pb = (
+            TransactionSelector(id=transaction._transaction_id)
+            if begin
+            else TransactionSelector(
+                begin=TransactionOptions(read_write=TransactionOptions.ReadWrite())
+            )
+        )
+
         expected_insert_params = Struct(
             fields={
                 key: _make_value_pb(value) for (key, value) in insert_params.items()
@@ -845,11 +930,11 @@ class TestTransaction(OpenTelemetryBase):
             ExecuteBatchDmlRequest.Statement(sql=delete_dml),
         ]
         expected_request_options = request_options
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        expected_request_options.transaction_tag = TRANSACTION_TAG
 
         expected_request = ExecuteBatchDmlRequest(
-            session=self.SESSION_NAME,
-            transaction=expected_transaction,
+            session=session.name,
+            transaction=expected_transaction_selector_pb,
             statements=expected_statements,
             seqno=count,
             request_options=expected_request_options,
@@ -864,7 +949,16 @@ class TestTransaction(OpenTelemetryBase):
             timeout=timeout,
         )
 
-        self.assertEqual(transaction._execute_sql_count, count + 1)
+        self.assertEqual(transaction._execute_sql_request_count, count + 1)
+
+        if not begin:
+            self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
+
+        if use_multiplexed:
+            self.assertEqual(transaction._precommit_token, PRECOMMIT_TOKEN_2)
+
+    def test_batch_update_wo_begin(self):
+        self._batch_update_helper(begin=False)
 
     def test_batch_update_wo_errors(self):
         self._batch_update_helper(
@@ -908,12 +1002,11 @@ class TestTransaction(OpenTelemetryBase):
         from google.cloud.spanner_v1 import Type
         from google.cloud.spanner_v1 import TypeCode
 
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
+        transaction = build_transaction()
+        transaction.begin()
+
+        api = transaction._session._database.spanner_api
         api.execute_batch_dml.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
@@ -933,7 +1026,7 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.batch_update(dml_statements)
 
-        self.assertEqual(transaction._execute_sql_count, 1)
+        self.assertEqual(transaction._execute_sql_request_count, 1)
 
     def test_batch_update_w_timeout_param(self):
         self._batch_update_helper(timeout=2.0)
@@ -944,52 +1037,46 @@ class TestTransaction(OpenTelemetryBase):
     def test_batch_update_w_timeout_and_retry_params(self):
         self._batch_update_helper(retry=gapic_v1.method.DEFAULT, timeout=2.0)
 
-    def test_context_mgr_success(self):
-        import datetime
-        from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner_v1 import Transaction as TransactionPB
-        from google.cloud._helpers import UTC
+    def test_batch_update_w_precommit_token(self):
+        self._batch_update_helper(use_multiplexed=True)
 
-        transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
-        response = CommitResponse(commit_timestamp=now)
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(
-            _begin_transaction_response=transaction_pb, _commit_response=response
-        )
-        session = _Session(database)
-        transaction = self._make_one(session)
+    def test_context_mgr_success(self):
+        transaction = build_transaction()
+        session = transaction._session
+        database = session._database
+        api = database.spanner_api
+
+        begin = api.begin_transaction
+        transaction_id = TRANSACTION_ID
+        begin.return_value = build_transaction_pb(id=transaction_id)
+
+        commit = api.commit
+        now = datetime.datetime.now(tz=datetime.timezone.utc)
+        commit.return_value = CommitResponse(commit_timestamp=now)
 
         with transaction:
             transaction.insert(TABLE_NAME, COLUMNS, VALUES)
 
         self.assertEqual(transaction.committed, now)
 
-        session_id, mutations, txn_id, _, _, metadata = api._committed
-        self.assertEqual(session_id, self.SESSION_NAME)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
-        self.assertEqual(mutations, transaction._mutations)
-        self.assertEqual(
-            metadata,
-            [
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-            ],
+        expected_request = CommitRequest(
+            session=session.name,
+            transaction_id=transaction_id,
+            mutations=transaction._mutations,
+            request_options=RequestOptions(),
+        )
+        expected_metadata = [
+            ("google-cloud-resource-prefix", database.name),
+            ("x-goog-spanner-route-to-leader", "true"),
+        ]
+
+        commit.assert_called_once_with(
+            request=expected_request,
+            metadata=expected_metadata,
         )
 
     def test_context_mgr_failure(self):
-        from google.protobuf.empty_pb2 import Empty
-
-        empty_pb = Empty()
-        from google.cloud.spanner_v1 import Transaction as TransactionPB
-
-        transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
-        database = _Database()
-        api = database.spanner_api = _FauxSpannerAPI(
-            _begin_transaction_response=transaction_pb, _rollback_response=empty_pb
-        )
-        session = _Session(database)
-        transaction = self._make_one(session)
+        transaction = build_transaction()
 
         with self.assertRaises(Exception):
             with transaction:
@@ -1000,74 +1087,26 @@ class TestTransaction(OpenTelemetryBase):
         # Rollback rpc will not be called as there is no transaction id to be rolled back, rolled_back flag will be marked as true.
         self.assertTrue(transaction.rolled_back)
         self.assertEqual(len(transaction._mutations), 1)
-        self.assertEqual(api._committed, None)
+
+        api = transaction._session._database.spanner_api
+        api.commit.assert_not_called()
 
 
-class _Client(object):
-    def __init__(self):
-        from google.cloud.spanner_v1 import ExecuteSqlRequest
+def _build_base_attributes(database) -> dict:
+    """Builds and returns the base attributes for the given database."""
 
-        self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
-        self.directed_read_options = None
+    base_attributes = {
+        "db.type": "spanner",
+        "db.url": "spanner.googleapis.com",
+        "db.instance": database.name,
+        "net.host.name": "spanner.googleapis.com",
+        "gcp.client.service": "spanner",
+        "gcp.client.version": LIB_VERSION,
+        "gcp.client.repo": "googleapis/python-spanner",
+    }
 
+    from tests._helpers import enrich_with_otel_scope
 
-class _Instance(object):
-    def __init__(self):
-        self._client = _Client()
+    enrich_with_otel_scope(base_attributes)
 
-
-class _Database(object):
-    def __init__(self):
-        self.name = "testing"
-        self._instance = _Instance()
-        self._route_to_leader_enabled = True
-        self._directed_read_options = None
-        self.default_transaction_options = DefaultTransactionOptions()
-
-
-class _Session(object):
-    _transaction = None
-
-    def __init__(self, database=None, name=TestTransaction.SESSION_NAME):
-        self._database = database
-        self.name = name
-
-    @property
-    def session_id(self):
-        return self.name
-
-
-class _FauxSpannerAPI(object):
-    _committed = None
-
-    def __init__(self, **kwargs):
-        self.__dict__.update(**kwargs)
-
-    def begin_transaction(self, session=None, options=None, metadata=None):
-        self._begun = (session, options, metadata)
-        return self._begin_transaction_response
-
-    def rollback(self, session=None, transaction_id=None, metadata=None):
-        self._rolled_back = (session, transaction_id, metadata)
-        return self._rollback_response
-
-    def commit(
-        self,
-        request=None,
-        metadata=None,
-    ):
-        assert not request.single_use_transaction
-
-        max_commit_delay = None
-        if type(request).pb(request).HasField("max_commit_delay"):
-            max_commit_delay = request.max_commit_delay
-
-        self._committed = (
-            request.session,
-            request.mutations,
-            request.transaction_id,
-            request.request_options,
-            max_commit_delay,
-            metadata,
-        )
-        return self._commit_response
+    return base_attributes

@@ -770,6 +770,23 @@ class Database(object):
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
 
+    def session(self, labels=None, database_role=None):
+        """Deprecated. Factory to create a session for this database.
+
+        :type labels: dict (str -> str) or None
+        :param labels: (Optional) user-assigned labels for the session.
+
+        :type database_role: str
+        :param database_role: (Optional) user-assigned database_role for the session.
+
+        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :returns: a session bound to this database.
+        """
+        # If role is specified in param, then that role is used
+        # instead.
+        role = database_role or self._database_role
+        return Session(self, labels=labels, database_role=role)
+
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.
 

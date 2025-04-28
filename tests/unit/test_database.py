@@ -31,10 +31,15 @@ from google.cloud.spanner_v1 import (
     DirectedReadOptions,
     RequestOptions,
 )
+from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.snapshot import Snapshot
-from tests._builders import build_database, build_session, TRANSACTION_ID, SESSION_ID
-from tests._helpers import enable_multiplexed_sessions
+from tests._builders import (
+    build_database,
+    build_session,
+    build_session_pb,
+    build_transaction_pb,
+)
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -82,6 +87,7 @@ class _BaseTest(unittest.TestCase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
     BACKUP_ID = "backup_id"
     BACKUP_NAME = INSTANCE_NAME + "/backups/" + BACKUP_ID
+    TRANSACTION_ID = b"transaction-id"
     TRANSACTION_TAG = "transaction-tag"
     DATABASE_ROLE = "dummy-role"
 
@@ -1273,8 +1279,6 @@ class TestDatabase(_BaseTest):
         )
 
     def test_execute_partitioned_dml_not_implemented_error_multiplexed(self):
-        enable_multiplexed_sessions()
-
         database = build_database()
         database.spanner_api.begin_transaction.side_effect = NotImplementedError(
             "Transaction type partitioned_dml not supported with multiplexed sessions"
@@ -1285,6 +1289,25 @@ class TestDatabase(_BaseTest):
 
         session_options = database.session_options
         self.assertFalse(session_options.use_multiplexed(TransactionType.PARTITIONED))
+
+    def test_session_factory_defaults(self):
+        database = build_database()
+        session = database.session()
+
+        self.assertIsInstance(session, Session)
+        self.assertIs(session.session_id, None)
+        self.assertIs(session._database, database)
+        self.assertEqual(session.labels, {})
+
+    def test_session_factory_w_labels(self):
+        database = build_database()
+        labels = {"foo": "bar"}
+        session = database.session(labels=labels)
+
+        self.assertIsInstance(session, Session)
+        self.assertIs(session.session_id, None)
+        self.assertIs(session._database, database)
+        self.assertEqual(session.labels, labels)
 
     def test_snapshot_defaults(self):
         from google.cloud.spanner_v1.database import SnapshotCheckout
@@ -2151,77 +2174,96 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = BatchSnapshot.from_dict(
             database,
             {
-                "transaction_id": TRANSACTION_ID,
-                "session_id": SESSION_ID,
+                "transaction_id": self.TRANSACTION_ID,
+                "session_id": self.SESSION_ID,
             },
         )
 
         self.assertIs(batch_txn._database, database)
-        self.assertIs(batch_txn._transaction_id, TRANSACTION_ID)
-        self.assertIs(batch_txn._session_id, SESSION_ID)
+        self.assertIs(batch_txn._transaction_id, self.TRANSACTION_ID)
+        self.assertIs(batch_txn._session_id, self.SESSION_ID)
 
         session = batch_txn._get_session()
-        self.assertEqual(session._session_id, SESSION_ID)
+        self.assertEqual(session._session_id, self.SESSION_ID)
 
         snapshot = batch_txn._get_snapshot()
-        self.assertEqual(snapshot._transaction_id, TRANSACTION_ID)
+        self.assertEqual(snapshot._transaction_id, self.TRANSACTION_ID)
         database.spanner_api.begin_transaction.assert_not_called()
 
     def test_to_dict(self):
         database = build_database()
         batch_txn = BatchSnapshot(database)
 
+        api = database.spanner_api
+        api.create_session.return_value = build_session_pb(name=self.SESSION_NAME)
+        api.begin_transaction.return_value = build_transaction_pb(
+            id=self.TRANSACTION_ID
+        )
+
         self.assertEqual(
             batch_txn.to_dict(),
             {
-                "transaction_id": TRANSACTION_ID,
-                "session_id": SESSION_ID,
+                "transaction_id": self.TRANSACTION_ID,
+                "session_id": self.SESSION_ID,
             },
         )
 
     def test__get_snapshot_already(self):
         database = build_database()
         batch_txn = BatchSnapshot(database)
-        snapshot_1 = batch_txn._get_snapshot()
 
+        snapshot_1 = batch_txn._get_snapshot()
         snapshot_2 = batch_txn._get_snapshot()
+
         self.assertEqual(snapshot_1, snapshot_2)
         database.spanner_api.begin_transaction.assert_called_once()
 
     def test__get_snapshot_new_wo_staleness(self):
         database = build_database()
         batch_txn = BatchSnapshot(database)
+
+        begin_transaction = database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(id=self.TRANSACTION_ID)
+
         snapshot = batch_txn._get_snapshot()
 
         self.assertIsNone(snapshot._read_timestamp)
         self.assertIsNone(snapshot._exact_staleness)
         self.assertTrue(snapshot._multi_use)
-        self.assertEqual(TRANSACTION_ID, snapshot._transaction_id)
-        database.spanner_api.begin_transaction.assert_called_once()
+        self.assertEqual(self.TRANSACTION_ID, snapshot._transaction_id)
+        begin_transaction.assert_called_once()
 
     def test__get_snapshot_w_read_timestamp(self):
         database = build_database()
         timestamp = self._make_timestamp()
         batch_txn = BatchSnapshot(database, read_timestamp=timestamp)
+
+        begin_transaction = database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(id=self.TRANSACTION_ID)
+
         snapshot = batch_txn._get_snapshot()
 
         self.assertEqual(timestamp, snapshot._read_timestamp)
         self.assertIsNone(snapshot._exact_staleness)
         self.assertTrue(snapshot._multi_use)
-        self.assertEqual(TRANSACTION_ID, snapshot._transaction_id)
-        database.spanner_api.begin_transaction.assert_called_once()
+        self.assertEqual(snapshot._transaction_id, self.TRANSACTION_ID)
+        begin_transaction.assert_called_once()
 
     def test__get_snapshot_w_exact_staleness(self):
         database = build_database()
         duration = self._make_duration()
         batch_txn = BatchSnapshot(database, exact_staleness=duration)
+
+        begin_transaction = database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(id=self.TRANSACTION_ID)
+
         snapshot = batch_txn._get_snapshot()
 
         self.assertIsNone(snapshot._read_timestamp)
         self.assertEqual(duration, snapshot._exact_staleness)
         self.assertTrue(snapshot._multi_use)
-        self.assertEqual(TRANSACTION_ID, snapshot._transaction_id)
-        database.spanner_api.begin_transaction.assert_called_once()
+        self.assertEqual(snapshot._transaction_id, self.TRANSACTION_ID)
+        begin_transaction.assert_called_once()
 
     def test_read(self):
         keyset = self._make_keyset()
