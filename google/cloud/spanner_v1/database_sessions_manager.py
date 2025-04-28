@@ -23,14 +23,15 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
 )
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import TransactionType
 
 
 class DatabaseSessionsManager(object):
     """Manages sessions for a Cloud Spanner database.
 
-    Sessions can be checked out from the database session manager using :meth:`get_session_for_read_only`,
-    :meth:`get_session_for_partitioned`, and :meth:`get_session_for_read_write`, and returned to
-    the session manager using :meth:`put_session`.
+    Sessions can be checked out from the database session manager for a specific
+    transaction type using :meth:`get_session`, and returned to the session manager
+    using :meth:`put_session`.
 
     The sessions returned by the session manager depend on the client's session options (see
     :class:`~google.cloud.spanner_v1.session_options.SessionOptions`) and the provided session
@@ -41,18 +42,15 @@ class DatabaseSessionsManager(object):
 
     :type pool: :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
     :param pool: The pool to get non-multiplexed sessions from.
-
-    :type logger: :class:`logging.Logger`
-    :param logger: Logger for the database session manager.
     """
 
     # Intervals for the maintenance thread to check and refresh the multiplexed session.
-    _MAINTENANCE_THREAD_POLLING_INTERVAL = datetime.timedelta(hours=1)
+    _MAINTENANCE_THREAD_POLLING_INTERVAL = datetime.timedelta(minutes=10)
     _MAINTENANCE_THREAD_REFRESH_INTERVAL = datetime.timedelta(days=7)
 
-    def __init__(self, database, pool, logger):
+    def __init__(self, database, pool):
         self._database = database
-        self._logger = logger
+        self._logger = database.logger
 
         # The session pool manages non-multiplexed sessions, and
         # will only be used if multiplexed sessions are not enabled.
@@ -70,83 +68,20 @@ class DatabaseSessionsManager(object):
         self._multiplexed_session_lock = threading.Lock()
         self._is_multiplexed_sessions_disabled_event = threading.Event()
 
-    def get_session_for_read_only(self) -> Session:
-        """Returns a session for read-only transactions from the database session manager.
+    def get_session(self, transaction_type: TransactionType) -> Session:
+        """Returns a session for the given transaction type from the database session manager.
 
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session for read-only transactions.
+        :returns: a session for the given transaction type.
         """
 
-        return self._get_session(
-            use_multiplexed=self._database._instance._client.session_options.use_multiplexed_for_read_only()
-        )
+        session_options = self._database.session_options
+        use_multiplexed = session_options.use_multiplexed(transaction_type)
 
-    def get_session_for_partitioned(self) -> Session:
-        """Returns a session for partitioned transactions from the database session manager.
-
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session for partitioned transactions.
-        """
-
-        if (
-            self._database._instance._client.session_options.use_multiplexed_for_partitioned()
-        ):
+        if use_multiplexed and transaction_type == TransactionType.READ_WRITE:
             raise NotImplementedError(
-                "Multiplexed sessions are not yet supported for partitioned transactions."
+                f"Multiplexed sessions are not yet supported for {transaction_type} transactions."
             )
-
-        return self._get_session(use_multiplexed=False)
-
-    def get_session_for_read_write(self) -> Session:
-        """Returns a session for read/write transactions from the database session manager.
-
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session for read/write transactions.
-        """
-
-        if (
-            self._database._instance._client.session_options.use_multiplexed_for_read_write()
-        ):
-            raise NotImplementedError(
-                "Multiplexed sessions are not yet supported for read/write transactions."
-            )
-
-        return self._get_session(use_multiplexed=False)
-
-    def put_session(self, session: Session) -> None:
-        """Returns the session to the database session manager.
-
-        :type session: :class:`~google.cloud.spanner_v1.session.Session`
-        :param session: The session to return to the database session manager.
-        """
-
-        # No action is needed for multiplexed sessions: the session
-        # pool is only used for managing non-multiplexed sessions,
-        # since they can only process one transaction at a time.
-        if not session.is_multiplexed:
-            self._pool.put(session)
-
-        current_span = get_current_span()
-        add_span_event(
-            current_span,
-            "Returned session",
-            {"id": session.session_id, "multiplexed": session.is_multiplexed},
-        )
-
-    def _get_session(self, use_multiplexed: bool) -> Session:
-        """Returns a session from the database session manager.
-
-        If use_multiplexed is True, returns a multiplexed session if
-        multiplexed sessions are supported. If multiplexed sessions are
-        not supported or if use_multiplexed is False, returns a non-
-        multiplexed session from the session pool.
-
-        :type use_multiplexed: bool
-        :param use_multiplexed: Whether to try to get a multiplexed session.
-
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session for the database session manager.
-        """
 
         if use_multiplexed:
             try:
@@ -168,6 +103,25 @@ class DatabaseSessionsManager(object):
         )
 
         return session
+
+    def put_session(self, session: Session) -> None:
+        """Returns the session to the database session manager.
+
+        :type session: :class:`~google.cloud.spanner_v1.session.Session`
+        :param session: The session to return to the database session manager.
+        """
+
+        add_span_event(
+            get_current_span(),
+            "Returning session",
+            {"id": session.session_id, "multiplexed": session.is_multiplexed},
+        )
+
+        # No action is needed for multiplexed sessions: the session
+        # pool is only used for managing non-multiplexed sessions,
+        # since they can only process one transaction at a time.
+        if not session.is_multiplexed:
+            self._pool.put(session)
 
     def _get_multiplexed_session(self) -> Session:
         """Returns a multiplexed session from the database session manager.
@@ -193,12 +147,6 @@ class DatabaseSessionsManager(object):
                     self._build_maintenance_thread()
                 )
                 self._multiplexed_session_maintenance_thread.start()
-
-            add_span_event(
-                get_current_span(),
-                "Using session",
-                {"id": self._multiplexed_session.session_id, "multiplexed": True},
-            )
 
             return self._multiplexed_session
 
@@ -227,17 +175,9 @@ class DatabaseSessionsManager(object):
     def _disable_multiplexed_sessions(self) -> None:
         """Disables multiplexed sessions for all transactions."""
 
-        self._logger.warning(
-            "Multiplexed session creation failed. Disabling multiplexed sessions."
-        )
-
-        session_options = self._database._instance._client.session_options
-        session_options.disable_multiplexed_for_read_only()
-        session_options.disable_multiplexed_for_partitioned()
-        session_options.disable_multiplexed_for_read_write()
-
         self._multiplexed_session = None
         self._is_multiplexed_sessions_disabled_event.set()
+        self._database.session_options.disable_multiplexed(self._logger)
 
     def _build_maintenance_thread(self) -> threading.Thread:
         """Builds and returns a multiplexed session maintenance thread for

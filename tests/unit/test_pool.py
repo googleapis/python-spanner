@@ -20,6 +20,7 @@ from datetime import datetime, timedelta
 
 import mock
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from tests._builders import build_database
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
@@ -27,18 +28,6 @@ from tests._helpers import (
     enrich_with_otel_scope,
     HAS_OPENTELEMETRY_INSTALLED,
 )
-
-
-def _make_database(name="name"):
-    from google.cloud.spanner_v1.database import Database
-
-    return mock.create_autospec(Database, instance=True)
-
-
-def _make_session():
-    from google.cloud.spanner_v1.database import Session
-
-    return mock.create_autospec(Session, instance=True)
 
 
 class TestAbstractSessionPool(unittest.TestCase):
@@ -66,7 +55,7 @@ class TestAbstractSessionPool(unittest.TestCase):
 
     def test_bind_abstract(self):
         pool = self._make_one()
-        database = _make_database("name")
+        database = build_database()
         with self.assertRaises(NotImplementedError):
             pool.bind(database)
 
@@ -88,38 +77,32 @@ class TestAbstractSessionPool(unittest.TestCase):
 
     def test__new_session_wo_labels(self):
         pool = self._make_one()
-        database = pool._database = _make_database("name")
-        session = _make_session()
-        database.session.return_value = session
+        pool._database = build_database()
 
         new_session = pool._new_session()
 
-        self.assertIs(new_session, session)
-        database.session.assert_called_once_with(labels={}, database_role=None)
+        self.assertEqual(new_session.labels, {})
+        self.assertIsNone(new_session.database_role)
 
     def test__new_session_w_labels(self):
         labels = {"foo": "bar"}
         pool = self._make_one(labels=labels)
-        database = pool._database = _make_database("name")
-        session = _make_session()
-        database.session.return_value = session
+        pool._database = build_database()
 
         new_session = pool._new_session()
 
-        self.assertIs(new_session, session)
-        database.session.assert_called_once_with(labels=labels, database_role=None)
+        self.assertEqual(new_session.labels, labels)
+        self.assertIsNone(new_session.database_role)
 
     def test__new_session_w_database_role(self):
         database_role = "dummy-role"
         pool = self._make_one(database_role=database_role)
-        database = pool._database = _make_database("name")
-        session = _make_session()
-        database.session.return_value = session
+        pool._database = build_database()
 
         new_session = pool._new_session()
 
-        self.assertIs(new_session, session)
-        database.session.assert_called_once_with(labels={}, database_role=database_role)
+        self.assertEqual(new_session.labels, {})
+        self.assertEqual(new_session.database_role, database_role)
 
 
 class TestFixedSizePool(OpenTelemetryBase):
@@ -167,10 +150,10 @@ class TestFixedSizePool(OpenTelemetryBase):
     def test_bind(self):
         database_role = "dummy-role"
         pool = self._make_one()
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 10
+        database = _Database()
         database._database_role = database_role
-        database._sessions.extend(SESSIONS)
+        sessions = [_Session(database)] * 10
+        pool._new_session = mock.Mock(side_effect=sessions)
 
         pool.bind(database)
 
@@ -182,37 +165,35 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         api = database.spanner_api
         self.assertEqual(api.batch_create_sessions.call_count, 5)
-        for session in SESSIONS:
+        for session in sessions:
             session.create.assert_not_called()
 
     def test_get_active(self):
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = sorted([_Session(database) for i in range(0, 4)])
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = sorted([_Session(database)] * 4)
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
 
         # check if sessions returned in LIFO order
         for i in (3, 2, 1, 0):
             session = pool.get()
-            self.assertIs(session, SESSIONS[i])
+            self.assertIs(session, sessions[i])
             self.assertFalse(session._exists_checked)
             self.assertFalse(pool._sessions.full())
 
     def test_get_non_expired(self):
         pool = self._make_one(size=4)
-        database = _Database("name")
+        database = _Database()
         last_use_time = datetime.utcnow() - timedelta(minutes=56)
-        SESSIONS = sorted(
-            [_Session(database, last_use_time=last_use_time) for i in range(0, 4)]
-        )
-        database._sessions.extend(SESSIONS)
+        sessions = sorted([_Session(database, last_use_time=last_use_time)] * 4)
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
 
         # check if sessions returned in LIFO order
         for i in (3, 2, 1, 0):
             session = pool.get()
-            self.assertIs(session, SESSIONS[i])
+            self.assertIs(session, sessions[i])
             self.assertTrue(session._exists_checked)
             self.assertFalse(pool._sessions.full())
 
@@ -222,12 +203,12 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         # This tests retrieving 1 out of 4 sessions from the session pool.
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = sorted([_Session(database) for i in range(0, 4)])
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = sorted([_Session(database) for i in range(0, 4)])
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
 
-        with trace_call("pool.Get", SESSIONS[0]):
+        with trace_call("pool.Get", sessions[0]):
             pool.get()
 
         span_list = self.get_finished_spans()
@@ -264,7 +245,7 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         # Tests trying to invoke pool.get() from an empty pool.
         pool = self._make_one(size=0)
-        database = _Database("name")
+        database = _Database()
         session1 = _Session(database)
         with trace_call("pool.Get", session1):
             try:
@@ -309,9 +290,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         # Tests the exception generated from invoking pool.bind when
         # you have an empty pool.
         pool = self._make_one(size=1)
-        database = _Database("name")
-        SESSIONS = []
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        pool._new_session = mock.Mock(side_effect=Exception("Test"))
         fauxSession = mock.Mock()
         setattr(fauxSession, "_database", database)
         try:
@@ -357,8 +337,8 @@ class TestFixedSizePool(OpenTelemetryBase):
             (
                 "exception",
                 {
-                    "exception.type": "IndexError",
-                    "exception.message": "pop from empty list",
+                    "exception.type": "Exception",
+                    "exception.message": "Test",
                     "exception.stacktrace": "EPHEMERAL",
                     "exception.escaped": "False",
                 },
@@ -368,8 +348,8 @@ class TestFixedSizePool(OpenTelemetryBase):
             (
                 "exception",
                 {
-                    "exception.type": "IndexError",
-                    "exception.message": "pop from empty list",
+                    "exception.type": "Exception",
+                    "exception.message": "Test",
                     "exception.stacktrace": "EPHEMERAL",
                     "exception.escaped": "False",
                 },
@@ -379,18 +359,18 @@ class TestFixedSizePool(OpenTelemetryBase):
 
     def test_get_expired(self):
         pool = self._make_one(size=4)
-        database = _Database("name")
+        database = _Database()
         last_use_time = datetime.utcnow() - timedelta(minutes=65)
-        SESSIONS = [_Session(database, last_use_time=last_use_time)] * 5
-        SESSIONS[0]._exists = False
-        database._sessions.extend(SESSIONS)
+        sessions = [_Session(database, last_use_time=last_use_time)] * 5
+        sessions[0]._exists = False
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
 
         session = pool.get()
 
-        self.assertIs(session, SESSIONS[4])
+        self.assertIs(session, sessions[4])
         session.create.assert_called()
-        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertTrue(sessions[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
 
     def test_get_empty_default_timeout(self):
@@ -419,9 +399,9 @@ class TestFixedSizePool(OpenTelemetryBase):
         import queue
 
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        database._sessions.extend(sessions)
         pool.bind(database)
         self.reset()
 
@@ -432,9 +412,9 @@ class TestFixedSizePool(OpenTelemetryBase):
 
     def test_put_non_full(self):
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        database._sessions.extend(sessions)
         pool.bind(database)
         pool._sessions.get()
 
@@ -444,20 +424,20 @@ class TestFixedSizePool(OpenTelemetryBase):
 
     def test_clear(self):
         pool = self._make_one()
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 10
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 10
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
         self.assertEqual(api.batch_create_sessions.call_count, 5)
-        for session in SESSIONS:
+        for session in sessions:
             session.create.assert_not_called()
 
         pool.clear()
 
-        for session in SESSIONS:
+        for session in sessions:
             self.assertTrue(session._deleted)
 
 
@@ -502,15 +482,15 @@ class TestBurstyPool(OpenTelemetryBase):
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
         pool = self._make_one()
-        database = pool._database = _Database("name")
+        database = pool._database = _Database()
         database._database_role = database_role
         pool.bind(database)
         self.assertEqual(pool.database_role, database_role)
 
     def test_get_empty(self):
         pool = self._make_one()
-        database = _Database("name")
-        database._sessions.append(_Session(database))
+        database = _Database()
+        pool._new_session = mock.Mock(side_effect=[_Session(database)])
         pool.bind(database)
 
         session = pool.get()
@@ -528,9 +508,9 @@ class TestBurstyPool(OpenTelemetryBase):
         # and pool.get() acquires from a pool, waiting for a session
         # to become available.
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         session1 = _Session(database)
-        database._sessions.append(session1)
+        pool._new_session = mock.Mock(side_effect=[session1])
         pool.bind(database)
 
         with trace_call("pool.Get", session1):
@@ -560,7 +540,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_get_non_empty_session_exists(self):
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         previous = _Session(database)
         pool.bind(database)
         pool.put(previous)
@@ -576,7 +556,7 @@ class TestBurstyPool(OpenTelemetryBase):
         # Tests the spans produces when you invoke pool.bind
         # and then insert a session into the pool.
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         previous = _Session(database)
         pool.bind(database)
         with trace_call("pool.Get", previous):
@@ -598,10 +578,10 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_get_non_empty_session_expired(self):
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         previous = _Session(database, exists=False)
         newborn = _Session(database)
-        database._sessions.append(newborn)
+        pool._new_session = mock.Mock(side_effect=[newborn])
         pool.bind(database)
         pool.put(previous)
 
@@ -615,7 +595,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_put_empty(self):
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         session = _Session(database)
 
@@ -626,7 +606,7 @@ class TestBurstyPool(OpenTelemetryBase):
     def test_spans_put_empty(self):
         # Tests the spans produced when you put sessions into an empty pool.
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         session = _Session(database)
 
@@ -641,7 +621,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_put_full(self):
         pool = self._make_one(target_size=1)
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         older = _Session(database)
         pool.put(older)
@@ -657,7 +637,7 @@ class TestBurstyPool(OpenTelemetryBase):
         # This scenario tests the spans produced from putting an older
         # session into a pool that is already full.
         pool = self._make_one(target_size=1)
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         older = _Session(database)
         with trace_call("pool.put", older):
@@ -677,7 +657,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_put_full_expired(self):
         pool = self._make_one(target_size=1)
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         older = _Session(database)
         pool.put(older)
@@ -691,7 +671,7 @@ class TestBurstyPool(OpenTelemetryBase):
 
     def test_clear(self):
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         pool.bind(database)
         previous = _Session(database)
         pool.put(previous)
@@ -753,18 +733,18 @@ class TestPingingPool(OpenTelemetryBase):
     def test_ctor_explicit_w_database_role_in_db(self):
         database_role = "dummy-role"
         pool = self._make_one()
-        database = pool._database = _Database("name")
-        SESSIONS = [_Session(database)] * 10
-        database._sessions.extend(SESSIONS)
+        database = pool._database = _Database()
+        sessions = [_Session(database)] * 10
+        database._sessions.extend(sessions)
         database._database_role = database_role
         pool.bind(database)
         self.assertEqual(pool.database_role, database_role)
 
     def test_bind(self):
         pool = self._make_one()
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 10
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 10
+        database._sessions.extend(sessions)
         pool.bind(database)
 
         self.assertIs(pool._database, database)
@@ -775,20 +755,20 @@ class TestPingingPool(OpenTelemetryBase):
 
         api = database.spanner_api
         self.assertEqual(api.batch_create_sessions.call_count, 5)
-        for session in SESSIONS:
+        for session in sessions:
             session.create.assert_not_called()
 
     def test_get_hit_no_ping(self):
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
         self.reset()
 
         session = pool.get()
 
-        self.assertIs(session, SESSIONS[0])
+        self.assertIs(session, sessions[0])
         self.assertFalse(session._exists_checked)
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
@@ -799,9 +779,9 @@ class TestPingingPool(OpenTelemetryBase):
         from google.cloud.spanner_v1 import pool as MUT
 
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        pool._new_session = mock.Mock(side_effect=sessions)
 
         sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
 
@@ -812,7 +792,7 @@ class TestPingingPool(OpenTelemetryBase):
 
         session = pool.get()
 
-        self.assertIs(session, SESSIONS[0])
+        self.assertIs(session, sessions[0])
         self.assertTrue(session._exists_checked)
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
@@ -823,10 +803,10 @@ class TestPingingPool(OpenTelemetryBase):
         from google.cloud.spanner_v1 import pool as MUT
 
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 5
-        SESSIONS[0]._exists = False
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 5
+        sessions[0]._exists = False
+        pool._new_session = mock.Mock(side_effect=sessions)
 
         sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
 
@@ -836,9 +816,9 @@ class TestPingingPool(OpenTelemetryBase):
 
         session = pool.get()
 
-        self.assertIs(session, SESSIONS[4])
+        self.assertIs(session, sessions[4])
         session.create.assert_called()
-        self.assertTrue(SESSIONS[0]._exists_checked)
+        self.assertTrue(sessions[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
 
@@ -870,9 +850,9 @@ class TestPingingPool(OpenTelemetryBase):
         import queue
 
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        database._sessions.extend(sessions)
         pool.bind(database)
 
         with self.assertRaises(queue.Full):
@@ -887,9 +867,9 @@ class TestPingingPool(OpenTelemetryBase):
         import queue
 
         pool = self._make_one(size=4)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 4
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 4
+        database._sessions.extend(sessions)
         pool.bind(database)
 
         with self.assertRaises(queue.Full):
@@ -926,7 +906,7 @@ class TestPingingPool(OpenTelemetryBase):
         session_queue = pool._sessions = _Queue()
 
         now = datetime.datetime.utcnow()
-        database = _Database("name")
+        database = _Database()
         session = _Session(database)
 
         with _Monkey(MUT, _NOW=lambda: now):
@@ -940,21 +920,21 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_clear(self):
         pool = self._make_one()
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 10
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 10
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
         self.reset()
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
         self.assertEqual(api.batch_create_sessions.call_count, 5)
-        for session in SESSIONS:
+        for session in sessions:
             session.create.assert_not_called()
 
         pool.clear()
 
-        for session in SESSIONS:
+        for session in sessions:
             self.assertTrue(session._deleted)
         self.assertNoSpans()
 
@@ -965,15 +945,15 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_ping_oldest_fresh(self):
         pool = self._make_one(size=1)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 1
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 1
+        database._sessions.extend(sessions)
         pool.bind(database)
         self.reset()
 
         pool.ping()
 
-        self.assertFalse(SESSIONS[0]._pinged)
+        self.assertFalse(sessions[0]._pinged)
         self.assertNoSpans()
 
     def test_ping_oldest_stale_but_exists(self):
@@ -982,16 +962,16 @@ class TestPingingPool(OpenTelemetryBase):
         from google.cloud.spanner_v1 import pool as MUT
 
         pool = self._make_one(size=1)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 1
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 1
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
 
         later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertTrue(SESSIONS[0]._pinged)
+        self.assertTrue(sessions[0]._pinged)
 
     def test_ping_oldest_stale_and_not_exists(self):
         import datetime
@@ -999,10 +979,10 @@ class TestPingingPool(OpenTelemetryBase):
         from google.cloud.spanner_v1 import pool as MUT
 
         pool = self._make_one(size=1)
-        database = _Database("name")
-        SESSIONS = [_Session(database)] * 2
-        SESSIONS[0]._exists = False
-        database._sessions.extend(SESSIONS)
+        database = _Database()
+        sessions = [_Session(database)] * 2
+        sessions[0]._exists = False
+        pool._new_session = mock.Mock(side_effect=sessions)
         pool.bind(database)
         self.reset()
 
@@ -1010,8 +990,8 @@ class TestPingingPool(OpenTelemetryBase):
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertTrue(SESSIONS[0]._pinged)
-        SESSIONS[1].create.assert_called()
+        self.assertTrue(sessions[0]._pinged)
+        sessions[1].create.assert_called()
         self.assertNoSpans()
 
     def test_spans_get_and_leave_empty_pool(self):
@@ -1021,9 +1001,9 @@ class TestPingingPool(OpenTelemetryBase):
         # This scenario tests the spans generated from pulling a span
         # out the pool and leaving it empty.
         pool = self._make_one()
-        database = _Database("name")
+        database = _Database()
         session1 = _Session(database)
-        database._sessions.append(session1)
+        pool._new_session = mock.Mock(side_effect=[session1])
         try:
             pool.bind(database)
         except Exception:
@@ -1098,11 +1078,11 @@ class _Session(object):
 
 
 class _Database(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
+        self.name = "name"
         self._sessions = []
         self._database_role = None
-        self.database_id = name
+        self.database_id = self.name
         self._route_to_leader_enabled = True
 
         def mock_batch_create_sessions(
@@ -1181,7 +1161,3 @@ class _Queue(object):
     def put_nowait(self, item, **kwargs):
         self._put_nowait = kwargs
         self._items.append(item)
-
-
-class _Pool(_Queue):
-    _database = None

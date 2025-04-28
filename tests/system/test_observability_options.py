@@ -233,7 +233,7 @@ def test_transaction_abort_then_retry_spans(mock_session_multiplexed, mock_sessi
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
         ("Using session", {"id": session_id, "multiplexed": session_multiplexed}),
-        ("Returned session", {"id": session_id, "multiplexed": session_multiplexed}),
+        ("Returning session", {"id": session_id, "multiplexed": session_multiplexed}),
         (
             "Transaction was aborted in user operation, retrying",
             {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
@@ -426,7 +426,7 @@ def test_database_partitioned_error(mock_session_multiplexed, mock_session_id):
         ("Creating Session", {}),
         ("Using session", {"id": session_id, "multiplexed": session_multiplexed}),
         ("Starting BeginTransaction", {}),
-        ("Returned session", {"id": session_id, "multiplexed": session_multiplexed}),
+        ("Returning session", {"id": session_id, "multiplexed": session_multiplexed}),
         (
             "exception",
             {

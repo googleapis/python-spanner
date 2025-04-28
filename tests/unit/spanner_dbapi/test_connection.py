@@ -41,6 +41,7 @@ from google.cloud.spanner_v1.client import Client
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import TransactionType
 
 PROJECT = "test-project"
 INSTANCE = "test-instance"
@@ -147,14 +148,14 @@ class TestConnection(unittest.TestCase):
         session_manager = database._session_manager
 
         session = Session(database=database)
-        session_manager.get_session_for_read_only = mock.Mock(return_value=session)
+        session_manager.get_session = mock.Mock(return_value=session)
 
         read_only_connection = Connection(
             instance="instance-id", database=database, read_only=True
         )
         read_only_connection._session_checkout()
 
-        session_manager.get_session_for_read_only.assert_called_once_with()
+        session_manager.get_session.assert_called_once_with(TransactionType.READ_ONLY)
         self.assertEqual(read_only_connection._session, session)
 
     def test__session_checkout_read_write(self):
@@ -164,14 +165,14 @@ class TestConnection(unittest.TestCase):
         session_manager = database._session_manager
 
         session = Session(database=database)
-        session_manager.get_session_for_read_write = mock.Mock(return_value=session)
+        session_manager.get_session = mock.Mock(return_value=session)
 
         read_write_connection = Connection(
             instance="instance-id", database=database, read_only=False
         )
         read_write_connection._session_checkout()
 
-        session_manager.get_session_for_read_write.assert_called_once_with()
+        session_manager.get_session.assert_called_once_with(TransactionType.READ_WRITE)
         self.assertEqual(read_write_connection._session, session)
 
     def test_session_checkout_database_error(self):

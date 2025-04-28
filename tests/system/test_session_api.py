@@ -33,7 +33,7 @@ from .testdata import singer_pb2
 from tests import _helpers as ot_helpers
 from . import _helpers
 from . import _sample_data
-
+from .._builders import build_session
 
 SOME_DATE = datetime.date(2011, 1, 17)
 SOME_TIME = datetime.datetime(1989, 1, 17, 17, 59, 12, 345612)
@@ -415,7 +415,7 @@ class _ReadAbortTrigger(object):
 
 
 def test_session_crud(sessions_database):
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     assert not session.exists()
 
     session.create()
@@ -587,7 +587,7 @@ def test_transaction_read_and_insert_then_rollback(
     sd = _sample_data
     db_name = sessions_database.name
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -722,7 +722,7 @@ def test_transaction_read_and_insert_or_update_then_commit(
     # [START spanner_test_dml_read_your_writes]
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -780,7 +780,7 @@ def test_transaction_execute_sql_w_dml_read_rollback(
     # [START spanner_test_dml_rollback_txn_not_committed]
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -814,7 +814,7 @@ def test_transaction_execute_update_read_commit(sessions_database, sessions_to_d
     # [START spanner_test_dml_read_your_writes]
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -846,7 +846,7 @@ def test_transaction_execute_update_then_insert_commit(
     # [START spanner_test_dml_update]
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -879,7 +879,7 @@ def test_transaction_execute_sql_dml_returning(
 ):
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -910,7 +910,7 @@ def test_transaction_execute_update_dml_returning(
 ):
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -938,7 +938,7 @@ def test_transaction_batch_update_dml_returning(
 ):
     sd = _sample_data
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -970,7 +970,7 @@ def test_transaction_batch_update_success(
     sd = _sample_data
     param_types = spanner_v1.param_types
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -1027,7 +1027,7 @@ def test_transaction_batch_update_and_execute_dml(
     sd = _sample_data
     param_types = spanner_v1.param_types
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -1087,7 +1087,7 @@ def test_transaction_batch_update_w_syntax_error(
     sd = _sample_data
     param_types = spanner_v1.param_types
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -1132,7 +1132,7 @@ def test_transaction_batch_update_w_syntax_error(
 
 
 def test_transaction_batch_update_wo_statements(sessions_database, sessions_to_delete):
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 
@@ -1155,7 +1155,7 @@ def test_transaction_batch_update_w_parent_span(
     param_types = spanner_v1.param_types
     tracer = trace.get_tracer(__name__)
 
-    session = sessions_database.session()
+    session = build_session(database=sessions_database)
     session.create()
     sessions_to_delete.append(session)
 

@@ -300,11 +300,6 @@ class Session(object):
         if self._session_id is None:
             raise ValueError("Session has not been created.")
 
-        if self.is_multiplexed:
-            raise NotImplementedError(
-                "Multiplexed sessions do not yet support read-only transactions."
-            )
-
         return Snapshot(self, **kw)
 
     def read(self, table, columns, keyset, index="", limit=0, column_info=None):

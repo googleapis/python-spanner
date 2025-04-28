@@ -14,7 +14,6 @@
 
 """Model a set of read-only queries to a database as a snapshot."""
 
-from datetime import datetime
 import functools
 import threading
 from google.protobuf.struct_pb2 import Struct
@@ -40,6 +39,7 @@ from google.cloud.spanner_v1._helpers import (
     _SessionWrapper,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -54,9 +54,9 @@ _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
 def _restart_on_unavailable(
     method,
     request,
+    session,
     metadata=None,
     trace_name=None,
-    session=None,
     attributes=None,
     transaction=None,
     transaction_selector=None,
@@ -69,6 +69,9 @@ def _restart_on_unavailable(
 
     :type request: proto
     :param request: request proto to call the method with
+
+    :type session: :class:`~google.cloud.spanner_v1.session.Session`
+    :param session: the session used to perform the operation
 
     :type transaction: :class:`google.cloud.spanner_v1.snapshot._SnapshotBase`
     :param transaction: Snapshot or Transaction class object based on the type of transaction
@@ -153,6 +156,9 @@ def _restart_on_unavailable(
                 iterator = method(request=request)
             continue
 
+        except NotImplementedError as exc:
+            _handle_not_implemented_error(exc, session._database)
+
         if len(item_buffer) == 0:
             break
 
@@ -160,6 +166,30 @@ def _restart_on_unavailable(
             yield item
 
         del item_buffer[:]
+
+
+def _handle_not_implemented_error(exception, database) -> None:
+    """Handles NotImplementedError for the database. If the error is due to unsupported
+    partitioned operations with multiplexed sessions, disables multiplexed sessions for
+    read-only transactions and re-raises the error. Otherwise, re-raises the error
+    with no side effects.
+
+    :type exception: :class:`NotImplementedError`
+    :param exception: The NotImplementedError to handle.
+
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :param database: The database instance associated with the error.
+
+    :raises NotImplementedError: The original exception
+    """
+
+    if "Partitioned operations are not supported with multiplexed sessions" in str(
+        exception
+    ):
+        session_options = database.session_options
+        session_options.disable_multiplexed(database.logger, TransactionType.READ_ONLY)
+
+    raise exception
 
 
 class _SnapshotBase(_SessionWrapper):
@@ -329,7 +359,8 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
-        restart = functools.partial(
+
+        streaming_read = functools.partial(
             api.streaming_read,
             request=request,
             metadata=metadata,
@@ -340,54 +371,23 @@ class _SnapshotBase(_SessionWrapper):
         trace_attributes = {"table_id": table, "columns": columns}
         observability_options = getattr(database, "observability_options", None)
 
+        get_streamed_result_set_args = {
+            "method": streaming_read,
+            "request": request,
+            "metadata": metadata,
+            "trace_attributes": trace_attributes,
+            "column_info": column_info,
+            "observability_options": observability_options,
+            "lazy_decode": lazy_decode,
+        }
+
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                iterator = _restart_on_unavailable(
-                    restart,
-                    request,
-                    metadata,
-                    f"CloudSpanner.{type(self).__name__}.read",
-                    self._session,
-                    trace_attributes,
-                    transaction=self,
-                    observability_options=observability_options,
-                )
-                self._read_request_count += 1
-                if self._multi_use:
-                    return StreamedResultSet(
-                        iterator,
-                        source=self,
-                        column_info=column_info,
-                        lazy_decode=lazy_decode,
-                    )
-                else:
-                    return StreamedResultSet(
-                        iterator, column_info=column_info, lazy_decode=lazy_decode
-                    )
-        else:
-            iterator = _restart_on_unavailable(
-                restart,
-                request,
-                metadata,
-                f"CloudSpanner.{type(self).__name__}.read",
-                self._session,
-                trace_attributes,
-                transaction=self,
-                observability_options=observability_options,
-            )
+                return self._get_streamed_result_set(**get_streamed_result_set_args)
 
-        self._read_request_count += 1
-        self._session._last_use_time = datetime.now()
-
-        if self._multi_use:
-            return StreamedResultSet(
-                iterator, source=self, column_info=column_info, lazy_decode=lazy_decode
-            )
         else:
-            return StreamedResultSet(
-                iterator, column_info=column_info, lazy_decode=lazy_decode
-            )
+            return self._get_streamed_result_set(**get_streamed_result_set_args)
 
     def execute_sql(
         self,
@@ -562,7 +562,7 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
-        restart = functools.partial(
+        execute_streaming_sql_method = functools.partial(
             api.execute_streaming_sql,
             request=request,
             metadata=metadata,
@@ -573,60 +573,22 @@ class _SnapshotBase(_SessionWrapper):
         trace_attributes = {"db.statement": sql}
         observability_options = getattr(database, "observability_options", None)
 
+        get_streamed_result_set_args = {
+            "method": execute_streaming_sql_method,
+            "request": request,
+            "metadata": metadata,
+            "trace_attributes": trace_attributes,
+            "column_info": column_info,
+            "observability_options": observability_options,
+            "lazy_decode": lazy_decode,
+        }
+
         if self._transaction_id is None:
             # lock is added to handle the inline begin for first rpc
             with self._lock:
-                return self._get_streamed_result_set(
-                    restart,
-                    request,
-                    metadata,
-                    trace_attributes,
-                    column_info,
-                    observability_options,
-                    lazy_decode=lazy_decode,
-                )
+                return self._get_streamed_result_set(**get_streamed_result_set_args)
         else:
-            return self._get_streamed_result_set(
-                restart,
-                request,
-                metadata,
-                trace_attributes,
-                column_info,
-                observability_options,
-                lazy_decode=lazy_decode,
-            )
-
-    def _get_streamed_result_set(
-        self,
-        restart,
-        request,
-        metadata,
-        trace_attributes,
-        column_info,
-        observability_options=None,
-        lazy_decode=False,
-    ):
-        iterator = _restart_on_unavailable(
-            restart,
-            request,
-            metadata,
-            f"CloudSpanner.{type(self).__name__}.execute_sql",
-            self._session,
-            trace_attributes,
-            transaction=self,
-            observability_options=observability_options,
-        )
-        self._read_request_count += 1
-        self._execute_sql_count += 1
-
-        if self._multi_use:
-            return StreamedResultSet(
-                iterator, source=self, column_info=column_info, lazy_decode=lazy_decode
-            )
-        else:
-            return StreamedResultSet(
-                iterator, column_info=column_info, lazy_decode=lazy_decode
-            )
+            return self._get_streamed_result_set(**get_streamed_result_set_args)
 
     def partition_read(
         self,
@@ -725,10 +687,15 @@ class _SnapshotBase(_SessionWrapper):
                 retry=retry,
                 timeout=timeout,
             )
-            response = _retry(
-                method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
-            )
+
+            try:
+                response = _retry(
+                    method,
+                    allowed_exceptions={InternalServerError: _check_rst_stream_error},
+                )
+
+            except NotImplementedError as exc:
+                _handle_not_implemented_error(exc, database)
 
         return [partition.partition_token for partition in response.partitions]
 
@@ -829,12 +796,61 @@ class _SnapshotBase(_SessionWrapper):
                 retry=retry,
                 timeout=timeout,
             )
-            response = _retry(
-                method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
-            )
+
+            try:
+                response = _retry(
+                    method,
+                    allowed_exceptions={InternalServerError: _check_rst_stream_error},
+                )
+
+            except NotImplementedError as exc:
+                _handle_not_implemented_error(exc, database)
 
         return [partition.partition_token for partition in response.partitions]
+
+    def _get_streamed_result_set(
+        self,
+        method,
+        request,
+        metadata,
+        trace_attributes,
+        column_info,
+        observability_options,
+        lazy_decode,
+    ):
+        """Returns the streamed result set for a read or execute SQL request with the given arguments."""
+
+        is_execute_sql_request = isinstance(request, ExecuteSqlRequest)
+
+        trace_request_name = "execute_sql" if is_execute_sql_request else "read"
+        trace_name = f"CloudSpanner.{type(self).__name__}.{trace_request_name}"
+
+        iterator = _restart_on_unavailable(
+            method=method,
+            request=request,
+            session=self._session,
+            metadata=metadata,
+            trace_name=trace_name,
+            attributes=trace_attributes,
+            transaction=self,
+            observability_options=observability_options,
+        )
+
+        self._read_request_count += 1
+
+        if is_execute_sql_request:
+            self._execute_sql_count += 1
+
+        streamed_result_set_args = {
+            "response_iterator": iterator,
+            "column_info": column_info,
+            "lazy_decode": lazy_decode,
+        }
+
+        if self._multi_use:
+            streamed_result_set_args["source"] = self
+
+        return StreamedResultSet(**streamed_result_set_args)
 
 
 class Snapshot(_SnapshotBase):
