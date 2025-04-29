@@ -31,10 +31,19 @@ from google.api_core.exceptions import Aborted
 from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import JsonObject
+from google.cloud.spanner_v1 import JsonObject, Interval
+from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1.request_id_header import with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
 
+try:
+    from opentelemetry.propagate import inject
+    from opentelemetry.propagators.textmap import Setter
+
+    HAS_OPENTELEMETRY_INSTALLED = True
+except ImportError:
+    HAS_OPENTELEMETRY_INSTALLED = False
+from typing import List, Tuple
 import random
 
 # Validation error messages
@@ -45,6 +54,29 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
     "Max precision for the whole component of a numeric is 29. The requested "
     + "numeric has a whole component with precision {}"
 )
+
+
+if HAS_OPENTELEMETRY_INSTALLED:
+
+    class OpenTelemetryContextSetter(Setter):
+        """
+        Used by Open Telemetry for context propagation.
+        """
+
+        def set(self, carrier: List[Tuple[str, str]], key: str, value: str) -> None:
+            """
+            Injects trace context into Spanner metadata
+
+            Args:
+                carrier(PubsubMessage): The Pub/Sub message which is the carrier of Open Telemetry
+                data.
+                key(str): The key for which the Open Telemetry context data needs to be set.
+                value(str): The Open Telemetry context value to be set.
+
+            Returns:
+                None
+            """
+            carrier.append((key, value))
 
 
 def _try_to_coerce_bytes(bytestring):
@@ -219,6 +251,8 @@ def _make_value_pb(value):
             return Value(null_value="NULL_VALUE")
         else:
             return Value(string_value=base64.b64encode(value))
+    if isinstance(value, Interval):
+        return Value(string_value=str(value))
 
     raise ValueError("Unknown type: %s" % (value,))
 
@@ -335,6 +369,8 @@ def _get_type_decoder(field_type, field_name, column_info=None):
             for item_field in field_type.struct_type.fields
         ]
         return lambda value_pb: _parse_struct(value_pb, element_decoders)
+    elif type_code == TypeCode.INTERVAL:
+        return _parse_interval
     else:
         raise ValueError("Unknown type: %s" % (field_type,))
 
@@ -439,6 +475,13 @@ def _parse_nullable(value_pb, decoder):
         return None
     else:
         return decoder(value_pb)
+
+
+def _parse_interval(value_pb):
+    """Parse a Value protobuf containing an interval."""
+    if hasattr(value_pb, "string_value"):
+        return Interval.from_str(value_pb.string_value)
+    return Interval.from_str(value_pb)
 
 
 class _SessionWrapper(object):
@@ -550,6 +593,21 @@ def _metadata_with_leader_aware_routing(value, **kw):
     return ("x-goog-spanner-route-to-leader", str(value).lower())
 
 
+def _metadata_with_span_context(metadata: List[Tuple[str, str]], **kw) -> None:
+    """
+    Appends metadata with end to end tracing header and OpenTelemetry span context .
+
+    Args:
+        metadata (list[tuple[str, str]]): The metadata carrier where the OpenTelemetry context
+                                          should be injected.
+    Returns:
+        None
+    """
+    if HAS_OPENTELEMETRY_INSTALLED:
+        metadata.append(("x-goog-spanner-end-to-end-tracing", "true"))
+        inject(setter=OpenTelemetryContextSetter(), carrier=metadata)
+
+
 def _delay_until_retry(exc, deadline, attempts):
     """Helper for :meth:`Session.run_in_transaction`.
 
@@ -644,3 +702,38 @@ class AtomicCounter:
 
 def _metadata_with_request_id(*args, **kwargs):
     return with_request_id(*args, **kwargs)
+
+
+def _merge_Transaction_Options(
+    defaultTransactionOptions: TransactionOptions,
+    mergeTransactionOptions: TransactionOptions,
+) -> TransactionOptions:
+    """Merges two TransactionOptions objects.
+
+    - Values from `mergeTransactionOptions` take precedence if set.
+    - Values from `defaultTransactionOptions` are used only if missing.
+
+    Args:
+        defaultTransactionOptions (TransactionOptions): The default transaction options (fallback values).
+        mergeTransactionOptions (TransactionOptions): The main transaction options (overrides when set).
+
+    Returns:
+        TransactionOptions: A merged TransactionOptions object.
+    """
+
+    if defaultTransactionOptions is None:
+        return mergeTransactionOptions
+
+    if mergeTransactionOptions is None:
+        return defaultTransactionOptions
+
+    merged_pb = TransactionOptions()._pb  # Create a new protobuf object
+
+    # Merge defaultTransactionOptions first
+    merged_pb.MergeFrom(defaultTransactionOptions._pb)
+
+    # Merge transactionOptions, ensuring it overrides default values
+    merged_pb.MergeFrom(mergeTransactionOptions._pb)
+
+    # Convert protobuf object back into a TransactionOptions instance
+    return TransactionOptions(merged_pb)

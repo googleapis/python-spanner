@@ -16,6 +16,7 @@
 import functools
 import threading
 from google.protobuf.struct_pb2 import Struct
+from typing import Optional
 
 from google.cloud.spanner_v1._helpers import (
     _make_value_pb,
@@ -24,6 +25,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _retry,
     _check_rst_stream_error,
+    _merge_Transaction_Options,
 )
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
@@ -37,7 +39,7 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any
 
 
@@ -59,6 +61,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     _lock = threading.Lock()
     _read_only = False
     exclude_txn_from_change_streams = False
+    isolation_level = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
 
     def __init__(self, session):
         if session._transaction is not None:
@@ -89,12 +92,17 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._check_state()
 
         if self._transaction_id is None:
-            return TransactionSelector(
-                begin=TransactionOptions(
-                    read_write=TransactionOptions.ReadWrite(),
-                    exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
-                )
+            txn_options = TransactionOptions(
+                read_write=TransactionOptions.ReadWrite(),
+                exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+                isolation_level=self.isolation_level,
             )
+
+            txn_options = _merge_Transaction_Options(
+                self._session._database.default_transaction_options.default_read_write_transaction_options,
+                txn_options,
+            )
+            return TransactionSelector(begin=txn_options)
         else:
             return TransactionSelector(id=self._transaction_id)
 
@@ -102,6 +110,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self,
         method,
         request,
+        metadata,
         trace_name=None,
         session=None,
         attributes=None,
@@ -118,7 +127,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         transaction = self._make_txn_selector()
         request.transaction = transaction
         with trace_call(
-            trace_name, session, attributes, observability_options=observability_options
+            trace_name,
+            session,
+            attributes,
+            observability_options=observability_options,
+            metadata=metadata,
         ), MetricsCapture():
             method = functools.partial(method, request=request)
             response = _retry(
@@ -155,12 +168,18 @@ class Transaction(_SnapshotBase, _BatchBase):
         txn_options = TransactionOptions(
             read_write=TransactionOptions.ReadWrite(),
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
+            isolation_level=self.isolation_level,
+        )
+        txn_options = _merge_Transaction_Options(
+            database.default_transaction_options.default_read_write_transaction_options,
+            txn_options,
         )
         observability_options = getattr(database, "observability_options", None)
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.begin",
             self._session,
             observability_options=observability_options,
+            metadata=metadata,
         ) as span, MetricsCapture():
             method = functools.partial(
                 api.begin_transaction,
@@ -203,6 +222,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 f"CloudSpanner.{type(self).__name__}.rollback",
                 self._session,
                 observability_options=observability_options,
+                metadata=metadata,
             ), MetricsCapture():
                 method = functools.partial(
                     api.rollback,
@@ -246,26 +266,24 @@ class Transaction(_SnapshotBase, _BatchBase):
         database = self._session._database
         trace_attributes = {"num_mutations": len(self._mutations)}
         observability_options = getattr(database, "observability_options", None)
+        api = database.spanner_api
+        metadata = _metadata_with_prefix(database.name)
+        if database._route_to_leader_enabled:
+            metadata.append(
+                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
+            )
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.commit",
             self._session,
             trace_attributes,
             observability_options,
+            metadata=metadata,
         ) as span, MetricsCapture():
             self._check_state()
             if self._transaction_id is None and len(self._mutations) > 0:
                 self.begin()
             elif self._transaction_id is None and len(self._mutations) == 0:
                 raise ValueError("Transaction is not begun")
-
-            api = database.spanner_api
-            metadata = _metadata_with_prefix(database.name)
-            if database._route_to_leader_enabled:
-                metadata.append(
-                    _metadata_with_leader_aware_routing(
-                        database._route_to_leader_enabled
-                    )
-                )
 
             if request_options is None:
                 request_options = RequestOptions()
@@ -465,6 +483,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
+                    metadata,
                     f"CloudSpanner.{type(self).__name__}.execute_update",
                     self._session,
                     trace_attributes,
@@ -482,6 +501,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
+                metadata,
                 f"CloudSpanner.{type(self).__name__}.execute_update",
                 self._session,
                 trace_attributes,
@@ -605,6 +625,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 response = self._execute_request(
                     method,
                     request,
+                    metadata,
                     "CloudSpanner.DMLTransaction",
                     self._session,
                     trace_attributes,
@@ -623,6 +644,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             response = self._execute_request(
                 method,
                 request,
+                metadata,
                 "CloudSpanner.DMLTransaction",
                 self._session,
                 trace_attributes,
@@ -652,3 +674,22 @@ class BatchTransactionId:
     transaction_id: str
     session_id: str
     read_timestamp: Any
+
+
+@dataclass
+class DefaultTransactionOptions:
+    isolation_level: str = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
+    _defaultReadWriteTransactionOptions: Optional[TransactionOptions] = field(
+        init=False, repr=False
+    )
+
+    def __post_init__(self):
+        """Initialize _defaultReadWriteTransactionOptions automatically"""
+        self._defaultReadWriteTransactionOptions = TransactionOptions(
+            isolation_level=self.isolation_level
+        )
+
+    @property
+    def default_read_write_transaction_options(self) -> TransactionOptions:
+        """Public accessor for _defaultReadWriteTransactionOptions"""
+        return self._defaultReadWriteTransactionOptions

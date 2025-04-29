@@ -16,6 +16,7 @@
 import mock
 
 from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
 from google.api_core.retry import Retry
@@ -309,7 +310,9 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     def test_commit_not_begun(self):
-        session = _Session()
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
         transaction = self._make_one(session)
         with self.assertRaises(ValueError):
             transaction.commit()
@@ -337,7 +340,9 @@ class TestTransaction(OpenTelemetryBase):
         assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_committed(self):
-        session = _Session()
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
         transaction.committed = object()
@@ -367,7 +372,9 @@ class TestTransaction(OpenTelemetryBase):
         assert got_span_events_statuses == want_span_events_statuses
 
     def test_commit_already_rolled_back(self):
-        session = _Session()
+        database = _Database()
+        database.spanner_api = self._make_spanner_api()
+        session = _Session(database)
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
         transaction.rolled_back = True
@@ -1015,6 +1022,7 @@ class _Database(object):
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None
+        self.default_transaction_options = DefaultTransactionOptions()
 
 
 class _Session(object):
