@@ -20,16 +20,12 @@ from google.api_core.gapic_v1.client_info import ClientInfo
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi import partition_helper
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
-from google.cloud.spanner_dbapi.parse_utils import _get_statement_type
-from google.cloud.spanner_dbapi.parsed_statement import (
-    StatementType,
-    AutocommitDmlMode,
-)
+from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
 from google.cloud.spanner_dbapi.partition_helper import PartitionId
 from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
 from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
 from google.cloud.spanner_dbapi.cursor import Cursor
-from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
 from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi.exceptions import (
@@ -112,6 +108,7 @@ class Connection:
         self._staleness = None
         self.request_priority = None
         self._transaction_begin_marked = False
+        self._transaction_isolation_level = None
         # whether transaction started at Spanner. This means that we had
         # made at least one call to Spanner.
         self._spanner_transaction_started = False
@@ -284,6 +281,33 @@ class Connection:
         self._connection_variables["transaction_tag"] = value
 
     @property
+    def isolation_level(self):
+        """The default isolation level that is used for all read/write
+        transactions on this `Connection`.
+
+        Returns:
+            google.cloud.spanner_v1.types.TransactionOptions.IsolationLevel:
+            The isolation level that is used for read/write transactions on
+            this `Connection`.
+        """
+        return self._connection_variables.get(
+            "isolation_level",
+            TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
+        )
+
+    @isolation_level.setter
+    def isolation_level(self, value: TransactionOptions.IsolationLevel):
+        """Sets the isolation level that is used for all read/write
+        transactions on this `Connection`.
+
+        Args:
+            value (google.cloud.spanner_v1.types.TransactionOptions.IsolationLevel):
+            The isolation level for all read/write transactions on this
+            `Connection`.
+        """
+        self._connection_variables["isolation_level"] = value
+
+    @property
     def staleness(self):
         """Current read staleness option value of this `Connection`.
 
@@ -363,6 +387,12 @@ class Connection:
             if not self._spanner_transaction_started:
                 self._transaction = self._session_checkout().transaction()
                 self._transaction.transaction_tag = self.transaction_tag
+                if self._transaction_isolation_level:
+                    self._transaction.isolation_level = (
+                        self._transaction_isolation_level
+                    )
+                else:
+                    self._transaction.isolation_level = self.isolation_level
                 self.transaction_tag = None
                 self._snapshot = None
                 self._spanner_transaction_started = True
@@ -405,7 +435,7 @@ class Connection:
         self.is_closed = True
 
     @check_not_closed
-    def begin(self):
+    def begin(self, isolation_level=None):
         """
         Marks the transaction as started.
 
@@ -421,6 +451,7 @@ class Connection:
                 "is already running"
             )
         self._transaction_begin_marked = True
+        self._transaction_isolation_level = isolation_level
 
     def commit(self):
         """Commits any pending transaction to the database.
@@ -465,6 +496,7 @@ class Connection:
         self._release_session()
         self._transaction_helper.reset()
         self._transaction_begin_marked = False
+        self._transaction_isolation_level = None
         self._spanner_transaction_started = False
 
     @check_not_closed
@@ -666,10 +698,6 @@ class Connection:
         self._autocommit_dml_mode = autocommit_dml_mode
 
     def _partitioned_query_validation(self, partitioned_query, statement):
-        if _get_statement_type(Statement(partitioned_query)) is not StatementType.QUERY:
-            raise ProgrammingError(
-                "Only queries can be partitioned. Invalid statement: " + statement.sql
-            )
         if self.read_only is not True and self._client_transaction_started is True:
             raise ProgrammingError(
                 "Partitioned query is not supported, because the connection is in a read/write transaction."
