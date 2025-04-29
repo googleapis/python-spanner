@@ -99,8 +99,13 @@ class TestSession(OpenTelemetryBase):
         return database
 
     @staticmethod
-    def _make_session_pb(name, labels=None, database_role=None):
-        return SessionRequestProto(name=name, labels=labels, creator_role=database_role)
+    def _make_session_pb(name=None, multiplexed=False, labels=None, database_role=None):
+        return SessionRequestProto(
+            name=name,
+            multiplexed=multiplexed,
+            labels=labels,
+            creator_role=database_role,
+        )
 
     def _make_spanner_api(self):
         return mock.Mock(autospec=SpannerClient, instance=True)
@@ -167,7 +172,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_create_w_database_role(self):
         session_pb = self._make_session_pb(
-            self.SESSION_NAME, database_role=self.DATABASE_ROLE
+            name=self.SESSION_NAME, database_role=self.DATABASE_ROLE
         )
         gax_api = self._make_spanner_api()
         gax_api.create_session.return_value = session_pb
@@ -200,7 +205,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_create_session_span_annotations(self):
         session_pb = self._make_session_pb(
-            self.SESSION_NAME, database_role=self.DATABASE_ROLE
+            name=self.SESSION_NAME, database_role=self.DATABASE_ROLE
         )
 
         gax_api = self._make_spanner_api()
@@ -233,7 +238,7 @@ class TestSession(OpenTelemetryBase):
             self.assertSpanEvents("TestSessionSpan", wantEventNames, span)
 
     def test_create_wo_database_role(self):
-        session_pb = self._make_session_pb(self.SESSION_NAME)
+        session_pb = self._make_session_pb(name=self.SESSION_NAME)
         gax_api = self._make_spanner_api()
         gax_api.create_session.return_value = session_pb
         database = self._make_database()
@@ -245,7 +250,7 @@ class TestSession(OpenTelemetryBase):
         self.assertIsNone(session.database_role)
 
         request = CreateSessionRequest(
-            database=database.name,
+            database=database.name, session=self._make_session_pb()
         )
 
         gax_api.create_session.assert_called_once_with(
@@ -261,7 +266,7 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_create_ok(self):
-        session_pb = self._make_session_pb(self.SESSION_NAME)
+        session_pb = self._make_session_pb(name=self.SESSION_NAME)
         gax_api = self._make_spanner_api()
         gax_api.create_session.return_value = session_pb
         database = self._make_database()
@@ -274,6 +279,7 @@ class TestSession(OpenTelemetryBase):
 
         request = CreateSessionRequest(
             database=database.name,
+            session=self._make_session_pb(),
         )
 
         gax_api.create_session.assert_called_once_with(
@@ -290,7 +296,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_create_w_labels(self):
         labels = {"foo": "bar"}
-        session_pb = self._make_session_pb(self.SESSION_NAME, labels=labels)
+        session_pb = self._make_session_pb(name=self.SESSION_NAME, labels=labels)
         gax_api = self._make_spanner_api()
         gax_api.create_session.return_value = session_pb
         database = self._make_database()
@@ -343,7 +349,7 @@ class TestSession(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_exists_hit(self):
-        session_pb = self._make_session_pb(self.SESSION_NAME)
+        session_pb = self._make_session_pb(name=self.SESSION_NAME)
         gax_api = self._make_spanner_api()
         gax_api.get_session.return_value = session_pb
         database = self._make_database()
@@ -371,7 +377,7 @@ class TestSession(OpenTelemetryBase):
         False,
     )
     def test_exists_hit_wo_span(self):
-        session_pb = self._make_session_pb(self.SESSION_NAME)
+        session_pb = self._make_session_pb(name=self.SESSION_NAME)
         gax_api = self._make_spanner_api()
         gax_api.get_session.return_value = session_pb
         database = self._make_database()

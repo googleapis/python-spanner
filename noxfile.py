@@ -34,7 +34,6 @@ LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
 DEFAULT_PYTHON_VERSION = "3.8"
 
-DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION = "3.12"
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.7",
     "3.8",
@@ -169,30 +168,6 @@ def install_unittest_dependencies(session, *constraints):
     else:
         session.install("-e", ".", *constraints)
 
-    # XXX Work around Kokoro image's older pip, which borks the OT install.
-    session.run("pip", "install", "--upgrade", "pip")
-    constraints_path = str(
-        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
-    )
-    session.install("-e", ".[tracing]", "-c", constraints_path)
-    # XXX: Dump installed versions to debug OT issue
-    session.run("pip", "list")
-
-    # Run py.test against the unit tests with OpenTelemetry.
-    session.run(
-        "py.test",
-        "--quiet",
-        "--cov=google.cloud.spanner",
-        "--cov=google.cloud",
-        "--cov=tests.unit",
-        "--cov-append",
-        "--cov-config=.coveragerc",
-        "--cov-report=",
-        "--cov-fail-under=0",
-        os.path.join("tests", "unit"),
-        *session.posargs,
-    )
-
 
 @nox.session(python=UNIT_TEST_PYTHON_VERSIONS)
 @nox.parametrize(
@@ -235,34 +210,6 @@ def unit(session, protobuf_implementation):
     )
 
 
-@nox.session(python=DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION)
-def mockserver(session):
-    # Install all test dependencies, then install this package in-place.
-
-    constraints_path = str(
-        CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
-    )
-    # install_unittest_dependencies(session, "-c", constraints_path)
-    standard_deps = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_DEPENDENCIES
-    session.install(*standard_deps, "-c", constraints_path)
-    session.install("-e", ".", "-c", constraints_path)
-
-    # Run py.test against the mockserver tests.
-    session.run(
-        "py.test",
-        "--quiet",
-        f"--junitxml=unit_{session.python}_sponge_log.xml",
-        "--cov=google",
-        "--cov=tests/unit",
-        "--cov-append",
-        "--cov-config=.coveragerc",
-        "--cov-report=",
-        "--cov-fail-under=0",
-        os.path.join("tests", "mockserver_tests"),
-        *session.posargs,
-    )
-
-
 def install_systemtest_dependencies(session, *constraints):
     # Use pre-release gRPC for system tests.
     # Exclude version 1.52.0rc1 which has a known issue.
@@ -294,18 +241,7 @@ def install_systemtest_dependencies(session, *constraints):
 
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
-@nox.parametrize(
-    "protobuf_implementation,database_dialect",
-    [
-        ("python", "GOOGLE_STANDARD_SQL"),
-        ("python", "POSTGRESQL"),
-        ("upb", "GOOGLE_STANDARD_SQL"),
-        ("upb", "POSTGRESQL"),
-        ("cpp", "GOOGLE_STANDARD_SQL"),
-        ("cpp", "POSTGRESQL"),
-    ],
-)
-def system(session, protobuf_implementation, database_dialect):
+def system(session):
     """Run the system test suite."""
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
@@ -316,17 +252,6 @@ def system(session, protobuf_implementation, database_dialect):
     # Check the value of `RUN_SYSTEM_TESTS` env var. It defaults to true.
     if os.environ.get("RUN_SYSTEM_TESTS", "true") == "false":
         session.skip("RUN_SYSTEM_TESTS is set to false, skipping")
-    # Sanity check: Only run tests if the environment variable is set.
-    if not os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "") and not os.environ.get(
-        "SPANNER_EMULATOR_HOST", ""
-    ):
-        session.skip(
-            "Credentials or emulator host must be set via environment variable"
-        )
-    # If POSTGRESQL tests and Emulator, skip the tests
-    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
-        session.skip("Postgresql is not supported by Emulator yet.")
-
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
         session.install("pyopenssl")
@@ -339,12 +264,6 @@ def system(session, protobuf_implementation, database_dialect):
 
     install_systemtest_dependencies(session, "-c", constraints_path)
 
-    # TODO(https://github.com/googleapis/synthtool/issues/1976):
-    # Remove the 'cpp' implementation once support for Protobuf 3.x is dropped.
-    # The 'cpp' implementation requires Protobuf<4.
-    if protobuf_implementation == "cpp":
-        session.install("protobuf<4")
-
     # Run py.test against the system tests.
     if system_test_exists:
         session.run(
@@ -353,11 +272,6 @@ def system(session, protobuf_implementation, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_path,
             *session.posargs,
-            env={
-                "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
-            },
         )
     if system_test_folder_exists:
         session.run(
@@ -366,11 +280,6 @@ def system(session, protobuf_implementation, database_dialect):
             f"--junitxml=system_{session.python}_sponge_log.xml",
             system_test_folder_path,
             *session.posargs,
-            env={
-                "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
-            },
         )
 
 
@@ -391,7 +300,7 @@ def cover(session):
 def docs(session):
     """Build the docs for this library."""
 
-    session.install("-e", ".[tracing]")
+    session.install("-e", ".")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
         # which still support sphinx 4.x.
@@ -426,7 +335,7 @@ def docs(session):
 def docfx(session):
     """Build the docfx yaml files for this library."""
 
-    session.install("-e", ".[tracing]")
+    session.install("-e", ".")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
         # which still support sphinx 4.x.
@@ -470,17 +379,10 @@ def docfx(session):
 
 @nox.session(python="3.13")
 @nox.parametrize(
-    "protobuf_implementation,database_dialect",
-    [
-        ("python", "GOOGLE_STANDARD_SQL"),
-        ("python", "POSTGRESQL"),
-        ("upb", "GOOGLE_STANDARD_SQL"),
-        ("upb", "POSTGRESQL"),
-        ("cpp", "GOOGLE_STANDARD_SQL"),
-        ("cpp", "POSTGRESQL"),
-    ],
+    "protobuf_implementation",
+    ["python", "upb", "cpp"],
 )
-def prerelease_deps(session, protobuf_implementation, database_dialect):
+def prerelease_deps(session, protobuf_implementation):
     """Run all tests with prerelease versions of dependencies installed."""
 
     if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13"):
@@ -553,8 +455,6 @@ def prerelease_deps(session, protobuf_implementation, database_dialect):
         "tests/unit",
         env={
             "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-            "SPANNER_DATABASE_DIALECT": database_dialect,
-            "SKIP_BACKUP_TESTS": "true",
         },
     )
 
@@ -571,8 +471,6 @@ def prerelease_deps(session, protobuf_implementation, database_dialect):
             *session.posargs,
             env={
                 "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
             },
         )
     if os.path.exists(system_test_folder_path):
@@ -584,7 +482,5 @@ def prerelease_deps(session, protobuf_implementation, database_dialect):
             *session.posargs,
             env={
                 "PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION": protobuf_implementation,
-                "SPANNER_DATABASE_DIALECT": database_dialect,
-                "SKIP_BACKUP_TESTS": "true",
             },
         )
