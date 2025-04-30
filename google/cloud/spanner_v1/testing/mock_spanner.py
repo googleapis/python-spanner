@@ -53,6 +53,7 @@ class MockSpanner:
         name = inspect.currentframe().f_back.f_code.co_name
         error: _Status | None = self.errors.pop(name, None)
         if error:
+            print("context.abort_with_status", error)
             context.abort_with_status(error)
 
     def get_result_as_partial_result_sets(
