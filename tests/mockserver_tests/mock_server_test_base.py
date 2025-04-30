@@ -20,6 +20,7 @@ from google.cloud.spanner_v1.testing.mock_spanner import (
     start_mock_server,
     SpannerServicer,
 )
+from google.cloud.spanner_v1.client import Client
 import google.cloud.spanner_v1.types.type as spanner_type
 import google.cloud.spanner_v1.types.result_set as result_set
 from google.api_core.client_options import ClientOptions
@@ -41,6 +42,27 @@ def aborted_status() -> _Status:
     error = status_pb2.Status(
         code=code_pb2.ABORTED,
         message="Transaction was aborted.",
+    )
+    retry_info = RetryInfo(retry_delay=Duration(seconds=0, nanos=1))
+    status = _Status(
+        code=code_to_grpc_status_code(error.code),
+        details=error.message,
+        trailing_metadata=(
+            ("grpc-status-details-bin", error.SerializeToString()),
+            (
+                "google.rpc.retryinfo-bin",
+                retry_info.SerializeToString(),
+            ),
+        ),
+    )
+    return status
+
+
+# Creates an UNAVAILABLE status with the smallest possible retry delay.
+def unavailable_status() -> _Status:
+    error = status_pb2.Status(
+        code=code_pb2.UNAVAILABLE,
+        message="Service unavailable.",
     )
     retry_info = RetryInfo(retry_delay=Duration(seconds=0, nanos=1))
     status = _Status(
@@ -153,6 +175,7 @@ class MockServerTestBase(unittest.TestCase):
     def teardown_class(cls):
         if MockServerTestBase.server is not None:
             MockServerTestBase.server.stop(grace=None)
+            Client.NTH_CLIENT.reset()
             MockServerTestBase.server = None
 
     def setup_method(self, *args, **kwargs):
@@ -186,6 +209,8 @@ class MockServerTestBase(unittest.TestCase):
     def database(self) -> Database:
         if self._database is None:
             self._database = self.instance.database(
-                "test-database", pool=FixedSizePool(size=10)
+                "test-database",
+                pool=FixedSizePool(size=10),
+                enable_interceptors_in_tests=True,
             )
         return self._database
