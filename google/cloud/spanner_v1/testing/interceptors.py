@@ -68,11 +68,12 @@ class MethodAbortInterceptor(ClientInterceptor):
 
 
 X_GOOG_REQUEST_ID = "x-goog-spanner-request-id"
-# TODO:(@odeke-em): delete this guard when PR #1367 is merged.
-__X_GOOG_REQUEST_ID_FUNCTIONALITY_MERGED = False
 
 
 class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
+    # TODO:(@odeke-em): delete this guard when PR #1367 is merged.
+    X_GOOG_REQUEST_ID_FUNCTIONALITY_MERGED = False
+
     def __init__(self):
         self._unary_req_segments = []
         self._stream_req_segments = []
@@ -86,22 +87,24 @@ class XGoogRequestIDHeaderInterceptor(ClientInterceptor):
                 x_goog_request_id = value
                 break
 
-        if __X_GOOG_REQUEST_ID_FUNCTIONALITY_MERGED and not x_goog_request_id:
+        if self.X_GOOG_REQUEST_ID_FUNCTIONALITY_MERGED and not x_goog_request_id:
             raise Exception(
                 f"Missing {X_GOOG_REQUEST_ID} header in {call_details.method}"
             )
 
         response_or_iterator = method(request_or_iterator, call_details)
         streaming = getattr(response_or_iterator, "__iter__", None) is not None
-        with self.__lock:
-            if streaming:
-                self._stream_req_segments.append(
-                    (call_details.method, parse_request_id(x_goog_request_id))
-                )
-            else:
-                self._unary_req_segments.append(
-                    (call_details.method, parse_request_id(x_goog_request_id))
-                )
+
+        if self.X_GOOG_REQUEST_ID_FUNCTIONALITY_MERGED:
+            with self.__lock:
+                if streaming:
+                    self._stream_req_segments.append(
+                        (call_details.method, parse_request_id(x_goog_request_id))
+                    )
+                else:
+                    self._unary_req_segments.append(
+                        (call_details.method, parse_request_id(x_goog_request_id))
+                    )
 
         return response_or_iterator
 
