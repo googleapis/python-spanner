@@ -20,7 +20,6 @@ from google.cloud.spanner_v1.testing.mock_spanner import (
     start_mock_server,
     SpannerServicer,
 )
-from google.cloud.spanner_v1.client import Client
 import google.cloud.spanner_v1.types.type as spanner_type
 import google.cloud.spanner_v1.types.result_set as result_set
 from google.api_core.client_options import ClientOptions
