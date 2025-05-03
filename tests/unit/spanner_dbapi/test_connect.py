@@ -140,11 +140,7 @@ class Test_connect(unittest.TestCase):
         instance = client.instance.return_value
         database = instance.database.return_value
 
-        connection = connect(
-            INSTANCE,
-            DATABASE,
-            ignore_transaction_warnings=True
-        )
+        connection = connect(INSTANCE, DATABASE, ignore_transaction_warnings=True)
 
         self.assertIsInstance(connection, Connection)
         self.assertTrue(connection._ignore_transaction_warnings)
