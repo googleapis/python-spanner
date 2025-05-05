@@ -1732,7 +1732,7 @@ def drop_sequence(instance_id, database_id):
 
 # [END spanner_postgresql_drop_sequence]
 
-# [START spanner_postgres_dml_last_statement]
+# [START spanner_postgresql_dml_last_statement]
 def dml_last_statement_option(instance_id, database_id):
     """Inserts and updates using DML where the update set the last statement option."""
     # instance_id = "your-spanner-instance"
@@ -1759,7 +1759,7 @@ def dml_last_statement_option(instance_id, database_id):
     database.run_in_transaction(insert_and_update_singers)
 
 
-# [END  spanner_postgres_dml_last_statement]
+# [END  spanner_postgresql_dml_last_statement]
 
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
