@@ -323,9 +323,8 @@ def system(session, protobuf_implementation, database_dialect):
         session.skip(
             "Credentials or emulator host must be set via environment variable"
         )
-    # If POSTGRESQL tests and Emulator, skip the tests
-    if os.environ.get("SPANNER_EMULATOR_HOST") and database_dialect == "POSTGRESQL":
-        session.skip("Postgresql is not supported by Emulator yet.")
+    if not os.environ.get("SPANNER_EMULATOR_HOST"):
+        session.skip("only run system tests on the emulator to speed the build up")
 
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
