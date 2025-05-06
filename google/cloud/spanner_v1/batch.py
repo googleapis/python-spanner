@@ -222,7 +222,10 @@ class Batch(_BatchBase):
             database.default_transaction_options.default_read_write_transaction_options,
             txn_options,
         )
-        trace_attributes = {"num_mutations": len(self._mutations)}
+        trace_attributes = {
+            "num_mutations": len(self._mutations),
+            "transaction.tag": self.transaction_tag,
+        }
 
         if request_options is None:
             request_options = RequestOptions()
@@ -352,12 +355,15 @@ class MutationGroups(_SessionWrapper):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        trace_attributes = {"num_mutation_groups": len(self._mutation_groups)}
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
+        trace_attributes = {
+            "num_mutation_groups": len(self._mutation_groups),
+            "request.tag": request_options.request_tag,
+        }
         request = BatchWriteRequest(
             session=self._session.name,
             mutation_groups=self._mutation_groups,
