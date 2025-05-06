@@ -139,6 +139,7 @@ class Test_connect(unittest.TestCase):
         client = mock_client.return_value
         instance = client.instance.return_value
         database = instance.database.return_value
+        self.assertIsNotNone(database)
 
         connection = connect(INSTANCE, DATABASE, ignore_transaction_warnings=True)
 
