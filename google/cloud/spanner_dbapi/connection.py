@@ -805,7 +805,7 @@ def connect(
         database = instance.database(
             database_id, pool=pool, database_role=database_role
         )
-    conn = Connection(instance, database)
+    conn = Connection(instance, database, **kwargs)
     if pool is not None:
         conn._own_pool = False
 
