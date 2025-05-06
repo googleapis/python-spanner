@@ -329,8 +329,12 @@ def system(session, protobuf_implementation, database_dialect):
         session.skip(
             "Credentials or emulator host must be set via environment variable"
         )
-    if not os.environ.get("SPANNER_EMULATOR_HOST"):
-        session.skip("only run system tests on the emulator to speed the build up")
+    if not (
+        os.environ.get("SPANNER_EMULATOR_HOST") or protobuf_implementation == "python"
+    ):
+        session.skip(
+            "Only run system tests on real Spanner with one protobuf implementation to speed up the build"
+        )
 
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
