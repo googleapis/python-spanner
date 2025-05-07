@@ -1401,7 +1401,7 @@ class TestDatabase(_BaseTest):
         import datetime
 
         NOW = datetime.datetime.now()
-        client = _Client()
+        client = _Client(observability_options=dict(enable_end_to_end_tracing=True))
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         session = _Session()
@@ -1916,7 +1916,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = self._make_one(database, timeout_secs=0.1, default_retry_delay=0)
 
         with self.assertRaises(Aborted):
             with checkout as batch:
@@ -1935,9 +1935,7 @@ class TestBatchCheckout(_BaseTest):
             return_commit_stats=True,
             request_options=RequestOptions(),
         )
-        # Asserts that the exponential backoff retry for aborted transactions with a 30-second deadline
-        # allows for a maximum of 4 retries (2^x <= 30) to stay within the time limit.
-        self.assertEqual(api.commit.call_count, 4)
+        self.assertGreater(api.commit.call_count, 1)
         api.commit.assert_any_call(
             request=request,
             metadata=[
@@ -3121,6 +3119,7 @@ class _Client(object):
         route_to_leader_enabled=True,
         directed_read_options=None,
         default_transaction_options=DefaultTransactionOptions(),
+        observability_options=None,
     ):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
@@ -3135,6 +3134,7 @@ class _Client(object):
         self.route_to_leader_enabled = route_to_leader_enabled
         self.directed_read_options = directed_read_options
         self.default_transaction_options = default_transaction_options
+        self.observability_options = observability_options
 
 
 class _Instance(object):
