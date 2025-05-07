@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import sys
+import traceback
 import threading
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
@@ -38,9 +40,12 @@ from google.cloud.spanner_v1.types import transaction as transaction_type
 from google.cloud.spanner_v1.keyset import KeySet
 
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _make_value_pb,
     _merge_query_options,
+    _metadata_with_request_id,
 )
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 import mock
 
@@ -522,6 +527,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -537,6 +546,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             timeout=TIMEOUT,
             retry=RETRY,
@@ -554,6 +567,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -570,6 +587,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -595,6 +616,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -621,6 +646,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -639,6 +668,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -653,6 +686,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
         )
 
@@ -669,6 +706,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -682,6 +723,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
         )
 
@@ -698,6 +743,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -711,6 +760,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
         )
 
@@ -732,6 +785,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
@@ -755,6 +812,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -771,6 +832,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -782,6 +847,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -798,6 +867,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -810,6 +883,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -850,6 +927,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
         )
 
@@ -860,6 +941,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
         )
 
@@ -868,6 +953,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -911,6 +1000,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                ),
             ],
         )
 
@@ -919,6 +1012,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -929,6 +1026,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -977,6 +1078,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                ),
             ],
         )
 
@@ -985,6 +1090,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -995,6 +1104,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -1043,6 +1156,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                ),
             ],
         )
         req = self._execute_sql_expected_request(database)
@@ -1051,6 +1168,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -1061,6 +1182,10 @@ class TestTransaction(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                ),
             ],
             retry=RETRY,
             timeout=TIMEOUT,
@@ -1079,19 +1204,39 @@ class TestTransaction(OpenTelemetryBase):
 
         api.execute_streaming_sql.assert_called_once_with(
             request=self._execute_sql_expected_request(database=database),
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                ),
+            ],
             timeout=TIMEOUT,
             retry=RETRY,
         )
 
 
 class _Client(object):
+    NTH_CLIENT = AtomicCounter()
+
     def __init__(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+        self._nth_client_id = _Client.NTH_CLIENT.increment()
+        self._nth_request = AtomicCounter()
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
+
+    def get_next_request(self):
+        # This method exists because somehow Python isn't able to
+        # call the property method "_next_nth_request" and that's
+        # needlessly stalled progress.
+        return self._nth_request.increment()
 
 
 class _Instance(object):
@@ -1106,6 +1251,27 @@ class _Database(object):
         self._route_to_leader_enabled = True
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+
+    @property
+    def _next_nth_request(self):
+        return self._instance._client.get_next_request()
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
 
 class _Session(object):

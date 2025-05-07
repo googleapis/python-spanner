@@ -252,7 +252,11 @@ class Batch(_BatchBase):
             method = functools.partial(
                 api.commit,
                 request=request,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                ),
             )
             deadline = time.time() + kwargs.get(
                 "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
@@ -377,7 +381,11 @@ class MutationGroups(_SessionWrapper):
             method = functools.partial(
                 api.batch_write,
                 request=request,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                ),
             )
             response = _retry(
                 method,
