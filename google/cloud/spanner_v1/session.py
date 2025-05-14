@@ -252,9 +252,7 @@ class Session(object):
 
         database = self._database
         api = database.spanner_api
-        metadata = database.metadata_with_request_id(
-            database._next_nth_request, 1, _metadata_with_prefix(database.name)
-        )
+        metadata = _metadata_with_prefix(database.name)
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
             "CloudSpanner.DeleteSession",
@@ -268,7 +266,9 @@ class Session(object):
         ), MetricsCapture():
             api.delete_session(
                 name=self.name,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request, 1, metadata
+                ),
             )
 
     def ping(self):

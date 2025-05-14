@@ -806,7 +806,9 @@ class Database(object):
 
     @property
     def _nth_client_id(self):
-        return self._instance._client._nth_client_id
+        if self._instance and self._instance._client:
+            return self._instance._client._nth_client_id
+        return 0
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
@@ -1028,7 +1030,6 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
-            # TODO: Infer the channel_id being used.
             metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future

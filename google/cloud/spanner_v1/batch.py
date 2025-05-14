@@ -250,15 +250,17 @@ class Batch(_BatchBase):
             observability_options=observability_options,
             metadata=metadata,
         ), MetricsCapture():
-            attempt = AtomicCounter()
-            nth_request = getattr(database, "_next_nth_request", 0)
-
             def wrapped_method(*args, **kwargs):
                 method = functools.partial(
                     api.commit,
                     request=request,
                     metadata=database.metadata_with_request_id(
-                        nth_request, attempt.increment(), metadata
+                        # This code is retried due to ABORTED, hence nth_request
+                        # should be increased. attempt can only be increased if
+                        # we encounter UNAVAILABLE or INTERNAL.
+                        getattr(database, "_next_nth_request", 0),
+                        1,
+                        metadata,
                     ),
                 )
                 return method(*args, **kwargs)

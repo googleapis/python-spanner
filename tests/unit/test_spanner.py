@@ -1008,7 +1008,6 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertEqual(api.execute_batch_dml.call_count, 2)
-        print("\033[34marg_list", api.execute_batch_dml.call_args_list, "\033[00m")
         self.assertEqual(
             api.execute_batch_dml.call_args_list,
             [
