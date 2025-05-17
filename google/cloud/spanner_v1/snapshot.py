@@ -359,7 +359,12 @@ class _SnapshotBase(_SessionWrapper):
             timeout=timeout,
         )
 
-        trace_attributes = {"table_id": table, "columns": columns}
+        trace_attributes = {
+            "table_id": table,
+            "columns": columns,
+            "request.tag": request_options.request_tag,
+            "transaction.tag": request_options.transaction_tag,
+        }
         observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
@@ -597,7 +602,11 @@ class _SnapshotBase(_SessionWrapper):
             )
             return restart(*args, **kwargs)
 
-        trace_attributes = {"db.statement": sql}
+        trace_attributes = {
+            "db.statement": sql,
+            "request.tag": request_options.request_tag,
+            "transaction.tag": request_options.transaction_tag,
+        }
         observability_options = getattr(database, "observability_options", None)
 
         if self._transaction_id is None:
