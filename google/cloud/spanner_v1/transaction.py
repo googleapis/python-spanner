@@ -186,13 +186,12 @@ class Transaction(_SnapshotBase, _BatchBase):
             nth_request = database._next_nth_request
 
             def wrapped_method(*args, **kwargs):
-                attempt.increment()
                 method = functools.partial(
                     api.begin_transaction,
                     session=self._session.name,
                     options=txn_options,
                     metadata=database.metadata_with_request_id(
-                        nth_request, attempt.value, metadata
+                        nth_request, attempt.increment(), metadata
                     ),
                 )
                 return method(*args, **kwargs)

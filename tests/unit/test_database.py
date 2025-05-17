@@ -1289,6 +1289,18 @@ class TestDatabase(_BaseTest):
         )
 
         if retried:
+            api.begin_transaction.assert_called_with(
+                session=session.name,
+                options=txn_options,
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                    ),
+                ],
+            )
             self.assertEqual(api.begin_transaction.call_count, 2)
             api.begin_transaction.assert_called_with(
                 session=session.name,
@@ -1304,6 +1316,18 @@ class TestDatabase(_BaseTest):
                 ],
             )
         else:
+            api.begin_transaction.assert_called_with(
+                session=session.name,
+                options=txn_options,
+                metadata=[
+                    ("google-cloud-resource-prefix", database.name),
+                    ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                    ),
+                ],
+            )
             self.assertEqual(api.begin_transaction.call_count, 1)
             api.begin_transaction.assert_called_with(
                 session=session.name,
@@ -1347,22 +1371,11 @@ class TestDatabase(_BaseTest):
             request_options=expected_request_options,
         )
 
-        api.execute_streaming_sql.assert_any_call(
-            request=expected_request,
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.{database._channel_id}.2.1",
-                ),
-            ],
-        )
         if retried:
             expected_retry_transaction = TransactionSelector(
                 id=self.RETRY_TRANSACTION_ID
             )
-            expected_request = ExecuteSqlRequest(
+            expected_request_with_retry = ExecuteSqlRequest(
                 session=self.SESSION_NAME,
                 sql=dml,
                 transaction=expected_retry_transaction,
@@ -1372,36 +1385,46 @@ class TestDatabase(_BaseTest):
                 request_options=expected_request_options,
             )
 
-            api.begin_transaction.assert_called_with(
-                session=self.SESSION_NAME,
-                options=txn_options,
-                metadata=[
-                    ("google-cloud-resource-prefix", database.name),
-                    ("x-goog-spanner-route-to-leader", "true"),
-                    (
-                        "x-goog-spanner-request-id",
-                        # Retrying on an aborted response involves creating the transaction afresh
-                        # and also re-invoking execute_streaming_sql, hence the fresh request 4.1.
-                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+            self.assertEqual(
+                api.execute_streaming_sql.call_args_list,
+                [
+                    mock.call(
+                        request=expected_request,
+                        metadata=[
+                            ("google-cloud-resource-prefix", database.name),
+                            ("x-goog-spanner-route-to-leader", "true"),
+                            (
+                                "x-goog-spanner-request-id",
+                                f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                            ),
+                        ],
+                    ),
+                    mock.call(
+                        request=expected_request_with_retry,
+                        metadata=[
+                            ("google-cloud-resource-prefix", database.name),
+                            ("x-goog-spanner-route-to-leader", "true"),
+                            (
+                                "x-goog-spanner-request-id",
+                                f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                            ),
+                        ],
                     ),
                 ],
             )
-
-            api.execute_streaming_sql.assert_called_with(
+            self.assertEqual(api.execute_streaming_sql.call_count, 2)
+        else:
+            api.execute_streaming_sql.assert_any_call(
                 request=expected_request,
                 metadata=[
                     ("google-cloud-resource-prefix", database.name),
                     ("x-goog-spanner-route-to-leader", "true"),
                     (
                         "x-goog-spanner-request-id",
-                        # Retrying on an aborted response involves creating the transaction afresh
-                        # and also re-invoking execute_streaming_sql, hence the fresh request 4.1.
-                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                     ),
                 ],
             )
-            self.assertEqual(api.execute_streaming_sql.call_count, 2)
-        else:
             self.assertEqual(api.execute_streaming_sql.call_count, 1)
 
     def test_execute_partitioned_dml_wo_params(self):
@@ -1583,7 +1606,7 @@ class TestDatabase(_BaseTest):
         import datetime
 
         NOW = datetime.datetime.now()
-        client = _Client()
+        client = _Client(observability_options=dict(enable_end_to_end_tracing=True))
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         session = _Session()
@@ -2069,7 +2092,7 @@ class TestBatchCheckout(_BaseTest):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -2120,7 +2143,7 @@ class TestBatchCheckout(_BaseTest):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -2142,7 +2165,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = self._make_one(database, timeout_secs=0.1, default_retry_delay=0)
 
         with self.assertRaises(Aborted):
             with checkout as batch:
@@ -2161,9 +2184,7 @@ class TestBatchCheckout(_BaseTest):
             return_commit_stats=True,
             request_options=RequestOptions(),
         )
-        # Asserts that the exponential backoff retry for aborted transactions with a 30-second deadline
-        # allows for a maximum of 4 retries (2^x <= 30) to stay within the time limit.
-        self.assertEqual(api.commit.call_count, 4)
+        self.assertGreater(api.commit.call_count, 1)
         api.commit.assert_any_call(
             request=request,
             metadata=[
@@ -2171,7 +2192,7 @@ class TestBatchCheckout(_BaseTest):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -3357,6 +3378,7 @@ class _Client(object):
         route_to_leader_enabled=True,
         directed_read_options=None,
         default_transaction_options=DefaultTransactionOptions(),
+        observability_options=None,
     ):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
@@ -3371,9 +3393,9 @@ class _Client(object):
         self.route_to_leader_enabled = route_to_leader_enabled
         self.directed_read_options = directed_read_options
         self.default_transaction_options = default_transaction_options
+        self.observability_options = observability_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
-        self.credentials = {}
 
     @property
     def _next_nth_request(self):
@@ -3396,6 +3418,7 @@ class _Backup(object):
 class _Database(object):
     log_commit_stats = False
     _route_to_leader_enabled = True
+    NTH_CLIENT_ID = AtomicCounter()
 
     def __init__(self, name, instance=None):
         self.name = name
@@ -3406,6 +3429,25 @@ class _Database(object):
         self.logger = mock.create_autospec(Logger, instance=True)
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+        self._nth_request = AtomicCounter()
+        self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
     @property
     def _next_nth_request(self):

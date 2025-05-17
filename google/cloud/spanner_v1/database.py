@@ -55,7 +55,6 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,
-    monkey_patch,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -813,12 +812,13 @@ class Database(object):
     def _next_nth_request(self):
         if self._instance and self._instance._client:
             return self._instance._client._next_nth_request
-        raise Exception("returning 1 for next_nth_request")
         return 1
 
     @property
     def _nth_client_id(self):
-        return self._instance._client._nth_client_id
+        if self._instance and self._instance._client:
+            return self._instance._client._nth_client_id
+        return 0
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
@@ -1040,7 +1040,6 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
-            # TODO: Infer the channel_id being used.
             metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future

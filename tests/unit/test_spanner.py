@@ -45,8 +45,11 @@ from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_request_id,
 )
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _metadata_with_request_id,
+)
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-
 import mock
 
 from google.api_core import gapic_v1
@@ -529,7 +532,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 ),
             ],
         )
@@ -548,7 +551,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             timeout=TIMEOUT,
@@ -569,7 +572,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -589,7 +592,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -618,7 +621,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -648,7 +651,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -670,7 +673,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -688,7 +691,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -708,7 +711,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -725,7 +728,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -745,7 +748,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -762,7 +765,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -787,7 +790,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=gapic_v1.method.DEFAULT,
@@ -814,7 +817,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -834,7 +837,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -849,7 +852,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
             retry=RETRY,
@@ -869,7 +872,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=RETRY,
@@ -885,7 +888,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
             retry=RETRY,
@@ -929,7 +932,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -943,7 +946,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -955,7 +958,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
                 ),
             ],
             retry=RETRY,
@@ -992,6 +995,7 @@ class TestTransaction(OpenTelemetryBase):
             thread.join()
 
         self._execute_update_helper(transaction=transaction, api=api)
+        self.assertEqual(api.execute_sql.call_count, 1)
 
         api.execute_sql.assert_any_call(
             request=self._execute_update_expected_request(database, begin=False),
@@ -1002,41 +1006,43 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
                 ),
             ],
         )
 
-        api.execute_batch_dml.assert_any_call(
-            request=self._batch_update_expected_request(),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
-        )
-
-        api.execute_batch_dml.assert_any_call(
-            request=self._batch_update_expected_request(begin=False),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
-        )
-
-        self.assertEqual(api.execute_sql.call_count, 1)
         self.assertEqual(api.execute_batch_dml.call_count, 2)
+        self.assertEqual(
+            api.execute_batch_dml.call_args_list,
+            [
+                mock.call(
+                    request=self._batch_update_expected_request(),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                ),
+                mock.call(
+                    request=self._batch_update_expected_request(begin=False),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                ),
+            ],
+        )
 
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(
         self,
@@ -1080,37 +1086,41 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.3.1",
                 ),
             ],
         )
 
-        api.streaming_read.assert_any_call(
-            request=self._read_helper_expected_request(),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+        self.assertEqual(
+            api.streaming_read.call_args_list,
+            [
+                mock.call(
+                    request=self._read_helper_expected_request(),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                ),
+                mock.call(
+                    request=self._read_helper_expected_request(begin=False),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
                 ),
             ],
-            retry=RETRY,
-            timeout=TIMEOUT,
-        )
-
-        api.streaming_read.assert_any_call(
-            request=self._read_helper_expected_request(begin=False),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
         )
 
         self.assertEqual(api.execute_sql.call_count, 1)
@@ -1158,37 +1168,41 @@ class TestTransaction(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.3.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.3.1",
                 ),
             ],
-        )
-        req = self._execute_sql_expected_request(database)
-        api.execute_streaming_sql.assert_any_call(
-            request=req,
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
         )
 
-        api.execute_streaming_sql.assert_any_call(
-            request=self._execute_sql_expected_request(database, begin=False),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.2.1",
+        self.assertEqual(
+            api.execute_streaming_sql.call_args_list,
+            [
+                mock.call(
+                    request=self._execute_sql_expected_request(database),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                ),
+                mock.call(
+                    request=self._execute_sql_expected_request(database, begin=False),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
                 ),
             ],
-            retry=RETRY,
-            timeout=TIMEOUT,
         )
 
         self.assertEqual(api.execute_sql.call_count, 1)
@@ -1208,7 +1222,7 @@ class TestTransaction(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             timeout=TIMEOUT,
@@ -1232,12 +1246,6 @@ class _Client(object):
     def _next_nth_request(self):
         return self._nth_request.increment()
 
-    def get_next_request(self):
-        # This method exists because somehow Python isn't able to
-        # call the property method "_next_nth_request" and that's
-        # needlessly stalled progress.
-        return self._nth_request.increment()
-
 
 class _Instance(object):
     def __init__(self):
@@ -1254,7 +1262,7 @@ class _Database(object):
 
     @property
     def _next_nth_request(self):
-        return self._instance._client.get_next_request()
+        return self._instance._client._next_nth_request
 
     @property
     def _nth_client_id(self):

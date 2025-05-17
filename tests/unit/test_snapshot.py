@@ -24,7 +24,11 @@ from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
     enrich_with_otel_scope,
 )
+from google.cloud.spanner_v1._helpers import (
+    _metadata_with_request_id,
+)
 from google.cloud.spanner_v1.param_types import INT64
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.api_core.retry import Retry
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
@@ -140,7 +144,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             session,
             attributes,
             transaction=derived,
-            request_id_manager=session._database,
+            request_id_manager=None if not session else session._database,
         )
 
     def _make_item(self, value, resume_token=b"", metadata=None):
@@ -166,11 +170,10 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 )
             ],
         )
-
         self.assertNoSpans()
 
     def test_iteration_w_non_empty_raw(self):
@@ -189,7 +192,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 )
             ],
         )
@@ -216,7 +219,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 )
             ],
         )
@@ -295,7 +298,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 )
             ],
         )
@@ -373,7 +376,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
                 )
             ],
         )
@@ -552,7 +555,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             metadata=[
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 )
             ],
         )
@@ -836,7 +839,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=retry,
@@ -1091,7 +1094,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             timeout=timeout,
@@ -1268,7 +1271,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=retry,
@@ -1451,7 +1454,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
             retry=retry,
@@ -1853,7 +1856,7 @@ class TestSnapshot(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -1895,7 +1898,7 @@ class TestSnapshot(OpenTelemetryBase):
                 ("google-cloud-resource-prefix", database.name),
                 (
                     "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{_Client.NTH_CLIENT.value}.1.1.1",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
                 ),
             ],
         )
@@ -1930,6 +1933,7 @@ class _Instance(object):
 class _Database(object):
     def __init__(self, directed_read_options=None):
         self.name = "testing"
+        self._nth_request = 0
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = directed_read_options
@@ -1940,11 +1944,12 @@ class _Database(object):
 
     @property
     def _next_nth_request(self):
-        return self._instance._client._next_nth_request
+        self._nth_request += 1
+        return self._nth_request
 
     @property
     def _nth_client_id(self):
-        return self._instance._client._nth_client_id
+        return 1
 
     def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
         return _metadata_with_request_id(

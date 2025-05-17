@@ -252,9 +252,7 @@ class Session(object):
 
         database = self._database
         api = database.spanner_api
-        metadata = database.metadata_with_request_id(
-            database._next_nth_request, 1, _metadata_with_prefix(database.name)
-        )
+        metadata = _metadata_with_prefix(database.name)
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
             "CloudSpanner.DeleteSession",
@@ -268,7 +266,9 @@ class Session(object):
         ), MetricsCapture():
             api.delete_session(
                 name=self.name,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request, 1, metadata
+                ),
             )
 
     def ping(self):
@@ -280,7 +280,6 @@ class Session(object):
             raise ValueError("Session ID not set by back-end")
         database = self._database
         api = database.spanner_api
-        database = self._database
         request = ExecuteSqlRequest(session=self.name, sql="SELECT 1")
         api.execute_sql(
             request=request,
@@ -483,6 +482,7 @@ class Session(object):
             reraises any non-ABORT exceptions raised by ``func``.
         """
         deadline = time.time() + kw.pop("timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS)
+        default_retry_delay = kw.pop("default_retry_delay", None)
         commit_request_options = kw.pop("commit_request_options", None)
         max_commit_delay = kw.pop("max_commit_delay", None)
         transaction_tag = kw.pop("transaction_tag", None)
@@ -524,7 +524,11 @@ class Session(object):
                 except Aborted as exc:
                     del self._transaction
                     if span:
-                        delay_seconds = _get_retry_delay(exc.errors[0], attempts)
+                        delay_seconds = _get_retry_delay(
+                            exc.errors[0],
+                            attempts,
+                            default_retry_delay=default_retry_delay,
+                        )
                         attributes = dict(delay_seconds=delay_seconds, cause=str(exc))
                         attributes.update(span_attributes)
                         add_span_event(
@@ -533,7 +537,9 @@ class Session(object):
                             attributes,
                         )
 
-                    _delay_until_retry(exc, deadline, attempts)
+                    _delay_until_retry(
+                        exc, deadline, attempts, default_retry_delay=default_retry_delay
+                    )
                     continue
                 except GoogleAPICallError:
                     del self._transaction
@@ -561,7 +567,11 @@ class Session(object):
                 except Aborted as exc:
                     del self._transaction
                     if span:
-                        delay_seconds = _get_retry_delay(exc.errors[0], attempts)
+                        delay_seconds = _get_retry_delay(
+                            exc.errors[0],
+                            attempts,
+                            default_retry_delay=default_retry_delay,
+                        )
                         attributes = dict(delay_seconds=delay_seconds)
                         attributes.update(span_attributes)
                         add_span_event(
@@ -570,7 +580,9 @@ class Session(object):
                             attributes,
                         )
 
-                    _delay_until_retry(exc, deadline, attempts)
+                    _delay_until_retry(
+                        exc, deadline, attempts, default_retry_delay=default_retry_delay
+                    )
                 except GoogleAPICallError:
                     del self._transaction
                     add_span_event(

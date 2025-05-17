@@ -74,8 +74,8 @@ retry_503 = retry.RetryErrors(exceptions.ServiceUnavailable)
 retry_429_503 = retry.RetryErrors(
     exceptions.TooManyRequests, exceptions.ServiceUnavailable, 8
 )
-retry_mabye_aborted_txn = retry.RetryErrors(exceptions.ServerError, exceptions.Aborted)
-retry_mabye_conflict = retry.RetryErrors(exceptions.ServerError, exceptions.Conflict)
+retry_maybe_aborted_txn = retry.RetryErrors(exceptions.Aborted)
+retry_maybe_conflict = retry.RetryErrors(exceptions.Conflict)
 
 
 def _has_all_ddl(database):
@@ -115,9 +115,20 @@ def scrub_instance_ignore_not_found(to_scrub):
     """Helper for func:`cleanup_old_instances`"""
     scrub_instance_backups(to_scrub)
 
+    for database_pb in to_scrub.list_databases():
+        db = to_scrub.database(database_pb.name.split("/")[-1])
+        db.reload()
+        try:
+            if db.enable_drop_protection:
+                db.enable_drop_protection = False
+                operation = db.update(["enable_drop_protection"])
+                operation.result(DATABASE_OPERATION_TIMEOUT_IN_SECONDS)
+        except exceptions.NotFound:
+            pass
+
     try:
         retry_429_503(to_scrub.delete)()
-    except exceptions.NotFound:  # lost the race
+    except exceptions.NotFound:
         pass
 
 
