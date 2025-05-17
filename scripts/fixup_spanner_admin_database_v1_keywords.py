@@ -64,7 +64,7 @@ class spanner_admin_databaseCallTransformer(cst.CSTTransformer):
         'update_backup': ('backup', 'update_mask', ),
         'update_backup_schedule': ('backup_schedule', 'update_mask', ),
         'update_database': ('database', 'update_mask', ),
-        'update_database_ddl': ('database', 'statements', 'operation_id', 'proto_descriptors', ),
+        'update_database_ddl': ('database', 'statements', 'operation_id', 'proto_descriptors', 'throughput_mode', ),
     }
 
     def leave_Call(self, original: cst.Call, updated: cst.Call) -> cst.CSTNode:

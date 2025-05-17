@@ -570,6 +570,10 @@ class UpdateDatabaseDdlRequest(proto.Message):
 
             For more details, see protobuffer `self
             description <https://developers.google.com/protocol-buffers/docs/techniques#self-description>`__.
+        throughput_mode (bool):
+            Optional. This field is exposed to be used by the Spanner
+            Migration Tool. For more details, see
+            `SMT <https://github.com/GoogleCloudPlatform/spanner-migration-tool>`__.
     """
 
     database: str = proto.Field(
@@ -587,6 +591,10 @@ class UpdateDatabaseDdlRequest(proto.Message):
     proto_descriptors: bytes = proto.Field(
         proto.BYTES,
         number=4,
+    )
+    throughput_mode: bool = proto.Field(
+        proto.BOOL,
+        number=5,
     )
 
 
