@@ -133,6 +133,7 @@ class TestSession(OpenTelemetryBase):
         database.default_transaction_options = default_transaction_options
         inject_into_mock_database(database)
 
+        database.metadata_with_request_id = metadata_with_request_id
         return database
 
     @staticmethod

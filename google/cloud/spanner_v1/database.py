@@ -51,6 +51,7 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,
@@ -431,6 +432,15 @@ class Database(object):
 
     @property
     def spanner_api(self):
+        """Helper for session-related API calls."""
+        api = self.__generate_spanner_api()
+        if not api:
+            return api
+
+        monkey_patch(api)
+        return api
+
+    def __generate_spanner_api(self):
         """Helper for session-related API calls."""
         if self._spanner_api is None:
             client_info = self._instance._client._client_info

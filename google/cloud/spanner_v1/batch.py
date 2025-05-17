@@ -26,6 +26,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _merge_Transaction_Options,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
@@ -249,7 +250,6 @@ class Batch(_BatchBase):
             observability_options=observability_options,
             metadata=metadata,
         ), MetricsCapture():
-
             def wrapped_method(*args, **kwargs):
                 method = functools.partial(
                     api.commit,
@@ -388,7 +388,11 @@ class MutationGroups(_SessionWrapper):
             method = functools.partial(
                 api.batch_write,
                 request=request,
-                metadata=metadata,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                ),
             )
             response = _retry(
                 method,

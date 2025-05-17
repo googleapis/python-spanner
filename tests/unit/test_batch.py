@@ -596,6 +596,12 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
                 "traceparent is missing in metadata",
             )
 
+        expected_metadata.append(
+            (
+                "x-goog-spanner-request-id",
+                f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.1.1.1",
+            )
+        )
         # Remove traceparent from actual metadata for comparison
         filtered_metadata = [item for item in metadata if item[0] != "traceparent"]
 
