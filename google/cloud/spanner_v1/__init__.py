@@ -75,7 +75,6 @@ from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import FixedSizePool
 from google.cloud.spanner_v1.pool import PingingPool
 from google.cloud.spanner_v1.pool import TransactionPingingPool
-from google.cloud.spanner_v1._helpers import monkey_patch
 
 
 COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
@@ -83,8 +82,6 @@ COMMIT_TIMESTAMP = "spanner.commit_timestamp()"
 This value can only be used for timestamp columns that have set the option
 ``(allow_commit_timestamp=true)`` in the schema.
 """
-
-monkey_patch(Transaction)
 
 
 __all__ = (

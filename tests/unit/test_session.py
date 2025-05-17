@@ -1560,7 +1560,6 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(kw, {})
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
-        print("gax_api", gax_api.begin_transaction.call_args_list[2])
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [

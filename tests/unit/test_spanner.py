@@ -13,8 +13,6 @@
 # limitations under the License.
 
 
-import sys
-import traceback
 import threading
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
@@ -43,10 +41,6 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _make_value_pb,
     _merge_query_options,
-    _metadata_with_request_id,
-)
-from google.cloud.spanner_v1._helpers import (
-    AtomicCounter,
     _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID

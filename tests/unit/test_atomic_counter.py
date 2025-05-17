@@ -15,7 +15,6 @@
 import random
 import threading
 import unittest
-
 from google.cloud.spanner_v1._helpers import AtomicCounter
 
 

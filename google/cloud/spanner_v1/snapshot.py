@@ -82,8 +82,6 @@ def _restart_on_unavailable(
 
     resume_token = b""
     item_buffer = []
-    next_nth_request = lambda: getattr(request_id_manager, "_next_nth_request", 0)
-    nth_request = next_nth_request()
 
     if transaction is not None:
         transaction_selector = transaction._make_txn_selector()
