@@ -433,15 +433,6 @@ class Database(object):
     @property
     def spanner_api(self):
         """Helper for session-related API calls."""
-        api = self.__generate_spanner_api()
-        if not api:
-            return api
-
-        monkey_patch(api)
-        return api
-
-    def __generate_spanner_api(self):
-        """Helper for session-related API calls."""
         if self._spanner_api is None:
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options

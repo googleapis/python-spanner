@@ -213,4 +213,5 @@ class MockServerTestBase(unittest.TestCase):
                 pool=FixedSizePool(size=10),
                 enable_interceptors_in_tests=True,
             )
+            print("self._database", self._database)
         return self._database

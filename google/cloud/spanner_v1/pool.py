@@ -18,12 +18,18 @@ import datetime
 import queue
 import time
 
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import ServiceUnavailable
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
+    _check_rst_stream_error,
+    _check_unavailable,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _retry,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
@@ -254,11 +260,25 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
-                resp = api.batch_create_sessions(
-                    request=request,
-                    metadata=database.metadata_with_request_id(
-                        database._next_nth_request, 1, metadata
-                    ),
+                attempt = AtomicCounter(0)
+                nth_request = database._next_nth_request
+                print("attempt", attempt.value)
+
+                def wrapped_method(*args, **kwargs):
+                    print("\033[33mwrapped_method", *args, "kwargs", kwargs, "\033[00m")
+                    return api.batch_create_sessions(
+                        request=request,
+                        metadata=database.metadata_with_request_id(
+                            database._next_nth_request, attempt.increment(), metadata
+                        ),
+                    )
+
+                resp = _retry(
+                    wrapped_method,
+                    allowed_exceptions={
+                        InternalServerError: _check_rst_stream_error,
+                        ServiceUnavailable: _check_unavailable,
+                    },
                 )
 
                 add_span_event(
@@ -462,6 +482,48 @@ class BurstyPool(AbstractSessionPool):
                 session.delete()
 
 
+class CallerInterceptor:
+    def __init__(self, api):
+        pass
+
+    def intercept(self):
+        # 1. For each callable method, intercept it and on each call, if we detect
+        # retryable UNAVAILABLE and INTERNAL grpc status codes, automatically retry.
+        elems = dir(self.__api)
+        for name in elems:
+            if name.startswith("_"):
+                continue
+
+            if name != "batch_create_sessions":
+                continue
+
+            attr = getattr(self.__api, name)
+            if not callable(attr):
+                continue
+
+            setattr(self.__api, name, rewrite_and_handle_retries(attr))
+
+
+"""
+from google.api_core.exceptions import (
+    InternalServerError,
+    ServiceUnavailable,
+)
+
+def rewrite_and_handle_retries(fn):
+    attempts = AtomicCounter(0)
+    def wrapper(*args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except InternalServerError, ServiceUnavailable Aborted as exc:
+            attempts.increment()
+        finally:
+            pass
+
+    return wrapper
+"""
+
+
 class PingingPool(AbstractSessionPool):
     """Concrete session pool implementation:
 
@@ -561,11 +623,24 @@ class PingingPool(AbstractSessionPool):
         ) as span, MetricsCapture():
             returned_session_count = 0
             while returned_session_count < self.size:
-                resp = api.batch_create_sessions(
-                    request=request,
-                    metadata=database.metadata_with_request_id(
-                        database._next_nth_request, 1, metadata
-                    ),
+                attempt = AtomicCounter(0)
+                print("attempt", attempt.value)
+                nth_request = database._next_nth_request
+
+                def wrapped_method(*args, **kwargs):
+                    return api.batch_create_sessions(
+                        request=request,
+                        metadata=database.metadata_with_request_id(
+                            database._next_nth_request, attempt.increment(), metadata
+                        ),
+                    )
+
+                resp = _retry(
+                    wrapped_method,
+                    allowed_exceptions={
+                        InternalServerError: _check_rst_stream_error,
+                        ServiceUnavailable: _check_unavailable,
+                    },
                 )
 
                 add_span_event(

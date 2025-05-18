@@ -250,6 +250,7 @@ class Batch(_BatchBase):
             observability_options=observability_options,
             metadata=metadata,
         ), MetricsCapture():
+
             def wrapped_method(*args, **kwargs):
                 method = functools.partial(
                     api.commit,
