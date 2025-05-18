@@ -15,15 +15,22 @@
 """Pools managing shared Session objects."""
 
 import datetime
+import functools
 import queue
 import time
 
+from google.api_core.exceptions import InternalServerError
+from google.api_core.exceptions import ServiceUnavailable
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session
 from google.cloud.spanner_v1._helpers import (
+    _check_rst_stream_error,
+    _check_unavailable,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _retry,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
@@ -254,14 +261,25 @@ class FixedSizePool(AbstractSessionPool):
                     f"Creating {request.session_count} sessions",
                     span_event_attributes,
                 )
-                resp = api.batch_create_sessions(
-                    request=request,
-                    metadata=database.metadata_with_request_id(
-                        database._next_nth_request,
-                        1,
-                        metadata,
-                        span,
-                    ),
+                attempt = AtomicCounter(0)
+                nth_request = database._next_nth_request
+
+                def wrapped_method(*args, **kwargs):
+                    method = functools.partial(
+                        api.batch_create_sessions,
+                        request=request,
+                        metadata=database.metadata_with_request_id(
+                            nth_request, attempt.increment(), metadata, span,
+                        ),
+                    )
+                    return method(*args, **kwargs)
+
+                resp = _retry(
+                    wrapped_method,
+                    allowed_exceptions={
+                        InternalServerError: _check_rst_stream_error,
+                        ServiceUnavailable: _check_unavailable,
+                    },
                 )
 
                 add_span_event(
@@ -564,14 +582,23 @@ class PingingPool(AbstractSessionPool):
         ) as span, MetricsCapture():
             returned_session_count = 0
             while returned_session_count < self.size:
-                resp = api.batch_create_sessions(
-                    request=request,
-                    metadata=database.metadata_with_request_id(
-                        database._next_nth_request,
-                        1,
-                        metadata,
-                        span,
-                    ),
+                attempt = AtomicCounter(0)
+                nth_request = database._next_nth_request
+
+                def wrapped_method(*args, **kwargs):
+                    return api.batch_create_sessions(
+                        request=request,
+                        metadata=database.metadata_with_request_id(
+                            database._next_nth_request, attempt.increment(), metadata, span,
+                        ),
+                    )
+
+                resp = _retry(
+                    wrapped_method,
+                    allowed_exceptions={
+                        InternalServerError: _check_rst_stream_error,
+                        ServiceUnavailable: _check_unavailable,
+                    },
                 )
 
                 add_span_event(

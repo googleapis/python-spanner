@@ -587,6 +587,19 @@ def _check_rst_stream_error(exc):
         raise
 
 
+def _check_unavailable(exc):
+    resumable_error = (
+        any(
+            resumable_message in exc.message
+            for resumable_message in (
+                "Service unavailable",
+            )
+        ),
+    )
+    if not resumable_error:
+        raise
+
+
 def _metadata_with_leader_aware_routing(value, **kw):
     """Create RPC metadata containing a leader aware routing header
 
