@@ -591,9 +591,7 @@ def _check_unavailable(exc):
     resumable_error = (
         any(
             resumable_message in exc.message
-            for resumable_message in (
-                "Service unavailable",
-            )
+            for resumable_message in ("Service unavailable",)
         ),
     )
     if not resumable_error:

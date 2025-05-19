@@ -589,7 +589,7 @@ class PingingPool(AbstractSessionPool):
                     return api.batch_create_sessions(
                         request=request,
                         metadata=database.metadata_with_request_id(
-                            database._next_nth_request, attempt.increment(), metadata, span,
+                            nth_request, attempt.increment(), metadata, span,
                         ),
                     )
 
