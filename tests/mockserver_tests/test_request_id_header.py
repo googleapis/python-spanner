@@ -74,6 +74,7 @@ class TestRequestIDHeader(MockServerTestBase):
         assert got_stream_segments == want_stream_segments
 
     def test_snapshot_read_concurrent(self):
+        add_select1_result()
         db = self.database
         # Trigger BatchCreateSessions firstly.
         with db.snapshot() as snapshot:
