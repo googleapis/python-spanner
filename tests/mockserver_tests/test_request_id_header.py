@@ -27,6 +27,7 @@ from tests.mockserver_tests.mock_server_test_base import (
     add_select1_result,
     aborted_status,
     add_error,
+    internal_status,
     unavailable_status,
 )
 
@@ -270,7 +271,7 @@ class TestRequestIDHeader(MockServerTestBase):
 
     def test_unary_retryable_error(self):
         add_select1_result()
-        add_error(SpannerServicer.BatchCreateSessions.__name__, unavailable_status())
+        add_error(SpannerServicer.BatchCreateSessions.__name__, internal_status())
 
         if not getattr(self.database, "_interceptors", None):
             self.database._interceptors = MockServerTestBase._interceptors
@@ -309,8 +310,6 @@ class TestRequestIDHeader(MockServerTestBase):
             )
         ]
 
-        print("got_unaries", got_unary_segments)
-        print("got_stream", got_stream_segments)
         assert got_unary_segments == want_unary_segments
         assert got_stream_segments == want_stream_segments
 

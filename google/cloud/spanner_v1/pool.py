@@ -15,6 +15,7 @@
 """Pools managing shared Session objects."""
 
 import datetime
+import functools
 import queue
 import time
 
@@ -266,12 +267,14 @@ class FixedSizePool(AbstractSessionPool):
 
                 def wrapped_method(*args, **kwargs):
                     print("\033[33mwrapped_method", *args, "kwargs", kwargs, "\033[00m")
-                    return api.batch_create_sessions(
+                    method = functools.partial(
+                        api.batch_create_sessions,
                         request=request,
                         metadata=database.metadata_with_request_id(
-                            database._next_nth_request, attempt.increment(), metadata
+                            nth_request, attempt.increment(), metadata
                         ),
                     )
+                    return method(*args, **kwargs)
 
                 resp = _retry(
                     wrapped_method,
@@ -624,7 +627,6 @@ class PingingPool(AbstractSessionPool):
             returned_session_count = 0
             while returned_session_count < self.size:
                 attempt = AtomicCounter(0)
-                print("attempt", attempt.value)
                 nth_request = database._next_nth_request
 
                 def wrapped_method(*args, **kwargs):
