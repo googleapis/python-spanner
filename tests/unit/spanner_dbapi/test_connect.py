@@ -17,8 +17,8 @@
 import unittest
 from unittest import mock
 
-import google.auth.credentials
-
+import google
+from google.auth.credentials import AnonymousCredentials
 
 INSTANCE = "test-instance"
 DATABASE = "test-database"
@@ -45,7 +45,13 @@ class Test_connect(unittest.TestCase):
         instance = client.instance.return_value
         database = instance.database.return_value
 
-        connection = connect(INSTANCE, DATABASE)
+        connection = connect(
+            "test-instance",
+            "test-database",
+            project="test-project",
+            credentials=AnonymousCredentials(),
+            client_options={"api_endpoint": "none"},
+        )
 
         self.assertIsInstance(connection, Connection)
 
@@ -55,11 +61,14 @@ class Test_connect(unittest.TestCase):
             project=mock.ANY,
             credentials=mock.ANY,
             client_info=mock.ANY,
+            client_options=mock.ANY,
             route_to_leader_enabled=True,
         )
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=None)
+        instance.database.assert_called_once_with(
+            DATABASE, pool=None, database_role=None
+        )
         # Datbase constructs its own pool
         self.assertIsNotNone(connection.database._pool)
         self.assertTrue(connection.instance._client.route_to_leader_enabled)
@@ -75,6 +84,7 @@ class Test_connect(unittest.TestCase):
         client = mock_client.return_value
         instance = client.instance.return_value
         database = instance.database.return_value
+        role = "some_role"
 
         connection = connect(
             INSTANCE,
@@ -82,6 +92,7 @@ class Test_connect(unittest.TestCase):
             PROJECT,
             credentials,
             pool=pool,
+            database_role=role,
             user_agent=USER_AGENT,
             route_to_leader_enabled=False,
         )
@@ -92,6 +103,7 @@ class Test_connect(unittest.TestCase):
             project=PROJECT,
             credentials=credentials,
             client_info=mock.ANY,
+            client_options=mock.ANY,
             route_to_leader_enabled=False,
         )
         client_info = mock_client.call_args_list[0][1]["client_info"]
@@ -102,7 +114,9 @@ class Test_connect(unittest.TestCase):
         client.instance.assert_called_once_with(INSTANCE)
 
         self.assertIs(connection.database, database)
-        instance.database.assert_called_once_with(DATABASE, pool=pool)
+        instance.database.assert_called_once_with(
+            DATABASE, pool=pool, database_role=role
+        )
 
     def test_w_credential_file_path(self, mock_client):
         from google.cloud.spanner_dbapi import connect
@@ -131,3 +145,17 @@ class Test_connect(unittest.TestCase):
         client_info = factory.call_args_list[0][1]["client_info"]
         self.assertEqual(client_info.user_agent, USER_AGENT)
         self.assertEqual(client_info.python_version, PY_VERSION)
+
+    def test_with_kwargs(self, mock_client):
+        from google.cloud.spanner_dbapi import connect
+        from google.cloud.spanner_dbapi import Connection
+
+        client = mock_client.return_value
+        instance = client.instance.return_value
+        database = instance.database.return_value
+        self.assertIsNotNone(database)
+
+        connection = connect(INSTANCE, DATABASE, ignore_transaction_warnings=True)
+
+        self.assertIsInstance(connection, Connection)
+        self.assertTrue(connection._ignore_transaction_warnings)

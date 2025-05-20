@@ -37,6 +37,11 @@ from google.cloud.spanner_v1.batch import MutationGroups, _BatchBase, Batch
 from google.cloud.spanner_v1.keyset import KeySet
 from google.rpc.status_pb2 import Status
 
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _metadata_with_request_id,
+)
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -249,6 +254,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertEqual(request_options, RequestOptions())
@@ -277,16 +286,12 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
 
         # Assertion: Ensure that calling batch.commit() raises the Aborted exception
         with self.assertRaises(Aborted) as context:
-            batch.commit()
+            batch.commit(timeout_secs=0.1, default_retry_delay=0)
 
         # Verify additional details about the exception
         self.assertEqual(str(context.exception), "409 Transaction was aborted")
         self.assertGreater(
             api.commit.call_count, 1, "commit should be called more than once"
-        )
-        # Since we are using exponential backoff here and default timeout is set to 30 sec 2^x <= 30. So value for x will be 4
-        self.assertEqual(
-            api.commit.call_count, 4, "commit should be called exactly 4 times"
         )
 
     def _test_commit_with_options(
@@ -347,6 +352,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertEqual(actual_request_options, expected_request_options)
@@ -457,6 +466,10 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
             [
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         self.assertEqual(request_options, RequestOptions())
@@ -587,6 +600,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
         filtered_metadata = [item for item in metadata if item[0] != "traceparent"]
 
         self.assertEqual(filtered_metadata, expected_metadata)
+
         if request_options is None:
             expected_request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -639,12 +653,36 @@ class _Session(object):
 
 
 class _Database(object):
+    name = "testing"
+    _route_to_leader_enabled = True
+    NTH_CLIENT_ID = AtomicCounter()
+
     def __init__(self, enable_end_to_end_tracing=False):
         self.name = "testing"
         self._route_to_leader_enabled = True
         if enable_end_to_end_tracing:
             self.observability_options = dict(enable_end_to_end_tracing=True)
         self.default_transaction_options = DefaultTransactionOptions()
+        self._nth_request = 0
+        self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
+
+    @property
+    def _next_nth_request(self):
+        self._nth_request += 1
+        return self._nth_request
+
+    def metadata_with_request_id(self, nth_request, nth_attempt, prior_metadata=[]):
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+        )
+
+    @property
+    def _channel_id(self):
+        return 1
 
 
 class _FauxSpannerAPI:

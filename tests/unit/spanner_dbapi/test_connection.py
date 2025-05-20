@@ -19,6 +19,7 @@ import mock
 import unittest
 import warnings
 import pytest
+from google.auth.credentials import AnonymousCredentials
 
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
@@ -68,7 +69,11 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_v1.client import Client
 
         # We don't need a real Client object to test the constructor
-        client = Client()
+        client = Client(
+            project="test",
+            credentials=AnonymousCredentials(),
+            client_options={"api_endpoint": "none"},
+        )
         instance = Instance(INSTANCE, client=client)
         database = instance.database(DATABASE, database_dialect=database_dialect)
         return Connection(instance, database, **kwargs)
@@ -239,7 +244,13 @@ class TestConnection(unittest.TestCase):
         from google.cloud.spanner_dbapi import connect
         from google.cloud.spanner_dbapi import InterfaceError
 
-        connection = connect("test-instance", "test-database")
+        connection = connect(
+            "test-instance",
+            "test-database",
+            project="test-project",
+            credentials=AnonymousCredentials(),
+            client_options={"api_endpoint": "none"},
+        )
 
         self.assertFalse(connection.is_closed)
 
@@ -815,6 +826,20 @@ class TestConnection(unittest.TestCase):
         connection = connect("test-instance", "test-database", client=client)
         self.assertTrue(connection.instance._client == client)
 
+    def test_custom_database_role(self):
+        from google.cloud.spanner_dbapi import connect
+
+        role = "some_role"
+        connection = connect(
+            "test-instance",
+            "test-database",
+            project="test-project",
+            database_role=role,
+            credentials=AnonymousCredentials(),
+            client_options={"api_endpoint": "none"},
+        )
+        self.assertEqual(connection.database.database_role, role)
+
     def test_invalid_custom_client_connection(self):
         from google.cloud.spanner_dbapi import connect
 
@@ -830,7 +855,12 @@ class TestConnection(unittest.TestCase):
     def test_connection_wo_database(self):
         from google.cloud.spanner_dbapi import connect
 
-        connection = connect("test-instance")
+        connection = connect(
+            "test-instance",
+            credentials=AnonymousCredentials(),
+            project="test-project",
+            client_options={"api_endpoint": "none"},
+        )
         self.assertTrue(connection.database is None)
 
 
@@ -858,8 +888,9 @@ class _Instance(object):
         database_id="database_id",
         pool=None,
         database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
+        database_role=None,
     ):
-        return _Database(database_id, pool, database_dialect)
+        return _Database(database_id, pool, database_dialect, database_role)
 
 
 class _Database(object):
@@ -868,7 +899,9 @@ class _Database(object):
         database_id="database_id",
         pool=None,
         database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
+        database_role=None,
     ):
         self.name = database_id
         self.pool = pool
         self.database_dialect = database_dialect
+        self.database_role = database_role

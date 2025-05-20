@@ -17,6 +17,8 @@ import warnings
 
 from google.api_core.exceptions import Aborted
 from google.api_core.gapic_v1.client_info import ClientInfo
+from google.auth.credentials import AnonymousCredentials
+
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi import partition_helper
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
@@ -720,6 +722,7 @@ def connect(
     user_agent=None,
     client=None,
     route_to_leader_enabled=True,
+    database_role=None,
     **kwargs,
 ):
     """Creates a connection to a Google Cloud Spanner database.
@@ -763,6 +766,10 @@ def connect(
         disable leader aware routing. Disabling leader aware routing would
         route all requests in RW/PDML transactions to the closest region.
 
+    :type database_role: str
+    :param database_role: (Optional) The database role to connect as when using
+        fine-grained access controls.
+
     **kwargs: Initial value for connection variables.
 
 
@@ -784,11 +791,15 @@ def connect(
                 route_to_leader_enabled=route_to_leader_enabled,
             )
         else:
+            client_options = None
+            if isinstance(credentials, AnonymousCredentials):
+                client_options = kwargs.get("client_options")
             client = spanner.Client(
                 project=project,
                 credentials=credentials,
                 client_info=client_info,
                 route_to_leader_enabled=route_to_leader_enabled,
+                client_options=client_options,
             )
     else:
         if project is not None and client.project != project:
@@ -797,8 +808,10 @@ def connect(
     instance = client.instance(instance_id)
     database = None
     if database_id:
-        database = instance.database(database_id, pool=pool)
-    conn = Connection(instance, database)
+        database = instance.database(
+            database_id, pool=pool, database_role=database_role
+        )
+    conn = Connection(instance, database, **kwargs)
     if pool is not None:
         conn._own_pool = False
 
