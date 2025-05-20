@@ -76,7 +76,7 @@ class TestRequestIDHeader(MockServerTestBase):
     def test_snapshot_read_concurrent(self):
         add_select1_result()
         db = self.database
-        # Trigger BatchCreateSessions firstly.
+        # Trigger BatchCreateSessions first.
         with db.snapshot() as snapshot:
             rows = snapshot.execute_sql("select 1")
             for row in rows:
@@ -96,24 +96,18 @@ class TestRequestIDHeader(MockServerTestBase):
         threads = []
         for i in range(n):
             th = threading.Thread(target=select1, name=f"snapshot-select1-{i}")
-            th.run()
             threads.append(th)
+            th.start()
 
         random.shuffle(threads)
-
-        while True:
-            n_finished = 0
-            for thread in threads:
-                if thread.is_alive():
-                    thread.join()
-                else:
-                    n_finished += 1
-
-            if n_finished == len(threads):
-                break
+        for thread in threads:
+            thread.join()
 
         requests = self.spanner_service.requests
-        self.assertEqual(2 + n * 2, len(requests), msg=requests)
+        # We expect 2 + n requests, because:
+        # 1. The initial query triggers one BatchCreateSessions call + one ExecuteStreamingSql call.
+        # 2. Each following query triggers one ExecuteStreamingSql call.
+        self.assertEqual(2 + n, len(requests), msg=requests)
 
         client_id = db._nth_client_id
         channel_id = db._channel_id
@@ -123,46 +117,6 @@ class TestRequestIDHeader(MockServerTestBase):
             (
                 "/google.spanner.v1.Spanner/BatchCreateSessions",
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 1, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 3, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 5, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 7, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 9, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 11, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 13, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 15, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 17, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 19, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/GetSession",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 21, 1),
             ),
         ]
         assert got_unary_segments == want_unary_segments
@@ -174,7 +128,15 @@ class TestRequestIDHeader(MockServerTestBase):
             ),
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 3, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 4, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 5, 1),
             ),
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
@@ -182,7 +144,15 @@ class TestRequestIDHeader(MockServerTestBase):
             ),
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 7, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 8, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 9, 1),
             ),
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
@@ -190,27 +160,11 @@ class TestRequestIDHeader(MockServerTestBase):
             ),
             (
                 "/google.spanner.v1.Spanner/ExecuteStreamingSql",
+                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 11, 1),
+            ),
+            (
+                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 12, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 14, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 16, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 18, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 20, 1),
-            ),
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 22, 1),
             ),
         ]
         assert got_stream_segments == want_stream_segments
