@@ -61,7 +61,7 @@ def aborted_status() -> _Status:
 def unavailable_status() -> _Status:
     error = status_pb2.Status(
         code=code_pb2.UNAVAILABLE,
-        message="Service unavailable.",
+        message="Received unexpected EOS on DATA frame from server",
     )
     retry_info = RetryInfo(retry_delay=Duration(seconds=0, nanos=1))
     status = _Status(
@@ -77,6 +77,25 @@ def unavailable_status() -> _Status:
     )
     return status
 
+# Creates an INTERNAL status with the smallest possible retry delay.
+def internal_status() -> _Status:
+    error = status_pb2.Status(
+        code=code_pb2.INTERNAL,
+        message="Service unavailable.",
+    )
+    retry_info = RetryInfo(retry_delay=Duration(seconds=0, nanos=1))
+    status = _Status(
+        code=code_to_grpc_status_code(error.code),
+        details=error.message,
+        trailing_metadata=(
+            ("grpc-status-details-bin", error.SerializeToString()),
+            (
+                "google.rpc.retryinfo-bin",
+                retry_info.SerializeToString(),
+            ),
+        ),
+    )
+    return status
 
 def add_error(method: str, error: status_pb2.Status):
     MockServerTestBase.spanner_service.mock_spanner.add_error(method, error)

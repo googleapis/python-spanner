@@ -51,6 +51,7 @@ from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,

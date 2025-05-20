@@ -19,6 +19,7 @@ import decimal
 import math
 import time
 import base64
+import inspect
 import threading
 
 from google.protobuf.struct_pb2 import ListValue
@@ -33,7 +34,7 @@ from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import JsonObject, Interval
 from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1.request_id_header import with_request_id
+from google.cloud.spanner_v1.request_id_header import REQ_ID_HEADER_KEY, with_request_id
 from google.rpc.error_details_pb2 import RetryInfo
 
 try:
@@ -45,6 +46,7 @@ except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
 from typing import List, Tuple
 import random
+from typing import Callable
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -574,12 +576,27 @@ def _retry(
 
 
 def _check_rst_stream_error(exc):
+    print("\033[31mrst_", exc, "\033[00m")
     resumable_error = (
         any(
             resumable_message in exc.message
             for resumable_message in (
                 "RST_STREAM",
                 "Received unexpected EOS on DATA frame from server",
+            )
+        ),
+    )
+    if not resumable_error:
+        raise
+
+
+def _check_unavailable(exc):
+    resumable_error = (
+        any(
+            resumable_message in exc.message
+            for resumable_message in (
+                "INTERNAL",
+                "Service unavailable",
             )
         ),
     )
@@ -749,3 +766,256 @@ def _merge_Transaction_Options(
 
     # Convert protobuf object back into a TransactionOptions instance
     return TransactionOptions(merged_pb)
+
+
+class InterceptingHeaderInjector:
+    def __init__(self, original_callable: Callable):
+        self._original_callable = original_callable
+
+
+patched = {}
+patched_mu = threading.Lock()
+
+
+def inject_retry_header_control(api):
+    # monkey_patch(type(api))
+    # monkey_patch(api)
+    pass
+
+
+def monkey_patch(typ):
+    keys = dir(typ)
+    attempts = dict()
+    for key in keys:
+        if key.startswith("_"):
+            continue
+
+        if key != "batch_create_sessions":
+            continue
+
+        fn = getattr(typ, key)
+
+        signature = inspect.signature(fn)
+        if signature.parameters.get("metadata", None) is None:
+            continue
+
+        print("fn.__call__", inspect.getsource(fn))
+
+        def as_proxy(db, *args, **kwargs):
+            print("db_key", hex(id(db)))
+            print("as_proxy", args, kwargs)
+            metadata = kwargs.get("metadata", None)
+            if not metadata:
+                return fn(db, *args, **kwargs)
+
+            hash_key = hex(id(db)) + "." + hex(id(key))
+            attempts.setdefault(hash_key, 0)
+            attempts[hash_key] += 1
+            # 4. Find all the headers that match the target header key.
+            all_metadata = []
+            for mkey, value in metadata:
+                if mkey is not REQ_ID_HEADER_KEY:
+                    continue
+
+                splits = value.split(".")
+                # 5. Increment the original_attempt with that of our re-invocation count.
+                print("\033[34mkey", mkey, "\033[00m", splits)
+                hdr_attempt_plus_reinvocation = int(splits[-1]) + attempts[hash_key]
+                splits[-1] = str(hdr_attempt_plus_reinvocation)
+                value = ".".join(splits)
+
+                all_metadata.append((mkey, value))
+
+            kwargs["metadata"] = all_metadata
+            return fn(db, *args, **kwargs)
+
+        setattr(typ, key, as_proxy)
+
+
+def alt_foo():
+    memoize_map = dict()
+    orig_get_attr = getattr(obj, "__getattribute__")
+    hex_orig = hex(id(orig_get_attr))
+    hex_patched = None
+
+    def patched_getattribute(obj, key, *args, **kwargs):
+        if key.startswith("_"):
+            return orig_get_attr(obj, key, *args, **kwargs)
+
+        if key != "batch_create_sessions":
+            return orig_get_attr(obj, key, *args, **kwargs)
+
+        map_key = hex(id(key)) + hex(id(obj))
+        memoized = memoize_map.get(map_key, None)
+        if memoized:
+            if False:
+                print(
+                    "memoized_hit",
+                    key,
+                    "\033[35m",
+                    inspect.getsource(orig_value),
+                    "\033[00m",
+                )
+            print("memoized_hit", key, "\033[35m", map_key, "\033[00m")
+            return memoized
+
+        orig_value = orig_get_attr(obj, key, *args, **kwargs)
+        if not callable(orig_value):
+            return orig_value
+
+        signature = inspect.signature(orig_value)
+        if signature.parameters.get("metadata", None) is None:
+            return orig_value
+
+        if False:
+            print(
+                key,
+                "\033[34m",
+                map_key,
+                "\033[00m",
+                signature,
+                signature.parameters.get("metadata", None),
+            )
+
+        if False:
+            stack = inspect.stack()
+            ends = stack[-50:-20]
+            for i, st in enumerate(ends):
+                print(i, st.filename, st.lineno)
+
+        print(
+            "\033[33mmonkey patching now\033[00m",
+            key,
+            "hex_orig",
+            hex_orig,
+            "hex_patched",
+            hex_patched,
+        )
+        counters = dict(attempt=0)
+
+        def patched_method(*aargs, **kkwargs):
+            counters["attempt"] += 1
+            print("counters", counters)
+            metadata = kkwargs.get("metadata", None)
+            if not metadata:
+                return orig_value(*aargs, **kkwargs)
+
+            # 4. Find all the headers that match the target header key.
+            all_metadata = []
+            for mkey, value in metadata:
+                if mkey is REQ_ID_HEADER_KEY:
+                    attempt = counters["attempt"]
+                    if attempt > 1:
+                        # 5. Increment the original_attempt with that of our re-invocation count.
+                        splits = value.split(".")
+                        print("\033[34mkey", mkey, "\033[00m", splits)
+                        hdr_attempt_plus_reinvocation = int(splits[-1]) + attempt
+                        splits[-1] = str(hdr_attempt_plus_reinvocation)
+                        value = ".".join(splits)
+
+                all_metadata.append((mkey, value))
+
+            kwargs["metadata"] = all_metadata
+
+            try:
+                return orig_value(*aargs, **kkwargs)
+
+            except (InternalServerError, ServiceUnavailable) as exc:
+                print("caught this exception, incrementing", exc)
+                counters["attempt"] += 1
+                raise exc
+
+        memoize_map[map_key] = patched_method
+        return patched_method
+
+    hex_patched = hex(id(patched_getattribute))
+    setattr(obj, "__getattribute__", patched_getattribute)
+
+
+def foo(api):
+    global patched
+    global patched_mu
+
+    # For each method, add an _attempt value that'll then be
+    # retrieved for each retry.
+    # 1. Patch the __getattribute__ method to match items in our manifest.
+    target = type(api)
+    hex_id = hex(id(target))
+    if patched.get(hex_id, None) is not None:
+        return
+
+    orig_getattribute = getattr(target, "__getattribute__")
+
+    def patched_getattribute(obj, key, *args, **kwargs):
+        # 1. Skip modifying private and mangled methods.
+        if key.startswith("_"):
+            return orig_getattribute(obj, key, *args, **kwargs)
+
+        attr = orig_getattribute(obj, key, *args, **kwargs)
+
+        # 2. Skip over non-methods.
+        if not callable(attr):
+            patched_mu.release()
+            return attr
+
+        patched_key = hex(id(key)) + hex(id(obj))
+        patched_mu.acquire()
+        already_patched = patched.get(patched_key, None)
+
+        other_attempts = dict(attempts=0)
+
+        # 3. Wrap the callable attribute and then capture its metadata keyed argument.
+        def wrapped_attr(*args, **kwargs):
+            print("\033[31m", key, "attempt", other_attempts["attempts"], "\033[00m")
+            other_attempts["attempts"] += 1
+
+            metadata = kwargs.get("metadata", [])
+            if not metadata:
+                # Increment the reinvocation count.
+                wrapped_attr._attempt += 1
+                return attr(*args, **kwargs)
+
+            print(
+                "\033[35mwrapped_attr",
+                key,
+                args,
+                kwargs,
+                "attempt",
+                wrapped_attr._attempt,
+                "\033[00m",
+            )
+
+            # 4. Find all the headers that match the target header key.
+            all_metadata = []
+            for mkey, value in metadata:
+                if mkey is REQ_ID_HEADER_KEY:
+                    if wrapped_attr._attempt > 0:
+                        # 5. Increment the original_attempt with that of our re-invocation count.
+                        splits = value.split(".")
+                        print("\033[34mkey", mkey, "\033[00m", splits)
+                        hdr_attempt_plus_reinvocation = (
+                            int(splits[-1]) + wrapped_attr._attempt
+                        )
+                        splits[-1] = str(hdr_attempt_plus_reinvocation)
+                        value = ".".join(splits)
+
+                all_metadata.append((mkey, value))
+
+            kwargs["metadata"] = all_metadata
+            wrapped_attr._attempt += 1
+            print(key, "\033[36mreplaced_all_metadata", all_metadata, "\033[00m")
+            return attr(*args, **kwargs)
+
+        if already_patched:
+            print("patched_key \033[32m", patched_key, key, "\033[00m", already_patched)
+            setattr(attr, "patched", True)
+            # Increment the reinvocation count.
+            patched_mu.release()
+            return already_patched
+
+        patched[patched_key] = wrapped_attr
+        setattr(wrapped_attr, "_attempt", 0)
+        patched_mu.release()
+        return wrapped_attr
+
+    setattr(target, "__getattribute__", patched_getattribute)
