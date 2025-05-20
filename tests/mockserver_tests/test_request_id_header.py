@@ -226,7 +226,7 @@ class TestRequestIDHeader(MockServerTestBase):
 
     def test_unary_retryable_error(self):
         add_select1_result()
-        add_error(SpannerServicer.BatchCreateSessions.__name__, internal_status())
+        add_error(SpannerServicer.BatchCreateSessions.__name__, unavailable_status())
 
         if not getattr(self.database, "_interceptors", None):
             self.database._interceptors = MockServerTestBase._interceptors
