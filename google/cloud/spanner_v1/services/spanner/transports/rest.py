@@ -37,6 +37,7 @@ from google.cloud.spanner_v1.types import commit_response
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
+from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 from google.protobuf import empty_pb2  # type: ignore
 
 
@@ -919,6 +920,7 @@ class SpannerRestTransport(_BaseSpannerRestTransport):
         url_scheme: str = "https",
         interceptor: Optional[SpannerRestInterceptor] = None,
         api_audience: Optional[str] = None,
+        metrics_interceptor: Optional[MetricsInterceptor] = None,
     ) -> None:
         """Instantiate the transport.
 

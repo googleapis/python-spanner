@@ -68,6 +68,7 @@ from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner
 from google.cloud.spanner_v1.types import transaction
+from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 from google.protobuf import struct_pb2  # type: ignore
 from google.protobuf import timestamp_pb2  # type: ignore
 from google.rpc import status_pb2  # type: ignore
@@ -715,6 +716,7 @@ class SpannerClient(metaclass=SpannerClientMeta):
                 client_info=client_info,
                 always_use_jwt_access=True,
                 api_audience=self._client_options.api_audience,
+                metrics_interceptor=MetricsInterceptor(),
             )
 
         if "async" not in str(self._transport):
