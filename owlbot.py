@@ -169,6 +169,13 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
             )""",
     )
 
+    assert 12 == s.replace(
+        library / "tests/unit/gapic/spanner_v1/test_spanner.py",
+        """api_audience=None,\n(\s+)\)""",
+        """api_audience=None,
+            metrics_interceptor=mock.ANY,
+        )"""
+    )
 
     s.move(
         library,
