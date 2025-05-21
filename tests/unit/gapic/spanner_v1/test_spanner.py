@@ -587,6 +587,7 @@ def test_spanner_client_client_options(client_class, transport_class, transport_
             client_info=transports.base.DEFAULT_CLIENT_INFO,
             always_use_jwt_access=True,
             api_audience="https://language.googleapis.com",
+            metrics_interceptor=mock.ANY,
         )
 
 
