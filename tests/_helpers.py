@@ -92,6 +92,7 @@ class OpenTelemetryBase(unittest.TestCase):
 
             self.assertEqual(span.name, name)
             self.assertEqual(span.status.status_code, status)
+            print("got_attributes\n", span.attributes, "vs\n", attributes)
             self.assertEqual(dict(span.attributes), attributes)
 
     def assertSpanEvents(self, name, wantEventNames=[], span=None):
