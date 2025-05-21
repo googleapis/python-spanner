@@ -587,12 +587,6 @@ def _check_rst_stream_error(exc):
         raise
 
 
-def _check_unavailable(exc):
-    # For UNAVAILABLE, we don't need to check against the
-    # messages as these should just be noop and retryable always.
-    return
-
-
 def _metadata_with_leader_aware_routing(value, **kw):
     """Create RPC metadata containing a leader aware routing header
 
