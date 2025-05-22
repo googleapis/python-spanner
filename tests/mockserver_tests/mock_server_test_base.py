@@ -78,20 +78,6 @@ def unavailable_status() -> _Status:
     return status
 
 
-# Creates an INTERNAL status.
-def internal_status() -> _Status:
-    error = status_pb2.Status(
-        code=code_pb2.INTERNAL,
-        message="Received unexpected EOS on DATA frame from server",
-    )
-    status = _Status(
-        code=code_to_grpc_status_code(error.code),
-        details=error.message,
-        trailing_metadata=(("grpc-status-details-bin", error.SerializeToString()),),
-    )
-    return status
-
-
 def add_error(method: str, error: status_pb2.Status):
     MockServerTestBase.spanner_service.mock_spanner.add_error(method, error)
 

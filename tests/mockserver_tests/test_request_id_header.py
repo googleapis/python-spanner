@@ -268,6 +268,7 @@ class TestRequestIDHeader(MockServerTestBase):
         ]
         # TODO(@odeke-em): enable this test in the next iteration
         # when we've figured out unary retries with UNAVAILABLE.
+        # See https://github.com/googleapis/python-spanner/issues/1379.
         if True:
             print(
                 "TODO(@odeke-em): enable request_id checking when we figure out propagation for unary requests"
