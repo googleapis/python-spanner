@@ -28,6 +28,7 @@ from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Stateme
 from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
 from google.cloud.spanner_dbapi.cursor import Cursor
 from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
+from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi.exceptions import (
@@ -357,7 +358,12 @@ class Connection:
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
         if not self._session:
-            self._session = self.database._pool.get()
+            transaction_type = (
+                TransactionType.READ_ONLY
+                if self.read_only
+                else TransactionType.READ_WRITE
+            )
+            self._session = self.database._session_manager.get_session(transaction_type)
 
         return self._session
 
@@ -370,7 +376,7 @@ class Connection:
             return
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self.database._pool.put(self._session)
+        self.database._session_manager.put_session(self._session)
         self._session = None
 
     def transaction_checkout(self):
@@ -432,7 +438,7 @@ class Connection:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
-            self.database._pool.clear()
+            self.database._session_manager._pool.clear()
 
         self.is_closed = True
 

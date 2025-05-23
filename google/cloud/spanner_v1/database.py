@@ -57,11 +57,11 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
+from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.pool import SessionCheckout
-from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
 from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -196,9 +196,9 @@ class Database(object):
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
-
-        self._pool = pool
         pool.bind(self)
+        self._session_manager = DatabaseSessionsManager(database=self, pool=pool)
+
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -461,6 +461,14 @@ class Database(object):
                 self._channel_id = channel_id
 
         return self._spanner_api
+
+    @property
+    def session_options(self) -> SessionOptions:
+        """Session options for the database.
+        :rtype: :class:`~google.cloud.spanner_v1.session_options.SessionOptions`
+        :returns: the session options
+        """
+        return self._instance._client.session_options
 
     def metadata_with_request_id(
         self, nth_request, nth_attempt, prior_metadata=[], span=None
@@ -759,18 +767,31 @@ class Database(object):
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
             ) as span, MetricsCapture():
-                with SessionCheckout(self._pool) as session:
+                with SessionCheckout(self, TransactionType.PARTITIONED) as session:
                     add_span_event(span, "Starting BeginTransaction")
-                    txn = api.begin_transaction(
-                        session=session.name,
-                        options=txn_options,
-                        metadata=self.metadata_with_request_id(
-                            self._next_nth_request,
-                            1,
-                            metadata,
-                            span,
-                        ),
-                    )
+                    try:
+                        txn = api.begin_transaction(
+                            session=session.name,
+                            options=txn_options,
+                            metadata=self.metadata_with_request_id(
+                                self._next_nth_request,
+                                1,
+                                metadata,
+                                span,
+                            ),
+                        )
+                    # If partitioned DML is not supported with multiplexed sessions,
+                    # disable multiplexed sessions for partitioned transactions before
+                    # re-raising the error.
+                    except NotImplementedError as exc:
+                        if (
+                                "Transaction type partitioned_dml not supported with multiplexed sessions"
+                                in str(exc)
+                        ):
+                            self.session_options.disable_multiplexed(
+                                self.logger, TransactionType.PARTITIONED
+                            )
+                        raise exc
 
                     txn_selector = TransactionSelector(id=txn.id)
 
@@ -792,6 +813,7 @@ class Database(object):
                         method=method,
                         trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
+                        session=session,
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
@@ -816,23 +838,6 @@ class Database(object):
         if self._instance and self._instance._client:
             return self._instance._client._nth_client_id
         return 0
-
-    def session(self, labels=None, database_role=None):
-        """Factory to create a session for this database.
-
-        :type labels: dict (str -> str) or None
-        :param labels: (Optional) user-assigned labels for the session.
-
-        :type database_role: str
-        :param database_role: (Optional) user-assigned database_role for the session.
-
-        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session bound to this database.
-        """
-        # If role is specified in param, then that role is used
-        # instead.
-        role = database_role or self._database_role
-        return Session(self, labels=labels, database_role=role)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.
@@ -995,7 +1000,7 @@ class Database(object):
             # Check out a session and run the function in a transaction; once
             # done, flip the sanity check bit back.
             try:
-                with SessionCheckout(self._pool) as session:
+                with SessionCheckout(self) as session:
                     return session.run_in_transaction(func, *args, **kw)
             finally:
                 self._local.transaction_running = False
@@ -1240,6 +1245,50 @@ class Database(object):
         opts["db_name"] = self.name
         return opts
 
+
+class SessionCheckout(object):
+    """Context manager for using a session from a database.
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :param database: database to use the session from
+    """
+
+    _session = None  # Not checked out until '__enter__'.
+
+    def __init__(
+        self,
+        database,  # type: ignore
+        transaction_type: TransactionType = TransactionType.READ_WRITE,
+    ):
+        # Move import here to avoid circular import
+        from google.cloud.spanner_v1.database import Database
+        if not isinstance(database, Database):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=Database.__name__,
+                    actual_class_name=database.__class__.__name__,
+                )
+            )
+
+        if not isinstance(transaction_type, TransactionType):
+            raise TypeError(
+                "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
+                    class_name=self.__class__.__name__,
+                    expected_class_name=TransactionType.__name__,
+                    actual_class_name=transaction_type.__class__.__name__,
+                )
+            )
+
+        self._database = database
+        self._transaction_type = transaction_type
+
+    def __enter__(self):
+        session_manager = self._database._session_manager
+        self._session = session_manager.get_session(self._transaction_type)
+        return self._session
+
+    def __exit__(self, *ignored):
+        self._database._session_manager.put_session(self._session)
 
 class BatchCheckout(object):
     """Context manager for using a batch from a database.
@@ -1929,3 +1978,4 @@ def _retry_on_aborted(func, retry_config):
     """
     retry = retry_config.with_predicate(if_exception_type(Aborted))
     return retry(func)
+

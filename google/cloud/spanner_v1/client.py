@@ -60,6 +60,7 @@ from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
 )
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 try:
     from opentelemetry import metrics
@@ -172,6 +173,9 @@ class Client(ClientWithProject):
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all transactions.
 
+    :type session_options: :class:`~google.cloud.spanner_v1.SessionOptions`
+    :param session_options: (Optional) Options for client sessions.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -196,6 +200,7 @@ class Client(ClientWithProject):
         directed_read_options=None,
         observability_options=None,
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
+        session_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -268,6 +273,7 @@ class Client(ClientWithProject):
         self._default_transaction_options = default_transaction_options
         self._nth_client_id = Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter(0)
+        self._session_options = session_options or SessionOptions()
 
     @property
     def _next_nth_request(self):
@@ -372,6 +378,14 @@ class Client(ClientWithProject):
         :returns: The default transaction options that are used by this client for all transactions.
         """
         return self._default_transaction_options
+
+    @property
+    def session_options(self):
+        """Returns the session options for the client.
+        :rtype: :class:`~google.cloud.spanner_v1.SessionOptions`
+        :returns: The session options for the client.
+        """
+        return self._session_options
 
     @property
     def directed_read_options(self):
