@@ -16,66 +16,64 @@
 
 import copy
 import functools
-
-import grpc
 import logging
 import re
 import threading
 
-import google.auth.credentials
-from google.api_core.retry import Retry
-from google.api_core.retry import if_exception_type
-from google.cloud.exceptions import NotFound
-from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
-from google.iam.v1 import iam_policy_pb2
-from google.iam.v1 import options_pb2
+from google.api_core.exceptions import Aborted
+from google.api_core.retry import Retry, if_exception_type
+import google.auth.credentials
+from google.iam.v1 import iam_policy_pb2, options_pb2
 from google.protobuf.field_mask_pb2 import FieldMask
+import grpc
 
+from google.cloud.exceptions import NotFound
+from google.cloud.spanner_admin_database_v1 import (
+    EncryptionConfig,
+    ListDatabaseRolesRequest,
+    RestoreDatabaseEncryptionConfig,
+    RestoreDatabaseRequest,
+    UpdateDatabaseDdlRequest,
+)
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
-from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
-from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
-from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
-from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1.transaction import BatchTransactionId
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import Type
-from google.cloud.spanner_v1 import TypeCode
-from google.cloud.spanner_v1 import TransactionSelector
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1 import SpannerClient
-from google.cloud.spanner_v1._helpers import _merge_query_options
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    RequestOptions,
+    SpannerClient,
+    TransactionOptions,
+    TransactionSelector,
+    Type,
+    TypeCode,
+)
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
+    _merge_query_options,
     _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
     _metadata_with_request_id,
 )
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1.batch import MutationGroups
-from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
-from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.merged_result_set import MergedResultSet
-from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
-from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.streamed import StreamedResultSet
-from google.cloud.spanner_v1.services.spanner.transports.grpc import (
-    SpannerGrpcTransport,
-)
-from google.cloud.spanner_v1.table import Table
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
     trace_call,
 )
+from google.cloud.spanner_v1.batch import Batch, MutationGroups
+from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-
+from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner_v1.services.spanner.transports.grpc import (
+    SpannerGrpcTransport,
+)
+from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
+from google.cloud.spanner_v1.snapshot import Snapshot, _restart_on_unavailable
+from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner_v1.table import Table
+from google.cloud.spanner_v1.transaction import BatchTransactionId
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 

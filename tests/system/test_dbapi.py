@@ -12,26 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import base64
-import datetime
 from collections import defaultdict
-
-import pytest
-import time
+import datetime
 import decimal
+import time
+
+from google.api_core.datetime_helpers import DatetimeWithNanoseconds
+import pytest
 
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
-
 from google.cloud.spanner_dbapi.connection import Connection, connect
 from google.cloud.spanner_dbapi.exceptions import (
-    ProgrammingError,
     OperationalError,
+    ProgrammingError,
     RetryAborted,
 )
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
 from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
-from google.api_core.datetime_helpers import DatetimeWithNanoseconds
+
 from . import _helpers
 
 DATABASE_NAME = "dbapi-txn"

@@ -14,40 +14,39 @@
 
 
 import threading
+
+from google.api_core import gapic_v1
 from google.protobuf.struct_pb2 import Struct
+import mock
+
 from google.cloud.spanner_v1 import (
-    PartialResultSet,
-    ResultSetMetadata,
-    ResultSetStats,
-    ResultSet,
-    RequestOptions,
-    Type,
-    TypeCode,
-    ExecuteSqlRequest,
-    ReadRequest,
-    StructType,
-    TransactionOptions,
-    TransactionSelector,
+    DefaultTransactionOptions,
     DirectedReadOptions,
     ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
+    ExecuteSqlRequest,
+    PartialResultSet,
+    ReadRequest,
+    RequestOptions,
+    ResultSet,
+    ResultSetMetadata,
+    ResultSetStats,
+    StructType,
+    TransactionOptions,
+    TransactionSelector,
+    Type,
+    TypeCode,
     param_types,
-    DefaultTransactionOptions,
 )
-from google.cloud.spanner_v1.types import transaction as transaction_type
-from google.cloud.spanner_v1.keyset import KeySet
-
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _make_value_pb,
     _merge_query_options,
     _metadata_with_request_id,
 )
+from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-import mock
-
-from google.api_core import gapic_v1
-
+from google.cloud.spanner_v1.types import transaction as transaction_type
 from tests._helpers import OpenTelemetryBase
 
 TABLE_NAME = "citizens"

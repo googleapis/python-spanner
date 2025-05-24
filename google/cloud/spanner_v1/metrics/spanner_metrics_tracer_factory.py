@@ -15,13 +15,14 @@
 
 """This module provides a singleton factory for creating SpannerMetricsTracer instances."""
 
-from .metrics_tracer_factory import MetricsTracerFactory
 import os
+
 from .constants import (
-    SPANNER_SERVICE_NAME,
-    GOOGLE_CLOUD_REGION_KEY,
     GOOGLE_CLOUD_REGION_GLOBAL,
+    GOOGLE_CLOUD_REGION_KEY,
+    SPANNER_SERVICE_NAME,
 )
+from .metrics_tracer_factory import MetricsTracerFactory
 
 try:
     from opentelemetry.resourcedetector import gcp_resource_detector
@@ -31,10 +32,10 @@ try:
     # code is not run in a GCP environment, with the location endpoints available.
     gcp_resource_detector._TIMEOUT_SEC = 0.2
 
-    import mmh3
-
     # Override Resource detector logging to not warn when GCP resources are not detected
     import logging
+
+    import mmh3
 
     logging.getLogger("opentelemetry.resourcedetector.gcp_resource_detector").setLevel(
         logging.ERROR
@@ -44,9 +45,11 @@ try:
 except ImportError:  # pragma: NO COVER
     HAS_OPENTELEMETRY_INSTALLED = False
 
-from .metrics_tracer import MetricsTracer
-from google.cloud.spanner_v1 import __version__
 from uuid import uuid4
+
+from google.cloud.spanner_v1 import __version__
+
+from .metrics_tracer import MetricsTracer
 
 
 class SpannerMetricsTracerFactory(MetricsTracerFactory):

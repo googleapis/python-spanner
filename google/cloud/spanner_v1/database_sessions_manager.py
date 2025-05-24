@@ -19,8 +19,8 @@ import weakref
 from google.api_core.exceptions import MethodNotImplemented
 
 from google.cloud.spanner_v1._opentelemetry_tracing import (
-    get_current_span,
     add_span_event,
+    get_current_span,
 )
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.session_options import TransactionType

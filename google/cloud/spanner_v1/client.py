@@ -23,42 +23,44 @@ In the hierarchy of API concepts
 * a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
   :class:`~google.cloud.spanner_v1.database.Database`
 """
-import grpc
 import os
+from typing import Optional
 import warnings
 
+import google.api_core.client_options
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
-import google.api_core.client_options
+import grpc
+
 from google.cloud.client import ClientWithProject
-from typing import Optional
-
-
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
 from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
     DatabaseAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
+from google.cloud.spanner_admin_instance_v1 import (
+    InstanceAdminClient,
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
+)
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
-from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
-from google.cloud.spanner_v1 import __version__
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    __version__,
+)
+from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.metrics.constants import (
     ENABLE_SPANNER_METRICS_ENV_VAR,
     METRIC_EXPORT_INTERVAL_MS,
 )
-from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
-    SpannerMetricsTracerFactory,
-)
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
+)
+from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
+    SpannerMetricsTracerFactory,
 )
 from google.cloud.spanner_v1.session_options import SessionOptions
 

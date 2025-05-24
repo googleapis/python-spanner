@@ -14,28 +14,30 @@
 
 """Context manager for Cloud Spanner batched writes."""
 import functools
+import time
 
-from google.cloud.spanner_v1 import CommitRequest
-from google.cloud.spanner_v1 import Mutation
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import BatchWriteRequest
+from google.api_core.exceptions import InternalServerError
 
-from google.cloud.spanner_v1._helpers import _SessionWrapper
-from google.cloud.spanner_v1._helpers import _make_list_value_pbs
+from google.cloud.spanner_v1 import (
+    BatchWriteRequest,
+    CommitRequest,
+    Mutation,
+    RequestOptions,
+    TransactionOptions,
+)
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _merge_Transaction_Options,
     AtomicCounter,
+    _check_rst_stream_error,
+    _make_list_value_pbs,
+    _merge_Transaction_Options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+    _retry,
+    _retry_on_aborted_exception,
+    _SessionWrapper,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1._helpers import _retry
-from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
-from google.cloud.spanner_v1._helpers import _check_rst_stream_error
-from google.api_core.exceptions import InternalServerError
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-import time
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 

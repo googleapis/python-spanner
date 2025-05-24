@@ -17,22 +17,21 @@ from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
 from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
-    ExecuteSqlRequest,
     BeginTransactionRequest,
-    TransactionOptions,
     ExecuteBatchDmlRequest,
+    ExecuteSqlRequest,
+    TransactionOptions,
     TypeCode,
 )
-from google.cloud.spanner_v1.transaction import Transaction
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
-
+from google.cloud.spanner_v1.transaction import Transaction
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
-    add_select1_result,
-    add_update_count,
     add_error,
-    unavailable_status,
+    add_select1_result,
     add_single_result,
+    add_update_count,
+    unavailable_status,
 )
 
 

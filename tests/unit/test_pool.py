@@ -13,29 +13,23 @@
 # limitations under the License.
 
 
+from datetime import datetime, timedelta
 from functools import total_ordering
 import time
 import unittest
-from datetime import datetime, timedelta
 
 import mock
-from google.cloud.spanner_v1._helpers import (
-    _metadata_with_request_id,
-    AtomicCounter,
-)
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
+from google.cloud.spanner_v1._helpers import AtomicCounter, _metadata_with_request_id
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from tests._helpers import (
-    OpenTelemetryBase,
+    HAS_OPENTELEMETRY_INSTALLED,
     LIB_VERSION,
+    OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
-    HAS_OPENTELEMETRY_INSTALLED,
 )
-
-from google.cloud.spanner_v1 import pool as pool_module
-from google.cloud.spanner_v1.pool import SessionCheckout
 
 
 def _make_database(name="name"):
@@ -264,7 +258,7 @@ class TestFixedSizePool(OpenTelemetryBase):
         want_span_names = ["CloudSpanner.FixedPool.BatchCreateSessions", "pool.Get"]
         assert got_span_names == want_span_names
 
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id-1}.{database._channel_id}.{_Database.NTH_REQUEST.value}.1"
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id - 1}.{database._channel_id}.{_Database.NTH_REQUEST.value}.1"
         attrs = dict(
             TestFixedSizePool.BASE_ATTRIBUTES.copy(), x_goog_spanner_request_id=req_id
         )
@@ -827,6 +821,7 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_get_hit_w_ping(self):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -851,6 +846,7 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_get_hit_w_ping_expired(self):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -934,7 +930,7 @@ class TestPingingPool(OpenTelemetryBase):
         want_span_names = ["CloudSpanner.PingingPool.BatchCreateSessions"]
         assert got_span_names == want_span_names
 
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id-1}.{database._channel_id}.{_Database.NTH_REQUEST.value}.1"
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id - 1}.{database._channel_id}.{_Database.NTH_REQUEST.value}.1"
         attrs = dict(
             TestPingingPool.BASE_ATTRIBUTES.copy(), x_goog_spanner_request_id=req_id
         )
@@ -954,6 +950,7 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_put_non_full(self):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1013,6 +1010,7 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_ping_oldest_stale_but_exists(self):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1030,6 +1028,7 @@ class TestPingingPool(OpenTelemetryBase):
 
     def test_ping_oldest_stale_and_not_exists(self):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1224,8 +1223,7 @@ class _Database(object):
             metadata=[],
             labels={},
         ):
-            from google.cloud.spanner_v1 import BatchCreateSessionsResponse
-            from google.cloud.spanner_v1 import Session
+            from google.cloud.spanner_v1 import BatchCreateSessionsResponse, Session
 
             database_role = request.session_template.creator_role if request else None
             if request.session_count < 2:

@@ -17,35 +17,39 @@
 from datetime import datetime
 import functools
 import threading
-from google.protobuf.struct_pb2 import Struct
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import ReadRequest
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import TransactionSelector
-from google.cloud.spanner_v1 import PartitionOptions
-from google.cloud.spanner_v1 import PartitionQueryRequest
-from google.cloud.spanner_v1 import PartitionReadRequest
 
-from google.api_core.exceptions import InternalServerError
-from google.api_core.exceptions import ServiceUnavailable
-from google.api_core.exceptions import InvalidArgument
 from google.api_core import gapic_v1
+from google.api_core.exceptions import (
+    InternalServerError,
+    InvalidArgument,
+    ServiceUnavailable,
+)
+from google.protobuf.struct_pb2 import Struct
+
+from google.cloud.spanner_v1 import (
+    ExecuteSqlRequest,
+    PartitionOptions,
+    PartitionQueryRequest,
+    PartitionReadRequest,
+    ReadRequest,
+    RequestOptions,
+    TransactionOptions,
+    TransactionSelector,
+)
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _check_rst_stream_error,
     _make_value_pb,
     _merge_query_options,
-    _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
     _retry,
-    _check_rst_stream_error,
     _SessionWrapper,
-    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.streamed import StreamedResultSet
-from google.cloud.spanner_v1 import RequestOptions
-
-from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
     "RST_STREAM",

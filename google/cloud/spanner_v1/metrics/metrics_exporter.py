@@ -13,36 +13,35 @@
 # limitations under the License.
 
 
-from .constants import (
-    BUILT_IN_METRICS_METER_NAME,
-    NATIVE_METRICS_PREFIX,
-    SPANNER_RESOURCE_TYPE,
-    MONITORED_RESOURCE_LABELS,
-    METRIC_LABELS,
-    METRIC_NAMES,
-)
-
 import logging
-from typing import Optional, List, Union, NoReturn, Tuple, Dict
+from typing import Dict, List, NoReturn, Optional, Tuple, Union
 
-import google.auth
-from google.auth import credentials as ga_credentials
-from google.api.distribution_pb2 import (  # pylint: disable=no-name-in-module
+from google.api.distribution_pb2 import (
     Distribution,
-)
+)  # pylint: disable=no-name-in-module
+from google.api.metric_pb2 import MetricDescriptor
 
 # pylint: disable=no-name-in-module
-from google.api.metric_pb2 import (  # pylint: disable=no-name-in-module
-    Metric as GMetric,
-    MetricDescriptor,
-)
-from google.api.monitored_resource_pb2 import (  # pylint: disable=no-name-in-module
+from google.api.metric_pb2 import Metric as GMetric  # pylint: disable=no-name-in-module
+from google.api.monitored_resource_pb2 import (
     MonitoredResource,
-)
+)  # pylint: disable=no-name-in-module
+import google.auth
+from google.auth import credentials as ga_credentials
 
 # pylint: disable=no-name-in-module
 from google.protobuf.timestamp_pb2 import Timestamp
+
 from google.cloud.spanner_v1.gapic_version import __version__
+
+from .constants import (
+    BUILT_IN_METRICS_METER_NAME,
+    METRIC_LABELS,
+    METRIC_NAMES,
+    MONITORED_RESOURCE_LABELS,
+    NATIVE_METRICS_PREFIX,
+    SPANNER_RESOURCE_TYPE,
+)
 
 try:
     from opentelemetry.sdk.metrics.export import (
@@ -57,9 +56,7 @@ try:
         Sum,
     )
     from opentelemetry.sdk.resources import Resource
-    from google.cloud.monitoring_v3.services.metric_service.transports.grpc import (
-        MetricServiceGrpcTransport,
-    )
+
     from google.cloud.monitoring_v3 import (
         CreateTimeSeriesRequest,
         MetricServiceClient,
@@ -67,6 +64,9 @@ try:
         TimeInterval,
         TimeSeries,
         TypedValue,
+    )
+    from google.cloud.monitoring_v3.services.metric_service.transports.grpc import (
+        MetricServiceGrpcTransport,
     )
 
     HAS_OPENTELEMETRY_INSTALLED = True
