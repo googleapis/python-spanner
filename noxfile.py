@@ -88,12 +88,17 @@ nox.options.sessions = [
     "format",
 ]
 
+
 # Error if a python version is missing
 nox.options.error_on_missing_interpreters = True
 
+def install_default_packages(session):
+    if os.environ.get("USE_AIRLOCK") == "true":
+        session.install("-r", ".kokoro/requirements-auth.txt", "-i", "https://pypi.org/simple/", "--require-hashes", "--only-binary", ":all:")
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def lint(session):
+    install_default_packages(session)
     """Run linters.
 
     Returns a failure if the linters find linting errors or sufficiently
@@ -110,6 +115,7 @@ def lint(session):
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def blacken(session):
+    install_default_packages(session)
     """Run black. Format code to uniform standard."""
     session.install(BLACK_VERSION)
     session.run(
@@ -120,6 +126,7 @@ def blacken(session):
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def format(session):
+    install_default_packages(session)
     """
     Run isort to sort imports. Then run black
     to format code to uniform standard.
@@ -140,12 +147,15 @@ def format(session):
 
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def lint_setup_py(session):
+    install_default_packages(session)
     """Verify that setup.py is valid (including RST check)."""
     session.install("docutils", "pygments")
     session.run("python", "setup.py", "check", "--restructuredtext", "--strict")
 
 
 def install_unittest_dependencies(session, *constraints):
+    install_default_packages(session)
+
     standard_deps = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_DEPENDENCIES
     session.install(*standard_deps, *constraints)
 
@@ -226,6 +236,7 @@ def unit(session, protobuf_implementation):
 @nox.session(python=DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION)
 def mockserver(session):
     # Install all test dependencies, then install this package in-place.
+    install_default_packages(session)
 
     constraints_path = str(
         CURRENT_DIRECTORY / "testing" / f"constraints-{session.python}.txt"
@@ -258,6 +269,7 @@ def install_systemtest_dependencies(session, *constraints):
     # Use pre-release gRPC for system tests.
     # Exclude version 1.52.0rc1 which has a known issue.
     # See https://github.com/grpc/grpc/issues/32163
+    install_default_packages(session)
     session.install("--pre", "grpcio!=1.52.0rc1")
 
     session.install(*SYSTEM_TEST_STANDARD_DEPENDENCIES, *constraints)
@@ -282,7 +294,6 @@ def install_systemtest_dependencies(session, *constraints):
         session.install("-e", f".[{','.join(extras)}]", *constraints)
     else:
         session.install("-e", ".", *constraints)
-
 
 @nox.session(python=SYSTEM_TEST_PYTHON_VERSIONS)
 @nox.parametrize(
@@ -375,6 +386,7 @@ def cover(session):
     This outputs the coverage report aggregating coverage from the unit
     test runs (not system test runs), and then erases coverage data.
     """
+    install_default_packages(session)
     session.install("coverage", "pytest-cov")
     session.run("coverage", "report", "--show-missing", "--fail-under=98")
 
@@ -384,7 +396,7 @@ def cover(session):
 @nox.session(python="3.10")
 def docs(session):
     """Build the docs for this library."""
-
+    install_default_packages(session)
     session.install("-e", ".[tracing]")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
@@ -419,7 +431,7 @@ def docs(session):
 @nox.session(python="3.10")
 def docfx(session):
     """Build the docfx yaml files for this library."""
-
+    install_default_packages(session)
     session.install("-e", ".[tracing]")
     session.install(
         # We need to pin to specific versions of the `sphinxcontrib-*` packages
@@ -481,6 +493,7 @@ def prerelease_deps(session, protobuf_implementation, database_dialect):
         session.skip("cpp implementation is not supported in python 3.11+")
 
     # Install all dependencies
+    install_default_packages(session)
     session.install("-e", ".[all, tests, tracing]")
     unit_deps_all = UNIT_TEST_STANDARD_DEPENDENCIES + UNIT_TEST_EXTERNAL_DEPENDENCIES
     session.install(*unit_deps_all)
