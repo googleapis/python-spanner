@@ -22,11 +22,13 @@ from google.api_core import gapic_v1
 from google.api_core.exceptions import InternalServerError
 from google.protobuf.struct_pb2 import Struct
 
-from google.cloud.spanner_v1 import (
+from google.cloud.spanner_v1.types.spanner import (
     CommitRequest,
     ExecuteBatchDmlRequest,
     ExecuteSqlRequest,
-    RequestOptions,
+)
+from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1.types.transaction import (
     TransactionOptions,
     TransactionSelector,
 )

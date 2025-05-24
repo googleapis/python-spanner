@@ -26,13 +26,15 @@ from google.api_core.exceptions import (
 )
 from google.protobuf.struct_pb2 import Struct
 
-from google.cloud.spanner_v1 import (
+from google.cloud.spanner_v1.types.spanner import (
     ExecuteSqlRequest,
-    PartitionOptions,
     PartitionQueryRequest,
     PartitionReadRequest,
     ReadRequest,
-    RequestOptions,
+)
+from google.cloud.spanner_v1.types.spanner import PartitionOptions
+from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1.types.transaction import (
     TransactionOptions,
     TransactionSelector,
 )

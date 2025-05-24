@@ -18,7 +18,8 @@ from contextlib import contextmanager
 from datetime import datetime
 import os
 
-from google.cloud.spanner_v1 import SpannerClient, gapic_version
+from google.cloud.spanner_v1.services.spanner import SpannerClient
+from google.cloud.spanner_v1 import gapic_version
 from google.cloud.spanner_v1._helpers import _metadata_with_span_context
 
 try:

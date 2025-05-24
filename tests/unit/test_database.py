@@ -30,6 +30,7 @@ from google.cloud.spanner_v1 import (
 from google.cloud.spanner_v1._helpers import AtomicCounter, _metadata_with_request_id
 from google.cloud.spanner_v1.param_types import INT64
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -2036,6 +2037,24 @@ class TestDatabase(_BaseTest):
         tables = database.list_tables()
         self.assertIsNotNone(tables)
 
+    def session(self, **kwargs):
+        from google.cloud.spanner_v1.session import Session
+        return Session(database=self, **kwargs)
+
+    @property
+    def _pool(self):
+        """Backward compatibility property for tests that still use _pool directly."""
+        return getattr(self._session_manager, "_pool", None)
+
+    @_pool.setter
+    def _pool(self, value):
+        """Backward compatibility setter for tests that still use _pool directly."""
+        self._session_manager._pool = value
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
+
 
 class TestBatchCheckout(_BaseTest):
     def _get_target_class(self):
@@ -2383,7 +2402,12 @@ class TestBatchSnapshot(_BaseTest):
     def _make_database(**kwargs):
         from google.cloud.spanner_v1.database import Database
 
-        return mock.create_autospec(Database, instance=True, **kwargs)
+        database = mock.create_autospec(Database, instance=True, **kwargs)
+        # Add a mock session manager for consistency with the real API
+        database._session_manager = mock.Mock()
+        database._session_manager.get_session = mock.Mock()
+        database._session_manager.put_session = mock.Mock()
+        return database
 
     @staticmethod
     def _make_session(**kwargs):
@@ -2445,7 +2469,7 @@ class TestBatchSnapshot(_BaseTest):
     def test_from_dict(self):
         klass = self._get_target_class()
         database = self._make_database()
-        session = database.session.return_value = self._make_session()
+        session = database._session_manager.get_session.return_value = self._make_session()
         snapshot = session.snapshot.return_value = self._make_snapshot()
         api_repr = {
             "session_id": self.SESSION_ID,
@@ -2480,7 +2504,7 @@ class TestBatchSnapshot(_BaseTest):
 
     def test__get_session_new(self):
         database = self._make_database()
-        session = database.session.return_value = self._make_session()
+        session = database._session_manager.get_session.return_value = self._make_session()
         batch_txn = self._make_one(database)
         self.assertIs(batch_txn._get_session(), session)
         session.create.assert_called_once_with()
@@ -3397,6 +3421,7 @@ class _Client(object):
         observability_options=None,
     ):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
+        from google.cloud.spanner_v1.session_options import SessionOptions
 
         self.project = project
         self.project_name = "projects/" + self.project
@@ -3412,6 +3437,7 @@ class _Client(object):
         self.observability_options = observability_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
+        self.session_options = SessionOptions()  # Add missing session_options
 
     @property
     def _next_nth_request(self):
@@ -3450,6 +3476,29 @@ class _Database(object):
 
         # Create a mock session manager for the new architecture
         self._session_manager = type("MockSessionManager", (), {})()
+        
+        # Add get_session method to mock session manager
+        def mock_get_session(transaction_type=None):
+            # Return a session from the pool if available
+            if hasattr(self._session_manager, '_pool') and self._session_manager._pool:
+                return self._session_manager._pool.get()
+            # Otherwise create a new session
+            return _Session(database=self)
+        
+        def mock_put_session(session):
+            # Put session back into the pool if available
+            if hasattr(self._session_manager, '_pool') and self._session_manager._pool:
+                try:
+                    self._session_manager._pool.put(session)
+                except:
+                    pass  # Ignore errors when putting back sessions
+        
+        self._session_manager.get_session = mock_get_session
+        self._session_manager.put_session = mock_put_session
+
+    def session(self, **kwargs):
+        from google.cloud.spanner_v1.session import Session
+        return Session(database=self, **kwargs)
 
     @property
     def _pool(self):
@@ -3501,6 +3550,7 @@ class _Session(object):
     _created = False
     _transaction = None
     _snapshot = None
+    is_multiplexed = False  # Add missing is_multiplexed attribute
 
     def __init__(
         self, database=None, name=_BaseTest.SESSION_NAME, run_transaction_function=False

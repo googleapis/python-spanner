@@ -20,8 +20,8 @@ import time
 from warnings import warn
 
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1 import BatchCreateSessionsRequest
-from google.cloud.spanner_v1 import Session as SessionPB
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types import Session as SessionPB
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -131,9 +131,7 @@ class AbstractSessionPool(object):
         :returns: new session instance.
         """
         database_role = self.database_role or self._database.database_role
-        return Session(
-            database=self._database, labels=self.labels, database_role=database_role
-        )
+        return self._database.session(labels=self.labels, database_role=database_role)
 
     def session(self, **kwargs):
         """Return a context manager for a session from the pool.

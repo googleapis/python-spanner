@@ -39,16 +39,12 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1 import (
-    DefaultTransactionOptions,
-    ExecuteSqlRequest,
-    RequestOptions,
-    SpannerClient,
-    TransactionOptions,
-    TransactionSelector,
-    Type,
-    TypeCode,
-)
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.types import RequestOptions
+from google.cloud.spanner_v1.services.spanner import SpannerClient
+from google.cloud.spanner_v1.types.transaction import TransactionOptions, TransactionSelector
+from google.cloud.spanner_v1.types.type import Type, TypeCode
 from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_leader_aware_routing,
@@ -466,6 +462,38 @@ class Database(object):
         :returns: the session options
         """
         return self._instance._client.session_options
+
+    @property
+    def _pool(self):
+        """Backward compatibility property for accessing the session pool.
+        
+        :rtype: :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
+        :returns: the session pool from the session manager
+        """
+        return self._session_manager._pool
+
+    def session(self, labels=None, database_role=None):
+        """Factory to create a session.
+
+        :type labels: dict (str -> str)
+        :param labels: (Optional) user-assigned labels for the session.
+
+        :type database_role: str
+        :param database_role: (Optional) user-assigned database_role for the session.
+
+        :rtype: :class:`~google.cloud.spanner_v1.session.Session`
+        :returns: a new session bound to this database.
+        """
+        from google.cloud.spanner_v1.session import Session
+        
+        session_labels = labels or {}
+        session_database_role = database_role or self.database_role
+        
+        return Session(
+            database=self,
+            labels=session_labels,
+            database_role=session_database_role
+        )
 
     def metadata_with_request_id(
         self, nth_request, nth_attempt, prior_metadata=[], span=None

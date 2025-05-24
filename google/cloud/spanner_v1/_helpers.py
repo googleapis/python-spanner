@@ -29,13 +29,10 @@ from google.protobuf.struct_pb2 import ListValue, Value
 from google.rpc.error_details_pb2 import RetryInfo
 
 from google.cloud._helpers import _date_from_iso8601_date
-from google.cloud.spanner_v1 import (
-    ExecuteSqlRequest,
-    Interval,
-    JsonObject,
-    TransactionOptions,
-    TypeCode,
-)
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.data_types import Interval, JsonObject
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1.types.type import TypeCode
 from google.cloud.spanner_v1.request_id_header import with_request_id
 
 try:

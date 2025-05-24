@@ -46,7 +46,7 @@ class DatabaseSessionsManager(object):
 
     def __init__(self, database, pool):
         self._database = database
-        self._logger = database.logger
+        self._logger = None  # Lazy initialization to avoid triggering database.logger during __init__
 
         # The session pool manages non-multiplexed sessions, and
         # will only be used if multiplexed sessions are not enabled.
@@ -63,6 +63,13 @@ class DatabaseSessionsManager(object):
         self._multiplexed_session_maintenance_thread = None
         self._multiplexed_session_lock = threading.Lock()
         self._is_multiplexed_sessions_disabled_event = threading.Event()
+
+    @property
+    def logger(self):
+        """Get the logger, initializing it lazily to avoid triggering database.logger during __init__."""
+        if self._logger is None:
+            self._logger = self._database.logger
+        return self._logger
 
     def get_session(self, transaction_type: TransactionType) -> Session:
         """Returns a session for the given transaction type from the database session manager.
@@ -157,7 +164,7 @@ class DatabaseSessionsManager(object):
 
         session.create()
 
-        self._logger.info("Created multiplexed session.")
+        self.logger.info("Created multiplexed session.")
 
         return session
 
@@ -169,12 +176,12 @@ class DatabaseSessionsManager(object):
                     self._multiplexed_session.delete()
                 except Exception as exc:  # noqa: BLE001
                     # Keep the client alive; best-effort cleanup.
-                    self._logger.warning(
+                    self.logger.warning(
                         "Failed to delete multiplexed session during disable: %s", exc
                     )
             self._multiplexed_session = None
         self._is_multiplexed_sessions_disabled_event.set()
-        self._database.session_options.disable_multiplexed(self._logger)
+        self._database.session_options.disable_multiplexed(self.logger)
 
     def _build_maintenance_thread(self) -> threading.Thread:
         """Builds and returns a multiplexed session maintenance thread for
@@ -241,7 +248,7 @@ class DatabaseSessionsManager(object):
                 try:
                     session_manager._multiplexed_session.delete()
                 except Exception as exc:  # noqa: BLE001
-                    session_manager._logger.warning(
+                    session_manager.logger.warning(
                         "Failed to delete multiplexed session during refresh: %s", exc
                     )
 

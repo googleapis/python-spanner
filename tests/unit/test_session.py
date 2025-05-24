@@ -299,6 +299,7 @@ class TestSession(OpenTelemetryBase):
 
         request = CreateSessionRequest(
             database=database.name,
+            session=SessionRequestProto(),
         )
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
@@ -335,6 +336,7 @@ class TestSession(OpenTelemetryBase):
 
         request = CreateSessionRequest(
             database=database.name,
+            session=SessionRequestProto(),
         )
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"

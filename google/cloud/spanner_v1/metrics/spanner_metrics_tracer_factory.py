@@ -35,8 +35,6 @@ try:
     # Override Resource detector logging to not warn when GCP resources are not detected
     import logging
 
-    import mmh3
-
     logging.getLogger("opentelemetry.resourcedetector.gcp_resource_detector").setLevel(
         logging.ERROR
     )
@@ -145,17 +143,27 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
         """
         if not client_uid:
             return "000000"
-        hashed_client = mmh3.hash64(client_uid)
+            
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            # Fallback to a simple hash if mmh3 is not available
+            return f"{hash(client_uid) % 0xFFFFFF:06x}"
+            
+        try:
+            import mmh3
+            hashed_client = mmh3.hash64(client_uid)
 
-        # Join the hashes back together since mmh3 splits into high and low 32bits
-        full_hash = (hashed_client[0] << 32) | (hashed_client[1] & 0xFFFFFFFF)
-        unsigned_hash = full_hash & 0xFFFFFFFFFFFFFFFF
+            # Join the hashes back together since mmh3 splits into high and low 32bits
+            full_hash = (hashed_client[0] << 32) | (hashed_client[1] & 0xFFFFFFFF)
+            unsigned_hash = full_hash & 0xFFFFFFFFFFFFFFFF
 
-        k_prefix_length = 10
-        sig_figs = unsigned_hash >> (64 - k_prefix_length)
+            k_prefix_length = 10
+            sig_figs = unsigned_hash >> (64 - k_prefix_length)
 
-        # Return as 6 digit zero padded hex string
-        return f"{sig_figs:06x}"
+            # Return as 6 digit zero padded hex string
+            return f"{sig_figs:06x}"
+        except ImportError:
+            # Fallback to a simple hash if mmh3 is not available
+            return f"{hash(client_uid) % 0xFFFFFF:06x}"
 
     @staticmethod
     def _get_location() -> str:

@@ -35,12 +35,14 @@ from tests._helpers import (
 def _make_database(name="name"):
     from google.cloud.spanner_v1.database import Database
 
-    return mock.create_autospec(Database, instance=True)
+    database = mock.create_autospec(Database, instance=True)
+    # Ensure database_role returns None instead of a MagicMock
+    database.database_role = None
+    return database
 
 
 def _make_session():
-    from google.cloud.spanner_v1.database import Session
-
+    from google.cloud.spanner_v1.session import Session
     return mock.create_autospec(Session, instance=True)
 
 
@@ -125,7 +127,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         database.session.assert_called_once_with(labels={}, database_role=database_role)
 
     def test_session_wo_kwargs(self):
-        from google.cloud.spanner_v1.database import SessionCheckout
+        from google.cloud.spanner_v1.pool import SessionCheckout
 
         pool = self._make_one()
         checkout = pool.session()
@@ -135,7 +137,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertEqual(checkout._kwargs, {})
 
     def test_session_w_kwargs(self):
-        from google.cloud.spanner_v1.database import SessionCheckout
+        from google.cloud.spanner_v1.pool import SessionCheckout
 
         pool = self._make_one()
         checkout = pool.session(foo="bar")
