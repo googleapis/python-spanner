@@ -15,10 +15,10 @@
 from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_v1 import (
     BatchCreateSessionsRequest,
-    ExecuteSqlRequest,
     BeginTransactionRequest,
-    TypeCode,
     CommitRequest,
+    ExecuteSqlRequest,
+    TypeCode,
 )
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,

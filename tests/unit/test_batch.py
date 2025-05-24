@@ -13,35 +13,33 @@
 # limitations under the License.
 
 
+import datetime
 import unittest
-from tests import _helpers as ot_helpers
 from unittest.mock import MagicMock
+
+from google.api_core.exceptions import Aborted, Unknown
+from google.rpc.status_pb2 import Status
+
+from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+from google.cloud.spanner_v1 import (
+    BatchWriteResponse,
+    CommitResponse,
+    DefaultTransactionOptions,
+    Mutation,
+    RequestOptions,
+    TransactionOptions,
+)
+from google.cloud.spanner_v1._helpers import AtomicCounter, _metadata_with_request_id
+from google.cloud.spanner_v1.batch import Batch, MutationGroups, _BatchBase
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from tests import _helpers as ot_helpers
 from tests._helpers import (
-    OpenTelemetryBase,
     LIB_VERSION,
+    OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
 )
-from google.cloud.spanner_v1 import (
-    RequestOptions,
-    CommitResponse,
-    TransactionOptions,
-    Mutation,
-    BatchWriteResponse,
-    DefaultTransactionOptions,
-)
-from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
-import datetime
-from google.api_core.exceptions import Aborted, Unknown
-from google.cloud.spanner_v1.batch import MutationGroups, _BatchBase, Batch
-from google.cloud.spanner_v1.keyset import KeySet
-from google.rpc.status_pb2 import Status
-
-from google.cloud.spanner_v1._helpers import (
-    AtomicCounter,
-    _metadata_with_request_id,
-)
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]

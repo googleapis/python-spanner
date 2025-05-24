@@ -18,19 +18,17 @@ from contextlib import contextmanager
 from datetime import datetime
 import os
 
-from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1.services.spanner import SpannerClient
 from google.cloud.spanner_v1 import gapic_version
-from google.cloud.spanner_v1._helpers import (
-    _metadata_with_span_context,
-)
+from google.cloud.spanner_v1._helpers import _metadata_with_span_context
 
 try:
     from opentelemetry import trace
-    from opentelemetry.trace.status import Status, StatusCode
     from opentelemetry.semconv.attributes.otel_attributes import (
         OTEL_SCOPE_NAME,
         OTEL_SCOPE_VERSION,
     )
+    from opentelemetry.trace.status import Status, StatusCode
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:

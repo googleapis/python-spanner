@@ -14,22 +14,22 @@
 
 """Wrapper for Cloud Spanner Session objects."""
 
+from datetime import datetime
 from functools import total_ordering
 import time
-from datetime import datetime
 
-from google.api_core.exceptions import Aborted
-from google.api_core.exceptions import GoogleAPICallError
-from google.api_core.exceptions import NotFound
+from google.api_core.exceptions import Aborted, GoogleAPICallError, NotFound
 from google.api_core.gapic_v1 import method
-from google.cloud.spanner_v1._helpers import _delay_until_retry
-from google.cloud.spanner_v1._helpers import _get_retry_delay
 
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import CreateSessionRequest
+from google.cloud.spanner_v1.types.spanner import (
+    CreateSessionRequest,
+    ExecuteSqlRequest,
+)
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
+    _delay_until_retry,
+    _get_retry_delay,
     _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
@@ -37,10 +37,10 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.transaction import Transaction
-from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-
+from google.cloud.spanner_v1.types import Session as SessionPB
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 """Default timeout used by :meth:`Session.run_in_transaction`."""
@@ -69,13 +69,14 @@ class Session(object):
     _session_id = None
     _transaction = None
 
-    def __init__(self, database, labels=None, database_role=None):
+    def __init__(self, database, labels=None, database_role=None, is_multiplexed=False):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
         self._last_use_time = datetime.utcnow()
+        self._is_multiplexed = is_multiplexed
 
     def __lt__(self, other):
         return self._session_id < other._session_id
@@ -87,7 +88,7 @@ class Session(object):
 
     @property
     def last_use_time(self):
-        """ "Approximate last use time of this session
+        """Approximate last use time of this session
 
         :rtype: datetime
         :returns: the approximate last use time of this session"""
@@ -131,6 +132,14 @@ class Session(object):
             raise ValueError("No session ID set by back-end")
         return self._database.name + "/sessions/" + self._session_id
 
+    @property
+    def is_multiplexed(self):
+        """Whether this session is multiplexed.
+        :rtype: bool
+        :returns: True if this session is multiplexed, False otherwise.
+        """
+        return self._is_multiplexed
+
     def create(self):
         """Create this session, bound to its database.
 
@@ -153,12 +162,13 @@ class Session(object):
                 )
             )
 
-        request = CreateSessionRequest(database=self._database.name)
+        session_pb = SessionPB(multiplexed=self.is_multiplexed)
         if self._database.database_role is not None:
-            request.session.creator_role = self._database.database_role
-
+            session_pb.creator_role = self._database.database_role
         if self._labels:
-            request.session.labels = self._labels
+            session_pb.labels = self._labels
+
+        request = CreateSessionRequest(database=self._database.name, session=session_pb)
 
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
@@ -438,6 +448,11 @@ class Session(object):
         if self._session_id is None:
             raise ValueError("Session has not been created.")
 
+        if self.is_multiplexed:
+            raise NotImplementedError(
+                "Multiplexed sessions do not yet support read/write transactions."
+            )
+
         return Batch(self)
 
     def transaction(self):
@@ -453,6 +468,11 @@ class Session(object):
         if self._transaction is not None:
             self._transaction.rolled_back = True
             del self._transaction
+
+        if self.is_multiplexed:
+            raise NotImplementedError(
+                "Multiplexed sessions do not yet support read/write transactions."
+            )
 
         txn = self._transaction = Transaction(self)
         return txn

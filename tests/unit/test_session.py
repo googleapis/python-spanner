@@ -13,46 +13,47 @@
 # limitations under the License.
 
 
-import google.api_core.gapic_v1.method
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
-import mock
 import datetime
-from google.cloud.spanner_v1 import (
-    Transaction as TransactionPB,
-    TransactionOptions,
-    CommitResponse,
-    CommitRequest,
-    RequestOptions,
-    SpannerClient,
-    CreateSessionRequest,
-    Session as SessionRequestProto,
-    ExecuteSqlRequest,
-    TypeCode,
-)
-from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
-from google.cloud.spanner_v1._helpers import _delay_until_retry
-from google.cloud.spanner_v1.transaction import Transaction
-from tests._helpers import (
-    OpenTelemetryBase,
-    LIB_VERSION,
-    StatusCode,
-    enrich_with_otel_scope,
-)
-import grpc
-from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.keyset import KeySet
+
+from google.api_core.exceptions import Aborted, Cancelled, NotFound, Unknown
+import google.api_core.gapic_v1.method
 from google.protobuf.duration_pb2 import Duration
-from google.rpc.error_details_pb2 import RetryInfo
-from google.api_core.exceptions import Unknown, Aborted, NotFound, Cancelled
 from google.protobuf.struct_pb2 import Struct, Value
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.rpc.error_details_pb2 import RetryInfo
+import grpc
+import mock
+
+from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+from google.cloud.spanner_v1 import (
+    CommitRequest,
+    CommitResponse,
+    CreateSessionRequest,
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    RequestOptions,
+)
+from google.cloud.spanner_v1 import Session as SessionRequestProto
+from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1 import Transaction as TransactionPB
+from google.cloud.spanner_v1 import TransactionOptions, TypeCode
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
+    _delay_until_retry,
     _metadata_with_request_id,
+)
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.transaction import Transaction
+from tests._helpers import (
+    LIB_VERSION,
+    OpenTelemetryBase,
+    StatusCode,
+    enrich_with_otel_scope,
 )
 
 
@@ -298,6 +299,7 @@ class TestSession(OpenTelemetryBase):
 
         request = CreateSessionRequest(
             database=database.name,
+            session=SessionRequestProto(),
         )
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
@@ -334,6 +336,7 @@ class TestSession(OpenTelemetryBase):
 
         request = CreateSessionRequest(
             database=database.name,
+            session=SessionRequestProto(),
         )
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"

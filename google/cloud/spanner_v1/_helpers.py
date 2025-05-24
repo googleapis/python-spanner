@@ -14,27 +14,26 @@
 
 """Helper functions for Cloud Spanner."""
 
+import base64
 import datetime
 import decimal
 import math
-import time
-import base64
 import threading
-
-from google.protobuf.struct_pb2 import ListValue
-from google.protobuf.struct_pb2 import Value
-from google.protobuf.message import Message
-from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
+import time
 
 from google.api_core import datetime_helpers
 from google.api_core.exceptions import Aborted
-from google.cloud._helpers import _date_from_iso8601_date
-from google.cloud.spanner_v1 import TypeCode
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import JsonObject, Interval
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1.request_id_header import with_request_id
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
+from google.protobuf.message import Message
+from google.protobuf.struct_pb2 import ListValue, Value
 from google.rpc.error_details_pb2 import RetryInfo
+
+from google.cloud._helpers import _date_from_iso8601_date
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.data_types import Interval, JsonObject
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1.types.type import TypeCode
+from google.cloud.spanner_v1.request_id_header import with_request_id
 
 try:
     from opentelemetry.propagate import inject
@@ -43,8 +42,8 @@ try:
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
-from typing import List, Tuple
 import random
+from typing import List, Tuple
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (

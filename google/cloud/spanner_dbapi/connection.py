@@ -21,23 +21,24 @@ from google.auth.credentials import AnonymousCredentials
 
 from google.cloud import spanner_v1 as spanner
 from google.cloud.spanner_dbapi import partition_helper
-from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode, BatchDmlExecutor
-from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_dbapi.partition_helper import PartitionId
-from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Statement
-from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
+from google.cloud.spanner_dbapi.batch_dml_executor import BatchDmlExecutor, BatchMode
 from google.cloud.spanner_dbapi.cursor import Cursor
-from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
-from google.cloud.spanner_v1.snapshot import Snapshot
-
 from google.cloud.spanner_dbapi.exceptions import (
     InterfaceError,
     OperationalError,
     ProgrammingError,
 )
-from google.cloud.spanner_dbapi.version import DEFAULT_USER_AGENT
-from google.cloud.spanner_dbapi.version import PY_VERSION
-
+from google.cloud.spanner_dbapi.parsed_statement import (
+    AutocommitDmlMode,
+    ParsedStatement,
+    Statement,
+)
+from google.cloud.spanner_dbapi.partition_helper import PartitionId
+from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
+from google.cloud.spanner_dbapi.version import DEFAULT_USER_AGENT, PY_VERSION
+from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
+from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.snapshot import Snapshot
 
 CLIENT_TRANSACTION_NOT_STARTED_WARNING = (
     "This method is non-operational as a transaction has not been started."
@@ -357,7 +358,12 @@ class Connection:
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
         if not self._session:
-            self._session = self.database._pool.get()
+            transaction_type = (
+                TransactionType.READ_ONLY
+                if self.read_only
+                else TransactionType.READ_WRITE
+            )
+            self._session = self.database._session_manager.get_session(transaction_type)
 
         return self._session
 
@@ -370,7 +376,7 @@ class Connection:
             return
         if self.database is None:
             raise ValueError("Database needs to be passed for this operation")
-        self.database._pool.put(self._session)
+        self.database._session_manager.put_session(self._session)
         self._session = None
 
     def transaction_checkout(self):
@@ -432,7 +438,7 @@ class Connection:
             self._transaction.rollback()
 
         if self._own_pool and self.database:
-            self.database._pool.clear()
+            self.database._session_manager._pool.clear()
 
         self.is_closed = True
 

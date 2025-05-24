@@ -24,9 +24,9 @@ from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
-    add_select1_result,
     aborted_status,
     add_error,
+    add_select1_result,
     unavailable_status,
 )
 

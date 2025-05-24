@@ -13,26 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from .commit_response import (
-    CommitResponse,
-)
-from .keys import (
-    KeyRange,
-    KeySet,
-)
-from .mutation import (
-    Mutation,
-)
-from .query_plan import (
-    PlanNode,
-    QueryPlan,
-)
-from .result_set import (
-    PartialResultSet,
-    ResultSet,
-    ResultSetMetadata,
-    ResultSetStats,
-)
+from .commit_response import CommitResponse
+from .keys import KeyRange, KeySet
+from .mutation import Mutation
+from .query_plan import PlanNode, QueryPlan
+from .result_set import PartialResultSet, ResultSet, ResultSetMetadata, ResultSetStats
 from .spanner import (
     BatchCreateSessionsRequest,
     BatchCreateSessionsResponse,
@@ -65,12 +50,7 @@ from .transaction import (
     TransactionOptions,
     TransactionSelector,
 )
-from .type import (
-    StructType,
-    Type,
-    TypeAnnotationCode,
-    TypeCode,
-)
+from .type import StructType, Type, TypeAnnotationCode, TypeCode
 
 __all__ = (
     "CommitResponse",

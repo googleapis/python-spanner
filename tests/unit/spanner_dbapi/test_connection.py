@@ -15,27 +15,28 @@
 """Cloud Spanner DB-API Connection class unit tests."""
 
 import datetime
-import mock
 import unittest
 import warnings
-import pytest
+
 from google.auth.credentials import AnonymousCredentials
+import mock
+import pytest
 
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
+from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_dbapi.batch_dml_executor import BatchMode
+from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
 from google.cloud.spanner_dbapi.exceptions import (
     InterfaceError,
     OperationalError,
     ProgrammingError,
 )
-from google.cloud.spanner_dbapi import Connection
-from google.cloud.spanner_dbapi.connection import CLIENT_TRANSACTION_NOT_STARTED_WARNING
 from google.cloud.spanner_dbapi.parsed_statement import (
-    ParsedStatement,
-    StatementType,
-    Statement,
-    ClientSideStatementType,
     AutocommitDmlMode,
+    ClientSideStatementType,
+    ParsedStatement,
+    Statement,
+    StatementType,
 )
 
 PROJECT = "test-project"
@@ -65,8 +66,8 @@ class TestConnection(unittest.TestCase):
     def _make_connection(
         self, database_dialect=DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED, **kwargs
     ):
-        from google.cloud.spanner_v1.instance import Instance
         from google.cloud.spanner_v1.client import Client
+        from google.cloud.spanner_v1.instance import Instance
 
         # We don't need a real Client object to test the constructor
         client = Client(
@@ -159,13 +160,24 @@ class TestConnection(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.database.Database")
     def test__session_checkout(self, mock_database):
-        pool = self._make_pool()
-        mock_database._pool = pool
+        # Mock the session manager and its get_session method
+        mock_session_manager = mock.MagicMock()
+        mock_session = mock.MagicMock()
+        mock_session_manager.get_session.return_value = mock_session
+        mock_database._session_manager = mock_session_manager
+
         connection = Connection(INSTANCE, mock_database)
 
         connection._session_checkout()
-        pool.get.assert_called_once_with()
-        self.assertEqual(connection._session, pool.get.return_value)
+
+        # Verify that the session manager's get_session method was called
+        # with the correct transaction type (READ_WRITE by default)
+        from google.cloud.spanner_v1.session_options import TransactionType
+
+        mock_session_manager.get_session.assert_called_once_with(
+            TransactionType.READ_WRITE
+        )
+        self.assertEqual(connection._session, mock_session)
 
         connection._session = "db_session"
         connection._session_checkout()
@@ -179,13 +191,17 @@ class TestConnection(unittest.TestCase):
 
     @mock.patch("google.cloud.spanner_v1.database.Database")
     def test__release_session(self, mock_database):
-        pool = self._make_pool()
-        mock_database._pool = pool
+        # Mock the session manager and its put_session method
+        mock_session_manager = mock.MagicMock()
+        mock_database._session_manager = mock_session_manager
+
         connection = Connection(INSTANCE, mock_database)
         connection._session = "session"
 
         connection._release_session()
-        pool.put.assert_called_once_with("session")
+
+        # Verify that the session manager's put_session method was called
+        mock_session_manager.put_session.assert_called_once_with("session")
         self.assertIsNone(connection._session)
 
     def test_release_session_database_error(self):
@@ -241,8 +257,7 @@ class TestConnection(unittest.TestCase):
         self.assertIsNone(connection.snapshot_checkout())
 
     def test_close(self):
-        from google.cloud.spanner_dbapi import connect
-        from google.cloud.spanner_dbapi import InterfaceError
+        from google.cloud.spanner_dbapi import InterfaceError, connect
 
         connection = connect(
             "test-instance",

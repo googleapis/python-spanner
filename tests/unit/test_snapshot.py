@@ -14,23 +14,20 @@
 
 
 from google.api_core import gapic_v1
+from google.api_core.retry import Retry
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
-from tests._helpers import (
-    OpenTelemetryBase,
-    LIB_VERSION,
-    StatusCode,
-    HAS_OPENTELEMETRY_INSTALLED,
-    enrich_with_otel_scope,
-)
-from google.cloud.spanner_v1._helpers import (
-    _metadata_with_request_id,
-    AtomicCounter,
-)
+from google.cloud.spanner_v1 import DirectedReadOptions, RequestOptions
+from google.cloud.spanner_v1._helpers import AtomicCounter, _metadata_with_request_id
 from google.cloud.spanner_v1.param_types import INT64
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from google.api_core.retry import Retry
+from tests._helpers import (
+    HAS_OPENTELEMETRY_INSTALLED,
+    LIB_VERSION,
+    OpenTelemetryBase,
+    StatusCode,
+    enrich_with_otel_scope,
+)
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -82,6 +79,7 @@ DIRECTED_READ_OPTIONS_FOR_CLIENT = {
 
 def _makeTimestamp():
     import datetime
+
     from google.cloud._helpers import UTC
 
     return datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -400,9 +398,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_iteration_w_raw_w_multiuse(self):
-        from google.cloud.spanner_v1 import (
-            ReadRequest,
-        )
+        from google.cloud.spanner_v1 import ReadRequest
 
         FIRST = (
             self._make_item(0),
@@ -427,9 +423,8 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def test_iteration_w_raw_raising_unavailable_w_multiuse(self):
         from google.api_core.exceptions import ServiceUnavailable
-        from google.cloud.spanner_v1 import (
-            ReadRequest,
-        )
+
+        from google.cloud.spanner_v1 import ReadRequest
 
         FIRST = (
             self._make_item(0),
@@ -461,11 +456,8 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
     def test_iteration_w_raw_raising_unavailable_after_token_w_multiuse(self):
         from google.api_core.exceptions import ServiceUnavailable
 
-        from google.cloud.spanner_v1 import ResultSetMetadata
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            ReadRequest,
-        )
+        from google.cloud.spanner_v1 import ReadRequest, ResultSetMetadata
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
 
         transaction_pb = TransactionPB(id=TXN_ID)
         metadata_pb = ResultSetMetadata(transaction=transaction_pb)
@@ -608,7 +600,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             self.assertEqual(len(span_list), 2)
             for i, span in enumerate(span_list):
                 self.assertEqual(span.name, name)
-                req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.{i+1}"
+                req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.{i + 1}"
                 self.assertEqual(
                     dict(span.attributes),
                     dict(
@@ -714,20 +706,20 @@ class Test_SnapshotBase(OpenTelemetryBase):
         directed_read_options_at_client_level=None,
     ):
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1 import (
             PartialResultSet,
+            ReadRequest,
             ResultSetMetadata,
             ResultSetStats,
-        )
-        from google.cloud.spanner_v1 import (
-            TransactionSelector,
+            StructType,
             TransactionOptions,
+            TransactionSelector,
+            Type,
+            TypeCode,
         )
-        from google.cloud.spanner_v1 import ReadRequest
-        from google.cloud.spanner_v1 import Type, StructType
-        from google.cloud.spanner_v1 import TypeCode
-        from google.cloud.spanner_v1.keyset import KeySet
         from google.cloud.spanner_v1._helpers import _make_value_pb
+        from google.cloud.spanner_v1.keyset import KeySet
 
         VALUES = [["bharney", 31], ["phred", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
@@ -980,18 +972,18 @@ class Test_SnapshotBase(OpenTelemetryBase):
         directed_read_options_at_client_level=None,
     ):
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1 import (
+            ExecuteSqlRequest,
             PartialResultSet,
             ResultSetMetadata,
             ResultSetStats,
-        )
-        from google.cloud.spanner_v1 import (
-            TransactionSelector,
+            StructType,
             TransactionOptions,
+            TransactionSelector,
+            Type,
+            TypeCode,
         )
-        from google.cloud.spanner_v1 import ExecuteSqlRequest
-        from google.cloud.spanner_v1 import Type, StructType
-        from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
@@ -1232,13 +1224,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
+        from google.cloud.spanner_v1 import (
+            Partition,
+            PartitionOptions,
+            PartitionReadRequest,
+            PartitionResponse,
+            Transaction,
+            TransactionSelector,
+        )
         from google.cloud.spanner_v1.keyset import KeySet
-        from google.cloud.spanner_v1 import Partition
-        from google.cloud.spanner_v1 import PartitionOptions
-        from google.cloud.spanner_v1 import PartitionReadRequest
-        from google.cloud.spanner_v1 import PartitionResponse
-        from google.cloud.spanner_v1 import Transaction
-        from google.cloud.spanner_v1 import TransactionSelector
 
         keyset = KeySet(all_=True)
         new_txn_id = b"ABECAB91"
@@ -1354,11 +1348,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
     def test_partition_read_w_retry(self):
-        from google.cloud.spanner_v1.keyset import KeySet
         from google.api_core.exceptions import InternalServerError
-        from google.cloud.spanner_v1 import Partition
-        from google.cloud.spanner_v1 import PartitionResponse
-        from google.cloud.spanner_v1 import Transaction
+
+        from google.cloud.spanner_v1 import Partition, PartitionResponse, Transaction
+        from google.cloud.spanner_v1.keyset import KeySet
 
         keyset = KeySet(all_=True)
         database = _Database()
@@ -1419,12 +1412,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
         timeout=gapic_v1.method.DEFAULT,
     ):
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1 import Partition
-        from google.cloud.spanner_v1 import PartitionOptions
-        from google.cloud.spanner_v1 import PartitionQueryRequest
-        from google.cloud.spanner_v1 import PartitionResponse
-        from google.cloud.spanner_v1 import Transaction
-        from google.cloud.spanner_v1 import TransactionSelector
+
+        from google.cloud.spanner_v1 import (
+            Partition,
+            PartitionOptions,
+            PartitionQueryRequest,
+            PartitionResponse,
+            Transaction,
+            TransactionSelector,
+        )
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         new_txn_id = b"ABECAB91"
@@ -1847,10 +1843,9 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
     def test_begin_w_retry(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-        )
         from google.api_core.exceptions import InternalServerError
+
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
 
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
@@ -1867,10 +1862,9 @@ class TestSnapshot(OpenTelemetryBase):
 
     def test_begin_ok_exact_staleness(self):
         from google.protobuf.duration_pb2 import Duration
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionOptions,
-        )
+
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
+        from google.cloud.spanner_v1 import TransactionOptions
 
         transaction_pb = TransactionPB(id=TXN_ID)
         database = _Database()
@@ -1912,10 +1906,8 @@ class TestSnapshot(OpenTelemetryBase):
         )
 
     def test_begin_ok_exact_strong(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionOptions,
-        )
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
+        from google.cloud.spanner_v1 import TransactionOptions
 
         transaction_pb = TransactionPB(id=TXN_ID)
         database = _Database()

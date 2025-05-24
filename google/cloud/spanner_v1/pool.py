@@ -17,22 +17,22 @@
 import datetime
 import queue
 import time
+from warnings import warn
 
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1 import BatchCreateSessionsRequest
-from google.cloud.spanner_v1 import Session
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types import Session as SessionPB
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
     trace_call,
 )
-from warnings import warn
-
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.session import Session
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
 
@@ -130,20 +130,37 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: new session instance.
         """
-        return self._database.session(
-            labels=self.labels, database_role=self.database_role
-        )
+        database_role = self.database_role or self._database.database_role
+        return self._database.session(labels=self.labels, database_role=database_role)
 
     def session(self, **kwargs):
-        """Check out a session from the pool.
+        """Return a context manager for a session from the pool.
 
-        :param kwargs: (optional) keyword arguments, passed through to
-                       the returned checkout.
+        .. warning::
+            This method bypasses the database session manager and will NOT use
+            multiplexed sessions even if they are enabled. For normal application
+            usage, prefer using database-level session APIs like
+            ``database.snapshot()`` or ``SessionCheckout(database)`` which
+            support multiplexed sessions.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.SessionCheckout`
-        :returns: a checkout instance, to be used as a context manager for
-                  accessing the session and returning it to the pool.
+        This method is primarily intended for pool testing and advanced use cases
+        where direct pool control is needed.
+
+        :type kwargs: dict
+        :param kwargs: additional keyword arguments to pass to the session
+
+        :rtype: :class:`SessionCheckout`
+        :returns: a context manager that yields a session from the pool
         """
+        import warnings
+
+        warnings.warn(
+            "pool.session() bypasses multiplexed session support. "
+            "Consider using database-level APIs like database.snapshot() "
+            "or SessionCheckout(database) instead.",
+            UserWarning,
+            stacklevel=2,
+        )
         return SessionCheckout(self, **kwargs)
 
 
@@ -237,7 +254,7 @@ class FixedSizePool(AbstractSessionPool):
         request = BatchCreateSessionsRequest(
             database=database.name,
             session_count=requested_session_count,
-            session_template=Session(creator_role=self.database_role),
+            session_template=SessionPB(creator_role=self.database_role),
         )
 
         observability_options = getattr(self._database, "observability_options", None)
@@ -313,13 +330,12 @@ class FixedSizePool(AbstractSessionPool):
             age = _NOW() - session.last_use_time
 
             if age >= self._max_age and not session.exists():
-                if not session.exists():
-                    add_span_event(
-                        current_span,
-                        "Session is not valid, recreating it",
-                        span_event_attributes,
-                    )
-                session = self._database.session()
+                add_span_event(
+                    current_span,
+                    "Session is not valid, recreating it",
+                    span_event_attributes,
+                )
+                session = self._new_session()
                 session.create()
                 # Replacing with the updated session.id.
                 span_event_attributes["session.id"] = session._session_id
@@ -536,7 +552,7 @@ class PingingPool(AbstractSessionPool):
         request = BatchCreateSessionsRequest(
             database=database.name,
             session_count=self.size,
-            session_template=Session(creator_role=self.database_role),
+            session_template=SessionPB(creator_role=self.database_role),
         )
 
         span_event_attributes = {"kind": type(self).__name__}
@@ -789,24 +805,36 @@ class TransactionPingingPool(PingingPool):
 
 
 class SessionCheckout(object):
-    """Context manager: hold session checked out from a pool.
+    """Context manager for checking out a session from a pool.
 
-    :type pool: concrete subclass of
-        :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
-    :param pool: Pool from which to check out a session.
+    .. warning::
+        This is a low-level API primarily intended for pool testing and
+        internal use. It bypasses the database session manager and will
+        NOT use multiplexed sessions even if enabled.
 
-    :param kwargs: extra keyword arguments to be passed to :meth:`pool.get`.
+        For normal application usage, prefer database-level APIs:
+        - ``database.snapshot()`` for read-only operations
+        - ``SessionCheckout(database)`` for general session management
+        - ``database.batch()`` for batch operations
+
+    :type pool: :class:`AbstractSessionPool`
+    :param pool: the pool to check out a session from
+    :type kwargs: dict
+    :param kwargs: additional keyword arguments for the session
     """
-
-    _session = None  # Not checked out until '__enter__'.
 
     def __init__(self, pool, **kwargs):
         self._pool = pool
-        self._kwargs = kwargs.copy()
+        self._session = None
+        self._kwargs = kwargs
 
     def __enter__(self):
+        """Check out a session from the pool."""
         self._session = self._pool.get(**self._kwargs)
         return self._session
 
-    def __exit__(self, *ignored):
-        self._pool.put(self._session)
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Return the session to the pool."""
+        if self._session is not None:
+            self._pool.put(self._session)
+            self._session = None

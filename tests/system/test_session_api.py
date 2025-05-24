@@ -19,25 +19,24 @@ import math
 import struct
 import threading
 import time
+
+from google.api_core import datetime_helpers, exceptions
+from google.rpc import code_pb2
+import grpc
 import pytest
 
-import grpc
-from google.rpc import code_pb2
-from google.api_core import datetime_helpers
-from google.api_core import exceptions
 from google.cloud import spanner_v1
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud._helpers import UTC
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1.data_types import JsonObject
-from .testdata import singer_pb2
-from tests import _helpers as ot_helpers
-from . import _helpers
-from . import _sample_data
 from google.cloud.spanner_v1.request_id_header import (
     REQ_RAND_PROCESS_ID,
     parse_request_id,
 )
+from tests import _helpers as ot_helpers
 
+from . import _helpers, _sample_data
+from .testdata import singer_pb2
 
 SOME_DATE = datetime.date(2011, 1, 17)
 SOME_TIME = datetime.datetime(1989, 1, 17, 17, 59, 12, 345612)
@@ -457,7 +456,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             attributes=_make_attributes(
                 db_name,
                 session_found=True,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+0}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 0}.1",
             ),
             span=span_list[0],
         )
@@ -467,7 +466,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             attributes=_make_attributes(
                 db_name,
                 num_mutations=2,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+1}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 1}.1",
             ),
             span=span_list[1],
         )
@@ -477,7 +476,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             attributes=_make_attributes(
                 db_name,
                 session_found=True,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+2}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 2}.1",
             ),
             span=span_list[2],
         )
@@ -488,7 +487,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
                 db_name,
                 columns=sd.COLUMNS,
                 table_id=sd.TABLE,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+3}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 3}.1",
             ),
             span=span_list[3],
         )
@@ -664,7 +663,7 @@ def test_transaction_read_and_insert_then_rollback(
             attributes=dict(
                 _make_attributes(
                     db_name,
-                    x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+0}.1",
+                    x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 0}.1",
                 ),
             ),
             span=span_list[0],
@@ -675,7 +674,7 @@ def test_transaction_read_and_insert_then_rollback(
             attributes=_make_attributes(
                 db_name,
                 session_found=True,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+1}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 1}.1",
             ),
             span=span_list[1],
         )
@@ -685,7 +684,7 @@ def test_transaction_read_and_insert_then_rollback(
             attributes=_make_attributes(
                 db_name,
                 num_mutations=1,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+2}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 2}.1",
             ),
             span=span_list[2],
         )
@@ -694,7 +693,7 @@ def test_transaction_read_and_insert_then_rollback(
             "CloudSpanner.Transaction.begin",
             attributes=_make_attributes(
                 db_name,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+3}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 3}.1",
             ),
             span=span_list[3],
         )
@@ -705,7 +704,7 @@ def test_transaction_read_and_insert_then_rollback(
                 db_name,
                 table_id=sd.TABLE,
                 columns=sd.COLUMNS,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+4}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 4}.1",
             ),
             span=span_list[4],
         )
@@ -716,7 +715,7 @@ def test_transaction_read_and_insert_then_rollback(
                 db_name,
                 table_id=sd.TABLE,
                 columns=sd.COLUMNS,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+5}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 5}.1",
             ),
             span=span_list[5],
         )
@@ -725,7 +724,7 @@ def test_transaction_read_and_insert_then_rollback(
             "CloudSpanner.Transaction.rollback",
             attributes=_make_attributes(
                 db_name,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+6}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 6}.1",
             ),
             span=span_list[6],
         )
@@ -736,7 +735,7 @@ def test_transaction_read_and_insert_then_rollback(
                 db_name,
                 table_id=sd.TABLE,
                 columns=sd.COLUMNS,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0+7}.1",
+                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 7}.1",
             ),
             span=span_list[7],
         )

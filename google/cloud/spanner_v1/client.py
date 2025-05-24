@@ -23,43 +23,44 @@ In the hierarchy of API concepts
 * a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
   :class:`~google.cloud.spanner_v1.database.Database`
 """
-import grpc
 import os
+from typing import Optional
 import warnings
 
+import google.api_core.client_options
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
-import google.api_core.client_options
+import grpc
+
 from google.cloud.client import ClientWithProject
-from typing import Optional
-
-
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
 from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
     DatabaseAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import InstanceAdminClient
+from google.cloud.spanner_admin_instance_v1 import (
+    InstanceAdminClient,
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
+)
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
-from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types import ExecuteSqlRequest
 from google.cloud.spanner_v1 import __version__
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.metrics.constants import (
     ENABLE_SPANNER_METRICS_ENV_VAR,
     METRIC_EXPORT_INTERVAL_MS,
 )
-from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
-    SpannerMetricsTracerFactory,
-)
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
 )
+from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
+    SpannerMetricsTracerFactory,
+)
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 try:
     from opentelemetry import metrics
@@ -172,6 +173,9 @@ class Client(ClientWithProject):
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all transactions.
 
+    :type session_options: :class:`~google.cloud.spanner_v1.SessionOptions`
+    :param session_options: (Optional) Options for client sessions.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
@@ -196,6 +200,7 @@ class Client(ClientWithProject):
         directed_read_options=None,
         observability_options=None,
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
+        session_options=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
 
@@ -268,6 +273,7 @@ class Client(ClientWithProject):
         self._default_transaction_options = default_transaction_options
         self._nth_client_id = Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter(0)
+        self._session_options = session_options or SessionOptions()
 
     @property
     def _next_nth_request(self):
@@ -372,6 +378,14 @@ class Client(ClientWithProject):
         :returns: The default transaction options that are used by this client for all transactions.
         """
         return self._default_transaction_options
+
+    @property
+    def session_options(self):
+        """Returns the session options for the client.
+        :rtype: :class:`~google.cloud.spanner_v1.SessionOptions`
+        :returns: The session options for the client.
+        """
+        return self._session_options
 
     @property
     def directed_read_options(self):

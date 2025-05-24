@@ -14,6 +14,7 @@
 
 
 import unittest
+
 import mock
 
 from google.cloud.spanner_v1 import TransactionOptions
@@ -122,8 +123,7 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, TEXT)
 
     def test_w_list(self):
-        from google.protobuf.struct_pb2 import Value
-        from google.protobuf.struct_pb2 import ListValue
+        from google.protobuf.struct_pb2 import ListValue, Value
 
         value_pb = self._callFUT(["a", "b", "c"])
         self.assertIsInstance(value_pb, Value)
@@ -132,8 +132,7 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual([value.string_value for value in values], ["a", "b", "c"])
 
     def test_w_tuple(self):
-        from google.protobuf.struct_pb2 import Value
-        from google.protobuf.struct_pb2 import ListValue
+        from google.protobuf.struct_pb2 import ListValue, Value
 
         value_pb = self._callFUT(("a", "b", "c"))
         self.assertIsInstance(value_pb, Value)
@@ -185,6 +184,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_date(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         today = datetime.date.today()
@@ -194,6 +194,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_date_pre1000ad(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         when = datetime.date(800, 2, 25)
@@ -203,8 +204,9 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_timestamp_w_nanos(self):
         import datetime
-        from google.protobuf.struct_pb2 import Value
+
         from google.api_core import datetime_helpers
+        from google.protobuf.struct_pb2 import Value
 
         when = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
@@ -215,8 +217,9 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_timestamp_w_nanos_pre1000ad(self):
         import datetime
-        from google.protobuf.struct_pb2 import Value
+
         from google.api_core import datetime_helpers
+        from google.protobuf.struct_pb2 import Value
 
         when = datetime_helpers.DatetimeWithNanoseconds(
             850, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
@@ -227,6 +230,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_listvalue(self):
         from google.protobuf.struct_pb2 import Value
+
         from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         list_value = _make_list_value_pb([1, 2, 3])
@@ -236,6 +240,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_datetime(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         when = datetime.datetime(2021, 2, 8, 0, 0, 0, tzinfo=datetime.timezone.utc)
@@ -245,6 +250,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_datetime_pre1000ad(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         when = datetime.datetime(916, 2, 8, 0, 0, 0, tzinfo=datetime.timezone.utc)
@@ -254,6 +260,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_timestamp_w_tz(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         zone = datetime.timezone(datetime.timedelta(hours=+1), name="CET")
@@ -264,6 +271,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_timestamp_w_tz_pre1000ad(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
 
         zone = datetime.timezone(datetime.timedelta(hours=+1), name="CET")
@@ -278,6 +286,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_numeric_precision_and_scale_valid(self):
         import decimal
+
         from google.protobuf.struct_pb2 import Value
 
         cases = [
@@ -296,9 +305,10 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_numeric_precision_and_scale_invalid(self):
         import decimal
+
         from google.cloud.spanner_v1._helpers import (
-            NUMERIC_MAX_SCALE_ERR_MSG,
             NUMERIC_MAX_PRECISION_ERR_MSG,
+            NUMERIC_MAX_SCALE_ERR_MSG,
         )
 
         max_precision_error_msg = NUMERIC_MAX_PRECISION_ERR_MSG.format("30")
@@ -339,6 +349,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_json(self):
         import json
+
         from google.protobuf.struct_pb2 import Value
 
         value = json.dumps(
@@ -356,8 +367,10 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertTrue(value_pb.HasField("null_value"))
 
     def test_w_proto_message(self):
-        from google.protobuf.struct_pb2 import Value
         import base64
+
+        from google.protobuf.struct_pb2 import Value
+
         from .testdata import singer_pb2
 
         singer_info = singer_pb2.SingerInfo()
@@ -368,6 +381,7 @@ class Test_make_value_pb(unittest.TestCase):
 
     def test_w_proto_enum(self):
         from google.protobuf.struct_pb2 import Value
+
         from .testdata import singer_pb2
 
         value_pb = self._callFUT(singer_pb2.Genre.ROCK)
@@ -450,9 +464,9 @@ class Test_parse_value_pb(unittest.TestCase):
         return _parse_value_pb(*args, **kw)
 
     def test_w_null(self):
-        from google.protobuf.struct_pb2 import Value, NULL_VALUE
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.protobuf.struct_pb2 import NULL_VALUE, Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         field_type = Type(code=TypeCode.STRING)
         field_name = "null_column"
@@ -462,8 +476,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_string(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = "Value"
         field_type = Type(code=TypeCode.STRING)
@@ -474,8 +488,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_bytes(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = b"Value"
         field_type = Type(code=TypeCode.BYTES)
@@ -486,8 +500,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_bool(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = True
         field_type = Type(code=TypeCode.BOOL)
@@ -498,8 +512,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_int(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = 12345
         field_type = Type(code=TypeCode.INT64)
@@ -510,8 +524,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_float(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = 3.14159
         field_type = Type(code=TypeCode.FLOAT64)
@@ -522,8 +536,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_float_str(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = "3.14159"
         field_type = Type(code=TypeCode.FLOAT64)
@@ -536,8 +550,9 @@ class Test_parse_value_pb(unittest.TestCase):
         )
 
     def test_w_float32(self):
-        from google.cloud.spanner_v1 import Type, TypeCode
         from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = 3.14159
         field_type = Type(code=TypeCode.FLOAT32)
@@ -547,8 +562,9 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(self._callFUT(value_pb, field_type, field_name), VALUE)
 
     def test_w_float32_str(self):
-        from google.cloud.spanner_v1 import Type, TypeCode
         from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = "3.14159"
         field_type = Type(code=TypeCode.FLOAT32)
@@ -562,9 +578,10 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_date(self):
         import datetime
+
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = datetime.date.today()
         field_type = Type(code=TypeCode.DATE)
@@ -575,10 +592,11 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_timestamp_wo_nanos(self):
         import datetime
-        from google.protobuf.struct_pb2 import Value
+
         from google.api_core import datetime_helpers
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=datetime.timezone.utc
@@ -593,10 +611,11 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_timestamp_w_nanos(self):
         import datetime
-        from google.protobuf.struct_pb2 import Value
+
         from google.api_core import datetime_helpers
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
             2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
@@ -610,9 +629,9 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(parsed, value)
 
     def test_w_array_empty(self):
-        from google.protobuf.struct_pb2 import Value, ListValue
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.protobuf.struct_pb2 import ListValue, Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         field_type = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
@@ -623,9 +642,9 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(self._callFUT(value_pb, field_type, field_name), [])
 
     def test_w_array_non_empty(self):
-        from google.protobuf.struct_pb2 import Value, ListValue
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.protobuf.struct_pb2 import ListValue, Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         field_type = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
@@ -641,9 +660,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_struct(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
         from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         VALUES = ["phred", 32]
@@ -661,9 +679,10 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_numeric(self):
         import decimal
+
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = decimal.Decimal("99999999999999999999999999999.999999999")
         field_type = Type(code=TypeCode.NUMERIC)
@@ -674,9 +693,10 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_json(self):
         import json
+
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         VALUE = {"id": 27863, "Name": "Anamika"}
         str_repr = json.dumps(VALUE, sort_keys=True, separators=(",", ":"))
@@ -697,8 +717,8 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_unknown_type(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         field_type = Type(code=TypeCode.TYPE_CODE_UNSPECIFIED)
         field_name = "unknown_column"
@@ -708,10 +728,12 @@ class Test_parse_value_pb(unittest.TestCase):
             self._callFUT(value_pb, field_type, field_name)
 
     def test_w_proto_message(self):
-        from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
         import base64
+
+        from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import Type, TypeCode
+
         from .testdata import singer_pb2
 
         VALUE = singer_pb2.SingerInfo()
@@ -726,8 +748,9 @@ class Test_parse_value_pb(unittest.TestCase):
 
     def test_w_proto_enum(self):
         from google.protobuf.struct_pb2 import Value
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+
+        from google.cloud.spanner_v1 import Type, TypeCode
+
         from .testdata import singer_pb2
 
         VALUE = "ROCK"
@@ -748,9 +771,7 @@ class Test_parse_list_value_pbs(unittest.TestCase):
         return _parse_list_value_pbs(*args, **kw)
 
     def test_empty(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
 
         struct_type_pb = StructType(
             fields=[
@@ -762,9 +783,7 @@ class Test_parse_list_value_pbs(unittest.TestCase):
         self.assertEqual(self._callFUT(rows=[], row_type=struct_type_pb), [])
 
     def test_non_empty(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
         from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 
         VALUES = [["phred", 32], ["bharney", 31]]
@@ -814,9 +833,11 @@ class Test_retry(unittest.TestCase):
             return True
 
     def test_retry_on_error(self):
-        from google.api_core.exceptions import InternalServerError, NotFound
-        from google.cloud.spanner_v1._helpers import _retry
         import functools
+
+        from google.api_core.exceptions import InternalServerError, NotFound
+
+        from google.cloud.spanner_v1._helpers import _retry
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -830,9 +851,11 @@ class Test_retry(unittest.TestCase):
         self.assertEqual(test_api.test_fxn.call_count, 3)
 
     def test_retry_allowed_exceptions(self):
-        from google.api_core.exceptions import InternalServerError, NotFound
-        from google.cloud.spanner_v1._helpers import _retry
         import functools
+
+        from google.api_core.exceptions import InternalServerError, NotFound
+
+        from google.cloud.spanner_v1._helpers import _retry
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -851,9 +874,11 @@ class Test_retry(unittest.TestCase):
         self.assertEqual(test_api.test_fxn.call_count, 2)
 
     def test_retry_count(self):
-        from google.api_core.exceptions import InternalServerError
-        from google.cloud.spanner_v1._helpers import _retry
         import functools
+
+        from google.api_core.exceptions import InternalServerError
+
+        from google.cloud.spanner_v1._helpers import _retry
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -867,9 +892,11 @@ class Test_retry(unittest.TestCase):
         self.assertEqual(test_api.test_fxn.call_count, 2)
 
     def test_check_rst_stream_error(self):
-        from google.api_core.exceptions import InternalServerError
-        from google.cloud.spanner_v1._helpers import _retry, _check_rst_stream_error
         import functools
+
+        from google.api_core.exceptions import InternalServerError
+
+        from google.cloud.spanner_v1._helpers import _check_rst_stream_error, _retry
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -887,10 +914,12 @@ class Test_retry(unittest.TestCase):
         self.assertEqual(test_api.test_fxn.call_count, 3)
 
     def test_retry_on_aborted_exception_with_success_after_first_aborted_retry(self):
-        from google.api_core.exceptions import Aborted
-        import time
-        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
+        import time
+
+        from google.api_core.exceptions import Aborted
+
+        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -906,10 +935,12 @@ class Test_retry(unittest.TestCase):
         self.assertTrue(result_after_retry)
 
     def test_retry_on_aborted_exception_with_success_after_three_retries(self):
-        from google.api_core.exceptions import Aborted
-        import time
-        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
+        import time
+
+        from google.api_core.exceptions import Aborted
+
+        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
 
         test_api = mock.create_autospec(self.test_class)
         # Case where aborted exception is thrown after other generic exceptions
@@ -930,10 +961,12 @@ class Test_retry(unittest.TestCase):
         self.assertEqual(test_api.test_fxn.call_count, 4)
 
     def test_retry_on_aborted_exception_raises_aborted_if_deadline_expires(self):
-        from google.api_core.exceptions import Aborted
-        import time
-        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
+        import time
+
+        from google.api_core.exceptions import Aborted
+
+        from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
 
         test_api = mock.create_autospec(self.test_class)
         test_api.test_fxn.side_effect = [
@@ -1047,9 +1080,8 @@ class Test_merge_transaction_options(unittest.TestCase):
 
 class Test_interval(unittest.TestCase):
     from google.protobuf.struct_pb2 import Value
-    from google.cloud.spanner_v1 import Interval
-    from google.cloud.spanner_v1 import Type
-    from google.cloud.spanner_v1 import TypeCode
+
+    from google.cloud.spanner_v1 import Interval, Type, TypeCode
 
     def _callFUT(self, *args, **kw):
         from google.cloud.spanner_v1._helpers import _make_value_pb

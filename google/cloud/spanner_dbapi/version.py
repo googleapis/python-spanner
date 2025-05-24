@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import platform
+
 from google.cloud.spanner_v1 import gapic_version as package_version
 
 PY_VERSION = platform.python_version()
