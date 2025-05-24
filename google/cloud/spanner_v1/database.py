@@ -199,7 +199,6 @@ class Database(object):
         pool.bind(self)
         self._session_manager = DatabaseSessionsManager(database=self, pool=pool)
 
-
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
         """Creates an instance of this class from a protobuf.
@@ -785,8 +784,8 @@ class Database(object):
                     # re-raising the error.
                     except NotImplementedError as exc:
                         if (
-                                "Transaction type partitioned_dml not supported with multiplexed sessions"
-                                in str(exc)
+                            "Transaction type partitioned_dml not supported with multiplexed sessions"
+                            in str(exc)
                         ):
                             self.session_options.disable_multiplexed(
                                 self.logger, TransactionType.PARTITIONED
@@ -1248,8 +1247,20 @@ class Database(object):
 
 class SessionCheckout(object):
     """Context manager for using a session from a database.
+
+    This is the recommended way to obtain sessions for database operations.
+    It automatically integrates with the database session manager to support
+    multiplexed sessions when enabled via environment variables.
+
+    For read-only operations, consider using ``database.snapshot()`` instead.
+
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use the session from
+
+    :type transaction_type: :class:`~google.cloud.spanner_v1.session_options.TransactionType`
+    :param transaction_type: type of transaction this session will be used for.
+        Defaults to READ_WRITE. For read-only operations, use READ_ONLY to
+        enable multiplexed session support.
     """
 
     _session = None  # Not checked out until '__enter__'.
@@ -1261,6 +1272,7 @@ class SessionCheckout(object):
     ):
         # Move import here to avoid circular import
         from google.cloud.spanner_v1.database import Database
+
         if not isinstance(database, Database):
             raise TypeError(
                 "{class_name} must receive an instance of {expected_class_name}. Received: {actual_class_name}".format(
@@ -1289,6 +1301,7 @@ class SessionCheckout(object):
 
     def __exit__(self, *ignored):
         self._database._session_manager.put_session(self._session)
+
 
 class BatchCheckout(object):
     """Context manager for using a batch from a database.
@@ -1339,8 +1352,12 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
+        from google.cloud.spanner_v1.database import TransactionType
+
         current_span = get_current_span()
-        session = self._session = self._database._pool.get()
+        session = self._session = self._database._session_manager.get_session(
+            TransactionType.READ_WRITE
+        )
         add_span_event(current_span, "Using session", {"id": session.session_id})
         batch = self._batch = Batch(session)
         if self._request_options.transaction_tag:
@@ -1365,7 +1382,7 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            self._database._pool.put(self._session)
+            self._database._session_manager.put_session(self._session)
             current_span = get_current_span()
             add_span_event(
                 current_span,
@@ -1393,7 +1410,11 @@ class MutationGroupsCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
+        from google.cloud.spanner_v1.database import TransactionType
+
+        session = self._session = self._database._session_manager.get_session(
+            TransactionType.READ_WRITE
+        )
         return MutationGroups(session)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1402,9 +1423,9 @@ class MutationGroupsCheckout(object):
             # If NotFound exception occurs inside the with block
             # then we validate if the session still exists.
             if not self._session.exists():
-                self._session = self._database._pool._new_session()
+                self._session = self._database._session_manager._pool._new_session()
                 self._session.create()
-        self._database._pool.put(self._session)
+        self._database._session_manager.put_session(self._session)
 
 
 class SnapshotCheckout(object):
@@ -1432,7 +1453,11 @@ class SnapshotCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
+        from google.cloud.spanner_v1.database import TransactionType
+
+        session = self._session = self._database._session_manager.get_session(
+            TransactionType.READ_ONLY
+        )
         return Snapshot(session, **self._kw)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1441,9 +1466,9 @@ class SnapshotCheckout(object):
             # If NotFound exception occurs inside the with block
             # then we validate if the session still exists.
             if not self._session.exists():
-                self._session = self._database._pool._new_session()
+                self._session = self._database._session_manager._pool._new_session()
                 self._session.create()
-        self._database._pool.put(self._session)
+        self._database._session_manager.put_session(self._session)
 
 
 class BatchSnapshot(object):
@@ -1488,8 +1513,12 @@ class BatchSnapshot(object):
 
         :rtype: :class:`BatchSnapshot`
         """
+        from google.cloud.spanner_v1.database import TransactionType
+
         instance = cls(database)
-        session = instance._session = database.session()
+        session = instance._session = database._session_manager.get_session(
+            TransactionType.READ_ONLY
+        )
         session._session_id = mapping["session_id"]
         snapshot = instance._snapshot = session.snapshot()
         snapshot._transaction_id = mapping["transaction_id"]
@@ -1522,8 +1551,12 @@ class BatchSnapshot(object):
            Caller is responsible for cleaning up the session after
            all partitions have been processed.
         """
+        from google.cloud.spanner_v1.database import TransactionType
+
         if self._session is None:
-            session = self._session = self._database.session()
+            session = self._session = self._database._session_manager.get_session(
+                TransactionType.READ_ONLY
+            )
             if self._session_id is None:
                 session.create()
             else:
@@ -1978,4 +2011,3 @@ def _retry_on_aborted(func, retry_config):
     """
     retry = retry_config.with_predicate(if_exception_type(Aborted))
     return retry(func)
-

@@ -134,11 +134,11 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
-        self.assertIsInstance(database._pool, BurstyPool)
+        self.assertIsInstance(database._session_manager._pool, BurstyPool)
         self.assertFalse(database.log_commit_stats)
         self.assertIsNone(database._logger)
         # BurstyPool does not create sessions during 'bind()'.
-        self.assertTrue(database._pool._sessions.empty())
+        self.assertTrue(database._session_manager._pool._sessions.empty())
         self.assertIsNone(database.database_role)
         self.assertTrue(database._route_to_leader_enabled, True)
 
@@ -149,7 +149,7 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
-        self.assertIs(database._pool, pool)
+        self.assertIs(database._session_manager._pool, pool)
         self.assertIs(pool._bound, database)
 
     def test_ctor_w_database_role(self):
@@ -286,7 +286,7 @@ class TestDatabase(_BaseTest):
         self.assertIsInstance(database, klass)
         self.assertEqual(database._instance, instance)
         self.assertEqual(database.database_id, self.DATABASE_ID)
-        self.assertIs(database._pool, pool)
+        self.assertIs(database._session_manager._pool, pool)
 
     def test_from_pb_success_w_hyphen_w_default_pool(self):
         from google.cloud.spanner_admin_database_v1 import Database
@@ -304,9 +304,9 @@ class TestDatabase(_BaseTest):
         self.assertIsInstance(database, klass)
         self.assertEqual(database._instance, instance)
         self.assertEqual(database.database_id, DATABASE_ID_HYPHEN)
-        self.assertIsInstance(database._pool, BurstyPool)
+        self.assertIsInstance(database._session_manager._pool, BurstyPool)
         # BurstyPool does not create sessions during 'bind()'.
-        self.assertTrue(database._pool._sessions.empty())
+        self.assertTrue(database._session_manager._pool._sessions.empty())
 
     def test_name_property(self):
         instance = _Instance(self.INSTANCE_NAME)
@@ -3431,6 +3431,19 @@ class _Database(object):
         self.default_transaction_options = DefaultTransactionOptions()
         self._nth_request = AtomicCounter()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
+
+        # Create a mock session manager for the new architecture
+        self._session_manager = type("MockSessionManager", (), {})()
+
+    @property
+    def _pool(self):
+        """Backward compatibility property for tests that still use _pool directly."""
+        return getattr(self._session_manager, "_pool", None)
+
+    @_pool.setter
+    def _pool(self, value):
+        """Backward compatibility setter for tests that still use _pool directly."""
+        self._session_manager._pool = value
 
     @property
     def _next_nth_request(self):

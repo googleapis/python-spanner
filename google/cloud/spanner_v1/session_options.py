@@ -66,9 +66,8 @@ class SessionOptions(object):
         """
 
         if transaction_type is TransactionType.READ_ONLY:
-            return (
-                self._is_multiplexed_enabled[transaction_type]
-                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
+            return self._is_multiplexed_enabled[transaction_type] and self._getenv(
+                self.ENV_VAR_ENABLE_MULTIPLEXED
             )
 
         elif transaction_type is TransactionType.PARTITIONED:
@@ -80,7 +79,7 @@ class SessionOptions(object):
 
         elif transaction_type is TransactionType.READ_WRITE:
             return False
- 
+
         raise ValueError(f"Transaction type {transaction_type} is not supported.")
 
     def disable_multiplexed(
@@ -104,11 +103,15 @@ class SessionOptions(object):
         if transaction_type is None:
             if logger:
                 logger.warning(
-                    disable_multiplexed_log_msg_fstring.format(transaction_type_value="all")
+                    disable_multiplexed_log_msg_fstring.format(
+                        transaction_type_value="all"
+                    )
                 )
             else:
                 print(
-                    disable_multiplexed_log_msg_fstring.format(transaction_type_value="all")
+                    disable_multiplexed_log_msg_fstring.format(
+                        transaction_type_value="all"
+                    )
                 )
             for transaction_type in TransactionType:
                 self._is_multiplexed_enabled[transaction_type] = False
@@ -123,7 +126,9 @@ class SessionOptions(object):
                 )
             else:
                 print(
-                    disable_multiplexed_log_msg_fstring.format(transaction_type_value=transaction_type.value)
+                    disable_multiplexed_log_msg_fstring.format(
+                        transaction_type_value=transaction_type.value
+                    )
                 )
             self._is_multiplexed_enabled[transaction_type] = False
             return

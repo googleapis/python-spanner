@@ -137,15 +137,33 @@ class AbstractSessionPool(object):
         )
 
     def session(self, **kwargs):
-        """Check out a session from the pool.
+        """Return a context manager for a session from the pool.
 
-        :param kwargs: (optional) keyword arguments, passed through to
-                       the returned checkout.
+        .. warning::
+            This method bypasses the database session manager and will NOT use
+            multiplexed sessions even if they are enabled. For normal application
+            usage, prefer using database-level session APIs like
+            ``database.snapshot()`` or ``SessionCheckout(database)`` which
+            support multiplexed sessions.
 
-        :rtype: :class:`~google.cloud.spanner_v1.session.SessionCheckout`
-        :returns: a checkout instance, to be used as a context manager for
-                  accessing the session and returning it to the pool.
+        This method is primarily intended for pool testing and advanced use cases
+        where direct pool control is needed.
+
+        :type kwargs: dict
+        :param kwargs: additional keyword arguments to pass to the session
+
+        :rtype: :class:`SessionCheckout`
+        :returns: a context manager that yields a session from the pool
         """
+        import warnings
+
+        warnings.warn(
+            "pool.session() bypasses multiplexed session support. "
+            "Consider using database-level APIs like database.snapshot() "
+            "or SessionCheckout(database) instead.",
+            UserWarning,
+            stacklevel=2,
+        )
         return SessionCheckout(self, **kwargs)
 
 
@@ -537,7 +555,7 @@ class PingingPool(AbstractSessionPool):
         request = BatchCreateSessionsRequest(
             database=database.name,
             session_count=self.size,
-            session_template=Session(creator_role=self.database_role),
+            session_template=SessionPB(creator_role=self.database_role),
         )
 
         span_event_attributes = {"kind": type(self).__name__}
@@ -789,5 +807,37 @@ class TransactionPingingPool(PingingPool):
             super(TransactionPingingPool, self).put(session)
 
 
+class SessionCheckout(object):
+    """Context manager for checking out a session from a pool.
 
+    .. warning::
+        This is a low-level API primarily intended for pool testing and
+        internal use. It bypasses the database session manager and will
+        NOT use multiplexed sessions even if enabled.
 
+        For normal application usage, prefer database-level APIs:
+        - ``database.snapshot()`` for read-only operations
+        - ``SessionCheckout(database)`` for general session management
+        - ``database.batch()`` for batch operations
+
+    :type pool: :class:`AbstractSessionPool`
+    :param pool: the pool to check out a session from
+    :type kwargs: dict
+    :param kwargs: additional keyword arguments for the session
+    """
+
+    def __init__(self, pool, **kwargs):
+        self._pool = pool
+        self._session = None
+        self._kwargs = kwargs
+
+    def __enter__(self):
+        """Check out a session from the pool."""
+        self._session = self._pool.get(**self._kwargs)
+        return self._session
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Return the session to the pool."""
+        if self._session is not None:
+            self._pool.put(self._session)
+            self._session = None

@@ -34,6 +34,9 @@ from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
 )
 
+from google.cloud.spanner_v1 import pool as pool_module
+from google.cloud.spanner_v1.pool import SessionCheckout
+
 
 def _make_database(name="name"):
     from google.cloud.spanner_v1.database import Database
@@ -128,7 +131,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         database.session.assert_called_once_with(labels={}, database_role=database_role)
 
     def test_session_wo_kwargs(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
+        from google.cloud.spanner_v1.database import SessionCheckout
 
         pool = self._make_one()
         checkout = pool.session()
@@ -138,7 +141,7 @@ class TestAbstractSessionPool(unittest.TestCase):
         self.assertEqual(checkout._kwargs, {})
 
     def test_session_w_kwargs(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
+        from google.cloud.spanner_v1.database import SessionCheckout
 
         pool = self._make_one()
         checkout = pool.session(foo="bar")
@@ -602,7 +605,7 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.empty())
 
     def test_spans_get_non_empty_session_exists(self):
-        # Tests the spans produces when you invoke pool.bind
+        # Tests the spans produced when you invoke pool.bind
         # and then insert a session into the pool.
         pool = self._make_one()
         database = _Database("name")

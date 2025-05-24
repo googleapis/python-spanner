@@ -3,7 +3,7 @@ on:
     branches:
       - main
   pull_request:
-name: Run Spanner integration tests against emulator
+name: Run Spanner integration tests against emulator with multiplexed sessions
 jobs:
   system-tests:
     runs-on: ubuntu-latest

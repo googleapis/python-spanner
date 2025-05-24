@@ -196,6 +196,7 @@ def _restart_on_unavailable(
 
         del item_buffer[:]
 
+
 def _handle_not_implemented_error(exception, database) -> None:
     """Handles NotImplementedError for the database. If the error is due to unsupported
     partitioned operations with multiplexed sessions, disables multiplexed sessions for
@@ -212,9 +213,12 @@ def _handle_not_implemented_error(exception, database) -> None:
         exception
     ):
         session_options = database.session_options
-        session_options.disable_multiplexed(database.logger, TransactionType.PARTITIONED)
+        session_options.disable_multiplexed(
+            database.logger, TransactionType.PARTITIONED
+        )
 
     raise exception
+
 
 class _SnapshotBase(_SessionWrapper):
     """Base class for Snapshot.
@@ -614,7 +618,6 @@ class _SnapshotBase(_SessionWrapper):
                 return self._get_streamed_result_set(**get_streamed_result_set_args)
         return self._get_streamed_result_set(**get_streamed_result_set_args)
 
-
     def partition_read(
         self,
         table,
@@ -856,14 +859,14 @@ class _SnapshotBase(_SessionWrapper):
         return [partition.partition_token for partition in response.partitions]
 
     def _get_streamed_result_set(
-            self,
-            method,
-            request,
-            metadata,
-            trace_attributes,
-            column_info,
-            observability_options,
-            lazy_decode,
+        self,
+        method,
+        request,
+        metadata,
+        trace_attributes,
+        column_info,
+        observability_options,
+        lazy_decode,
     ):
         """Returns the streamed result set for a read or execute SQL request with the given arguments."""
 
@@ -900,6 +903,7 @@ class _SnapshotBase(_SessionWrapper):
             streamed_result_set_args["source"] = self
 
         return StreamedResultSet(**streamed_result_set_args)
+
 
 class Snapshot(_SnapshotBase):
     """Allow a set of reads / SQL statements with shared staleness.
