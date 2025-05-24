@@ -43,6 +43,7 @@ def _make_database(name="name"):
 
 def _make_session():
     from google.cloud.spanner_v1.session import Session
+
     return mock.create_autospec(Session, instance=True)
 
 

@@ -43,7 +43,10 @@ from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
 from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 from google.cloud.spanner_v1.types import RequestOptions
 from google.cloud.spanner_v1.services.spanner import SpannerClient
-from google.cloud.spanner_v1.types.transaction import TransactionOptions, TransactionSelector
+from google.cloud.spanner_v1.types.transaction import (
+    TransactionOptions,
+    TransactionSelector,
+)
 from google.cloud.spanner_v1.types.type import Type, TypeCode
 from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
@@ -466,7 +469,7 @@ class Database(object):
     @property
     def _pool(self):
         """Backward compatibility property for accessing the session pool.
-        
+
         :rtype: :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
         :returns: the session pool from the session manager
         """
@@ -485,14 +488,12 @@ class Database(object):
         :returns: a new session bound to this database.
         """
         from google.cloud.spanner_v1.session import Session
-        
+
         session_labels = labels or {}
         session_database_role = database_role or self.database_role
-        
+
         return Session(
-            database=self,
-            labels=session_labels,
-            database_role=session_database_role
+            database=self, labels=session_labels, database_role=session_database_role
         )
 
     def metadata_with_request_id(

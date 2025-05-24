@@ -2039,6 +2039,7 @@ class TestDatabase(_BaseTest):
 
     def session(self, **kwargs):
         from google.cloud.spanner_v1.session import Session
+
         return Session(database=self, **kwargs)
 
     @property
@@ -2469,7 +2470,9 @@ class TestBatchSnapshot(_BaseTest):
     def test_from_dict(self):
         klass = self._get_target_class()
         database = self._make_database()
-        session = database._session_manager.get_session.return_value = self._make_session()
+        session = (
+            database._session_manager.get_session.return_value
+        ) = self._make_session()
         snapshot = session.snapshot.return_value = self._make_snapshot()
         api_repr = {
             "session_id": self.SESSION_ID,
@@ -2504,7 +2507,9 @@ class TestBatchSnapshot(_BaseTest):
 
     def test__get_session_new(self):
         database = self._make_database()
-        session = database._session_manager.get_session.return_value = self._make_session()
+        session = (
+            database._session_manager.get_session.return_value
+        ) = self._make_session()
         batch_txn = self._make_one(database)
         self.assertIs(batch_txn._get_session(), session)
         session.create.assert_called_once_with()
@@ -3476,28 +3481,29 @@ class _Database(object):
 
         # Create a mock session manager for the new architecture
         self._session_manager = type("MockSessionManager", (), {})()
-        
+
         # Add get_session method to mock session manager
         def mock_get_session(transaction_type=None):
             # Return a session from the pool if available
-            if hasattr(self._session_manager, '_pool') and self._session_manager._pool:
+            if hasattr(self._session_manager, "_pool") and self._session_manager._pool:
                 return self._session_manager._pool.get()
             # Otherwise create a new session
             return _Session(database=self)
-        
+
         def mock_put_session(session):
             # Put session back into the pool if available
-            if hasattr(self._session_manager, '_pool') and self._session_manager._pool:
+            if hasattr(self._session_manager, "_pool") and self._session_manager._pool:
                 try:
                     self._session_manager._pool.put(session)
                 except:
                     pass  # Ignore errors when putting back sessions
-        
+
         self._session_manager.get_session = mock_get_session
         self._session_manager.put_session = mock_put_session
 
     def session(self, **kwargs):
         from google.cloud.spanner_v1.session import Session
+
         return Session(database=self, **kwargs)
 
     @property

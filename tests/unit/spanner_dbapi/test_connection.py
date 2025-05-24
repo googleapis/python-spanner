@@ -165,15 +165,18 @@ class TestConnection(unittest.TestCase):
         mock_session = mock.MagicMock()
         mock_session_manager.get_session.return_value = mock_session
         mock_database._session_manager = mock_session_manager
-        
+
         connection = Connection(INSTANCE, mock_database)
 
         connection._session_checkout()
-        
+
         # Verify that the session manager's get_session method was called
         # with the correct transaction type (READ_WRITE by default)
         from google.cloud.spanner_v1.session_options import TransactionType
-        mock_session_manager.get_session.assert_called_once_with(TransactionType.READ_WRITE)
+
+        mock_session_manager.get_session.assert_called_once_with(
+            TransactionType.READ_WRITE
+        )
         self.assertEqual(connection._session, mock_session)
 
         connection._session = "db_session"
@@ -191,12 +194,12 @@ class TestConnection(unittest.TestCase):
         # Mock the session manager and its put_session method
         mock_session_manager = mock.MagicMock()
         mock_database._session_manager = mock_session_manager
-        
+
         connection = Connection(INSTANCE, mock_database)
         connection._session = "session"
 
         connection._release_session()
-        
+
         # Verify that the session manager's put_session method was called
         mock_session_manager.put_session.assert_called_once_with("session")
         self.assertIsNone(connection._session)

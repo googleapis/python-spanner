@@ -143,13 +143,14 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
         """
         if not client_uid:
             return "000000"
-            
+
         if not HAS_OPENTELEMETRY_INSTALLED:
             # Fallback to a simple hash if mmh3 is not available
             return f"{hash(client_uid) % 0xFFFFFF:06x}"
-            
+
         try:
             import mmh3
+
             hashed_client = mmh3.hash64(client_uid)
 
             # Join the hashes back together since mmh3 splits into high and low 32bits
