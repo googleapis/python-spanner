@@ -59,10 +59,7 @@ class SessionOptions(object):
         * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
         * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true; and
         * multiplexed sessions have not been disabled for partitioned transactions.
-        Multiplexed sessions are enabled for read/write transactions if:
-        * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
-        * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true; and
-        * multiplexed sessions have not been disabled for read/write transactions.
+        Multiplexed sessions are **currently disabled** for read / write.
         :type transaction_type: :class:`TransactionType`
         :param transaction_type: the type of transaction to check whether
             multiplexed sessions should be used.
@@ -102,6 +99,10 @@ class SessionOptions(object):
         disable_multiplexed_log_msg_fstring = (
             "Disabling multiplexed sessions for {transaction_type_value} transactions"
         )
+        import logging
+
+        if logger is None:
+            logger = logging.getLogger(__name__)
 
         if transaction_type is None:
             logger.warning(

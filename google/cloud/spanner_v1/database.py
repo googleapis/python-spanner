@@ -202,7 +202,6 @@ class Database(object):
         self._pool = pool
         pool.bind(self)
 
-        # Initialize session options and sessions manager for multiplexed session support
         self.session_options = SessionOptions()
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
@@ -767,7 +766,6 @@ class Database(object):
             ) as span, MetricsCapture():
                 from google.cloud.spanner_v1.session_options import TransactionType
 
-                # Use sessions manager for partitioned DML operations
                 session = self._sessions_manager.get_session(
                     TransactionType.PARTITIONED
                 )
@@ -1926,7 +1924,8 @@ class BatchSnapshot(object):
            from all the partitions.
         """
         if self._session is not None:
-            self._session.delete()
+            if not self._session.is_multiplexed:
+                self._session.delete()
 
 
 def _check_ddl_statements(value):

@@ -1264,7 +1264,6 @@ class TestDatabase(_BaseTest):
         pool.put(session)
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
-        # Check if multiplexed sessions are enabled for partitioned operations
         multiplexed_partitioned_enabled = (
             os.environ.get(
                 "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS", "false"
@@ -3213,10 +3212,24 @@ class TestBatchSnapshot(_BaseTest):
         database = self._make_database()
         batch_txn = self._make_one(database)
         session = batch_txn._session = self._make_session()
+        # Configure session as non-multiplexed (default behavior)
+        session.is_multiplexed = False
 
         batch_txn.close()
 
         session.delete.assert_called_once_with()
+
+    def test_close_w_multiplexed_session(self):
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        session = batch_txn._session = self._make_session()
+        # Configure session as multiplexed
+        session.is_multiplexed = True
+
+        batch_txn.close()
+
+        # Multiplexed sessions should not be deleted
+        session.delete.assert_not_called()
 
     def test_process_w_invalid_batch(self):
         token = b"TOKEN"

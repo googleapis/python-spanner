@@ -173,9 +173,18 @@ class Session(object):
         if self._labels:
             request.session.labels = self._labels
 
+        # Set the multiplexed field for multiplexed sessions
+        if self._is_multiplexed:
+            request.session.multiplexed = True
+
         observability_options = getattr(self._database, "observability_options", None)
+        span_name = (
+            "CloudSpanner.CreateMultiplexedSession"
+            if self._is_multiplexed
+            else "CloudSpanner.CreateSession"
+        )
         with trace_call(
-            "CloudSpanner.CreateSession",
+            span_name,
             self,
             self._labels,
             observability_options=observability_options,
