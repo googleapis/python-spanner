@@ -1263,25 +1263,32 @@ class TestDatabase(_BaseTest):
         session = _Session()
         pool.put(session)
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
-        
+
         # Check if multiplexed sessions are enabled for partitioned operations
-        multiplexed_partitioned_enabled = os.environ.get(
-            "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS", "false"
-        ).lower() == "true"
-        
+        multiplexed_partitioned_enabled = (
+            os.environ.get(
+                "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS", "false"
+            ).lower()
+            == "true"
+        )
+
         if multiplexed_partitioned_enabled:
             # When multiplexed sessions are enabled, create a mock multiplexed session
             # that the sessions manager will return
             multiplexed_session = _Session()
-            multiplexed_session.name = self.SESSION_NAME  # Use the expected session name
+            multiplexed_session.name = (
+                self.SESSION_NAME
+            )  # Use the expected session name
             multiplexed_session.is_multiplexed = True
             # Configure the sessions manager to return the multiplexed session
-            database._sessions_manager.get_session = mock.Mock(return_value=multiplexed_session)
+            database._sessions_manager.get_session = mock.Mock(
+                return_value=multiplexed_session
+            )
             expected_session = multiplexed_session
         else:
             # When multiplexed sessions are disabled, use the regular pool session
             expected_session = session
-        
+
         api = database._spanner_api = self._make_spanner_api()
         api._method_configs = {"ExecuteStreamingSql": MethodConfig(retry=Retry())}
         if retried:
@@ -1446,12 +1453,15 @@ class TestDatabase(_BaseTest):
                 ],
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 1)
-            
+
         # Verify that the correct session type was used based on environment
         if multiplexed_partitioned_enabled:
             # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
             from google.cloud.spanner_v1.session_options import TransactionType
-            database._sessions_manager.get_session.assert_called_with(TransactionType.PARTITIONED)
+
+            database._sessions_manager.get_session.assert_called_with(
+                TransactionType.PARTITIONED
+            )
         # If multiplexed sessions are not enabled, the regular pool session should be used
 
     def test_execute_partitioned_dml_wo_params(self):
@@ -1542,8 +1552,10 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Check if multiplexed sessions are enabled for read operations
-        multiplexed_enabled = os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
-        
+        multiplexed_enabled = (
+            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
+        )
+
         if multiplexed_enabled:
             # When multiplexed sessions are enabled, configure the sessions manager
             # to return a multiplexed session for read operations
@@ -1551,7 +1563,9 @@ class TestDatabase(_BaseTest):
             multiplexed_session.name = self.SESSION_NAME
             multiplexed_session.is_multiplexed = True
             # Override the side_effect to return the multiplexed session
-            database._sessions_manager.get_session = mock.Mock(return_value=multiplexed_session)
+            database._sessions_manager.get_session = mock.Mock(
+                return_value=multiplexed_session
+            )
             expected_session = multiplexed_session
         else:
             expected_session = session
@@ -1588,8 +1602,10 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Check if multiplexed sessions are enabled for read operations
-        multiplexed_enabled = os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
-        
+        multiplexed_enabled = (
+            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
+        )
+
         if multiplexed_enabled:
             # When multiplexed sessions are enabled, configure the sessions manager
             # to return a multiplexed session for read operations
@@ -1597,7 +1613,9 @@ class TestDatabase(_BaseTest):
             multiplexed_session.name = self.SESSION_NAME
             multiplexed_session.is_multiplexed = True
             # Override the side_effect to return the multiplexed session
-            database._sessions_manager.get_session = mock.Mock(return_value=multiplexed_session)
+            database._sessions_manager.get_session = mock.Mock(
+                return_value=multiplexed_session
+            )
             expected_session = multiplexed_session
         else:
             expected_session = session
@@ -2557,7 +2575,10 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(batch_txn._get_session(), session)
         # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
         from google.cloud.spanner_v1.session_options import TransactionType
-        database.sessions_manager.get_session.assert_called_once_with(TransactionType.PARTITIONED)
+
+        database.sessions_manager.get_session.assert_called_once_with(
+            TransactionType.PARTITIONED
+        )
 
     def test__get_snapshot_already(self):
         database = self._make_database()
@@ -3518,17 +3539,25 @@ class _Database(object):
         self.default_transaction_options = DefaultTransactionOptions()
         self._nth_request = AtomicCounter()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
-        
+
         # Mock sessions manager for multiplexed sessions support
         self._sessions_manager = mock.Mock()
-        # Configure get_session to return sessions from the pool  
-        self._sessions_manager.get_session = mock.Mock(side_effect=lambda tx_type: self._pool.get() if hasattr(self, '_pool') and self._pool else None)
-        self._sessions_manager.put_session = mock.Mock(side_effect=lambda session: self._pool.put(session) if hasattr(self, '_pool') and self._pool else None)
+        # Configure get_session to return sessions from the pool
+        self._sessions_manager.get_session = mock.Mock(
+            side_effect=lambda tx_type: self._pool.get()
+            if hasattr(self, "_pool") and self._pool
+            else None
+        )
+        self._sessions_manager.put_session = mock.Mock(
+            side_effect=lambda session: self._pool.put(session)
+            if hasattr(self, "_pool") and self._pool
+            else None
+        )
 
     @property
     def sessions_manager(self):
         """Returns the database sessions manager.
-        
+
         :rtype: Mock
         :returns: The mock sessions manager for this database.
         """

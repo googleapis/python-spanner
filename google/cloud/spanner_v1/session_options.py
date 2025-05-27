@@ -69,9 +69,8 @@ class SessionOptions(object):
         """
 
         if transaction_type is TransactionType.READ_ONLY:
-            return (
-                self._is_multiplexed_enabled[transaction_type]
-                and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
+            return self._is_multiplexed_enabled[transaction_type] and self._getenv(
+                self.ENV_VAR_ENABLE_MULTIPLEXED
             )
 
         elif transaction_type is TransactionType.PARTITIONED:

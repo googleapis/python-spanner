@@ -201,7 +201,7 @@ class Database(object):
 
         self._pool = pool
         pool.bind(self)
-        
+
         # Initialize session options and sessions manager for multiplexed session support
         self.session_options = SessionOptions()
         self._sessions_manager = DatabaseSessionsManager(self, pool)
@@ -766,9 +766,11 @@ class Database(object):
                 observability_options=self.observability_options,
             ) as span, MetricsCapture():
                 from google.cloud.spanner_v1.session_options import TransactionType
-                
+
                 # Use sessions manager for partitioned DML operations
-                session = self._sessions_manager.get_session(TransactionType.PARTITIONED)
+                session = self._sessions_manager.get_session(
+                    TransactionType.PARTITIONED
+                )
                 try:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
@@ -1255,7 +1257,7 @@ class Database(object):
     @property
     def sessions_manager(self):
         """Returns the database sessions manager.
-        
+
         :rtype: :class:`~google.cloud.spanner_v1.database_sessions_manager.DatabaseSessionsManager`
         :returns: The sessions manager for this database.
         """
@@ -1312,7 +1314,7 @@ class BatchCheckout(object):
     def __enter__(self):
         """Begin ``with`` block."""
         from google.cloud.spanner_v1.session_options import TransactionType
-        
+
         current_span = get_current_span()
         session = self._session = self._database.sessions_manager.get_session(
             TransactionType.READ_WRITE
@@ -1370,7 +1372,7 @@ class MutationGroupsCheckout(object):
     def __enter__(self):
         """Begin ``with`` block."""
         from google.cloud.spanner_v1.session_options import TransactionType
-        
+
         session = self._session = self._database.sessions_manager.get_session(
             TransactionType.READ_WRITE
         )
@@ -1413,7 +1415,7 @@ class SnapshotCheckout(object):
     def __enter__(self):
         """Begin ``with`` block."""
         from google.cloud.spanner_v1.session_options import TransactionType
-        
+
         session = self._session = self._database.sessions_manager.get_session(
             TransactionType.READ_ONLY
         )
@@ -1508,7 +1510,7 @@ class BatchSnapshot(object):
         """
         if self._session is None:
             from google.cloud.spanner_v1.session_options import TransactionType
-            
+
             # Use sessions manager for partition operations
             session = self._session = self._database.sessions_manager.get_session(
                 TransactionType.PARTITIONED
