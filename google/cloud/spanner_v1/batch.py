@@ -26,6 +26,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _merge_Transaction_Options,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
@@ -248,18 +249,30 @@ class Batch(_BatchBase):
             trace_attributes,
             observability_options=observability_options,
             metadata=metadata,
-        ), MetricsCapture():
-            method = functools.partial(
-                api.commit,
-                request=request,
-                metadata=metadata,
-            )
+        ) as span, MetricsCapture():
+
+            def wrapped_method(*args, **kwargs):
+                method = functools.partial(
+                    api.commit,
+                    request=request,
+                    metadata=database.metadata_with_request_id(
+                        # This code is retried due to ABORTED, hence nth_request
+                        # should be increased. attempt can only be increased if
+                        # we encounter UNAVAILABLE or INTERNAL.
+                        getattr(database, "_next_nth_request", 0),
+                        1,
+                        metadata,
+                        span,
+                    ),
+                )
+                return method(*args, **kwargs)
+
             deadline = time.time() + kwargs.get(
                 "timeout_secs", DEFAULT_RETRY_TIMEOUT_SECS
             )
             default_retry_delay = kwargs.get("default_retry_delay", None)
             response = _retry_on_aborted_exception(
-                method,
+                wrapped_method,
                 deadline=deadline,
                 default_retry_delay=default_retry_delay,
             )
@@ -373,14 +386,25 @@ class MutationGroups(_SessionWrapper):
             trace_attributes,
             observability_options=observability_options,
             metadata=metadata,
-        ), MetricsCapture():
-            method = functools.partial(
-                api.batch_write,
-                request=request,
-                metadata=metadata,
-            )
+        ) as span, MetricsCapture():
+            attempt = AtomicCounter(0)
+            nth_request = getattr(database, "_next_nth_request", 0)
+
+            def wrapped_method(*args, **kwargs):
+                method = functools.partial(
+                    api.batch_write,
+                    request=request,
+                    metadata=database.metadata_with_request_id(
+                        nth_request,
+                        attempt.increment(),
+                        metadata,
+                        span,
+                    ),
+                )
+                return method(*args, **kwargs)
+
             response = _retry(
-                method,
+                wrapped_method,
                 allowed_exceptions={
                     InternalServerError: _check_rst_stream_error,
                 },

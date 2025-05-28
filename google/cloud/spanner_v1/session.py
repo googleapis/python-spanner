@@ -64,17 +64,21 @@ class Session(object):
 
     :type database_role: str
     :param database_role: (Optional) user-assigned database_role for the session.
+
+    :type is_multiplexed: bool
+    :param is_multiplexed: (Optional) whether this session is a multiplexed session.
     """
 
     _session_id = None
     _transaction = None
 
-    def __init__(self, database, labels=None, database_role=None):
+    def __init__(self, database, labels=None, database_role=None, is_multiplexed=False):
         self._database = database
         if labels is None:
             labels = {}
         self._labels = labels
         self._database_role = database_role
+        self._is_multiplexed = is_multiplexed
         self._last_use_time = datetime.utcnow()
 
     def __lt__(self, other):
@@ -84,6 +88,15 @@ class Session(object):
     def session_id(self):
         """Read-only ID, set by the back-end during :meth:`create`."""
         return self._session_id
+
+    @property
+    def is_multiplexed(self):
+        """Whether this session is a multiplexed session.
+
+        :rtype: bool
+        :returns: True if this is a multiplexed session, False otherwise.
+        """
+        return self._is_multiplexed
 
     @property
     def last_use_time(self):
@@ -160,17 +173,31 @@ class Session(object):
         if self._labels:
             request.session.labels = self._labels
 
+        # Set the multiplexed field for multiplexed sessions
+        if self._is_multiplexed:
+            request.session.multiplexed = True
+
         observability_options = getattr(self._database, "observability_options", None)
+        span_name = (
+            "CloudSpanner.CreateMultiplexedSession"
+            if self._is_multiplexed
+            else "CloudSpanner.CreateSession"
+        )
         with trace_call(
-            "CloudSpanner.CreateSession",
+            span_name,
             self,
             self._labels,
             observability_options=observability_options,
             metadata=metadata,
-        ), MetricsCapture():
+        ) as span, MetricsCapture():
             session_pb = api.create_session(
                 request=request,
-                metadata=metadata,
+                metadata=self._database.metadata_with_request_id(
+                    self._database._next_nth_request,
+                    1,
+                    metadata,
+                    span,
+                ),
             )
         self._session_id = session_pb.name.split("/")[-1]
 
@@ -195,7 +222,8 @@ class Session(object):
             current_span, "Checking if Session exists", {"session.id": self._session_id}
         )
 
-        api = self._database.spanner_api
+        database = self._database
+        api = database.spanner_api
         metadata = _metadata_with_prefix(self._database.name)
         if self._database._route_to_leader_enabled:
             metadata.append(
@@ -212,7 +240,15 @@ class Session(object):
             metadata=metadata,
         ) as span, MetricsCapture():
             try:
-                api.get_session(name=self.name, metadata=metadata)
+                api.get_session(
+                    name=self.name,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request,
+                        1,
+                        metadata,
+                        span,
+                    ),
+                )
                 if span:
                     span.set_attribute("session_found", True)
             except NotFound:
@@ -242,8 +278,9 @@ class Session(object):
             current_span, "Deleting Session", {"session.id": self._session_id}
         )
 
-        api = self._database.spanner_api
-        metadata = _metadata_with_prefix(self._database.name)
+        database = self._database
+        api = database.spanner_api
+        metadata = _metadata_with_prefix(database.name)
         observability_options = getattr(self._database, "observability_options", None)
         with trace_call(
             "CloudSpanner.DeleteSession",
@@ -254,8 +291,16 @@ class Session(object):
             },
             observability_options=observability_options,
             metadata=metadata,
-        ), MetricsCapture():
-            api.delete_session(name=self.name, metadata=metadata)
+        ) as span, MetricsCapture():
+            api.delete_session(
+                name=self.name,
+                metadata=database.metadata_with_request_id(
+                    database._next_nth_request,
+                    1,
+                    metadata,
+                    span,
+                ),
+            )
 
     def ping(self):
         """Ping the session to keep it alive by executing "SELECT 1".
@@ -264,10 +309,17 @@ class Session(object):
         """
         if self._session_id is None:
             raise ValueError("Session ID not set by back-end")
-        api = self._database.spanner_api
-        metadata = _metadata_with_prefix(self._database.name)
+        database = self._database
+        api = database.spanner_api
         request = ExecuteSqlRequest(session=self.name, sql="SELECT 1")
-        api.execute_sql(request=request, metadata=metadata)
+        api.execute_sql(
+            request=request,
+            metadata=database.metadata_with_request_id(
+                database._next_nth_request,
+                1,
+                _metadata_with_prefix(database.name),
+            ),
+        )
         self._last_use_time = datetime.now()
 
     def snapshot(self, **kw):

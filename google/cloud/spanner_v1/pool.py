@@ -256,7 +256,12 @@ class FixedSizePool(AbstractSessionPool):
                 )
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request,
+                        1,
+                        metadata,
+                        span,
+                    ),
                 )
 
                 add_span_event(
@@ -444,6 +449,7 @@ class BurstyPool(AbstractSessionPool):
             self._sessions.put_nowait(session)
         except queue.Full:
             try:
+                # Sessions from pools are never multiplexed, so we can always delete them
                 session.delete()
             except NotFound:
                 pass
@@ -561,7 +567,12 @@ class PingingPool(AbstractSessionPool):
             while returned_session_count < self.size:
                 resp = api.batch_create_sessions(
                     request=request,
-                    metadata=metadata,
+                    metadata=database.metadata_with_request_id(
+                        database._next_nth_request,
+                        1,
+                        metadata,
+                        span,
+                    ),
                 )
 
                 add_span_event(

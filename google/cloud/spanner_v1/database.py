@@ -53,6 +53,7 @@ from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -61,6 +62,8 @@ from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import SessionOptions
+from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
 from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 from google.cloud.spanner_v1.snapshot import Snapshot
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -151,6 +154,9 @@ class Database(object):
 
     _spanner_api: SpannerClient = None
 
+    __transport_lock = threading.Lock()
+    __transports_to_channel_id = dict()
+
     def __init__(
         self,
         database_id,
@@ -188,12 +194,16 @@ class Database(object):
             self._instance._client.default_transaction_options
         )
         self._proto_descriptors = proto_descriptors
+        self._channel_id = 0  # It'll be created when _spanner_api is created.
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
         pool.bind(self)
+
+        self.session_options = SessionOptions()
+        self._sessions_manager = DatabaseSessionsManager(self, pool)
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -446,7 +456,31 @@ class Database(object):
                 client_info=client_info,
                 client_options=client_options,
             )
+
+            with self.__transport_lock:
+                transport = self._spanner_api._transport
+                channel_id = self.__transports_to_channel_id.get(transport, None)
+                if channel_id is None:
+                    channel_id = len(self.__transports_to_channel_id) + 1
+                    self.__transports_to_channel_id[transport] = channel_id
+                self._channel_id = channel_id
+
         return self._spanner_api
+
+    def metadata_with_request_id(
+        self, nth_request, nth_attempt, prior_metadata=[], span=None
+    ):
+        if span is None:
+            span = get_current_span()
+
+        return _metadata_with_request_id(
+            self._nth_client_id,
+            self._channel_id,
+            nth_request,
+            nth_attempt,
+            prior_metadata,
+            span,
+        )
 
     def __eq__(self, other):
         if not isinstance(other, self.__class__):
@@ -490,7 +524,10 @@ class Database(object):
             database_dialect=self._database_dialect,
             proto_descriptors=self._proto_descriptors,
         )
-        future = api.create_database(request=request, metadata=metadata)
+        future = api.create_database(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def exists(self):
@@ -506,7 +543,12 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         try:
-            api.get_database_ddl(database=self.name, metadata=metadata)
+            api.get_database_ddl(
+                database=self.name,
+                metadata=self.metadata_with_request_id(
+                    self._next_nth_request, 1, metadata
+                ),
+            )
         except NotFound:
             return False
         return True
@@ -523,10 +565,16 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        response = api.get_database_ddl(database=self.name, metadata=metadata)
+        response = api.get_database_ddl(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._ddl_statements = tuple(response.statements)
         self._proto_descriptors = response.proto_descriptors
-        response = api.get_database(name=self.name, metadata=metadata)
+        response = api.get_database(
+            name=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         self._state = DatabasePB.State(response.state)
         self._create_time = response.create_time
         self._restore_info = response.restore_info
@@ -571,7 +619,10 @@ class Database(object):
             proto_descriptors=proto_descriptors,
         )
 
-        future = api.update_database_ddl(request=request, metadata=metadata)
+        future = api.update_database_ddl(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return future
 
     def update(self, fields):
@@ -609,7 +660,9 @@ class Database(object):
         metadata = _metadata_with_prefix(self.name)
 
         future = api.update_database(
-            database=database_pb, update_mask=field_mask, metadata=metadata
+            database=database_pb,
+            update_mask=field_mask,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
 
         return future
@@ -622,7 +675,10 @@ class Database(object):
         """
         api = self._instance._client.database_admin_api
         metadata = _metadata_with_prefix(self.name)
-        api.drop_database(database=self.name, metadata=metadata)
+        api.drop_database(
+            database=self.name,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def execute_partitioned_dml(
         self,
@@ -708,10 +764,22 @@ class Database(object):
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
             ) as span, MetricsCapture():
-                with SessionCheckout(self._pool) as session:
+                from google.cloud.spanner_v1.session_options import TransactionType
+
+                session = self._sessions_manager.get_session(
+                    TransactionType.PARTITIONED
+                )
+                try:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
-                        session=session.name, options=txn_options, metadata=metadata
+                        session=session.name,
+                        options=txn_options,
+                        metadata=self.metadata_with_request_id(
+                            self._next_nth_request,
+                            1,
+                            metadata,
+                            span,
+                        ),
                     )
 
                     txn_selector = TransactionSelector(id=txn.id)
@@ -724,6 +792,7 @@ class Database(object):
                         query_options=query_options,
                         request_options=request_options,
                     )
+
                     method = functools.partial(
                         api.execute_streaming_sql,
                         metadata=metadata,
@@ -736,14 +805,29 @@ class Database(object):
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
+                        request_id_manager=self,
                     )
 
                     result_set = StreamedResultSet(iterator)
                     list(result_set)  # consume all partials
 
                     return result_set.stats.row_count_lower_bound
+                finally:
+                    self._sessions_manager.put_session(session)
 
         return _retry_on_aborted(execute_pdml, DEFAULT_RETRY_BACKOFF)()
+
+    @property
+    def _next_nth_request(self):
+        if self._instance and self._instance._client:
+            return self._instance._client._next_nth_request
+        return 1
+
+    @property
+    def _nth_client_id(self):
+        if self._instance and self._instance._client:
+            return self._instance._client._nth_client_id
+        return 0
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
@@ -965,7 +1049,7 @@ class Database(object):
         )
         future = api.restore_database(
             request=request,
-            metadata=metadata,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return future
 
@@ -1034,7 +1118,10 @@ class Database(object):
             parent=self.name,
             page_size=page_size,
         )
-        return api.list_database_roles(request=request, metadata=metadata)
+        return api.list_database_roles(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
 
     def table(self, table_id):
         """Factory to create a table object within this database.
@@ -1118,7 +1205,10 @@ class Database(object):
                 requested_policy_version=policy_version
             ),
         )
-        response = api.get_iam_policy(request=request, metadata=metadata)
+        response = api.get_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     def set_iam_policy(self, policy):
@@ -1140,7 +1230,10 @@ class Database(object):
             resource=self.name,
             policy=policy,
         )
-        response = api.set_iam_policy(request=request, metadata=metadata)
+        response = api.set_iam_policy(
+            request=request,
+            metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
+        )
         return response
 
     @property
@@ -1158,6 +1251,15 @@ class Database(object):
 
         opts["db_name"] = self.name
         return opts
+
+    @property
+    def sessions_manager(self):
+        """Returns the database sessions manager.
+
+        :rtype: :class:`~google.cloud.spanner_v1.database_sessions_manager.DatabaseSessionsManager`
+        :returns: The sessions manager for this database.
+        """
+        return self._sessions_manager
 
 
 class BatchCheckout(object):
@@ -1209,8 +1311,12 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
+        from google.cloud.spanner_v1.session_options import TransactionType
+
         current_span = get_current_span()
-        session = self._session = self._database._pool.get()
+        session = self._session = self._database.sessions_manager.get_session(
+            TransactionType.READ_WRITE
+        )
         add_span_event(current_span, "Using session", {"id": session.session_id})
         batch = self._batch = Batch(session)
         if self._request_options.transaction_tag:
@@ -1235,7 +1341,7 @@ class BatchCheckout(object):
                     "CommitStats: {}".format(self._batch.commit_stats),
                     extra={"commit_stats": self._batch.commit_stats},
                 )
-            self._database._pool.put(self._session)
+            self._database.sessions_manager.put_session(self._session)
             current_span = get_current_span()
             add_span_event(
                 current_span,
@@ -1263,7 +1369,11 @@ class MutationGroupsCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
+        from google.cloud.spanner_v1.session_options import TransactionType
+
+        session = self._session = self._database.sessions_manager.get_session(
+            TransactionType.READ_WRITE
+        )
         return MutationGroups(session)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1274,7 +1384,7 @@ class MutationGroupsCheckout(object):
             if not self._session.exists():
                 self._session = self._database._pool._new_session()
                 self._session.create()
-        self._database._pool.put(self._session)
+        self._database.sessions_manager.put_session(self._session)
 
 
 class SnapshotCheckout(object):
@@ -1302,7 +1412,11 @@ class SnapshotCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        session = self._session = self._database._pool.get()
+        from google.cloud.spanner_v1.session_options import TransactionType
+
+        session = self._session = self._database.sessions_manager.get_session(
+            TransactionType.READ_ONLY
+        )
         return Snapshot(session, **self._kw)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1313,7 +1427,7 @@ class SnapshotCheckout(object):
             if not self._session.exists():
                 self._session = self._database._pool._new_session()
                 self._session.create()
-        self._database._pool.put(self._session)
+        self._database.sessions_manager.put_session(self._session)
 
 
 class BatchSnapshot(object):
@@ -1393,10 +1507,13 @@ class BatchSnapshot(object):
            all partitions have been processed.
         """
         if self._session is None:
-            session = self._session = self._database.session()
-            if self._session_id is None:
-                session.create()
-            else:
+            from google.cloud.spanner_v1.session_options import TransactionType
+
+            # Use sessions manager for partition operations
+            session = self._session = self._database.sessions_manager.get_session(
+                TransactionType.PARTITIONED
+            )
+            if self._session_id is not None:
                 session._session_id = self._session_id
         return self._session
 
@@ -1807,7 +1924,8 @@ class BatchSnapshot(object):
            from all the partitions.
         """
         if self._session is not None:
-            self._session.delete()
+            if not self._session.is_multiplexed:
+                self._session.delete()
 
 
 def _check_ddl_statements(value):

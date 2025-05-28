@@ -49,12 +49,51 @@ from google.api_core.exceptions import Unknown, Aborted, NotFound, Cancelled
 from google.protobuf.struct_pb2 import Struct, Value
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1 import DefaultTransactionOptions
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _metadata_with_request_id,
+)
 
 
 def _make_rpc_error(error_cls, trailing_metadata=None):
     grpc_error = mock.create_autospec(grpc.Call, instance=True)
     grpc_error.trailing_metadata.return_value = trailing_metadata
     return error_cls("error", errors=(grpc_error,))
+
+
+NTH_CLIENT_ID = AtomicCounter()
+
+
+def inject_into_mock_database(mockdb):
+    setattr(mockdb, "_nth_request", AtomicCounter())
+    nth_client_id = NTH_CLIENT_ID.increment()
+    setattr(mockdb, "_nth_client_id", nth_client_id)
+    channel_id = 1
+    setattr(mockdb, "_channel_id", channel_id)
+
+    def metadata_with_request_id(
+        nth_request, nth_attempt, prior_metadata=[], span=None
+    ):
+        nth_req = nth_request.fget(mockdb)
+        return _metadata_with_request_id(
+            nth_client_id,
+            channel_id,
+            nth_req,
+            nth_attempt,
+            prior_metadata,
+            span,
+        )
+
+    setattr(mockdb, "metadata_with_request_id", metadata_with_request_id)
+
+    @property
+    def _next_nth_request(self):
+        return self._nth_request.increment()
+
+    setattr(mockdb, "_next_nth_request", _next_nth_request)
+
+    return mockdb
 
 
 class TestSession(OpenTelemetryBase):
@@ -95,6 +134,7 @@ class TestSession(OpenTelemetryBase):
         database.database_role = database_role
         database._route_to_leader_enabled = True
         database.default_transaction_options = default_transaction_options
+        inject_into_mock_database(database)
 
         return database
 
@@ -186,16 +226,24 @@ class TestSession(OpenTelemetryBase):
             session=session_template,
         )
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.create_session.assert_called_once_with(
             request=request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.CreateSession", attributes=TestSession.BASE_ATTRIBUTES
+            "CloudSpanner.CreateSession",
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_create_session_span_annotations(self):
@@ -226,6 +274,10 @@ class TestSession(OpenTelemetryBase):
                 metadata=[
                     ("google-cloud-resource-prefix", database.name),
                     ("x-goog-spanner-route-to-leader", "true"),
+                    (
+                        "x-goog-spanner-request-id",
+                        f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                    ),
                 ],
             )
 
@@ -248,16 +300,24 @@ class TestSession(OpenTelemetryBase):
             database=database.name,
         )
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.create_session.assert_called_once_with(
             request=request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.CreateSession", attributes=TestSession.BASE_ATTRIBUTES
+            "CloudSpanner.CreateSession",
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_create_ok(self):
@@ -276,16 +336,24 @@ class TestSession(OpenTelemetryBase):
             database=database.name,
         )
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.create_session.assert_called_once_with(
             request=request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
-            "CloudSpanner.CreateSession", attributes=TestSession.BASE_ATTRIBUTES
+            "CloudSpanner.CreateSession",
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_create_w_labels(self):
@@ -306,17 +374,24 @@ class TestSession(OpenTelemetryBase):
             session=SessionRequestProto(labels=labels),
         )
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.create_session.assert_called_once_with(
             request=request,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
             "CloudSpanner.CreateSession",
-            attributes=dict(TestSession.BASE_ATTRIBUTES, foo="bar"),
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, foo="bar", x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_create_error(self):
@@ -329,10 +404,13 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.create()
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         self.assertSpanAttributes(
             "CloudSpanner.CreateSession",
             status=StatusCode.ERROR,
-            attributes=TestSession.BASE_ATTRIBUTES,
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_exists_wo_session_id(self):
@@ -353,17 +431,26 @@ class TestSession(OpenTelemetryBase):
 
         self.assertTrue(session.exists())
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.get_session.assert_called_once_with(
             name=self.SESSION_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
-            attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=True),
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES,
+                session_found=True,
+                x_goog_spanner_request_id=req_id,
+            ),
         )
 
     @mock.patch(
@@ -386,6 +473,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -401,17 +492,26 @@ class TestSession(OpenTelemetryBase):
 
         self.assertFalse(session.exists())
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.get_session.assert_called_once_with(
             name=self.SESSION_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
-            attributes=dict(TestSession.BASE_ATTRIBUTES, session_found=False),
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES,
+                session_found=False,
+                x_goog_spanner_request_id=req_id,
+            ),
         )
 
     @mock.patch(
@@ -433,6 +533,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -449,18 +553,25 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.exists()
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.get_session.assert_called_once_with(
             name=self.SESSION_NAME,
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
             ],
         )
 
         self.assertSpanAttributes(
             "CloudSpanner.GetSession",
             status=StatusCode.ERROR,
-            attributes=TestSession.BASE_ATTRIBUTES,
+            attributes=dict(
+                TestSession.BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id
+            ),
         )
 
     def test_ping_wo_session_id(self):
@@ -486,7 +597,13 @@ class TestSession(OpenTelemetryBase):
 
         gax_api.execute_sql.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
+            ],
         )
 
     def test_ping_miss(self):
@@ -507,7 +624,13 @@ class TestSession(OpenTelemetryBase):
 
         gax_api.execute_sql.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
+            ],
         )
 
     def test_ping_error(self):
@@ -528,7 +651,13 @@ class TestSession(OpenTelemetryBase):
 
         gax_api.execute_sql.assert_called_once_with(
             request=request,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
+            ],
         )
 
     def test_delete_wo_session_id(self):
@@ -550,16 +679,23 @@ class TestSession(OpenTelemetryBase):
 
         session.delete()
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.delete_session.assert_called_once_with(
             name=self.SESSION_NAME,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
+            ],
         )
 
         attrs = {"session.id": session._session_id, "session.name": session.name}
         attrs.update(TestSession.BASE_ATTRIBUTES)
         self.assertSpanAttributes(
             "CloudSpanner.DeleteSession",
-            attributes=attrs,
+            attributes=dict(attrs, x_goog_spanner_request_id=req_id),
         )
 
     def test_delete_miss(self):
@@ -573,12 +709,23 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(NotFound):
             session.delete()
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.delete_session.assert_called_once_with(
             name=self.SESSION_NAME,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
+            ],
         )
 
-        attrs = {"session.id": session._session_id, "session.name": session.name}
+        attrs = {
+            "session.id": session._session_id,
+            "session.name": session.name,
+            "x_goog_spanner_request_id": req_id,
+        }
         attrs.update(TestSession.BASE_ATTRIBUTES)
 
         self.assertSpanAttributes(
@@ -598,12 +745,23 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.delete()
 
+        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.delete_session.assert_called_once_with(
             name=self.SESSION_NAME,
-            metadata=[("google-cloud-resource-prefix", database.name)],
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                (
+                    "x-goog-spanner-request-id",
+                    req_id,
+                ),
+            ],
         )
 
-        attrs = {"session.id": session._session_id, "session.name": session.name}
+        attrs = {
+            "session.id": session._session_id,
+            "session.name": session.name,
+            "x_goog_spanner_request_id": req_id,
+        }
         attrs.update(TestSession.BASE_ATTRIBUTES)
 
         self.assertSpanAttributes(
@@ -936,6 +1094,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -949,6 +1111,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -1000,6 +1166,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1052,10 +1222,25 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    session=self.SESSION_NAME,
+                    options=expected_options,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                        ),
+                    ],
+                ),
+            ],
         )
         request = CommitRequest(
             session=self.SESSION_NAME,
@@ -1071,10 +1256,24 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                        ),
+                    ],
+                ),
+            ],
         )
 
     def test_run_in_transaction_w_abort_w_retry_metadata(self):
@@ -1137,10 +1336,25 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    session=self.SESSION_NAME,
+                    options=expected_options,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                        ),
+                    ],
+                ),
+            ],
         )
         request = CommitRequest(
             session=self.SESSION_NAME,
@@ -1156,10 +1370,24 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                        ),
+                    ],
+                ),
+            ],
         )
 
     def test_run_in_transaction_w_callback_raises_abort_wo_metadata(self):
@@ -1221,6 +1449,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1234,6 +1466,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -1297,6 +1533,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1310,6 +1550,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -1369,10 +1613,37 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
                     ],
-                )
-            ]
-            * 3,
+                ),
+                mock.call(
+                    session=self.SESSION_NAME,
+                    options=expected_options,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                        ),
+                    ],
+                ),
+                mock.call(
+                    session=self.SESSION_NAME,
+                    options=expected_options,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.5.1",
+                        ),
+                    ],
+                ),
+            ],
         )
         request = CommitRequest(
             session=self.SESSION_NAME,
@@ -1388,10 +1659,35 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
                     ],
-                )
-            ]
-            * 3,
+                ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                        ),
+                    ],
+                ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.6.1",
+                        ),
+                    ],
+                ),
+            ],
         )
 
     def test_run_in_transaction_w_commit_stats_success(self):
@@ -1440,6 +1736,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1454,6 +1754,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
         database.logger.info.assert_called_once_with(
@@ -1502,6 +1806,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1516,6 +1824,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
         database.logger.info.assert_not_called()
@@ -1568,6 +1880,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1581,6 +1897,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -1633,6 +1953,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
         request = CommitRequest(
@@ -1646,6 +1970,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                ),
             ],
         )
 
@@ -1719,10 +2047,25 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    session=self.SESSION_NAME,
+                    options=expected_options,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.3.1",
+                        ),
+                    ],
+                ),
+            ],
         )
         request = CommitRequest(
             session=self.SESSION_NAME,
@@ -1738,10 +2081,24 @@ class TestSession(OpenTelemetryBase):
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
                     ],
-                )
-            ]
-            * 2,
+                ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                        ),
+                    ],
+                ),
+            ],
         )
 
     def test_run_in_transaction_w_isolation_level_at_request(self):
@@ -1773,6 +2130,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1807,6 +2168,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 
@@ -1845,6 +2210,10 @@ class TestSession(OpenTelemetryBase):
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
             ],
         )
 

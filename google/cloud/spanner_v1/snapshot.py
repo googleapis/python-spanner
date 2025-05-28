@@ -38,6 +38,7 @@ from google.cloud.spanner_v1._helpers import (
     _retry,
     _check_rst_stream_error,
     _SessionWrapper,
+    AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -61,6 +62,7 @@ def _restart_on_unavailable(
     transaction=None,
     transaction_selector=None,
     observability_options=None,
+    request_id_manager=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -90,6 +92,8 @@ def _restart_on_unavailable(
 
     request.transaction = transaction_selector
     iterator = None
+    attempt = 1
+    nth_request = getattr(request_id_manager, "_next_nth_request", 0)
 
     while True:
         try:
@@ -100,8 +104,16 @@ def _restart_on_unavailable(
                     attributes,
                     observability_options=observability_options,
                     metadata=metadata,
-                ), MetricsCapture():
-                    iterator = method(request=request, metadata=metadata)
+                ) as span, MetricsCapture():
+                    iterator = method(
+                        request=request,
+                        metadata=request_id_manager.metadata_with_request_id(
+                            nth_request,
+                            attempt,
+                            metadata,
+                            span,
+                        ),
+                    )
             for item in iterator:
                 item_buffer.append(item)
                 # Setting the transaction id because the transaction begin was inlined for first rpc.
@@ -124,12 +136,21 @@ def _restart_on_unavailable(
                 attributes,
                 observability_options=observability_options,
                 metadata=metadata,
-            ), MetricsCapture():
+            ) as span, MetricsCapture():
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
                 request.transaction = transaction_selector
-                iterator = method(request=request)
+                attempt += 1
+                iterator = method(
+                    request=request,
+                    metadata=request_id_manager.metadata_with_request_id(
+                        nth_request,
+                        attempt,
+                        metadata,
+                        span,
+                    ),
+                )
             continue
         except InternalServerError as exc:
             resumable_error = any(
@@ -145,12 +166,21 @@ def _restart_on_unavailable(
                 attributes,
                 observability_options=observability_options,
                 metadata=metadata,
-            ), MetricsCapture():
+            ) as span, MetricsCapture():
                 request.resume_token = resume_token
                 if transaction is not None:
                     transaction_selector = transaction._make_txn_selector()
+                attempt += 1
                 request.transaction = transaction_selector
-                iterator = method(request=request)
+                iterator = method(
+                    request=request,
+                    metadata=request_id_manager.metadata_with_request_id(
+                        nth_request,
+                        attempt,
+                        metadata,
+                        span,
+                    ),
+                )
             continue
 
         if len(item_buffer) == 0:
@@ -329,6 +359,7 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
+
         restart = functools.partial(
             api.streaming_read,
             request=request,
@@ -352,6 +383,7 @@ class _SnapshotBase(_SessionWrapper):
                     trace_attributes,
                     transaction=self,
                     observability_options=observability_options,
+                    request_id_manager=self._session._database,
                 )
                 self._read_request_count += 1
                 if self._multi_use:
@@ -375,6 +407,7 @@ class _SnapshotBase(_SessionWrapper):
                 trace_attributes,
                 transaction=self,
                 observability_options=observability_options,
+                request_id_manager=self._session._database,
             )
 
         self._read_request_count += 1
@@ -562,13 +595,16 @@ class _SnapshotBase(_SessionWrapper):
             data_boost_enabled=data_boost_enabled,
             directed_read_options=directed_read_options,
         )
-        restart = functools.partial(
-            api.execute_streaming_sql,
-            request=request,
-            metadata=metadata,
-            retry=retry,
-            timeout=timeout,
-        )
+
+        def wrapped_restart(*args, **kwargs):
+            restart = functools.partial(
+                api.execute_streaming_sql,
+                request=request,
+                metadata=kwargs.get("metadata", metadata),
+                retry=retry,
+                timeout=timeout,
+            )
+            return restart(*args, **kwargs)
 
         trace_attributes = {"db.statement": sql}
         observability_options = getattr(database, "observability_options", None)
@@ -577,7 +613,7 @@ class _SnapshotBase(_SessionWrapper):
             # lock is added to handle the inline begin for first rpc
             with self._lock:
                 return self._get_streamed_result_set(
-                    restart,
+                    wrapped_restart,
                     request,
                     metadata,
                     trace_attributes,
@@ -587,7 +623,7 @@ class _SnapshotBase(_SessionWrapper):
                 )
         else:
             return self._get_streamed_result_set(
-                restart,
+                wrapped_restart,
                 request,
                 metadata,
                 trace_attributes,
@@ -615,6 +651,7 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             transaction=self,
             observability_options=observability_options,
+            request_id_manager=self._session._database,
         )
         self._read_request_count += 1
         self._execute_sql_count += 1
@@ -717,16 +754,28 @@ class _SnapshotBase(_SessionWrapper):
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ), MetricsCapture():
-            method = functools.partial(
-                api.partition_read,
-                request=request,
-                metadata=metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+        ) as span, MetricsCapture():
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter()
+
+            def attempt_tracking_method():
+                all_metadata = database.metadata_with_request_id(
+                    nth_request,
+                    attempt.increment(),
+                    metadata,
+                    span,
+                )
+                method = functools.partial(
+                    api.partition_read,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method()
+
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -821,16 +870,28 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ), MetricsCapture():
-            method = functools.partial(
-                api.partition_query,
-                request=request,
-                metadata=metadata,
-                retry=retry,
-                timeout=timeout,
-            )
+        ) as span, MetricsCapture():
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter()
+
+            def attempt_tracking_method():
+                all_metadata = database.metadata_with_request_id(
+                    nth_request,
+                    attempt.increment(),
+                    metadata,
+                    span,
+                )
+                method = functools.partial(
+                    api.partition_query,
+                    request=request,
+                    metadata=all_metadata,
+                    retry=retry,
+                    timeout=timeout,
+                )
+                return method()
+
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
 
@@ -968,15 +1029,27 @@ class Snapshot(_SnapshotBase):
             self._session,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ), MetricsCapture():
-            method = functools.partial(
-                api.begin_transaction,
-                session=self._session.name,
-                options=txn_selector.begin,
-                metadata=metadata,
-            )
+        ) as span, MetricsCapture():
+            nth_request = getattr(database, "_next_nth_request", 0)
+            attempt = AtomicCounter()
+
+            def attempt_tracking_method():
+                all_metadata = database.metadata_with_request_id(
+                    nth_request,
+                    attempt.increment(),
+                    metadata,
+                    span,
+                )
+                method = functools.partial(
+                    api.begin_transaction,
+                    session=self._session.name,
+                    options=txn_selector.begin,
+                    metadata=all_metadata,
+                )
+                return method()
+
             response = _retry(
-                method,
+                attempt_tracking_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
             )
         self._transaction_id = response.id
