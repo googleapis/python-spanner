@@ -1732,6 +1732,35 @@ def drop_sequence(instance_id, database_id):
 
 # [END spanner_postgresql_drop_sequence]
 
+# [START spanner_postgresql_dml_last_statement]
+def dml_last_statement_option(instance_id, database_id):
+    """Inserts and updates using DML where the update set the last statement option."""
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    spanner_client = spanner.Client()
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    def insert_and_update_singers(transaction):
+        insert_row_ct = transaction.execute_update(
+            "INSERT INTO Singers (SingerId, FirstName, LastName) "
+            " VALUES (54214, 'John', 'Do')"
+        )
+
+        print("{} record(s) inserted.".format(insert_row_ct))
+
+        update_row_ct = transaction.execute_update(
+            "UPDATE Singers SET LastName = 'Doe' WHERE SingerId = 54214",
+            last_statement=True)
+
+        print("{} record(s) updated.".format(update_row_ct))
+
+    database.run_in_transaction(insert_and_update_singers)
+
+
+# [END  spanner_postgresql_dml_last_statement]
+
 if __name__ == "__main__":  # noqa: C901
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -1778,7 +1807,7 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser("insert_data_with_dml", help=insert_data_with_dml.__doc__)
     subparsers.add_parser("update_data_with_dml", help=update_data_with_dml.__doc__)
     subparsers.add_parser(
-        "update_data_with_dml", help=update_data_with_dml_returning.__doc__
+        "update_data_with_dml_returning", help=update_data_with_dml_returning.__doc__
     )
     subparsers.add_parser("delete_data_with_dml", help=delete_data_with_dml.__doc__)
     subparsers.add_parser(
@@ -1837,6 +1866,7 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser("create_sequence", help=create_sequence.__doc__)
     subparsers.add_parser("alter_sequence", help=alter_sequence.__doc__)
     subparsers.add_parser("drop_sequence", help=drop_sequence.__doc__)
+    subparsers.add_parser("dml_last_statement_option", help=dml_last_statement_option.__doc__)
 
     args = parser.parse_args()
 
@@ -1932,3 +1962,5 @@ if __name__ == "__main__":  # noqa: C901
         query_data_with_query_options(args.instance_id, args.database_id)
     elif args.command == "create_client_with_query_options":
         create_client_with_query_options(args.instance_id, args.database_id)
+    elif args.command == "dml_last_statement_option":
+        dml_last_statement_option(args.instance_id, args.database_id)
