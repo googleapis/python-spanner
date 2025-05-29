@@ -289,7 +289,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         :raises ValueError: if there are no mutations to commit.
         """
         database = self._session._database
-        trace_attributes = {"num_mutations": len(self._mutations)}
+        trace_attributes = {
+            "num_mutations": len(self._mutations),
+            "transaction.tag": self.transaction_tag,
+        }
         observability_options = getattr(database, "observability_options", None)
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
@@ -491,7 +494,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions(request_options)
         request_options.transaction_tag = self.transaction_tag
 
-        trace_attributes = {"db.statement": dml}
+        trace_attributes = {
+            "db.statement": dml,
+            "request.tag": request_options.request_tag,
+            "transaction.tag": request_options.transaction_tag,
+        }
 
         request = ExecuteSqlRequest(
             session=self._session.name,
@@ -645,7 +652,9 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {
             # Get just the queries from the DML statement batch
-            "db.statement": ";".join([statement.sql for statement in parsed])
+            "db.statement": ";".join([statement.sql for statement in parsed]),
+            "request.tag": request_options.request_tag,
+            "transaction.tag": request_options.transaction_tag,
         }
         request = ExecuteBatchDmlRequest(
             session=self._session.name,

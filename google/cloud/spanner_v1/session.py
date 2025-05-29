@@ -525,9 +525,11 @@ class Session(object):
         attempts = 0
 
         observability_options = getattr(self._database, "observability_options", None)
+        trace_attributes = {"transaction.tag": transaction_tag}
         with trace_call(
             "CloudSpanner.Session.run_in_transaction",
             self,
+            extra_attributes=trace_attributes,
             observability_options=observability_options,
         ) as span, MetricsCapture():
             while True:
