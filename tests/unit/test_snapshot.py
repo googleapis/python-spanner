@@ -11,7 +11,9 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from google.api_core import gapic_v1
+from google.api_core.retry import Retry
 import mock
 
 from google.cloud.spanner_v1 import (
@@ -20,18 +22,20 @@ from google.cloud.spanner_v1 import (
     SpannerClient,
     KeySet,
 )
+from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.session_options import TransactionType
+from tests._builders import (
+    build_precommit_token_pb,
+    build_result_set_metadata_pb,
+    build_session,
+)
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
     StatusCode,
     HAS_OPENTELEMETRY_INSTALLED,
-    enrich_with_otel_scope,
-    enable_multiplexed_sessions,
 )
 from google.cloud.spanner_v1.param_types import INT64
-from google.api_core.retry import Retry
-from tests._builders import build_session
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -45,19 +49,8 @@ SQL_QUERY_WITH_BYTES_PARAM = """\
 SELECT image_name FROM images WHERE @bytes IN image_data"""
 PARAMS_WITH_BYTES = {"bytes": b"FACEDACE"}
 RESUME_TOKEN = b"DEADBEEF"
-TXN_ID = b"DEAFBEAD"
 SECONDS = 3
 MICROS = 123456
-BASE_ATTRIBUTES = {
-    "db.type": "spanner",
-    "db.url": "spanner.googleapis.com",
-    "db.instance": "testing",
-    "net.host.name": "spanner.googleapis.com",
-    "gcp.client.service": "spanner",
-    "gcp.client.version": LIB_VERSION,
-    "gcp.client.repo": "googleapis/python-spanner",
-}
-enrich_with_otel_scope(BASE_ATTRIBUTES)
 
 DIRECTED_READ_OPTIONS = {
     "include_replicas": {
@@ -80,6 +73,11 @@ DIRECTED_READ_OPTIONS_FOR_CLIENT = {
     },
 }
 
+TRANSACTION_ID = b"transaction-id"
+
+PRECOMMIT_TOKEN_1 = build_precommit_token_pb(precommit_token=b"1", seq_num=1)
+PRECOMMIT_TOKEN_2 = build_precommit_token_pb(precommit_token=b"2", seq_num=2)
+
 
 def _makeTimestamp():
     import datetime
@@ -96,9 +94,6 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def _makeDerived(self, session):
         class _Derived(self._getTargetClass()):
-            _transaction_id = None
-            _multi_use = False
-
             def _make_txn_selector(self):
                 from google.cloud.spanner_v1 import (
                     TransactionOptions,
@@ -146,7 +141,8 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             value=value,
             resume_token=resume_token,
             metadata=metadata,
-            spec=["value", "resume_token", "metadata"],
+            precommit_token=build_precommit_token_pb(),
+            spec=["value", "resume_token", "metadata", "precommit_token"],
         )
 
     def test_iteration_w_empty_raw(self):
@@ -299,7 +295,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             fail_after=True,
             error=InternalServerError(
                 "Received unexpected EOS on DATA frame from server"
-            )
+            ),
         )
         after = _MockIterator(*LAST)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
@@ -418,15 +414,9 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
     def test_iteration_w_raw_raising_unavailable_after_token_w_multiuse(self):
         from google.api_core.exceptions import ServiceUnavailable
+        from google.cloud.spanner_v1 import ReadRequest
 
-        from google.cloud.spanner_v1 import ResultSetMetadata
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            ReadRequest,
-        )
-
-        transaction_pb = TransactionPB(id=TXN_ID)
-        metadata_pb = ResultSetMetadata(transaction=transaction_pb)
+        metadata_pb = build_result_set_metadata_pb(transaction={"id": TRANSACTION_ID})
         FIRST = (
             self._make_item(0),
             self._make_item(1, resume_token=RESUME_TOKEN, metadata=metadata_pb),
@@ -449,11 +439,13 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertEqual(list(resumable), list(FIRST + SECOND))
         self.assertEqual(len(restart.mock_calls), 2)
         self.assertEqual(request.resume_token, RESUME_TOKEN)
+
+        transaction_id_string = TRANSACTION_ID.decode("utf-8")
         transaction_id_selector_count = sum(
             [
                 1
                 for args in restart.call_args_list
-                if 'id: "DEAFBEAD"' in args.kwargs.__str__()
+                if f'id: "{transaction_id_string}"' in args.kwargs.__str__()
             ]
         )
 
@@ -471,7 +463,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             fail_after=True,
             error=InternalServerError(
                 "Received unexpected EOS on DATA frame from server"
-            )
+            ),
         )
         after = _MockIterator(*SECOND)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
@@ -521,7 +513,9 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             derived, restart, request, name, _Session(_Database()), extra_atts
         )
         self.assertEqual(list(resumable), [])
-        self.assertSpanAttributes(name, attributes=dict(BASE_ATTRIBUTES, test_att=1))
+        self.assertSpanAttributes(
+            name, attributes=dict(_build_base_attributes(database), test_att=1)
+        )
 
     def test_iteration_w_multiple_span_creation(self):
         from google.api_core.exceptions import ServiceUnavailable
@@ -554,18 +548,12 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
                 self.assertEqual(span.name, name)
                 self.assertEqual(
                     dict(span.attributes),
-                    enrich_with_otel_scope(BASE_ATTRIBUTES),
+                    _build_base_attributes(database),
                 )
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
-    PROJECT_ID = "project-id"
-    INSTANCE_ID = "instance-id"
-    INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
-    DATABASE_ID = "database-id"
-    DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
     SESSION_ID = "session-id"
-    SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
         from google.cloud.spanner_v1.snapshot import _SnapshotBase
@@ -604,7 +592,8 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session()
         base = self._make_one(session)
         self.assertIs(base._session, session)
-        self.assertEqual(base._execute_sql_count, 0)
+        self.assertEqual(base._execute_sql_request_count, 0)
+        self.assertEqual(base._total_read_request_count, 0)
 
         self.assertNoSpans()
 
@@ -615,8 +604,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             base._make_txn_selector()
 
     def test_read_partitioned_not_implemented_for_multiplexed(self):
-        enable_multiplexed_sessions()
-
         database = (
             self._build_database_with_partitioned_not_implemented_for_multiplexed()
         )
@@ -647,7 +634,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             "CloudSpanner._Derived.read",
             status=StatusCode.ERROR,
             attributes=dict(
-                BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
+                _build_base_attributes(database),
+                table_id=TABLE_NAME,
+                columns=tuple(COLUMNS),
             ),
         )
 
@@ -662,11 +651,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         request_options=None,
         directed_read_options=None,
         directed_read_options_at_client_level=None,
+        use_multiplexed=False,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             PartialResultSet,
-            ResultSetMetadata,
             ResultSetStats,
         )
         from google.cloud.spanner_v1 import (
@@ -678,6 +667,31 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import TypeCode
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
+        # [A] Build derived
+        # -----------------
+
+        session = build_session(
+            database={
+                "instance": {
+                    "client": {
+                        "directed_read_options": directed_read_options_at_client_level
+                    }
+                }
+            }
+        )
+
+        session._session_id = self.SESSION_ID
+
+        derived = self._makeDerived(session)
+        derived._multi_use = multi_use
+        derived._total_read_request_count = count
+
+        if not first:
+            derived._transaction_id = TRANSACTION_ID
+
+        # [B] Build results
+        # -----------------
+
         VALUES = [["bharney", 31], ["phred", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
         struct_type_pb = StructType(
@@ -686,31 +700,46 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
+
+        # If the transaction had not already begun, the first result
+        # set will include metadata with information about the transaction.
+        metadata_pb = build_result_set_metadata_pb(
+            row_type=struct_type_pb,
+            transaction={"id": TRANSACTION_ID} if first else None,
+        )
+
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
-        result_sets = [
-            PartialResultSet(metadata=metadata_pb),
-            PartialResultSet(stats=stats_pb),
-        ]
+
+        # Precommit tokens will be included in the result sets if the transaction is on
+        # a multiplexed session. Precommit tokens may be returned out of order.
+        partial_result_set_1_args = {"metadata": metadata_pb}
+        if use_multiplexed:
+            partial_result_set_1_args["precommit_token"] = PRECOMMIT_TOKEN_2
+        partial_result_set_1 = PartialResultSet(**partial_result_set_1_args)
+
+        partial_result_set_2_args = {"stats": stats_pb}
+        if use_multiplexed:
+            partial_result_set_2_args["precommit_token"] = PRECOMMIT_TOKEN_1
+        partial_result_set_2 = PartialResultSet(**partial_result_set_2_args)
+
+        result_sets = [partial_result_set_1, partial_result_set_2]
+
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
+
+        database = session._database
+        api = database.spanner_api
+        api.streaming_read.return_value = _MockIterator(*result_sets)
+
+        # [C] Execute read
+        # ----------------
+
         KEYS = [["bharney@example.com"], ["phred@example.com"]]
         keyset = KeySet(keys=KEYS)
         INDEX = "email-address-index"
         LIMIT = 20
-        database = _Database(
-            directed_read_options=directed_read_options_at_client_level
-        )
-        api = database.spanner_api = self._make_spanner_api()
-        api.streaming_read.return_value = _MockIterator(*result_sets)
-        session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = multi_use
-        derived._read_request_count = count
-        if not first:
-            derived._transaction_id = TXN_ID
 
         if request_options is None:
             request_options = RequestOptions()
@@ -742,12 +771,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 directed_read_options=directed_read_options,
             )
 
-        self.assertEqual(derived._read_request_count, count + 1)
+        # [D] Verify results
+        # ------------------
 
-        if multi_use:
-            self.assertIs(result_set._source, derived)
-        else:
-            self.assertIsNone(result_set._source)
+        self.assertEqual(derived._total_read_request_count, count + 1)
 
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
@@ -759,11 +786,17 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         if multi_use:
             if first:
-                expected_transaction = TransactionSelector(begin=txn_options)
+                expected_transaction_selector_pb = TransactionSelector(
+                    begin=txn_options
+                )
             else:
-                expected_transaction = TransactionSelector(id=TXN_ID)
+                expected_transaction_selector_pb = TransactionSelector(
+                    id=TRANSACTION_ID
+                )
         else:
-            expected_transaction = TransactionSelector(single_use=txn_options)
+            expected_transaction_selector_pb = TransactionSelector(
+                single_use=txn_options
+            )
 
         if partition is not None:
             expected_limit = 0
@@ -781,11 +814,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         expected_request = ReadRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             table=TABLE_NAME,
             columns=COLUMNS,
             key_set=keyset._to_pb(),
-            transaction=expected_transaction,
+            transaction=expected_transaction_selector_pb,
             index=INDEX,
             limit=expected_limit,
             partition_token=partition,
@@ -802,9 +835,17 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner._Derived.read",
             attributes=dict(
-                BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
+                _build_base_attributes(database),
+                table_id=TABLE_NAME,
+                columns=tuple(COLUMNS),
             ),
         )
+
+        if first:
+            self.assertEqual(derived._transaction_id, TRANSACTION_ID)
+
+        if use_multiplexed:
+            self.assertEqual(derived._precommit_token, PRECOMMIT_TOKEN_2)
 
     def test_read_wo_multi_use(self):
         self._read_helper(multi_use=False)
@@ -882,9 +923,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
 
-    def test_execute_sql_partitioned_not_implemented_for_multiplexed(self):
-        enable_multiplexed_sessions()
+    def test_read_w_multi_use_w_first(self):
+        self._read_helper(first=True, multi_use=True)
 
+    def test_read_w_precommit_tokens(self):
+        self._read_helper(multi_use=True, use_multiplexed=True)
+
+    def test_execute_sql_partitioned_not_implemented_for_multiplexed(self):
         database = (
             self._build_database_with_partitioned_not_implemented_for_multiplexed()
         )
@@ -910,12 +955,14 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             list(derived.execute_sql(SQL_QUERY))
 
-        self.assertEqual(derived._execute_sql_count, 1)
+        self.assertEqual(derived._execute_sql_request_count, 1)
 
         self.assertSpanAttributes(
             "CloudSpanner._Derived.execute_sql",
             status=StatusCode.ERROR,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
+            attributes=dict(
+                _build_base_attributes(database), **{"db.statement": SQL_QUERY}
+            ),
         )
 
     def _execute_sql_helper(
@@ -931,11 +978,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         retry=gapic_v1.method.DEFAULT,
         directed_read_options=None,
         directed_read_options_at_client_level=None,
+        use_multiplexed=False,
     ):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             PartialResultSet,
-            ResultSetMetadata,
             ResultSetStats,
         )
         from google.cloud.spanner_v1 import (
@@ -950,6 +997,32 @@ class Test_SnapshotBase(OpenTelemetryBase):
             _merge_query_options,
         )
 
+        # [A] Build derived
+        # -----------------
+
+        session = build_session(
+            database={
+                "instance": {
+                    "client": {
+                        "directed_read_options": directed_read_options_at_client_level
+                    }
+                }
+            }
+        )
+
+        session._session_id = self.SESSION_ID
+
+        derived = self._makeDerived(session)
+        derived._multi_use = multi_use
+        derived._total_read_request_count = count
+        derived._execute_sql_request_count = sql_count
+
+        if not first:
+            derived._transaction_id = TRANSACTION_ID
+
+        # [B] Build results
+        # -----------------
+
         VALUES = [["bharney", "rhubbyl", 31], ["phred", "phlyntstone", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
         MODE = 2  # PROFILE
@@ -960,29 +1033,42 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
+
+        # If the transaction has not already begun, the first result set will
+        # include metadata with information about the newly-begun transaction.
+        metadata_pb = build_result_set_metadata_pb(
+            row_type=struct_type_pb,
+            transaction={"id": TRANSACTION_ID} if first else None,
+        )
+
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
-        result_sets = [
-            PartialResultSet(metadata=metadata_pb),
-            PartialResultSet(stats=stats_pb),
-        ]
+
+        # Precommit tokens will be included in the result sets if the transaction is on
+        # a multiplexed session. Return the precommit tokens out of order to verify that
+        # the transaction tracks the one with the highest sequence number.
+        partial_result_set_1_args = {"metadata": metadata_pb}
+        if use_multiplexed:
+            partial_result_set_1_args["precommit_token"] = PRECOMMIT_TOKEN_2
+        partial_result_set_1 = PartialResultSet(**partial_result_set_1_args)
+
+        partial_result_set_2_args = {"stats": stats_pb}
+        if use_multiplexed:
+            partial_result_set_2_args["precommit_token"] = PRECOMMIT_TOKEN_1
+        partial_result_set_2 = PartialResultSet(**partial_result_set_2_args)
+
+        result_sets = [partial_result_set_1, partial_result_set_2]
+
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
-        iterator = _MockIterator(*result_sets)
-        database = _Database(
-            directed_read_options=directed_read_options_at_client_level
-        )
-        api = database.spanner_api = self._make_spanner_api()
-        api.execute_streaming_sql.return_value = iterator
-        session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = multi_use
-        derived._read_request_count = count
-        derived._execute_sql_count = sql_count
-        if not first:
-            derived._transaction_id = TXN_ID
+
+        database = session._database
+        api = database.spanner_api
+        api.execute_streaming_sql.return_value = _MockIterator(*result_sets)
+
+        # [C] Execute SQL
+        # ---------------
 
         if request_options is None:
             request_options = RequestOptions()
@@ -1002,12 +1088,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
             directed_read_options=directed_read_options,
         )
 
-        self.assertEqual(derived._read_request_count, count + 1)
+        # [D] Verify results
+        # ------------------
 
-        if multi_use:
-            self.assertIs(result_set._source, derived)
-        else:
-            self.assertIsNone(result_set._source)
+        self.assertEqual(derived._total_read_request_count, count + 1)
+        self.assertEqual(derived._execute_sql_request_count, sql_count + 1)
 
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
@@ -1019,11 +1104,17 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         if multi_use:
             if first:
-                expected_transaction = TransactionSelector(begin=txn_options)
+                expected_transaction_selector_pb = TransactionSelector(
+                    begin=txn_options
+                )
             else:
-                expected_transaction = TransactionSelector(id=TXN_ID)
+                expected_transaction_selector_pb = TransactionSelector(
+                    id=TRANSACTION_ID
+                )
         else:
-            expected_transaction = TransactionSelector(single_use=txn_options)
+            expected_transaction_selector_pb = TransactionSelector(
+                single_use=txn_options
+            )
 
         expected_params = Struct(
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
@@ -1035,10 +1126,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 expected_query_options, query_options
             )
 
-        if derived._read_only:
-            # Transaction tag is ignored for read only requests.
-            expected_request_options = request_options
-            expected_request_options.transaction_tag = None
+        # Transaction tag is ignored for read only requests.
+        expected_request_options = request_options
+        expected_request_options.transaction_tag = None
 
         expected_directed_read_options = (
             directed_read_options
@@ -1047,9 +1137,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         expected_request = ExecuteSqlRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             sql=SQL_QUERY_WITH_PARAM,
-            transaction=expected_transaction,
+            transaction=expected_transaction_selector_pb,
             params=expected_params,
             param_types=PARAM_TYPES,
             query_mode=MODE,
@@ -1066,13 +1156,20 @@ class Test_SnapshotBase(OpenTelemetryBase):
             retry=retry,
         )
 
-        self.assertEqual(derived._execute_sql_count, sql_count + 1)
-
         self.assertSpanAttributes(
             "CloudSpanner._Derived.execute_sql",
             status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
+            attributes=dict(
+                _build_base_attributes(database),
+                **{"db.statement": SQL_QUERY_WITH_PARAM},
+            ),
         )
+
+        if first:
+            self.assertEqual(derived._transaction_id, TRANSACTION_ID)
+
+        if use_multiplexed:
+            self.assertEqual(derived._precommit_token, PRECOMMIT_TOKEN_2)
 
     def test_execute_sql_wo_multi_use(self):
         self._execute_sql_helper(multi_use=False)
@@ -1162,6 +1259,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
 
+    def test_execute_sql_w_precommit_tokens(self):
+        self._execute_sql_helper(multi_use=True, use_multiplexed=True)
+
     def _partition_read_helper(
         self,
         multi_use,
@@ -1197,7 +1297,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         derived = self._makeDerived(session)
         derived._multi_use = multi_use
         if w_txn:
-            derived._transaction_id = TXN_ID
+            derived._transaction_id = TRANSACTION_ID
         tokens = list(
             derived.partition_read(
                 TABLE_NAME,
@@ -1213,14 +1313,14 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(tokens, [token_1, token_2])
 
-        expected_txn_selector = TransactionSelector(id=TXN_ID)
+        expected_txn_selector = TransactionSelector(id=TRANSACTION_ID)
 
         expected_partition_options = PartitionOptions(
             partition_size_bytes=size, max_partitions=max_partitions
         )
 
         expected_request = PartitionReadRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             table=TABLE_NAME,
             columns=COLUMNS,
             key_set=keyset._to_pb(),
@@ -1239,7 +1339,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         want_span_attributes = dict(
-            BASE_ATTRIBUTES,
+            _build_base_attributes(database),
             table_id=TABLE_NAME,
             columns=tuple(COLUMNS),
         )
@@ -1260,8 +1360,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
             self._partition_read_helper(multi_use=True, w_txn=False)
 
     def test_partition_read_multiplexed_not_implemented_error(self):
-        enable_multiplexed_sessions()
-
         database = (
             self._build_database_with_partitioned_not_implemented_for_multiplexed()
         )
@@ -1270,7 +1368,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session.create()
         derived = self._makeDerived(session)
         derived._multi_use = True
-        derived._transaction_id = TXN_ID
+        derived._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(NotImplementedError):
             list(derived.partition_read(TABLE_NAME, COLUMNS, KeySet(all_=True)))
@@ -1287,7 +1385,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        derived._transaction_id = TXN_ID
+        derived._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(RuntimeError):
             list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
@@ -1296,7 +1394,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             "CloudSpanner._Derived.partition_read",
             status=StatusCode.ERROR,
             attributes=dict(
-                BASE_ATTRIBUTES, table_id=TABLE_NAME, columns=tuple(COLUMNS)
+                _build_base_attributes(database),
+                table_id=TABLE_NAME,
+                columns=tuple(COLUMNS),
             ),
         )
 
@@ -1327,7 +1427,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        derived._transaction_id = TXN_ID
+        derived._transaction_id = TRANSACTION_ID
 
         list(derived.partition_read(TABLE_NAME, COLUMNS, keyset))
 
@@ -1390,7 +1490,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         derived = self._makeDerived(session)
         derived._multi_use = multi_use
         if w_txn:
-            derived._transaction_id = TXN_ID
+            derived._transaction_id = TRANSACTION_ID
 
         tokens = list(
             derived.partition_query(
@@ -1410,14 +1510,14 @@ class Test_SnapshotBase(OpenTelemetryBase):
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
         )
 
-        expected_txn_selector = TransactionSelector(id=TXN_ID)
+        expected_txn_selector = TransactionSelector(id=TRANSACTION_ID)
 
         expected_partition_options = PartitionOptions(
             partition_size_bytes=size, max_partitions=max_partitions
         )
 
         expected_request = PartitionQueryRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             sql=SQL_QUERY_WITH_PARAM,
             transaction=expected_txn_selector,
             params=expected_params,
@@ -1437,12 +1537,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner._Derived.partition_query",
             status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY_WITH_PARAM}),
+            attributes=dict(
+                _build_base_attributes(database),
+                **{"db.statement": SQL_QUERY_WITH_PARAM},
+            ),
         )
 
     def test_partition_query_partitioned_not_implemented_for_multiplexed(self):
-        enable_multiplexed_sessions()
-
         database = (
             self._build_database_with_partitioned_not_implemented_for_multiplexed()
         )
@@ -1451,7 +1552,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session.create()
         derived = self._makeDerived(session)
         derived._multi_use = True
-        derived._transaction_id = TXN_ID
+        derived._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(NotImplementedError):
             list(derived.partition_query(SQL_QUERY_WITH_PARAM, PARAMS, PARAM_TYPES))
@@ -1467,7 +1568,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
-        derived._transaction_id = TXN_ID
+        derived._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(RuntimeError):
             list(derived.partition_query(SQL_QUERY))
@@ -1475,7 +1576,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner._Derived.partition_query",
             status=StatusCode.ERROR,
-            attributes=dict(BASE_ATTRIBUTES, **{"db.statement": SQL_QUERY}),
+            attributes=dict(
+                _build_base_attributes(database), **{"db.statement": SQL_QUERY}
+            ),
         )
 
     def test_partition_query_single_use_raises(self):
@@ -1672,9 +1775,9 @@ class TestSnapshot(OpenTelemetryBase):
     def test__make_txn_selector_w_transaction_id(self):
         session = _Session()
         snapshot = self._make_one(session)
-        snapshot._transaction_id = TXN_ID
+        snapshot._transaction_id = TRANSACTION_ID
         selector = snapshot._make_txn_selector()
-        self.assertEqual(selector.id, TXN_ID)
+        self.assertEqual(selector.id, TRANSACTION_ID)
 
     def test__make_txn_selector_strong(self):
         session = _Session()
@@ -1777,14 +1880,14 @@ class TestSnapshot(OpenTelemetryBase):
     def test_begin_w_read_request_count_gt_0(self):
         session = _Session()
         snapshot = self._make_one(session, multi_use=True)
-        snapshot._read_request_count = 1
+        snapshot._total_read_request_count = 1
         with self.assertRaises(ValueError):
             snapshot.begin()
 
     def test_begin_w_existing_txn_id(self):
         session = _Session()
         snapshot = self._make_one(session, multi_use=True)
-        snapshot._transaction_id = TXN_ID
+        snapshot._transaction_id = TRANSACTION_ID
         with self.assertRaises(ValueError):
             snapshot.begin()
 
@@ -1810,7 +1913,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Snapshot.begin",
             status=StatusCode.ERROR,
-            attributes=BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
 
     def test_begin_w_retry(self):
@@ -1823,7 +1926,7 @@ class TestSnapshot(OpenTelemetryBase):
         api = database.spanner_api = self._make_spanner_api()
         database.spanner_api.begin_transaction.side_effect = [
             InternalServerError("Received unexpected EOS on DATA frame from server"),
-            TransactionPB(id=TXN_ID),
+            TransactionPB(id=TRANSACTION_ID),
         ]
         timestamp = _makeTimestamp()
         session = _Session(database)
@@ -1839,7 +1942,7 @@ class TestSnapshot(OpenTelemetryBase):
             TransactionOptions,
         )
 
-        transaction_pb = TransactionPB(id=TXN_ID)
+        transaction_pb = TransactionPB(id=TRANSACTION_ID)
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         api.begin_transaction.return_value = transaction_pb
@@ -1849,8 +1952,8 @@ class TestSnapshot(OpenTelemetryBase):
 
         txn_id = snapshot.begin()
 
-        self.assertEqual(txn_id, TXN_ID)
-        self.assertEqual(snapshot._transaction_id, TXN_ID)
+        self.assertEqual(txn_id, TRANSACTION_ID)
+        self.assertEqual(snapshot._transaction_id, TRANSACTION_ID)
 
         expected_duration = Duration(seconds=SECONDS, nanos=MICROS * 1000)
         expected_txn_options = TransactionOptions(
@@ -1868,7 +1971,7 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
-            attributes=BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
 
     def test_begin_ok_exact_strong(self):
@@ -1877,7 +1980,7 @@ class TestSnapshot(OpenTelemetryBase):
             TransactionOptions,
         )
 
-        transaction_pb = TransactionPB(id=TXN_ID)
+        transaction_pb = TransactionPB(id=TRANSACTION_ID)
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
         api.begin_transaction.return_value = transaction_pb
@@ -1886,8 +1989,8 @@ class TestSnapshot(OpenTelemetryBase):
 
         txn_id = snapshot.begin()
 
-        self.assertEqual(txn_id, TXN_ID)
-        self.assertEqual(snapshot._transaction_id, TXN_ID)
+        self.assertEqual(txn_id, TRANSACTION_ID)
+        self.assertEqual(snapshot._transaction_id, TRANSACTION_ID)
 
         expected_txn_options = TransactionOptions(
             read_only=TransactionOptions.ReadOnly(
@@ -1904,8 +2007,25 @@ class TestSnapshot(OpenTelemetryBase):
         self.assertSpanAttributes(
             "CloudSpanner.Snapshot.begin",
             status=StatusCode.OK,
-            attributes=BASE_ATTRIBUTES,
+            attributes=_build_base_attributes(database),
         )
+
+
+def _build_base_attributes(database: Database) -> dict:
+    """Builds and returns the base attributes for the given database."""
+    from tests._helpers import enrich_with_otel_scope
+
+    return enrich_with_otel_scope(
+        {
+            "db.type": "spanner",
+            "db.url": "spanner.googleapis.com",
+            "db.instance": database.name,
+            "net.host.name": "spanner.googleapis.com",
+            "gcp.client.service": "spanner",
+            "gcp.client.version": LIB_VERSION,
+            "gcp.client.repo": "googleapis/python-spanner",
+        }
+    )
 
 
 class _Client(object):

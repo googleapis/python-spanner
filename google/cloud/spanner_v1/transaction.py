@@ -14,7 +14,6 @@
 
 """Spanner read-write transaction support."""
 import functools
-import threading
 from google.protobuf.struct_pb2 import Struct
 from typing import Optional
 
@@ -26,6 +25,12 @@ from google.cloud.spanner_v1._helpers import (
     _retry,
     _check_rst_stream_error,
     _merge_Transaction_Options,
+)
+
+from google.cloud.spanner_v1 import (
+    Transaction as TransactionProto,
+    ExecuteBatchDmlResponse,
+    ResultSet,
 )
 from google.cloud.spanner_v1 import CommitRequest
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
@@ -52,22 +57,23 @@ class Transaction(_SnapshotBase, _BatchBase):
     :raises ValueError: if session has an existing transaction
     """
 
-    committed = None
-    """Timestamp at which the transaction was successfully committed."""
-    rolled_back = False
-    commit_stats = None
-    _multi_use = True
-    _execute_sql_count = 0
-    _lock = threading.Lock()
-    _read_only = False
     exclude_txn_from_change_streams = False
     isolation_level = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
+
+    # Override defaults from _SnapshotBase.
+    _multi_use = True
+    _read_only = False
 
     def __init__(self, session):
         if session._transaction is not None:
             raise ValueError("Session has existing transaction.")
 
         super(Transaction, self).__init__(session)
+
+        self.committed = None
+        """Timestamp at which the transaction was successfully committed."""
+        self.rolled_back = False
+        self.commit_stats = None
 
     def _check_state(self):
         """Helper for :meth:`commit` et al.
@@ -141,7 +147,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return response
 
-    def begin(self):
+    def begin(self) -> bytes:
         """Begin a transaction on the database.
 
         :rtype: bytes
@@ -188,19 +194,20 @@ class Transaction(_SnapshotBase, _BatchBase):
                 metadata=metadata,
             )
 
-            def beforeNextRetry(nthRetry, delayInSeconds):
+            def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
                     span,
                     "Transaction Begin Attempt Failed. Retrying",
-                    {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
                 )
 
-            response = _retry(
+            transaction_pb: TransactionProto = _retry(
                 method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
-                beforeNextRetry=beforeNextRetry,
+                beforeNextRetry=before_next_retry,
             )
-        self._transaction_id = response.id
+
+        self._update_for_transaction_pb(transaction_pb)
         return self._transaction_id
 
     def rollback(self):
@@ -302,6 +309,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 return_commit_stats=return_commit_stats,
                 max_commit_delay=max_commit_delay,
                 request_options=request_options,
+                precommit_token=self._precommit_token,
             )
 
             add_span_event(span, "Starting Commit")
@@ -312,20 +320,24 @@ class Transaction(_SnapshotBase, _BatchBase):
                 metadata=metadata,
             )
 
-            def beforeNextRetry(nthRetry, delayInSeconds):
+            def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
                     span,
                     "Transaction Commit Attempt Failed. Retrying",
-                    {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
                 )
 
             response = _retry(
                 method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
-                beforeNextRetry=beforeNextRetry,
+                beforeNextRetry=before_next_retry,
             )
 
             add_span_event(span, "Commit Done")
+
+        # TODO multiplexed
+        # Retry commit if the response contains a MultiplexedSessionRetry entry.
+        # Will require refactoring the commit method to the _BatchBase class.
 
         self.committed = response.commit_timestamp
         if return_commit_stats:
@@ -436,9 +448,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
         api = database.spanner_api
 
-        seqno, self._execute_sql_count = (
-            self._execute_sql_count,
-            self._execute_sql_count + 1,
+        execute_sql_request_count, self._execute_sql_request_count = (
+            self._execute_sql_request_count,
+            self._execute_sql_request_count + 1,
         )
 
         # Query-level options have higher precedence than client-level and
@@ -457,14 +469,24 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {"db.statement": dml}
 
+        # If this request begins the transaction, we need to lock
+        # the transaction until the transaction ID is updated.
+        is_inline_begin = False
+
+        if self._transaction_id is None:
+            is_inline_begin = True
+            self._lock.acquire()
+
+        transaction_selector_pb = self._make_txn_selector()
         request = ExecuteSqlRequest(
             session=self._session.name,
+            transaction=transaction_selector_pb,
             sql=dml,
             params=params_pb,
             param_types=param_types,
             query_mode=query_mode,
             query_options=query_options,
-            seqno=seqno,
+            seqno=execute_sql_request_count,
             request_options=request_options,
             last_statement=last_statement,
         )
@@ -477,38 +499,22 @@ class Transaction(_SnapshotBase, _BatchBase):
             timeout=timeout,
         )
 
-        if self._transaction_id is None:
-            # lock is added to handle the inline begin for first rpc
-            with self._lock:
-                response = self._execute_request(
-                    method,
-                    request,
-                    metadata,
-                    f"CloudSpanner.{type(self).__name__}.execute_update",
-                    self._session,
-                    trace_attributes,
-                    observability_options=observability_options,
-                )
-                # Setting the transaction id because the transaction begin was inlined for first rpc.
-                if (
-                    self._transaction_id is None
-                    and response is not None
-                    and response.metadata is not None
-                    and response.metadata.transaction is not None
-                ):
-                    self._transaction_id = response.metadata.transaction.id
-        else:
-            response = self._execute_request(
-                method,
-                request,
-                metadata,
-                f"CloudSpanner.{type(self).__name__}.execute_update",
-                self._session,
-                trace_attributes,
-                observability_options=observability_options,
-            )
+        result_set_pb: ResultSet = self._execute_request(
+            method,
+            request,
+            metadata,
+            f"CloudSpanner.{type(self).__name__}.execute_update",
+            self._session,
+            trace_attributes,
+            observability_options=observability_options,
+        )
 
-        return response.stats.row_count_exact
+        self._update_for_result_set_pb(result_set_pb)
+
+        if is_inline_begin:
+            self._lock.release()
+
+        return result_set_pb.stats.row_count_exact
 
     def batch_update(
         self,
@@ -588,9 +594,9 @@ class Transaction(_SnapshotBase, _BatchBase):
         api = database.spanner_api
         observability_options = getattr(database, "observability_options", None)
 
-        seqno, self._execute_sql_count = (
-            self._execute_sql_count,
-            self._execute_sql_count + 1,
+        execute_sql_request_count, self._execute_sql_request_count = (
+            self._execute_sql_request_count,
+            self._execute_sql_request_count + 1,
         )
 
         if request_options is None:
@@ -603,10 +609,21 @@ class Transaction(_SnapshotBase, _BatchBase):
             # Get just the queries from the DML statement batch
             "db.statement": ";".join([statement.sql for statement in parsed])
         }
+
+        # If this request begins the transaction, we need to lock
+        # the transaction until the transaction ID is updated.
+        is_inline_begin = False
+
+        if self._transaction_id is None:
+            is_inline_begin = True
+            self._lock.acquire()
+
+        transaction_selector_pb = self._make_txn_selector()
         request = ExecuteBatchDmlRequest(
             session=self._session.name,
+            transaction=transaction_selector_pb,
             statements=parsed,
-            seqno=seqno,
+            seqno=execute_sql_request_count,
             request_options=request_options,
             last_statements=last_statement,
         )
@@ -619,43 +636,41 @@ class Transaction(_SnapshotBase, _BatchBase):
             timeout=timeout,
         )
 
-        if self._transaction_id is None:
-            # lock is added to handle the inline begin for first rpc
-            with self._lock:
-                response = self._execute_request(
-                    method,
-                    request,
-                    metadata,
-                    "CloudSpanner.DMLTransaction",
-                    self._session,
-                    trace_attributes,
-                    observability_options=observability_options,
-                )
-                # Setting the transaction id because the transaction begin was inlined for first rpc.
-                for result_set in response.result_sets:
-                    if (
-                        self._transaction_id is None
-                        and result_set.metadata is not None
-                        and result_set.metadata.transaction is not None
-                    ):
-                        self._transaction_id = result_set.metadata.transaction.id
-                        break
-        else:
-            response = self._execute_request(
-                method,
-                request,
-                metadata,
-                "CloudSpanner.DMLTransaction",
-                self._session,
-                trace_attributes,
-                observability_options=observability_options,
-            )
+        response_pb: ExecuteBatchDmlResponse = self._execute_request(
+            method,
+            request,
+            metadata,
+            "CloudSpanner.DMLTransaction",
+            self._session,
+            trace_attributes,
+            observability_options=observability_options,
+        )
+
+        self._update_for_execute_batch_dml_response_pb(response_pb)
+
+        if is_inline_begin:
+            self._lock.release()
 
         row_counts = [
-            result_set.stats.row_count_exact for result_set in response.result_sets
+            result_set.stats.row_count_exact for result_set in response_pb.result_sets
         ]
 
-        return response.status, row_counts
+        return response_pb.status, row_counts
+
+    def _update_for_execute_batch_dml_response_pb(
+        self, response_pb: ExecuteBatchDmlResponse
+    ) -> None:
+        """Update the transaction for the given execute batch DML response.
+
+        :type response_pb: :class:`~google.cloud.spanner_v1.types.ExecuteBatchDmlResponse`
+        :param response_pb: The execute batch DML response to update the transaction with.
+        """
+        if response_pb.precommit_token:
+            self._update_for_precommit_token_pb(response_pb.precommit_token)
+
+        # Only the first result set contains the result set metadata.
+        if len(response_pb.result_sets) > 0:
+            self._update_for_result_set_pb(response_pb.result_sets[0])
 
     def __enter__(self):
         """Begin ``with`` block."""
