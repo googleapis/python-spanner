@@ -148,7 +148,8 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             value=value,
             resume_token=resume_token,
             metadata=metadata,
-            spec=["value", "resume_token", "metadata"],
+            precommit_token=None,
+            spec=["value", "resume_token", "metadata", "precommit_token"],
         )
 
     def test_iteration_w_empty_raw(self):
@@ -666,7 +667,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         session = _Session()
         base = self._make_one(session)
         self.assertIs(base._session, session)
-        self.assertEqual(base._execute_sql_count, 0)
+        self.assertEqual(base._execute_sql_request_count, 0)
 
         self.assertNoSpans()
 
@@ -953,7 +954,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             list(derived.execute_sql(SQL_QUERY))
 
-        self.assertEqual(derived._execute_sql_count, 1)
+        self.assertEqual(derived._execute_sql_request_count, 1)
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         self.assertSpanAttributes(
@@ -1027,7 +1028,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         derived = self._makeDerived(session)
         derived._multi_use = multi_use
         derived._read_request_count = count
-        derived._execute_sql_count = sql_count
+        derived._execute_sql_request_count = sql_count
         if not first:
             derived._transaction_id = TXN_ID
 
@@ -1120,7 +1121,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             retry=retry,
         )
 
-        self.assertEqual(derived._execute_sql_count, sql_count + 1)
+        self.assertEqual(derived._execute_sql_request_count, sql_count + 1)
 
         self.assertSpanAttributes(
             "CloudSpanner._Derived.execute_sql",

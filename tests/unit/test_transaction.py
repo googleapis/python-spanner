@@ -104,7 +104,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertIsNone(transaction.committed)
         self.assertFalse(transaction.rolled_back)
         self.assertTrue(transaction._multi_use)
-        self.assertEqual(transaction._execute_sql_count, 0)
+        self.assertEqual(transaction._execute_sql_request_count, 0)
 
     def test__check_state_already_committed(self):
         session = _Session()
@@ -349,7 +349,7 @@ class TestTransaction(OpenTelemetryBase):
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.Transaction.commit"]
-        assert got_span_names == want_span_names
+        self.assertEqual(got_span_names, want_span_names)
 
         got_span_events_statuses = self.finished_spans_events_statuses()
         want_span_events_statuses = [
@@ -363,7 +363,7 @@ class TestTransaction(OpenTelemetryBase):
                 },
             )
         ]
-        assert got_span_events_statuses == want_span_events_statuses
+        self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
     def test_commit_already_committed(self):
         database = _Database()
@@ -381,7 +381,7 @@ class TestTransaction(OpenTelemetryBase):
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.Transaction.commit"]
-        assert got_span_names == want_span_names
+        self.assertEqual(got_span_names, want_span_names)
 
         got_span_events_statuses = self.finished_spans_events_statuses()
         want_span_events_statuses = [
@@ -395,7 +395,7 @@ class TestTransaction(OpenTelemetryBase):
                 },
             )
         ]
-        assert got_span_events_statuses == want_span_events_statuses
+        self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
     def test_commit_already_rolled_back(self):
         database = _Database()
@@ -413,7 +413,7 @@ class TestTransaction(OpenTelemetryBase):
         span_list = self.get_finished_spans()
         got_span_names = [span.name for span in span_list]
         want_span_names = ["CloudSpanner.Transaction.commit"]
-        assert got_span_names == want_span_names
+        self.assertEqual(got_span_names, want_span_names)
 
         got_span_events_statuses = self.finished_spans_events_statuses()
         want_span_events_statuses = [
@@ -427,7 +427,7 @@ class TestTransaction(OpenTelemetryBase):
                 },
             )
         ]
-        assert got_span_events_statuses == want_span_events_statuses
+        self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
     def test_commit_w_other_error(self):
         database = _Database()
@@ -652,7 +652,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
         transaction.transaction_tag = self.TRANSACTION_TAG
-        transaction._execute_sql_count = count
+        transaction._execute_sql_request_count = count
 
         if request_options is None:
             request_options = RequestOptions()
@@ -710,7 +710,7 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
-        self.assertEqual(transaction._execute_sql_count, count + 1)
+        self.assertEqual(transaction._execute_sql_request_count, count + 1)
         want_span_attributes = dict(TestTransaction.BASE_ATTRIBUTES)
         want_span_attributes["db.statement"] = DML_QUERY_WITH_PARAM
         self.assertSpanAttributes(
@@ -773,7 +773,7 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
 
-        self.assertEqual(transaction._execute_sql_count, 1)
+        self.assertEqual(transaction._execute_sql_request_count, 1)
 
     def test_execute_update_w_query_options(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
@@ -853,7 +853,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction = self._make_one(session)
         transaction._transaction_id = self.TRANSACTION_ID
         transaction.transaction_tag = self.TRANSACTION_TAG
-        transaction._execute_sql_count = count
+        transaction._execute_sql_request_count = count
 
         if request_options is None:
             request_options = RequestOptions()
@@ -909,7 +909,7 @@ class TestTransaction(OpenTelemetryBase):
             timeout=timeout,
         )
 
-        self.assertEqual(transaction._execute_sql_count, count + 1)
+        self.assertEqual(transaction._execute_sql_request_count, count + 1)
 
     def test_batch_update_wo_errors(self):
         self._batch_update_helper(
@@ -978,7 +978,7 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(RuntimeError):
             transaction.batch_update(dml_statements)
 
-        self.assertEqual(transaction._execute_sql_count, 1)
+        self.assertEqual(transaction._execute_sql_request_count, 1)
 
     def test_batch_update_w_timeout_param(self):
         self._batch_update_helper(timeout=2.0)

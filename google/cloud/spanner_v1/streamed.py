@@ -50,7 +50,10 @@ class StreamedResultSet(object):
         self._stats = None  # Until set from last PRS
         self._current_row = []  # Accumulated values for incomplete row
         self._pending_chunk = None  # Incomplete value
+
+        # TODO multiplexed - remove
         self._source = source  # Source snapshot
+
         self._column_info = column_info  # Column information
         self._field_decoders = None
         self._lazy_decode = lazy_decode  # Return protobuf values
