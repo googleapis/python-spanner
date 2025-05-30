@@ -1253,7 +1253,7 @@ class Database(object):
         return opts
 
     @property
-    def sessions_manager(self):
+    def sessions_manager(self) -> DatabaseSessionsManager:
         """Returns the database sessions manager.
 
         :rtype: :class:`~google.cloud.spanner_v1.database_sessions_manager.DatabaseSessionsManager`
