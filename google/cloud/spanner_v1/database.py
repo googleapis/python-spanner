@@ -62,7 +62,7 @@ from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.session_options import SessionOptions
+from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
 from google.cloud.spanner_v1.snapshot import _restart_on_unavailable
 from google.cloud.spanner_v1.snapshot import Snapshot
@@ -202,7 +202,6 @@ class Database(object):
         self._pool = pool
         pool.bind(self)
 
-        self.session_options = SessionOptions()
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
     @classmethod
@@ -764,11 +763,9 @@ class Database(object):
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
             ) as span, MetricsCapture():
-                from google.cloud.spanner_v1.session_options import TransactionType
+                transaction_type = TransactionType.PARTITIONED
+                session = self._sessions_manager.get_session(transaction_type)
 
-                session = self._sessions_manager.get_session(
-                    TransactionType.PARTITIONED
-                )
                 try:
                     add_span_event(span, "Starting BeginTransaction")
                     txn = api.begin_transaction(
@@ -1296,8 +1293,10 @@ class BatchCheckout(object):
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         **kw,
     ):
-        self._database = database
-        self._session = self._batch = None
+        self._database: Database = database
+        self._session: Session = None
+        self._batch: Batch = None
+
         if request_options is None:
             self._request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -1311,16 +1310,19 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        from google.cloud.spanner_v1.session_options import TransactionType
+        transaction_type = TransactionType.READ_WRITE
+        self._session = self._database.sessions_manager.get_session(transaction_type)
 
-        current_span = get_current_span()
-        session = self._session = self._database.sessions_manager.get_session(
-            TransactionType.READ_WRITE
+        add_span_event(
+            span=get_current_span(),
+            event_name="Using session",
+            event_attributes={"id": self._session.session_id},
         )
-        add_span_event(current_span, "Using session", {"id": session.session_id})
-        batch = self._batch = Batch(session)
+
+        batch = self._batch = Batch(session=self._session)
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
+
         return batch
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -1364,17 +1366,15 @@ class MutationGroupsCheckout(object):
     """
 
     def __init__(self, database):
-        self._database = database
-        self._session = None
+        self._database: Database = database
+        self._session: Session = None
 
     def __enter__(self):
         """Begin ``with`` block."""
-        from google.cloud.spanner_v1.session_options import TransactionType
+        transaction_type = TransactionType.READ_WRITE
+        self._session = self._database.sessions_manager.get_session(transaction_type)
 
-        session = self._session = self._database.sessions_manager.get_session(
-            TransactionType.READ_WRITE
-        )
-        return MutationGroups(session)
+        return MutationGroups(session=self._session)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
@@ -1406,18 +1406,16 @@ class SnapshotCheckout(object):
     """
 
     def __init__(self, database, **kw):
-        self._database = database
-        self._session = None
-        self._kw = kw
+        self._database: Database = database
+        self._session: Session = None
+        self._kw: dict = kw
 
     def __enter__(self):
         """Begin ``with`` block."""
-        from google.cloud.spanner_v1.session_options import TransactionType
+        transaction_type = TransactionType.READ_ONLY
+        self._session = self._database.sessions_manager.get_session(transaction_type)
 
-        session = self._session = self._database.sessions_manager.get_session(
-            TransactionType.READ_ONLY
-        )
-        return Snapshot(session, **self._kw)
+        return Snapshot(session=self._session, **self._kw)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
@@ -1507,14 +1505,15 @@ class BatchSnapshot(object):
            all partitions have been processed.
         """
         if self._session is None:
-            from google.cloud.spanner_v1.session_options import TransactionType
-
             # Use sessions manager for partition operations
-            session = self._session = self._database.sessions_manager.get_session(
-                TransactionType.PARTITIONED
+            transaction_type = TransactionType.PARTITIONED
+            self._session = self._database.sessions_manager.get_session(
+                transaction_type
             )
+
             if self._session_id is not None:
-                session._session_id = self._session_id
+                self._session._session_id = self._session_id
+
         return self._session
 
     def _get_snapshot(self):

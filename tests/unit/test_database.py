@@ -35,6 +35,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.session_options import SessionOptions
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -3517,6 +3518,7 @@ class _Client(object):
         self.observability_options = observability_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
+        self._session_options = SessionOptions()
 
     @property
     def _next_nth_request(self):

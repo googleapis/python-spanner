@@ -69,7 +69,7 @@ class DatabaseSessionsManager(object):
         :returns: a session for the given transaction type.
         """
 
-        session_options = self._database.session_options
+        session_options = self._database._instance._client._session_options
         use_multiplexed = session_options.use_multiplexed(transaction_type)
 
         # TODO multiplexed: enable for read/write transactions
@@ -153,7 +153,9 @@ class DatabaseSessionsManager(object):
 
         self._multiplexed_session = None
         self._multiplexed_session_disabled_event.set()
-        self._database.session_options.disable_multiplexed(self._database.logger)
+
+        session_options = self._database._instance._client._session_options
+        session_options.disable_multiplexed(self._database.logger)
 
     def _build_maintenance_thread(self) -> Thread:
         """Builds and returns a multiplexed session maintenance thread for
