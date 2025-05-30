@@ -14,7 +14,6 @@
 
 """Spanner read-write transaction support."""
 import functools
-import threading
 from google.protobuf.struct_pb2 import Struct
 from typing import Optional
 
@@ -27,7 +26,12 @@ from google.cloud.spanner_v1._helpers import (
     _check_rst_stream_error,
     _merge_Transaction_Options,
 )
-from google.cloud.spanner_v1 import CommitRequest
+from google.cloud.spanner_v1 import (
+    CommitRequest,
+    CommitResponse,
+    ResultSet,
+    ExecuteBatchDmlResponse,
+)
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import TransactionSelector
@@ -57,19 +61,21 @@ class Transaction(_SnapshotBase, _BatchBase):
     """Timestamp at which the transaction was successfully committed."""
     rolled_back = False
     commit_stats = None
-    _multi_use = True
-    _execute_sql_count = 0
-    _lock = threading.Lock()
-    _read_only = False
     exclude_txn_from_change_streams = False
     isolation_level = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
 
+    # Override defaults from _SnapshotBase.
+    _multi_use: bool = True
+    _read_only: bool = False
+
     def __init__(self, session):
+        # TODO multiplexed - remove
         if session._transaction is not None:
             raise ValueError("Session has existing transaction.")
 
         super(Transaction, self).__init__(session)
 
+    # TODO multiplexed - remove
     def _check_state(self):
         """Helper for :meth:`commit` et al.
 
@@ -83,6 +89,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self.rolled_back:
             raise ValueError("Transaction is already rolled back")
 
+    # TODO multiplexed - refactor to base class
     def _make_txn_selector(self):
         """Helper for :meth:`read`.
 
@@ -113,9 +120,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         request,
         metadata,
         trace_name=None,
-        session=None,
         attributes=None,
-        observability_options=None,
     ):
         """Helper method to execute request after fetching transaction selector.
 
@@ -125,13 +130,18 @@ class Transaction(_SnapshotBase, _BatchBase):
         :type request: proto
         :param request: request proto to call the method with
         """
+
+        session = self._session
         transaction = self._make_txn_selector()
         request.transaction = transaction
+
         with trace_call(
             trace_name,
             session,
             attributes,
-            observability_options=observability_options,
+            observability_options=getattr(
+                session._database, "observability_options", None
+            ),
             metadata=metadata,
         ), MetricsCapture():
             method = functools.partial(method, request=request)
@@ -142,6 +152,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return response
 
+    # TODO multiplexed - move to base class
     def begin(self):
         """Begin a transaction on the database.
 
@@ -214,13 +225,17 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._transaction_id = response.id
         return self._transaction_id
 
-    def rollback(self):
+    def rollback(self) -> None:
         """Roll back a transaction on the database."""
+
+        # TODO multiplexed - cleanup
         self._check_state()
 
         if self._transaction_id is not None:
-            database = self._session._database
+            session = self._session
+            database = session._database
             api = database.spanner_api
+
             metadata = _metadata_with_prefix(database.name)
             if database._route_to_leader_enabled:
                 metadata.append(
@@ -232,7 +247,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             observability_options = getattr(database, "observability_options", None)
             with trace_call(
                 f"CloudSpanner.{type(self).__name__}.rollback",
-                self._session,
+                session,
                 observability_options=observability_options,
                 metadata=metadata,
             ) as span, MetricsCapture():
@@ -241,7 +256,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
                 def wrapped_method(*args, **kwargs):
                     attempt.increment()
-                    method = functools.partial(
+                    rollback_method = functools.partial(
                         api.rollback,
                         session=self._session.name,
                         transaction_id=self._transaction_id,
@@ -252,7 +267,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                             span,
                         ),
                     )
-                    return method(*args, **kwargs)
+                    return rollback_method(*args, **kwargs)
 
                 _retry(
                     wrapped_method,
@@ -260,6 +275,8 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
 
         self.rolled_back = True
+
+        # TODO multiplexed - remove
         del self._session._transaction
 
     def commit(
@@ -288,27 +305,35 @@ class Transaction(_SnapshotBase, _BatchBase):
         :returns: timestamp of the committed changes.
         :raises ValueError: if there are no mutations to commit.
         """
-        database = self._session._database
-        trace_attributes = {"num_mutations": len(self._mutations)}
-        observability_options = getattr(database, "observability_options", None)
+
+        mutations = self._mutations
+        num_mutations = len(mutations)
+
+        session = self._session
+        database = session._database
         api = database.spanner_api
+
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
+
         with trace_call(
-            f"CloudSpanner.{type(self).__name__}.commit",
-            self._session,
-            trace_attributes,
-            observability_options,
+            name=f"CloudSpanner.{type(self).__name__}.commit",
+            session=session,
+            extra_attributes={"num_mutations": num_mutations},
+            observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
         ) as span, MetricsCapture():
+            # TODO multiplexed - cleanup
             self._check_state()
-            if self._transaction_id is None and len(self._mutations) > 0:
-                self.begin()
-            elif self._transaction_id is None and len(self._mutations) == 0:
+            if self._transaction_id is None and len(self._mutations) == 0:
                 raise ValueError("Transaction is not begun")
+
+            # TODO multiplexed - begin transaction
+            if self._transaction_id is None and num_mutations > 0:
+                self.begin()
 
             if request_options is None:
                 request_options = RequestOptions()
@@ -320,9 +345,9 @@ class Transaction(_SnapshotBase, _BatchBase):
             # Request tags are not supported for commit requests.
             request_options.request_tag = None
 
-            request = CommitRequest(
-                session=self._session.name,
-                mutations=self._mutations,
+            commit_request = CommitRequest(
+                session=session.name,
+                mutations=mutations,
                 transaction_id=self._transaction_id,
                 return_commit_stats=return_commit_stats,
                 max_commit_delay=max_commit_delay,
@@ -336,9 +361,9 @@ class Transaction(_SnapshotBase, _BatchBase):
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()
-                method = functools.partial(
+                commit_method = functools.partial(
                     api.commit,
-                    request=request,
+                    request=commit_request,
                     metadata=database.metadata_with_request_id(
                         nth_request,
                         attempt.value,
@@ -346,7 +371,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                         span,
                     ),
                 )
-                return method(*args, **kwargs)
+                return commit_method(*args, **kwargs)
 
             def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
@@ -355,18 +380,23 @@ class Transaction(_SnapshotBase, _BatchBase):
                     {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
                 )
 
-            response = _retry(
+            response_pb: CommitResponse = _retry(
                 wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
                 before_next_retry=before_next_retry,
             )
 
+            # TODO multiplexed - retry commit if precommit token.
+
             add_span_event(span, "Commit Done")
 
-        self.committed = response.commit_timestamp
+        self.committed = response_pb.commit_timestamp
         if return_commit_stats:
-            self.commit_stats = response.commit_stats
+            self.commit_stats = response_pb.commit_stats
+
+        # TODO multiplexed - remove
         del self._session._transaction
+
         return self.committed
 
     @staticmethod
@@ -463,27 +493,28 @@ class Transaction(_SnapshotBase, _BatchBase):
         :rtype: int
         :returns: Count of rows affected by the DML statement.
         """
+
+        session = self._session
+        database = session._database
+        api = database.spanner_api
+
         params_pb = self._make_params_pb(params, param_types)
-        database = self._session._database
+
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        api = database.spanner_api
 
-        seqno, self._execute_sql_count = (
-            self._execute_sql_count,
-            self._execute_sql_count + 1,
+        seqno, self._execute_sql_request_count = (
+            self._execute_sql_request_count,
+            self._execute_sql_request_count + 1,
         )
 
         # Query-level options have higher precedence than client-level and
         # environment-level options
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
-        observability_options = getattr(
-            database._instance._client, "observability_options", None
-        )
 
         if request_options is None:
             request_options = RequestOptions()
@@ -493,8 +524,17 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         trace_attributes = {"db.statement": dml}
 
-        request = ExecuteSqlRequest(
-            session=self._session.name,
+        # If this request begins the transaction, we need to lock
+        # the transaction until the transaction ID is updated.
+        is_inline_begin = False
+
+        if self._transaction_id is None:
+            is_inline_begin = True
+            self._lock.acquire()
+
+        execute_sql_request = ExecuteSqlRequest(
+            session=session.name,
+            transaction=self._make_txn_selector(),
             sql=dml,
             params=params_pb,
             param_types=param_types,
@@ -510,49 +550,31 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         def wrapped_method(*args, **kwargs):
             attempt.increment()
-            method = functools.partial(
+            execute_sql_method = functools.partial(
                 api.execute_sql,
-                request=request,
+                request=execute_sql_request,
                 metadata=database.metadata_with_request_id(
                     nth_request, attempt.value, metadata
                 ),
                 retry=retry,
                 timeout=timeout,
             )
-            return method(*args, **kwargs)
+            return execute_sql_method(*args, **kwargs)
 
-        if self._transaction_id is None:
-            # lock is added to handle the inline begin for first rpc
-            with self._lock:
-                response = self._execute_request(
-                    wrapped_method,
-                    request,
-                    metadata,
-                    f"CloudSpanner.{type(self).__name__}.execute_update",
-                    self._session,
-                    trace_attributes,
-                    observability_options=observability_options,
-                )
-                # Setting the transaction id because the transaction begin was inlined for first rpc.
-                if (
-                    self._transaction_id is None
-                    and response is not None
-                    and response.metadata is not None
-                    and response.metadata.transaction is not None
-                ):
-                    self._transaction_id = response.metadata.transaction.id
-        else:
-            response = self._execute_request(
-                wrapped_method,
-                request,
-                metadata,
-                f"CloudSpanner.{type(self).__name__}.execute_update",
-                self._session,
-                trace_attributes,
-                observability_options=observability_options,
-            )
+        result_set_pb: ResultSet = self._execute_request(
+            wrapped_method,
+            execute_sql_request,
+            metadata,
+            f"CloudSpanner.{type(self).__name__}.execute_update",
+            trace_attributes,
+        )
 
-        return response.stats.row_count_exact
+        self._update_for_result_set_pb(result_set_pb)
+
+        if is_inline_begin:
+            self._lock.release()
+
+        return result_set_pb.stats.row_count_exact
 
     def batch_update(
         self,
@@ -610,6 +632,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             statement triggering the error will not have an entry in the
             list, nor will any statements following that one.
         """
+
+        session = self._session
+        database = session._database
+        api = database.spanner_api
+
         parsed = []
         for statement in statements:
             if isinstance(statement, str):
@@ -623,18 +650,15 @@ class Transaction(_SnapshotBase, _BatchBase):
                     )
                 )
 
-        database = self._session._database
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
-        api = database.spanner_api
-        observability_options = getattr(database, "observability_options", None)
 
-        seqno, self._execute_sql_count = (
-            self._execute_sql_count,
-            self._execute_sql_count + 1,
+        seqno, self._execute_sql_request_count = (
+            self._execute_sql_request_count,
+            self._execute_sql_request_count + 1,
         )
 
         if request_options is None:
@@ -647,8 +671,18 @@ class Transaction(_SnapshotBase, _BatchBase):
             # Get just the queries from the DML statement batch
             "db.statement": ";".join([statement.sql for statement in parsed])
         }
-        request = ExecuteBatchDmlRequest(
-            session=self._session.name,
+
+        # If this request begins the transaction, we need to lock
+        # the transaction until the transaction ID is updated.
+        is_inline_begin = False
+
+        if self._transaction_id is None:
+            is_inline_begin = True
+            self._lock.acquire()
+
+        execute_batch_dml_request = ExecuteBatchDmlRequest(
+            session=session.name,
+            transaction=self._make_txn_selector(),
             statements=parsed,
             seqno=seqno,
             request_options=request_options,
@@ -660,54 +694,50 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         def wrapped_method(*args, **kwargs):
             attempt.increment()
-            method = functools.partial(
+            execute_batch_dml_method = functools.partial(
                 api.execute_batch_dml,
-                request=request,
+                request=execute_batch_dml_request,
                 metadata=database.metadata_with_request_id(
                     nth_request, attempt.value, metadata
                 ),
                 retry=retry,
                 timeout=timeout,
             )
-            return method(*args, **kwargs)
+            return execute_batch_dml_method(*args, **kwargs)
 
-        if self._transaction_id is None:
-            # lock is added to handle the inline begin for first rpc
-            with self._lock:
-                response = self._execute_request(
-                    wrapped_method,
-                    request,
-                    metadata,
-                    "CloudSpanner.DMLTransaction",
-                    self._session,
-                    trace_attributes,
-                    observability_options=observability_options,
-                )
-                # Setting the transaction id because the transaction begin was inlined for first rpc.
-                for result_set in response.result_sets:
-                    if (
-                        self._transaction_id is None
-                        and result_set.metadata is not None
-                        and result_set.metadata.transaction is not None
-                    ):
-                        self._transaction_id = result_set.metadata.transaction.id
-                        break
-        else:
-            response = self._execute_request(
-                wrapped_method,
-                request,
-                metadata,
-                "CloudSpanner.DMLTransaction",
-                self._session,
-                trace_attributes,
-                observability_options=observability_options,
-            )
+        response_pb: ExecuteBatchDmlResponse = self._execute_request(
+            wrapped_method,
+            execute_batch_dml_request,
+            metadata,
+            "CloudSpanner.DMLTransaction",
+            trace_attributes,
+        )
+
+        self._update_for_execute_batch_dml_response_pb(response_pb)
+
+        if is_inline_begin:
+            self._lock.release()
 
         row_counts = [
-            result_set.stats.row_count_exact for result_set in response.result_sets
+            result_set.stats.row_count_exact for result_set in response_pb.result_sets
         ]
 
-        return response.status, row_counts
+        return response_pb.status, row_counts
+
+    def _update_for_execute_batch_dml_response_pb(
+        self, response_pb: ExecuteBatchDmlResponse
+    ) -> None:
+        """Update the transaction for the given execute batch DML response.
+
+        :type response_pb: :class:`~google.cloud.spanner_v1.types.ExecuteBatchDmlResponse`
+        :param response_pb: The execute batch DML response to update the transaction with.
+        """
+        if response_pb.precommit_token:
+            self._update_for_precommit_token_pb(response_pb.precommit_token)
+
+        # Only the first result set contains the result set metadata.
+        if len(response_pb.result_sets) > 0:
+            self._update_for_result_set_pb(response_pb.result_sets[0])
 
     def __enter__(self):
         """Begin ``with`` block."""
