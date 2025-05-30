@@ -137,6 +137,9 @@ class AbstractSessionPool(object):
     def session(self, **kwargs):
         """Check out a session from the pool.
 
+        Deprecated. Sessions should be checked out using context
+        managers, rather than directly from the pool.
+
         :param kwargs: (optional) keyword arguments, passed through to
                        the returned checkout.
 
@@ -792,6 +795,9 @@ class TransactionPingingPool(PingingPool):
 class SessionCheckout(object):
     """Context manager: hold session checked out from a pool.
 
+    Deprecated. Sessions should be checked out using context
+    managers, rather than directly from the pool.
+
     :type pool: concrete subclass of
         :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
     :param pool: Pool from which to check out a session.
@@ -799,7 +805,7 @@ class SessionCheckout(object):
     :param kwargs: extra keyword arguments to be passed to :meth:`pool.get`.
     """
 
-    _session = None  # Not checked out until '__enter__'.
+    _session = None
 
     def __init__(self, pool, **kwargs):
         self._pool = pool

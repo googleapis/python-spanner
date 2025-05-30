@@ -60,7 +60,6 @@ from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.pool import SessionCheckout
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
@@ -999,15 +998,20 @@ class Database(object):
             # is running.
             if getattr(self._local, "transaction_running", False):
                 raise RuntimeError("Spanner does not support nested transactions.")
+
             self._local.transaction_running = True
 
             # Check out a session and run the function in a transaction; once
-            # done, flip the sanity check bit back.
+            # done, flip the sanity check bit back and return the session.
+            transaction_type = TransactionType.READ_WRITE
+            session = self._sessions_manager.get_session(transaction_type)
+
             try:
-                with SessionCheckout(self._pool) as session:
-                    return session.run_in_transaction(func, *args, **kw)
+                return session.run_in_transaction(func, *args, **kw)
+
             finally:
                 self._local.transaction_running = False
+                self._sessions_manager.put_session(session)
 
     def restore(self, source):
         """Restore from a backup to this database.
