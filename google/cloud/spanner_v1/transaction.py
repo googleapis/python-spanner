@@ -199,17 +199,17 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
                 return method(*args, **kwargs)
 
-            def beforeNextRetry(nthRetry, delayInSeconds):
+            def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
                     span,
                     "Transaction Begin Attempt Failed. Retrying",
-                    {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
                 )
 
             response = _retry(
                 wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
-                beforeNextRetry=beforeNextRetry,
+                before_next_retry=before_next_retry,
             )
         self._transaction_id = response.id
         return self._transaction_id
@@ -348,17 +348,17 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
                 return method(*args, **kwargs)
 
-            def beforeNextRetry(nthRetry, delayInSeconds):
+            def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
                     span,
                     "Transaction Commit Attempt Failed. Retrying",
-                    {"attempt": nthRetry, "sleep_seconds": delayInSeconds},
+                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
                 )
 
             response = _retry(
                 wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
-                beforeNextRetry=beforeNextRetry,
+                before_next_retry=before_next_retry,
             )
 
             add_span_event(span, "Commit Done")
