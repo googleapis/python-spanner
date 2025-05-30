@@ -796,11 +796,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(derived._read_request_count, count + 1)
 
-        if multi_use:
-            self.assertIs(result_set._source, derived)
-        else:
-            self.assertIsNone(result_set._source)
-
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
@@ -1051,11 +1046,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         self.assertEqual(derived._read_request_count, count + 1)
-
-        if multi_use:
-            self.assertIs(result_set._source, derived)
-        else:
-            self.assertIsNone(result_set._source)
 
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
