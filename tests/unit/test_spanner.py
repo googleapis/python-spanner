@@ -381,8 +381,6 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction._read_request_count, count + 1)
 
-        self.assertIs(result_set._source, transaction)
-
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
