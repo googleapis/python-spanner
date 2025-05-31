@@ -1481,11 +1481,15 @@ class BatchSnapshot(object):
 
         :rtype: :class:`BatchSnapshot`
         """
+
         instance = cls(database)
-        session = instance._session = database.session()
-        session._session_id = mapping["session_id"]
+
+        session = instance._session = Session(database=database)
+        instance._session_id = session._session_id = mapping["session_id"]
+
         snapshot = instance._snapshot = session.snapshot()
-        snapshot._transaction_id = mapping["transaction_id"]
+        instance._transaction_id = snapshot._transaction_id = mapping["transaction_id"]
+
         return instance
 
     def to_dict(self):
@@ -1516,19 +1520,28 @@ class BatchSnapshot(object):
            all partitions have been processed.
         """
         if self._session is None:
-            # Use sessions manager for partition operations
-            transaction_type = TransactionType.PARTITIONED
-            self._session = self._database.sessions_manager.get_session(
-                transaction_type
-            )
+            database = self._database
 
-            if self._session_id is not None:
-                self._session._session_id = self._session_id
+            # If the session ID is not specified, check out a new session for
+            # partitioned transactions from  the database session manager; otherwise,
+            # the session has already been checked out, so just create a session to
+            # represent it.
+            if self._session_id is None:
+                transaction_type = TransactionType.PARTITIONED
+                session = database.sessions_manager.get_session(transaction_type)
+                self._session_id = session.session_id
+
+            else:
+                session = Session(database=database)
+                session._session_id = self._session_id
+
+            self._session = session
 
         return self._session
 
     def _get_snapshot(self):
         """Create snapshot if needed."""
+
         if self._snapshot is None:
             self._snapshot = self._get_session().snapshot(
                 read_timestamp=self._read_timestamp,
@@ -1536,8 +1549,10 @@ class BatchSnapshot(object):
                 multi_use=True,
                 transaction_id=self._transaction_id,
             )
+
             if self._transaction_id is None:
                 self._snapshot.begin()
+
         return self._snapshot
 
     def get_batch_transaction_id(self):

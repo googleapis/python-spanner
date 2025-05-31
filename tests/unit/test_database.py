@@ -35,7 +35,9 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from google.cloud.spanner_v1.session_options import SessionOptions
+from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
+from tests._builders import build_spanner_api
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -1509,8 +1511,6 @@ class TestDatabase(_BaseTest):
         )
 
     def test_session_factory_defaults(self):
-        from google.cloud.spanner_v1.session import Session
-
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
@@ -1524,8 +1524,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, {})
 
     def test_session_factory_w_labels(self):
-        from google.cloud.spanner_v1.session import Session
-
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
@@ -2475,8 +2473,6 @@ class TestBatchSnapshot(_BaseTest):
 
     @staticmethod
     def _make_session(**kwargs):
-        from google.cloud.spanner_v1.session import Session
-
         return mock.create_autospec(Session, instance=True, **kwargs)
 
     @staticmethod
@@ -2533,20 +2529,22 @@ class TestBatchSnapshot(_BaseTest):
     def test_from_dict(self):
         klass = self._get_target_class()
         database = self._make_database()
-        session = database.session.return_value = self._make_session()
-        snapshot = session.snapshot.return_value = self._make_snapshot()
-        api_repr = {
-            "session_id": self.SESSION_ID,
-            "transaction_id": self.TRANSACTION_ID,
-        }
+        api = database.spanner_api = build_spanner_api()
 
-        batch_txn = klass.from_dict(database, api_repr)
+        batch_txn = klass.from_dict(
+            database,
+            {
+                "session_id": self.SESSION_ID,
+                "transaction_id": self.TRANSACTION_ID,
+            },
+        )
+
         self.assertIs(batch_txn._database, database)
-        self.assertIs(batch_txn._session, session)
-        self.assertEqual(session._session_id, self.SESSION_ID)
-        self.assertEqual(snapshot._transaction_id, self.TRANSACTION_ID)
-        snapshot.begin.assert_not_called()
-        self.assertIs(batch_txn._snapshot, snapshot)
+        self.assertEqual(batch_txn._session._session_id, self.SESSION_ID)
+        self.assertEqual(batch_txn._snapshot._transaction_id, self.TRANSACTION_ID)
+
+        api.create_session.assert_not_called()
+        api.begin_transaction.assert_not_called()
 
     def test_to_dict(self):
         database = self._make_database()
@@ -2574,8 +2572,6 @@ class TestBatchSnapshot(_BaseTest):
         batch_txn = self._make_one(database)
         self.assertIs(batch_txn._get_session(), session)
         # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
-        from google.cloud.spanner_v1.session_options import TransactionType
-
         database.sessions_manager.get_session.assert_called_once_with(
             TransactionType.PARTITIONED
         )
