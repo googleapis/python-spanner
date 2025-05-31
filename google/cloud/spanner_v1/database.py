@@ -796,8 +796,9 @@ class Database(object):
 
                     iterator = _restart_on_unavailable(
                         method=method,
-                        trace_name="CloudSpanner.ExecuteStreamingSql",
                         request=request,
+                        trace_name="CloudSpanner.ExecuteStreamingSql",
+                        session=session,
                         metadata=metadata,
                         transaction_selector=txn_selector,
                         observability_options=self.observability_options,
@@ -827,6 +828,9 @@ class Database(object):
 
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
+
+        Deprecated. Sessions should be checked out using context
+        managers, rather than retrieved directly from the database.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.
@@ -1314,7 +1318,10 @@ class BatchCheckout(object):
 
     def __enter__(self):
         """Begin ``with`` block."""
-        transaction_type = TransactionType.READ_WRITE
+
+        # Batch transactions are performed as blind writes,
+        # which are treated as read-only transactions.
+        transaction_type = TransactionType.READ_ONLY
         self._session = self._database.sessions_manager.get_session(transaction_type)
 
         add_span_event(
