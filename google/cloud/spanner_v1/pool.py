@@ -20,7 +20,8 @@ import time
 
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
-from google.cloud.spanner_v1 import Session
+from google.cloud.spanner_v1 import Session as SessionProto
+from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
@@ -130,9 +131,9 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: new session instance.
         """
-        return self._database.session(
-            labels=self.labels, database_role=self.database_role
-        )
+
+        role = self.database_role or self._database.database_role
+        return Session(database=self._database, labels=self.labels, database_role=role)
 
     def session(self, **kwargs):
         """Check out a session from the pool.
@@ -240,7 +241,7 @@ class FixedSizePool(AbstractSessionPool):
         request = BatchCreateSessionsRequest(
             database=database.name,
             session_count=requested_session_count,
-            session_template=Session(creator_role=self.database_role),
+            session_template=SessionProto(creator_role=self.database_role),
         )
 
         observability_options = getattr(self._database, "observability_options", None)
@@ -322,7 +323,7 @@ class FixedSizePool(AbstractSessionPool):
                         "Session is not valid, recreating it",
                         span_event_attributes,
                     )
-                session = self._database.session()
+                session = self._new_session()
                 session.create()
                 # Replacing with the updated session.id.
                 span_event_attributes["session.id"] = session._session_id
@@ -540,7 +541,7 @@ class PingingPool(AbstractSessionPool):
         request = BatchCreateSessionsRequest(
             database=database.name,
             session_count=self.size,
-            session_template=Session(creator_role=self.database_role),
+            session_template=SessionProto(creator_role=self.database_role),
         )
 
         span_event_attributes = {"kind": type(self).__name__}
