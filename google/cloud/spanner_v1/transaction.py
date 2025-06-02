@@ -259,7 +259,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                     attempt.increment()
                     rollback_method = functools.partial(
                         api.rollback,
-                        session=self._session.name,
+                        session=session.name,
                         transaction_id=self._transaction_id,
                         metadata=database.metadata_with_request_id(
                             nth_request,
@@ -278,7 +278,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.rolled_back = True
 
         # TODO multiplexed - remove
-        del self._session._transaction
+        self._session._transaction = None
 
     def commit(
         self, return_commit_stats=False, request_options=None, max_commit_delay=None
@@ -396,7 +396,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             self.commit_stats = response_pb.commit_stats
 
         # TODO multiplexed - remove
-        del self._session._transaction
+        self._session._transaction = None
 
         return self.committed
 

@@ -16,7 +16,7 @@
 
 import functools
 import threading
-from typing import List, Union
+from typing import List, Union, Optional
 
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
@@ -225,12 +225,12 @@ class _SnapshotBase(_SessionWrapper):
         self._read_request_count: int = 0
 
         # Identifier for the transaction.
-        self._transaction_id: bytes = None
+        self._transaction_id: Optional[bytes] = None
 
         # Precommit tokens are returned for transactions with
         # multiplexed sessions. The precommit token with the
         # highest sequence number is included in the  commit request.
-        self._precommit_token: MultiplexedSessionPrecommitToken = None
+        self._precommit_token: Optional[MultiplexedSessionPrecommitToken] = None
 
         # Operations within a transaction can be performed using multiple
         # threads, so we need to use a lock when updating the transaction.
