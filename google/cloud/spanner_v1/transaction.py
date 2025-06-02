@@ -57,12 +57,10 @@ class Transaction(_SnapshotBase, _BatchBase):
     :raises ValueError: if session has an existing transaction
     """
 
-    committed = None
-    """Timestamp at which the transaction was successfully committed."""
-    rolled_back = False
-    commit_stats = None
-    exclude_txn_from_change_streams = False
-    isolation_level = TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
+    exclude_txn_from_change_streams: bool = False
+    isolation_level: TransactionOptions.IsolationLevel = (
+        TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED
+    )
 
     # Override defaults from _SnapshotBase.
     _multi_use: bool = True
@@ -74,6 +72,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             raise ValueError("Session has existing transaction.")
 
         super(Transaction, self).__init__(session)
+        self.rolled_back: bool = False
 
     # TODO multiplexed - remove
     def _check_state(self):
@@ -97,6 +96,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             :class:`~.transaction_pb2.TransactionSelector`
         :returns: a selector configured for read-write transaction semantics.
         """
+
+        # TODO multiplexed - remove
         self._check_state()
 
         if self._transaction_id is None:

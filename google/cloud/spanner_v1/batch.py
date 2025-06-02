@@ -14,8 +14,10 @@
 
 """Context manager for Cloud Spanner batched writes."""
 import functools
+from datetime import datetime
+from typing import List
 
-from google.cloud.spanner_v1 import CommitRequest
+from google.cloud.spanner_v1 import CommitRequest, CommitResponse
 from google.cloud.spanner_v1 import Mutation
 from google.cloud.spanner_v1 import TransactionOptions
 from google.cloud.spanner_v1 import BatchWriteRequest
@@ -47,13 +49,17 @@ class _BatchBase(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    transaction_tag = None
-    _read_only = False
-
     def __init__(self, session):
         super(_BatchBase, self).__init__(session)
-        self._mutations = []
 
+        self._mutations: List[Mutation] = []
+        self.transaction_tag: str = None
+
+        self.committed: datetime = None
+        """Timestamp at which the batch was successfully committed."""
+        self.commit_stats: CommitResponse.CommitStats = None
+
+    # TODO multiplexed - cleanup
     def _check_state(self):
         """Helper for :meth:`commit` et al.
 
@@ -148,10 +154,7 @@ class _BatchBase(_SessionWrapper):
 class Batch(_BatchBase):
     """Accumulate mutations for transmission during :meth:`commit`."""
 
-    committed = None
-    commit_stats = None
-    """Timestamp at which the batch was successfully committed."""
-
+    # TODO multiplexed - cleanup
     def _check_state(self):
         """Helper for :meth:`commit` et al.
 
@@ -163,6 +166,7 @@ class Batch(_BatchBase):
         if self.committed is not None:
             raise ValueError("Batch already committed")
 
+    # TODO multiplexed - cleanup kwargs
     def commit(
         self,
         return_commit_stats=False,
@@ -205,7 +209,10 @@ class Batch(_BatchBase):
         :rtype: datetime
         :returns: timestamp of the committed changes.
         """
+
+        # TODO multiplexed - cleanup
         self._check_state()
+
         database = self._session._database
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
@@ -282,6 +289,8 @@ class Batch(_BatchBase):
 
     def __enter__(self):
         """Begin ``with`` block."""
+
+        # TODO multiplexed - cleanup
         self._check_state()
 
         return self
@@ -317,11 +326,10 @@ class MutationGroups(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    committed = None
-
     def __init__(self, session):
         super(MutationGroups, self).__init__(session)
-        self._mutation_groups = []
+        self._mutation_groups: List[MutationGroup] = []
+        self.committed: bool = False
 
     def _check_state(self):
         """Checks if the object's state is valid for making API requests.
@@ -329,7 +337,7 @@ class MutationGroups(_SessionWrapper):
         :raises: :exc:`ValueError` if the object's state is invalid for making
                  API requests.
         """
-        if self.committed is not None:
+        if self.committed:
             raise ValueError("MutationGroups already committed")
 
     def group(self):
@@ -358,10 +366,14 @@ class MutationGroups(_SessionWrapper):
         :rtype: :class:`Iterable[google.cloud.spanner_v1.types.BatchWriteResponse]`
         :returns: a sequence of responses for each batch.
         """
+
+        # TODO multiplexed - cleanup
         self._check_state()
 
-        database = self._session._database
+        session = self._session
+        database = session._database
         api = database.spanner_api
+
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
             metadata.append(
@@ -374,7 +386,7 @@ class MutationGroups(_SessionWrapper):
             request_options = RequestOptions(request_options)
 
         request = BatchWriteRequest(
-            session=self._session.name,
+            session=session.name,
             mutation_groups=self._mutation_groups,
             request_options=request_options,
             exclude_txn_from_change_streams=exclude_txn_from_change_streams,
@@ -409,6 +421,7 @@ class MutationGroups(_SessionWrapper):
                     InternalServerError: _check_rst_stream_error,
                 },
             )
+
         self.committed = True
         return response
 
