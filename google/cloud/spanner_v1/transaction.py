@@ -249,7 +249,6 @@ class Transaction(_SnapshotBase, _BatchBase):
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
         ) as span, MetricsCapture():
-
             if self.committed is not None:
                 raise ValueError("Transaction already committed.")
             if self.rolled_back:
