@@ -16,7 +16,11 @@
 from google.api_core import gapic_v1
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions, DirectedReadOptions
+from google.cloud.spanner_v1 import (
+    RequestOptions,
+    DirectedReadOptions,
+    BeginTransactionRequest,
+)
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
@@ -1885,8 +1889,11 @@ class TestSnapshot(OpenTelemetryBase):
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         api.begin_transaction.assert_called_once_with(
-            session=session.name,
-            options=expected_txn_options,
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=expected_txn_options,
+                mutation_key=None,
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 (
@@ -1928,8 +1935,10 @@ class TestSnapshot(OpenTelemetryBase):
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         api.begin_transaction.assert_called_once_with(
-            session=session.name,
-            options=expected_txn_options,
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=expected_txn_options,
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 (

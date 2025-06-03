@@ -221,12 +221,12 @@ class TestConnection(unittest.TestCase):
         self.assertIsNone(connection.transaction_checkout())
 
     def test_snapshot_checkout(self):
-        connection = Connection(INSTANCE, DATABASE, read_only=True)
+        connection = build_connection(read_only=True)
         connection.autocommit = False
 
-        session_checkout = mock.MagicMock(autospec=True)
+        session_checkout = mock.Mock(wraps=connection._session_checkout)
+        release_session = mock.Mock(wraps=connection._release_session)
         connection._session_checkout = session_checkout
-        release_session = mock.MagicMock()
         connection._release_session = release_session
 
         snapshot = connection.snapshot_checkout()

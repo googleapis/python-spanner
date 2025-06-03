@@ -21,6 +21,7 @@ from google.cloud.spanner_v1.client import Client
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.types import Session as SessionPB
 
 # Default values used to populate required or expected attributes.
 # Tests should not depend on them: if a test requires a specific
@@ -28,6 +29,12 @@ from google.cloud.spanner_v1.session import Session
 _PROJECT_ID = "default-project-id"
 _INSTANCE_ID = "default-instance-id"
 _DATABASE_ID = "default-database-id"
+_SESSION_ID = "default-session-id"
+
+_PROJECT_NAME = "projects/" + _PROJECT_ID
+_INSTANCE_NAME = _PROJECT_NAME + "/instances/" + _INSTANCE_ID
+_DATABASE_NAME = _INSTANCE_NAME + "/databases/" + _DATABASE_ID
+_SESSION_NAME = _DATABASE_NAME + "/sessions/" + _SESSION_ID
 
 
 def build_client(**kwargs: Mapping) -> Client:
@@ -104,4 +111,9 @@ def build_spanner_api() -> SpannerClient:
     """Builds and returns a mock Spanner Client API for testing using the given arguments.
     Commonly used methods are mocked to return default values."""
 
-    return create_autospec(SpannerClient, instance=True)
+    api = create_autospec(SpannerClient, instance=True)
+
+    # Mock API calls with default return values.
+    api.create_session.return_value = SessionPB(name=_SESSION_NAME)
+
+    return api
