@@ -260,9 +260,8 @@ class Transaction(_SnapshotBase, _BatchBase):
             if self._transaction_id is None and len(self._mutations) == 0:
                 raise ValueError("Transaction is not begun")
 
-            # TODO multiplexed - begin transaction
             if self._transaction_id is None and num_mutations > 0:
-                self.begin()
+                self._begin_mutations_only_transaction()
 
             if request_options is None:
                 request_options = RequestOptions()
@@ -671,7 +670,49 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self.rolled_back:
             raise ValueError("Transaction is already rolled back")
 
-        return super(Transaction, self)._begin_transaction()
+        return super(Transaction, self)._begin_transaction(mutation=mutation)
+
+    def _begin_mutations_only_transaction(self) -> None:
+        """Begins a mutations-only transaction on the database."""
+
+        mutation = self._get_mutation_for_begin_mutations_only_transaction()
+        self._begin_transaction(mutation=mutation)
+
+    def _get_mutation_for_begin_mutations_only_transaction(self) -> Optional[Mutation]:
+        """Returns a mutation to use for beginning a mutations-only transaction.
+        Returns None if a mutation does not need to be included.
+
+        :rtype: :class:`~google.cloud.spanner_v1.types.Mutation`
+        :returns: A mutation to use for beginning a mutations-only transaction.
+        """
+
+        # A mutation only needs to be included
+        # for transaction with multiplexed sessions.
+        if not self._session.is_multiplexed:
+            return None
+
+        mutations: list[Mutation] = self._mutations
+
+        # If there are multiple mutations, select the mutation as follows:
+        #   1. Choose a delete, update, or replace mutation instead
+        #      of an insert mutation (since inserts could involve an auto-
+        #      generated column and the client doesn't have that information).
+        #   2. If there are no delete, update, or replace mutations, choose
+        #      the insert mutation that includes the largest number of values.
+
+        insert_mutation: Mutation = None
+        max_insert_values: int = -1
+
+        for mut in mutations:
+            if mut.insert:
+                num_values = len(mut.insert.values)
+                if num_values > max_insert_values:
+                    insert_mutation = mut
+                    max_insert_values = num_values
+            else:
+                return mut
+
+        return insert_mutation
 
     def _update_for_execute_batch_dml_response_pb(
         self, response_pb: ExecuteBatchDmlResponse
