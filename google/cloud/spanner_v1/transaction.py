@@ -31,6 +31,7 @@ from google.cloud.spanner_v1 import (
     CommitResponse,
     ResultSet,
     ExecuteBatchDmlResponse,
+    Mutation,
 )
 from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
 from google.cloud.spanner_v1 import ExecuteSqlRequest
@@ -152,79 +153,6 @@ class Transaction(_SnapshotBase, _BatchBase):
             )
 
         return response
-
-    # TODO multiplexed - move to base class
-    def begin(self):
-        """Begin a transaction on the database.
-
-        :rtype: bytes
-        :returns: the ID for the newly-begun transaction.
-        :raises ValueError:
-            if the transaction is already begun, committed, or rolled back.
-        """
-        if self._transaction_id is not None:
-            raise ValueError("Transaction already begun")
-
-        if self.committed is not None:
-            raise ValueError("Transaction already committed")
-
-        if self.rolled_back:
-            raise ValueError("Transaction is already rolled back")
-
-        database = self._session._database
-        api = database.spanner_api
-        metadata = _metadata_with_prefix(database.name)
-        if database._route_to_leader_enabled:
-            metadata.append(
-                _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
-            )
-        txn_options = TransactionOptions(
-            read_write=TransactionOptions.ReadWrite(),
-            exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
-            isolation_level=self.isolation_level,
-        )
-        txn_options = _merge_Transaction_Options(
-            database.default_transaction_options.default_read_write_transaction_options,
-            txn_options,
-        )
-        observability_options = getattr(database, "observability_options", None)
-        with trace_call(
-            f"CloudSpanner.{type(self).__name__}.begin",
-            self._session,
-            observability_options=observability_options,
-            metadata=metadata,
-        ) as span, MetricsCapture():
-            attempt = AtomicCounter(0)
-            nth_request = database._next_nth_request
-
-            def wrapped_method(*args, **kwargs):
-                method = functools.partial(
-                    api.begin_transaction,
-                    session=self._session.name,
-                    options=txn_options,
-                    metadata=database.metadata_with_request_id(
-                        nth_request,
-                        attempt.increment(),
-                        metadata,
-                        span,
-                    ),
-                )
-                return method(*args, **kwargs)
-
-            def before_next_retry(nth_retry, delay_in_seconds):
-                add_span_event(
-                    span,
-                    "Transaction Begin Attempt Failed. Retrying",
-                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
-                )
-
-            response = _retry(
-                wrapped_method,
-                allowed_exceptions={InternalServerError: _check_rst_stream_error},
-                before_next_retry=before_next_retry,
-            )
-        self._transaction_id = response.id
-        return self._transaction_id
 
     def rollback(self) -> None:
         """Roll back a transaction on the database."""
@@ -724,6 +652,26 @@ class Transaction(_SnapshotBase, _BatchBase):
         ]
 
         return response_pb.status, row_counts
+
+    def _begin_transaction(self, mutation: Mutation = None) -> bytes:
+        """Begins a transaction on the database.
+
+        :type mutation: :class:`~google.cloud.spanner_v1.mutation.Mutation`
+        :param mutation: (Optional) Mutation to include in the begin transaction
+            request. Required for mutation-only transactions with multiplexed sessions.
+
+        :rtype: bytes
+        :returns: identifier for the transaction.
+
+        :raises ValueError: if the transaction has already begun or is single-use.
+        """
+
+        if self.committed is not None:
+            raise ValueError("Transaction is already committed")
+        if self.rolled_back:
+            raise ValueError("Transaction is already rolled back")
+
+        return super(Transaction, self)._begin_transaction()
 
     def _update_for_execute_batch_dml_response_pb(
         self, response_pb: ExecuteBatchDmlResponse

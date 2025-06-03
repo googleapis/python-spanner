@@ -14,7 +14,6 @@
 
 """Context manager for Cloud Spanner batched writes."""
 import functools
-from datetime import datetime
 from typing import List, Optional
 
 from google.cloud.spanner_v1 import CommitRequest, CommitResponse
@@ -55,7 +54,7 @@ class _BatchBase(_SessionWrapper):
         self._mutations: List[Mutation] = []
         self.transaction_tag: Optional[str] = None
 
-        self.committed: Optional[datetime] = None
+        self.committed = None
         """Timestamp at which the batch was successfully committed."""
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
 

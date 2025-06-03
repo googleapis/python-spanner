@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from datetime import datetime
 from logging import Logger
 from mock import create_autospec
 from typing import Mapping
@@ -21,7 +22,14 @@ from google.cloud.spanner_v1.client import Client
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.transaction import Transaction
+
 from google.cloud.spanner_v1.types import Session as SessionPB
+from google.cloud.spanner_v1.types import Transaction as TransactionPB
+from google.cloud.spanner_v1.types import CommitResponse as CommitResponsePB
+
+from google.cloud._helpers import _datetime_to_pb_timestamp
+from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
 
 # Default values used to populate required or expected attributes.
 # Tests should not depend on them: if a test requires a specific
@@ -30,11 +38,51 @@ _PROJECT_ID = "default-project-id"
 _INSTANCE_ID = "default-instance-id"
 _DATABASE_ID = "default-database-id"
 _SESSION_ID = "default-session-id"
+_TRANSACTION_ID = b"default-transaction-id"
 
 _PROJECT_NAME = "projects/" + _PROJECT_ID
 _INSTANCE_NAME = _PROJECT_NAME + "/instances/" + _INSTANCE_ID
 _DATABASE_NAME = _INSTANCE_NAME + "/databases/" + _DATABASE_ID
 _SESSION_NAME = _DATABASE_NAME + "/sessions/" + _SESSION_ID
+
+_TIMESTAMP = _datetime_to_pb_timestamp(datetime.now())
+
+# Protocol buffers
+# ----------------
+
+
+def _build_commit_response_pb(**kwargs) -> CommitResponsePB:
+    """Builds and returns a commit response protocol buffer for testing using the given arguments.
+    If an expected argument is not provided, a default value will be used."""
+
+    if "commit_timestamp" not in kwargs:
+        kwargs["commit_timestamp"] = _TIMESTAMP
+
+    return CommitResponsePB(**kwargs)
+
+
+def build_session_pb(**kwargs) -> SessionPB:
+    """Builds and returns a session protocol buffer for testing using the given arguments.
+    If an expected argument is not provided, a default value will be used."""
+
+    if "name" not in kwargs:
+        kwargs["name"] = _SESSION_NAME
+
+    return SessionPB(**kwargs)
+
+
+def build_transaction_pb(**kwargs) -> TransactionPB:
+    """Builds and returns a transaction protocol buffer for testing using the given arguments..
+    If an expected argument is not provided, a default value will be used."""
+
+    if "id" not in kwargs:
+        kwargs["id"] = _TRANSACTION_ID
+
+    return TransactionPB(**kwargs)
+
+
+# Client classes
+# --------------
 
 
 def build_client(**kwargs: Mapping) -> Client:
@@ -92,11 +140,6 @@ def build_instance(**kwargs: Mapping) -> Instance:
     return Instance(**kwargs)
 
 
-def build_logger() -> Logger:
-    """Builds and returns a logger for testing."""
-    return create_autospec(Logger, instance=True)
-
-
 def build_session(**kwargs: Mapping) -> Session:
     """Builds and returns a session for testing using the given arguments.
     If a required argument is not provided, a default value will be used."""
@@ -107,6 +150,30 @@ def build_session(**kwargs: Mapping) -> Session:
     return Session(**kwargs)
 
 
+def build_transaction(session=None) -> Transaction:
+    """Builds and returns a transaction for testing using the given arguments.
+    If a required argument is not provided, a default value will be used."""
+
+    session = session or build_session()
+
+    # Ensure session exists.
+    if session.session_id is None:
+        session.create()
+
+    _clear_spans()
+    return session.transaction()
+
+
+# Other classes
+# -------------
+
+
+def build_logger() -> Logger:
+    """Builds and returns a logger for testing."""
+
+    return create_autospec(Logger, instance=True)
+
+
 def build_spanner_api() -> SpannerClient:
     """Builds and returns a mock Spanner Client API for testing using the given arguments.
     Commonly used methods are mocked to return default values."""
@@ -114,6 +181,21 @@ def build_spanner_api() -> SpannerClient:
     api = create_autospec(SpannerClient, instance=True)
 
     # Mock API calls with default return values.
-    api.create_session.return_value = SessionPB(name=_SESSION_NAME)
+    api.begin_transaction.return_value = build_transaction_pb()
+    api.commit.return_value = _build_commit_response_pb()
+    api.create_session.return_value = build_session_pb()
 
     return api
+
+
+# Helper functions
+# ----------------
+
+
+def _clear_spans() -> None:
+    """Clears the spans collected by the OpenTelemetry exporter.
+    This ensures that spans generated while building test objects
+    do not interfere with the tests."""
+
+    if HAS_OPENTELEMETRY_INSTALLED:
+        get_test_ot_exporter().clear()

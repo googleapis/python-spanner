@@ -28,6 +28,7 @@ from google.cloud.spanner_v1 import (
     Session as SessionRequestProto,
     ExecuteSqlRequest,
     TypeCode,
+    BeginTransactionRequest,
 )
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _delay_until_retry
@@ -1089,8 +1090,9 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1217,8 +1219,9 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1229,8 +1232,9 @@ class TestSession(OpenTelemetryBase):
                     ],
                 ),
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1331,8 +1335,9 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1343,8 +1348,9 @@ class TestSession(OpenTelemetryBase):
                     ],
                 ),
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1444,8 +1450,9 @@ class TestSession(OpenTelemetryBase):
 
         # First call was aborted before commit operation, therefore no begin rpc was made during first attempt.
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1528,8 +1535,9 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1608,8 +1616,9 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1620,8 +1629,9 @@ class TestSession(OpenTelemetryBase):
                     ],
                 ),
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1632,8 +1642,9 @@ class TestSession(OpenTelemetryBase):
                     ],
                 ),
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -1731,8 +1742,9 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1801,8 +1813,9 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1875,8 +1888,9 @@ class TestSession(OpenTelemetryBase):
 
         expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -1948,8 +1962,9 @@ class TestSession(OpenTelemetryBase):
             exclude_txn_from_change_streams=True,
         )
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -2042,8 +2057,9 @@ class TestSession(OpenTelemetryBase):
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -2054,8 +2070,9 @@ class TestSession(OpenTelemetryBase):
                     ],
                 ),
                 mock.call(
-                    session=self.SESSION_NAME,
-                    options=expected_options,
+                    request=BeginTransactionRequest(
+                        session=self.SESSION_NAME, options=expected_options
+                    ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
                         ("x-goog-spanner-route-to-leader", "true"),
@@ -2125,8 +2142,9 @@ class TestSession(OpenTelemetryBase):
             isolation_level=TransactionOptions.IsolationLevel.SERIALIZABLE,
         )
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -2163,8 +2181,9 @@ class TestSession(OpenTelemetryBase):
             isolation_level=TransactionOptions.IsolationLevel.SERIALIZABLE,
         )
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
@@ -2205,8 +2224,9 @@ class TestSession(OpenTelemetryBase):
             isolation_level=TransactionOptions.IsolationLevel.REPEATABLE_READ,
         )
         gax_api.begin_transaction.assert_called_once_with(
-            session=self.SESSION_NAME,
-            options=expected_options,
+            request=BeginTransactionRequest(
+                session=self.SESSION_NAME, options=expected_options
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),

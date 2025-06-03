@@ -48,7 +48,7 @@ from google.cloud.spanner_v1._helpers import (
     _SessionWrapper,
     AtomicCounter,
 )
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
@@ -953,13 +953,7 @@ class _SnapshotBase(_SessionWrapper):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
-            def attempt_tracking_method():
-                all_metadata = database.metadata_with_request_id(
-                    nth_request,
-                    attempt.increment(),
-                    metadata,
-                    span,
-                )
+            def wrapped_method():
                 begin_transaction_request = BeginTransactionRequest(
                     session=session.name,
                     options=self._make_txn_selector().begin,
@@ -968,14 +962,30 @@ class _SnapshotBase(_SessionWrapper):
                 begin_transaction_method = functools.partial(
                     api.begin_transaction,
                     request=begin_transaction_request,
-                    metadata=all_metadata,
+                    metadata=database.metadata_with_request_id(
+                        nth_request,
+                        attempt.increment(),
+                        metadata,
+                        span,
+                    ),
                 )
                 return begin_transaction_method()
+
+            def before_next_retry(nth_retry, delay_in_seconds):
+                add_span_event(
+                    span=span,
+                    event_name="Transaction Begin Attempt Failed. Retrying",
+                    event_attributes={
+                        "attempt": nth_retry,
+                        "sleep_seconds": delay_in_seconds,
+                    },
+                )
 
             # An aborted transaction may be raised by a mutations-only
             # transaction with a multiplexed session.
             transaction_pb: Transaction = _retry(
-                attempt_tracking_method,
+                wrapped_method,
+                before_next_retry=before_next_retry,
                 allowed_exceptions={
                     InternalServerError: _check_rst_stream_error,
                     Aborted: None,
