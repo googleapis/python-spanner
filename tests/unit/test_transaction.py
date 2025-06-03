@@ -102,28 +102,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertTrue(transaction._multi_use)
         self.assertEqual(transaction._execute_sql_request_count, 0)
 
-    def test__check_state_already_committed(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.committed = object()
-        with self.assertRaises(ValueError):
-            transaction._check_state()
-
-    def test__check_state_already_rolled_back(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.rolled_back = True
-        with self.assertRaises(ValueError):
-            transaction._check_state()
-
-    def test__check_state_ok(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction._check_state()  # does not raise
-
     def test__make_txn_selector(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -348,7 +326,7 @@ class TestTransaction(OpenTelemetryBase):
                 "exception",
                 {
                     "exception.type": "ValueError",
-                    "exception.message": "Transaction is not begun",
+                    "exception.message": "Transaction has not begun.",
                     "exception.stacktrace": "EPHEMERAL",
                     "exception.escaped": "False",
                 },
@@ -380,7 +358,7 @@ class TestTransaction(OpenTelemetryBase):
                 "exception",
                 {
                     "exception.type": "ValueError",
-                    "exception.message": "Transaction is already committed",
+                    "exception.message": "Transaction already committed.",
                     "exception.stacktrace": "EPHEMERAL",
                     "exception.escaped": "False",
                 },
@@ -412,7 +390,7 @@ class TestTransaction(OpenTelemetryBase):
                 "exception",
                 {
                     "exception.type": "ValueError",
-                    "exception.message": "Transaction is already rolled back",
+                    "exception.message": "Transaction already rolled back.",
                     "exception.stacktrace": "EPHEMERAL",
                     "exception.escaped": "False",
                 },

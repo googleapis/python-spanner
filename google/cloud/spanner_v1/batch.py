@@ -58,17 +58,6 @@ class _BatchBase(_SessionWrapper):
         """Timestamp at which the batch was successfully committed."""
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
 
-    # TODO multiplexed - cleanup
-    def _check_state(self):
-        """Helper for :meth:`commit` et al.
-
-        Subclasses must override
-
-        :raises: :exc:`ValueError` if the object's state is invalid for making
-                 API requests.
-        """
-        raise NotImplementedError
-
     def insert(self, table, columns, values):
         """Insert one or more new table rows.
 
@@ -153,18 +142,6 @@ class _BatchBase(_SessionWrapper):
 class Batch(_BatchBase):
     """Accumulate mutations for transmission during :meth:`commit`."""
 
-    # TODO multiplexed - cleanup
-    def _check_state(self):
-        """Helper for :meth:`commit` et al.
-
-        Subclasses must override
-
-        :raises: :exc:`ValueError` if the object's state is invalid for making
-                 API requests.
-        """
-        if self.committed is not None:
-            raise ValueError("Batch already committed")
-
     # TODO multiplexed - cleanup kwargs
     def commit(
         self,
@@ -207,10 +184,12 @@ class Batch(_BatchBase):
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
+
+        :raises: ValueError: if the transaction is not ready to commit.
         """
 
-        # TODO multiplexed - cleanup
-        self._check_state()
+        if self.committed is not None:
+            raise ValueError("Transaction already committed.")
 
         database = self._session._database
         api = database.spanner_api
@@ -288,9 +267,8 @@ class Batch(_BatchBase):
 
     def __enter__(self):
         """Begin ``with`` block."""
-
-        # TODO multiplexed - cleanup
-        self._check_state()
+        if self.committed is not None:
+            raise ValueError("Transaction already committed")
 
         return self
 

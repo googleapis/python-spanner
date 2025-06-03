@@ -75,31 +75,12 @@ class Transaction(_SnapshotBase, _BatchBase):
         super(Transaction, self).__init__(session)
         self.rolled_back: bool = False
 
-    # TODO multiplexed - remove
-    def _check_state(self):
-        """Helper for :meth:`commit` et al.
-
-        :raises: :exc:`ValueError` if the object's state is invalid for making
-                 API requests.
-        """
-
-        if self.committed is not None:
-            raise ValueError("Transaction is already committed")
-
-        if self.rolled_back:
-            raise ValueError("Transaction is already rolled back")
-
-    # TODO multiplexed - refactor to base class
     def _make_txn_selector(self):
         """Helper for :meth:`read`.
 
-        :rtype:
-            :class:`~.transaction_pb2.TransactionSelector`
+        :rtype: :class:`~.transaction_pb2.TransactionSelector`
         :returns: a selector configured for read-write transaction semantics.
         """
-
-        # TODO multiplexed - remove
-        self._check_state()
 
         if self._transaction_id is None:
             txn_options = TransactionOptions(
@@ -131,7 +112,14 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         :type request: proto
         :param request: request proto to call the method with
+
+        :raises: ValueError: if the transaction is not ready to update.
         """
+
+        if self.committed is not None:
+            raise ValueError("Transaction already committed.")
+        if self.rolled_back:
+            raise ValueError("Transaction already rolled back.")
 
         session = self._session
         transaction = self._make_txn_selector()
@@ -155,10 +143,15 @@ class Transaction(_SnapshotBase, _BatchBase):
         return response
 
     def rollback(self) -> None:
-        """Roll back a transaction on the database."""
+        """Roll back a transaction on the database.
 
-        # TODO multiplexed - cleanup
-        self._check_state()
+        :raises: ValueError: if the transaction is not ready to roll back.
+        """
+
+        if self.committed is not None:
+            raise ValueError("Transaction already committed.")
+        if self.rolled_back:
+            raise ValueError("Transaction already rolled back.")
 
         if self._transaction_id is not None:
             session = self._session
@@ -232,7 +225,8 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         :rtype: datetime
         :returns: timestamp of the committed changes.
-        :raises ValueError: if there are no mutations to commit.
+
+        :raises: ValueError: if the transaction is not ready to commit.
         """
 
         mutations = self._mutations
@@ -255,13 +249,17 @@ class Transaction(_SnapshotBase, _BatchBase):
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
         ) as span, MetricsCapture():
-            # TODO multiplexed - cleanup
-            self._check_state()
-            if self._transaction_id is None and len(self._mutations) == 0:
-                raise ValueError("Transaction is not begun")
 
-            if self._transaction_id is None and num_mutations > 0:
-                self._begin_mutations_only_transaction()
+            if self.committed is not None:
+                raise ValueError("Transaction already committed.")
+            if self.rolled_back:
+                raise ValueError("Transaction already rolled back.")
+
+            if self._transaction_id is None:
+                if num_mutations > 0:
+                    self._begin_mutations_only_transaction()
+                else:
+                    raise ValueError("Transaction has not begun.")
 
             if request_options is None:
                 request_options = RequestOptions()

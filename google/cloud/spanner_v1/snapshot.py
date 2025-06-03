@@ -353,17 +353,15 @@ class _SnapshotBase(_SessionWrapper):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
 
-        :raises ValueError:
-            for reuse of single-use snapshots, or if a transaction ID is
-            already pending for multiple-use snapshots.
+        :raises ValueError: if the Transaction already used to execute a
+            read request, but is not a multi-use transaction or has not begun.
         """
 
-        # TODO multiplexed - cleanup
         if self._read_request_count > 0:
             if not self._multi_use:
                 raise ValueError("Cannot re-use single-use snapshot.")
-            if self._transaction_id is None and self._read_only:
-                raise ValueError("Transaction ID pending.")
+            if self._transaction_id is None:
+                raise ValueError("Transaction has not begun.")
 
         session = self._session
         database = session._database
@@ -534,17 +532,15 @@ class _SnapshotBase(_SessionWrapper):
             objects. ``iterator.decode_column(row, column_index)`` decodes one
             specific column in the given row.
 
-        :raises ValueError:
-            for reuse of single-use snapshots, or if a transaction ID is
-            already pending for multiple-use snapshots.
+        :raises ValueError: if the Transaction already used to execute a
+            read request, but is not a multi-use transaction or has not begun.
         """
 
-        # TODO multiplexed - cleanup
         if self._read_request_count > 0:
             if not self._multi_use:
                 raise ValueError("Cannot re-use single-use snapshot.")
-            if self._transaction_id is None and self._read_only:
-                raise ValueError("Transaction ID pending.")
+            if self._transaction_id is None:
+                raise ValueError("Transaction has not begun.")
 
         if params is not None:
             params_pb = Struct(
@@ -719,17 +715,13 @@ class _SnapshotBase(_SessionWrapper):
         :rtype: iterable of bytes
         :returns: a sequence of partition tokens
 
-        :raises ValueError:
-            for single-use snapshots, or if a transaction ID is
-            already associated with the snapshot.
+        :raises ValueError: if the transaction has not begun or is single-use.
         """
 
-        # TODO multiplexed - cleanup
-        if not self._multi_use:
-            raise ValueError("Cannot use single-use snapshot.")
-
         if self._transaction_id is None:
-            raise ValueError("Transaction not started.")
+            raise ValueError("Transaction has not begun.")
+        if not self._multi_use:
+            raise ValueError("Cannot partition a single-use transaction.")
 
         session = self._session
         database = session._database
@@ -838,17 +830,13 @@ class _SnapshotBase(_SessionWrapper):
         :rtype: iterable of bytes
         :returns: a sequence of partition tokens
 
-        :raises ValueError:
-            for single-use snapshots, or if a transaction ID is
-            already associated with the snapshot.
+        :raises ValueError: if the transaction has not begun or is single-use.
         """
 
-        # TODO multiplexed - cleanup
-        if not self._multi_use:
-            raise ValueError("Cannot use single-use snapshot.")
-
         if self._transaction_id is None:
-            raise ValueError("Transaction not started.")
+            raise ValueError("Transaction has not begun.")
+        if not self._multi_use:
+            raise ValueError("Cannot partition a single-use transaction.")
 
         if params is not None:
             params_pb = Struct(
