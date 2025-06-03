@@ -270,14 +270,13 @@ class Transaction(_SnapshotBase, _BatchBase):
             # Request tags are not supported for commit requests.
             request_options.request_tag = None
 
-            commit_request = CommitRequest(
-                session=session.name,
-                mutations=mutations,
-                transaction_id=self._transaction_id,
-                return_commit_stats=return_commit_stats,
-                max_commit_delay=max_commit_delay,
-                request_options=request_options,
-            )
+            common_commit_request_args = {
+                "session": session.name,
+                "transaction_id": self._transaction_id,
+                "return_commit_stats": return_commit_stats,
+                "max_commit_delay": max_commit_delay,
+                "request_options": request_options,
+            }
 
             add_span_event(span, "Starting Commit")
 
@@ -288,7 +287,11 @@ class Transaction(_SnapshotBase, _BatchBase):
                 attempt.increment()
                 commit_method = functools.partial(
                     api.commit,
-                    request=commit_request,
+                    request=CommitRequest(
+                        mutations=mutations,
+                        precommit_token=self._precommit_token,
+                        **common_commit_request_args,
+                    ),
                     metadata=database.metadata_with_request_id(
                         nth_request,
                         attempt.value,
@@ -298,26 +301,43 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
                 return commit_method(*args, **kwargs)
 
+            commit_retry_event_name = "Transaction Commit Attempt Failed. Retrying"
+
             def before_next_retry(nth_retry, delay_in_seconds):
                 add_span_event(
-                    span,
-                    "Transaction Commit Attempt Failed. Retrying",
-                    {"attempt": nth_retry, "sleep_seconds": delay_in_seconds},
+                    span=span,
+                    event_name=commit_retry_event_name,
+                    event_attributes={
+                        "attempt": nth_retry,
+                        "sleep_seconds": delay_in_seconds,
+                    },
                 )
 
-            response_pb: CommitResponse = _retry(
+            commit_response_pb: CommitResponse = _retry(
                 wrapped_method,
                 allowed_exceptions={InternalServerError: _check_rst_stream_error},
                 before_next_retry=before_next_retry,
             )
 
-            # TODO multiplexed - retry commit if precommit token.
+            # If the response contains a precommit token, the transaction did not
+            # successfully commit, and must be retried with the new precommit token.
+            # The mutations should not be included in the new request, and no further
+            # retries or exception handling should be performed.
+            if commit_response_pb.precommit_token:
+                add_span_event(span, commit_retry_event_name)
+                commit_response_pb = api.commit(
+                    request=CommitRequest(
+                        precommit_token=commit_response_pb.precommit_token,
+                        **common_commit_request_args,
+                    ),
+                    metadata=metadata,
+                )
 
             add_span_event(span, "Commit Done")
 
-        self.committed = response_pb.commit_timestamp
+        self.committed = commit_response_pb.commit_timestamp
         if return_commit_stats:
-            self.commit_stats = response_pb.commit_stats
+            self.commit_stats = commit_response_pb.commit_stats
 
         # TODO multiplexed - remove
         self._session._transaction = None

@@ -33,6 +33,7 @@ from google.cloud.spanner_v1 import (
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _delay_until_retry
 from google.cloud.spanner_v1.transaction import Transaction
+from tests._builders import build_spanner_api
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
@@ -2119,10 +2120,8 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_isolation_level_at_request(self):
-        gax_api = self._make_spanner_api()
-        gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database()
-        database.spanner_api = gax_api
+        api = database.spanner_api = build_spanner_api()
         session = self._make_one(database)
         session._session_id = self.SESSION_ID
 
@@ -2141,7 +2140,7 @@ class TestSession(OpenTelemetryBase):
             read_write=TransactionOptions.ReadWrite(),
             isolation_level=TransactionOptions.IsolationLevel.SERIALIZABLE,
         )
-        gax_api.begin_transaction.assert_called_once_with(
+        api.begin_transaction.assert_called_once_with(
             request=BeginTransactionRequest(
                 session=self.SESSION_NAME, options=expected_options
             ),
@@ -2156,14 +2155,12 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_isolation_level_at_client(self):
-        gax_api = self._make_spanner_api()
-        gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
                 isolation_level="SERIALIZABLE"
             )
         )
-        database.spanner_api = gax_api
+        api = database.spanner_api = build_spanner_api()
         session = self._make_one(database)
         session._session_id = self.SESSION_ID
 
@@ -2180,7 +2177,7 @@ class TestSession(OpenTelemetryBase):
             read_write=TransactionOptions.ReadWrite(),
             isolation_level=TransactionOptions.IsolationLevel.SERIALIZABLE,
         )
-        gax_api.begin_transaction.assert_called_once_with(
+        api.begin_transaction.assert_called_once_with(
             request=BeginTransactionRequest(
                 session=self.SESSION_NAME, options=expected_options
             ),
@@ -2195,14 +2192,12 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_isolation_level_at_request_overrides_client(self):
-        gax_api = self._make_spanner_api()
-        gax_api.begin_transaction.return_value = TransactionPB(id=b"FACEDACE")
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
                 isolation_level="SERIALIZABLE"
             )
         )
-        database.spanner_api = gax_api
+        api = database.spanner_api = build_spanner_api()
         session = self._make_one(database)
         session._session_id = self.SESSION_ID
 
@@ -2223,7 +2218,7 @@ class TestSession(OpenTelemetryBase):
             read_write=TransactionOptions.ReadWrite(),
             isolation_level=TransactionOptions.IsolationLevel.REPEATABLE_READ,
         )
-        gax_api.begin_transaction.assert_called_once_with(
+        api.begin_transaction.assert_called_once_with(
             request=BeginTransactionRequest(
                 session=self.SESSION_NAME, options=expected_options
             ),

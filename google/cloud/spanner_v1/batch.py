@@ -142,7 +142,6 @@ class _BatchBase(_SessionWrapper):
 class Batch(_BatchBase):
     """Accumulate mutations for transmission during :meth:`commit`."""
 
-    # TODO multiplexed - cleanup kwargs
     def commit(
         self,
         return_commit_stats=False,
