@@ -25,9 +25,9 @@ from google.protobuf import timestamp_pb2  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package='google.spanner.v1',
+    package="google.spanner.v1",
     manifest={
-        'ChangeStreamRecord',
+        "ChangeStreamRecord",
     },
 )
 
@@ -161,6 +161,7 @@ class ChangeStreamRecord(proto.Message):
                 issued by time-to-live (TTL), column backfill,
                 etc.
         """
+
         class ModType(proto.Enum):
             r"""Mod type describes the type of change Spanner applied to the data.
             For example, if the client submits an INSERT_OR_UPDATE request,
@@ -290,20 +291,26 @@ class ChangeStreamRecord(proto.Message):
                     [DELETE][google.spanner.v1.ChangeStreamRecord.DataChangeRecord.ModType.DELETE].
             """
 
-            keys: MutableSequence['ChangeStreamRecord.DataChangeRecord.ModValue'] = proto.RepeatedField(
+            keys: MutableSequence[
+                "ChangeStreamRecord.DataChangeRecord.ModValue"
+            ] = proto.RepeatedField(
                 proto.MESSAGE,
                 number=1,
-                message='ChangeStreamRecord.DataChangeRecord.ModValue',
+                message="ChangeStreamRecord.DataChangeRecord.ModValue",
             )
-            old_values: MutableSequence['ChangeStreamRecord.DataChangeRecord.ModValue'] = proto.RepeatedField(
+            old_values: MutableSequence[
+                "ChangeStreamRecord.DataChangeRecord.ModValue"
+            ] = proto.RepeatedField(
                 proto.MESSAGE,
                 number=2,
-                message='ChangeStreamRecord.DataChangeRecord.ModValue',
+                message="ChangeStreamRecord.DataChangeRecord.ModValue",
             )
-            new_values: MutableSequence['ChangeStreamRecord.DataChangeRecord.ModValue'] = proto.RepeatedField(
+            new_values: MutableSequence[
+                "ChangeStreamRecord.DataChangeRecord.ModValue"
+            ] = proto.RepeatedField(
                 proto.MESSAGE,
                 number=3,
-                message='ChangeStreamRecord.DataChangeRecord.ModValue',
+                message="ChangeStreamRecord.DataChangeRecord.ModValue",
             )
 
         commit_timestamp: timestamp_pb2.Timestamp = proto.Field(
@@ -327,25 +334,31 @@ class ChangeStreamRecord(proto.Message):
             proto.STRING,
             number=5,
         )
-        column_metadata: MutableSequence['ChangeStreamRecord.DataChangeRecord.ColumnMetadata'] = proto.RepeatedField(
+        column_metadata: MutableSequence[
+            "ChangeStreamRecord.DataChangeRecord.ColumnMetadata"
+        ] = proto.RepeatedField(
             proto.MESSAGE,
             number=6,
-            message='ChangeStreamRecord.DataChangeRecord.ColumnMetadata',
+            message="ChangeStreamRecord.DataChangeRecord.ColumnMetadata",
         )
-        mods: MutableSequence['ChangeStreamRecord.DataChangeRecord.Mod'] = proto.RepeatedField(
+        mods: MutableSequence[
+            "ChangeStreamRecord.DataChangeRecord.Mod"
+        ] = proto.RepeatedField(
             proto.MESSAGE,
             number=7,
-            message='ChangeStreamRecord.DataChangeRecord.Mod',
+            message="ChangeStreamRecord.DataChangeRecord.Mod",
         )
-        mod_type: 'ChangeStreamRecord.DataChangeRecord.ModType' = proto.Field(
+        mod_type: "ChangeStreamRecord.DataChangeRecord.ModType" = proto.Field(
             proto.ENUM,
             number=8,
-            enum='ChangeStreamRecord.DataChangeRecord.ModType',
+            enum="ChangeStreamRecord.DataChangeRecord.ModType",
         )
-        value_capture_type: 'ChangeStreamRecord.DataChangeRecord.ValueCaptureType' = proto.Field(
-            proto.ENUM,
-            number=9,
-            enum='ChangeStreamRecord.DataChangeRecord.ValueCaptureType',
+        value_capture_type: "ChangeStreamRecord.DataChangeRecord.ValueCaptureType" = (
+            proto.Field(
+                proto.ENUM,
+                number=9,
+                enum="ChangeStreamRecord.DataChangeRecord.ValueCaptureType",
+            )
         )
         number_of_records_in_transaction: int = proto.Field(
             proto.INT32,
@@ -637,45 +650,49 @@ class ChangeStreamRecord(proto.Message):
             proto.STRING,
             number=3,
         )
-        move_in_events: MutableSequence['ChangeStreamRecord.PartitionEventRecord.MoveInEvent'] = proto.RepeatedField(
+        move_in_events: MutableSequence[
+            "ChangeStreamRecord.PartitionEventRecord.MoveInEvent"
+        ] = proto.RepeatedField(
             proto.MESSAGE,
             number=4,
-            message='ChangeStreamRecord.PartitionEventRecord.MoveInEvent',
+            message="ChangeStreamRecord.PartitionEventRecord.MoveInEvent",
         )
-        move_out_events: MutableSequence['ChangeStreamRecord.PartitionEventRecord.MoveOutEvent'] = proto.RepeatedField(
+        move_out_events: MutableSequence[
+            "ChangeStreamRecord.PartitionEventRecord.MoveOutEvent"
+        ] = proto.RepeatedField(
             proto.MESSAGE,
             number=5,
-            message='ChangeStreamRecord.PartitionEventRecord.MoveOutEvent',
+            message="ChangeStreamRecord.PartitionEventRecord.MoveOutEvent",
         )
 
     data_change_record: DataChangeRecord = proto.Field(
         proto.MESSAGE,
         number=1,
-        oneof='record',
+        oneof="record",
         message=DataChangeRecord,
     )
     heartbeat_record: HeartbeatRecord = proto.Field(
         proto.MESSAGE,
         number=2,
-        oneof='record',
+        oneof="record",
         message=HeartbeatRecord,
     )
     partition_start_record: PartitionStartRecord = proto.Field(
         proto.MESSAGE,
         number=3,
-        oneof='record',
+        oneof="record",
         message=PartitionStartRecord,
     )
     partition_end_record: PartitionEndRecord = proto.Field(
         proto.MESSAGE,
         number=4,
-        oneof='record',
+        oneof="record",
         message=PartitionEndRecord,
     )
     partition_event_record: PartitionEventRecord = proto.Field(
         proto.MESSAGE,
         number=5,
-        oneof='record',
+        oneof="record",
         message=PartitionEventRecord,
     )
 
