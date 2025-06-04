@@ -29,6 +29,7 @@ from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud._helpers import UTC
 from google.cloud.spanner_v1.data_types import JsonObject
+from google.cloud.spanner_v1.session_options import TransactionType
 from .testdata import singer_pb2
 from tests import _helpers as ot_helpers
 from . import _helpers
@@ -37,7 +38,7 @@ from google.cloud.spanner_v1.request_id_header import (
     REQ_RAND_PROCESS_ID,
     parse_request_id,
 )
-
+from .._helpers import is_multiplexed_enabled
 
 SOME_DATE = datetime.date(2011, 1, 17)
 SOME_TIME = datetime.datetime(1989, 1, 17, 17, 59, 12, 345612)
@@ -430,8 +431,6 @@ def test_session_crud(sessions_database):
 
 
 def test_batch_insert_then_read(sessions_database, ot_exporter):
-    import os
-
     db_name = sessions_database.name
     sd = _sample_data
 
@@ -453,10 +452,7 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
         nth_req0 = sampling_req_id[-2]
 
         db = sessions_database
-
-        multiplexed_enabled = (
-            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "").lower() == "true"
-        )
+        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
         # [A] Verify batch checkout spans
         # -------------------------------
@@ -690,12 +686,7 @@ def test_transaction_read_and_insert_then_rollback(
     assert rows == []
 
     if ot_exporter is not None:
-        import os
-
-        multiplexed_enabled = (
-            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "").lower() == "true"
-        )
-
+        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
         span_list = ot_exporter.get_finished_spans()
         got_span_names = [span.name for span in span_list]
 
@@ -3332,17 +3323,13 @@ def test_interval(sessions_database, database_dialect, not_emulator):
 
 
 def test_session_id_and_multiplexed_flag_behavior(sessions_database, ot_exporter):
-    import os
-
     sd = _sample_data
 
     with sessions_database.batch() as batch:
         batch.delete(sd.TABLE, sd.ALL)
         batch.insert(sd.TABLE, sd.COLUMNS, sd.ROW_DATA)
 
-    multiplexed_enabled = (
-        os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "").lower() == "true"
-    )
+    multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
     snapshot1_session_id = None
     snapshot2_session_id = None

@@ -38,6 +38,7 @@ from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
 from tests._builders import build_spanner_api
+from tests._helpers import is_multiplexed_enabled
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -1527,7 +1528,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, labels)
 
     def test_snapshot_defaults(self):
-        import os
         from google.cloud.spanner_v1.database import SnapshotCheckout
         from google.cloud.spanner_v1.snapshot import Snapshot
 
@@ -1539,9 +1539,7 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Check if multiplexed sessions are enabled for read operations
-        multiplexed_enabled = (
-            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
-        )
+        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
         if multiplexed_enabled:
             # When multiplexed sessions are enabled, configure the sessions manager
@@ -1575,7 +1573,6 @@ class TestDatabase(_BaseTest):
 
     def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
-        import os
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.database import SnapshotCheckout
         from google.cloud.spanner_v1.snapshot import Snapshot
@@ -1589,9 +1586,7 @@ class TestDatabase(_BaseTest):
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Check if multiplexed sessions are enabled for read operations
-        multiplexed_enabled = (
-            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS") == "true"
-        )
+        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
         if multiplexed_enabled:
             # When multiplexed sessions are enabled, configure the sessions manager

@@ -16,11 +16,14 @@ import pytest
 from mock import PropertyMock, patch
 
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.session_options import TransactionType
 from . import _helpers
 from google.cloud.spanner_v1 import Client
 from google.api_core.exceptions import Aborted
 from google.auth.credentials import AnonymousCredentials
 from google.rpc import code_pb2
+
+from .._helpers import is_multiplexed_enabled
 
 HAS_OTEL_INSTALLED = False
 
@@ -113,11 +116,7 @@ def test_observability_options_propagation():
         gotNames = [span.name for span in from_inject_spans]
 
         # Check if multiplexed sessions are enabled
-        import os
-
-        multiplexed_enabled = (
-            os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "").lower() == "true"
-        )
+        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
         # Determine expected session span name based on multiplexed sessions
         expected_session_span_name = (
@@ -213,13 +212,11 @@ def create_db_trace_exporter():
     reason="Tracing requires OpenTelemetry",
 )
 @patch.object(Session, "session_id", new_callable=PropertyMock)
-@patch.object(Session, "is_multiplexed", new_callable=PropertyMock)
-def test_transaction_abort_then_retry_spans(mock_session_multiplexed, mock_session_id):
+def test_transaction_abort_then_retry_spans(mock_session_id):
     from opentelemetry.trace.status import StatusCode
 
-    # Mock session properties for testing.
-    mock_session_multiplexed.return_value = session_multiplexed = False
     mock_session_id.return_value = session_id = "session-id"
+    multiplexed = is_multiplexed_enabled(TransactionType.READ_WRITE)
 
     db, trace_exporter = create_db_trace_exporter()
 
@@ -247,8 +244,8 @@ def test_transaction_abort_then_retry_spans(mock_session_multiplexed, mock_sessi
         ("Waiting for a session to become available", {"kind": "BurstyPool"}),
         ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
         ("Creating Session", {}),
-        ("Using session", {"id": session_id, "multiplexed": session_multiplexed}),
-        ("Returning session", {"id": session_id, "multiplexed": session_multiplexed}),
+        ("Using session", {"id": session_id, "multiplexed": multiplexed}),
+        ("Returning session", {"id": session_id, "multiplexed": multiplexed}),
         (
             "Transaction was aborted in user operation, retrying",
             {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
@@ -417,7 +414,6 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     reason="Tracing requires OpenTelemetry",
 )
 def test_database_partitioned_error():
-    import os
     from opentelemetry.trace.status import StatusCode
 
     db, trace_exporter = create_db_trace_exporter()
@@ -428,12 +424,9 @@ def test_database_partitioned_error():
         pass
 
     got_statuses, got_events = finished_spans_statuses(trace_exporter)
+    multiplexed_enabled = is_multiplexed_enabled(TransactionType.PARTITIONED)
 
-    multiplexed_partitioned_enabled = (
-        os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS") == "true"
-    )
-
-    if multiplexed_partitioned_enabled:
+    if multiplexed_enabled:
         expected_event_names = [
             "Creating Session",
             "Using session",
@@ -496,7 +489,7 @@ def test_database_partitioned_error():
 
     expected_session_span_name = (
         "CloudSpanner.CreateMultiplexedSession"
-        if multiplexed_partitioned_enabled
+        if multiplexed_enabled
         else "CloudSpanner.CreateSession"
     )
     want_statuses = [
