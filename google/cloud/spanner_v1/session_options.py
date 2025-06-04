@@ -40,9 +40,6 @@ class SessionOptions(object):
     ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE = (
         "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW"
     )
-    ENV_VAR_FORCE_DISABLE_MULTIPLEXED = (
-        "GOOGLE_CLOUD_SPANNER_FORCE_DISABLE_MULTIPLEXED_SESSIONS"
-    )
 
     def __init__(self):
         # Internal overrides to disable the use of multiplexed
@@ -57,20 +54,17 @@ class SessionOptions(object):
         """Returns whether to use multiplexed sessions for the given transaction type.
 
         Multiplexed sessions are enabled for read-only transactions if:
-            * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
-            * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
+            * ENV_VAR_ENABLE_MULTIPLEXED is set to true; and
             * multiplexed sessions have not been disabled for read-only transactions.
 
         Multiplexed sessions are enabled for partitioned transactions if:
             * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
-            * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true;
-            * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
+            * ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED is set to true; and
             * multiplexed sessions have not been disabled for partitioned transactions.
 
         Multiplexed sessions are enabled for read/write transactions if:
             * ENV_VAR_ENABLE_MULTIPLEXED is set to true;
-            * ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE is set to true;
-            * ENV_VAR_FORCE_DISABLE_MULTIPLEXED is not set to true; and
+            * ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE is set to true; and
             * multiplexed sessions have not been disabled for read/write transactions.
 
         :type transaction_type: :class:`TransactionType`
@@ -80,7 +74,6 @@ class SessionOptions(object):
         if transaction_type is TransactionType.READ_ONLY:
             return (
                 self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
-                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
                 and self._is_multiplexed_enabled[transaction_type]
             )
 
@@ -88,7 +81,6 @@ class SessionOptions(object):
             return (
                 self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
                 and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED)
-                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
                 and self._is_multiplexed_enabled[transaction_type]
             )
 
@@ -96,7 +88,6 @@ class SessionOptions(object):
             return (
                 self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED)
                 and self._getenv(self.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE)
-                and not self._getenv(self.ENV_VAR_FORCE_DISABLE_MULTIPLEXED)
                 and self._is_multiplexed_enabled[transaction_type]
             )
 

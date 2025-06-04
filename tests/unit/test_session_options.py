@@ -42,10 +42,6 @@ class TestSessionOptions(TestCase):
         self.assertFalse(session_options.use_multiplexed(transaction_type))
 
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED] = "true"
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "true"
-        self.assertFalse(session_options.use_multiplexed(transaction_type))
-
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
         self.assertTrue(session_options.use_multiplexed(transaction_type))
 
         session_options.disable_multiplexed(self.logger, transaction_type)
@@ -67,10 +63,6 @@ class TestSessionOptions(TestCase):
         self.assertFalse(session_options.use_multiplexed(transaction_type))
 
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED] = "true"
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "true"
-        self.assertFalse(session_options.use_multiplexed(transaction_type))
-
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
         self.assertTrue(session_options.use_multiplexed(transaction_type))
 
         session_options.disable_multiplexed(self.logger, transaction_type)
@@ -92,10 +84,6 @@ class TestSessionOptions(TestCase):
         self.assertFalse(session_options.use_multiplexed(transaction_type))
 
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE] = "true"
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "true"
-        self.assertFalse(session_options.use_multiplexed(transaction_type))
-
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
         self.assertTrue(session_options.use_multiplexed(transaction_type))
 
         session_options.disable_multiplexed(self.logger, transaction_type)
@@ -111,7 +99,6 @@ class TestSessionOptions(TestCase):
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED] = "true"
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED] = "true"
         environ[SessionOptions.ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE] = "true"
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
 
         session_options.disable_multiplexed(self.logger)
 
@@ -143,8 +130,6 @@ class TestSessionOptions(TestCase):
 
     def test_env_var_values(self):
         session_options = SessionOptions()
-
-        environ[SessionOptions.ENV_VAR_FORCE_DISABLE_MULTIPLEXED] = "false"
 
         true_values = ["1", " 1", " 1", "true", "True", "TRUE", " true "]
         for value in true_values:
