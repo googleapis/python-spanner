@@ -26,7 +26,10 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
 )
 from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.request_id_header import (
+    REQ_RAND_PROCESS_ID,
+    build_request_id,
+)
 from tests._builders import build_transaction
 
 from tests._helpers import (
@@ -949,7 +952,12 @@ class TestTransaction(OpenTelemetryBase):
         """Builds a request ID for an Spanner Client API request with the given database and attempt number."""
 
         client = database._instance._client
-        return f"1.{REQ_RAND_PROCESS_ID}.{client._nth_client_id}.{database._channel_id}.{client._nth_request.value}.{attempt}"
+        return build_request_id(
+            client_id=client._nth_client_id,
+            channel_id=database._channel_id,
+            nth_request=client._nth_request.value,
+            attempt=attempt,
+        )
 
 
 class _Client(object):

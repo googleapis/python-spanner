@@ -43,7 +43,10 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
 )
 from google.cloud.spanner_v1.param_types import INT64
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.request_id_header import (
+    REQ_RAND_PROCESS_ID,
+    build_request_id,
+)
 from google.api_core.retry import Retry
 
 TABLE_NAME = "citizens"
@@ -824,7 +827,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         expected_span_name = "CloudSpanner._Derived.begin"
         self.assertSpanAttributes(
             name=expected_span_name,
-            attributes=_build_span_attributes(database, attempts),
+            attributes=_build_span_attributes(database, attempt=attempts),
         )
 
     def test_read_other_error(self):
@@ -1994,12 +1997,10 @@ class _MockIterator(object):
     next = __next__
 
 
-def _build_span_attributes(
-    database: Database, attempt: int = 1, **extra_attributes
-) -> Mapping[str, str]:
+def _build_span_attributes(database: Database, attempt: int = 1) -> Mapping[str, str]:
     """Builds the attributes for spans using the given database and extra attributes."""
 
-    attributes = enrich_with_otel_scope(
+    return enrich_with_otel_scope(
         {
             "db.type": "spanner",
             "db.url": "spanner.googleapis.com",
@@ -2012,14 +2013,14 @@ def _build_span_attributes(
         }
     )
 
-    if extra_attributes:
-        attributes.update(extra_attributes)
 
-    return attributes
-
-
-def _build_request_id(database: Database, attempt: int = 1) -> str:
+def _build_request_id(database: Database, attempt: int) -> str:
     """Builds a request ID for an Spanner Client API request with the given database and attempt number."""
 
     client = database._instance._client
-    return f"1.{REQ_RAND_PROCESS_ID}.{client._nth_client_id}.{database._channel_id}.{client._nth_request.value}.{attempt}"
+    return build_request_id(
+        client_id=client._nth_client_id,
+        channel_id=database._channel_id,
+        nth_request=client._nth_request.value,
+        attempt=attempt,
+    )
