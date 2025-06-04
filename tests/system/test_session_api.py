@@ -701,12 +701,11 @@ def test_transaction_read_and_insert_then_rollback(
 
         if multiplexed_enabled:
             # With multiplexed sessions enabled:
-            # - Batch operations still use regular sessions (GetSession)
+            # - Batch operations use multiplexed sessions (GetSession)
             # - run_in_transaction uses regular sessions (GetSession)
-            # - Snapshot (read-only) can use multiplexed sessions (CreateMultiplexedSession)
+            # - Snapshot (read-only) re-use existing multiplexed sessions
             # Note: Session creation span may not appear if session is reused from pool
             expected_span_names = [
-                "CloudSpanner.GetSession",  # Batch operation
                 "CloudSpanner.Batch.commit",  # Batch commit
                 "CloudSpanner.GetSession",  # Transaction session
                 "CloudSpanner.Transaction.read",  # First read
