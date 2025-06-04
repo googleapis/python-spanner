@@ -171,6 +171,10 @@ class TestDatabaseSessionManager(TestCase):
         self.assertTrue(session_2.is_multiplexed)
         self.assertNotEqual(session_1, session_2)
 
+        # Verify logger calls.
+        info = manager._database.logger.info
+        info.assert_called_with("Created multiplexed session.")
+
     def test_multiplexed_maintenance_terminates_disabled(self):
         manager = self._manager
         self._enable_multiplexed_sessions()
