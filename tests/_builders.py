@@ -16,6 +16,7 @@ from logging import Logger
 from mock import create_autospec
 from typing import Mapping
 
+from google.auth.credentials import Credentials, Scoped
 from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1.client import Client
@@ -91,6 +92,9 @@ def build_client(**kwargs: Mapping) -> Client:
 
     if "project" not in kwargs:
         kwargs["project"] = _PROJECT_ID
+
+    if "credentials" not in kwargs:
+        kwargs["credentials"] = build_scoped_credentials()
 
     return Client(**kwargs)
 
@@ -172,6 +176,15 @@ def build_logger() -> Logger:
     """Builds and returns a logger for testing."""
 
     return create_autospec(Logger, instance=True)
+
+
+def build_scoped_credentials() -> Credentials:
+    """Builds and returns a mock scoped credentials for testing."""
+
+    class _ScopedCredentials(Credentials, Scoped):
+        pass
+
+    return create_autospec(spec=_ScopedCredentials, instance=True)
 
 
 def build_spanner_api() -> SpannerClient:
