@@ -15,7 +15,7 @@ from typing import Mapping
 
 import mock
 
-from google.cloud.spanner_v1 import RequestOptions, CommitRequest
+from google.cloud.spanner_v1 import RequestOptions, CommitRequest, Mutation, KeySet
 from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
@@ -25,12 +25,13 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _metadata_with_request_id,
 )
+from google.cloud.spanner_v1.batch import _make_write_pb
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.request_id_header import (
     REQ_RAND_PROCESS_ID,
     build_request_id,
 )
-from tests._builders import build_transaction
+from tests._builders import build_transaction, build_precommit_token_pb
 
 from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
@@ -40,12 +41,16 @@ from tests._helpers import (
     enrich_with_otel_scope,
 )
 
+KEYS = [[0], [1], [2]]
+KEYSET = KeySet(keys=KEYS)
+KEYSET_PB = KEYSET._to_pb()
+
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
-VALUES = [
-    ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-    ["bharney@example.com", "Bharney", "Rhubble", 31],
-]
+VALUE_1 = ["phred@exammple.com", "Phred", "Phlyntstone", 32]
+VALUE_2 = ["bharney@example.com", "Bharney", "Rhubble", 31]
+VALUES = [VALUE_1, VALUE_2]
+
 DML_QUERY = """\
 INSERT INTO citizens(first_name, last_name, age)
 VALUES ("Phred", "Phlyntstone", 32)
@@ -57,6 +62,17 @@ VALUES ("Phred", "Phlyntstone", @age)
 PARAMS = {"age": 30}
 PARAM_TYPES = {"age": Type(code=TypeCode.INT64)}
 
+TRANSACTION_ID = b"transaction-id"
+TRANSACTION_TAG = "transaction-tag"
+
+PRECOMMIT_TOKEN_PB_0 = build_precommit_token_pb(precommit_token=b"0", seq_num=0)
+PRECOMMIT_TOKEN_PB_1 = build_precommit_token_pb(precommit_token=b"1", seq_num=1)
+PRECOMMIT_TOKEN_PB_2 = build_precommit_token_pb(precommit_token=b"2", seq_num=2)
+
+DELETE_MUTATION = Mutation(delete=Mutation.Delete(table=TABLE_NAME, key_set=KEYSET_PB))
+INSERT_MUTATION = Mutation(insert=_make_write_pb(TABLE_NAME, COLUMNS, VALUES))
+UPDATE_MUTATION = Mutation(update=_make_write_pb(TABLE_NAME, COLUMNS, VALUES))
+
 
 class TestTransaction(OpenTelemetryBase):
     PROJECT_ID = "project-id"
@@ -66,8 +82,6 @@ class TestTransaction(OpenTelemetryBase):
     DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
     SESSION_ID = "session-id"
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
-    TRANSACTION_ID = b"DEADBEEF"
-    TRANSACTION_TAG = "transaction-tag"
 
     def _getTargetClass(self):
         from google.cloud.spanner_v1.transaction import Transaction
@@ -103,9 +117,9 @@ class TestTransaction(OpenTelemetryBase):
     def test__make_txn_selector(self):
         session = _Session()
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         selector = transaction._make_txn_selector()
-        self.assertEqual(selector.id, self.TRANSACTION_ID)
+        self.assertEqual(selector.id, TRANSACTION_ID)
 
     def test_begin_already_rolled_back(self):
         session = _Session()
@@ -142,7 +156,7 @@ class TestTransaction(OpenTelemetryBase):
     def test_rollback_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.committed = object()
         with self.assertRaises(ValueError):
             transaction.rollback()
@@ -152,7 +166,7 @@ class TestTransaction(OpenTelemetryBase):
     def test_rollback_already_rolled_back(self):
         session = _Session()
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.rolled_back = True
         with self.assertRaises(ValueError):
             transaction.rollback()
@@ -165,7 +179,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api.rollback.side_effect = RuntimeError("other error")
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.insert(TABLE_NAME, COLUMNS, VALUES)
 
         with self.assertRaises(RuntimeError):
@@ -190,7 +204,7 @@ class TestTransaction(OpenTelemetryBase):
         api = database.spanner_api = _FauxSpannerAPI(_rollback_response=empty_pb)
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.replace(TABLE_NAME, COLUMNS, VALUES)
 
         transaction.rollback()
@@ -200,7 +214,7 @@ class TestTransaction(OpenTelemetryBase):
 
         session_id, txn_id, metadata = api._rolled_back
         self.assertEqual(session_id, session.name)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
+        self.assertEqual(txn_id, TRANSACTION_ID)
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         self.assertEqual(
             metadata,
@@ -256,7 +270,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.committed = object()
         with self.assertRaises(ValueError):
             transaction.commit()
@@ -288,7 +302,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api = self._make_spanner_api()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.rolled_back = True
         with self.assertRaises(ValueError):
             transaction.commit()
@@ -321,7 +335,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api.commit.side_effect = RuntimeError()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
         transaction.replace(TABLE_NAME, COLUMNS, VALUES)
 
         with self.assertRaises(RuntimeError):
@@ -363,8 +377,8 @@ class TestTransaction(OpenTelemetryBase):
         api = database.spanner_api = _FauxSpannerAPI(_commit_response=response)
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
+        transaction._transaction_id = TRANSACTION_ID
+        transaction.transaction_tag = TRANSACTION_TAG
 
         if mutate:
             transaction.delete(TABLE_NAME, keyset)
@@ -388,21 +402,19 @@ class TestTransaction(OpenTelemetryBase):
         ) = api._committed
 
         if request_options is None:
-            expected_request_options = RequestOptions(
-                transaction_tag=self.TRANSACTION_TAG
-            )
+            expected_request_options = RequestOptions(transaction_tag=TRANSACTION_TAG)
         elif type(request_options) is dict:
             expected_request_options = RequestOptions(request_options)
-            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.transaction_tag = TRANSACTION_TAG
             expected_request_options.request_tag = None
         else:
             expected_request_options = request_options
-            expected_request_options.transaction_tag = self.TRANSACTION_TAG
+            expected_request_options.transaction_tag = TRANSACTION_TAG
             expected_request_options.request_tag = None
 
         self.assertEqual(max_commit_delay_in, max_commit_delay)
         self.assertEqual(session_id, session.name)
-        self.assertEqual(txn_id, self.TRANSACTION_ID)
+        self.assertEqual(txn_id, TRANSACTION_ID)
         self.assertEqual(mutations, transaction._mutations)
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         self.assertEqual(
@@ -504,7 +516,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api.execute_sql.side_effect = RuntimeError()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
@@ -536,8 +548,8 @@ class TestTransaction(OpenTelemetryBase):
         api.execute_sql.return_value = ResultSet(stats=stats_pb)
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
+        transaction._transaction_id = TRANSACTION_ID
+        transaction.transaction_tag = TRANSACTION_TAG
         transaction._execute_sql_request_count = count
 
         if request_options is None:
@@ -558,7 +570,7 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(row_count, 1)
 
-        expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
+        expected_transaction = TransactionSelector(id=TRANSACTION_ID)
         expected_params = Struct(
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
         )
@@ -569,7 +581,7 @@ class TestTransaction(OpenTelemetryBase):
                 expected_query_options, query_options
             )
         expected_request_options = request_options
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        expected_request_options.transaction_tag = TRANSACTION_TAG
 
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
@@ -653,7 +665,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api.execute_sql.side_effect = RuntimeError()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(RuntimeError):
             transaction.execute_update(DML_QUERY)
@@ -680,7 +692,7 @@ class TestTransaction(OpenTelemetryBase):
         database.spanner_api.execute_batch_dml.side_effect = RuntimeError()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
 
         with self.assertRaises(RuntimeError):
             transaction.batch_update(statements=[DML_QUERY])
@@ -736,8 +748,8 @@ class TestTransaction(OpenTelemetryBase):
         api.execute_batch_dml.return_value = response
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        transaction.transaction_tag = self.TRANSACTION_TAG
+        transaction._transaction_id = TRANSACTION_ID
+        transaction.transaction_tag = TRANSACTION_TAG
         transaction._execute_sql_request_count = count
 
         if request_options is None:
@@ -755,7 +767,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(status, expected_status)
         self.assertEqual(row_counts, expected_row_counts)
 
-        expected_transaction = TransactionSelector(id=self.TRANSACTION_ID)
+        expected_transaction = TransactionSelector(id=TRANSACTION_ID)
         expected_insert_params = Struct(
             fields={
                 key: _make_value_pb(value) for (key, value) in insert_params.items()
@@ -771,7 +783,7 @@ class TestTransaction(OpenTelemetryBase):
             ExecuteBatchDmlRequest.Statement(sql=delete_dml),
         ]
         expected_request_options = request_options
-        expected_request_options.transaction_tag = self.TRANSACTION_TAG
+        expected_request_options.transaction_tag = TRANSACTION_TAG
 
         expected_request = ExecuteBatchDmlRequest(
             session=self.SESSION_NAME,
@@ -843,7 +855,7 @@ class TestTransaction(OpenTelemetryBase):
         api.execute_batch_dml.side_effect = RuntimeError()
         session = _Session(database)
         transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
+        transaction._transaction_id = TRANSACTION_ID
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
         insert_params = {"pkey": 12345, "desc": "DESCRIPTION"}
@@ -905,7 +917,7 @@ class TestTransaction(OpenTelemetryBase):
         empty_pb = Empty()
         from google.cloud.spanner_v1 import Transaction as TransactionPB
 
-        transaction_pb = TransactionPB(id=self.TRANSACTION_ID)
+        transaction_pb = TransactionPB(id=TRANSACTION_ID)
         database = _Database()
         api = database.spanner_api = _FauxSpannerAPI(
             _begin_transaction_response=transaction_pb, _rollback_response=empty_pb
