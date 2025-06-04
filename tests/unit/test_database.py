@@ -63,17 +63,6 @@ DIRECTED_READ_OPTIONS = {
 }
 
 
-def _make_credentials():  # pragma: NO COVER
-    import google.auth.credentials
-
-    class _CredentialsWithScopes(
-        google.auth.credentials.Credentials, google.auth.credentials.Scoped
-    ):
-        pass
-
-    return mock.Mock(spec=_CredentialsWithScopes)
-
-
 class _BaseTest(unittest.TestCase):
     PROJECT_ID = "project-id"
     PARENT = "projects/" + PROJECT_ID

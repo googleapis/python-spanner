@@ -46,15 +46,6 @@ DATABASE = "test-database"
 USER_AGENT = "user-agent"
 
 
-def _make_credentials():
-    from google.auth import credentials
-
-    class _CredentialsWithScopes(credentials.Credentials, credentials.Scoped):
-        pass
-
-    return mock.Mock(spec=_CredentialsWithScopes)
-
-
 class TestConnection(unittest.TestCase):
     def setUp(self):
         self._under_test = self._make_connection()
