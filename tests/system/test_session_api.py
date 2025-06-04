@@ -458,16 +458,32 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             os.getenv("GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS", "").lower() == "true"
         )
 
-        assert_span_attributes(
-            ot_exporter,
-            "CloudSpanner.GetSession",
-            attributes=_make_attributes(
-                db_name,
-                session_found=True,
-                x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 0}.1",
-            ),
-            span=span_list[0],
-        )
+        # [A] Verify batch checkout spans
+        # -------------------------------
+
+        request_id_1 = f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 0}.1"
+
+        if multiplexed_enabled:
+            assert_span_attributes(
+                ot_exporter,
+                "CloudSpanner.CreateMultiplexedSession",
+                attributes=_make_attributes(
+                    db_name, x_goog_spanner_request_id=request_id_1
+                ),
+                span=span_list[0],
+            )
+        else:
+            assert_span_attributes(
+                ot_exporter,
+                "CloudSpanner.GetSession",
+                attributes=_make_attributes(
+                    db_name,
+                    session_found=True,
+                    x_goog_spanner_request_id=request_id_1,
+                ),
+                span=span_list[0],
+            )
+
         assert_span_attributes(
             ot_exporter,
             "CloudSpanner.Batch.commit",
@@ -478,6 +494,9 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
             ),
             span=span_list[1],
         )
+
+        # [B] Verify snapshot checkout spans
+        # ----------------------------------
 
         if len(span_list) == 4:
             if multiplexed_enabled:
