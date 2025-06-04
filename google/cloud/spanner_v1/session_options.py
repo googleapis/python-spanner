@@ -14,6 +14,7 @@
 import logging
 import os
 from enum import Enum
+from typing import Mapping
 
 
 class TransactionType(Enum):
@@ -44,7 +45,7 @@ class SessionOptions(object):
     def __init__(self):
         # Internal overrides to disable the use of multiplexed
         # sessions in case of runtime errors.
-        self._is_multiplexed_enabled = {
+        self._is_multiplexed_enabled: Mapping[TransactionType, str] = {
             TransactionType.READ_ONLY: True,
             TransactionType.PARTITIONED: True,
             TransactionType.READ_WRITE: True,

@@ -14,6 +14,7 @@
 from datetime import timedelta
 from threading import Event, Lock, Thread
 from time import sleep, time
+from typing import Optional
 from weakref import ref
 
 from google.cloud.spanner_v1.session import Session
@@ -57,10 +58,10 @@ class DatabaseSessionsManager(object):
         # the multiplexed session to avoid any race conditions. We also create an event
         # so that the thread can terminate if the use of multiplexed session has been
         # disabled for all transactions.
-        self._multiplexed_session = None
-        self._multiplexed_session_thread = None
-        self._multiplexed_session_lock = Lock()
-        self._multiplexed_session_disabled_event = Event()
+        self._multiplexed_session: Optional[Session] = None
+        self._multiplexed_session_thread: Optional[Thread] = None
+        self._multiplexed_session_lock: Lock = Lock()
+        self._multiplexed_session_disabled_event: Event = Event()
 
     def get_session(self, transaction_type: TransactionType) -> Session:
         """Returns a session for the given transaction type from the database session manager.
