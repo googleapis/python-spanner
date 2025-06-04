@@ -15,12 +15,7 @@ from typing import Mapping
 
 import mock
 
-from google.cloud.spanner_v1 import (
-    RequestOptions,
-    BeginTransactionRequest,
-    TransactionOptions,
-    CommitRequest,
-)
+from google.cloud.spanner_v1 import RequestOptions, CommitRequest
 from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1 import Type
 from google.cloud.spanner_v1 import TypeCode
@@ -32,7 +27,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from tests._builders import build_transaction, build_transaction_pb
+from tests._builders import build_transaction
 
 from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
@@ -109,15 +104,6 @@ class TestTransaction(OpenTelemetryBase):
         selector = transaction._make_txn_selector()
         self.assertEqual(selector.id, self.TRANSACTION_ID)
 
-    def test_begin_already_begun(self):
-        session = _Session()
-        transaction = self._make_one(session)
-        transaction._transaction_id = self.TRANSACTION_ID
-        with self.assertRaises(ValueError):
-            transaction.begin()
-
-        self.assertNoSpans()
-
     def test_begin_already_rolled_back(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -135,78 +121,6 @@ class TestTransaction(OpenTelemetryBase):
             transaction.begin()
 
         self.assertNoSpans()
-
-    def test_begin_w_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = RuntimeError()
-        session = _Session(database)
-        transaction = self._make_one(session)
-
-        with self.assertRaises(RuntimeError):
-            transaction.begin()
-
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
-        self.assertSpanAttributes(
-            "CloudSpanner.Transaction.begin",
-            status=StatusCode.ERROR,
-            attributes=self._build_span_attributes(
-                database, x_goog_spanner_request_id=req_id
-            ),
-        )
-
-    def test_begin_ok(self):
-        transaction = build_transaction()
-        session = transaction._session
-        database = session._database
-
-        begin_transaction = database.spanner_api.begin_transaction
-        begin_transaction.return_value = build_transaction_pb(id=self.TRANSACTION_ID)
-
-        transaction_id = transaction.begin()
-
-        self.assertEqual(transaction_id, self.TRANSACTION_ID)
-        self.assertEqual(transaction._transaction_id, self.TRANSACTION_ID)
-
-        request_id = self._build_request_id(database)
-
-        begin_transaction.assert_called_once_with(
-            request=BeginTransactionRequest(
-                session=session.name,
-                options=TransactionOptions(read_write=TransactionOptions.ReadWrite()),
-            ),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                ("x-goog-spanner-request-id", request_id),
-            ],
-        )
-
-        self.assertSpanAttributes(
-            "CloudSpanner.Transaction.begin",
-            attributes=self._build_span_attributes(
-                database, x_goog_spanner_request_id=request_id
-            ),
-        )
-
-    def test_begin_w_retry(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-        )
-        from google.api_core.exceptions import InternalServerError
-
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = [
-            InternalServerError("Received unexpected EOS on DATA frame from server"),
-            TransactionPB(id=self.TRANSACTION_ID),
-        ]
-
-        session = _Session(database)
-        transaction = self._make_one(session)
-        transaction.begin()
-
-        self.assertEqual(api.begin_transaction.call_count, 2)
 
     def test_rollback_not_begun(self):
         database = _Database()

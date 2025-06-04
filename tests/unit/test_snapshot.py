@@ -11,15 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from typing import Mapping
 
 from google.api_core import gapic_v1
 import mock
+from google.api_core.exceptions import InternalServerError, Aborted
 
+from google.cloud.spanner_admin_database_v1 import Database
 from google.cloud.spanner_v1 import (
     RequestOptions,
     DirectedReadOptions,
     BeginTransactionRequest,
+    TransactionSelector,
+)
+from google.cloud.spanner_v1.snapshot import _SnapshotBase
+from tests._builders import (
+    build_precommit_token_pb,
+    build_spanner_api,
+    build_session,
+    build_transaction_pb,
 )
 from tests._helpers import (
     OpenTelemetryBase,
@@ -83,6 +93,16 @@ DIRECTED_READ_OPTIONS_FOR_CLIENT = {
     },
 }
 
+TRANSACTION_ID = b"transaction-id"
+
+PRECOMMIT_TOKEN_1 = build_precommit_token_pb(precommit_token=b"1", seq_num=1)
+PRECOMMIT_TOKEN_2 = build_precommit_token_pb(precommit_token=b"2", seq_num=2)
+
+# Common errors for testing.
+INTERNAL_SERVER_ERROR_UNEXPECTED_EOS = InternalServerError(
+    "Received unexpected EOS on DATA frame from server"
+)
+
 
 def _makeTimestamp():
     import datetime
@@ -119,7 +139,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
         return _Derived(session)
 
-    def _make_spanner_api(self):
+    def build_spanner_api(self):
         from google.cloud.spanner_v1 import SpannerClient
 
         return mock.create_autospec(SpannerClient, instance=True)
@@ -161,7 +181,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -183,7 +203,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -210,7 +230,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -239,7 +259,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -249,8 +269,6 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_no_token(self):
-        from google.api_core.exceptions import InternalServerError
-
         ITEMS = (
             self._make_item(0),
             self._make_item(1, resume_token=RESUME_TOKEN),
@@ -258,15 +276,13 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         )
         before = _MockIterator(
             fail_after=True,
-            error=InternalServerError(
-                "Received unexpected EOS on DATA frame from server"
-            ),
+            error=INTERNAL_SERVER_ERROR_UNEXPECTED_EOS,
         )
         after = _MockIterator(*ITEMS)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -288,7 +304,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(spec=["resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -318,7 +334,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -328,23 +344,19 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error(self):
-        from google.api_core.exceptions import InternalServerError
-
         FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
         SECOND = (self._make_item(2),)  # discarded after 503
         LAST = (self._make_item(3),)
         before = _MockIterator(
             *(FIRST + SECOND),
             fail_after=True,
-            error=InternalServerError(
-                "Received unexpected EOS on DATA frame from server"
-            ),
+            error=INTERNAL_SERVER_ERROR_UNEXPECTED_EOS,
         )
         after = _MockIterator(*LAST)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -366,7 +378,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -395,7 +407,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -417,7 +429,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = ReadRequest(transaction=None)
         restart = mock.Mock(spec=[], return_value=before)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
@@ -448,7 +460,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = ReadRequest(transaction=None)
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
@@ -486,7 +498,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = ReadRequest(transaction=None)
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         derived._multi_use = True
@@ -509,22 +521,18 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         self.assertNoSpans()
 
     def test_iteration_w_raw_raising_retryable_internal_error_after_token(self):
-        from google.api_core.exceptions import InternalServerError
-
         FIRST = (self._make_item(0), self._make_item(1, resume_token=RESUME_TOKEN))
         SECOND = (self._make_item(2), self._make_item(3))
         before = _MockIterator(
             *FIRST,
             fail_after=True,
-            error=InternalServerError(
-                "Received unexpected EOS on DATA frame from server"
-            ),
+            error=INTERNAL_SERVER_ERROR_UNEXPECTED_EOS,
         )
         after = _MockIterator(*SECOND)
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -545,7 +553,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], side_effect=[before, after])
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(derived, restart, request, session=session)
@@ -569,7 +577,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
         request = mock.Mock(test="test", spec=["test", "resume_token"])
         restart = mock.Mock(spec=[], return_value=raw)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         session = _Session(database)
         derived = self._makeDerived(session)
         resumable = self._call_fut(
@@ -599,7 +607,7 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
             restart = mock.Mock(spec=[], side_effect=[before, after])
             name = "TestSpan"
             database = _Database()
-            database.spanner_api = self._make_spanner_api()
+            database.spanner_api = build_spanner_api()
             session = _Session(database)
             derived = self._makeDerived(session)
             resumable = self._call_fut(
@@ -624,52 +632,34 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
-    PROJECT_ID = "project-id"
-    INSTANCE_ID = "instance-id"
-    INSTANCE_NAME = "projects/" + PROJECT_ID + "/instances/" + INSTANCE_ID
-    DATABASE_ID = "database-id"
-    DATABASE_NAME = INSTANCE_NAME + "/databases/" + DATABASE_ID
-    SESSION_ID = "session-id"
-    SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
+    class _Derived(_SnapshotBase):
+        """A minimally-implemented _SnapshotBase-derived class for testing"""
 
-    def _getTargetClass(self):
-        from google.cloud.spanner_v1.snapshot import _SnapshotBase
+        # Use a simplified implementation of _make_txn_selector
+        # that always returns the same transaction selector.
+        TRANSACTION_SELECTOR = TransactionSelector()
 
-        return _SnapshotBase
+        def _make_txn_selector(self) -> TransactionSelector:
+            return self.TRANSACTION_SELECTOR
 
-    def _make_one(self, session):
-        return self._getTargetClass()(session)
+    @staticmethod
+    def _build_derived(session=None, multi_use=False, read_only=True):
+        """Builds and returns an instance of a minimally-implemented
+        _SnapshotBase-derived class for testing."""
 
-    def _makeDerived(self, session):
-        class _Derived(self._getTargetClass()):
-            _transaction_id = None
-            _multi_use = False
+        session = session or build_session()
+        if session.session_id is None:
+            session.create()
 
-            def _make_txn_selector(self):
-                from google.cloud.spanner_v1 import (
-                    TransactionOptions,
-                    TransactionSelector,
-                )
+        derived = Test_SnapshotBase._Derived(session=session)
+        derived._multi_use = multi_use
+        derived._read_only = read_only
 
-                if self._transaction_id:
-                    return TransactionSelector(id=self._transaction_id)
-                options = TransactionOptions(
-                    read_only=TransactionOptions.ReadOnly(strong=True)
-                )
-                if self._multi_use:
-                    return TransactionSelector(begin=options)
-                return TransactionSelector(single_use=options)
-
-        return _Derived(session)
-
-    def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
-        return mock.create_autospec(SpannerClient, instance=True)
+        return derived
 
     def test_ctor(self):
         session = _Session()
-        base = self._make_one(session)
+        base = _SnapshotBase(session)
         self.assertIs(base._session, session)
         self.assertEqual(base._execute_sql_request_count, 0)
 
@@ -677,19 +667,175 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test__make_txn_selector_virtual(self):
         session = _Session()
-        base = self._make_one(session)
+        base = _SnapshotBase(session)
         with self.assertRaises(NotImplementedError):
             base._make_txn_selector()
+
+    def test_begin_error_not_multi_use(self):
+        derived = self._build_derived(multi_use=False)
+
+        self.reset()
+        with self.assertRaises(ValueError):
+            derived.begin()
+
+        self.assertNoSpans()
+
+    def test_begin_error_already_begun(self):
+        derived = self._build_derived(multi_use=True)
+        derived.begin()
+
+        self.reset()
+        with self.assertRaises(ValueError):
+            derived.begin()
+
+        self.assertNoSpans()
+
+    def test_begin_error_other(self):
+        derived = self._build_derived(multi_use=True)
+
+        database = derived._session._database
+        begin_transaction = database.spanner_api.begin_transaction
+        begin_transaction.side_effect = RuntimeError()
+
+        self.reset()
+        with self.assertRaises(RuntimeError):
+            derived.begin()
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        self.assertSpanAttributes(
+            name="CloudSpanner._Derived.begin",
+            status=StatusCode.ERROR,
+            attributes=_build_span_attributes(database),
+        )
+
+    def test_begin_read_write(self):
+        derived = self._build_derived(multi_use=True, read_only=False)
+
+        begin_transaction = derived._session._database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb()
+
+        self._execute_begin(derived)
+
+    def test_begin_read_only(self):
+        derived = self._build_derived(multi_use=True, read_only=True)
+
+        begin_transaction = derived._session._database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb()
+
+        self._execute_begin(derived)
+
+    def test_begin_precommit_token(self):
+        derived = self._build_derived(multi_use=True)
+
+        begin_transaction = derived._session._database.spanner_api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(
+            precommit_token=PRECOMMIT_TOKEN_1
+        )
+
+        self._execute_begin(derived)
+
+    def test_begin_retry_for_internal_server_error(self):
+        derived = self._build_derived(multi_use=True)
+
+        begin_transaction = derived._session._database.spanner_api.begin_transaction
+        begin_transaction.side_effect = [
+            INTERNAL_SERVER_ERROR_UNEXPECTED_EOS,
+            build_transaction_pb(),
+        ]
+
+        self._execute_begin(derived, attempts=2)
+
+        expected_statuses = [
+            (
+                "Transaction Begin Attempt Failed. Retrying",
+                {"attempt": 1, "sleep_seconds": 4},
+            )
+        ]
+        actual_statuses = self.finished_spans_events_statuses()
+        self.assertEqual(expected_statuses, actual_statuses)
+
+    def test_begin_retry_for_aborted(self):
+        derived = self._build_derived(multi_use=True)
+
+        begin_transaction = derived._session._database.spanner_api.begin_transaction
+        begin_transaction.side_effect = [
+            Aborted("test"),
+            build_transaction_pb(),
+        ]
+
+        self._execute_begin(derived, attempts=2)
+
+        expected_statuses = [
+            (
+                "Transaction Begin Attempt Failed. Retrying",
+                {"attempt": 1, "sleep_seconds": 4},
+            )
+        ]
+        actual_statuses = self.finished_spans_events_statuses()
+        self.assertEqual(expected_statuses, actual_statuses)
+
+    def _execute_begin(self, derived: _Derived, attempts: int = 1):
+        """Helper for testing _SnapshotBase.begin(). Executes method and verifies
+        transaction state, begin transaction API call, and span attributes and events.
+        """
+
+        session = derived._session
+        database = session._database
+
+        # Clear spans.
+        self.reset()
+
+        transaction_id = derived.begin()
+
+        # Verify transaction state.
+        begin_transaction = database.spanner_api.begin_transaction
+        expected_transaction_id = begin_transaction.return_value.id or None
+        expected_precommit_token = (
+            begin_transaction.return_value.precommit_token or None
+        )
+
+        self.assertEqual(transaction_id, expected_transaction_id)
+        self.assertEqual(derived._transaction_id, expected_transaction_id)
+        self.assertEqual(derived._precommit_token, expected_precommit_token)
+
+        # Verify begin transaction API call.
+        self.assertEqual(begin_transaction.call_count, attempts)
+
+        expected_metadata = [
+            ("google-cloud-resource-prefix", database.name),
+            ("x-goog-spanner-request-id", _build_request_id(database, attempts)),
+        ]
+        if not derived._read_only and database._route_to_leader_enabled:
+            expected_metadata.insert(-1, ("x-goog-spanner-route-to-leader", "true"))
+
+        database.spanner_api.begin_transaction.assert_called_with(
+            request=BeginTransactionRequest(
+                session=session.name, options=self._Derived.TRANSACTION_SELECTOR.begin
+            ),
+            metadata=expected_metadata,
+        )
+
+        if not HAS_OPENTELEMETRY_INSTALLED:
+            return
+
+        # Verify span attributes.
+        expected_span_name = "CloudSpanner._Derived.begin"
+        self.assertSpanAttributes(
+            name=expected_span_name,
+            attributes=_build_span_attributes(database, attempts),
+        )
 
     def test_read_other_error(self):
         from google.cloud.spanner_v1.keyset import KeySet
 
         keyset = KeySet(all_=True)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         database.spanner_api.streaming_read.side_effect = RuntimeError()
         session = _Session(database)
-        derived = self._makeDerived(session)
+        derived = self._build_derived(session)
 
         with self.assertRaises(RuntimeError):
             list(derived.read(TABLE_NAME, COLUMNS, keyset))
@@ -706,7 +852,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
-    def _read_helper(
+    def _execute_read(
         self,
         multi_use,
         first=True,
@@ -718,15 +864,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
         directed_read_options=None,
         directed_read_options_at_client_level=None,
     ):
+        """Helper for testing _SnapshotBase.read(). Executes method and verifies
+        transaction state, begin transaction API call, and span attributes and events.
+        """
+
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             PartialResultSet,
             ResultSetMetadata,
             ResultSetStats,
-        )
-        from google.cloud.spanner_v1 import (
-            TransactionSelector,
-            TransactionOptions,
         )
         from google.cloud.spanner_v1 import ReadRequest
         from google.cloud.spanner_v1 import Type, StructType
@@ -759,10 +905,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
         database = _Database(
             directed_read_options=directed_read_options_at_client_level
         )
-        api = database.spanner_api = self._make_spanner_api()
+        api = database.spanner_api = build_spanner_api()
         api.streaming_read.return_value = _MockIterator(*result_sets)
         session = _Session(database)
-        derived = self._makeDerived(session)
+        derived = self._build_derived(session)
         derived._multi_use = multi_use
         derived._read_request_count = count
         if not first:
@@ -804,18 +950,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
 
-        txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(strong=True)
-        )
-
-        if multi_use:
-            if first:
-                expected_transaction = TransactionSelector(begin=txn_options)
-            else:
-                expected_transaction = TransactionSelector(id=TXN_ID)
-        else:
-            expected_transaction = TransactionSelector(single_use=txn_options)
-
         if partition is not None:
             expected_limit = 0
         else:
@@ -832,11 +966,11 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         expected_request = ReadRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             table=TABLE_NAME,
             columns=COLUMNS,
             key_set=keyset._to_pb(),
-            transaction=expected_transaction,
+            transaction=self._Derived.TRANSACTION_SELECTOR,
             index=INDEX,
             limit=expected_limit,
             partition_token=partition,
@@ -868,76 +1002,76 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
     def test_read_wo_multi_use(self):
-        self._read_helper(multi_use=False)
+        self._execute_read(multi_use=False)
 
     def test_read_w_request_tag_success(self):
         request_options = RequestOptions(
             request_tag="tag-1",
         )
-        self._read_helper(multi_use=False, request_options=request_options)
+        self._execute_read(multi_use=False, request_options=request_options)
 
     def test_read_w_transaction_tag_success(self):
         request_options = RequestOptions(
             transaction_tag="tag-1-1",
         )
-        self._read_helper(multi_use=False, request_options=request_options)
+        self._execute_read(multi_use=False, request_options=request_options)
 
     def test_read_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(
             request_tag="tag-1",
             transaction_tag="tag-1-1",
         )
-        self._read_helper(multi_use=False, request_options=request_options)
+        self._execute_read(multi_use=False, request_options=request_options)
 
     def test_read_w_request_and_transaction_tag_dictionary_success(self):
         request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
-        self._read_helper(multi_use=False, request_options=request_options)
+        self._execute_read(multi_use=False, request_options=request_options)
 
     def test_read_w_incorrect_tag_dictionary_error(self):
         request_options = {"incorrect_tag": "tag-1-1"}
         with self.assertRaises(ValueError):
-            self._read_helper(multi_use=False, request_options=request_options)
+            self._execute_read(multi_use=False, request_options=request_options)
 
     def test_read_wo_multi_use_w_read_request_count_gt_0(self):
         with self.assertRaises(ValueError):
-            self._read_helper(multi_use=False, count=1)
+            self._execute_read(multi_use=False, count=1)
 
     def test_read_w_multi_use_wo_first(self):
-        self._read_helper(multi_use=True, first=False)
+        self._execute_read(multi_use=True, first=False)
 
     def test_read_w_multi_use_wo_first_w_count_gt_0(self):
-        self._read_helper(multi_use=True, first=False, count=1)
+        self._execute_read(multi_use=True, first=False, count=1)
 
     def test_read_w_multi_use_w_first_w_partition(self):
         PARTITION = b"FADEABED"
-        self._read_helper(multi_use=True, first=True, partition=PARTITION)
+        self._execute_read(multi_use=True, first=True, partition=PARTITION)
 
     def test_read_w_multi_use_w_first_w_count_gt_0(self):
         with self.assertRaises(ValueError):
-            self._read_helper(multi_use=True, first=True, count=1)
+            self._execute_read(multi_use=True, first=True, count=1)
 
     def test_read_w_timeout_param(self):
-        self._read_helper(multi_use=True, first=False, timeout=2.0)
+        self._execute_read(multi_use=True, first=False, timeout=2.0)
 
     def test_read_w_retry_param(self):
-        self._read_helper(multi_use=True, first=False, retry=Retry(deadline=60))
+        self._execute_read(multi_use=True, first=False, retry=Retry(deadline=60))
 
     def test_read_w_timeout_and_retry_params(self):
-        self._read_helper(
+        self._execute_read(
             multi_use=True, first=False, retry=Retry(deadline=60), timeout=2.0
         )
 
     def test_read_w_directed_read_options(self):
-        self._read_helper(multi_use=False, directed_read_options=DIRECTED_READ_OPTIONS)
+        self._execute_read(multi_use=False, directed_read_options=DIRECTED_READ_OPTIONS)
 
     def test_read_w_directed_read_options_at_client_level(self):
-        self._read_helper(
+        self._execute_read(
             multi_use=False,
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
 
     def test_read_w_directed_read_options_override(self):
-        self._read_helper(
+        self._execute_read(
             multi_use=False,
             directed_read_options=DIRECTED_READ_OPTIONS,
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
@@ -945,10 +1079,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_execute_sql_other_error(self):
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         database.spanner_api.execute_streaming_sql.side_effect = RuntimeError()
         session = _Session(database)
-        derived = self._makeDerived(session)
+        derived = self._build_derived(session)
 
         with self.assertRaises(RuntimeError):
             list(derived.execute_sql(SQL_QUERY))
@@ -979,15 +1113,15 @@ class Test_SnapshotBase(OpenTelemetryBase):
         directed_read_options=None,
         directed_read_options_at_client_level=None,
     ):
+        """Helper for testing _SnapshotBase.execute_sql(). Executes method and verifies
+        transaction state, begin transaction API call, and span attributes and events.
+        """
+
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import (
             PartialResultSet,
             ResultSetMetadata,
             ResultSetStats,
-        )
-        from google.cloud.spanner_v1 import (
-            TransactionSelector,
-            TransactionOptions,
         )
         from google.cloud.spanner_v1 import ExecuteSqlRequest
         from google.cloud.spanner_v1 import Type, StructType
@@ -1021,11 +1155,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
         database = _Database(
             directed_read_options=directed_read_options_at_client_level
         )
-        api = database.spanner_api = self._make_spanner_api()
+        api = database.spanner_api = build_spanner_api()
         api.execute_streaming_sql.return_value = iterator
         session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = multi_use
+        derived = self._build_derived(session, multi_use=multi_use)
         derived._read_request_count = count
         derived._execute_sql_request_count = sql_count
         if not first:
@@ -1055,18 +1188,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertEqual(result_set.metadata, metadata_pb)
         self.assertEqual(result_set.stats, stats_pb)
 
-        txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(strong=True)
-        )
-
-        if multi_use:
-            if first:
-                expected_transaction = TransactionSelector(begin=txn_options)
-            else:
-                expected_transaction = TransactionSelector(id=TXN_ID)
-        else:
-            expected_transaction = TransactionSelector(single_use=txn_options)
-
         expected_params = Struct(
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
         )
@@ -1089,9 +1210,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
         )
 
         expected_request = ExecuteSqlRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             sql=SQL_QUERY_WITH_PARAM,
-            transaction=expected_transaction,
+            transaction=self._Derived.TRANSACTION_SELECTOR,
             params=expected_params,
             param_types=PARAM_TYPES,
             query_mode=MODE,
@@ -1233,7 +1354,6 @@ class Test_SnapshotBase(OpenTelemetryBase):
         from google.cloud.spanner_v1 import PartitionReadRequest
         from google.cloud.spanner_v1 import PartitionResponse
         from google.cloud.spanner_v1 import Transaction
-        from google.cloud.spanner_v1 import TransactionSelector
 
         keyset = KeySet(all_=True)
         new_txn_id = b"ABECAB91"
@@ -1247,10 +1367,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
             transaction=Transaction(id=new_txn_id),
         )
         database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
+        api = database.spanner_api = build_spanner_api()
         api.partition_read.return_value = response
         session = _Session(database)
-        derived = self._makeDerived(session)
+        derived = self._build_derived(session)
         derived._multi_use = multi_use
         if w_txn:
             derived._transaction_id = TXN_ID
@@ -1269,18 +1389,16 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         self.assertEqual(tokens, [token_1, token_2])
 
-        expected_txn_selector = TransactionSelector(id=TXN_ID)
-
         expected_partition_options = PartitionOptions(
             partition_size_bytes=size, max_partitions=max_partitions
         )
 
         expected_request = PartitionReadRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             table=TABLE_NAME,
             columns=COLUMNS,
             key_set=keyset._to_pb(),
-            transaction=expected_txn_selector,
+            transaction=self._Derived.TRANSACTION_SELECTOR,
             index=index,
             partition_options=expected_partition_options,
         )
@@ -1326,11 +1444,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         keyset = KeySet(all_=True)
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         database.spanner_api.partition_read.side_effect = RuntimeError()
         session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = True
+        derived = self._build_derived(session, multi_use=True)
         derived._transaction_id = TXN_ID
 
         with self.assertRaises(RuntimeError):
@@ -1350,14 +1467,13 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_partition_read_w_retry(self):
         from google.cloud.spanner_v1.keyset import KeySet
-        from google.api_core.exceptions import InternalServerError
         from google.cloud.spanner_v1 import Partition
         from google.cloud.spanner_v1 import PartitionResponse
         from google.cloud.spanner_v1 import Transaction
 
         keyset = KeySet(all_=True)
         database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
+        api = database.spanner_api = build_spanner_api()
         new_txn_id = b"ABECAB91"
         token_1 = b"FACE0FFF"
         token_2 = b"BADE8CAF"
@@ -1369,12 +1485,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
             transaction=Transaction(id=new_txn_id),
         )
         database.spanner_api.partition_read.side_effect = [
-            InternalServerError("Received unexpected EOS on DATA frame from server"),
+            INTERNAL_SERVER_ERROR_UNEXPECTED_EOS,
             response,
         ]
 
         session = _Session(database)
-        derived = self._makeDerived(session)
+        derived = self._build_derived(session)
         derived._multi_use = True
         derived._transaction_id = TXN_ID
 
@@ -1413,13 +1529,16 @@ class Test_SnapshotBase(OpenTelemetryBase):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
+        """Helper for testing _SnapshotBase.partition_query(). Executes method and verifies
+        transaction state, begin transaction API call, and span attributes and events.
+        """
+
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import Partition
         from google.cloud.spanner_v1 import PartitionOptions
         from google.cloud.spanner_v1 import PartitionQueryRequest
         from google.cloud.spanner_v1 import PartitionResponse
         from google.cloud.spanner_v1 import Transaction
-        from google.cloud.spanner_v1 import TransactionSelector
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         new_txn_id = b"ABECAB91"
@@ -1433,11 +1552,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
             transaction=Transaction(id=new_txn_id),
         )
         database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
+        api = database.spanner_api = build_spanner_api()
         api.partition_query.return_value = response
         session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = multi_use
+        derived = self._build_derived(session, multi_use=multi_use)
         if w_txn:
             derived._transaction_id = TXN_ID
 
@@ -1459,16 +1577,14 @@ class Test_SnapshotBase(OpenTelemetryBase):
             fields={key: _make_value_pb(value) for (key, value) in PARAMS.items()}
         )
 
-        expected_txn_selector = TransactionSelector(id=TXN_ID)
-
         expected_partition_options = PartitionOptions(
             partition_size_bytes=size, max_partitions=max_partitions
         )
 
         expected_request = PartitionQueryRequest(
-            session=self.SESSION_NAME,
+            session=session.name,
             sql=SQL_QUERY_WITH_PARAM,
-            transaction=expected_txn_selector,
+            transaction=self._Derived.TRANSACTION_SELECTOR,
             params=expected_params,
             param_types=PARAM_TYPES,
             partition_options=expected_partition_options,
@@ -1502,11 +1618,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
     def test_partition_query_other_error(self):
         database = _Database()
-        database.spanner_api = self._make_spanner_api()
+        database.spanner_api = build_spanner_api()
         database.spanner_api.partition_query.side_effect = RuntimeError()
         session = _Session(database)
-        derived = self._makeDerived(session)
-        derived._multi_use = True
+        derived = self._build_derived(session, multi_use=True)
         derived._transaction_id = TXN_ID
 
         with self.assertRaises(RuntimeError):
@@ -1569,11 +1684,6 @@ class TestSnapshot(OpenTelemetryBase):
 
     def _make_one(self, *args, **kwargs):
         return self._getTargetClass()(*args, **kwargs)
-
-    def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
-
-        return mock.create_autospec(SpannerClient, instance=True)
 
     def _makeDuration(self, seconds=1, microseconds=0):
         import datetime
@@ -1795,165 +1905,6 @@ class TestSnapshot(OpenTelemetryBase):
             type(options).pb(options).read_only.exact_staleness.nanos, 123456000
         )
 
-    def test_begin_wo_multi_use(self):
-        session = _Session()
-        snapshot = self._make_one(session)
-        with self.assertRaises(ValueError):
-            snapshot.begin()
-
-    def test_begin_w_read_request_count_gt_0(self):
-        session = _Session()
-        snapshot = self._make_one(session, multi_use=True)
-        snapshot._read_request_count = 1
-        with self.assertRaises(ValueError):
-            snapshot.begin()
-
-    def test_begin_w_existing_txn_id(self):
-        session = _Session()
-        snapshot = self._make_one(session, multi_use=True)
-        snapshot._transaction_id = TXN_ID
-        with self.assertRaises(ValueError):
-            snapshot.begin()
-
-    def test_begin_w_other_error(self):
-        database = _Database()
-        database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = RuntimeError()
-        timestamp = _makeTimestamp()
-        session = _Session(database)
-        snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
-
-        with self.assertRaises(RuntimeError):
-            snapshot.begin()
-
-        if not HAS_OPENTELEMETRY_INSTALLED:
-            return
-
-        span_list = self.get_finished_spans()
-        got_span_names = [span.name for span in span_list]
-        want_span_names = ["CloudSpanner.Snapshot.begin"]
-        assert got_span_names == want_span_names
-
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
-        self.assertSpanAttributes(
-            "CloudSpanner.Snapshot.begin",
-            status=StatusCode.ERROR,
-            attributes=dict(BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id),
-        )
-
-    def test_begin_w_retry(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-        )
-        from google.api_core.exceptions import InternalServerError
-
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        database.spanner_api.begin_transaction.side_effect = [
-            InternalServerError("Received unexpected EOS on DATA frame from server"),
-            TransactionPB(id=TXN_ID),
-        ]
-        timestamp = _makeTimestamp()
-        session = _Session(database)
-        snapshot = self._make_one(session, read_timestamp=timestamp, multi_use=True)
-
-        snapshot.begin()
-        self.assertEqual(api.begin_transaction.call_count, 2)
-
-    def test_begin_ok_exact_staleness(self):
-        from google.protobuf.duration_pb2 import Duration
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionOptions,
-        )
-
-        transaction_pb = TransactionPB(id=TXN_ID)
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        api.begin_transaction.return_value = transaction_pb
-        duration = self._makeDuration(seconds=SECONDS, microseconds=MICROS)
-        session = _Session(database)
-        snapshot = self._make_one(session, exact_staleness=duration, multi_use=True)
-
-        txn_id = snapshot.begin()
-
-        self.assertEqual(txn_id, TXN_ID)
-        self.assertEqual(snapshot._transaction_id, TXN_ID)
-
-        expected_duration = Duration(seconds=SECONDS, nanos=MICROS * 1000)
-        expected_txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(
-                exact_staleness=expected_duration, return_read_timestamp=True
-            )
-        )
-
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
-        api.begin_transaction.assert_called_once_with(
-            request=BeginTransactionRequest(
-                session=session.name,
-                options=expected_txn_options,
-                mutation_key=None,
-            ),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                (
-                    "x-goog-spanner-request-id",
-                    req_id,
-                ),
-            ],
-        )
-
-        self.assertSpanAttributes(
-            "CloudSpanner.Snapshot.begin",
-            status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id),
-        )
-
-    def test_begin_ok_exact_strong(self):
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionOptions,
-        )
-
-        transaction_pb = TransactionPB(id=TXN_ID)
-        database = _Database()
-        api = database.spanner_api = self._make_spanner_api()
-        api.begin_transaction.return_value = transaction_pb
-        session = _Session(database)
-        snapshot = self._make_one(session, multi_use=True)
-
-        txn_id = snapshot.begin()
-
-        self.assertEqual(txn_id, TXN_ID)
-        self.assertEqual(snapshot._transaction_id, TXN_ID)
-
-        expected_txn_options = TransactionOptions(
-            read_only=TransactionOptions.ReadOnly(
-                strong=True, return_read_timestamp=True
-            )
-        )
-
-        req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
-        api.begin_transaction.assert_called_once_with(
-            request=BeginTransactionRequest(
-                session=session.name,
-                options=expected_txn_options,
-            ),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                (
-                    "x-goog-spanner-request-id",
-                    req_id,
-                ),
-            ],
-        )
-
-        self.assertSpanAttributes(
-            "CloudSpanner.Snapshot.begin",
-            status=StatusCode.OK,
-            attributes=dict(BASE_ATTRIBUTES, x_goog_spanner_request_id=req_id),
-        )
-
 
 class _Client(object):
     NTH_CLIENT = AtomicCounter()
@@ -2041,3 +1992,34 @@ class _MockIterator(object):
             raise
 
     next = __next__
+
+
+def _build_span_attributes(
+    database: Database, attempt: int = 1, **extra_attributes
+) -> Mapping[str, str]:
+    """Builds the attributes for spans using the given database and extra attributes."""
+
+    attributes = enrich_with_otel_scope(
+        {
+            "db.type": "spanner",
+            "db.url": "spanner.googleapis.com",
+            "db.instance": database.name,
+            "net.host.name": "spanner.googleapis.com",
+            "gcp.client.service": "spanner",
+            "gcp.client.version": LIB_VERSION,
+            "gcp.client.repo": "googleapis/python-spanner",
+            "x_goog_spanner_request_id": _build_request_id(database, attempt),
+        }
+    )
+
+    if extra_attributes:
+        attributes.update(extra_attributes)
+
+    return attributes
+
+
+def _build_request_id(database: Database, attempt: int = 1) -> str:
+    """Builds a request ID for an Spanner Client API request with the given database and attempt number."""
+
+    client = database._instance._client
+    return f"1.{REQ_RAND_PROCESS_ID}.{client._nth_client_id}.{database._channel_id}.{client._nth_request.value}.{attempt}"
