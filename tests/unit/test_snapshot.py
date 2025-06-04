@@ -96,8 +96,6 @@ DIRECTED_READ_OPTIONS_FOR_CLIENT = {
     },
 }
 
-TRANSACTION_ID = b"transaction-id"
-
 PRECOMMIT_TOKEN_1 = build_precommit_token_pb(precommit_token=b"1", seq_num=1)
 PRECOMMIT_TOKEN_2 = build_precommit_token_pb(precommit_token=b"2", seq_num=2)
 
@@ -866,6 +864,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         request_options=None,
         directed_read_options=None,
         directed_read_options_at_client_level=None,
+        use_multiplexed=False,
     ):
         """Helper for testing _SnapshotBase.read(). Executes method and verifies
         transaction state, begin transaction API call, and span attributes and events.
@@ -891,14 +890,33 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
+
+        # If the transaction had not already begun, the first result
+        # set will include metadata with information about the transaction.
+        transaction_pb = build_transaction_pb(id=TXN_ID) if first else None
+        metadata_pb = ResultSetMetadata(
+            row_type=struct_type_pb,
+            transaction=transaction_pb,
+        )
+
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
-        result_sets = [
-            PartialResultSet(metadata=metadata_pb),
-            PartialResultSet(stats=stats_pb),
-        ]
+
+        # Precommit tokens will be included in the result sets if the transaction is on
+        # a multiplexed session. Precommit tokens may be returned out of order.
+        partial_result_set_1_args = {"metadata": metadata_pb}
+        if use_multiplexed:
+            partial_result_set_1_args["precommit_token"] = PRECOMMIT_TOKEN_2
+        partial_result_set_1 = PartialResultSet(**partial_result_set_1_args)
+
+        partial_result_set_2_args = {"stats": stats_pb}
+        if use_multiplexed:
+            partial_result_set_2_args["precommit_token"] = PRECOMMIT_TOKEN_1
+        partial_result_set_2 = PartialResultSet(**partial_result_set_2_args)
+
+        result_sets = [partial_result_set_1, partial_result_set_2]
+
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
         KEYS = [["bharney@example.com"], ["phred@example.com"]]
@@ -908,6 +926,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         database = _Database(
             directed_read_options=directed_read_options_at_client_level
         )
+
         api = database.spanner_api = build_spanner_api()
         api.streaming_read.return_value = _MockIterator(*result_sets)
         session = _Session(database)
@@ -1004,6 +1023,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
+        if first:
+            self.assertEqual(derived._transaction_id, TXN_ID)
+
+        if use_multiplexed:
+            self.assertEqual(derived._precommit_token, PRECOMMIT_TOKEN_2)
+
     def test_read_wo_multi_use(self):
         self._execute_read(multi_use=False)
 
@@ -1038,6 +1063,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
     def test_read_wo_multi_use_w_read_request_count_gt_0(self):
         with self.assertRaises(ValueError):
             self._execute_read(multi_use=False, count=1)
+
+    def test_read_w_multi_use_w_first(self):
+        self._execute_read(multi_use=True, first=True)
 
     def test_read_w_multi_use_wo_first(self):
         self._execute_read(multi_use=True, first=False)
@@ -1080,6 +1108,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
 
+    def test_read_w_precommit_tokens(self):
+        self._execute_read(multi_use=True, use_multiplexed=True)
+
     def test_execute_sql_other_error(self):
         database = _Database()
         database.spanner_api = build_spanner_api()
@@ -1115,6 +1146,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         retry=gapic_v1.method.DEFAULT,
         directed_read_options=None,
         directed_read_options_at_client_level=None,
+        use_multiplexed=False,
     ):
         """Helper for testing _SnapshotBase.execute_sql(). Executes method and verifies
         transaction state, begin transaction API call, and span attributes and events.
@@ -1144,14 +1176,34 @@ class Test_SnapshotBase(OpenTelemetryBase):
                 StructType.Field(name="age", type_=Type(code=TypeCode.INT64)),
             ]
         )
-        metadata_pb = ResultSetMetadata(row_type=struct_type_pb)
+
+        # If the transaction has not already begun, the first result set will
+        # include metadata with information about the newly-begun transaction.
+        transaction_pb = build_transaction_pb(id=TXN_ID) if first else None
+        metadata_pb = ResultSetMetadata(
+            row_type=struct_type_pb,
+            transaction=transaction_pb,
+        )
+
         stats_pb = ResultSetStats(
             query_stats=Struct(fields={"rows_returned": _make_value_pb(2)})
         )
-        result_sets = [
-            PartialResultSet(metadata=metadata_pb),
-            PartialResultSet(stats=stats_pb),
-        ]
+
+        # Precommit tokens will be included in the result sets if the transaction is on
+        # a multiplexed session. Return the precommit tokens out of order to verify that
+        # the transaction tracks the one with the highest sequence number.
+        partial_result_set_1_args = {"metadata": metadata_pb}
+        if use_multiplexed:
+            partial_result_set_1_args["precommit_token"] = PRECOMMIT_TOKEN_2
+        partial_result_set_1 = PartialResultSet(**partial_result_set_1_args)
+
+        partial_result_set_2_args = {"stats": stats_pb}
+        if use_multiplexed:
+            partial_result_set_2_args["precommit_token"] = PRECOMMIT_TOKEN_1
+        partial_result_set_2 = PartialResultSet(**partial_result_set_2_args)
+
+        result_sets = [partial_result_set_1, partial_result_set_2]
+
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
         iterator = _MockIterator(*result_sets)
@@ -1253,6 +1305,12 @@ class Test_SnapshotBase(OpenTelemetryBase):
             ),
         )
 
+        if first:
+            self.assertEqual(derived._transaction_id, TXN_ID)
+
+        if use_multiplexed:
+            self.assertEqual(derived._precommit_token, PRECOMMIT_TOKEN_2)
+
     def test_execute_sql_wo_multi_use(self):
         self._execute_sql_helper(multi_use=False)
 
@@ -1340,6 +1398,9 @@ class Test_SnapshotBase(OpenTelemetryBase):
             directed_read_options=DIRECTED_READ_OPTIONS,
             directed_read_options_at_client_level=DIRECTED_READ_OPTIONS_FOR_CLIENT,
         )
+
+    def test_execute_sql_w_precommit_tokens(self):
+        self._execute_sql_helper(multi_use=True, use_multiplexed=True)
 
     def _partition_read_helper(
         self,
