@@ -33,7 +33,6 @@ from google.cloud.spanner_v1.types import (
 )
 
 from google.cloud._helpers import _datetime_to_pb_timestamp
-from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
 
 # Default values used to populate required or expected attributes.
 # Tests should not depend on them: if a test requires a specific
@@ -181,9 +180,8 @@ def build_transaction(session=None) -> Transaction:
 
     # Ensure session exists.
     if session.session_id is None:
-        session.create()
+        session._session_id = _SESSION_ID
 
-    _clear_spans()
     return session.transaction()
 
 
@@ -218,16 +216,3 @@ def build_spanner_api() -> SpannerClient:
     api.create_session.return_value = build_session_pb()
 
     return api
-
-
-# Helper functions
-# ----------------
-
-
-def _clear_spans() -> None:
-    """Clears the spans collected by the OpenTelemetry exporter.
-    This ensures that spans generated while building test objects
-    do not interfere with the tests."""
-
-    if HAS_OPENTELEMETRY_INSTALLED:
-        get_test_ot_exporter().clear()
