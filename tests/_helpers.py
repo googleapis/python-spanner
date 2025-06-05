@@ -34,15 +34,6 @@ except ImportError:
 _TEST_OT_EXPORTER = None
 _TEST_OT_PROVIDER_INITIALIZED = False
 
-# Environment variables for enabling multiplexed sessions
-"GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS"
-ENV_VAR_ENABLE_MULTIPLEXED_FOR_PARTITIONED = (
-    "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS"
-)
-ENV_VAR_ENABLE_MULTIPLEXED_FOR_READ_WRITE = (
-    "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW"
-)
-
 
 def is_multiplexed_enabled(transaction_type: TransactionType) -> bool:
     """Returns whether multiplexed sessions are enabled for the given transaction type."""
