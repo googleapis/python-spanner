@@ -467,7 +467,6 @@ class Session(object):
 
         return Batch(self)
 
-    # TODO multiplexed - remove
     def transaction(self):
         """Create a transaction to perform a set of reads with shared staleness.
 
@@ -478,6 +477,7 @@ class Session(object):
         if self._session_id is None:
             raise ValueError("Session has not been created.")
 
+        # TODO multiplexed - remove
         if self._transaction is not None:
             self._transaction.rolled_back = True
             self._transaction = None
