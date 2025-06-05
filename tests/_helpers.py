@@ -4,7 +4,7 @@ from os import getenv
 import mock
 
 from google.cloud.spanner_v1 import gapic_version
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 
 LIB_VERSION = gapic_version.__version__
 

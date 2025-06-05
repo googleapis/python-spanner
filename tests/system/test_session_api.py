@@ -32,7 +32,7 @@ from google.cloud._helpers import UTC
 
 from google.cloud.spanner_v1._helpers import AtomicCounter
 from google.cloud.spanner_v1.data_types import JsonObject
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from .testdata import singer_pb2
 from tests import _helpers as ot_helpers
 from . import _helpers

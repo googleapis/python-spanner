@@ -60,7 +60,6 @@ from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
 )
-from google.cloud.spanner_v1.session_options import SessionOptions
 
 try:
     from opentelemetry import metrics
@@ -269,8 +268,6 @@ class Client(ClientWithProject):
         self._default_transaction_options = default_transaction_options
         self._nth_client_id = Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter(0)
-
-        self._session_options = SessionOptions()
 
     @property
     def _next_nth_request(self):

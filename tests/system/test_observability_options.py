@@ -16,7 +16,7 @@ import pytest
 from mock import PropertyMock, patch
 
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from . import _helpers
 from google.cloud.spanner_v1 import Client
 from google.api_core.exceptions import Aborted

@@ -37,7 +37,7 @@ from google.cloud.spanner_dbapi.parsed_statement import (
     ClientSideStatementType,
     AutocommitDmlMode,
 )
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from tests._builders import build_connection, build_session
 
 PROJECT = "test-project"

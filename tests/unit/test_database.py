@@ -21,6 +21,7 @@ from google.cloud.spanner_admin_database_v1 import (
     Database as DatabasePB,
     DatabaseDialect,
 )
+
 from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
@@ -36,7 +37,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.session_options import SessionOptions, TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from tests._builders import build_spanner_api
 from tests._helpers import is_multiplexed_enabled
 
@@ -1449,8 +1450,6 @@ class TestDatabase(_BaseTest):
         # Verify that the correct session type was used based on environment
         if multiplexed_partitioned_enabled:
             # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
-            from google.cloud.spanner_v1.session_options import TransactionType
-
             database._sessions_manager.get_session.assert_called_with(
                 TransactionType.PARTITIONED
             )
@@ -3498,7 +3497,6 @@ class _Client(object):
         self.observability_options = observability_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
-        self._session_options = SessionOptions()
 
     @property
     def _next_nth_request(self):

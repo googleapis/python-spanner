@@ -28,7 +28,7 @@ from google.cloud.spanner_dbapi.parsed_statement import ParsedStatement, Stateme
 from google.cloud.spanner_dbapi.transaction_helper import TransactionRetryHelper
 from google.cloud.spanner_dbapi.cursor import Cursor
 from google.cloud.spanner_v1 import RequestOptions, TransactionOptions
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from google.cloud.spanner_v1.snapshot import Snapshot
 
 from google.cloud.spanner_dbapi.exceptions import (

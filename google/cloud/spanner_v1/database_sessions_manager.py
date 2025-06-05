@@ -11,6 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from enum import Enum
+from os import getenv
 from datetime import timedelta
 from threading import Event, Lock, Thread
 from time import sleep, time
@@ -18,11 +20,18 @@ from typing import Optional
 from weakref import ref
 
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.session_options import TransactionType
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     get_current_span,
     add_span_event,
 )
+
+
+class TransactionType(Enum):
+    """Transaction types for session options."""
+
+    READ_ONLY = "read-only"
+    PARTITIONED = "partitioned"
+    READ_WRITE = "read/write"
 
 
 class DatabaseSessionsManager(object):
@@ -32,9 +41,8 @@ class DatabaseSessionsManager(object):
     transaction type using :meth:`get_session`, and returned to the session manager
     using :meth:`put_session`.
 
-    The sessions returned by the session manager depend on the client's session options
-    (see :class:`~google.cloud.spanner_v1.session_options.SessionOptions`) and the
-    provided session pool (see :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`).
+    The sessions returned by the session manager depend on the configured environment variables
+    and the provided session pool (see :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`).
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: The database to manage sessions for.
@@ -42,6 +50,13 @@ class DatabaseSessionsManager(object):
     :type pool: :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
     :param pool: The pool to get non-multiplexed sessions from.
     """
+
+    # Environment variables for multiplexed sessions
+    _ENV_VAR_MULTIPLEXED = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS"
+    _ENV_VAR_MULTIPLEXED_PARTITIONED = (
+        "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS"
+    )
+    _ENV_VAR_MULTIPLEXED_READ_WRITE = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW"
 
     # Intervals for the maintenance thread to check and refresh the multiplexed session.
     _MAINTENANCE_THREAD_POLLING_INTERVAL = timedelta(minutes=10)
@@ -55,13 +70,14 @@ class DatabaseSessionsManager(object):
         # database session manager is created, a maintenance thread is initialized to
         # periodically delete and recreate the multiplexed session so that it remains
         # valid. Because of this concurrency, we need to use a lock whenever we access
-        # the multiplexed session to avoid any race conditions. We also create an event
-        # so that the thread can terminate if the use of multiplexed session has been
-        # disabled for all transactions.
+        # the multiplexed session to avoid any race conditions.
         self._multiplexed_session: Optional[Session] = None
         self._multiplexed_session_thread: Optional[Thread] = None
         self._multiplexed_session_lock: Lock = Lock()
-        self._multiplexed_session_disabled_event: Event = Event()
+
+        # Event to terminate the maintenance thread.
+        # Only used for testing purposes.
+        self._multiplexed_session_terminate_event: Event = Event()
 
     def get_session(self, transaction_type: TransactionType) -> Session:
         """Returns a session for the given transaction type from the database session manager.
@@ -70,8 +86,7 @@ class DatabaseSessionsManager(object):
         :returns: a session for the given transaction type.
         """
 
-        session_options = self._database._instance._client._session_options
-        use_multiplexed = session_options.use_multiplexed(transaction_type)
+        use_multiplexed = self._use_multiplexed(transaction_type)
 
         # TODO multiplexed: enable for read/write transactions
         if use_multiplexed and transaction_type == TransactionType.READ_WRITE:
@@ -149,15 +164,6 @@ class DatabaseSessionsManager(object):
 
         return session
 
-    def _disable_multiplexed_sessions(self) -> None:
-        """Disables multiplexed sessions for all transactions."""
-
-        self._multiplexed_session = None
-        self._multiplexed_session_disabled_event.set()
-
-        session_options = self._database._instance._client._session_options
-        session_options.disable_multiplexed(self._database.logger)
-
     def _build_maintenance_thread(self) -> Thread:
         """Builds and returns a multiplexed session maintenance thread for
         the database session manager. This thread will periodically delete
@@ -185,34 +191,33 @@ class DatabaseSessionsManager(object):
 
         This method will delete and recreate the referenced database session manager's
         multiplexed session to ensure that it is always valid. The method will run until
-        the database session manager is deleted, the multiplexed session is deleted, or
-        building a multiplexed session fails.
+        the database session manager is deleted or the multiplexed session is deleted.
 
         :type session_manager_ref: :class:`_weakref.ReferenceType`
         :param session_manager_ref: A weak reference to the database session manager.
         """
 
-        session_manager = session_manager_ref()
-        if session_manager is None:
+        manager = session_manager_ref()
+        if manager is None:
             return
 
         polling_interval_seconds = (
-            session_manager._MAINTENANCE_THREAD_POLLING_INTERVAL.total_seconds()
+            manager._MAINTENANCE_THREAD_POLLING_INTERVAL.total_seconds()
         )
         refresh_interval_seconds = (
-            session_manager._MAINTENANCE_THREAD_REFRESH_INTERVAL.total_seconds()
+            manager._MAINTENANCE_THREAD_REFRESH_INTERVAL.total_seconds()
         )
 
         session_created_time = time()
 
         while True:
             # Terminate the thread is the database session manager has been deleted.
-            session_manager = session_manager_ref()
-            if session_manager is None:
+            manager = session_manager_ref()
+            if manager is None:
                 return
 
-            # Terminate the thread if the use of multiplexed sessions has been disabled.
-            if session_manager._multiplexed_session_disabled_event.is_set():
+            # Terminate the thread if corresponding event is set.
+            if manager._multiplexed_session_terminate_event.is_set():
                 return
 
             # Wait for until the refresh interval has elapsed.
@@ -220,10 +225,65 @@ class DatabaseSessionsManager(object):
                 sleep(polling_interval_seconds)
                 continue
 
-            with session_manager._multiplexed_session_lock:
-                session_manager._multiplexed_session.delete()
-                session_manager._multiplexed_session = (
-                    session_manager._build_multiplexed_session()
-                )
+            with manager._multiplexed_session_lock:
+                manager._multiplexed_session.delete()
+                manager._multiplexed_session = manager._build_multiplexed_session()
 
             session_created_time = time()
+
+    @classmethod
+    def _use_multiplexed(cls, transaction_type: TransactionType) -> bool:
+        """Returns whether to use multiplexed sessions for the given transaction type.
+
+        Multiplexed sessions are enabled for read-only transactions if:
+            * _ENV_VAR_MULTIPLEXED is set to true.
+
+        Multiplexed sessions are enabled for partitioned transactions if:
+            * _ENV_VAR_MULTIPLEXED is set to true; and
+            * _ENV_VAR_MULTIPLEXED_PARTITIONED is set to true.
+
+        Multiplexed sessions are enabled for read/write transactions if:
+            * _ENV_VAR_MULTIPLEXED is set to true; and
+            * _ENV_VAR_MULTIPLEXED_READ_WRITE is set to true.
+
+        :type transaction_type: :class:`TransactionType`
+        :param transaction_type: the type of transaction
+
+        :rtype: bool
+        :returns: True if multiplexed sessions should be used for the given transaction
+            type, False otherwise.
+
+        :raises ValueError: if the transaction type is not supported.
+        """
+
+        if transaction_type is TransactionType.READ_ONLY:
+            return cls._getenv(cls._ENV_VAR_MULTIPLEXED)
+
+        elif transaction_type is TransactionType.PARTITIONED:
+            return cls._getenv(cls._ENV_VAR_MULTIPLEXED) and cls._getenv(
+                cls._ENV_VAR_MULTIPLEXED_PARTITIONED
+            )
+
+        elif transaction_type is TransactionType.READ_WRITE:
+            return cls._getenv(cls._ENV_VAR_MULTIPLEXED) and cls._getenv(
+                cls._ENV_VAR_MULTIPLEXED_READ_WRITE
+            )
+
+        raise ValueError(f"Transaction type {transaction_type} is not supported.")
+
+    @classmethod
+    def _getenv(cls, env_var_name: str) -> bool:
+        """Returns the value of the given environment variable as a boolean.
+
+        True values are '1' and 'true' (case-insensitive).
+        All other values are considered false.
+
+        :type env_var_name: str
+        :param env_var_name: the name of the boolean environment variable
+
+        :rtype: bool
+        :returns: True if the environment variable is set to a true value, False otherwise.
+        """
+
+        env_var_value = getenv(env_var_name, "").lower().strip()
+        return env_var_value in ["1", "true"]

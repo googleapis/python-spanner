@@ -13,14 +13,14 @@
 # limitations under the License.
 from datetime import timedelta
 from mock import Mock, patch
-from threading import Thread
+from os import environ
 from time import time, sleep
 from typing import Callable
 from unittest import TestCase
 
 from google.api_core.exceptions import BadRequest, FailedPrecondition
 from google.cloud.spanner_v1.database_sessions_manager import DatabaseSessionsManager
-from google.cloud.spanner_v1.session_options import TransactionType
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from tests._builders import build_database
 
 
@@ -31,6 +31,17 @@ from tests._builders import build_database
     _MAINTENANCE_THREAD_REFRESH_INTERVAL=timedelta(seconds=2),
 )
 class TestDatabaseSessionManager(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        # Save the original environment variables.
+        cls._original_env = dict(environ)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Restore environment variables.
+        environ.clear()
+        environ.update(cls._original_env)
+
     def setUp(self):
         # Build session manager.
         database = build_database()
@@ -42,15 +53,15 @@ class TestDatabaseSessionManager(TestCase):
         pool.put = Mock(wraps=pool.put)
 
     def tearDown(self):
-        # If the maintenance thread is still alive, disable multiplexed sessions and
-        # wait for the thread to terminate. We need to do this to ensure that the
-        # thread is properly cleaned up and does not interfere with other tests.
-        sessions_manager = self._manager
-        thread = sessions_manager._multiplexed_session_thread
+        # If the maintenance thread is still alive, set the event and wait
+        # for the thread to terminate. We need to do this to ensure that the
+        # thread does not interfere with other tests.
+        manager = self._manager
+        thread = manager._multiplexed_session_thread
 
         if thread and thread.is_alive():
-            sessions_manager._multiplexed_session_disabled_event.set()
-            self._assert_thread_terminated(thread)
+            manager._multiplexed_session_terminate_event.set()
+            self._assert_true_with_timeout(lambda: not thread.is_alive())
 
     def test_read_only_pooled(self):
         manager = self._manager
@@ -175,25 +186,11 @@ class TestDatabaseSessionManager(TestCase):
         info = manager._database.logger.info
         info.assert_called_with("Created multiplexed session.")
 
-    def test_multiplexed_maintenance_terminates_disabled(self):
-        manager = self._manager
-        self._enable_multiplexed_sessions()
-
-        # Maintenance thread is started.
-        session_1 = manager.get_session(TransactionType.READ_ONLY)
-        self.assertTrue(session_1.is_multiplexed)
-
-        manager._multiplexed_session_disabled_event.set()
-
-        thread = manager._multiplexed_session_thread
-        self._assert_thread_terminated(thread)
-
     def test_exception_bad_request(self):
         manager = self._manager
         api = manager._database.spanner_api
         api.create_session.side_effect = BadRequest("")
 
-        # Verify that BadRequest is not caught.
         with self.assertRaises(BadRequest):
             manager.get_session(TransactionType.READ_ONLY)
 
@@ -202,12 +199,76 @@ class TestDatabaseSessionManager(TestCase):
         api = manager._database.spanner_api
         api.create_session.side_effect = FailedPrecondition("")
 
-        # Verify that FailedPrecondition is not caught.
         with self.assertRaises(FailedPrecondition):
             manager.get_session(TransactionType.READ_ONLY)
 
+    def test__use_multiplexed_read_only(self):
+        transaction_type = TransactionType.READ_ONLY
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "false"
+        self.assertFalse(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "true"
+        self.assertTrue(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+    def test__use_multiplexed_partitioned(self):
+        transaction_type = TransactionType.PARTITIONED
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "false"
+        self.assertFalse(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "true"
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_PARTITIONED] = "false"
+        self.assertFalse(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_PARTITIONED] = "true"
+        self.assertTrue(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+    def test__use_multiplexed_read_write(self):
+        transaction_type = TransactionType.READ_WRITE
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "false"
+        self.assertFalse(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "true"
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_READ_WRITE] = "false"
+        self.assertFalse(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_READ_WRITE] = "true"
+        self.assertTrue(DatabaseSessionsManager._use_multiplexed(transaction_type))
+
+    def test__use_multiplexed_unsupported_transaction_type(self):
+        unsupported_type = "UNSUPPORTED_TRANSACTION_TYPE"
+
+        with self.assertRaises(ValueError):
+            DatabaseSessionsManager._use_multiplexed(unsupported_type)
+
+    def test__getenv(self):
+        true_values = ["1", " 1", " 1", "true", "True", "TRUE", " true "]
+        for value in true_values:
+            environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = value
+            self.assertTrue(
+                DatabaseSessionsManager._use_multiplexed(TransactionType.READ_ONLY)
+            )
+
+        false_values = ["", "0", "false", "False", "FALSE", " false "]
+        for value in false_values:
+            environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = value
+            self.assertFalse(
+                DatabaseSessionsManager._use_multiplexed(TransactionType.READ_ONLY)
+            )
+
+        del environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED]
+        self.assertFalse(
+            DatabaseSessionsManager._use_multiplexed(TransactionType.READ_ONLY)
+        )
+
     def _assert_true_with_timeout(self, condition: Callable) -> None:
-        """Asserts that the given condition is met within a timeout period."""
+        """Asserts that the given condition is met within a timeout period.
+
+        :type condition: Callable
+        :param condition: A callable that returns a boolean indicating whether the condition is met.
+        """
 
         sleep_seconds = 0.1
         timeout_seconds = 10
@@ -218,22 +279,16 @@ class TestDatabaseSessionManager(TestCase):
 
         self.assertTrue(condition())
 
-    def _assert_thread_terminated(self, thread: Thread) -> None:
-        """Asserts that the given thread is terminated."""
-
-        def _is_thread_terminated():
-            return not thread.is_alive()
-
-        self._assert_true_with_timeout(_is_thread_terminated)
-
-    def _disable_multiplexed_sessions(self) -> None:
+    @staticmethod
+    def _disable_multiplexed_sessions() -> None:
         """Sets environment variables to disable multiplexed sessions for all transactions types."""
 
-        options = self._manager._database._instance._client._session_options
-        options.use_multiplexed = Mock(return_value=False)
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "false"
 
-    def _enable_multiplexed_sessions(self) -> None:
+    @staticmethod
+    def _enable_multiplexed_sessions() -> None:
         """Sets environment variables to enable multiplexed sessions for all transaction types."""
 
-        options = self._manager._database._instance._client._session_options
-        options.use_multiplexed = Mock(return_value=True)
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED] = "true"
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_PARTITIONED] = "true"
+        environ[DatabaseSessionsManager._ENV_VAR_MULTIPLEXED_READ_WRITE] = "true"
