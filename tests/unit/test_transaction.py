@@ -889,7 +889,6 @@ class TestTransaction(OpenTelemetryBase):
         from google.protobuf.struct_pb2 import Struct
         from google.cloud.spanner_v1 import param_types
         from google.cloud.spanner_v1 import ResultSet
-        from google.cloud.spanner_v1 import ResultSetStats
         from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
         from google.cloud.spanner_v1 import ExecuteBatchDmlResponse
         from google.cloud.spanner_v1 import TransactionSelector
