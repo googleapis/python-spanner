@@ -15,28 +15,32 @@
 from google.cloud.spanner_admin_database_v1.types import spanner_database_admin
 from google.cloud.spanner_dbapi import Connection
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_v1 import (
-    BatchCreateSessionsRequest,
-    ExecuteSqlRequest,
-    BeginTransactionRequest,
-    TransactionOptions,
-    ExecuteBatchDmlRequest,
-    TypeCode,
-)
-from google.cloud.spanner_v1.transaction import Transaction
+from google.cloud.spanner_v1 import BatchCreateSessionsRequest
+from google.cloud.spanner_v1 import BeginTransactionRequest
+from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
+from google.cloud.spanner_v1 import ExecuteSqlRequest
+from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
-
-from tests.mockserver_tests.mock_server_test_base import (
-    MockServerTestBase,
-    add_select1_result,
-    add_update_count,
-    add_error,
-    unavailable_status,
-    add_single_result,
-)
+from google.cloud.spanner_v1.transaction import Transaction
+from tests.mockserver_tests.mock_server_test_base import MockServerTestBase
+from tests.mockserver_tests.mock_server_test_base import \
+    _make_partial_result_sets
+from tests.mockserver_tests.mock_server_test_base import add_error
+from tests.mockserver_tests.mock_server_test_base import \
+    add_execute_streaming_sql_results
+from tests.mockserver_tests.mock_server_test_base import add_select1_result
+from tests.mockserver_tests.mock_server_test_base import add_single_result
+from tests.mockserver_tests.mock_server_test_base import add_update_count
+from tests.mockserver_tests.mock_server_test_base import unavailable_status
 
 
 class TestBasics(MockServerTestBase):
+
+    def setUp(self):
+        super().setUp()
+        super().setup_class()
+
     def test_select1(self):
         add_select1_result()
         with self.database.snapshot() as snapshot:
@@ -176,6 +180,27 @@ class TestBasics(MockServerTestBase):
         self.assertEqual(1, len(requests), msg=requests)
         self.assertTrue(requests[0].last_statement, requests[0])
 
+    def test_execute_streaming_sql_last_field(self):
+        partial_result_sets = _make_partial_result_sets(
+            [("ID", TypeCode.INT64), ("NAME", TypeCode.STRING)],
+            [{"values": ["1", "ABC", "2", "DEF"]},
+             {"values": ["3", "GHI"], "last": True}])
+
+        sql = "select * from my_table"
+        add_execute_streaming_sql_results(sql, partial_result_sets)
+        count = 1
+        with self.database.snapshot() as snapshot:
+            results = snapshot.execute_sql(sql)
+            result_list = []
+            for row in results:
+                result_list.append(row)
+                self.assertEqual(count, row[0])
+                count += 1
+            self.assertEqual(3, len(result_list))
+        requests = self.spanner_service.requests
+        self.assertEqual(2, len(requests), msg=requests)
+        self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
+        self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
 
 def _execute_query(transaction: Transaction, sql: str):
     rows = transaction.execute_sql(sql, last_statement=True)
