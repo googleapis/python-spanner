@@ -174,15 +174,20 @@ class TestStreamedResultSet(unittest.TestCase):
         for length in range(4, 6):
             metadata = self._make_result_set_metadata(fields)
             result_sets = [
-                self._make_partial_result_set([self._make_value(0), "google_0"],
-                                              metadata=metadata)]
+                self._make_partial_result_set(
+                    [self._make_value(0), "google_0"], metadata=metadata
+                )
+            ]
             for i in range(1, 5):
                 bares = [i]
-                values = [[self._make_value(bare), "google_" + str(bare)] for
-                          bare in bares]
-                result_sets.append(self._make_partial_result_set(*values,
-                                                                 metadata=metadata,
-                                                                 last=(i == length - 1)))
+                values = [
+                    [self._make_value(bare), "google_" + str(bare)] for bare in bares
+                ]
+                result_sets.append(
+                    self._make_partial_result_set(
+                        *values, metadata=metadata, last=(i == length - 1)
+                    )
+                )
 
             iterator = _MockCancellableIterator(*result_sets)
             streamed = self._make_one(iterator)
