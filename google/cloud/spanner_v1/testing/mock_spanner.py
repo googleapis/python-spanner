@@ -64,7 +64,7 @@ class MockSpanner:
     def get_execute_streaming_sql_results(
         self, sql: str, started_transaction: transaction.Transaction
     ) -> list[result_set.PartialResultSet]:
-        if self.execute_streaming_sql_results[sql.lower().strip()]:
+        if self.execute_streaming_sql_results.get(sql.lower().strip()):
             partials = self.execute_streaming_sql_results[sql.lower().strip()]
         else:
             partials = self.get_result_as_partial_result_sets(sql)
