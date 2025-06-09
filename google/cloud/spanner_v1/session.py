@@ -464,7 +464,6 @@ class Session(object):
 
         return Batch(self)
 
-    # TODO multiplexed - deprecate
     def transaction(self) -> Transaction:
         """Create a transaction to perform a set of reads with shared staleness.
 
@@ -531,6 +530,12 @@ class Session(object):
         ) as span, MetricsCapture():
             attempts: int = 0
 
+            # If the transaction is retried after an aborted user operation, it should include the previous transaction ID
+            # in the transaction options used to begin the transaction. This allows the backend to recognize the transaction
+            # and increase the lock order for the new transaction ID that is created.
+            # See :attr:`~google.cloud.spanner_v1.types.TransactionOptions.ReadWrite.multiplexed_session_previous_transaction_id`
+            previous_transaction_id: Optional[bytes] = None
+
             while True:
                 # [A] Build transaction
                 # ---------------------
@@ -539,6 +544,7 @@ class Session(object):
                 txn.transaction_tag = transaction_tag
                 txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
                 txn.isolation_level = isolation_level
+                txn._previous_transaction_id = previous_transaction_id
 
                 # [B] Run user operation
                 # ----------------------
@@ -549,8 +555,8 @@ class Session(object):
                 try:
                     return_value = func(txn, *args, **kw)
 
-                # TODO multiplexed: store previous transaction ID.
                 except Aborted as exc:
+                    previous_transaction_id = txn._transaction_id
                     if span:
                         delay_seconds = _get_retry_delay(
                             exc.errors[0],
@@ -598,6 +604,7 @@ class Session(object):
                     )
 
                 except Aborted as exc:
+                    previous_transaction_id = txn._transaction_id
                     if span:
                         delay_seconds = _get_retry_delay(
                             exc.errors[0],
@@ -615,6 +622,7 @@ class Session(object):
                     _delay_until_retry(
                         exc, deadline, attempts, default_retry_delay=default_retry_delay
                     )
+
                 except GoogleAPICallError:
                     add_span_event(
                         span,
@@ -622,6 +630,7 @@ class Session(object):
                         span_attributes,
                     )
                     raise
+
                 else:
                     if log_commit_stats and txn.commit_stats:
                         database.logger.info(

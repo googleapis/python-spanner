@@ -33,7 +33,7 @@ from google.cloud.spanner_v1 import (
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _delay_until_retry
 from google.cloud.spanner_v1.transaction import Transaction
-from tests._builders import build_spanner_api
+from tests._builders import build_spanner_api, build_session, build_transaction_pb
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
@@ -57,8 +57,18 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
 )
 
+TABLE_NAME = "citizens"
+COLUMNS = ["email", "first_name", "last_name", "age"]
+VALUES = [
+    ["phred@exammple.com", "Phred", "Phlyntstone", 32],
+    ["bharney@example.com", "Bharney", "Rhubble", 31],
+]
+KEYS = ["bharney@example.com", "phred@example.com"]
+KEYSET = KeySet(keys=KEYS)
+TRANSACTION_ID = b"FACEDACE"
 
-def _make_rpc_error(error_cls, trailing_metadata=None):
+
+def _make_rpc_error(error_cls, trailing_metadata=[]):
     grpc_error = mock.create_autospec(grpc.Call, instance=True)
     grpc_error.trailing_metadata.return_value = trailing_metadata
     return error_cls("error", errors=(grpc_error,))
@@ -1038,9 +1048,52 @@ class TestSession(OpenTelemetryBase):
 
         gax_api.rollback.assert_not_called()
 
+    def test_run_in_transaction_retry_callback_raises_abort(self):
+        session = build_session()
+        database = session._database
+        api = database.spanner_api
+
+        # Build API responses
+        previous_transaction_id = b"transaction-id"
+        begin_transaction = api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(
+            id=previous_transaction_id
+        )
+
+        streaming_read = api.streaming_read
+        streaming_read.side_effect = [_make_rpc_error(Aborted), []]
+
+        # Run in transaction.
+        def unit_of_work(transaction):
+            transaction.begin()
+            list(transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+
+        session.create()
+        session.run_in_transaction(unit_of_work)
+
+        # Verify retried BeginTransaction API call.
+        self.assertEqual(begin_transaction.call_count, 2)
+
+        begin_transaction.assert_called_with(
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=TransactionOptions(
+                    read_write=TransactionOptions.ReadWrite(
+                        multiplexed_session_previous_transaction_id=previous_transaction_id
+                    )
+                ),
+            ),
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                ),
+            ],
+        )
+
     def test_run_in_transaction_w_args_w_kwargs_wo_abort(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
         VALUES = [
             ["phred@exammple.com", "Phred", "Phlyntstone", 32],
             ["bharney@example.com", "Bharney", "Rhubble", 31],
@@ -1172,13 +1225,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_abort_no_retry_metadata(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -1210,13 +1256,15 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(args, ("abc",))
             self.assertEqual(kw, {"some_arg": "def"})
 
-        expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite()
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1229,7 +1277,12 @@ class TestSession(OpenTelemetryBase):
                 ),
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(
+                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
+                            )
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1277,13 +1330,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_abort_w_retry_metadata(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         RETRY_SECONDS = 12
         RETRY_NANOS = 3456
         retry_info = RetryInfo(
@@ -1326,13 +1372,15 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(args, ("abc",))
             self.assertEqual(kw, {"some_arg": "def"})
 
-        expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite()
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1345,7 +1393,12 @@ class TestSession(OpenTelemetryBase):
                 ),
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(
+                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
+                            )
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1393,13 +1446,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_callback_raises_abort_wo_metadata(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
@@ -1477,13 +1523,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_abort_w_retry_metadata_deadline(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
@@ -1562,13 +1601,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_timeout(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         aborted = _make_rpc_error(Aborted, trailing_metadata=[])
         gax_api = self._make_spanner_api()
@@ -1607,13 +1639,15 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(args, ())
             self.assertEqual(kw, {})
 
-        expected_options = TransactionOptions(read_write=TransactionOptions.ReadWrite())
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite()
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1626,7 +1660,12 @@ class TestSession(OpenTelemetryBase):
                 ),
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(
+                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
+                            )
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1639,7 +1678,12 @@ class TestSession(OpenTelemetryBase):
                 ),
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(
+                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
+                            )
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -1698,13 +1742,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_commit_stats_success(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -1772,13 +1809,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_commit_stats_error(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         gax_api = self._make_spanner_api()
         gax_api.begin_transaction.return_value = transaction_pb
@@ -1840,13 +1870,6 @@ class TestSession(OpenTelemetryBase):
         database.logger.info.assert_not_called()
 
     def test_run_in_transaction_w_transaction_tag(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -1912,13 +1935,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     def test_run_in_transaction_w_exclude_txn_from_change_streams(self):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -1987,13 +2003,6 @@ class TestSession(OpenTelemetryBase):
     def test_run_in_transaction_w_abort_w_retry_metadata_w_exclude_txn_from_change_streams(
         self,
     ):
-        TABLE_NAME = "citizens"
-        COLUMNS = ["email", "first_name", "last_name", "age"]
-        VALUES = [
-            ["phred@exammple.com", "Phred", "Phlyntstone", 32],
-            ["bharney@example.com", "Bharney", "Rhubble", 31],
-        ]
-        TRANSACTION_ID = b"FACEDACE"
         RETRY_SECONDS = 12
         RETRY_NANOS = 3456
         retry_info = RetryInfo(
@@ -2041,16 +2050,16 @@ class TestSession(OpenTelemetryBase):
             self.assertEqual(args, ("abc",))
             self.assertEqual(kw, {"some_arg": "def"})
 
-        expected_options = TransactionOptions(
-            read_write=TransactionOptions.ReadWrite(),
-            exclude_txn_from_change_streams=True,
-        )
         self.assertEqual(
             gax_api.begin_transaction.call_args_list,
             [
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(),
+                            exclude_txn_from_change_streams=True,
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
@@ -2063,7 +2072,13 @@ class TestSession(OpenTelemetryBase):
                 ),
                 mock.call(
                     request=BeginTransactionRequest(
-                        session=self.SESSION_NAME, options=expected_options
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite(
+                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
+                            ),
+                            exclude_txn_from_change_streams=True,
+                        ),
                     ),
                     metadata=[
                         ("google-cloud-resource-prefix", database.name),
