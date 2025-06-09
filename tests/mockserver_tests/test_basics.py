@@ -21,7 +21,7 @@ from google.cloud.spanner_v1 import (
     ExecuteBatchDmlRequest,
     ExecuteSqlRequest,
     TransactionOptions,
-    TypeCode
+    TypeCode,
 )
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
 from google.cloud.spanner_v1.transaction import Transaction

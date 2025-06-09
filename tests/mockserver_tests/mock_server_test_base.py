@@ -24,10 +24,7 @@ from google.cloud.spanner_v1._helpers import _make_value_pb
 
 from google.cloud.spanner_v1 import PartialResultSet
 from google.protobuf.duration_pb2 import Duration
-from google.rpc import (
-    code_pb2,
-    status_pb2
-)
+from google.rpc import code_pb2, status_pb2
 
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc_status._common import code_to_grpc_status_code
@@ -36,18 +33,13 @@ from grpc_status.rpc_status import _Status
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.type as spanner_type
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_v1 import (
-    Client,
-    FixedSizePool,
-    ResultSetMetadata,
-    TypeCode
-)
+from google.cloud.spanner_v1 import Client, FixedSizePool, ResultSetMetadata, TypeCode
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
 from google.cloud.spanner_v1.testing.mock_spanner import (
     SpannerServicer,
-    start_mock_server
+    start_mock_server,
 )
 
 
