@@ -39,7 +39,6 @@ from tests.mockserver_tests.mock_server_test_base import (
 
 
 class TestBasics(MockServerTestBase):
-
     def test_select1(self):
         add_select1_result()
         with self.database.snapshot() as snapshot:
