@@ -16,6 +16,7 @@
 
 import copy
 import functools
+from typing import Optional
 
 import grpc
 import logging
@@ -1305,8 +1306,8 @@ class BatchCheckout(object):
         **kw,
     ):
         self._database: Database = database
-        self._session: Session = None
-        self._batch: Batch = None
+        self._session: Optional[Session] = None
+        self._batch: Optional[Batch] = None
 
         if request_options is None:
             self._request_options = RequestOptions()
@@ -1381,7 +1382,7 @@ class MutationGroupsCheckout(object):
 
     def __init__(self, database):
         self._database: Database = database
-        self._session: Session = None
+        self._session: Optional[Session] = None
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1421,7 +1422,7 @@ class SnapshotCheckout(object):
 
     def __init__(self, database, **kw):
         self._database: Database = database
-        self._session: Session = None
+        self._session: Optional[Session] = None
         self._kw: dict = kw
 
     def __enter__(self):
@@ -1464,11 +1465,14 @@ class BatchSnapshot(object):
         session_id=None,
         transaction_id=None,
     ):
-        self._database = database
-        self._session_id = session_id
-        self._session = None
-        self._snapshot = None
-        self._transaction_id = transaction_id
+        self._database: Database = database
+
+        self._session_id: Optional[str] = session_id
+        self._transaction_id: Optional[bytes] = transaction_id
+
+        self._session: Optional[Session] = None
+        self._snapshot: Optional[Snapshot] = None
+
         self._read_timestamp = read_timestamp
         self._exact_staleness = exact_staleness
 
