@@ -831,8 +831,9 @@ class Database(object):
     def session(self, labels=None, database_role=None):
         """Factory to create a session for this database.
 
-        Deprecated. Sessions should be checked out using context
-        managers, rather than retrieved directly from the database.
+        Deprecated. Sessions should be checked out indirectly using context
+        managers or :meth:`~google.cloud.spanner_v1.database.Database.run_in_transaction`,
+        rather than built directly from the database.
 
         :type labels: dict (str -> str) or None
         :param labels: (Optional) user-assigned labels for the session.

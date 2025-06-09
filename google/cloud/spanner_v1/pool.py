@@ -138,8 +138,9 @@ class AbstractSessionPool(object):
     def session(self, **kwargs):
         """Check out a session from the pool.
 
-        Deprecated. Sessions should be checked out using context
-        managers, rather than directly from the pool.
+        Deprecated. Sessions should be checked out indirectly using context
+        managers or :meth:`~google.cloud.spanner_v1.database.Database.run_in_transaction`,
+        rather than checked out directly from the pool.
 
         :param kwargs: (optional) keyword arguments, passed through to
                        the returned checkout.
@@ -796,8 +797,9 @@ class TransactionPingingPool(PingingPool):
 class SessionCheckout(object):
     """Context manager: hold session checked out from a pool.
 
-    Deprecated. Sessions should be checked out using context
-    managers, rather than directly from the pool.
+    Deprecated. Sessions should be checked out indirectly using context
+    managers or :meth:`~google.cloud.spanner_v1.database.Database.run_in_transaction`,
+    rather than checked out directly from the pool.
 
     :type pool: concrete subclass of
         :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
