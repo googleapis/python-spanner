@@ -39,8 +39,7 @@ from google.cloud.spanner_v1 import ResultSetMetadata
 from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1.testing.mock_database_admin import \
-    DatabaseAdminServicer
+from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
 from google.cloud.spanner_v1.testing.mock_spanner import start_mock_server
 
@@ -66,8 +65,9 @@ def aborted_status() -> _Status:
     return status
 
 
-def _make_partial_result_sets(fields: list[tuple[str, TypeCode]],
-    results: list[dict]) -> list[result_set.PartialResultSet]:
+def _make_partial_result_sets(
+    fields: list[tuple[str, TypeCode]], results: list[dict]
+) -> list[result_set.PartialResultSet]:
     partial_result_sets = []
     for result in results:
         partial_result_set = PartialResultSet()
@@ -76,13 +76,15 @@ def _make_partial_result_sets(fields: list[tuple[str, TypeCode]],
             metadata = ResultSetMetadata(row_type=StructType(fields=[]))
             for field in fields:
                 metadata.row_type.fields.append(
-                    StructType.Field(name=field[0], type_=Type(code=field[1])))
+                    StructType.Field(name=field[0], type_=Type(code=field[1]))
+                )
             partial_result_set.metadata = metadata
         for value in result["values"]:
             partial_result_set.values.append(_make_value_pb(value))
-        partial_result_set.last = result.get('last') or False
+        partial_result_set.last = result.get("last") or False
         partial_result_sets.append(partial_result_set)
     return partial_result_sets
+
 
 # Creates an UNAVAILABLE status with the smallest possible retry delay.
 def unavailable_status() -> _Status:
@@ -128,10 +130,13 @@ def add_select1_result():
     add_single_result("select 1", "c", TypeCode.INT64, [("1",)])
 
 
-def add_execute_streaming_sql_results(sql: str,
-    partial_result_sets: list[result_set.PartialResultSet]):
+def add_execute_streaming_sql_results(
+    sql: str, partial_result_sets: list[result_set.PartialResultSet]
+):
     MockServerTestBase.spanner_service.mock_spanner.add_execute_streaming_sql_results(
-        sql, partial_result_sets)
+        sql, partial_result_sets
+    )
+
 
 def add_single_result(
     sql: str, column_name: str, type_code: spanner_type.TypeCode, row

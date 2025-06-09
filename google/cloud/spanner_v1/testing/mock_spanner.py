@@ -41,10 +41,10 @@ class MockSpanner:
     def add_result(self, sql: str, result: result_set.ResultSet):
         self.results[sql.lower().strip()] = result
 
-    def add_execute_streaming_sql_results(self, sql: str,
-        partial_result_sets: list[result_set.PartialResultSet]):
-        self.execute_streaming_sql_results[
-            sql.lower().strip()] = partial_result_sets
+    def add_execute_streaming_sql_results(
+        self, sql: str, partial_result_sets: list[result_set.PartialResultSet]
+    ):
+        self.execute_streaming_sql_results[sql.lower().strip()] = partial_result_sets
 
     def get_result(self, sql: str) -> result_set.ResultSet:
         result = self.results.get(sql.lower().strip())
@@ -61,9 +61,9 @@ class MockSpanner:
         if error:
             context.abort_with_status(error)
 
-    def get_execute_streaming_sql_results(self, sql: str,
-        started_transaction: transaction.Transaction) -> list[
-        result_set.PartialResultSet]:
+    def get_execute_streaming_sql_results(
+        self, sql: str, started_transaction: transaction.Transaction
+    ) -> list[result_set.PartialResultSet]:
         if self.execute_streaming_sql_results[sql.lower().strip()]:
             partials = self.execute_streaming_sql_results[sql.lower().strip()]
         else:

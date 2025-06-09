@@ -24,11 +24,11 @@ from google.cloud.spanner_v1 import TypeCode
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
 from google.cloud.spanner_v1.transaction import Transaction
 from tests.mockserver_tests.mock_server_test_base import MockServerTestBase
-from tests.mockserver_tests.mock_server_test_base import \
-    _make_partial_result_sets
+from tests.mockserver_tests.mock_server_test_base import _make_partial_result_sets
 from tests.mockserver_tests.mock_server_test_base import add_error
-from tests.mockserver_tests.mock_server_test_base import \
-    add_execute_streaming_sql_results
+from tests.mockserver_tests.mock_server_test_base import (
+    add_execute_streaming_sql_results,
+)
 from tests.mockserver_tests.mock_server_test_base import add_select1_result
 from tests.mockserver_tests.mock_server_test_base import add_single_result
 from tests.mockserver_tests.mock_server_test_base import add_update_count
@@ -36,7 +36,6 @@ from tests.mockserver_tests.mock_server_test_base import unavailable_status
 
 
 class TestBasics(MockServerTestBase):
-
     def setUp(self):
         super().setUp()
         super().setup_class()
@@ -183,8 +182,11 @@ class TestBasics(MockServerTestBase):
     def test_execute_streaming_sql_last_field(self):
         partial_result_sets = _make_partial_result_sets(
             [("ID", TypeCode.INT64), ("NAME", TypeCode.STRING)],
-            [{"values": ["1", "ABC", "2", "DEF"]},
-             {"values": ["3", "GHI"], "last": True}])
+            [
+                {"values": ["1", "ABC", "2", "DEF"]},
+                {"values": ["3", "GHI"], "last": True},
+            ],
+        )
 
         sql = "select * from my_table"
         add_execute_streaming_sql_results(sql, partial_result_sets)
@@ -201,6 +203,7 @@ class TestBasics(MockServerTestBase):
         self.assertEqual(2, len(requests), msg=requests)
         self.assertTrue(isinstance(requests[0], BatchCreateSessionsRequest))
         self.assertTrue(isinstance(requests[1], ExecuteSqlRequest))
+
 
 def _execute_query(transaction: Transaction, sql: str):
     rows = transaction.execute_sql(sql, last_statement=True)
