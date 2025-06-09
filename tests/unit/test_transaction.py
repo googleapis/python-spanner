@@ -113,12 +113,6 @@ class TestTransaction(OpenTelemetryBase):
 
         return mock.create_autospec(SpannerClient, instance=True)
 
-    def test_ctor_session_w_existing_txn(self):
-        session = _Session()
-        session._transaction = object()
-        with self.assertRaises(ValueError):
-            self._make_one(session)
-
     def test_ctor_defaults(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -434,7 +428,6 @@ class TestTransaction(OpenTelemetryBase):
 
         # Verify transaction state.
         self.assertEqual(transaction.committed, commit_timestamp)
-        self.assertIsNone(session._transaction)
 
         if return_commit_stats:
             self.assertEqual(transaction.commit_stats.mutation_count, 4)

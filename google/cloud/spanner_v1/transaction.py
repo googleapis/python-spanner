@@ -68,10 +68,6 @@ class Transaction(_SnapshotBase, _BatchBase):
     _read_only: bool = False
 
     def __init__(self, session):
-        # TODO multiplexed - remove
-        if session._transaction is not None:
-            raise ValueError("Session has existing transaction.")
-
         super(Transaction, self).__init__(session)
         self.rolled_back: bool = False
 
@@ -197,9 +193,6 @@ class Transaction(_SnapshotBase, _BatchBase):
                 )
 
         self.rolled_back = True
-
-        # TODO multiplexed - remove
-        self._session._transaction = None
 
     def commit(
         self, return_commit_stats=False, request_options=None, max_commit_delay=None
@@ -338,9 +331,6 @@ class Transaction(_SnapshotBase, _BatchBase):
         self.committed = commit_response_pb.commit_timestamp
         if return_commit_stats:
             self.commit_stats = commit_response_pb.commit_stats
-
-        # TODO multiplexed - remove
-        self._session._transaction = None
 
         return self.committed
 

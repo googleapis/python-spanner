@@ -957,18 +957,6 @@ class TestSession(OpenTelemetryBase):
 
         self.assertIsInstance(transaction, Transaction)
         self.assertIs(transaction._session, session)
-        self.assertIs(session._transaction, transaction)
-
-    def test_transaction_w_existing_txn(self):
-        database = self._make_database()
-        session = self._make_one(database)
-        session._session_id = "DEADBEEF"
-
-        existing = session.transaction()
-        another = session.transaction()  # invalidates existing txn
-
-        self.assertIs(session._transaction, another)
-        self.assertTrue(existing.rolled_back)
 
     def test_run_in_transaction_callback_raises_non_gax_error(self):
         TABLE_NAME = "citizens"
@@ -1000,7 +988,6 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Testing):
             session.run_in_transaction(unit_of_work)
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1041,7 +1028,6 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Cancelled):
             session.run_in_transaction(unit_of_work)
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1081,7 +1067,6 @@ class TestSession(OpenTelemetryBase):
 
         return_value = session.run_in_transaction(unit_of_work, "abc", some_arg="def")
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1128,17 +1113,16 @@ class TestSession(OpenTelemetryBase):
             ["phred@exammple.com", "Phred", "Phlyntstone", 32],
             ["bharney@example.com", "Bharney", "Rhubble", 31],
         ]
-        TRANSACTION_ID = b"FACEDACE"
-        gax_api = self._make_spanner_api()
-        gax_api.commit.side_effect = Unknown("error")
         database = self._make_database()
-        database.spanner_api = gax_api
+
+        api = database.spanner_api = build_spanner_api()
+        begin_transaction = api.begin_transaction
+        commit = api.commit
+
+        commit.side_effect = Unknown("error")
+
         session = self._make_one(database)
         session._session_id = self.SESSION_ID
-        begun_txn = session._transaction = Transaction(session)
-        begun_txn._transaction_id = TRANSACTION_ID
-
-        assert session._transaction._transaction_id
 
         called_with = []
 
@@ -1149,29 +1133,40 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.run_in_transaction(unit_of_work)
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
-        self.assertIs(txn, begun_txn)
         self.assertEqual(txn.committed, None)
         self.assertEqual(args, ())
         self.assertEqual(kw, {})
 
-        gax_api.begin_transaction.assert_not_called()
-        request = CommitRequest(
-            session=self.SESSION_NAME,
-            mutations=txn._mutations,
-            transaction_id=TRANSACTION_ID,
-            request_options=RequestOptions(),
-        )
-        gax_api.commit.assert_called_once_with(
-            request=request,
+        begin_transaction.assert_called_once_with(
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=TransactionOptions(read_write=TransactionOptions.ReadWrite()),
+            ),
             metadata=[
                 ("google-cloud-resource-prefix", database.name),
                 ("x-goog-spanner-route-to-leader", "true"),
                 (
                     "x-goog-spanner-request-id",
                     f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                ),
+            ],
+        )
+
+        api.commit.assert_called_once_with(
+            request=CommitRequest(
+                session=session.name,
+                mutations=txn._mutations,
+                transaction_id=begin_transaction.return_value.id,
+                request_options=RequestOptions(),
+            ),
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
                 ),
             ],
         )
@@ -1733,7 +1728,6 @@ class TestSession(OpenTelemetryBase):
 
         return_value = session.run_in_transaction(unit_of_work, "abc", some_arg="def")
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1805,7 +1799,6 @@ class TestSession(OpenTelemetryBase):
         with self.assertRaises(Unknown):
             session.run_in_transaction(unit_of_work, "abc", some_arg="def")
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1879,7 +1872,6 @@ class TestSession(OpenTelemetryBase):
             unit_of_work, "abc", some_arg="def", transaction_tag=transaction_tag
         )
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -1951,7 +1943,6 @@ class TestSession(OpenTelemetryBase):
             unit_of_work, "abc", exclude_txn_from_change_streams=True
         )
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
         self.assertIsInstance(txn, Transaction)
@@ -2133,7 +2124,6 @@ class TestSession(OpenTelemetryBase):
             unit_of_work, "abc", isolation_level="SERIALIZABLE"
         )
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(return_value, 42)
 
         expected_options = TransactionOptions(
@@ -2170,7 +2160,6 @@ class TestSession(OpenTelemetryBase):
 
         return_value = session.run_in_transaction(unit_of_work, "abc")
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(return_value, 42)
 
         expected_options = TransactionOptions(
@@ -2211,7 +2200,6 @@ class TestSession(OpenTelemetryBase):
             isolation_level=TransactionOptions.IsolationLevel.REPEATABLE_READ,
         )
 
-        self.assertIsNone(session._transaction)
         self.assertEqual(return_value, 42)
 
         expected_options = TransactionOptions(
