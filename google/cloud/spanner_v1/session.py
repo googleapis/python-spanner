@@ -537,17 +537,11 @@ class Session(object):
             previous_transaction_id: Optional[bytes] = None
 
             while True:
-                # [A] Build transaction
-                # ---------------------
-
                 txn = self.transaction()
                 txn.transaction_tag = transaction_tag
                 txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
                 txn.isolation_level = isolation_level
                 txn._previous_transaction_id = previous_transaction_id
-
-                # [B] Run user operation
-                # ----------------------
 
                 attempts += 1
                 span_attributes = dict(attempt=attempts)
@@ -592,9 +586,6 @@ class Session(object):
                     )
                     txn.rollback()
                     raise
-
-                # [C] Commit transaction
-                # ----------------------
 
                 try:
                     txn.commit(
