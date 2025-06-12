@@ -33,7 +33,12 @@ from google.cloud.spanner_v1 import (
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.spanner_v1._helpers import _delay_until_retry
 from google.cloud.spanner_v1.transaction import Transaction
-from tests._builders import build_spanner_api, build_session, build_transaction_pb
+from tests._builders import (
+    build_spanner_api,
+    build_session,
+    build_transaction_pb,
+    build_commit_response_pb,
+)
 from tests._helpers import (
     OpenTelemetryBase,
     LIB_VERSION,
@@ -1051,6 +1056,41 @@ class TestSession(OpenTelemetryBase):
     def test_run_in_transaction_retry_callback_raises_abort(self):
         session = build_session()
         database = session._database
+
+        # Build API responses.
+        api = database.spanner_api
+        begin_transaction = api.begin_transaction
+        streaming_read = api.streaming_read
+        streaming_read.side_effect = [_make_rpc_error(Aborted), []]
+
+        # Run in transaction.
+        def unit_of_work(transaction):
+            transaction.begin()
+            list(transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+
+        session.create()
+        session.run_in_transaction(unit_of_work)
+
+        self.assertEqual(begin_transaction.call_count, 2)
+
+        begin_transaction.assert_called_with(
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=TransactionOptions(read_write=TransactionOptions.ReadWrite()),
+            ),
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                ),
+            ],
+        )
+
+    def test_run_in_transaction_retry_callback_raises_abort_multiplexed(self):
+        session = build_session(is_multiplexed=True)
+        database = session._database
         api = database.spanner_api
 
         # Build API responses
@@ -1089,6 +1129,51 @@ class TestSession(OpenTelemetryBase):
                 (
                     "x-goog-spanner-request-id",
                     f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.4.1",
+                ),
+            ],
+        )
+
+    def test_run_in_transaction_retry_commit_raises_abort_multiplexed(self):
+        session = build_session(is_multiplexed=True)
+        database = session._database
+
+        # Build API responses
+        api = database.spanner_api
+        previous_transaction_id = b"transaction-id"
+        begin_transaction = api.begin_transaction
+        begin_transaction.return_value = build_transaction_pb(
+            id=previous_transaction_id
+        )
+
+        commit = api.commit
+        commit.side_effect = [_make_rpc_error(Aborted), build_commit_response_pb()]
+
+        # Run in transaction.
+        def unit_of_work(transaction):
+            transaction.begin()
+            list(transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+
+        session.create()
+        session.run_in_transaction(unit_of_work)
+
+        # Verify retried BeginTransaction API call.
+        self.assertEqual(begin_transaction.call_count, 2)
+
+        begin_transaction.assert_called_with(
+            request=BeginTransactionRequest(
+                session=session.name,
+                options=TransactionOptions(
+                    read_write=TransactionOptions.ReadWrite(
+                        multiplexed_session_previous_transaction_id=previous_transaction_id
+                    )
+                ),
+            ),
+            metadata=[
+                ("google-cloud-resource-prefix", database.name),
+                ("x-goog-spanner-route-to-leader", "true"),
+                (
+                    "x-goog-spanner-request-id",
+                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.5.1",
                 ),
             ],
         )
@@ -1279,9 +1364,7 @@ class TestSession(OpenTelemetryBase):
                     request=BeginTransactionRequest(
                         session=session.name,
                         options=TransactionOptions(
-                            read_write=TransactionOptions.ReadWrite(
-                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
-                            )
+                            read_write=TransactionOptions.ReadWrite()
                         ),
                     ),
                     metadata=[
@@ -1395,9 +1478,7 @@ class TestSession(OpenTelemetryBase):
                     request=BeginTransactionRequest(
                         session=session.name,
                         options=TransactionOptions(
-                            read_write=TransactionOptions.ReadWrite(
-                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
-                            )
+                            read_write=TransactionOptions.ReadWrite()
                         ),
                     ),
                     metadata=[
@@ -1662,9 +1743,7 @@ class TestSession(OpenTelemetryBase):
                     request=BeginTransactionRequest(
                         session=session.name,
                         options=TransactionOptions(
-                            read_write=TransactionOptions.ReadWrite(
-                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
-                            )
+                            read_write=TransactionOptions.ReadWrite()
                         ),
                     ),
                     metadata=[
@@ -1680,9 +1759,7 @@ class TestSession(OpenTelemetryBase):
                     request=BeginTransactionRequest(
                         session=session.name,
                         options=TransactionOptions(
-                            read_write=TransactionOptions.ReadWrite(
-                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
-                            )
+                            read_write=TransactionOptions.ReadWrite()
                         ),
                     ),
                     metadata=[
@@ -2074,9 +2151,7 @@ class TestSession(OpenTelemetryBase):
                     request=BeginTransactionRequest(
                         session=session.name,
                         options=TransactionOptions(
-                            read_write=TransactionOptions.ReadWrite(
-                                multiplexed_session_previous_transaction_id=TRANSACTION_ID
-                            ),
+                            read_write=TransactionOptions.ReadWrite(),
                             exclude_txn_from_change_streams=True,
                         ),
                     ),

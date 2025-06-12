@@ -530,9 +530,11 @@ class Session(object):
         ) as span, MetricsCapture():
             attempts: int = 0
 
-            # If the transaction is retried after an aborted user operation, it should include the previous transaction ID
-            # in the transaction options used to begin the transaction. This allows the backend to recognize the transaction
-            # and increase the lock order for the new transaction ID that is created.
+            # If a transaction using a multiplexed session is retried after an aborted
+            # user operation, it should include the previous transaction ID in the
+            # transaction options used to begin the transaction. This allows the backend
+            # to recognize the transaction and increase the lock order for the new
+            # transaction that is created.
             # See :attr:`~google.cloud.spanner_v1.types.TransactionOptions.ReadWrite.multiplexed_session_previous_transaction_id`
             previous_transaction_id: Optional[bytes] = None
 
@@ -541,7 +543,11 @@ class Session(object):
                 txn.transaction_tag = transaction_tag
                 txn.exclude_txn_from_change_streams = exclude_txn_from_change_streams
                 txn.isolation_level = isolation_level
-                txn._previous_transaction_id = previous_transaction_id
+
+                if self.is_multiplexed:
+                    txn._multiplexed_session_previous_transaction_id = (
+                        previous_transaction_id
+                    )
 
                 attempts += 1
                 span_attributes = dict(attempt=attempts)

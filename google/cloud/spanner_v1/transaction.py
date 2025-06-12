@@ -70,11 +70,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         super(Transaction, self).__init__(session)
         self.rolled_back: bool = False
 
-        # If this transaction is used to retry a previous aborted transaction, the
-        # identifier for that transaction is used to increase the lock order of the new
-        # transaction (see :meth:`_build_transaction_options_pb`). This attribute should
-        # only be set by :meth:`~google.cloud.spanner_v1.session.Session.run_in_transaction`.
-        self._previous_transaction_id: Optional[bytes] = None
+        # If this transaction is used to retry a previous aborted transaction with a
+        # multiplexed session, the identifier for that transaction is used to increase
+        # the lock order of the new transaction (see :meth:`_build_transaction_options_pb`).
+        # This attribute should only be set by :meth:`~google.cloud.spanner_v1.session.Session.run_in_transaction`.
+        self._multiplexed_session_previous_transaction_id: Optional[bytes] = None
 
     def _build_transaction_options_pb(self) -> TransactionOptions:
         """Builds and returns transaction options for this transaction.
@@ -89,7 +89,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         merge_transaction_options = TransactionOptions(
             read_write=TransactionOptions.ReadWrite(
-                multiplexed_session_previous_transaction_id=self._previous_transaction_id
+                multiplexed_session_previous_transaction_id=self._multiplexed_session_previous_transaction_id
             ),
             exclude_txn_from_change_streams=self.exclude_txn_from_change_streams,
             isolation_level=self.isolation_level,
