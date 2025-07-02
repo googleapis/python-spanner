@@ -77,7 +77,13 @@ SYSTEM_TEST_EXTRAS_BY_PYTHON: Dict[str, List[str]] = {}
 CURRENT_DIRECTORY = pathlib.Path(__file__).parent.absolute()
 
 nox.options.sessions = [
-    "unit",
+    # TODO(https://github.com/googleapis/python-spanner/issues/1392):
+    # Remove or restore testing for Python 3.7/3.8
+    "unit-3.9",
+    "unit-3.10",
+    "unit-3.11",
+    "unit-3.12",
+    "unit-3.13",
     "system",
     "cover",
     "lint",
