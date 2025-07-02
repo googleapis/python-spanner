@@ -143,7 +143,7 @@ def format(session):
 @nox.session(python=DEFAULT_PYTHON_VERSION)
 def lint_setup_py(session):
     """Verify that setup.py is valid (including RST check)."""
-    session.install("docutils", "pygments")
+    session.install("docutils", "pygments", "setuptools>=79.0.1")
     session.run("python", "setup.py", "check", "--restructuredtext", "--strict")
 
 
