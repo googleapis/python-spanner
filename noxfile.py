@@ -330,6 +330,9 @@ def system(session, protobuf_implementation, database_dialect):
             "Only run system tests on real Spanner with one protobuf implementation to speed up the build"
         )
 
+    if protobuf_implementation == "cpp" and session.python in ("3.11", "3.12", "3.13"):
+        session.skip("cpp implementation is not supported in python 3.11+")
+
     # Install pyopenssl for mTLS testing.
     if os.environ.get("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false") == "true":
         session.install("pyopenssl")
