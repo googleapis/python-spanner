@@ -225,6 +225,7 @@ templated_files = common.py_library(
     cov_level=98,
     split_system_tests=True,
     system_test_extras=["tracing"],
+    system_test_python_versions=["3.12"]
 )
 s.move(
     templated_files,
