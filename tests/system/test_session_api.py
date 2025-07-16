@@ -879,7 +879,7 @@ def test_transaction_read_and_insert_then_rollback(
             # For now, we'll verify the essential spans are present rather than exact count
             actual_span_names = [span.name for span in span_list]
             expected_span_names = [prop["name"] for prop in expected_span_properties]
-            
+
             # Check that all expected span types are present
             for expected_name in expected_span_names:
                 assert (
