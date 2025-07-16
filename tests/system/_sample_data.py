@@ -88,15 +88,24 @@ def _assert_timestamp(value, nano_value):
     if time_diff < 1:
         if isinstance(value, datetime_helpers.DatetimeWithNanoseconds):
             expected_ns = value.nanosecond
-            found_ns = getattr(nano_value, "nanosecond", nano_value.microsecond * 1000)
-            assert (
-                abs(expected_ns - found_ns) <= 1_000_000
-            ), f"Nanosecond diff {abs(expected_ns - found_ns)} > 1ms"
+            found_ns = nano_value.nanosecond if hasattr(nano_value, 'nanosecond') else nano_value.microsecond * 1000
+            # Allow up to 1ms difference for timestamp precision issues
+            ns_diff = abs(expected_ns - found_ns)
+            if ns_diff > 1_000_000:
+                print(f"DEBUG: Timestamp comparison failed:")
+                print(f"  Expected: {value} (nanosecond: {expected_ns})")
+                print(f"  Found: {nano_value} (nanosecond: {found_ns})")
+                print(f"  Difference: {ns_diff} nanoseconds ({ns_diff / 1_000_000:.3f} ms)")
+            assert ns_diff <= 1_000_000, f"Nanosecond diff {ns_diff} > 1ms"
         else:
-            assert (
-                abs(value.microsecond - nano_value.microsecond) <= 1
-            ), f"Microsecond diff {abs(value.microsecond - nano_value.microsecond)} > 1"
-
+            # Allow up to 1 microsecond difference for timestamp precision issues
+            us_diff = abs(value.microsecond - nano_value.microsecond)
+            if us_diff > 1:
+                print(f"DEBUG: Microsecond comparison failed:")
+                print(f"  Expected: {value} (microsecond: {value.microsecond})")
+                print(f"  Found: {nano_value} (microsecond: {nano_value.microsecond})")
+                print(f"  Difference: {us_diff} microseconds")
+            assert us_diff <= 1, f"Microsecond diff {us_diff} > 1"
 
 def _check_rows_data(rows_data, expected=ROW_DATA, recurse_into_lists=True):
     assert len(rows_data) == len(expected)
