@@ -416,17 +416,17 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     # Sort the spans by their start time in the hierarchy.
     span_list = sorted(span_list, key=lambda span: span.start_time)
     got_span_names = [span.name for span in span_list]
-    
+
     # Check if multiplexed sessions are enabled for read-write transactions
     multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
-    
+
     # Determine expected session span name based on multiplexed sessions
     expected_session_span_name = (
         "CloudSpanner.CreateMultiplexedSession"
         if multiplexed_enabled
         else "CloudSpanner.CreateSession"
     )
-    
+
     want_span_names = [
         "CloudSpanner.Database.run_in_transaction",
         expected_session_span_name,

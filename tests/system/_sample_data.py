@@ -88,10 +88,14 @@ def _assert_timestamp(value, nano_value):
     if time_diff < 1:
         if isinstance(value, datetime_helpers.DatetimeWithNanoseconds):
             expected_ns = value.nanosecond
-            found_ns = getattr(nano_value, 'nanosecond', nano_value.microsecond * 1000)
-            assert abs(expected_ns - found_ns) <= 1_000_000, f"Nanosecond diff {abs(expected_ns - found_ns)} > 1ms"
+            found_ns = getattr(nano_value, "nanosecond", nano_value.microsecond * 1000)
+            assert (
+                abs(expected_ns - found_ns) <= 1_000_000
+            ), f"Nanosecond diff {abs(expected_ns - found_ns)} > 1ms"
         else:
-            assert abs(value.microsecond - nano_value.microsecond) <= 1, f"Microsecond diff {abs(value.microsecond - nano_value.microsecond)} > 1"
+            assert (
+                abs(value.microsecond - nano_value.microsecond) <= 1
+            ), f"Microsecond diff {abs(value.microsecond - nano_value.microsecond)} > 1"
 
 
 def _check_rows_data(rows_data, expected=ROW_DATA, recurse_into_lists=True):
@@ -117,7 +121,11 @@ def _check_cell_data(found_cell, expected_cell, recurse_into_lists=True):
     elif isinstance(found_cell, float) and math.isnan(found_cell):
         assert math.isnan(expected_cell)
 
-    elif isinstance(found_cell, list) and isinstance(expected_cell, list) and all(isinstance(x, datetime.datetime) for x in found_cell):
+    elif (
+        isinstance(found_cell, list)
+        and isinstance(expected_cell, list)
+        and all(isinstance(x, datetime.datetime) for x in found_cell)
+    ):
         assert len(found_cell) == len(expected_cell)
         for found_item, expected_item in zip(found_cell, expected_cell):
             _assert_timestamp(expected_item, found_item)

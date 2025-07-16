@@ -693,9 +693,9 @@ def test_transaction_read_and_insert_then_rollback(
         multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
 
         span_list = ot_exporter.get_finished_spans()
-        print('DEBUG: Actual span names:')
+        print("DEBUG: Actual span names:")
         for i, span in enumerate(span_list):
-            print(f'{i}: {span.name}')
+            print(f"{i}: {span.name}")
 
         # Determine the first request ID from the spans,
         # and use an atomic counter to track it.
@@ -716,13 +716,57 @@ def test_transaction_read_and_insert_then_rollback(
         # Replace the entire block that builds expected_span_properties with:
         if multiplexed_enabled:
             expected_span_properties = [
-                {"name": "CloudSpanner.Batch.commit", "attributes": _make_attributes(db_name, num_mutations=1, x_goog_spanner_request_id=_build_request_id())},
-                {"name": "CloudSpanner.Transaction.read", "attributes": _make_attributes(db_name, table_id=sd.TABLE, columns=sd.COLUMNS, x_goog_spanner_request_id=_build_request_id())},
-                {"name": "CloudSpanner.Transaction.read", "attributes": _make_attributes(db_name, table_id=sd.TABLE, columns=sd.COLUMNS, x_goog_spanner_request_id=_build_request_id())},
-                {"name": "CloudSpanner.Transaction.rollback", "attributes": _make_attributes(db_name, x_goog_spanner_request_id=_build_request_id())},
-                {"name": "CloudSpanner.Session.run_in_transaction", "status": ot_helpers.StatusCode.ERROR, "attributes": _make_attributes(db_name)},
-                {"name": "CloudSpanner.Database.run_in_transaction", "status": ot_helpers.StatusCode.ERROR, "attributes": _make_attributes(db_name)},
-                {"name": "CloudSpanner.Snapshot.read", "attributes": _make_attributes(db_name, table_id=sd.TABLE, columns=sd.COLUMNS, x_goog_spanner_request_id=_build_request_id())},
+                {
+                    "name": "CloudSpanner.Batch.commit",
+                    "attributes": _make_attributes(
+                        db_name,
+                        num_mutations=1,
+                        x_goog_spanner_request_id=_build_request_id(),
+                    ),
+                },
+                {
+                    "name": "CloudSpanner.Transaction.read",
+                    "attributes": _make_attributes(
+                        db_name,
+                        table_id=sd.TABLE,
+                        columns=sd.COLUMNS,
+                        x_goog_spanner_request_id=_build_request_id(),
+                    ),
+                },
+                {
+                    "name": "CloudSpanner.Transaction.read",
+                    "attributes": _make_attributes(
+                        db_name,
+                        table_id=sd.TABLE,
+                        columns=sd.COLUMNS,
+                        x_goog_spanner_request_id=_build_request_id(),
+                    ),
+                },
+                {
+                    "name": "CloudSpanner.Transaction.rollback",
+                    "attributes": _make_attributes(
+                        db_name, x_goog_spanner_request_id=_build_request_id()
+                    ),
+                },
+                {
+                    "name": "CloudSpanner.Session.run_in_transaction",
+                    "status": ot_helpers.StatusCode.ERROR,
+                    "attributes": _make_attributes(db_name),
+                },
+                {
+                    "name": "CloudSpanner.Database.run_in_transaction",
+                    "status": ot_helpers.StatusCode.ERROR,
+                    "attributes": _make_attributes(db_name),
+                },
+                {
+                    "name": "CloudSpanner.Snapshot.read",
+                    "attributes": _make_attributes(
+                        db_name,
+                        table_id=sd.TABLE,
+                        columns=sd.COLUMNS,
+                        x_goog_spanner_request_id=_build_request_id(),
+                    ),
+                },
             ]
         else:
             # [A] Batch spans
