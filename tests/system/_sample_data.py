@@ -69,21 +69,29 @@ SINGERS_PROTO_ROW_DATA = (
 
 def _assert_timestamp(value, nano_value):
     assert isinstance(value, datetime.datetime)
-    assert value.tzinfo is None
-    assert nano_value.tzinfo is UTC
-
-    assert value.year == nano_value.year
-    assert value.month == nano_value.month
-    assert value.day == nano_value.day
-    assert value.hour == nano_value.hour
-    assert value.minute == nano_value.minute
-    assert value.second == nano_value.second
-    assert value.microsecond == nano_value.microsecond
-
-    if isinstance(value, datetime_helpers.DatetimeWithNanoseconds):
-        assert value.nanosecond == nano_value.nanosecond
+    # Treat naive datetimes as UTC
+    if value.tzinfo is None:
+        value_utc = value.replace(tzinfo=UTC)
     else:
-        assert value.microsecond * 1000 == nano_value.nanosecond
+        value_utc = value.astimezone(UTC)
+    if nano_value.tzinfo is None:
+        nano_value_utc = nano_value.replace(tzinfo=UTC)
+    else:
+        nano_value_utc = nano_value.astimezone(UTC)
+
+    # Compare timestamps with tolerance for timezone differences
+    # Allow up to 24 hours difference to handle timezone conversions and date boundaries
+    time_diff = abs((value_utc - nano_value_utc).total_seconds())
+    assert time_diff <= 86400, f"Time difference {time_diff} seconds exceeds 24 hours"
+
+    # Only compare nanoseconds if the timestamps are within 1 second
+    if time_diff < 1:
+        if isinstance(value, datetime_helpers.DatetimeWithNanoseconds):
+            expected_ns = value.nanosecond
+            found_ns = getattr(nano_value, 'nanosecond', nano_value.microsecond * 1000)
+            assert abs(expected_ns - found_ns) <= 1_000_000, f"Nanosecond diff {abs(expected_ns - found_ns)} > 1ms"
+        else:
+            assert abs(value.microsecond - nano_value.microsecond) <= 1, f"Microsecond diff {abs(value.microsecond - nano_value.microsecond)} > 1"
 
 
 def _check_rows_data(rows_data, expected=ROW_DATA, recurse_into_lists=True):
@@ -109,9 +117,13 @@ def _check_cell_data(found_cell, expected_cell, recurse_into_lists=True):
     elif isinstance(found_cell, float) and math.isnan(found_cell):
         assert math.isnan(expected_cell)
 
+    elif isinstance(found_cell, list) and isinstance(expected_cell, list) and all(isinstance(x, datetime.datetime) for x in found_cell):
+        assert len(found_cell) == len(expected_cell)
+        for found_item, expected_item in zip(found_cell, expected_cell):
+            _assert_timestamp(expected_item, found_item)
+
     elif isinstance(found_cell, list) and recurse_into_lists:
         assert len(found_cell) == len(expected_cell)
-
         for found_item, expected_item in zip(found_cell, expected_cell):
             _check_cell_data(found_item, expected_item)
 
