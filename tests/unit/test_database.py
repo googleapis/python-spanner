@@ -1704,7 +1704,9 @@ class TestDatabase(_BaseTest):
             return NOW
 
         # Mock the transaction commit method to return NOW
-        with mock.patch('google.cloud.spanner_v1.transaction.Transaction.commit', return_value=NOW):
+        with mock.patch(
+            "google.cloud.spanner_v1.transaction.Transaction.commit", return_value=NOW
+        ):
             committed = database.run_in_transaction(_unit_of_work)
 
             self.assertEqual(committed, NOW)
@@ -1729,7 +1731,9 @@ class TestDatabase(_BaseTest):
             return NOW
 
         # Mock the transaction commit method to return NOW
-        with mock.patch('google.cloud.spanner_v1.transaction.Transaction.commit', return_value=NOW):
+        with mock.patch(
+            "google.cloud.spanner_v1.transaction.Transaction.commit", return_value=NOW
+        ):
             committed = database.run_in_transaction(_unit_of_work, SINCE, until=UNTIL)
 
             self.assertEqual(committed, NOW)
@@ -3517,20 +3521,22 @@ class _Client(object):
         self.observability_options = observability_options
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
-        
+
         # Mock credentials with proper attributes
         self.credentials = mock.Mock()
         self.credentials.token = "mock_token"
         self.credentials.expiry = None
         self.credentials.valid = True
-        
+
         # Mock the spanner API to return proper session names
         self._spanner_api = mock.Mock()
+
         # Configure create_session to return a proper session with string name
         def mock_create_session(request, **kwargs):
             session_response = mock.Mock()
             session_response.name = f"projects/{self.project}/instances/instance-id/databases/database-id/sessions/session-{self._nth_request.increment()}"
             return session_response
+
         self._spanner_api.create_session = mock_create_session
 
     @property
