@@ -873,20 +873,26 @@ def test_transaction_read_and_insert_then_rollback(
         # between multiplexed and non-multiplexed modes
         actual_span_count = len(span_list)
         expected_span_count = len(expected_span_properties)
-        
+
         # Allow for flexibility in span count due to session management
         if actual_span_count != expected_span_count:
-            print(f"DEBUG: Span count mismatch - Expected: {expected_span_count}, Got: {actual_span_count}")
-            print(f"DEBUG: Expected span names: {[prop['name'] for prop in expected_span_properties]}")
+            print(
+                f"DEBUG: Span count mismatch - Expected: {expected_span_count}, Got: {actual_span_count}"
+            )
+            print(
+                f"DEBUG: Expected span names: {[prop['name'] for prop in expected_span_properties]}"
+            )
             print(f"DEBUG: Actual span names: {[span.name for span in span_list]}")
-            
+
             # For now, we'll verify the essential spans are present rather than exact count
             actual_span_names = [span.name for span in span_list]
             expected_span_names = [prop["name"] for prop in expected_span_properties]
-            
+
             # Check that all expected span types are present
             for expected_name in expected_span_names:
-                assert expected_name in actual_span_names, f"Expected span '{expected_name}' not found in actual spans: {actual_span_names}"
+                assert (
+                    expected_name in actual_span_names
+                ), f"Expected span '{expected_name}' not found in actual spans: {actual_span_names}"
         else:
             # If counts match, verify each span in order
             for i, expected in enumerate(expected_span_properties):
