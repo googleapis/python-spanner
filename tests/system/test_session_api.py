@@ -876,18 +876,10 @@ def test_transaction_read_and_insert_then_rollback(
 
         # Allow for flexibility in span count due to session management
         if actual_span_count != expected_span_count:
-            print(
-                f"DEBUG: Span count mismatch - Expected: {expected_span_count}, Got: {actual_span_count}"
-            )
-            print(
-                f"DEBUG: Expected span names: {[prop['name'] for prop in expected_span_properties]}"
-            )
-            print(f"DEBUG: Actual span names: {[span.name for span in span_list]}")
-
             # For now, we'll verify the essential spans are present rather than exact count
             actual_span_names = [span.name for span in span_list]
             expected_span_names = [prop["name"] for prop in expected_span_properties]
-
+            
             # Check that all expected span types are present
             for expected_name in expected_span_names:
                 assert (
