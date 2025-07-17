@@ -663,8 +663,13 @@ class Transaction(_SnapshotBase, _BatchBase):
         if is_inline_begin:
             self._lock.release()
 
-        if len(response_pb.result_sets) > 0 and response_pb.result_sets[0].precommit_token:
-            self._update_for_precommit_token_pb(response_pb.result_sets[0].precommit_token)
+        if (
+            len(response_pb.result_sets) > 0
+            and response_pb.result_sets[0].precommit_token
+        ):
+            self._update_for_precommit_token_pb(
+                response_pb.result_sets[0].precommit_token
+            )
 
         row_counts = [
             result_set.stats.row_count_exact for result_set in response_pb.result_sets
