@@ -3648,7 +3648,9 @@ class _Session(object):
 
     def run_in_transaction(self, func, *args, **kw):
         if self._run_transaction_function:
-            func(*args, **kw)
+            mock_txn = mock.Mock()
+            mock_txn._transaction_id = b"mock_transaction_id"
+            func(mock_txn, *args, **kw)
         self._retried = (func, args, kw)
         return self._committed
 
