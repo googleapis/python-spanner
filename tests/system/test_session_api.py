@@ -424,6 +424,9 @@ class _ReadAbortTrigger(object):
 
 
 def test_session_crud(sessions_database):
+    if is_multiplexed_enabled(transaction_type=TransactionType.READ_ONLY):
+        pytest.skip("Multiplexed sessions do not support CRUD operations.")
+
     session = sessions_database.session()
     assert not session.exists()
 
@@ -1412,11 +1415,13 @@ def test_transaction_batch_update_w_parent_span(
     for span in ot_exporter.get_finished_spans():
         if span and span.name:
             span_list.append(span)
-
+    multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
     span_list = sorted(span_list, key=lambda v1: v1.start_time)
     got_span_names = [span.name for span in span_list]
     expected_span_names = [
-        "CloudSpanner.CreateSession",
+        "CloudSpanner.CreateMultiplexedSession"
+        if multiplexed_enabled
+        else "CloudSpanner.CreateSession",
         "CloudSpanner.Batch.commit",
         "Test Span",
         "CloudSpanner.Session.run_in_transaction",

@@ -101,7 +101,6 @@ def _assert_timestamp(value, nano_value):
             # Allow up to 1 microsecond difference for timestamp precision issues
             us_diff = abs(value.microsecond - nano_value.microsecond)
             if us_diff > 1:
-                print(f"DEBUG: Microsecond comparison failed:")
                 print(f"  Expected: {value} (microsecond: {value.microsecond})")
                 print(f"  Found: {nano_value} (microsecond: {nano_value.microsecond})")
                 print(f"  Difference: {us_diff} microseconds")
