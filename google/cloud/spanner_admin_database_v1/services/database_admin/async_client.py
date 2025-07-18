@@ -28,6 +28,7 @@ from typing import (
     Type,
     Union,
 )
+import uuid
 
 from google.cloud.spanner_admin_database_v1 import gapic_version as package_version
 

@@ -32,6 +32,7 @@ from typing import (
     Union,
     cast,
 )
+import uuid
 import warnings
 
 from google.cloud.spanner_admin_database_v1 import gapic_version as package_version
