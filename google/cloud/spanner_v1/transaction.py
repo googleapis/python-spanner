@@ -285,13 +285,16 @@ class Transaction(_SnapshotBase, _BatchBase):
 
             def wrapped_method(*args, **kwargs):
                 attempt.increment()
+                commit_request_args = {
+                    "mutations": mutations,
+                    **common_commit_request_args,
+                }
+                if self._session.is_multiplexed and self._precommit_token is not None:
+                    commit_request_args["precommit_token"] = self._precommit_token
+                
                 commit_method = functools.partial(
                     api.commit,
-                    request=CommitRequest(
-                        mutations=mutations,
-                        precommit_token=self._precommit_token,
-                        **common_commit_request_args,
-                    ),
+                    request=CommitRequest(**commit_request_args),
                     metadata=database.metadata_with_request_id(
                         nth_request,
                         attempt.value,
