@@ -289,7 +289,9 @@ class Transaction(_SnapshotBase, _BatchBase):
                     "mutations": mutations,
                     **common_commit_request_args,
                 }
-                if self._session.is_multiplexed and self._precommit_token is not None:
+                # Check if session is multiplexed (safely handle mock sessions)
+                is_multiplexed = getattr(self._session, "is_multiplexed", False)
+                if is_multiplexed and self._precommit_token is not None:
                     commit_request_args["precommit_token"] = self._precommit_token
 
                 commit_method = functools.partial(
