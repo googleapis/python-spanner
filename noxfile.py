@@ -512,11 +512,12 @@ def prerelease_deps(session, protobuf_implementation, database_dialect):
     constraints_deps = [
         match.group(1)
         for match in re.finditer(
-            r"^\s*(\S+)(?===\S+)", constraints_text, flags=re.MULTILINE
+            r"^\s*([a-zA-Z0-9._-]+)", constraints_text, flags=re.MULTILINE
         )
     ]
 
-    session.install(*constraints_deps)
+    if constraints_deps:
+        session.install(*constraints_deps)
 
     prerel_deps = [
         "protobuf",
