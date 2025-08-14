@@ -3175,6 +3175,42 @@ def directed_read_options(
             print("SingerId: {}, AlbumId: {}, AlbumTitle: {}".format(*row))
     # [END spanner_directed_read]
 
+def isolation_level_options(
+    instance_id,
+    database_id,
+):
+    from google.cloud.spanner_v1 import TransactionOptions, DefaultTransactionOptions
+    
+    """
+    Shows how to run a Read Write transaction with isolation level options.
+    """
+    # [START spanner_isolation_level]
+    # instance_id = "your-spanner-instance"
+    # database_id = "your-spanner-db-id"
+
+    isolation_level_options_for_client = TransactionOptions.IsolationLevel.SERIALIZABLE
+
+    # The isolation level specified at the client level via default_transaction_options will be applied to all RW transactions
+    spanner_client = spanner.Client(
+        default_transaction_options=DefaultTransactionOptions(isolation_level=isolation_level_options_for_client)
+    )
+    instance = spanner_client.instance(instance_id)
+    database = instance.database(database_id)
+
+    isolation_level_options_for_request = TransactionOptions.IsolationLevel.REPEATABLE_READ
+
+    def insert_singers(transaction):
+        row_ct = transaction.execute_update(
+            "INSERT INTO Singers (SingerId, FirstName, LastName) "
+            " VALUES (20, 'Virginia', 'Watson')"
+        )
+
+        print("{} record(s) inserted.".format(row_ct))
+
+    # The isolation level specified at the request level takes precedence over the isolation level configured at the client level.
+    database.run_in_transaction(insert_singers, isolation_level=isolation_level_options_for_request)
+    # [END spanner_isolation_level]
+
 
 def set_custom_timeout_and_retry(instance_id, database_id):
     """Executes a snapshot read with custom timeout and retry."""
@@ -3798,6 +3834,7 @@ if __name__ == "__main__":  # noqa: C901
     )
     enable_fine_grained_access_parser.add_argument("--title", default="condition title")
     subparsers.add_parser("directed_read_options", help=directed_read_options.__doc__)
+    subparsers.add_parser("isolation_level_options", help=isolation_level_options.__doc__)
     subparsers.add_parser(
         "set_custom_timeout_and_retry", help=set_custom_timeout_and_retry.__doc__
     )
@@ -3958,6 +3995,8 @@ if __name__ == "__main__":  # noqa: C901
         )
     elif args.command == "directed_read_options":
         directed_read_options(args.instance_id, args.database_id)
+    elif args.command == "isolation_level_options":
+        isolation_level_options(args.instance_id, args.database_id)
     elif args.command == "set_custom_timeout_and_retry":
         set_custom_timeout_and_retry(args.instance_id, args.database_id)
     elif args.command == "create_instance_with_autoscaling_config":
