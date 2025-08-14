@@ -512,3 +512,9 @@ def test_drop_sequence(capsys, instance_id, bit_reverse_sequence_database):
         "Altered Customers table to drop DEFAULT from CustomerId column and dropped the Seq sequence on database"
         in out
     )
+
+def test_dml_last_statement_option(capsys, instance_id, sample_database):
+    snippets.dml_last_statement_option(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "1 record(s) inserted." in out
+    assert "1 record(s) updated." in out

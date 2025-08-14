@@ -1030,3 +1030,10 @@ def test_add_split_points(capsys, instance_id, sample_database):
     snippets.add_split_points(instance_id, sample_database.database_id)
     out, _ = capsys.readouterr()
     assert "Added split points." in out
+
+
+def test_dml_last_statement_option(capsys, instance_id, sample_database):
+    snippets.dml_last_statement_option(instance_id, sample_database.database_id)
+    out, _ = capsys.readouterr()
+    assert "1 record(s) inserted." in out
+    assert "1 record(s) updated." in out
