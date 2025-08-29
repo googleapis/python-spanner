@@ -106,17 +106,15 @@ class TransactionOptions(proto.Message):
                 If the value is not specified, the ``SERIALIZABLE``
                 isolation level is used.
             SERIALIZABLE (1):
-                All transactions appear as if they executed
-                in a serial order, even if some of the reads,
-                writes, and other operations of distinct
-                transactions actually occurred in parallel.
-                Spanner assigns commit timestamps that reflect
-                the order of committed transactions to implement
-                this property. Spanner offers a stronger
-                guarantee than serializability called external
-                consistency. For further details, please refer
-                to
-                https://cloud.google.com/spanner/docs/true-time-external-consistency#serializability.
+                All transactions appear as if they executed in a serial
+                order, even if some of the reads, writes, and other
+                operations of distinct transactions actually occurred in
+                parallel. Spanner assigns commit timestamps that reflect the
+                order of committed transactions to implement this property.
+                Spanner offers a stronger guarantee than serializability
+                called external consistency. For more information, see
+                `TrueTime and external
+                consistency <https://cloud.google.com/spanner/docs/true-time-external-consistency#serializability>`__.
             REPEATABLE_READ (2):
                 All reads performed during the transaction observe a
                 consistent snapshot of the database, and the transaction is
