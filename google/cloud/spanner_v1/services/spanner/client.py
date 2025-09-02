@@ -1614,8 +1614,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
                    Example 1:
 
-                   -  Request: 5 DML statements, all executed
-                      successfully.
+                   - Request: 5 DML statements, all executed
+                     successfully.
 
                    \* Response: 5
                    [ResultSet][google.spanner.v1.ResultSet] messages,
@@ -1623,8 +1623,8 @@ class SpannerClient(metaclass=SpannerClientMeta):
 
                    Example 2:
 
-                   -  Request: 5 DML statements. The third statement has
-                      a syntax error.
+                   - Request: 5 DML statements. The third statement has
+                     a syntax error.
 
                    \* Response: 2
                    [ResultSet][google.spanner.v1.ResultSet] messages,
