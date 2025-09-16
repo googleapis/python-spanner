@@ -19,6 +19,7 @@ from threading import Lock, Event
 
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1._helpers import _get_type_decoder, _parse_nullable
 
 if TYPE_CHECKING:
     from google.cloud.spanner_v1.database import BatchSnapshot
@@ -33,10 +34,13 @@ class PartitionExecutor:
     rows in the queue
     """
 
-    def __init__(self, batch_snapshot, partition_id, merged_result_set):
+    def __init__(
+        self, batch_snapshot, partition_id, merged_result_set, lazy_decode=False
+    ):
         self._batch_snapshot: BatchSnapshot = batch_snapshot
         self._partition_id = partition_id
         self._merged_result_set: MergedResultSet = merged_result_set
+        self._lazy_decode = lazy_decode
         self._queue: Queue[PartitionExecutorResult] = merged_result_set._queue
 
     def run(self):
@@ -52,7 +56,9 @@ class PartitionExecutor:
     def __run(self):
         results = None
         try:
-            results = self._batch_snapshot.process_query_batch(self._partition_id)
+            results = self._batch_snapshot.process_query_batch(
+                self._partition_id, lazy_decode=self._lazy_decode
+            )
             for row in results:
                 if self._merged_result_set._metadata is None:
                     self._set_metadata(results)
@@ -94,7 +100,9 @@ class MergedResultSet:
     records in the MergedResultSet is not guaranteed.
     """
 
-    def __init__(self, batch_snapshot, partition_ids, max_parallelism):
+    def __init__(
+        self, batch_snapshot, partition_ids, max_parallelism, lazy_decode=False
+    ):
         self._exception = None
         self._metadata = None
         self.metadata_event = Event()
@@ -110,7 +118,7 @@ class MergedResultSet:
         partition_executors = []
         for partition_id in partition_ids:
             partition_executors.append(
-                PartitionExecutor(batch_snapshot, partition_id, self)
+                PartitionExecutor(batch_snapshot, partition_id, self, lazy_decode)
             )
         executor = ThreadPoolExecutor(max_workers=parallelism)
         for partition_executor in partition_executors:
@@ -144,3 +152,40 @@ class MergedResultSet:
     def stats(self):
         # TODO: Implement
         return None
+
+    def decode_row(self, row: []) -> []:
+        """Decodes a row from protobuf values to Python objects. This function
+           should only be called for result sets that use ``lazy_decoding=True``.
+           The array that is returned by this function is the same as the array
+           that would have been returned by the rows iterator if ``lazy_decoding=False``.
+
+        :returns: an array containing the decoded values of all the columns in the given row
+        """
+        if not isinstance(row, (list, tuple)):
+            raise TypeError("row must be an array of protobuf values")
+        decoders = self._decoders
+        return [
+            _parse_nullable(row[index], decoders[index]) for index in range(len(row))
+        ]
+
+    def decode_column(self, row: [], column_index: int):
+        """Decodes a column from a protobuf value to a Python object. This function
+           should only be called for result sets that use ``lazy_decoding=True``.
+           The object that is returned by this function is the same as the object
+           that would have been returned by the rows iterator if ``lazy_decoding=False``.
+
+        :returns: the decoded column value
+        """
+        if not isinstance(row, (list, tuple)):
+            raise TypeError("row must be an array of protobuf values")
+        decoders = self._decoders
+        return _parse_nullable(row[column_index], decoders[column_index])
+
+    @property
+    def _decoders(self):
+        if self.metadata is None:
+            raise ValueError("iterator not started")
+        return [
+            _get_type_decoder(field.type_, field.name, None)
+            for field in self.metadata.row_type.fields
+        ]
