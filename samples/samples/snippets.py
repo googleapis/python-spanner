@@ -3188,27 +3188,34 @@ def isolation_level_options(
     # instance_id = "your-spanner-instance"
     # database_id = "your-spanner-db-id"
 
-    isolation_level_options_for_client = TransactionOptions.IsolationLevel.SERIALIZABLE
-
-    # The isolation level specified at the client level via default_transaction_options will be applied to all RW transactions
+    # The isolation level specified at the client-level will be applied to all RW transactions.
+    isolation_options_for_client = TransactionOptions.IsolationLevel.SERIALIZABLE
+    
     spanner_client = spanner.Client(
-        default_transaction_options=DefaultTransactionOptions(isolation_level=isolation_level_options_for_client)
+        default_transaction_options=DefaultTransactionOptions(isolation_level=isolation_options_for_client)
     )
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    isolation_level_options_for_request = TransactionOptions.IsolationLevel.REPEATABLE_READ
+    # The isolation level specified at the request level takes precedence over the isolation level configured at the client level.
+    isolation_options_for_transaction = TransactionOptions.IsolationLevel.REPEATABLE_READ
 
-    def insert_singers(transaction):
+    def update_albums_with_isolation(transaction):
+        # Read an AlbumTitle.
+        results = transaction.execute_sql(
+            "SELECT AlbumTitle from Albums WHERE SingerId = 1 and AlbumId = 1"
+        )
+        for result in results:
+            print("Current Album Title: {}".format(*result))
+
+        # Update the AlbumTitle.
         row_ct = transaction.execute_update(
-            "INSERT INTO Singers (SingerId, FirstName, LastName) "
-            " VALUES (20, 'Virginia', 'Watson')"
+            "UPDATE Albums SET AlbumTitle = 'A New Title' WHERE SingerId = 1 and AlbumId = 1"
         )
 
-        print("{} record(s) inserted.".format(row_ct))
+        print("{} record(s) updated.".format(row_ct))
 
-    # The isolation level specified at the request level takes precedence over the isolation level configured at the client level.
-    database.run_in_transaction(insert_singers, isolation_level=isolation_level_options_for_request)
+    database.run_in_transaction(update_albums_with_isolation, isolation_level=isolation_options_for_transaction)
     # [END spanner_isolation_level]
 
 
