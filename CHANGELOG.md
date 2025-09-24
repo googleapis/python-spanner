@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.58.1](https://github.com/googleapis/python-spanner/compare/v3.58.0...v3.58.1) (2025-09-24)
+
+
+### Documentation
+
+* Add snippet for Repeatable Read configuration at client and transaction  ([#1326](https://github.com/googleapis/python-spanner/issues/1326)) ([58e2406](https://github.com/googleapis/python-spanner/commit/58e2406af3c8918e37e0daadefaf537073aed1a4))
+
 ## [3.58.0](https://github.com/googleapis/python-spanner/compare/v3.57.0...v3.58.0) (2025-09-10)
 
 
