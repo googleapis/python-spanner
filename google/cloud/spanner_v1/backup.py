@@ -53,8 +53,9 @@ class Backup(object):
 
     :type expire_time: :class:`datetime.datetime`
     :param expire_time: (Optional) The expire time that will be used to
-                        create the backup. Required if the create method
-                        needs to be called.
+                        create the backup. If the expire time is not specified
+                        then the backup will be retained for the duration of
+                        maximum retention period.
 
     :type version_time: :class:`datetime.datetime`
     :param version_time: (Optional) The version time that was specified for
@@ -271,8 +272,6 @@ class Backup(object):
         :raises BadRequest: if the database or expire_time values are invalid
                             or expire_time is not set
         """
-        if not self._expire_time:
-            raise ValueError("expire_time not set")
 
         if not self._database and not self._source_backup:
             raise ValueError("database and source backup both not set")
