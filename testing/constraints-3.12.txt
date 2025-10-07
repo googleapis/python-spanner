@@ -5,3 +5,8 @@ google-api-core
 proto-plus
 protobuf
 grpc-google-iam-v1
+grpc-interceptor
+google-cloud-core
+google-cloud-testutils
+mock
+sqlparse

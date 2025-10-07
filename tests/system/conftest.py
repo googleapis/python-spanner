@@ -16,6 +16,7 @@ import datetime
 import time
 
 import pytest
+from google.api_core.client_options import ClientOptions
 
 from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
@@ -105,9 +106,12 @@ def spanner_client():
             credentials=credentials,
         )
     else:
-        client_options = {"api_endpoint": _helpers.API_ENDPOINT}
         return spanner_v1.Client(
-            client_options=client_options
+            project="tpczero-system:bootstrap-libraries",
+            client_options=ClientOptions(
+                api_endpoint=_helpers.API_ENDPOINT,
+                universe_domain="apis-tpczero.goog",
+            )
         )  # use google.auth.default credentials
 
 
