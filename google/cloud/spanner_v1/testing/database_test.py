@@ -110,7 +110,7 @@ class TestDatabase(Database):
             default_host=SpannerTransport.DEFAULT_HOST,
         )
         channel = grpc.intercept_channel(channel, *self._interceptors)
-        transport = SpannerGrpcTransport(channel=channel)
+        transport = SpannerGrpcTransport(channel=channel, host=api_endpoint)
         return SpannerClient(
             client_options=client_options,
             transport=transport,

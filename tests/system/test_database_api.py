@@ -37,7 +37,7 @@ DIRECTED_READ_OPTIONS = {
     "include_replicas": {
         "replica_selections": [
             {
-                "location": "us-west1",
+                "location": "u-us-prp1",
                 "type_": DirectedReadOptions.ReplicaSelection.Type.READ_ONLY,
             },
         ],
@@ -281,7 +281,7 @@ def test_iam_policy(
 
     new_binding = policy_pb2.Binding(
         role="roles/spanner.fineGrainedAccessUser",
-        members=["user:asthamohta@google.com"],
+        members=["user:sasubramanian@google.com"],
         condition=expr_pb2.Expr(
             title="condition title",
             expression='resource.name.endsWith("/databaseRoles/parent")',

@@ -370,16 +370,17 @@ class SpannerClient(metaclass=SpannerClientMeta):
         )
         if client_options is None:
             client_options = client_options_lib.ClientOptions()
-        use_client_cert = os.getenv("GOOGLE_API_USE_CLIENT_CERTIFICATE", "false")
-        use_mtls_endpoint = os.getenv("GOOGLE_API_USE_MTLS_ENDPOINT", "auto")
-        if use_client_cert not in ("true", "false"):
-            raise ValueError(
-                "Environment variable `GOOGLE_API_USE_CLIENT_CERTIFICATE` must be either `true` or `false`"
-            )
-        if use_mtls_endpoint not in ("auto", "never", "always"):
-            raise MutualTLSChannelError(
-                "Environment variable `GOOGLE_API_USE_MTLS_ENDPOINT` must be `never`, `auto` or `always`"
-            )
+
+        (
+            use_client_cert,
+            use_mtls_endpoint,
+            universe_domain_env,
+        ) = SpannerClient._read_environment_variables()
+
+        universe_domain_opt = getattr(client_options, "universe_domain", None)
+        universe_domain = SpannerClient._get_universe_domain(
+            universe_domain_opt, universe_domain_env
+        )
 
         # Figure out the client cert source to use.
         client_cert_source = None
@@ -397,7 +398,9 @@ class SpannerClient(metaclass=SpannerClientMeta):
         ):
             api_endpoint = cls.DEFAULT_MTLS_ENDPOINT
         else:
-            api_endpoint = cls.DEFAULT_ENDPOINT
+            api_endpoint = SpannerClient._DEFAULT_ENDPOINT_TEMPLATE.format(
+                UNIVERSE_DOMAIN=universe_domain
+            )
 
         return api_endpoint, client_cert_source
 
