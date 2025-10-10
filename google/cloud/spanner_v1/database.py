@@ -2033,7 +2033,10 @@ def _call_api_with_request_id(api_callable, request, metadata):
     except GoogleAPICallError as e:
         request_id = dict(metadata).get("x-goog-spanner-request-id")
         raise SpannerException(
-            message=e.message, errors=e.errors, response=e.response, request_id=request_id
+            message=e.message,
+            errors=e.errors,
+            response=e.response,
+            request_id=request_id,
         ) from e
 
 
