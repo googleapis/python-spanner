@@ -169,4 +169,4 @@ class SpannerMetricsTracerFactory(MetricsTracerFactory):
         if GOOGLE_CLOUD_REGION_KEY not in resources.attributes:
             return GOOGLE_CLOUD_REGION_GLOBAL
         else:
-            return resources[GOOGLE_CLOUD_REGION_KEY]
+            return resources.attributes[GOOGLE_CLOUD_REGION_KEY]
