@@ -20,7 +20,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.semconv.resource import ResourceAttributes
 
 
-from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1 import TransactionOptions, _helpers
 
 
 class Test_merge_query_options(unittest.TestCase):
@@ -94,6 +94,9 @@ class Test_merge_query_options(unittest.TestCase):
 
 
 class Test_get_cloud_region(unittest.TestCase):
+    def setUp(self):
+        _helpers._cloud_region = None
+
     def _callFUT(self, *args, **kw):
         from google.cloud.spanner_v1._helpers import _get_cloud_region
 

@@ -27,7 +27,6 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
     TransactionSelector,
 )
-from google.cloud.spanner_v1._helpers import _get_cloud_region
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from tests._builders import (
     build_precommit_token_pb,
@@ -1048,7 +1047,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             x_goog_spanner_request_id=req_id,
         )
         if request_options and request_options.request_tag:
-            expected_attributes["spanner.request_tag"] = request_options.request_tag
+            expected_attributes["request.tag"] = request_options.request_tag
         self.assertSpanAttributes(
             "CloudSpanner._Derived.read", attributes=expected_attributes
         )
@@ -1407,7 +1406,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
             },
         )
         if request_options and request_options.request_tag:
-            expected_attributes["spanner.request_tag"] = request_options.request_tag
+            expected_attributes["request.tag"] = request_options.request_tag
 
         self.assertSpanAttributes(
             "CloudSpanner._Derived.execute_sql",

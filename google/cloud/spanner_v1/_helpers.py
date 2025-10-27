@@ -42,9 +42,15 @@ try:
     from opentelemetry.propagate import inject
     from opentelemetry.propagators.textmap import Setter
     from opentelemetry.semconv.resource import ResourceAttributes
+    from opentelemetry.resourcedetector import gcp_resource_detector
     from opentelemetry.resourcedetector.gcp_resource_detector import (
         GoogleCloudResourceDetector,
     )
+
+    # Overwrite the requests timeout for the detector.
+    # This is necessary as the client will wait the full timeout if the
+    # code is not run in a GCP environment, with the location endpoints available.
+    gcp_resource_detector._TIMEOUT_SEC = 0.2
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
@@ -64,6 +70,8 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
 GOOGLE_CLOUD_REGION_GLOBAL = "global"
 
 log = logging.getLogger(__name__)
+
+_cloud_region: str = None
 
 
 if HAS_OPENTELEMETRY_INSTALLED:
@@ -90,25 +98,30 @@ if HAS_OPENTELEMETRY_INSTALLED:
 
 
 def _get_cloud_region() -> str:
-    """Get the location of the resource.
+    """Get the location of the resource, caching the result.
 
     Returns:
         str: The location of the resource. If OpenTelemetry is not installed, returns a global region.
     """
-    if not HAS_OPENTELEMETRY_INSTALLED:
-        return GOOGLE_CLOUD_REGION_GLOBAL
+    global _cloud_region
+    if _cloud_region is not None:
+        return _cloud_region
+
     try:
         detector = GoogleCloudResourceDetector()
         resources = detector.detect()
-
         if ResourceAttributes.CLOUD_REGION in resources.attributes:
-            return resources.attributes[ResourceAttributes.CLOUD_REGION]
+            _cloud_region = resources.attributes[ResourceAttributes.CLOUD_REGION]
+        else:
+            _cloud_region = GOOGLE_CLOUD_REGION_GLOBAL
     except Exception as e:
         log.warning(
             "Failed to detect GCP resource location for Spanner metrics, defaulting to 'global'. Error: %s",
             e,
         )
-    return GOOGLE_CLOUD_REGION_GLOBAL
+        _cloud_region = GOOGLE_CLOUD_REGION_GLOBAL
+
+    return _cloud_region
 
 
 def _try_to_coerce_bytes(bytestring):

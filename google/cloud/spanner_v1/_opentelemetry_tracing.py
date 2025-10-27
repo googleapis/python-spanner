@@ -99,7 +99,6 @@ def trace_call(
             "enable_end_to_end_tracing", enable_end_to_end_tracing
         )
         db_name = observability_options.get("db_name", db_name)
-        cloud_region = observability_options.get("cloud_region", cloud_region)
 
     cloud_region = _get_cloud_region()
     tracer = get_tracer(tracer_provider)
@@ -125,7 +124,7 @@ def trace_call(
     if "request_options" in attributes:
         request_options = attributes.pop("request_options")
         if request_options and request_options.request_tag:
-            attributes["spanner.request_tag"] = request_options.request_tag
+            attributes["request.tag"] = request_options.request_tag
 
     if extended_tracing_globally_disabled:
         enable_extended_tracing = False

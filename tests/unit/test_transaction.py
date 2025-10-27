@@ -26,7 +26,6 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
     ResultSetMetadata,
 )
-from google.cloud.spanner_v1._helpers import _get_cloud_region
 from google.cloud.spanner_v1._helpers import GOOGLE_CLOUD_REGION_GLOBAL
 from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1 import Type
@@ -841,7 +840,7 @@ class TestTransaction(OpenTelemetryBase):
             database, **{"db.statement": DML_QUERY_WITH_PARAM}
         )
         if request_options.request_tag:
-            expected_attributes["spanner.request_tag"] = request_options.request_tag
+            expected_attributes["request.tag"] = request_options.request_tag
         self.assertSpanAttributes(
             "CloudSpanner.Transaction.execute_update", attributes=expected_attributes
         )
