@@ -176,7 +176,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertEqual(pool.labels, {})
         self.assertIsNone(pool.database_role)
 
-    def test_ctor_explicit(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ctor_explicit(self, mock_region):
         labels = {"foo": "bar"}
         database_role = "dummy-role"
         pool = self._make_one(
@@ -189,7 +190,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
 
-    def test_bind(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_bind(self, mock_region):
         database_role = "dummy-role"
         pool = self._make_one()
         database = _Database("name")
@@ -210,7 +212,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         for session in SESSIONS:
             session.create.assert_not_called()
 
-    def test_get_active(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_active(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = sorted([_Session(database) for i in range(0, 4)])
@@ -224,7 +227,8 @@ class TestFixedSizePool(OpenTelemetryBase):
             self.assertFalse(session._exists_checked)
             self.assertFalse(pool._sessions.full())
 
-    def test_get_non_expired(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_non_expired(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
         last_use_time = datetime.utcnow() - timedelta(minutes=56)
@@ -241,7 +245,8 @@ class TestFixedSizePool(OpenTelemetryBase):
             self.assertTrue(session._exists_checked)
             self.assertFalse(pool._sessions.full())
 
-    def test_spans_bind_get(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_bind_get(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
@@ -286,7 +291,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         ]
         self.assertSpanEvents("pool.Get", wantEventNames, span_list[-1])
 
-    def test_spans_bind_get_empty_pool(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_bind_get_empty_pool(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
@@ -330,7 +336,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         ]
         assert got_all_events == want_all_events
 
-    def test_spans_pool_bind(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_pool_bind(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
@@ -404,7 +411,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         ]
         assert got_all_events == want_all_events
 
-    def test_get_expired(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_expired(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
         last_use_time = datetime.utcnow() - timedelta(minutes=65)
@@ -420,7 +428,8 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertTrue(SESSIONS[0]._exists_checked)
         self.assertFalse(pool._sessions.full())
 
-    def test_get_empty_default_timeout(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_empty_default_timeout(self, mock_region):
         import queue
 
         pool = self._make_one(size=1)
@@ -431,7 +440,8 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         self.assertEqual(session_queue._got, {"block": True, "timeout": 10})
 
-    def test_get_empty_explicit_timeout(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_empty_explicit_timeout(self, mock_region):
         import queue
 
         pool = self._make_one(size=1, default_timeout=0.1)
@@ -442,7 +452,8 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         self.assertEqual(session_queue._got, {"block": True, "timeout": 1})
 
-    def test_put_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_full(self, mock_region):
         import queue
 
         pool = self._make_one(size=4)
@@ -457,7 +468,8 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         self.assertTrue(pool._sessions.full())
 
-    def test_put_non_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_non_full(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 4
@@ -469,7 +481,8 @@ class TestFixedSizePool(OpenTelemetryBase):
 
         self.assertTrue(pool._sessions.full())
 
-    def test_clear(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_clear(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database)] * 10
@@ -527,7 +540,8 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
 
-    def test_ctor_explicit_w_database_role_in_db(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ctor_explicit_w_database_role_in_db(self, mock_region):
         database_role = "dummy-role"
         pool = self._make_one()
         database = pool._database = _Database("name")
@@ -535,7 +549,8 @@ class TestBurstyPool(OpenTelemetryBase):
         pool.bind(database)
         self.assertEqual(pool.database_role, database_role)
 
-    def test_get_empty(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_empty(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         pool._new_session = mock.Mock(return_value=_Session(database))
@@ -548,7 +563,8 @@ class TestBurstyPool(OpenTelemetryBase):
         session.create.assert_called()
         self.assertTrue(pool._sessions.empty())
 
-    def test_spans_get_empty_pool(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_get_empty_pool(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
@@ -586,7 +602,8 @@ class TestBurstyPool(OpenTelemetryBase):
         ]
         self.assertSpanEvents("pool.Get", wantEventNames, span=create_span)
 
-    def test_get_non_empty_session_exists(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_non_empty_session_exists(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         previous = _Session(database)
@@ -600,7 +617,8 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertTrue(session._exists_checked)
         self.assertTrue(pool._sessions.empty())
 
-    def test_spans_get_non_empty_session_exists(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_get_non_empty_session_exists(self, mock_region):
         # Tests the spans produces when you invoke pool.bind
         # and then insert a session into the pool.
         pool = self._make_one()
@@ -624,7 +642,8 @@ class TestBurstyPool(OpenTelemetryBase):
             ["Acquiring session", "Waiting for a session to become available"],
         )
 
-    def test_get_non_empty_session_expired(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_non_empty_session_expired(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         previous = _Session(database, exists=False)
@@ -641,7 +660,8 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertFalse(session._exists_checked)
         self.assertTrue(pool._sessions.empty())
 
-    def test_put_empty(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_empty(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         pool.bind(database)
@@ -651,7 +671,8 @@ class TestBurstyPool(OpenTelemetryBase):
 
         self.assertFalse(pool._sessions.empty())
 
-    def test_spans_put_empty(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_put_empty(self, mock_region):
         # Tests the spans produced when you put sessions into an empty pool.
         pool = self._make_one()
         database = _Database("name")
@@ -667,7 +688,8 @@ class TestBurstyPool(OpenTelemetryBase):
             attributes=TestBurstyPool.BASE_ATTRIBUTES,
         )
 
-    def test_put_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_full(self, mock_region):
         pool = self._make_one(target_size=1)
         database = _Database("name")
         pool.bind(database)
@@ -681,7 +703,8 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertTrue(younger._deleted)
         self.assertIs(pool.get(), older)
 
-    def test_spans_put_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_put_full(self, mock_region):
         # This scenario tests the spans produced from putting an older
         # session into a pool that is already full.
         pool = self._make_one(target_size=1)
@@ -703,7 +726,8 @@ class TestBurstyPool(OpenTelemetryBase):
             attributes=TestBurstyPool.BASE_ATTRIBUTES,
         )
 
-    def test_put_full_expired(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_full_expired(self, mock_region):
         pool = self._make_one(target_size=1)
         database = _Database("name")
         pool.bind(database)
@@ -717,7 +741,8 @@ class TestBurstyPool(OpenTelemetryBase):
         self.assertTrue(younger._deleted)
         self.assertIs(pool.get(), older)
 
-    def test_clear(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_clear(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         pool.bind(database)
@@ -779,7 +804,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, database_role)
 
-    def test_ctor_explicit_w_database_role_in_db(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ctor_explicit_w_database_role_in_db(self, mock_region):
         database_role = "dummy-role"
         pool = self._make_one()
         database = pool._database = _Database("name")
@@ -789,7 +815,8 @@ class TestPingingPool(OpenTelemetryBase):
         pool.bind(database)
         self.assertEqual(pool.database_role, database_role)
 
-    def test_bind(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_bind(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database)] * 10
@@ -807,7 +834,8 @@ class TestPingingPool(OpenTelemetryBase):
         for session in SESSIONS:
             session.create.assert_not_called()
 
-    def test_get_hit_no_ping(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_hit_no_ping(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 4
@@ -822,7 +850,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
 
-    def test_get_hit_w_ping(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_hit_w_ping(self, mock_region):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -846,7 +875,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
 
-    def test_get_hit_w_ping_expired(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_hit_w_ping_expired(self, mock_region):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -871,7 +901,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertFalse(pool._sessions.full())
         self.assertNoSpans()
 
-    def test_get_empty_default_timeout(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_empty_default_timeout(self, mock_region):
         import queue
 
         pool = self._make_one(size=1)
@@ -883,7 +914,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertEqual(session_queue._got, {"block": True, "timeout": 10})
         self.assertNoSpans()
 
-    def test_get_empty_explicit_timeout(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_get_empty_explicit_timeout(self, mock_region):
         import queue
 
         pool = self._make_one(size=1, default_timeout=0.1)
@@ -895,7 +927,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertEqual(session_queue._got, {"block": True, "timeout": 1})
         self.assertNoSpans()
 
-    def test_put_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_full(self, mock_region):
         import queue
 
         pool = self._make_one(size=4)
@@ -909,7 +942,8 @@ class TestPingingPool(OpenTelemetryBase):
 
         self.assertTrue(pool._sessions.full())
 
-    def test_spans_put_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_put_full(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 
@@ -949,7 +983,8 @@ class TestPingingPool(OpenTelemetryBase):
             "CloudSpanner.PingingPool.BatchCreateSessions", wantEventNames
         )
 
-    def test_put_non_full(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_put_non_full(self, mock_region):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -970,7 +1005,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertIs(queued, session)
         self.assertNoSpans()
 
-    def test_clear(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_clear(self, mock_region):
         pool = self._make_one()
         database = _Database("name")
         SESSIONS = [_Session(database)] * 10
@@ -990,12 +1026,14 @@ class TestPingingPool(OpenTelemetryBase):
             self.assertTrue(session._deleted)
         self.assertNoSpans()
 
-    def test_ping_empty(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ping_empty(self, mock_region):
         pool = self._make_one(size=1)
         pool.ping()  # Does not raise 'Empty'
         self.assertNoSpans()
 
-    def test_ping_oldest_fresh(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ping_oldest_fresh(self, mock_region):
         pool = self._make_one(size=1)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 1
@@ -1008,7 +1046,8 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertFalse(SESSIONS[0]._pinged)
         self.assertNoSpans()
 
-    def test_ping_oldest_stale_but_exists(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ping_oldest_stale_but_exists(self, mock_region):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -1025,7 +1064,8 @@ class TestPingingPool(OpenTelemetryBase):
 
         self.assertTrue(SESSIONS[0]._pinged)
 
-    def test_ping_oldest_stale_and_not_exists(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_ping_oldest_stale_and_not_exists(self, mock_region):
         import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
@@ -1046,7 +1086,8 @@ class TestPingingPool(OpenTelemetryBase):
         SESSIONS[1].create.assert_called()
         self.assertNoSpans()
 
-    def test_spans_get_and_leave_empty_pool(self):
+    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    def test_spans_get_and_leave_empty_pool(self, mock_region):
         if not HAS_OPENTELEMETRY_INSTALLED:
             return
 

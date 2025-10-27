@@ -35,16 +35,16 @@ from google.cloud.spanner_v1.types import TransactionOptions
 from google.cloud.spanner_v1.data_types import JsonObject, Interval
 from google.cloud.spanner_v1.request_id_header import with_request_id
 from google.cloud.spanner_v1.types import TypeCode
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.resourcedetector.gcp_resource_detector import (
-    GoogleCloudResourceDetector,
-)
 
 from google.rpc.error_details_pb2 import RetryInfo
 
 try:
     from opentelemetry.propagate import inject
     from opentelemetry.propagators.textmap import Setter
+    from opentelemetry.semconv.resource import ResourceAttributes
+    from opentelemetry.resourcedetector.gcp_resource_detector import (
+        GoogleCloudResourceDetector,
+    )
 
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:

@@ -354,6 +354,7 @@ def _make_attributes(db_instance, **kwargs):
         "db.url": "spanner.googleapis.com",
         "net.host.name": "spanner.googleapis.com",
         "db.instance": db_instance,
+        "cloud.region": "global",
         "gcp.client.service": "spanner",
         "gcp.client.version": ot_helpers.LIB_VERSION,
         "gcp.client.repo": "googleapis/python-spanner",
