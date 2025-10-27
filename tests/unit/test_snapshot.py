@@ -624,10 +624,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
     def test_ctor(self):
         session = build_session()
         derived = _build_snapshot_derived(session=session)
-    
+
         # Attributes from _SessionWrapper.
         self.assertIs(derived._session, session)
-    
+
         # Attributes from _SnapshotBase.
         self.assertTrue(derived._read_only)
         self.assertFalse(derived._multi_use)
@@ -636,7 +636,7 @@ class Test_SnapshotBase(OpenTelemetryBase):
         self.assertIsNone(derived._transaction_id)
         self.assertIsNone(derived._precommit_token)
         self.assertIsInstance(derived._lock, type(Lock()))
-    
+
         self.assertNoSpans()
 
     def test__build_transaction_selector_pb_single_use(self):
