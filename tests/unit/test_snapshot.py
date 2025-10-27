@@ -116,6 +116,8 @@ INTERNAL_SERVER_ERROR_UNEXPECTED_EOS = InternalServerError(
 class _Derived(_SnapshotBase):
     """A minimally-implemented _SnapshotBase-derived class for testing"""
 
+    transaction_tag = None
+
     # Use a simplified implementation of _build_transaction_options_pb
     # that always returns the same transaction options.
     TRANSACTION_OPTIONS = TransactionOptions()
@@ -619,23 +621,23 @@ class Test_restart_on_unavailable(OpenTelemetryBase):
 
 
 class Test_SnapshotBase(OpenTelemetryBase):
-    # def test_ctor(self):
-    #     session = build_session()
-    #     derived = _build_snapshot_derived(session=session)
-    #
-    #     # Attributes from _SessionWrapper.
-    #     self.assertIs(derived._session, session)
-    #
-    #     # Attributes from _SnapshotBase.
-    #     self.assertTrue(derived._read_only)
-    #     self.assertFalse(derived._multi_use)
-    #     self.assertEqual(derived._execute_sql_request_count, 0)
-    #     self.assertEqual(derived._read_request_count, 0)
-    #     self.assertIsNone(derived._transaction_id)
-    #     self.assertIsNone(derived._precommit_token)
-    #     self.assertIsInstance(derived._lock, type(Lock()))
-    #
-    #     self.assertNoSpans()
+    def test_ctor(self):
+        session = build_session()
+        derived = _build_snapshot_derived(session=session)
+    
+        # Attributes from _SessionWrapper.
+        self.assertIs(derived._session, session)
+    
+        # Attributes from _SnapshotBase.
+        self.assertTrue(derived._read_only)
+        self.assertFalse(derived._multi_use)
+        self.assertEqual(derived._execute_sql_request_count, 0)
+        self.assertEqual(derived._read_request_count, 0)
+        self.assertIsNone(derived._transaction_id)
+        self.assertIsNone(derived._precommit_token)
+        self.assertIsInstance(derived._lock, type(Lock()))
+    
+        self.assertNoSpans()
 
     def test__build_transaction_selector_pb_single_use(self):
         derived = _build_snapshot_derived(multi_use=False)
@@ -1282,7 +1284,10 @@ class Test_SnapshotBase(OpenTelemetryBase):
 
         expected_attributes = dict(
             BASE_ATTRIBUTES,
-            **{"db.statement": SQL_QUERY_WITH_PARAM, "x_goog_spanner_request_id": req_id},
+            **{
+                "db.statement": SQL_QUERY_WITH_PARAM,
+                "x_goog_spanner_request_id": req_id,
+            },
         )
         if request_options and request_options.request_tag:
             expected_attributes["spanner.request_tag"] = request_options.request_tag

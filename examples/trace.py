@@ -27,7 +27,7 @@ from opentelemetry.propagate import set_global_textmap
 from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
 # Setup common variables that'll be used between Spanner and traces.
-project_id = os.environ.get('SPANNER_PROJECT_ID', 'span-cloud-testing')
+project_id = os.environ.get('SPANNER_PROJECT_ID', 'test-project')
 
 def spanner_with_cloud_trace():
     # [START spanner_opentelemetry_traces_cloudtrace_usage]
@@ -62,13 +62,16 @@ def spanner_with_otlp():
 
 
 def main():
+    # Setup OpenTelemetry, trace and Cloud Trace exporter.
+    tracer_provider = TracerProvider(sampler=ALWAYS_ON)
+    trace_exporter = CloudTraceSpanExporter(project_id=project_id)
+    tracer_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
+
     # Setup the Cloud Spanner Client.
     # Change to "spanner_client = spanner_with_otlp" to use OTLP exporter
     spanner_client = spanner_with_cloud_trace()
-    instance = spanner_client.instance('suvham-testing')
-    instance.reload()
-    database = instance.database('gildb')
-    tracer_provider = spanner_client.observability_options["tracer_provider"]
+    instance = spanner_client.instance('test-instance')
+    database = instance.database('test-db')
     
     # Set W3C Trace Context as the global propagator for end to end tracing.
     set_global_textmap(TraceContextTextMapPropagator())
@@ -90,26 +93,11 @@ def main():
                 # Purposefully issue a bad SQL statement to examine exceptions
                 # that get recorded and a ERROR span status.
                 try:
-                    data = snapshot.execute_sql('SELECT CURRENT_TIMESTAMP()')
+                    data = snapshot.execute_sql('SELECT CURRENT_TIMESTAMPx()')
                     for row in data:
                         print(row)
                 except Exception as e:
                     print(e)
-
-        # Example of a read-write transaction with a transaction tag
-        with tracer.start_as_current_span('TaggedTransaction'):
-            def update_singer_name(transaction):
-                transaction.execute_update(
-                    "UPDATE Singers SET FirstName = 'Timothy' WHERE SingerId = 1",
-                    request_options={
-                        "request_tag": "app=concert,env=dev,action=update"
-                    },
-                )
-                print("Updated singer's name.")
-
-            database.run_in_transaction(
-                update_singer_name, transaction_tag="app=concert,env=dev"
-            )
 
 
 if __name__ == '__main__':

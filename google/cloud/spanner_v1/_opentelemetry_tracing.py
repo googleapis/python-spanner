@@ -122,6 +122,11 @@ def trace_call(
     if extra_attributes:
         attributes.update(extra_attributes)
 
+    if "request_options" in attributes:
+        request_options = attributes.pop("request_options")
+        if request_options and request_options.request_tag:
+            attributes["spanner.request_tag"] = request_options.request_tag
+
     if extended_tracing_globally_disabled:
         enable_extended_tracing = False
 

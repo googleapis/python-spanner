@@ -14,12 +14,9 @@
 # limitations under the License.
 
 import pytest
-import unittest
-from unittest import mock
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
-from opentelemetry.sdk.resources import Resource
 
 pytest.importorskip("opentelemetry")
 
