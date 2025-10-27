@@ -27,7 +27,6 @@ from google.cloud.spanner_v1 import (
     TransactionOptions,
     TransactionSelector,
 )
-from google.cloud.spanner_v1._helpers import _get_cloud_region
 from google.cloud.spanner_v1.snapshot import _SnapshotBase
 from tests._builders import (
     build_precommit_token_pb,
