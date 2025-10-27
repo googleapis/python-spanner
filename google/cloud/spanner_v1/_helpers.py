@@ -20,6 +20,7 @@ import math
 import time
 import base64
 import threading
+import logging
 
 from google.protobuf.struct_pb2 import ListValue
 from google.protobuf.struct_pb2 import Value
@@ -29,11 +30,16 @@ from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 from google.api_core import datetime_helpers
 from google.api_core.exceptions import Aborted
 from google.cloud._helpers import _date_from_iso8601_date
-from google.cloud.spanner_v1 import TypeCode
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import JsonObject, Interval
-from google.cloud.spanner_v1 import TransactionOptions
+from google.cloud.spanner_v1.types import ExecuteSqlRequest
+from google.cloud.spanner_v1.types import TransactionOptions
+from google.cloud.spanner_v1.data_types import JsonObject, Interval
 from google.cloud.spanner_v1.request_id_header import with_request_id
+from google.cloud.spanner_v1.types import TypeCode
+from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.resourcedetector.gcp_resource_detector import (
+    GoogleCloudResourceDetector,
+)
+
 from google.rpc.error_details_pb2 import RetryInfo
 
 try:
@@ -54,6 +60,10 @@ NUMERIC_MAX_PRECISION_ERR_MSG = (
     "Max precision for the whole component of a numeric is 29. The requested "
     + "numeric has a whole component with precision {}"
 )
+
+GOOGLE_CLOUD_REGION_GLOBAL = "global"
+
+log = logging.getLogger(__name__)
 
 
 if HAS_OPENTELEMETRY_INSTALLED:
@@ -77,6 +87,28 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 None
             """
             carrier.append((key, value))
+
+
+def _get_cloud_region() -> str:
+    """Get the location of the resource.
+
+    Returns:
+        str: The location of the resource. If OpenTelemetry is not installed, returns a global region.
+    """
+    if not HAS_OPENTELEMETRY_INSTALLED:
+        return GOOGLE_CLOUD_REGION_GLOBAL
+    try:
+        detector = GoogleCloudResourceDetector()
+        resources = detector.detect()
+
+        if ResourceAttributes.CLOUD_REGION in resources.attributes:
+            return resources.attributes[ResourceAttributes.CLOUD_REGION]
+    except Exception as e:
+        log.warning(
+            "Failed to detect GCP resource location for Spanner metrics, defaulting to 'global'. Error: %s",
+            e,
+        )
+    return GOOGLE_CLOUD_REGION_GLOBAL
 
 
 def _try_to_coerce_bytes(bytestring):

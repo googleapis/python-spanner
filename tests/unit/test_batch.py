@@ -57,6 +57,7 @@ BASE_ATTRIBUTES = {
     "gcp.client.service": "spanner",
     "gcp.client.version": LIB_VERSION,
     "gcp.client.repo": "googleapis/python-spanner",
+    "cloud.region": "global",
 }
 enrich_with_otel_scope(BASE_ATTRIBUTES)
 

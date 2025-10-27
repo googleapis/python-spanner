@@ -752,8 +752,9 @@ class TestTransaction(OpenTelemetryBase):
             expected_query_options = _merge_query_options(
                 expected_query_options, query_options
             )
-        expected_request_options = request_options
-        expected_request_options.transaction_tag = TRANSACTION_TAG
+        expected_request_options = RequestOptions(request_options)
+        if request_options.request_tag:
+            expected_request_options.request_tag = request_options.request_tag
 
         expected_request = ExecuteSqlRequest(
             session=self.SESSION_NAME,
@@ -763,7 +764,7 @@ class TestTransaction(OpenTelemetryBase):
             param_types=PARAM_TYPES,
             query_mode=MODE,
             query_options=expected_query_options,
-            request_options=request_options,
+            request_options=expected_request_options,
             seqno=count,
         )
         api.execute_sql.assert_called_once_with(
@@ -780,11 +781,13 @@ class TestTransaction(OpenTelemetryBase):
             ],
         )
 
+        expected_attributes = self._build_span_attributes(
+            database, **{"db.statement": DML_QUERY_WITH_PARAM}
+        )
+        if request_options.request_tag:
+            expected_attributes["spanner.request_tag"] = request_options.request_tag
         self.assertSpanAttributes(
-            "CloudSpanner.Transaction.execute_update",
-            attributes=self._build_span_attributes(
-                database, **{"db.statement": DML_QUERY_WITH_PARAM}
-            ),
+            "CloudSpanner.Transaction.execute_update", attributes=expected_attributes
         )
 
         self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
@@ -1163,7 +1166,7 @@ class TestTransaction(OpenTelemetryBase):
     def _build_span_attributes(
         database: Database, **extra_attributes
     ) -> Mapping[str, str]:
-        """Builds the attributes for spans using the given database and extra attributes."""
+        """Builds the attributes for spans using the given database and attempt number."""
 
         attributes = enrich_with_otel_scope(
             {
@@ -1174,6 +1177,7 @@ class TestTransaction(OpenTelemetryBase):
                 "gcp.client.service": "spanner",
                 "gcp.client.version": LIB_VERSION,
                 "gcp.client.repo": "googleapis/python-spanner",
+                "cloud.region": "global",
             }
         )
 
