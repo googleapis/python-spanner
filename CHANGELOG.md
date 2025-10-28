@@ -4,6 +4,13 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.59.1](https://github.com/googleapis/python-spanner/compare/v3.59.0...v3.59.1) (2025-10-28)
+
+
+### Bug Fixes
+
+* Configure keepAlive time for gRPC TCP connections ([#1448](https://github.com/googleapis/python-spanner/issues/1448)) ([efb2833](https://github.com/googleapis/python-spanner/commit/efb2833e52e54b096e552a4d91f94b017ac733bb))
+
 ## [3.59.0](https://github.com/googleapis/python-spanner/compare/v3.58.0...v3.59.0) (2025-10-18)
 
 
