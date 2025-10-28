@@ -54,7 +54,10 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 self.assertIsNone(no_span)
 
     class TestTracing(OpenTelemetryBase):
-        @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+        @mock.patch(
+            "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+            return_value="global",
+        )
         def test_trace_call(self, mock_region):
             extra_attributes = {
                 "attribute1": "value1",
@@ -90,7 +93,10 @@ if HAS_OPENTELEMETRY_INSTALLED:
             self.assertEqual(span.name, "CloudSpanner.Test")
             self.assertEqual(span.status.status_code, StatusCode.OK)
 
-        @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+        @mock.patch(
+            "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+            return_value="global",
+        )
         def test_trace_error(self, mock_region):
             extra_attributes = {"db.instance": "database_name"}
 

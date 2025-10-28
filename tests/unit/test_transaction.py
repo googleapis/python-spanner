@@ -193,7 +193,10 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertNoSpans()
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_rollback_w_other_error(self, mock_region):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -217,7 +220,10 @@ class TestTransaction(OpenTelemetryBase):
             ),
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_rollback_ok(self, mock_region):
         from google.protobuf.empty_pb2 import Empty
 
@@ -350,7 +356,10 @@ class TestTransaction(OpenTelemetryBase):
         ]
         self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_w_other_error(self, mock_region):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -563,11 +572,17 @@ class TestTransaction(OpenTelemetryBase):
         actual_statuses = self.finished_spans_events_statuses()
         self.assertEqual(actual_statuses, expected_statuses)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_mutations_only_not_multiplexed(self, mock_region):
         self._commit_helper(mutations=[DELETE_MUTATION], is_multiplexed=False)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_mutations_only_multiplexed_w_non_insert_mutation(self, mock_region):
         self._commit_helper(
             mutations=[DELETE_MUTATION],
@@ -575,7 +590,10 @@ class TestTransaction(OpenTelemetryBase):
             expected_begin_mutation=DELETE_MUTATION,
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_mutations_only_multiplexed_w_insert_mutation(self, mock_region):
         self._commit_helper(
             mutations=[INSERT_MUTATION],
@@ -583,7 +601,10 @@ class TestTransaction(OpenTelemetryBase):
             expected_begin_mutation=INSERT_MUTATION,
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_mutations_only_multiplexed_w_non_insert_and_insert_mutations(
         self, mock_region
     ):
@@ -593,8 +614,13 @@ class TestTransaction(OpenTelemetryBase):
             expected_begin_mutation=DELETE_MUTATION,
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
-    def test_commit_mutations_only_multiplexed_w_multiple_insert_mutations(self, mock_region):
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
+    def test_commit_mutations_only_multiplexed_w_multiple_insert_mutations(
+        self, mock_region
+    ):
         insert_1 = Mutation(insert=_make_write_pb(TABLE_NAME, COLUMNS, [VALUE_1]))
         insert_2 = Mutation(
             insert=_make_write_pb(TABLE_NAME, COLUMNS, [VALUE_1, VALUE_2])
@@ -606,7 +632,10 @@ class TestTransaction(OpenTelemetryBase):
             expected_begin_mutation=insert_2,
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_mutations_only_multiplexed_w_multiple_non_insert_mutations(
         self, mock_region
     ):
@@ -617,7 +646,10 @@ class TestTransaction(OpenTelemetryBase):
             expected_begin_mutation=mutations[0],
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_w_return_commit_stats(self, mock_region):
         self._commit_helper(return_commit_stats=True)
 
@@ -645,7 +677,10 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             self._commit_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_commit_w_retry_for_precommit_token(self, mock_region):
         self._commit_helper(retry_for_precommit_token=True)
 
@@ -676,7 +711,10 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(params_pb, expected_params)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_other_error(self, mock_region):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -814,25 +852,37 @@ class TestTransaction(OpenTelemetryBase):
         if use_multiplexed:
             self.assertEqual(transaction._precommit_token, PRECOMMIT_TOKEN_PB_0)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_new_transaction(self, mock_region):
         self._execute_update_helper()
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_request_tag_success(self, mock_region):
         request_options = RequestOptions(
             request_tag="tag-1",
         )
         self._execute_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_transaction_tag_success(self, mock_region):
         request_options = RequestOptions(
             transaction_tag="tag-1-1",
         )
         self._execute_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_request_and_transaction_tag_success(self, mock_region):
         request_options = RequestOptions(
             request_tag="tag-1",
@@ -840,7 +890,10 @@ class TestTransaction(OpenTelemetryBase):
         )
         self._execute_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_request_and_transaction_tag_dictionary_success(
         self, mock_region
     ):
@@ -852,19 +905,31 @@ class TestTransaction(OpenTelemetryBase):
         with self.assertRaises(ValueError):
             self._execute_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_count(self, mock_region):
         self._execute_update_helper(count=1)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_timeout_param(self, mock_region):
         self._execute_update_helper(timeout=2.0)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_retry_param(self, mock_region):
         self._execute_update_helper(retry=Retry(deadline=60))
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_timeout_and_retry_params(self, mock_region):
         self._execute_update_helper(retry=Retry(deadline=60), timeout=2.0)
 
@@ -881,7 +946,10 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction._execute_sql_request_count, 1)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_query_options(self, mock_region):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
@@ -889,15 +957,24 @@ class TestTransaction(OpenTelemetryBase):
             query_options=ExecuteSqlRequest.QueryOptions(optimizer_version="3")
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_wo_begin(self, mock_region):
         self._execute_update_helper(begin=False)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_precommit_token(self, mock_region):
         self._execute_update_helper(use_multiplexed=True)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_execute_update_w_request_options(self, mock_region):
         self._execute_update_helper(
             request_options=RequestOptions(
@@ -905,7 +982,10 @@ class TestTransaction(OpenTelemetryBase):
             )
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_other_error(self, mock_region):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -1062,11 +1142,17 @@ class TestTransaction(OpenTelemetryBase):
         if use_multiplexed:
             self.assertEqual(transaction._precommit_token, PRECOMMIT_TOKEN_PB_2)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_wo_begin(self, mock_region):
         self._batch_update_helper(begin=False)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_wo_errors(self, mock_region):
         self._batch_update_helper(
             request_options=RequestOptions(
@@ -1074,21 +1160,30 @@ class TestTransaction(OpenTelemetryBase):
             ),
         )
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_request_tag_success(self, mock_region):
         request_options = RequestOptions(
             request_tag="tag-1",
         )
         self._batch_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_transaction_tag_success(self, mock_region):
         request_options = RequestOptions(
             transaction_tag="tag-1-1",
         )
         self._batch_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_request_and_transaction_tag_success(self, mock_region):
         request_options = RequestOptions(
             request_tag="tag-1",
@@ -1096,20 +1191,29 @@ class TestTransaction(OpenTelemetryBase):
         )
         self._batch_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_request_and_transaction_tag_dictionary_success(
         self, mock_region
     ):
         request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
         self._batch_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_incorrect_tag_dictionary_error(self, mock_region):
         request_options = {"incorrect_tag": "tag-1-1"}
         with self.assertRaises(ValueError):
             self._batch_update_helper(request_options=request_options)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_errors(self, mock_region):
         self._batch_update_helper(error_after=2, count=1)
 
@@ -1144,23 +1248,38 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(transaction._execute_sql_request_count, 1)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_timeout_param(self, mock_region):
         self._batch_update_helper(timeout=2.0)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_retry_param(self, mock_region):
         self._batch_update_helper(retry=gapic_v1.method.DEFAULT)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_timeout_and_retry_params(self, mock_region):
         self._batch_update_helper(retry=gapic_v1.method.DEFAULT, timeout=2.0)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_batch_update_w_precommit_token(self, mock_region):
         self._batch_update_helper(use_multiplexed=True)
 
-    @mock.patch("google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region", return_value="global")
+    @mock.patch(
+        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+        return_value="global",
+    )
     def test_context_mgr_success(self, mock_region):
         transaction = build_transaction()
         session = transaction._session
