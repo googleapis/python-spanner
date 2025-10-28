@@ -191,7 +191,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
             library / "google/cloud/spanner_v1/services/*/transports/grpc*",
             library / "tests/unit/gapic/spanner_v1/*",
         ],
-        "options=\\[.*?\\]",
+        "^\s+options=\\[.*?\\]",
         """options=[
                     ("grpc.max_send_message_length", -1),
                     ("grpc.max_receive_message_length", -1),
@@ -223,7 +223,7 @@ for library in get_staging_dirs(
             library / "google/cloud/spanner_admin_instance_v1/services/*/transports/grpc*",
             library / "tests/unit/gapic/spanner_admin_instance_v1/*",
         ],
-        "options=\\[.*?\\]",
+        "^\s+options=\\[.*?\\]",
         """options=[
                     ("grpc.max_send_message_length", -1),
                     ("grpc.max_receive_message_length", -1),
@@ -246,7 +246,7 @@ for library in get_staging_dirs(
             library / "google/cloud/spanner_admin_database_v1/services/*/transports/grpc*",
             library / "tests/unit/gapic/spanner_admin_database_v1/*",
         ],
-        "options=\\[.*?\\]",
+        "^\s+options=\\[.*?\\]",
         """options=[
                     ("grpc.max_send_message_length", -1),
                     ("grpc.max_receive_message_length", -1),
