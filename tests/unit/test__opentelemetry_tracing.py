@@ -10,6 +10,7 @@ except ImportError:
     pass
 
 from google.api_core.exceptions import GoogleAPICallError
+from google.cloud.spanner_v1._helpers import GOOGLE_CLOUD_REGION_GLOBAL
 from google.cloud.spanner_v1 import _opentelemetry_tracing
 
 from tests._helpers import (
@@ -53,7 +54,11 @@ if HAS_OPENTELEMETRY_INSTALLED:
                 self.assertIsNone(no_span)
 
     class TestTracing(OpenTelemetryBase):
-        def test_trace_call(self):
+        @mock.patch(
+            "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+            return_value="global",
+        )
+        def test_trace_call(self, mock_region):
             extra_attributes = {
                 "attribute1": "value1",
                 # Since our database is mocked, we have to override the db.instance parameter so it is a string
@@ -65,6 +70,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                     "db.type": "spanner",
                     "db.url": "spanner.googleapis.com",
                     "net.host.name": "spanner.googleapis.com",
+                    "cloud.region": GOOGLE_CLOUD_REGION_GLOBAL,
                     "gcp.client.service": "spanner",
                     "gcp.client.version": LIB_VERSION,
                     "gcp.client.repo": "googleapis/python-spanner",
@@ -87,7 +93,11 @@ if HAS_OPENTELEMETRY_INSTALLED:
             self.assertEqual(span.name, "CloudSpanner.Test")
             self.assertEqual(span.status.status_code, StatusCode.OK)
 
-        def test_trace_error(self):
+        @mock.patch(
+            "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
+            return_value="global",
+        )
+        def test_trace_error(self, mock_region):
             extra_attributes = {"db.instance": "database_name"}
 
             expected_attributes = enrich_with_otel_scope(
@@ -95,6 +105,7 @@ if HAS_OPENTELEMETRY_INSTALLED:
                     "db.type": "spanner",
                     "db.url": "spanner.googleapis.com",
                     "net.host.name": "spanner.googleapis.com",
+                    "cloud.region": GOOGLE_CLOUD_REGION_GLOBAL,
                     "gcp.client.service": "spanner",
                     "gcp.client.version": LIB_VERSION,
                     "gcp.client.repo": "googleapis/python-spanner",
