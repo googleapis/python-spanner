@@ -48,6 +48,10 @@ def not_emulator():
     if _helpers.USE_EMULATOR:
         pytest.skip(f"{_helpers.USE_EMULATOR_ENVVAR} set in environment.")
 
+@pytest.fixture(scope="module")
+def not_experimental_host():
+    if _helpers.USE_EXPERIMENTAL_HOST:
+        pytest.skip(f"{_helpers.USE_EXPERIMENTAL_HOST_ENVVAR} set in environment.")
 
 @pytest.fixture(scope="session")
 def not_postgres(database_dialect):
@@ -104,6 +108,15 @@ def spanner_client():
             project=_helpers.EMULATOR_PROJECT,
             credentials=credentials,
         )
+    elif _helpers.USE_EXPERIMENTAL_HOST:
+        from google.auth.credentials import AnonymousCredentials
+
+        credentials = AnonymousCredentials()
+        return spanner_v1.Client(
+            project=_helpers.EXPERIMENTAL_HOST_PROJECT,
+            credentials=credentials,
+            experimental_host=_helpers.EXPERIMENTAL_HOST
+        )
     else:
         client_options = {"api_endpoint": _helpers.API_ENDPOINT}
         return spanner_v1.Client(
@@ -130,7 +143,8 @@ def backup_operation_timeout():
 def shared_instance_id():
     if _helpers.CREATE_INSTANCE:
         return f"{_helpers.unique_id('google-cloud')}"
-
+    if _helpers.USE_EXPERIMENTAL_HOST:
+        return _helpers.EXPERIMENTAL_HOST_INSTANCE
     return _helpers.INSTANCE_ID
 
 
@@ -138,7 +152,7 @@ def shared_instance_id():
 def instance_configs(spanner_client):
     configs = list(_helpers.retry_503(spanner_client.list_instance_configs)())
 
-    if not _helpers.USE_EMULATOR:
+    if not _helpers.USE_EMULATOR and not _helpers.USE_EXPERIMENTAL_HOST:
         # Defend against back-end returning configs for regions we aren't
         # actually allowed to use.
         configs = [config for config in configs if "-us-" in config.name]
