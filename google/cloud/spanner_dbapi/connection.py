@@ -808,7 +808,7 @@ def connect(
             if isinstance(credentials, AnonymousCredentials):
                 client_options = kwargs.get("client_options")
             if experimental_host is not None:
-                project="default"
+                project = "default"
                 credentials = AnonymousCredentials()
                 client_options = ClientOptions(api_endpoint=experimental_host)
             client = spanner.Client(

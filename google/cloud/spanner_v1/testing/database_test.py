@@ -93,7 +93,9 @@ class TestDatabase(Database):
                 channel = grpc.intercept_channel(channel, *self._interceptors)
                 transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
-                    client_info=client_info, transport=transport, client_options=client_options
+                    client_info=client_info,
+                    transport=transport,
+                    client_options=client_options,
                 )
                 return self._spanner_api
             credentials = client.credentials

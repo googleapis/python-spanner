@@ -205,7 +205,9 @@ class Database(object):
         pool.bind(self)
         is_experimental_host = self._instance.experimental_host is not None
 
-        self._sessions_manager = DatabaseSessionsManager(self, pool, is_experimental_host)
+        self._sessions_manager = DatabaseSessionsManager(
+            self, pool, is_experimental_host
+        )
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -455,7 +457,9 @@ class Database(object):
                     channel=grpc.insecure_channel(self._instance.experimental_host)
                 )
                 self._spanner_api = SpannerClient(
-                    client_info=client_info, transport=transport, client_options=client_options
+                    client_info=client_info,
+                    transport=transport,
+                    client_options=client_options,
                 )
                 return self._spanner_api
             credentials = self._instance._client.credentials

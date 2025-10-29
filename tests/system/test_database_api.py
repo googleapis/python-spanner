@@ -47,7 +47,9 @@ DIRECTED_READ_OPTIONS = {
 
 
 @pytest.fixture(scope="module")
-def multiregion_instance(spanner_client, instance_operation_timeout, not_postgres, not_experimental_host):
+def multiregion_instance(
+    spanner_client, instance_operation_timeout, not_postgres, not_experimental_host
+):
     multi_region_instance_id = _helpers.unique_id("multi-region")
     multi_region_config = "nam3"
     config_name = "{}/instanceConfigs/{}".format(
@@ -764,7 +766,11 @@ def test_information_schema_referential_constraints_fkadc(
 
 
 def test_update_database_success(
-    not_emulator, not_experimental_host, shared_database, shared_instance, database_operation_timeout
+    not_emulator,
+    not_experimental_host,
+    shared_database,
+    shared_instance,
+    database_operation_timeout,
 ):
     old_protection = shared_database.enable_drop_protection
     new_protection = True

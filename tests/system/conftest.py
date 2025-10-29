@@ -48,10 +48,12 @@ def not_emulator():
     if _helpers.USE_EMULATOR:
         pytest.skip(f"{_helpers.USE_EMULATOR_ENVVAR} set in environment.")
 
+
 @pytest.fixture(scope="module")
 def not_experimental_host():
     if _helpers.USE_EXPERIMENTAL_HOST:
         pytest.skip(f"{_helpers.USE_EXPERIMENTAL_HOST_ENVVAR} set in environment.")
+
 
 @pytest.fixture(scope="session")
 def not_postgres(database_dialect):
@@ -115,7 +117,7 @@ def spanner_client():
         return spanner_v1.Client(
             project=_helpers.EXPERIMENTAL_HOST_PROJECT,
             credentials=credentials,
-            experimental_host=_helpers.EXPERIMENTAL_HOST
+            experimental_host=_helpers.EXPERIMENTAL_HOST,
         )
     else:
         client_options = {"api_endpoint": _helpers.API_ENDPOINT}
