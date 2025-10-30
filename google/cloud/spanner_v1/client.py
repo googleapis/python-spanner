@@ -176,6 +176,11 @@ class Client(ClientWithProject):
         or :class:`dict`
     :param default_transaction_options: (Optional) Default options to use for all transactions.
 
+    :type experimental_host: str
+    :param experimental_host: (Optional) The endpoint for a spanner experimental host deployment.
+        This is intended only for experimental host spanner endpoints.
+        If set, this will override the `api_endpoint` in `client_options`.
+
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
     """
