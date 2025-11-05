@@ -14,10 +14,10 @@
 
 """This script is used to synthesize generated parts of this library."""
 
-import re
-import shutil
 from pathlib import Path
+import shutil
 from typing import List, Optional
+import re
 
 import synthtool as s
 from synthtool import gcp
@@ -99,11 +99,11 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
             \*\*kwargs,
             \) -> None:
         \"\"\"Instantiate the transport.""",
-        """api_audience: Optional[str] = None,
+"""api_audience: Optional[str] = None,
             metrics_interceptor: Optional[MetricsInterceptor] = None,
             **kwargs,
     ) -> None:
-        \"\"\"Instantiate the transport.""",
+        \"\"\"Instantiate the transport."""
     )
 
     assert 4 == s.replace(
@@ -111,10 +111,10 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
         """api_audience: Optional\[str\] = None,
             \) -> None:
         \"\"\"Instantiate the transport.""",
-        """api_audience: Optional[str] = None,
+"""api_audience: Optional[str] = None,
             metrics_interceptor: Optional[MetricsInterceptor] = None,
     ) -> None:
-        \"\"\"Instantiate the transport.""",
+        \"\"\"Instantiate the transport."""
     )
 
     assert 1 == s.replace(
@@ -129,7 +129,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
                 self._grpc_channel, metrics_interceptor
             )
 
-        self._interceptor = _LoggingClientInterceptor()""",
+        self._interceptor = _LoggingClientInterceptor()"""
     )
 
     assert 1 == s.replace(
@@ -138,7 +138,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
         """self._stubs: Dict[str, Callable] = {}
         self._metrics_interceptor = None
 
-        if api_mtls_endpoint:""",
+        if api_mtls_endpoint:"""
     )
 
     assert 1 == s.replace(
@@ -155,7 +155,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
                 always_use_jwt_access=True,
                 api_audience=self._client_options.api_audience,
             \)""",
-        """# initialize with the provided callable or the passed in class
+            """# initialize with the provided callable or the passed in class
             self._transport = transport_init(
                 credentials=credentials,
                 credentials_file=self._client_options.credentials_file,
@@ -175,7 +175,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
         """api_audience=None,\n(\s+)\)""",
         """api_audience=None,
             metrics_interceptor=mock.ANY,
-        )""",
+        )"""
     )
 
     assert 1 == s.replace(
@@ -183,7 +183,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
         """api_audience="https://language.googleapis.com"\n(\s+)\)""",
         """api_audience="https://language.googleapis.com",
             metrics_interceptor=mock.ANY,
-        )""",
+        )"""
     )
 
     count = s.replace(
@@ -220,8 +220,7 @@ for library in get_staging_dirs(
 ):
     count = s.replace(
         [
-            library
-            / "google/cloud/spanner_admin_instance_v1/services/*/transports/grpc*",
+            library / "google/cloud/spanner_admin_instance_v1/services/*/transports/grpc*",
             library / "tests/unit/gapic/spanner_admin_instance_v1/*",
         ],
         "^\s+options=\\[.*?\\]",
@@ -236,14 +235,7 @@ for library in get_staging_dirs(
         raise Exception("Expected replacements for gRPC channel options not made.")
     s.move(
         library,
-        excludes=[
-            "google/cloud/spanner_admin_instance/**",
-            "*.*",
-            "docs/index.rst",
-            "noxfile.py",
-            "**/gapic_version.py",
-            "testing/constraints-3.7.txt",
-        ],
+        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
     )
 
 for library in get_staging_dirs(
@@ -251,8 +243,7 @@ for library in get_staging_dirs(
 ):
     count = s.replace(
         [
-            library
-            / "google/cloud/spanner_admin_database_v1/services/*/transports/grpc*",
+            library / "google/cloud/spanner_admin_database_v1/services/*/transports/grpc*",
             library / "tests/unit/gapic/spanner_admin_database_v1/*",
         ],
         "^\s+options=\\[.*?\\]",
@@ -267,14 +258,7 @@ for library in get_staging_dirs(
         raise Exception("Expected replacements for gRPC channel options not made.")
     s.move(
         library,
-        excludes=[
-            "google/cloud/spanner_admin_database/**",
-            "*.*",
-            "docs/index.rst",
-            "noxfile.py",
-            "**/gapic_version.py",
-            "testing/constraints-3.7.txt",
-        ],
+        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
     )
 
 s.remove_staging_dirs()
@@ -288,7 +272,7 @@ templated_files = common.py_library(
     cov_level=98,
     split_system_tests=True,
     system_test_extras=["tracing"],
-    system_test_python_versions=["3.12"],
+    system_test_python_versions=["3.12"]
 )
 s.move(
     templated_files,
