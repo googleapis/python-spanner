@@ -1,0 +1,18 @@
+image: us-central1-docker.pkg.dev/cloud-sdk-librarian-prod/images-prod/python-librarian-generator@sha256:27eae7edfe88876a47cbdb89ec6491192706e94ce46ac0e3ff4d202ef3220fed
+libraries:
+  - id: google-cloud-spanner
+    version: 3.59.0
+    last_generated_commit: 53f97391f3451398f7b53c7f86dabd325d205677
+    apis:
+      - path: google/spanner/v1
+        service_config: spanner.yaml
+      - path: google/spanner/admin/database/v1
+        service_config: spanner.yaml
+      - path: google/spanner/admin/instance/v1
+        service_config: spanner.yaml
+    source_roots:
+      - .
+    preserve_regex: []
+    remove_regex:
+      - google/spanner_v1
+    tag_format: v{version}
