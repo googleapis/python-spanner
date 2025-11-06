@@ -19,4 +19,6 @@ libraries:
       - google/cloud/spanner_v1
       - .coveragerc
       - .flake8
+      - .github
+      - .gitignore
     tag_format: v{version}
