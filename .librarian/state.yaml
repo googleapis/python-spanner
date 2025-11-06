@@ -17,4 +17,5 @@ libraries:
       - google/cloud/spanner_admin_database_v1
       - google/cloud/spanner_admin_instance_v1
       - google/cloud/spanner_v1
+      - .coveragerc
     tag_format: v{version}
