@@ -18,4 +18,5 @@ libraries:
       - google/cloud/spanner_admin_instance_v1
       - google/cloud/spanner_v1
       - .coveragerc
+      - .flake8
     tag_format: v{version}
