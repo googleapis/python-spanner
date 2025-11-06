@@ -13,5 +13,8 @@ libraries:
     source_roots:
       - .
     preserve_regex: []
-    remove_regex: []
+    remove_regex:
+      - google/cloud/spanner_admin_database_v1
+      - google/cloud/spanner_admin_instance_v1
+      - google/cloud/spanner_v1
     tag_format: v{version}
