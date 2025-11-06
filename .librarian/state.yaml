@@ -14,11 +14,28 @@ libraries:
       - .
     preserve_regex: []
     remove_regex:
-      - google/cloud/spanner_admin_database_v1
-      - google/cloud/spanner_admin_instance_v1
-      - google/cloud/spanner_v1
-      - .coveragerc
-      - .flake8
-      - .github
-      - .gitignore
+      - ^google/pubsub
+      - ^google/pubsub_v1
+      - ^tests/unit/gapic
+      - ^tests/__init__.py
+      - ^tests/unit/__init__.py
+      - ^.coveragerc
+      - ^.flake8
+      - ^.pre-commit-config.yaml
+      - ^.repo-metadata.json
+      - ^.trampolinerc
+      - ^LICENSE
+      - ^MANIFEST.in
+      - ^SECURITY.md
+      - ^mypy.ini
+      - ^noxfile.py
+      - ^owlbot.py
+      - ^renovate.json
+      - ^samples/AUTHORING_GUIDE.md
+      - ^samples/CONTRIBUTING.md
+      - ^samples/generated_samples
+      - ^scripts/fixup_pubsub_v1_keywords.py
+      - ^setup.py
+      - ^testing/constraints-3.9
+      - ^testing/constraints-3.1
     tag_format: v{version}
