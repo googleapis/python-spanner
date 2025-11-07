@@ -25,58 +25,9 @@ from synthtool.languages import python
 
 common = gcp.CommonTemplates()
 
-
-def get_staging_dirs(
-    # This is a customized version of the s.get_staging_dirs() function
-    # from synthtool to # cater for copying 3 different folders from
-    # googleapis-gen:
-    # spanner, spanner/admin/instance and spanner/admin/database.
-    # Source:
-    # https://github.com/googleapis/synthtool/blob/master/synthtool/transforms.py#L280
-    default_version: Optional[str] = None,
-    sub_directory: Optional[str] = None,
-) -> List[Path]:
-    """Returns the list of directories, one per version, copied from
-    https://github.com/googleapis/googleapis-gen. Will return in lexical sorting
-    order with the exception of the default_version which will be last (if specified).
-
-    Args:
-      default_version (str): the default version of the API. The directory for this version
-        will be the last item in the returned list if specified.
-      sub_directory (str): if a `sub_directory` is provided, only the directories within the
-        specified `sub_directory` will be returned.
-
-    Returns: the empty list if no file were copied.
-    """
-
-    staging = Path("owl-bot-staging")
-
-    if sub_directory:
-        staging /= sub_directory
-
-    if staging.is_dir():
-        # Collect the subdirectories of the staging directory.
-        versions = [v.name for v in staging.iterdir() if v.is_dir()]
-        # Reorder the versions so the default version always comes last.
-        versions = [v for v in versions if v != default_version]
-        versions.sort()
-        if default_version is not None:
-            versions += [default_version]
-        dirs = [staging / v for v in versions]
-        for dir in dirs:
-            s._tracked_paths.add(dir)
-        return dirs
-    else:
-        return []
-
-
-spanner_default_version = "v1"
-spanner_admin_instance_default_version = "v1"
-spanner_admin_database_default_version = "v1"
-
 clean_up_generated_samples = True
 
-for library in get_staging_dirs("v1"):
+for library in "v1":
     if clean_up_generated_samples:
         shutil.rmtree("samples/generated_samples", ignore_errors=True)
         clean_up_generated_samples = False
@@ -202,22 +153,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
     if count < 1:
         raise Exception("Expected replacements for gRPC channel options not made.")
 
-    s.move(
-        library,
-        excludes=[
-            "google/cloud/spanner/**",
-            "*.*",
-            "noxfile.py",
-            "docs/index.rst",
-            "google/cloud/spanner_v1/__init__.py",
-            "**/gapic_version.py",
-            "testing/constraints-3.7.txt",
-        ],
-    )
 
-for library in get_staging_dirs(
-    spanner_admin_instance_default_version, "spanner_admin_instance"
-):
     count = s.replace(
         [
             library / "google/cloud/spanner_admin_instance_v1/services/*/transports/grpc*",
@@ -233,14 +169,7 @@ for library in get_staging_dirs(
     )
     if count < 1:
         raise Exception("Expected replacements for gRPC channel options not made.")
-    s.move(
-        library,
-        excludes=["google/cloud/spanner_admin_instance/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
-    )
 
-for library in get_staging_dirs(
-    spanner_admin_database_default_version, "spanner_admin_database"
-):
     count = s.replace(
         [
             library / "google/cloud/spanner_admin_database_v1/services/*/transports/grpc*",
@@ -256,10 +185,22 @@ for library in get_staging_dirs(
     )
     if count < 1:
         raise Exception("Expected replacements for gRPC channel options not made.")
+    
     s.move(
         library,
-        excludes=["google/cloud/spanner_admin_database/**", "*.*", "docs/index.rst", "noxfile.py", "**/gapic_version.py", "testing/constraints-3.7.txt",],
+        excludes=[
+            "google/cloud/spanner/**",
+            "google/cloud/spanner_admin_instance/**"
+            "google/cloud/spanner_admin_database/**"
+            "*.*",
+            "noxfile.py",
+            "docs/index.rst",
+            "google/cloud/spanner_v1/__init__.py",
+            "**/gapic_version.py",
+            "testing/constraints-3.7.txt",
+        ],
     )
+
 
 s.remove_staging_dirs()
 
