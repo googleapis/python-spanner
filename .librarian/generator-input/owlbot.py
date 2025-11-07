@@ -27,7 +27,7 @@ common = gcp.CommonTemplates()
 
 clean_up_generated_samples = True
 
-for library in "v1":
+for library in s.get_staging_dirs("v1"):
     if clean_up_generated_samples:
         shutil.rmtree("samples/generated_samples", ignore_errors=True)
         clean_up_generated_samples = False
