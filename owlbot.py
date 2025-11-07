@@ -212,6 +212,7 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
             "google/cloud/spanner_v1/__init__.py",
             "**/gapic_version.py",
             "testing/constraints-3.7.txt",
+            "testing/constraints-3.9.txt",
         ],
     )
 
