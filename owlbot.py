@@ -153,7 +153,6 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
     if count < 1:
         raise Exception("Expected replacements for gRPC channel options not made.")
 
-
     count = s.replace(
         [
             library / "google/cloud/spanner_admin_instance_v1/services/*/transports/grpc*",
@@ -185,22 +184,19 @@ from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsIntercept
     )
     if count < 1:
         raise Exception("Expected replacements for gRPC channel options not made.")
-    
     s.move(
         library,
         excludes=[
             "google/cloud/spanner/**",
-            "google/cloud/spanner_admin_instance/**"
-            "google/cloud/spanner_admin_database/**"
             "*.*",
             "noxfile.py",
             "docs/index.rst",
             "google/cloud/spanner_v1/__init__.py",
-            "**/gapic_version.py",
             "testing/constraints-3.7.txt",
+            "google/cloud/spanner_admin_instance/**",
+            "google/cloud/spanner_admin_database/**"
         ],
     )
-
 
 s.remove_staging_dirs()
 
@@ -219,25 +215,10 @@ s.move(
     templated_files,
     excludes=[
         ".coveragerc",
-        ".github/workflows",  # exclude gh actions as credentials are needed for tests
+        ".github/**",
+        ".kokoro/**",
         "README.rst",
-        ".github/release-please.yml",
-        ".kokoro/test-samples-impl.sh",
-        ".kokoro/presubmit/presubmit.cfg",
-        ".kokoro/samples/python3.7/**",
-        ".kokoro/samples/python3.8/**",
     ],
-)
-
-# Ensure CI runs on a new instance each time
-s.replace(
-    ".kokoro/build.sh",
-    "# Setup project id.",
-    """\
-# Set up creating a new instance for each system test run
-export GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE=true
-
-# Setup project id.""",
 )
 
 # Update samples folder in CONTRIBUTING.rst
