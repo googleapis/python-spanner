@@ -76,7 +76,7 @@ spanner_admin_database_default_version = "v1"
 
 clean_up_generated_samples = True
 
-for library in get_staging_dirs(spanner_default_version, "spanner"):
+for library in get_staging_dirs("v1"):
     if clean_up_generated_samples:
         shutil.rmtree("samples/generated_samples", ignore_errors=True)
         clean_up_generated_samples = False
