@@ -3141,6 +3141,7 @@ class TestBatchSnapshot(_BaseTest):
             params=params,
             param_types=param_types,
             partition=token,
+            lazy_decode=False,
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
         )
@@ -3170,6 +3171,7 @@ class TestBatchSnapshot(_BaseTest):
             params=params,
             param_types=param_types,
             partition=token,
+            lazy_decode=False,
             retry=retry,
             timeout=2.0,
         )
@@ -3193,10 +3195,22 @@ class TestBatchSnapshot(_BaseTest):
         snapshot.execute_sql.assert_called_once_with(
             sql=sql,
             partition=token,
+            lazy_decode=False,
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
             directed_read_options=DIRECTED_READ_OPTIONS,
         )
+
+    def test_context_manager(self):
+        database = self._make_database()
+        batch_txn = self._make_one(database)
+        session = batch_txn._session = self._make_session()
+        session.is_multiplexed = False
+
+        with batch_txn:
+            pass
+
+        session.delete.assert_called_once_with()
 
     def test_close_wo_session(self):
         database = self._make_database()
@@ -3292,6 +3306,7 @@ class TestBatchSnapshot(_BaseTest):
             params=params,
             param_types=param_types,
             partition=token,
+            lazy_decode=False,
             retry=gapic_v1.method.DEFAULT,
             timeout=gapic_v1.method.DEFAULT,
         )
@@ -3545,11 +3560,14 @@ class _Client(object):
 
 
 class _Instance(object):
-    def __init__(self, name, client=_Client(), emulator_host=None):
+    def __init__(
+        self, name, client=_Client(), emulator_host=None, experimental_host=None
+    ):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
         self.emulator_host = emulator_host
+        self.experimental_host = experimental_host
 
 
 class _Backup(object):
