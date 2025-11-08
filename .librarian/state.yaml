@@ -2,7 +2,7 @@ image: us-central1-docker.pkg.dev/cloud-sdk-librarian-prod/images-prod/python-li
 libraries:
   - id: google-cloud-spanner
     version: 3.59.0
-    last_generated_commit: 3a77bd60b37c086effb39819e9183fbc83e3a693
+    last_generated_commit: 9fcfbea0aa5b50fa22e190faceb073d74504172b
     apis:
       - path: google/spanner/v1
         service_config: spanner.yaml
@@ -18,6 +18,7 @@ libraries:
       - ^google/cloud/spanner_v1/gapic_version.py
       - ^google/cloud/spanner_v1/py.typed
       - ^google/cloud/spanner_v1/services
+      - ^google/cloud/spanner_v1/types
       - ^google/cloud/spanner_admin_database_v1
       - ^google/cloud/spanner_admin_instance_v1
       - ^tests/unit/gapic
@@ -38,8 +39,9 @@ libraries:
       - ^samples/AUTHORING_GUIDE.md
       - ^samples/CONTRIBUTING.md
       - ^samples/generated_samples
-      - ^scripts/fixup_pubsub_v1_keywords.py
+      - ^scripts/fixup_
       - ^setup.py
+      - ^testing/constraints-3.8
       - ^testing/constraints-3.9
       - ^testing/constraints-3.1
       - ^docs/_static
