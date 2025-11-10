@@ -23,7 +23,7 @@ libraries:
       - ^google/cloud/spanner_admin_instance_v1
       - ^tests/unit/gapic
       - ^tests/__init__.py
-      - ^tests/unit/__init__.pyå
+      - ^tests/unit/__init__.py
       - ^.pre-commit-config.yaml
       - ^.repo-metadata.json
       - ^.trampolinerc
