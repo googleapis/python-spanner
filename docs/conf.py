@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 #
-# google-cloud-spanner-admin-database documentation build configuration file
+# google-cloud-spanner-admin-instance documentation build configuration file
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -81,9 +81,15 @@ source_suffix = [".rst", ".md"]
 root_doc = "index"
 
 # General information about the project.
+<<<<<<< HEAD
 project = "google-cloud-spanner-admin-database"
 copyright = "2025, Google, LLC"
 author = "Google APIs"
+=======
+project = u"google-cloud-spanner-admin-instance"
+copyright = u"2025, Google, LLC"
+author = u"Google APIs"
+>>>>>>> ea2fb81 (generated changes)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -155,7 +161,11 @@ html_theme = "alabaster"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+<<<<<<< HEAD
     "description": "Google Cloud Client Libraries for google-cloud-spanner-admin-database",
+=======
+    "description": "Google Cloud Client Libraries for google-cloud-spanner-admin-instance",
+>>>>>>> ea2fb81 (generated changes)
     "github_user": "googleapis",
     "github_repo": "google-cloud-python",
     "github_banner": True,
@@ -249,7 +259,11 @@ html_static_path = ["_static"]
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
+<<<<<<< HEAD
 htmlhelp_basename = "google-cloud-spanner-admin-database-doc"
+=======
+htmlhelp_basename = "google-cloud-spanner-admin-instance-doc"
+>>>>>>> ea2fb81 (generated changes)
 
 # -- Options for warnings ------------------------------------------------------
 
@@ -282,8 +296,13 @@ latex_elements = {
 latex_documents = [
     (
         root_doc,
+<<<<<<< HEAD
         "google-cloud-spanner-admin-database.tex",
         "google-cloud-spanner-admin-database Documentation",
+=======
+        "google-cloud-spanner-admin-instance.tex",
+        u"google-cloud-spanner-admin-instance Documentation",
+>>>>>>> ea2fb81 (generated changes)
         author,
         "manual",
     )
@@ -317,8 +336,13 @@ latex_documents = [
 man_pages = [
     (
         root_doc,
+<<<<<<< HEAD
         "google-cloud-spanner-admin-database",
         "google-cloud-spanner-admin-database Documentation",
+=======
+        "google-cloud-spanner-admin-instance",
+        "google-cloud-spanner-admin-instance Documentation",
+>>>>>>> ea2fb81 (generated changes)
         [author],
         1,
     )
@@ -336,11 +360,19 @@ man_pages = [
 texinfo_documents = [
     (
         root_doc,
+<<<<<<< HEAD
         "google-cloud-spanner-admin-database",
         "google-cloud-spanner-admin-database Documentation",
         author,
         "google-cloud-spanner-admin-database",
         "google-cloud-spanner-admin-database Library",
+=======
+        "google-cloud-spanner-admin-instance",
+        "google-cloud-spanner-admin-instance Documentation",
+        author,
+        "google-cloud-spanner-admin-instance",
+        "google-cloud-spanner-admin-instance Library",
+>>>>>>> ea2fb81 (generated changes)
         "APIs",
     )
 ]
