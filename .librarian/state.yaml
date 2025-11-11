@@ -28,8 +28,6 @@ libraries:
       - ^.repo-metadata.json
       - ^.trampolinerc
       - ^LICENSE
-      - ^.flake8
-      - ^MANIFEST.in
       - ^SECURITY.md
       - ^mypy.ini
       - ^noxfile.py
