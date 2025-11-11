@@ -43,6 +43,7 @@ libraries:
       - ^testing/constraints-3.1
       - ^docs/conf.py
       - ^docs/_static
+      - ^docs/spanner_v1/types_.rst
       - ^docs/_templates
       - ^docs/spanner_v1/services_.rst
       - ^docs/spanner_v1/spanner.rst
