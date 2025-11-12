@@ -21,10 +21,18 @@ deep-remove-regex:
 deep-copy-regex:
   - source: /google/spanner/(v.*)/.*-py/(.*)
     dest: /owl-bot-staging/spanner/$1/$2
+  - source: /google/spanner/(v.*)/.*-pb2-py/(commit_response.*|keys.*|mutation.*|query_plan.*|result_set.*|spanner.*|transaction.*|type.*)
+    dest: /owl-bot-staging/spanner_pb2/$1/$2
   - source: /google/spanner/admin/instance/(v.*)/.*-py/(.*)
     dest: /owl-bot-staging/spanner_admin_instance/$1/$2
+  - source: /google/spanner/admin/instance/(v.*)/.*-pb2-py/(common.*|spanner_instance_admin.*)
+    dest: /owl-bot-staging/spanner_admin_instance_pb2/$1/$2
   - source: /google/spanner/admin/database/(v.*)/.*-py/(.*)
     dest: /owl-bot-staging/spanner_admin_database/$1/$2
+  - source: /google/spanner/admin/database/(v.*)/.*-pb2-py/(common.*|backup.*|spanner_database_admin.*)
+    dest: /owl-bot-staging/spanner_admin_database_pb2/$1/$2
+  - source: /google/spanner/executor/(v.*)/.*-pb2-py/(cloud_executor.*)
+    dest: /owl-bot-staging/spanner_executor_pb2/$1/$2
 
 begin-after-commit-hash: b154da710c5c9eedee127c07f74b6158c9c22382
 
