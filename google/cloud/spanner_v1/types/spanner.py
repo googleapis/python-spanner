@@ -96,10 +96,10 @@ class BatchCreateSessionsRequest(proto.Message):
             Parameters to apply to each created session.
         session_count (int):
             Required. The number of sessions to be created in this batch
-            call. The API can return fewer than the requested number of
-            sessions. If a specific number of sessions are desired, the
-            client can make additional calls to ``BatchCreateSessions``
-            (adjusting
+            call. At least one session is created. The API can return
+            fewer than the requested number of sessions. If a specific
+            number of sessions are desired, the client can make
+            additional calls to ``BatchCreateSessions`` (adjusting
             [session_count][google.spanner.v1.BatchCreateSessionsRequest.session_count]
             as necessary).
     """
@@ -167,9 +167,9 @@ class Session(proto.Message):
             The database role which created this session.
         multiplexed (bool):
             Optional. If ``true``, specifies a multiplexed session. Use
-            a multiplexed session for multiple, concurrent read-only
-            operations. Don't use them for read-write transactions,
-            partitioned reads, or partitioned queries. Use
+            a multiplexed session for multiple, concurrent operations
+            including any combination of read-only and read-write
+            transactions. Use
             [``sessions.create``][google.spanner.v1.Spanner.CreateSession]
             to create multiplexed sessions. Don't use
             [BatchCreateSessions][google.spanner.v1.Spanner.BatchCreateSessions]
