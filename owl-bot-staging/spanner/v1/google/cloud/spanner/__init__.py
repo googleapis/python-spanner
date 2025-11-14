@@ -1,0 +1,115 @@
+# -*- coding: utf-8 -*-
+# Copyright 2025 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+from google.cloud.spanner import gapic_version as package_version
+
+__version__ = package_version.__version__
+
+
+from google.cloud.spanner_v1.services.spanner.client import SpannerClient
+from google.cloud.spanner_v1.services.spanner.async_client import SpannerAsyncClient
+
+from google.cloud.spanner_v1.types.change_stream import ChangeStreamRecord
+from google.cloud.spanner_v1.types.commit_response import CommitResponse
+from google.cloud.spanner_v1.types.keys import KeyRange
+from google.cloud.spanner_v1.types.keys import KeySet
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.query_plan import PlanNode
+from google.cloud.spanner_v1.types.query_plan import QueryAdvisorResult
+from google.cloud.spanner_v1.types.query_plan import QueryPlan
+from google.cloud.spanner_v1.types.result_set import PartialResultSet
+from google.cloud.spanner_v1.types.result_set import ResultSet
+from google.cloud.spanner_v1.types.result_set import ResultSetMetadata
+from google.cloud.spanner_v1.types.result_set import ResultSetStats
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsResponse
+from google.cloud.spanner_v1.types.spanner import BatchWriteRequest
+from google.cloud.spanner_v1.types.spanner import BatchWriteResponse
+from google.cloud.spanner_v1.types.spanner import BeginTransactionRequest
+from google.cloud.spanner_v1.types.spanner import CommitRequest
+from google.cloud.spanner_v1.types.spanner import CreateSessionRequest
+from google.cloud.spanner_v1.types.spanner import DeleteSessionRequest
+from google.cloud.spanner_v1.types.spanner import DirectedReadOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlResponse
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.types.spanner import GetSessionRequest
+from google.cloud.spanner_v1.types.spanner import ListSessionsRequest
+from google.cloud.spanner_v1.types.spanner import ListSessionsResponse
+from google.cloud.spanner_v1.types.spanner import Partition
+from google.cloud.spanner_v1.types.spanner import PartitionOptions
+from google.cloud.spanner_v1.types.spanner import PartitionQueryRequest
+from google.cloud.spanner_v1.types.spanner import PartitionReadRequest
+from google.cloud.spanner_v1.types.spanner import PartitionResponse
+from google.cloud.spanner_v1.types.spanner import ReadRequest
+from google.cloud.spanner_v1.types.spanner import RequestOptions
+from google.cloud.spanner_v1.types.spanner import RollbackRequest
+from google.cloud.spanner_v1.types.spanner import Session
+from google.cloud.spanner_v1.types.transaction import MultiplexedSessionPrecommitToken
+from google.cloud.spanner_v1.types.transaction import Transaction
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1.types.transaction import TransactionSelector
+from google.cloud.spanner_v1.types.type import StructType
+from google.cloud.spanner_v1.types.type import Type
+from google.cloud.spanner_v1.types.type import TypeAnnotationCode
+from google.cloud.spanner_v1.types.type import TypeCode
+
+__all__ = ('SpannerClient',
+    'SpannerAsyncClient',
+    'ChangeStreamRecord',
+    'CommitResponse',
+    'KeyRange',
+    'KeySet',
+    'Mutation',
+    'PlanNode',
+    'QueryAdvisorResult',
+    'QueryPlan',
+    'PartialResultSet',
+    'ResultSet',
+    'ResultSetMetadata',
+    'ResultSetStats',
+    'BatchCreateSessionsRequest',
+    'BatchCreateSessionsResponse',
+    'BatchWriteRequest',
+    'BatchWriteResponse',
+    'BeginTransactionRequest',
+    'CommitRequest',
+    'CreateSessionRequest',
+    'DeleteSessionRequest',
+    'DirectedReadOptions',
+    'ExecuteBatchDmlRequest',
+    'ExecuteBatchDmlResponse',
+    'ExecuteSqlRequest',
+    'GetSessionRequest',
+    'ListSessionsRequest',
+    'ListSessionsResponse',
+    'Partition',
+    'PartitionOptions',
+    'PartitionQueryRequest',
+    'PartitionReadRequest',
+    'PartitionResponse',
+    'ReadRequest',
+    'RequestOptions',
+    'RollbackRequest',
+    'Session',
+    'MultiplexedSessionPrecommitToken',
+    'Transaction',
+    'TransactionOptions',
+    'TransactionSelector',
+    'StructType',
+    'Type',
+    'TypeAnnotationCode',
+    'TypeCode',
+)
