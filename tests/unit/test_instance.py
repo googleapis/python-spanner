@@ -700,6 +700,24 @@ class TestInstance(unittest.TestCase):
         self.assertIs(backup._expire_time, timestamp)
         self.assertEqual(backup._encryption_config, encryption_config)
 
+    def test_backup_factory_without_expiration_time(self):
+        from google.cloud.spanner_v1.backup import Backup
+
+        client = _Client(self.PROJECT)
+        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
+        BACKUP_ID = "backup-id"
+        DATABASE_NAME = "database-name"
+
+        backup = instance.backup(
+            BACKUP_ID,
+            database=DATABASE_NAME,
+        )
+
+        self.assertIsInstance(backup, Backup)
+        self.assertEqual(backup.backup_id, BACKUP_ID)
+        self.assertIs(backup._instance, instance)
+        self.assertEqual(backup._database, DATABASE_NAME)
+
     def test_list_backups_defaults(self):
         from google.cloud.spanner_admin_database_v1 import Backup as BackupPB
         from google.cloud.spanner_admin_database_v1 import DatabaseAdminClient
