@@ -1071,6 +1071,38 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertEqual(api.execute_batch_dml.call_count, 2)
+        a = mock.call(
+                    request=self._batch_update_expected_request(),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                )
+        b = mock.call(
+                    request=self._batch_update_expected_request(begin=False),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
+                        ),
+                    ],
+                    retry=RETRY,
+                    timeout=TIMEOUT,
+                )
+        print("A: ", a)
+        print("B: ", b)
+        
+        
+        
+        
         self.assertEqual(
             api.execute_batch_dml.call_args_list,
             [
