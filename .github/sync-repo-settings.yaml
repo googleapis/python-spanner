@@ -8,8 +8,8 @@ branchProtectionRules:
   requiresStrictStatusChecks: true
   requiredStatusCheckContexts:
     - 'Kokoro'
-    - 'Kokoro system-3.12'
+    - 'Kokoro system-3.14'
     - 'cla/google'
     - 'Samples - Lint'
     - 'Samples - Python 3.9'
-    - 'Samples - Python 3.12'
+    - 'Samples - Python 3.14'
