@@ -1071,9 +1071,9 @@ class TestTransaction(OpenTelemetryBase):
         )
 
         self.assertEqual(api.execute_batch_dml.call_count, 2)
-        
+
         call_args_list = api.execute_batch_dml.call_args_list
-        
+
         a11 = mock.call(
             request=self._batch_update_expected_request(),
             metadata=[
