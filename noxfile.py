@@ -32,10 +32,10 @@ BLACK_VERSION = "black[jupyter]==23.7.0"
 ISORT_VERSION = "isort==5.11.0"
 LINT_PATHS = ["docs", "google", "tests", "noxfile.py", "setup.py"]
 
-DEFAULT_PYTHON_VERSION = "3.12"
+DEFAULT_PYTHON_VERSION = "3.14"
 
 DEFAULT_MOCK_SERVER_TESTS_PYTHON_VERSION = "3.12"
-SYSTEM_TEST_PYTHON_VERSIONS: List[str] = ["3.12"]
+SYSTEM_TEST_PYTHON_VERSIONS: List[str] = ["3.14"]
 
 UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.9",
@@ -43,6 +43,7 @@ UNIT_TEST_PYTHON_VERSIONS: List[str] = [
     "3.11",
     "3.12",
     "3.13",
+    "3.14",
 ]
 UNIT_TEST_STANDARD_DEPENDENCIES = [
     "mock",
@@ -81,6 +82,7 @@ nox.options.sessions = [
     "unit-3.11",
     "unit-3.12",
     "unit-3.13",
+    "unit-3.14",
     "system",
     "cover",
     "lint",
@@ -480,7 +482,7 @@ def docfx(session):
     )
 
 
-@nox.session(python="3.13")
+@nox.session(python="3.14")
 @nox.parametrize(
     "protobuf_implementation,database_dialect",
     [
