@@ -4,6 +4,22 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.60.0](https://github.com/googleapis/python-spanner/compare/v3.59.0...v3.60.0) (2025-11-18)
+
+
+### Features
+
+* add cloud.region, request_tag and transaction_tag in span attributes (#1449) ([d37fb80a39aea859059ae7d85adc75095a6e14e6](https://github.com/googleapis/python-spanner/commit/d37fb80a39aea859059ae7d85adc75095a6e14e6))
+* Exposing AutoscalingConfig in InstancePartition ([8b6f154085543953556acde161a739414988b7f0](https://github.com/googleapis/python-spanner/commit/8b6f154085543953556acde161a739414988b7f0))
+* enable OpenTelemetry metrics and tracing by default (#1410) ([bb5095dfb615159a575933a332382ba93ba4bbd1](https://github.com/googleapis/python-spanner/commit/bb5095dfb615159a575933a332382ba93ba4bbd1))
+* add support for experimental host (#1452) ([9535e5e096f6ab53f2817af4fd7ac1fa2ca71660](https://github.com/googleapis/python-spanner/commit/9535e5e096f6ab53f2817af4fd7ac1fa2ca71660))
+
+
+### Bug Fixes
+
+* Deprecate credentials_file argument ([8b6f154085543953556acde161a739414988b7f0](https://github.com/googleapis/python-spanner/commit/8b6f154085543953556acde161a739414988b7f0))
+* configure keepAlive time for gRPC TCP connections (#1448) ([efb2833e52e54b096e552a4d91f94b017ac733bb](https://github.com/googleapis/python-spanner/commit/efb2833e52e54b096e552a4d91f94b017ac733bb))
+
 ## [3.59.0](https://github.com/googleapis/python-spanner/compare/v3.58.0...v3.59.0) (2025-10-18)
 
 
