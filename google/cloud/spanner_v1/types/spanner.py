@@ -20,6 +20,7 @@ from typing import MutableMapping, MutableSequence
 import proto  # type: ignore
 
 from google.cloud.spanner_v1.types import keys
+from google.cloud.spanner_v1.types import location as gs_location
 from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import transaction as gs_transaction
@@ -660,6 +661,15 @@ class ExecuteSqlRequest(proto.Message):
             example, validation of unique constraints). Given this,
             successful execution of a DML statement shouldn't be assumed
             until a subsequent ``Commit`` call completes successfully.
+        routing_hint (google.cloud.spanner_v1.types.RoutingHint):
+            Optional. If present, it makes the Spanner
+            requests location-aware.
+            It gives the server hints that can be used to
+            route the request to an appropriate server,
+            potentially significantly decreasing latency and
+            improving throughput. To achieve improved
+            performance, most fields must be filled in with
+            accurate values.
     """
 
     class QueryMode(proto.Enum):
@@ -825,6 +835,11 @@ class ExecuteSqlRequest(proto.Message):
     last_statement: bool = proto.Field(
         proto.BOOL,
         number=17,
+    )
+    routing_hint: gs_location.RoutingHint = proto.Field(
+        proto.MESSAGE,
+        number=18,
+        message=gs_location.RoutingHint,
     )
 
 
@@ -1385,6 +1400,15 @@ class ReadRequest(proto.Message):
         lock_hint (google.cloud.spanner_v1.types.ReadRequest.LockHint):
             Optional. Lock Hint for the request, it can
             only be used with read-write transactions.
+        routing_hint (google.cloud.spanner_v1.types.RoutingHint):
+            Optional. If present, it makes the Spanner
+            requests location-aware.
+            It gives the server hints that can be used to
+            route the request to an appropriate server,
+            potentially significantly decreasing latency and
+            improving throughput. To achieve improved
+            performance, most fields must be filled in with
+            accurate values.
     """
 
     class OrderBy(proto.Enum):
@@ -1529,6 +1553,11 @@ class ReadRequest(proto.Message):
         proto.ENUM,
         number=17,
         enum=LockHint,
+    )
+    routing_hint: gs_location.RoutingHint = proto.Field(
+        proto.MESSAGE,
+        number=18,
+        message=gs_location.RoutingHint,
     )
 
 

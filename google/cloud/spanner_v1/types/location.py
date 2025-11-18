@@ -24,15 +24,15 @@ from google.protobuf import struct_pb2  # type: ignore
 
 
 __protobuf__ = proto.module(
-    package='google.spanner.v1',
+    package="google.spanner.v1",
     manifest={
-        'Range',
-        'Tablet',
-        'Group',
-        'KeyRecipe',
-        'RecipeList',
-        'CacheUpdate',
-        'RoutingHint',
+        "Range",
+        "Tablet",
+        "Group",
+        "KeyRecipe",
+        "RecipeList",
+        "CacheUpdate",
+        "RoutingHint",
     },
 )
 
@@ -172,6 +172,7 @@ class Tablet(proto.Message):
             this cues the server to send updated information for this
             tablet should it become usable again.
     """
+
     class Role(proto.Enum):
         r"""Indicates the role of the tablet.
 
@@ -253,10 +254,10 @@ class Group(proto.Message):
         proto.UINT64,
         number=1,
     )
-    tablets: MutableSequence['Tablet'] = proto.RepeatedField(
+    tablets: MutableSequence["Tablet"] = proto.RepeatedField(
         proto.MESSAGE,
         number=2,
-        message='Tablet',
+        message="Tablet",
     )
     leader_index: int = proto.Field(
         proto.INT32,
@@ -348,6 +349,7 @@ class KeyRecipe(proto.Message):
                 It is a repeated field to support fetching key columns from
                 nested structs, such as ``STRUCT`` query parameters.
         """
+
         class Order(proto.Enum):
             r"""The remaining fields encode column values.
 
@@ -389,15 +391,15 @@ class KeyRecipe(proto.Message):
             proto.UINT32,
             number=1,
         )
-        order: 'KeyRecipe.Part.Order' = proto.Field(
+        order: "KeyRecipe.Part.Order" = proto.Field(
             proto.ENUM,
             number=2,
-            enum='KeyRecipe.Part.Order',
+            enum="KeyRecipe.Part.Order",
         )
-        null_order: 'KeyRecipe.Part.NullOrder' = proto.Field(
+        null_order: "KeyRecipe.Part.NullOrder" = proto.Field(
             proto.ENUM,
             number=3,
-            enum='KeyRecipe.Part.NullOrder',
+            enum="KeyRecipe.Part.NullOrder",
         )
         type_: gs_type.Type = proto.Field(
             proto.MESSAGE,
@@ -407,18 +409,18 @@ class KeyRecipe(proto.Message):
         identifier: str = proto.Field(
             proto.STRING,
             number=5,
-            oneof='value_type',
+            oneof="value_type",
         )
         value: struct_pb2.Value = proto.Field(
             proto.MESSAGE,
             number=6,
-            oneof='value_type',
+            oneof="value_type",
             message=struct_pb2.Value,
         )
         random: bool = proto.Field(
             proto.BOOL,
             number=8,
-            oneof='value_type',
+            oneof="value_type",
         )
         struct_identifiers: MutableSequence[int] = proto.RepeatedField(
             proto.INT32,
@@ -428,17 +430,17 @@ class KeyRecipe(proto.Message):
     table_name: str = proto.Field(
         proto.STRING,
         number=1,
-        oneof='target',
+        oneof="target",
     )
     index_name: str = proto.Field(
         proto.STRING,
         number=2,
-        oneof='target',
+        oneof="target",
     )
     operation_uid: int = proto.Field(
         proto.UINT64,
         number=3,
-        oneof='target',
+        oneof="target",
     )
     part: MutableSequence[Part] = proto.RepeatedField(
         proto.MESSAGE,
@@ -468,10 +470,10 @@ class RecipeList(proto.Message):
         proto.BYTES,
         number=1,
     )
-    recipe: MutableSequence['KeyRecipe'] = proto.RepeatedField(
+    recipe: MutableSequence["KeyRecipe"] = proto.RepeatedField(
         proto.MESSAGE,
         number=3,
-        message='KeyRecipe',
+        message="KeyRecipe",
     )
 
 
@@ -503,20 +505,20 @@ class CacheUpdate(proto.Message):
         proto.UINT64,
         number=1,
     )
-    range_: MutableSequence['Range'] = proto.RepeatedField(
+    range_: MutableSequence["Range"] = proto.RepeatedField(
         proto.MESSAGE,
         number=2,
-        message='Range',
+        message="Range",
     )
-    group: MutableSequence['Group'] = proto.RepeatedField(
+    group: MutableSequence["Group"] = proto.RepeatedField(
         proto.MESSAGE,
         number=3,
-        message='Group',
+        message="Group",
     )
-    key_recipes: 'RecipeList' = proto.Field(
+    key_recipes: "RecipeList" = proto.Field(
         proto.MESSAGE,
         number=5,
-        message='RecipeList',
+        message="RecipeList",
     )
 
 

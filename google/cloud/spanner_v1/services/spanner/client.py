@@ -64,6 +64,7 @@ _LOGGER = std_logging.getLogger(__name__)
 
 from google.cloud.spanner_v1.services.spanner import pagers
 from google.cloud.spanner_v1.types import commit_response
+from google.cloud.spanner_v1.types import location
 from google.cloud.spanner_v1.types import mutation
 from google.cloud.spanner_v1.types import result_set
 from google.cloud.spanner_v1.types import spanner

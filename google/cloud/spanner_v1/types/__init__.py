@@ -23,6 +23,15 @@ from .keys import (
     KeyRange,
     KeySet,
 )
+from .location import (
+    CacheUpdate,
+    Group,
+    KeyRecipe,
+    Range,
+    RecipeList,
+    RoutingHint,
+    Tablet,
+)
 from .mutation import (
     Mutation,
 )
@@ -81,6 +90,13 @@ __all__ = (
     "CommitResponse",
     "KeyRange",
     "KeySet",
+    "CacheUpdate",
+    "Group",
+    "KeyRecipe",
+    "Range",
+    "RecipeList",
+    "RoutingHint",
+    "Tablet",
     "Mutation",
     "PlanNode",
     "QueryAdvisorResult",
