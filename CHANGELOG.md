@@ -4,6 +4,24 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.60.0](https://github.com/googleapis/python-spanner/compare/v3.59.0...v3.60.0) (2025-11-19)
+
+
+### Features
+
+* Add cloud.region, request_tag and transaction_tag in span attributes ([#1449](https://github.com/googleapis/python-spanner/issues/1449)) ([d37fb80](https://github.com/googleapis/python-spanner/commit/d37fb80a39aea859059ae7d85adc75095a6e14e6))
+* Add Send and Ack mutations for Queues ([e08260f](https://github.com/googleapis/python-spanner/commit/e08260fe24b62313d7964572eeb963eb8c3c923f))
+* Add Spanner location API ([#1457](https://github.com/googleapis/python-spanner/issues/1457)) ([e08260f](https://github.com/googleapis/python-spanner/commit/e08260fe24b62313d7964572eeb963eb8c3c923f))
+* Add support for experimental host ([#1452](https://github.com/googleapis/python-spanner/issues/1452)) ([9535e5e](https://github.com/googleapis/python-spanner/commit/9535e5e096f6ab53f2817af4fd7ac1fa2ca71660))
+* Exposing AutoscalingConfig in InstancePartition ([8b6f154](https://github.com/googleapis/python-spanner/commit/8b6f154085543953556acde161a739414988b7f0))
+* **observability:** Enable OpenTelemetry metrics and tracing by default ([#1410](https://github.com/googleapis/python-spanner/issues/1410)) ([bb5095d](https://github.com/googleapis/python-spanner/commit/bb5095dfb615159a575933a332382ba93ba4bbd1))
+
+
+### Bug Fixes
+
+* Configure keepAlive time for gRPC TCP connections ([#1448](https://github.com/googleapis/python-spanner/issues/1448)) ([efb2833](https://github.com/googleapis/python-spanner/commit/efb2833e52e54b096e552a4d91f94b017ac733bb))
+* Deprecate credentials_file argument ([8b6f154](https://github.com/googleapis/python-spanner/commit/8b6f154085543953556acde161a739414988b7f0))
+
 ## [3.59.0](https://github.com/googleapis/python-spanner/compare/v3.58.0...v3.59.0) (2025-10-18)
 
 
