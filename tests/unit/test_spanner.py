@@ -1100,8 +1100,6 @@ class TestTransaction(OpenTelemetryBase):
             retry=RETRY,
             timeout=TIMEOUT,
         )
-        print("\nDINOSAUR CALL_ARGS_LIST: ", call_args_list)
-        print("\nDINOSAUR BOTH: ", [a11, b21])
 
         expected_requests = [
             self._batch_update_expected_request(),
