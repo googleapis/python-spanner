@@ -1077,7 +1077,7 @@ class TestTransaction(OpenTelemetryBase):
         expected_requests = [
             self._batch_update_expected_request(),
             self._batch_update_expected_request(begin=False),
-
+        ]
 
         actual_requests = [call.kwargs["request"] for call in call_args_list]
         self.assertCountEqual(actual_requests, expected_requests)
