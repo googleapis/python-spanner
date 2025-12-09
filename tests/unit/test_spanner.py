@@ -1074,37 +1074,10 @@ class TestTransaction(OpenTelemetryBase):
 
         call_args_list = api.execute_batch_dml.call_args_list
 
-        a11 = mock.call(
-            request=self._batch_update_expected_request(),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
-        )
-        b21 = mock.call(
-            request=self._batch_update_expected_request(begin=False),
-            metadata=[
-                ("google-cloud-resource-prefix", database.name),
-                ("x-goog-spanner-route-to-leader", "true"),
-                (
-                    "x-goog-spanner-request-id",
-                    f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.2.1",
-                ),
-            ],
-            retry=RETRY,
-            timeout=TIMEOUT,
-        )
-
         expected_requests = [
             self._batch_update_expected_request(),
             self._batch_update_expected_request(begin=False),
-        ]
+
 
         actual_requests = [call.kwargs["request"] for call in call_args_list]
         self.assertCountEqual(actual_requests, expected_requests)
