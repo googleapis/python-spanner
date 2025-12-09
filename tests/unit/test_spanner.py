@@ -1108,22 +1108,26 @@ class TestTransaction(OpenTelemetryBase):
             self._batch_update_expected_request(begin=False),
         ]
 
-        actual_requests = [call.kwargs['request'] for call in call_args_list]
+        actual_requests = [call.kwargs["request"] for call in call_args_list]
         self.assertCountEqual(actual_requests, expected_requests)
 
         request_ids = []
         for call in call_args_list:
-            metadata = call.kwargs['metadata']
+            metadata = call.kwargs["metadata"]
             self.assertEqual(len(metadata), 3)
-            self.assertEqual(metadata[0], ("google-cloud-resource-prefix", database.name))
+            self.assertEqual(
+                metadata[0], ("google-cloud-resource-prefix", database.name)
+            )
             self.assertEqual(metadata[1], ("x-goog-spanner-route-to-leader", "true"))
             self.assertEqual(metadata[2][0], "x-goog-spanner-request-id")
             request_ids.append(metadata[2][1])
-            self.assertEqual(call.kwargs['retry'], RETRY)
-            self.assertEqual(call.kwargs['timeout'], TIMEOUT)
+            self.assertEqual(call.kwargs["retry"], RETRY)
+            self.assertEqual(call.kwargs["timeout"], TIMEOUT)
 
         expected_id_suffixes = ["1.1", "2.1"]
-        actual_id_suffixes = sorted([".".join(rid.split('.')[-2:]) for rid in request_ids])
+        actual_id_suffixes = sorted(
+            [".".join(rid.split(".")[-2:]) for rid in request_ids]
+        )
         self.assertEqual(actual_id_suffixes, expected_id_suffixes)
 
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(
