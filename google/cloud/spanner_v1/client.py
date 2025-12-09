@@ -292,6 +292,36 @@ class Client(ClientWithProject):
         self._nth_client_id = Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter(0)
 
+        self.host = "spanner.googleapis.com"
+        if self._emulator_host:
+            self.host = self._emulator_host
+        elif self._experimental_host:
+            self.host = self._experimental_host
+        elif self._client_options and self._client_options.api_endpoint:
+            self.host = self._client_options.api_endpoint
+
+        self._log_spanner_options()
+
+    def _log_spanner_options(self):
+        """Logs Spanner client options."""
+        log.info(
+            "Spanner options: \n"
+            "  Project ID: %s\n"
+            "  Host: %s\n"
+            "  Route to leader enabled: %s\n"
+            "  Directed read options: %s\n"
+            "  Default transaction options: %s\n"
+            "  Observability options: %s\n"
+            "  Built-in metrics enabled: %s",
+            self.project,
+            self.host,
+            self.route_to_leader_enabled,
+            self._directed_read_options,
+            self._default_transaction_options,
+            self._observability_options,
+            _get_spanner_enable_builtin_metrics_env(),
+        )
+
     @property
     def _next_nth_request(self):
         return self._nth_request.increment()
