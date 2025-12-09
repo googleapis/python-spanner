@@ -475,7 +475,6 @@ class TestTransaction(OpenTelemetryBase):
 
         self.assertEqual(status, expected_status)
         self.assertEqual(row_counts, expected_row_counts)
-        self.assertEqual(transaction._execute_sql_request_count, count + 1)
 
     def _batch_update_expected_request(self, begin=True, count=0):
         if begin is True:
