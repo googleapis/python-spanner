@@ -98,7 +98,7 @@ class TestClient(unittest.TestCase):
             query_options=query_options,
             directed_read_options=directed_read_options,
             default_transaction_options=default_transaction_options,
-            **kwargs
+            **kwargs,
         )
 
         expected_creds = expected_creds or creds.with_scopes.return_value
@@ -328,6 +328,74 @@ class TestClient(unittest.TestCase):
             creds,
             default_transaction_options=self.DEFAULT_TRANSACTION_OPTIONS,
         )
+
+    def test_constructor_logs_options(self):
+        from google.cloud.spanner_v1 import client as MUT
+
+        creds = build_scoped_credentials()
+        observability_options = {"enable_extended_tracing": True}
+        with self.assertLogs(MUT.__name__, level="INFO") as cm:
+            client = self._make_one(
+                project=self.PROJECT,
+                credentials=creds,
+                route_to_leader_enabled=False,
+                directed_read_options=self.DIRECTED_READ_OPTIONS,
+                default_transaction_options=self.DEFAULT_TRANSACTION_OPTIONS,
+                observability_options=observability_options,
+            )
+            self.assertIsNotNone(client)
+
+        self.assertEqual(len(cm.output), 1)
+        log_output = cm.output[0]
+        self.assertIn("Spanner options:", log_output)
+        self.assertIn(f"\n  Project ID: {self.PROJECT}", log_output)
+        self.assertIn("\n  Host: spanner.googleapis.com", log_output)
+        self.assertIn("\n  Route to leader enabled: False", log_output)
+        self.assertIn(
+            f"\n  Directed read options: {self.DIRECTED_READ_OPTIONS}", log_output
+        )
+        self.assertIn(
+            f"\n  Default transaction options: {self.DEFAULT_TRANSACTION_OPTIONS}",
+            log_output,
+        )
+        self.assertIn(f"\n  Observability options: {observability_options}", log_output)
+        # SPANNER_DISABLE_BUILTIN_METRICS is "true" from class-level patch
+        self.assertIn("\n  Built-in metrics enabled: False", log_output)
+
+        # Test with custom host
+        endpoint = "test.googleapis.com"
+        with self.assertLogs(MUT.__name__, level="INFO") as cm:
+            self._make_one(
+                project=self.PROJECT,
+                credentials=creds,
+                client_options={"api_endpoint": endpoint},
+            )
+
+        self.assertEqual(len(cm.output), 1)
+        log_output = cm.output[0]
+        self.assertIn(f"\n  Host: {endpoint}", log_output)
+
+        # Test with emulator host
+        emulator_host = "localhost:9010"
+        with mock.patch.dict(os.environ, {MUT.EMULATOR_ENV_VAR: emulator_host}):
+            with self.assertLogs(MUT.__name__, level="INFO") as cm:
+                self._make_one(project=self.PROJECT)
+
+        self.assertEqual(len(cm.output), 1)
+        log_output = cm.output[0]
+        self.assertIn(f"\n  Host: {emulator_host}", log_output)
+
+        # Test with experimental host
+        experimental_host = "exp.googleapis.com"
+        with self.assertLogs(MUT.__name__, level="INFO") as cm:
+            self._make_one(
+                project=self.PROJECT,
+                experimental_host=experimental_host,
+            )
+
+        self.assertEqual(len(cm.output), 1)
+        log_output = cm.output[0]
+        self.assertIn(f"\n  Host: {experimental_host}", log_output)
 
     @mock.patch("google.cloud.spanner_v1.client._get_spanner_emulator_host")
     def test_instance_admin_api(self, mock_em):
