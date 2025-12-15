@@ -463,14 +463,11 @@ class TestTransaction(OpenTelemetryBase):
         if mutations is not None:
             self.assertEqual(transaction._transaction_id, TRANSACTION_ID)
 
-            request_options = RequestOptions()
-            request_options.transaction_tag = TRANSACTION_TAG
-
             expected_begin_transaction_request = BeginTransactionRequest(
                 session=session.name,
                 options=TransactionOptions(read_write=TransactionOptions.ReadWrite()),
                 mutation_key=expected_begin_mutation,
-                request_options=request_options,
+                request_options=RequestOptions(transaction_tag=TRANSACTION_TAG),
             )
 
             expected_begin_metadata = base_metadata.copy()
