@@ -560,7 +560,8 @@ class Instance(object):
         :type expire_time: :class:`datetime.datetime`
         :param expire_time:
             Optional. The expire time that will be used when creating the backup.
-            Required if the create method needs to be called.
+            If the expire time is not specified then the backup will be retained
+            for the duration of maximum retention period.
 
         :type version_time: :class:`datetime.datetime`
         :param version_time:
@@ -614,7 +615,8 @@ class Instance(object):
         :type expire_time: :class:`datetime.datetime`
         :param expire_time:
             Optional. The expire time that will be used when creating the copy backup.
-            Required if the create method needs to be called.
+            If the expire time is not specified then the backup will be created with
+            the expiration time of the source backup.
         :type encryption_config:
             :class:`~google.cloud.spanner_admin_database_v1.types.CopyBackupEncryptionConfig`
             or :class:`dict`
