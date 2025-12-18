@@ -560,7 +560,8 @@ class Instance(object):
         :type expire_time: :class:`datetime.datetime`
         :param expire_time:
             Optional. The expire time that will be used when creating the backup.
-            Required if the create method needs to be called.
+            If the expire time is not specified then the backup will be retained
+            for the duration of maximum retention period.
 
         :type version_time: :class:`datetime.datetime`
         :param version_time:
