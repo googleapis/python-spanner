@@ -3058,6 +3058,8 @@ def test_execute_sql_returning_transfinite_floats(sessions_database, not_postgre
 
 
 def test_execute_sql_w_uuid_bindings(sessions_database, database_dialect):
+    if database_dialect == DatabaseDialect.POSTGRESQL:
+        pytest.skip("UUID parameter type is not yet supported in PostgreSQL dialect.")
     _bind_test_helper(
         sessions_database,
         database_dialect,
