@@ -624,7 +624,6 @@ def _retry(
             if is_allowed and retries < retry_count:
                 if (
                     allowed_exceptions is not None
-                    and exc.__class__ in allowed_exceptions
                     and allowed_exceptions[exc.__class__] is not None
                 ):
                     allowed_exceptions[exc.__class__](exc)
