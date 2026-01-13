@@ -19,7 +19,6 @@ import pytest
 import time
 import decimal
 
-from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
 
 from google.cloud.spanner_dbapi.connection import Connection, connect
