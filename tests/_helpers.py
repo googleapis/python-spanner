@@ -1,5 +1,4 @@
 import unittest
-from os import getenv
 
 import mock
 
@@ -36,21 +35,12 @@ _TEST_OT_PROVIDER_INITIALIZED = False
 
 
 def is_multiplexed_enabled(transaction_type: TransactionType) -> bool:
-    """Returns whether multiplexed sessions are enabled for the given transaction type."""
+    """Returns whether multiplexed sessions are enabled for the given transaction type.
 
-    env_var = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS"
-    env_var_partitioned = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS"
-    env_var_read_write = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW"
-
-    def _getenv(val: str) -> bool:
-        return getenv(val, "true").lower().strip() != "false"
-
-    if transaction_type is TransactionType.READ_ONLY:
-        return _getenv(env_var)
-    elif transaction_type is TransactionType.PARTITIONED:
-        return _getenv(env_var) and _getenv(env_var_partitioned)
-    else:
-        return _getenv(env_var) and _getenv(env_var_read_write)
+    Multiplexed sessions are now always enabled for all transaction types.
+    This function is kept for backward compatibility with existing tests.
+    """
+    return True
 
 
 def get_test_ot_exporter():

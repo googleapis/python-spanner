@@ -868,9 +868,7 @@ class Database(object):
         # instead.
         role = database_role or self._database_role
         # Always use multiplexed sessions
-        return Session(
-            self, labels=labels, database_role=role, is_multiplexed=True
-        )
+        return Session(self, labels=labels, database_role=role, is_multiplexed=True)
 
     def snapshot(self, **kw):
         """Return an object which wraps a snapshot.

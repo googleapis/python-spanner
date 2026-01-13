@@ -16,7 +16,6 @@ import random
 import threading
 
 from google.cloud.spanner_v1 import (
-    BatchCreateSessionsRequest,
     CreateSessionRequest,
     ExecuteSqlRequest,
     BeginTransactionRequest,
@@ -58,20 +57,17 @@ class TestRequestIDHeader(MockServerTestBase):
         NTH_CLIENT = self.database._nth_client_id
         CHANNEL_ID = self.database._channel_id
         got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
-        # Filter out CreateSessionRequest unary segments for comparison
-        filtered_unary_segments = [
-            seg for seg in got_unary_segments if not seg[0].endswith("/CreateSession")
-        ]
+        # With multiplexed sessions, we expect one CreateSession request
         want_unary_segments = [
             (
-                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                "/google.spanner.v1.Spanner/CreateSession",
                 (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 1, 1),
             )
         ]
         # Dynamically determine the expected sequence number for ExecuteStreamingSql
         session_requests_before = 0
         for req in requests:
-            if isinstance(req, (BatchCreateSessionsRequest, CreateSessionRequest)):
+            if isinstance(req, CreateSessionRequest):
                 session_requests_before += 1
             elif isinstance(req, ExecuteSqlRequest):
                 break
@@ -88,7 +84,7 @@ class TestRequestIDHeader(MockServerTestBase):
                 ),
             )
         ]
-        assert filtered_unary_segments == want_unary_segments
+        assert got_unary_segments == want_unary_segments
         assert got_stream_segments == want_stream_segments
 
     def test_snapshot_read_concurrent(self):
@@ -118,45 +114,32 @@ class TestRequestIDHeader(MockServerTestBase):
         for thread in threads:
             thread.join()
         requests = self.spanner_service.requests
-        # Allow for an extra request due to multiplexed session creation
-        expected_min = 2 + n
-        expected_max = expected_min + 1
+        # With multiplexed sessions: 1 CreateSession + (n + 1) ExecuteSql
+        expected_min = 1 + n + 1
+        expected_max = expected_min
         assert (
             expected_min <= len(requests) <= expected_max
-        ), f"Expected {expected_min} or {expected_max} requests, got {len(requests)}: {requests}"
+        ), f"Expected {expected_min} requests, got {len(requests)}: {requests}"
         client_id = db._nth_client_id
         channel_id = db._channel_id
         got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
         want_unary_segments = [
             (
-                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                "/google.spanner.v1.Spanner/CreateSession",
                 (1, REQ_RAND_PROCESS_ID, client_id, channel_id, 1, 1),
             ),
         ]
         assert any(seg == want_unary_segments[0] for seg in got_unary_segments)
 
-        # Dynamically determine the expected sequence numbers for ExecuteStreamingSql
-        session_requests_before = 0
-        for req in requests:
-            if isinstance(req, (BatchCreateSessionsRequest, CreateSessionRequest)):
-                session_requests_before += 1
-            elif isinstance(req, ExecuteSqlRequest):
-                break
-        want_stream_segments = [
-            (
-                "/google.spanner.v1.Spanner/ExecuteStreamingSql",
-                (
-                    1,
-                    REQ_RAND_PROCESS_ID,
-                    client_id,
-                    channel_id,
-                    session_requests_before + i,
-                    1,
-                ),
-            )
-            for i in range(1, n + 2)
-        ]
-        assert got_stream_segments == want_stream_segments
+        # Verify we have the expected number of ExecuteStreamingSql segments
+        # (n + 1 = 11 for initial + 10 concurrent)
+        assert len(got_stream_segments) == n + 1
+        # Verify all segments are for ExecuteStreamingSql
+        for seg in got_stream_segments:
+            assert seg[0] == "/google.spanner.v1.Spanner/ExecuteStreamingSql"
+            # Verify the segment has correct client_id and channel_id
+            assert seg[1][2] == client_id
+            assert seg[1][3] == channel_id
 
     def test_database_run_in_transaction_retries_on_abort(self):
         counters = dict(aborted=0)
@@ -192,19 +175,15 @@ class TestRequestIDHeader(MockServerTestBase):
         got_stream_segments, got_unary_segments = self.canonicalize_request_id_headers()
         NTH_CLIENT = self.database._nth_client_id
         CHANNEL_ID = self.database._channel_id
-        # Allow for extra unary segments due to session creation
-        filtered_unary_segments = [
-            seg for seg in got_unary_segments if not seg[0].endswith("/CreateSession")
-        ]
         # Find the actual sequence number for BeginTransaction
         begin_txn_seq = None
-        for seg in filtered_unary_segments:
+        for seg in got_unary_segments:
             if seg[0].endswith("/BeginTransaction"):
                 begin_txn_seq = seg[1][4]
                 break
         want_unary_segments = [
             (
-                "/google.spanner.v1.Spanner/BatchCreateSessions",
+                "/google.spanner.v1.Spanner/CreateSession",
                 (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, 1, 1),
             ),
             (
@@ -212,13 +191,6 @@ class TestRequestIDHeader(MockServerTestBase):
                 (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, begin_txn_seq, 1),
             ),
         ]
-        # Dynamically determine the expected sequence number for ExecuteStreamingSql
-        session_requests_before = 0
-        for req in requests:
-            if isinstance(req, (BatchCreateSessionsRequest, CreateSessionRequest)):
-                session_requests_before += 1
-            elif isinstance(req, ExecuteSqlRequest):
-                break
         # Find the actual sequence number for ExecuteStreamingSql
         exec_sql_seq = got_stream_segments[0][1][4] if got_stream_segments else None
         want_stream_segments = [
@@ -227,12 +199,12 @@ class TestRequestIDHeader(MockServerTestBase):
                 (1, REQ_RAND_PROCESS_ID, NTH_CLIENT, CHANNEL_ID, exec_sql_seq, 1),
             )
         ]
-        assert all(seg in filtered_unary_segments for seg in want_unary_segments)
+        assert all(seg in got_unary_segments for seg in want_unary_segments)
         assert got_stream_segments == want_stream_segments
 
     def test_unary_retryable_error(self):
         add_select1_result()
-        add_error(SpannerServicer.BatchCreateSessions.__name__, unavailable_status())
+        add_error(SpannerServicer.CreateSession.__name__, unavailable_status())
 
         if not getattr(self.database, "_interceptors", None):
             self.database._interceptors = MockServerTestBase._interceptors

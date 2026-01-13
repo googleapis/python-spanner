@@ -186,7 +186,8 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         database = self._make_one(
-            self.DATABASE_ID, instance, ddl_statements=DDL_STATEMENTS        )
+            self.DATABASE_ID, instance, ddl_statements=DDL_STATEMENTS
+        )
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), DDL_STATEMENTS)
@@ -391,9 +392,7 @@ class TestDatabase(_BaseTest):
 
     def test_proto_descriptors(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(
-            self.DATABASE_ID, instance, proto_descriptors=b""
-        )
+        database = self._make_one(self.DATABASE_ID, instance, proto_descriptors=b"")
         self.assertEqual(database.proto_descriptors, b"")
 
     def test_spanner_api_property_w_scopeless_creds(self):
@@ -1048,7 +1047,8 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = self._make_one(
-            self.DATABASE_ID, instance, enable_drop_protection=True        )
+            self.DATABASE_ID, instance, enable_drop_protection=True
+        )
 
         future = database.update(["enable_drop_protection"])
 
@@ -1181,7 +1181,6 @@ class TestDatabase(_BaseTest):
         retried=False,
         exclude_txn_from_change_streams=False,
     ):
-        import os
         from google.api_core.exceptions import Aborted
         from google.api_core.retry import Retry
         from google.protobuf.struct_pb2 import Struct
@@ -1212,32 +1211,17 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        session = _Session()
         database = self._make_one(self.DATABASE_ID, instance)
 
-        multiplexed_partitioned_enabled = (
-            os.environ.get(
-                "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS", "true"
-            ).lower()
-            != "false"
+        # Create a mock multiplexed session that the sessions manager will return
+        multiplexed_session = _Session()
+        multiplexed_session.name = self.SESSION_NAME  # Use the expected session name
+        multiplexed_session.is_multiplexed = True
+        # Configure the sessions manager to return the multiplexed session
+        database._sessions_manager.get_session = mock.Mock(
+            return_value=multiplexed_session
         )
-
-        if multiplexed_partitioned_enabled:
-            # When multiplexed sessions are enabled, create a mock multiplexed session
-            # that the sessions manager will return
-            multiplexed_session = _Session()
-            multiplexed_session.name = (
-                self.SESSION_NAME
-            )  # Use the expected session name
-            multiplexed_session.is_multiplexed = True
-            # Configure the sessions manager to return the multiplexed session
-            database._sessions_manager.get_session = mock.Mock(
-                return_value=multiplexed_session
-            )
-            expected_session = multiplexed_session
-        else:
-            # Multiplexed sessions are now always used
-            expected_session = session
+        expected_session = multiplexed_session
 
         api = database._spanner_api = self._make_spanner_api()
         api._method_configs = {"ExecuteStreamingSql": MethodConfig(retry=Retry())}
@@ -1404,13 +1388,10 @@ class TestDatabase(_BaseTest):
             )
             self.assertEqual(api.execute_streaming_sql.call_count, 1)
 
-        # Verify that the correct session type was used based on environment
-        if multiplexed_partitioned_enabled:
-            # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
-            database._sessions_manager.get_session.assert_called_with(
-                TransactionType.PARTITIONED
-            )
-        # Multiplexed sessions are now always used
+        # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
+        database._sessions_manager.get_session.assert_called_with(
+            TransactionType.PARTITIONED
+        )
 
     def test_execute_partitioned_dml_wo_params(self):
         self._execute_partitioned_dml_helper(dml=DML_WO_PARAM)
@@ -1483,7 +1464,6 @@ class TestDatabase(_BaseTest):
 
     def test_snapshot_defaults(self):
         from google.cloud.spanner_v1.database import SnapshotCheckout
-        from google.cloud.spanner_v1.snapshot import Snapshot
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1507,7 +1487,6 @@ class TestDatabase(_BaseTest):
         import datetime
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.database import SnapshotCheckout
-        from google.cloud.spanner_v1.snapshot import Snapshot
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         client = _Client()
@@ -1534,7 +1513,6 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        session = _Session()
         database = self._make_one(self.DATABASE_ID, instance)
 
         checkout = database.batch()
@@ -1546,7 +1524,6 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        session = _Session()
         database = self._make_one(self.DATABASE_ID, instance)
 
         checkout = database.mutation_groups()
@@ -1597,8 +1574,6 @@ class TestDatabase(_BaseTest):
         NOW = datetime.datetime.now()
         client = _Client(observability_options=dict(enable_end_to_end_tracing=True))
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        session = _Session()
-        session._committed = NOW
         database = self._make_one(self.DATABASE_ID, instance)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
@@ -1622,8 +1597,6 @@ class TestDatabase(_BaseTest):
         NOW = datetime.datetime.now()
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        session = _Session()
-        session._committed = NOW
         database = self._make_one(self.DATABASE_ID, instance)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
@@ -2091,7 +2064,6 @@ class TestBatchCheckout(_BaseTest):
         database.log_commit_stats = True
         api = database.spanner_api = self._make_spanner_client()
         api.commit.return_value = response
-        session = _Session(database)
         checkout = self._make_one(database)
 
         with checkout as batch:
@@ -2135,14 +2107,12 @@ class TestBatchCheckout(_BaseTest):
         database.log_commit_stats = True
         api = database.spanner_api = self._make_spanner_client()
         api.commit.side_effect = Aborted("aborted exception", errors=("Aborted error"))
-        session = _Session(database)
         checkout = self._make_one(database, timeout_secs=0.1, default_retry_delay=0)
 
         with self.assertRaises(Aborted):
             with checkout as batch:
-                        self.assertIsInstance(batch, Batch)
+                self.assertIsInstance(batch, Batch)
             self.assertIs(batch._session, database._default_session)
-
 
         expected_txn_options = TransactionOptions(read_write={})
 
@@ -2172,7 +2142,6 @@ class TestBatchCheckout(_BaseTest):
         from google.cloud.spanner_v1.batch import Batch
 
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
         checkout = self._make_one(database)
 
         class Testing(Exception):
@@ -2197,8 +2166,7 @@ class TestSnapshotCheckout(_BaseTest):
         from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
-        
+
         checkout = self._make_one(database)
         self.assertIs(checkout._database, database)
         self.assertEqual(checkout._kw, {})
@@ -2209,7 +2177,6 @@ class TestSnapshotCheckout(_BaseTest):
             self.assertTrue(snapshot._strong)
             self.assertFalse(snapshot._multi_use)
 
-
     def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
         from google.cloud._helpers import UTC
@@ -2217,8 +2184,7 @@ class TestSnapshotCheckout(_BaseTest):
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
-        
+
         checkout = self._make_one(database, read_timestamp=now, multi_use=True)
         self.assertIs(checkout._database, database)
         self.assertEqual(checkout._kw, {"read_timestamp": now, "multi_use": True})
@@ -2229,12 +2195,10 @@ class TestSnapshotCheckout(_BaseTest):
             self.assertEqual(snapshot._read_timestamp, now)
             self.assertTrue(snapshot._multi_use)
 
-
     def test_context_mgr_failure(self):
         from google.cloud.spanner_v1.snapshot import Snapshot
 
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
         checkout = self._make_one(database)
 
         class Testing(Exception):
@@ -3144,14 +3108,12 @@ class TestMutationGroupsCheckout(_BaseTest):
         from google.cloud.spanner_v1.batch import MutationGroups
 
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
         checkout = self._make_one(database)
         self.assertIs(checkout._database, database)
 
         with checkout as groups:
             self.assertIsInstance(groups, MutationGroups)
             self.assertIs(groups._session, database._default_session)
-
 
     def test_context_mgr_success(self):
         import datetime
@@ -3173,7 +3135,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         database = _Database(self.DATABASE_NAME)
         api = database.spanner_api = self._make_spanner_client()
         api.batch_write.return_value = [response]
-        session = _Session(database)
         checkout = self._make_one(database)
 
         request_options = RequestOptions(transaction_tag=self.TRANSACTION_TAG)
@@ -3202,7 +3163,6 @@ class TestMutationGroupsCheckout(_BaseTest):
             groups.batch_write(request_options)
             self.assertEqual(groups.committed, True)
 
-
         api.batch_write.assert_called_once_with(
             request=request,
             metadata=[
@@ -3219,7 +3179,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         from google.cloud.spanner_v1.batch import MutationGroups
 
         database = _Database(self.DATABASE_NAME)
-        session = _Session(database)
         checkout = self._make_one(database)
 
         class Testing(Exception):

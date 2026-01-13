@@ -210,4 +210,3 @@ class DatabaseSessionsManager(object):
                 manager._multiplexed_session = manager._build_multiplexed_session()
 
             session_created_time = time()
-

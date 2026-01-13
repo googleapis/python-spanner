@@ -249,9 +249,7 @@ def test_update_ddl_w_operation_id(
     #    https://github.com/GoogleCloudPlatform/google-cloud-python/issues/5629
     # )
     temp_db_id = _helpers.unique_id("update_ddl", separator="_")
-    temp_db = shared_instance.database(
-        temp_db_id, database_dialect=database_dialect
-    )
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
     create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
