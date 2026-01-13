@@ -529,7 +529,6 @@ class TestInstance(unittest.TestCase):
 
     def test_database_factory_defaults(self):
         from google.cloud.spanner_v1.database import Database
-        from google.cloud.spanner_v1.pool import BurstyPool
 
         client = _Client(self.PROJECT)
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
@@ -541,10 +540,7 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(database.database_id, DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
-        self.assertIsInstance(database._pool, BurstyPool)
         self.assertIsNone(database._logger)
-        pool = database._pool
-        self.assertIs(pool._database, database)
         self.assertIsNone(database.database_role)
 
     def test_database_factory_explicit(self):
@@ -556,7 +552,6 @@ class TestInstance(unittest.TestCase):
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
         DATABASE_ID = "database-id"
         DATABASE_ROLE = "dummy-role"
-        pool = _Pool()
         logger = mock.create_autospec(Logger, instance=True)
         encryption_config = {"kms_key_name": "kms_key_name"}
         proto_descriptors = b""
@@ -564,7 +559,6 @@ class TestInstance(unittest.TestCase):
         database = instance.database(
             DATABASE_ID,
             ddl_statements=DDL_STATEMENTS,
-            pool=pool,
             logger=logger,
             encryption_config=encryption_config,
             database_role=DATABASE_ROLE,
@@ -575,9 +569,7 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(database.database_id, DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), DDL_STATEMENTS)
-        self.assertIs(database._pool, pool)
         self.assertIs(database._logger, logger)
-        self.assertIs(pool._bound, database)
         self.assertIs(database._encryption_config, encryption_config)
         self.assertIs(database.database_role, DATABASE_ROLE)
         self.assertIs(database._proto_descriptors, proto_descriptors)
@@ -1088,10 +1080,3 @@ class _FauxInstanceAdminAPI(object):
 
 class _FauxOperationFuture(object):
     pass
-
-
-class _Pool(object):
-    _bound = None
-
-    def bind(self, database):
-        self._bound = database

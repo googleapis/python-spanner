@@ -60,7 +60,6 @@ from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
-from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.database_sessions_manager import (
     DatabaseSessionsManager,
@@ -122,9 +121,11 @@ class Database(object):
 
     :type pool: concrete subclass of
                 :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
-    :param pool: (Optional) session pool to be used by database.  If not
-                 passed, the database will construct an instance of
-                 :class:`~google.cloud.spanner_v1.pool.BurstyPool`.
+    :param pool: (Deprecated) session pool to be used by database. Session
+                 pools are deprecated as multiplexed sessions are now used for
+                 all operations by default. If not passed, the database will
+                 construct an internal pool instance for backward compatibility.
+                 New code should not pass a pool argument.
 
     :type logger: :class:`logging.Logger`
     :param logger: (Optional) a custom logger that is used if `log_commit_stats`
@@ -198,16 +199,21 @@ class Database(object):
         self._proto_descriptors = proto_descriptors
         self._channel_id = 0  # It'll be created when _spanner_api is created.
 
-        if pool is None:
-            pool = BurstyPool(database_role=database_role)
+        # Session pools are deprecated. Multiplexed sessions are now used for all operations.
+        # The pool parameter is kept for backward compatibility but is ignored.
+        if pool is not None:
+            from warnings import warn
 
-        self._pool = pool
-        pool.bind(self)
+            warn(
+                "The 'pool' parameter is deprecated and ignored. "
+                "Multiplexed sessions are now used for all operations.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
         is_experimental_host = self._instance.experimental_host is not None
 
-        self._sessions_manager = DatabaseSessionsManager(
-            self, pool, is_experimental_host
-        )
+        self._sessions_manager = DatabaseSessionsManager(self, is_experimental_host)
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -861,13 +867,9 @@ class Database(object):
         # If role is specified in param, then that role is used
         # instead.
         role = database_role or self._database_role
-        is_multiplexed = False
-        if self.sessions_manager._use_multiplexed(
-            transaction_type=TransactionType.READ_ONLY
-        ):
-            is_multiplexed = True
+        # Always use multiplexed sessions
         return Session(
-            self, labels=labels, database_role=role, is_multiplexed=is_multiplexed
+            self, labels=labels, database_role=role, is_multiplexed=True
         )
 
     def snapshot(self, **kw):
@@ -1430,12 +1432,6 @@ class MutationGroupsCheckout(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
         self._database.sessions_manager.put_session(self._session)
 
 
@@ -1471,12 +1467,6 @@ class SnapshotCheckout(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
-        if isinstance(exc_val, NotFound):
-            # If NotFound exception occurs inside the with block
-            # then we validate if the session still exists.
-            if not self._session.exists():
-                self._session = self._database._pool._new_session()
-                self._session.create()
         self._database.sessions_manager.put_session(self._session)
 
 

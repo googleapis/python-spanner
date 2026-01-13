@@ -16,7 +16,6 @@
 
 from google.cloud.spanner_v1 import Client
 from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.pool import BurstyPool
 
 # Import relative to the script's directory
 from streaming_utils import FOUR_KAY
@@ -68,10 +67,7 @@ def ensure_database(client):
         print_func("Instance exists: {}".format(INSTANCE_NAME))
         instance.reload()
 
-    pool = BurstyPool()
-    database = instance.database(
-        DATABASE_NAME, ddl_statements=DDL_STATEMENTS, pool=pool
-    )
+    database = instance.database(DATABASE_NAME, ddl_statements=DDL_STATEMENTS)
 
     if not database.exists():
         print_func("Creating database: {}".format(DATABASE_NAME))

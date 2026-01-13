@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from enum import Enum
-from os import getenv
 from datetime import timedelta
 from threading import Event, Lock, Thread
 from time import sleep, time
@@ -41,31 +40,21 @@ class DatabaseSessionsManager(object):
     transaction type using :meth:`get_session`, and returned to the session manager
     using :meth:`put_session`.
 
-    The sessions returned by the session manager depend on the configured environment variables
-    and the provided session pool (see :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`).
+    Multiplexed sessions are used for all transaction types.
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: The database to manage sessions for.
 
-    :type pool: :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
-    :param pool: The pool to get non-multiplexed sessions from.
+    :type is_experimental_host: bool
+    :param is_experimental_host: Whether the database is using an experimental host.
     """
-
-    # Environment variables for multiplexed sessions
-    _ENV_VAR_MULTIPLEXED = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS"
-    _ENV_VAR_MULTIPLEXED_PARTITIONED = (
-        "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_PARTITIONED_OPS"
-    )
-    _ENV_VAR_MULTIPLEXED_READ_WRITE = "GOOGLE_CLOUD_SPANNER_MULTIPLEXED_SESSIONS_FOR_RW"
 
     # Intervals for the maintenance thread to check and refresh the multiplexed session.
     _MAINTENANCE_THREAD_POLLING_INTERVAL = timedelta(minutes=10)
     _MAINTENANCE_THREAD_REFRESH_INTERVAL = timedelta(days=7)
 
-    def __init__(self, database, pool, is_experimental_host: bool = False):
+    def __init__(self, database, is_experimental_host: bool = False):
         self._database = database
-        self._pool = pool
-        self._is_experimental_host = is_experimental_host
 
         # Declare multiplexed session attributes. When a multiplexed session for the
         # database session manager is created, a maintenance thread is initialized to
@@ -81,17 +70,16 @@ class DatabaseSessionsManager(object):
         self._multiplexed_session_terminate_event: Event = Event()
 
     def get_session(self, transaction_type: TransactionType) -> Session:
-        """Returns a session for the given transaction type from the database session manager.
+        """Returns a multiplexed session for the given transaction type.
+
+        :type transaction_type: :class:`TransactionType`
+        :param transaction_type: The type of transaction (ignored, multiplexed
+            sessions support all transaction types).
 
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
-        :returns: a session for the given transaction type.
+        :returns: a multiplexed session.
         """
-
-        session = (
-            self._get_multiplexed_session()
-            if self._use_multiplexed(transaction_type) or self._is_experimental_host
-            else self._pool.get()
-        )
+        session = self._get_multiplexed_session()
 
         add_span_event(
             get_current_span(),
@@ -104,21 +92,18 @@ class DatabaseSessionsManager(object):
     def put_session(self, session: Session) -> None:
         """Returns the session to the database session manager.
 
+        For multiplexed sessions, this is a no-op since they can handle
+        multiple concurrent transactions and don't need to be returned to a pool.
+
         :type session: :class:`~google.cloud.spanner_v1.session.Session`
         :param session: The session to return to the database session manager.
         """
-
         add_span_event(
             get_current_span(),
             "Returning session",
             {"id": session.session_id, "multiplexed": session.is_multiplexed},
         )
-
-        # No action is needed for multiplexed sessions: the session
-        # pool is only used for managing non-multiplexed sessions,
-        # since they can only process one transaction at a time.
-        if not session.is_multiplexed:
-            self._pool.put(session)
+        # Multiplexed sessions don't need to be returned to a pool
 
     def _get_multiplexed_session(self) -> Session:
         """Returns a multiplexed session from the database session manager.
@@ -226,53 +211,3 @@ class DatabaseSessionsManager(object):
 
             session_created_time = time()
 
-    @classmethod
-    def _use_multiplexed(cls, transaction_type: TransactionType) -> bool:
-        """Returns whether to use multiplexed sessions for the given transaction type.
-
-        Multiplexed sessions are enabled for read-only transactions if:
-            * _ENV_VAR_MULTIPLEXED != 'false'.
-
-        Multiplexed sessions are enabled for partitioned transactions if:
-            * _ENV_VAR_MULTIPLEXED_PARTITIONED != 'false'.
-
-        Multiplexed sessions are enabled for read/write transactions if:
-            * _ENV_VAR_MULTIPLEXED_READ_WRITE != 'false'.
-
-        :type transaction_type: :class:`TransactionType`
-        :param transaction_type: the type of transaction
-
-        :rtype: bool
-        :returns: True if multiplexed sessions should be used for the given transaction
-            type, False otherwise.
-
-        :raises ValueError: if the transaction type is not supported.
-        """
-
-        if transaction_type is TransactionType.READ_ONLY:
-            return cls._getenv(cls._ENV_VAR_MULTIPLEXED)
-
-        elif transaction_type is TransactionType.PARTITIONED:
-            return cls._getenv(cls._ENV_VAR_MULTIPLEXED_PARTITIONED)
-
-        elif transaction_type is TransactionType.READ_WRITE:
-            return cls._getenv(cls._ENV_VAR_MULTIPLEXED_READ_WRITE)
-
-        raise ValueError(f"Transaction type {transaction_type} is not supported.")
-
-    @classmethod
-    def _getenv(cls, env_var_name: str) -> bool:
-        """Returns the value of the given environment variable as a boolean.
-
-        True unless explicitly 'false' (case-insensitive).
-        All other values (including unset) are considered true.
-
-        :type env_var_name: str
-        :param env_var_name: the name of the boolean environment variable
-
-        :rtype: bool
-        :returns: True unless the environment variable is set to 'false', False otherwise.
-        """
-
-        env_var_value = getenv(env_var_name, "true").lower().strip()
-        return env_var_value != "false"

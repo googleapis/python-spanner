@@ -269,12 +269,10 @@ def sessions_database(
     shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
 ):
     database_name = _helpers.unique_id("test_sessions", separator="_")
-    pool = spanner_v1.BurstyPool(labels={"testcase": "session_api"})
 
     if database_dialect == DatabaseDialect.POSTGRESQL:
         sessions_database = shared_instance.database(
             database_name,
-            pool=pool,
             database_dialect=database_dialect,
         )
 
@@ -288,7 +286,6 @@ def sessions_database(
         sessions_database = shared_instance.database(
             database_name,
             ddl_statements=_helpers.DDL_STATEMENTS,
-            pool=pool,
             proto_descriptors=proto_descriptor_file,
         )
 
@@ -296,10 +293,6 @@ def sessions_database(
         operation.result(database_operation_timeout)
 
     _helpers.retry_has_all_dll(sessions_database.reload)()
-    # Some tests expect there to be a session present in the pool.
-    # Experimental host connections only support multiplexed sessions
-    if not _helpers.USE_EXPERIMENTAL_HOST:
-        pool.put(pool.get())
 
     yield sessions_database
 
@@ -1846,12 +1839,10 @@ def test_read_w_index(
 
     # Create an alternate dataase w/ index.
     extra_ddl = ["CREATE INDEX contacts_by_last_name ON contacts(last_name)"]
-    pool = spanner_v1.BurstyPool(labels={"testcase": "read_w_index"})
 
     if database_dialect == DatabaseDialect.POSTGRESQL:
         temp_db = shared_instance.database(
             _helpers.unique_id("test_read", separator="_"),
-            pool=pool,
             database_dialect=database_dialect,
         )
         operation = temp_db.create()
@@ -1868,7 +1859,6 @@ def test_read_w_index(
             ddl_statements=_helpers.DDL_STATEMENTS
             + extra_ddl
             + _helpers.PROTO_COLUMNS_DDL_STATEMENTS,
-            pool=pool,
             database_dialect=database_dialect,
             proto_descriptors=proto_descriptor_file,
         )

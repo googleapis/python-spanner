@@ -33,7 +33,7 @@ from grpc_status.rpc_status import _Status
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.type as spanner_type
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_v1 import Client, FixedSizePool, ResultSetMetadata, TypeCode
+from google.cloud.spanner_v1 import Client, ResultSetMetadata, TypeCode
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
@@ -228,7 +228,6 @@ class MockServerTestBase(unittest.TestCase):
         if self._database is None:
             self._database = self.instance.database(
                 "test-database",
-                pool=FixedSizePool(size=10),
                 enable_interceptors_in_tests=True,
                 logger=self.logger,
             )

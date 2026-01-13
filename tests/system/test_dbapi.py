@@ -78,11 +78,9 @@ DDL_STATEMENTS = [stmt.strip() for stmt in DDL.split(";") if stmt.strip()]
 @pytest.fixture(scope="session")
 def raw_database(shared_instance, database_operation_timeout, not_postgres):
     database_id = _helpers.unique_id("dbapi-txn")
-    pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     database = shared_instance.database(
         database_id,
         ddl_statements=DDL_STATEMENTS,
-        pool=pool,
         enable_interceptors_in_tests=True,
     )
     op = database.create()

@@ -12,7 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Pools managing shared Session objects."""
+"""Pools managing shared Session objects.
+
+.. deprecated::
+    Session pools are deprecated and will be removed in a future release.
+    Multiplexed sessions are now used for all operations by default, eliminating
+    the need for session pooling.
+"""
 
 import datetime
 import queue
@@ -37,9 +43,20 @@ from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
 
+_POOL_DEPRECATION_MESSAGE = (
+    "Session pools are deprecated and will be removed in a future release. "
+    "Multiplexed sessions are now used for all operations by default, "
+    "eliminating the need for session pooling. "
+    "To disable this warning, do not pass a pool argument when creating a Database."
+)
+
 
 class AbstractSessionPool(object):
     """Specifies required API for concrete session pool implementations.
+
+    .. deprecated::
+        Session pools are deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
@@ -155,6 +172,10 @@ class AbstractSessionPool(object):
 class FixedSizePool(AbstractSessionPool):
     """Concrete session pool implementation:
 
+    .. deprecated::
+        FixedSizePool is deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
+
     - Pre-allocates / creates a fixed number of sessions.
 
     - "Pings" existing sessions via :meth:`session.exists` before returning
@@ -169,11 +190,13 @@ class FixedSizePool(AbstractSessionPool):
       :meth:`get` followed by :meth:`put` whenever in need of a session.
 
     :type size: int
-    :param size: fixed pool size
+    :param size: (Deprecated) fixed pool size. This parameter is deprecated
+        as session pools are no longer needed with multiplexed sessions.
 
     :type default_timeout: int
-    :param default_timeout: default timeout, in seconds, to wait for
-                                 a returned session.
+    :param default_timeout: (Deprecated) default timeout, in seconds, to wait for
+        a returned session. This parameter is deprecated as session pools are
+        no longer needed with multiplexed sessions.
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
@@ -195,6 +218,11 @@ class FixedSizePool(AbstractSessionPool):
         database_role=None,
         max_age_minutes=DEFAULT_MAX_AGE_MINUTES,
     ):
+        warn(
+            _POOL_DEPRECATION_MESSAGE,
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super(FixedSizePool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
@@ -368,6 +396,10 @@ class FixedSizePool(AbstractSessionPool):
 class BurstyPool(AbstractSessionPool):
     """Concrete session pool implementation:
 
+    .. deprecated::
+        BurstyPool is deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
+
     - "Pings" existing sessions via :meth:`session.exists` before returning
       them.
 
@@ -378,7 +410,8 @@ class BurstyPool(AbstractSessionPool):
       is called on a full pool.
 
     :type target_size: int
-    :param target_size: max pool size
+    :param target_size: (Deprecated) max pool size. This parameter is deprecated
+        as session pools are no longer needed with multiplexed sessions.
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
@@ -388,7 +421,17 @@ class BurstyPool(AbstractSessionPool):
     :param database_role: (Optional) user-assigned database_role for the session.
     """
 
+    # Internal flag to suppress deprecation warning when BurstyPool is used
+    # as a fallback/internal implementation detail.
+    _suppress_warning = False
+
     def __init__(self, target_size=10, labels=None, database_role=None):
+        if not BurstyPool._suppress_warning:
+            warn(
+                _POOL_DEPRECATION_MESSAGE,
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super(BurstyPool, self).__init__(labels=labels, database_role=database_role)
         self.target_size = target_size
         self._database = None
@@ -474,6 +517,10 @@ class BurstyPool(AbstractSessionPool):
 class PingingPool(AbstractSessionPool):
     """Concrete session pool implementation:
 
+    .. deprecated::
+        PingingPool is deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
+
     - Pre-allocates / creates a fixed number of sessions.
 
     - Sessions are used in "round-robin" order (LRU first).
@@ -492,14 +539,18 @@ class PingingPool(AbstractSessionPool):
     times, e.g. from a background thread.
 
     :type size: int
-    :param size: fixed pool size
+    :param size: (Deprecated) fixed pool size. This parameter is deprecated
+        as session pools are no longer needed with multiplexed sessions.
 
     :type default_timeout: int
-    :param default_timeout: default timeout, in seconds, to wait for
-                            a returned session.
+    :param default_timeout: (Deprecated) default timeout, in seconds, to wait for
+        a returned session. This parameter is deprecated as session pools are
+        no longer needed with multiplexed sessions.
 
     :type ping_interval: int
-    :param ping_interval: interval at which to ping sessions.
+    :param ping_interval: (Deprecated) interval at which to ping sessions.
+        This parameter is deprecated as session pools are no longer needed
+        with multiplexed sessions.
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
@@ -509,6 +560,9 @@ class PingingPool(AbstractSessionPool):
     :param database_role: (Optional) user-assigned database_role for the session.
     """
 
+    # Internal flag to suppress deprecation warning when called from subclass.
+    _suppress_warning = False
+
     def __init__(
         self,
         size=10,
@@ -517,6 +571,12 @@ class PingingPool(AbstractSessionPool):
         labels=None,
         database_role=None,
     ):
+        if not PingingPool._suppress_warning:
+            warn(
+                _POOL_DEPRECATION_MESSAGE,
+                DeprecationWarning,
+                stacklevel=2,
+            )
         super(PingingPool, self).__init__(labels=labels, database_role=database_role)
         self.size = size
         self.default_timeout = default_timeout
@@ -699,9 +759,11 @@ class PingingPool(AbstractSessionPool):
 class TransactionPingingPool(PingingPool):
     """Concrete session pool implementation:
 
-    Deprecated: TransactionPingingPool no longer begins a transaction for each of its sessions at startup.
-    Hence the TransactionPingingPool is same as :class:`PingingPool` and maybe removed in the future.
-
+    .. deprecated::
+        TransactionPingingPool is deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
+        TransactionPingingPool no longer begins a transaction for each of its sessions
+        at startup. Hence the TransactionPingingPool is same as :class:`PingingPool`.
 
     In addition to the features of :class:`PingingPool`, this class
     creates and begins a transaction for each of its sessions at startup.
@@ -713,14 +775,18 @@ class TransactionPingingPool(PingingPool):
     as appropriate via the pool's :meth:`begin_pending_transactions` method.
 
     :type size: int
-    :param size: fixed pool size
+    :param size: (Deprecated) fixed pool size. This parameter is deprecated
+        as session pools are no longer needed with multiplexed sessions.
 
     :type default_timeout: int
-    :param default_timeout: default timeout, in seconds, to wait for
-                            a returned session.
+    :param default_timeout: (Deprecated) default timeout, in seconds, to wait for
+        a returned session. This parameter is deprecated as session pools are
+        no longer needed with multiplexed sessions.
 
     :type ping_interval: int
-    :param ping_interval: interval at which to ping sessions.
+    :param ping_interval: (Deprecated) interval at which to ping sessions.
+        This parameter is deprecated as session pools are no longer needed
+        with multiplexed sessions.
 
     :type labels: dict (str -> str) or None
     :param labels: (Optional) user-assigned labels for sessions created
@@ -740,19 +806,24 @@ class TransactionPingingPool(PingingPool):
     ):
         """This throws a deprecation warning on initialization."""
         warn(
-            f"{self.__class__.__name__} is deprecated.",
+            _POOL_DEPRECATION_MESSAGE,
             DeprecationWarning,
             stacklevel=2,
         )
         self._pending_sessions = queue.Queue()
 
-        super(TransactionPingingPool, self).__init__(
-            size,
-            default_timeout,
-            ping_interval,
-            labels=labels,
-            database_role=database_role,
-        )
+        # Suppress warning from parent class to avoid double warning
+        PingingPool._suppress_warning = True
+        try:
+            super(TransactionPingingPool, self).__init__(
+                size,
+                default_timeout,
+                ping_interval,
+                labels=labels,
+                database_role=database_role,
+            )
+        finally:
+            PingingPool._suppress_warning = False
 
         self.begin_pending_transactions()
 
@@ -797,13 +868,16 @@ class TransactionPingingPool(PingingPool):
 class SessionCheckout(object):
     """Context manager: hold session checked out from a pool.
 
-    Deprecated. Sessions should be checked out indirectly using context
-    managers or :meth:`~google.cloud.spanner_v1.database.Database.run_in_transaction`,
-    rather than checked out directly from the pool.
+    .. deprecated::
+        SessionCheckout is deprecated and will be removed in a future release.
+        Multiplexed sessions are now used for all operations by default.
+        Sessions should be checked out indirectly using context managers or
+        :meth:`~google.cloud.spanner_v1.database.Database.run_in_transaction`,
+        rather than checked out directly from the pool.
 
     :type pool: concrete subclass of
         :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`
-    :param pool: Pool from which to check out a session.
+    :param pool: (Deprecated) Pool from which to check out a session.
 
     :param kwargs: extra keyword arguments to be passed to :meth:`pool.get`.
     """
@@ -811,6 +885,13 @@ class SessionCheckout(object):
     _session = None
 
     def __init__(self, pool, **kwargs):
+        warn(
+            "SessionCheckout is deprecated. "
+            "Sessions should be managed through database context managers or "
+            "run_in_transaction instead of being checked out directly from the pool.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._pool = pool
         self._kwargs = kwargs.copy()
 

@@ -272,7 +272,6 @@ class TestConnection(unittest.TestCase):
         mock_rollback.assert_called_once_with()
 
         connection._transaction = mock.MagicMock()
-        connection._own_pool = False
         connection.close()
 
         self.assertTrue(connection.is_closed)
@@ -890,20 +889,18 @@ class _Instance(object):
         database_role=None,
         logger=None,
     ):
-        return _Database(database_id, pool, database_dialect, database_role, logger)
+        return _Database(database_id, database_dialect, database_role, logger)
 
 
 class _Database(object):
     def __init__(
         self,
         database_id="database_id",
-        pool=None,
         database_dialect=DatabaseDialect.GOOGLE_STANDARD_SQL,
         database_role=None,
         logger=None,
     ):
         self.name = database_id
-        self.pool = pool
         self.database_dialect = database_dialect
         self.database_role = database_role
         self.logger = logger
