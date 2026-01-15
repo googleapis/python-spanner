@@ -841,7 +841,7 @@ def _create_experimental_host_transport(
     elif ca_certificate:
         with open(ca_certificate, "rb") as f:
             ca_cert = f.read()
-        if client_certificate is not None and client_key is not None:
+        if client_certificate and client_key:
             with open(client_certificate, "rb") as f:
                 client_cert = f.read()
             with open(client_key, "rb") as f:
@@ -851,12 +851,12 @@ def _create_experimental_host_transport(
                 private_key=private_key,
                 certificate_chain=client_cert,
             )
-        elif client_certificate is None and client_key is None:
-            ssl_creds = grpc.ssl_channel_credentials(root_certificates=ca_cert)
-        else:
+        elif client_certificate or client_key:
             raise ValueError(
                 "Both client_certificate and client_key must be provided for mTLS connection"
             )
+        else:
+            ssl_creds = grpc.ssl_channel_credentials(root_certificates=ca_cert)
         channel = grpc.secure_channel(experimental_host, ssl_creds)
     else:
         raise ValueError(
