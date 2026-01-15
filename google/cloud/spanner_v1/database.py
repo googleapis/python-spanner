@@ -55,6 +55,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
     _metadata_with_request_id,
+    _create_experimental_host_transport,
 )
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
@@ -203,11 +204,9 @@ class Database(object):
 
         self._pool = pool
         pool.bind(self)
-        is_experimental_host = self._instance.experimental_host is not None
+        self._experimental_host = self._instance._client._experimental_host
 
-        self._sessions_manager = DatabaseSessionsManager(
-            self, pool, is_experimental_host
-        )
+        self._sessions_manager = DatabaseSessionsManager(self, pool)
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -452,9 +451,14 @@ class Database(object):
                     client_info=client_info, transport=transport
                 )
                 return self._spanner_api
-            if self._instance.experimental_host is not None:
-                transport = SpannerGrpcTransport(
-                    channel=grpc.insecure_channel(self._instance.experimental_host)
+            if self._experimental_host is not None:
+                transport = _create_experimental_host_transport(
+                    SpannerGrpcTransport,
+                    self._experimental_host,
+                    self._instance._client._use_plain_text,
+                    self._instance._client._ca_certificate,
+                    self._instance._client._client_certificate,
+                    self._instance._client._client_key,
                 )
                 self._spanner_api = SpannerClient(
                     client_info=client_info,
