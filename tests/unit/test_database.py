@@ -3543,6 +3543,8 @@ class _Client(object):
         self.credentials.expiry = None
         self.credentials.valid = True
 
+        self._experimental_host = None
+
         # Mock the spanner API to return proper session names
         self._spanner_api = mock.Mock()
 
@@ -3560,14 +3562,11 @@ class _Client(object):
 
 
 class _Instance(object):
-    def __init__(
-        self, name, client=_Client(), emulator_host=None, experimental_host=None
-    ):
+    def __init__(self, name, client=_Client(), emulator_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
         self.emulator_host = emulator_host
-        self.experimental_host = experimental_host
 
 
 class _Backup(object):
