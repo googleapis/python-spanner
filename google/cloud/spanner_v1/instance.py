@@ -450,7 +450,8 @@ class Instance(object):
 
         :type pool: concrete subclass of
                     :class:`~google.cloud.spanner_v1.pool.AbstractSessionPool`.
-        :param pool: (Optional) session pool to be used by database.
+        :param pool: (Optional) Deprecated. Session pools are no longer used.
+            Multiplexed sessions are now used for all operations.
 
         :type logger: :class:`logging.Logger`
         :param logger: (Optional) a custom logger that is used if `log_commit_stats`
@@ -488,13 +489,21 @@ class Instance(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance.
         """
+        if pool is not None:
+            from warnings import warn
+
+            warn(
+                "The 'pool' parameter is deprecated and ignored. "
+                "Multiplexed sessions are now used for all operations.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         if not enable_interceptors_in_tests:
             return Database(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
-                pool=pool,
                 logger=logger,
                 encryption_config=encryption_config,
                 database_dialect=database_dialect,
@@ -507,7 +516,6 @@ class Instance(object):
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
-                pool=pool,
                 logger=logger,
                 encryption_config=encryption_config,
                 database_dialect=database_dialect,

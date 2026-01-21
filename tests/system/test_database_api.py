@@ -21,7 +21,6 @@ import pytest
 from google.api_core import exceptions
 from google.iam.v1 import policy_pb2
 from google.cloud import spanner_v1
-from google.cloud.spanner_v1.pool import FixedSizePool, PingingPool
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import DirectedReadOptions
 from google.type import expr_pb2
@@ -78,11 +77,8 @@ def test_list_databases(shared_instance, shared_database):
 
 
 def test_create_database(shared_instance, databases_to_delete, database_dialect):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "create_database"})
     temp_db_id = _helpers.unique_id("temp_db")
-    temp_db = shared_instance.database(
-        temp_db_id, pool=pool, database_dialect=database_dialect
-    )
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
     operation = temp_db.create()
     databases_to_delete.append(temp_db)
 
@@ -93,90 +89,18 @@ def test_create_database(shared_instance, databases_to_delete, database_dialect)
     assert temp_db.name in database_ids
 
 
-def test_database_binding_of_fixed_size_pool(
-    not_emulator,
-    shared_instance,
-    databases_to_delete,
-    not_postgres,
-    proto_descriptor_file,
-    not_experimental_host,
-):
-    temp_db_id = _helpers.unique_id("fixed_size_db", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
-
-    create_op = temp_db.create()
-    databases_to_delete.append(temp_db)
-    create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
-    # Create role and grant select permission on table contacts for parent role.
-    ddl_statements = _helpers.DDL_STATEMENTS + [
-        "CREATE ROLE parent",
-        "GRANT SELECT ON TABLE contacts TO ROLE parent",
-    ]
-    operation = temp_db.update_ddl(
-        ddl_statements, proto_descriptors=proto_descriptor_file
-    )
-    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
-    pool = FixedSizePool(
-        size=1,
-        default_timeout=500,
-        database_role="parent",
-    )
-    database = shared_instance.database(temp_db_id, pool=pool)
-    assert database._pool.database_role == "parent"
-
-
-def test_database_binding_of_pinging_pool(
-    not_emulator,
-    shared_instance,
-    databases_to_delete,
-    not_postgres,
-    proto_descriptor_file,
-    not_experimental_host,
-):
-    temp_db_id = _helpers.unique_id("binding_db", separator="_")
-    temp_db = shared_instance.database(temp_db_id)
-
-    create_op = temp_db.create()
-    databases_to_delete.append(temp_db)
-    create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
-    # Create role and grant select permission on table contacts for parent role.
-    ddl_statements = _helpers.DDL_STATEMENTS + [
-        "CREATE ROLE parent",
-        "GRANT SELECT ON TABLE contacts TO ROLE parent",
-    ]
-    operation = temp_db.update_ddl(
-        ddl_statements, proto_descriptors=proto_descriptor_file
-    )
-    operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
-
-    pool = PingingPool(
-        size=1,
-        default_timeout=500,
-        ping_interval=100,
-        database_role="parent",
-    )
-    database = shared_instance.database(temp_db_id, pool=pool)
-    assert database._pool.database_role == "parent"
-
-
 def test_create_database_pitr_invalid_retention_period(
     not_emulator,  # PITR-lite features are not supported by the emulator
     not_postgres,
     shared_instance,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "create_database_pitr"})
     temp_db_id = _helpers.unique_id("pitr_inv_db", separator="_")
     retention_period = "0d"
     ddl_statements = [
         f"ALTER DATABASE {temp_db_id}"
         f" SET OPTIONS (version_retention_period = '{retention_period}')"
     ]
-    temp_db = shared_instance.database(
-        temp_db_id, pool=pool, ddl_statements=ddl_statements
-    )
+    temp_db = shared_instance.database(temp_db_id, ddl_statements=ddl_statements)
     with pytest.raises(exceptions.InvalidArgument):
         temp_db.create()
 
@@ -187,16 +111,13 @@ def test_create_database_pitr_success(
     shared_instance,
     databases_to_delete,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "create_database_pitr"})
     temp_db_id = _helpers.unique_id("pitr_db", separator="_")
     retention_period = "7d"
     ddl_statements = [
         f"ALTER DATABASE {temp_db_id}"
         f" SET OPTIONS (version_retention_period = '{retention_period}')"
     ]
-    temp_db = shared_instance.database(
-        temp_db_id, pool=pool, ddl_statements=ddl_statements
-    )
+    temp_db = shared_instance.database(temp_db_id, ddl_statements=ddl_statements)
     operation = temp_db.create()
     databases_to_delete.append(temp_db)
     operation.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
@@ -225,17 +146,13 @@ def test_create_database_with_default_leader_success(
     multiregion_instance,
     databases_to_delete,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "create_database_default_leader"})
-
     temp_db_id = _helpers.unique_id("dflt_ldr_db", separator="_")
     default_leader = "us-east4"
     ddl_statements = [
         f"ALTER DATABASE {temp_db_id}"
         f" SET OPTIONS (default_leader = '{default_leader}')"
     ]
-    temp_db = multiregion_instance.database(
-        temp_db_id, pool=pool, ddl_statements=ddl_statements
-    )
+    temp_db = multiregion_instance.database(temp_db_id, ddl_statements=ddl_statements)
     operation = temp_db.create()
     databases_to_delete.append(temp_db)
     operation.result(30)  # raises on failure / timeout.
@@ -262,7 +179,6 @@ def test_iam_policy(
     shared_instance,
     databases_to_delete,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "iam_policy"})
     temp_db_id = _helpers.unique_id("iam_db", separator="_")
     create_table = (
         "CREATE TABLE policy (\n"
@@ -275,7 +191,6 @@ def test_iam_policy(
     temp_db = shared_instance.database(
         temp_db_id,
         ddl_statements=[create_table, create_role],
-        pool=pool,
     )
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
@@ -333,11 +248,8 @@ def test_update_ddl_w_operation_id(
     #    reason="'Database.update_ddl' has a flaky timeout.  See: "
     #    https://github.com/GoogleCloudPlatform/google-cloud-python/issues/5629
     # )
-    pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl"})
     temp_db_id = _helpers.unique_id("update_ddl", separator="_")
-    temp_db = shared_instance.database(
-        temp_db_id, pool=pool, database_dialect=database_dialect
-    )
+    temp_db = shared_instance.database(temp_db_id, database_dialect=database_dialect)
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
     create_op.result(DBAPI_OPERATION_TIMEOUT)  # raises on failure / timeout.
@@ -366,10 +278,9 @@ def test_update_ddl_w_pitr_invalid(
     databases_to_delete,
     proto_descriptor_file,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
     temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
     retention_period = "0d"
-    temp_db = shared_instance.database(temp_db_id, pool=pool)
+    temp_db = shared_instance.database(temp_db_id)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
@@ -392,10 +303,9 @@ def test_update_ddl_w_pitr_success(
     databases_to_delete,
     proto_descriptor_file,
 ):
-    pool = spanner_v1.BurstyPool(labels={"testcase": "update_database_ddl_pitr"})
     temp_db_id = _helpers.unique_id("pitr_upd_ddl_inv", separator="_")
     retention_period = "7d"
-    temp_db = shared_instance.database(temp_db_id, pool=pool)
+    temp_db = shared_instance.database(temp_db_id)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)
@@ -425,13 +335,9 @@ def test_update_ddl_w_default_leader_success(
     databases_to_delete,
     proto_descriptor_file,
 ):
-    pool = spanner_v1.BurstyPool(
-        labels={"testcase": "update_database_ddl_default_leader"},
-    )
-
     temp_db_id = _helpers.unique_id("dfl_ldrr_upd_ddl", separator="_")
     default_leader = "us-east4"
-    temp_db = multiregion_instance.database(temp_db_id, pool=pool)
+    temp_db = multiregion_instance.database(temp_db_id)
 
     create_op = temp_db.create()
     databases_to_delete.append(temp_db)

@@ -19,7 +19,6 @@ from google.cloud.spanner_admin_database_v1.types.common import DatabaseDialect
 import pytest
 
 from google.api_core import exceptions
-from google.cloud import spanner_v1
 from . import _helpers
 
 skip_env_reason = f"""\
@@ -104,11 +103,9 @@ def second_database(
     shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
 ):
     database_name = _helpers.unique_id("test_database2")
-    pool = spanner_v1.BurstyPool(labels={"testcase": "database_api"})
     if database_dialect == DatabaseDialect.POSTGRESQL:
         database = shared_instance.database(
             database_name,
-            pool=pool,
             database_dialect=database_dialect,
         )
         operation = database.create()
@@ -121,7 +118,6 @@ def second_database(
         database = shared_instance.database(
             database_name,
             ddl_statements=_helpers.DDL_STATEMENTS,
-            pool=pool,
             database_dialect=database_dialect,
             proto_descriptors=proto_descriptor_file,
         )

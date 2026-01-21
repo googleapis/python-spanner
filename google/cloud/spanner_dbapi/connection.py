@@ -104,10 +104,6 @@ class Connection:
 
         self.is_closed = False
         self._autocommit = False
-        # indicator to know if the session pool used by
-        # this connection should be cleared on the
-        # connection close
-        self._own_pool = True
         self._read_only = read_only
         self._staleness = None
         self.request_priority = None
@@ -442,9 +438,6 @@ class Connection:
         """
         if self._spanner_transaction_started and not self._read_only:
             self._transaction.rollback()
-
-        if self._own_pool and self.database:
-            self.database._sessions_manager._pool.clear()
 
         self.is_closed = True
 
@@ -830,7 +823,5 @@ def connect(
             database_id, pool=pool, database_role=database_role, logger=logger
         )
     conn = Connection(instance, database, **kwargs)
-    if pool is not None:
-        conn._own_pool = False
 
     return conn

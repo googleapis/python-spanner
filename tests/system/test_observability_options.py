@@ -16,14 +16,12 @@ import pytest
 from mock import PropertyMock, patch
 
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from . import _helpers
 from google.cloud.spanner_v1 import Client
 from google.api_core.exceptions import Aborted
 from google.auth.credentials import AnonymousCredentials
 from google.rpc import code_pb2
 
-from .._helpers import is_multiplexed_enabled
 
 HAS_OTEL_INSTALLED = False
 
@@ -115,18 +113,9 @@ def test_observability_options_propagation():
         )  # "Expecting at least 2 spans from the injected trace exporter"
         gotNames = [span.name for span in from_inject_spans]
 
-        # Check if multiplexed sessions are enabled
-        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
-
-        # Determine expected session span name based on multiplexed sessions
-        expected_session_span_name = (
-            "CloudSpanner.CreateMultiplexedSession"
-            if multiplexed_enabled
-            else "CloudSpanner.CreateSession"
-        )
-
+        # Multiplexed sessions are always enabled
         wantNames = [
-            expected_session_span_name,
+            "CloudSpanner.CreateMultiplexedSession",
             "CloudSpanner.Snapshot.execute_sql",
         ]
         assert gotNames == wantNames
@@ -216,7 +205,6 @@ def test_transaction_abort_then_retry_spans(mock_session_id):
     from opentelemetry.trace.status import StatusCode
 
     mock_session_id.return_value = session_id = "session-id"
-    multiplexed = is_multiplexed_enabled(TransactionType.READ_WRITE)
 
     db, trace_exporter = create_db_trace_exporter()
 
@@ -238,60 +226,30 @@ def test_transaction_abort_then_retry_spans(mock_session_id):
 
     got_statuses, got_events = finished_spans_statuses(trace_exporter)
 
-    # Check for the series of events
-    if multiplexed:
-        # With multiplexed sessions, there are no pool-related events
-        want_events = [
-            ("Creating Session", {}),
-            ("Using session", {"id": session_id, "multiplexed": multiplexed}),
-            ("Returning session", {"id": session_id, "multiplexed": multiplexed}),
-            (
-                "Transaction was aborted in user operation, retrying",
-                {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
-            ),
-            ("Starting Commit", {}),
-            ("Commit Done", {}),
-        ]
-    else:
-        # With regular sessions, include pool-related events
-        want_events = [
-            ("Acquiring session", {"kind": "BurstyPool"}),
-            ("Waiting for a session to become available", {"kind": "BurstyPool"}),
-            ("No sessions available in pool. Creating session", {"kind": "BurstyPool"}),
-            ("Creating Session", {}),
-            ("Using session", {"id": session_id, "multiplexed": multiplexed}),
-            ("Returning session", {"id": session_id, "multiplexed": multiplexed}),
-            (
-                "Transaction was aborted in user operation, retrying",
-                {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
-            ),
-            ("Starting Commit", {}),
-            ("Commit Done", {}),
-        ]
+    # Multiplexed sessions are always enabled, no pool-related events
+    want_events = [
+        ("Creating Session", {}),
+        ("Using session", {"id": session_id, "multiplexed": True}),
+        ("Returning session", {"id": session_id, "multiplexed": True}),
+        (
+            "Transaction was aborted in user operation, retrying",
+            {"delay_seconds": "EPHEMERAL", "cause": "EPHEMERAL", "attempt": 1},
+        ),
+        ("Starting Commit", {}),
+        ("Commit Done", {}),
+    ]
     assert got_events == want_events
 
-    # Check for the statues.
+    # Check for the statuses
     codes = StatusCode
-    if multiplexed:
-        # With multiplexed sessions, the session span name is different
-        want_statuses = [
-            ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
-            ("CloudSpanner.CreateMultiplexedSession", codes.OK, None),
-            ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
-            ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
-            ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
-            ("CloudSpanner.Transaction.commit", codes.OK, None),
-        ]
-    else:
-        # With regular sessions
-        want_statuses = [
-            ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
-            ("CloudSpanner.CreateSession", codes.OK, None),
-            ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
-            ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
-            ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
-            ("CloudSpanner.Transaction.commit", codes.OK, None),
-        ]
+    want_statuses = [
+        ("CloudSpanner.Database.run_in_transaction", codes.OK, None),
+        ("CloudSpanner.CreateMultiplexedSession", codes.OK, None),
+        ("CloudSpanner.Session.run_in_transaction", codes.OK, None),
+        ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
+        ("CloudSpanner.Transaction.execute_sql", codes.OK, None),
+        ("CloudSpanner.Transaction.commit", codes.OK, None),
+    ]
     assert got_statuses == want_statuses
 
 
@@ -417,19 +375,10 @@ def test_transaction_update_implicit_begin_nested_inside_commit():
     span_list = sorted(span_list, key=lambda span: span.start_time)
     got_span_names = [span.name for span in span_list]
 
-    # Check if multiplexed sessions are enabled for read-write transactions
-    multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
-
-    # Determine expected session span name based on multiplexed sessions
-    expected_session_span_name = (
-        "CloudSpanner.CreateMultiplexedSession"
-        if multiplexed_enabled
-        else "CloudSpanner.CreateSession"
-    )
-
+    # Multiplexed sessions are always enabled
     want_span_names = [
         "CloudSpanner.Database.run_in_transaction",
-        expected_session_span_name,
+        "CloudSpanner.CreateMultiplexedSession",
         "CloudSpanner.Session.run_in_transaction",
         "CloudSpanner.Transaction.commit",
         "CloudSpanner.Transaction.begin",
@@ -462,81 +411,38 @@ def test_database_partitioned_error():
         pass
 
     got_statuses, got_events = finished_spans_statuses(trace_exporter)
-    multiplexed_enabled = is_multiplexed_enabled(TransactionType.PARTITIONED)
 
-    if multiplexed_enabled:
-        expected_event_names = [
-            "Creating Session",
-            "Using session",
-            "Starting BeginTransaction",
-            "Returning session",
-            "exception",
-            "exception",
-        ]
-        assert len(got_events) == len(expected_event_names)
-        for i, expected_name in enumerate(expected_event_names):
-            assert got_events[i][0] == expected_name
+    # Multiplexed sessions are always enabled
+    expected_event_names = [
+        "Creating Session",
+        "Using session",
+        "Starting BeginTransaction",
+        "Returning session",
+        "exception",
+        "exception",
+    ]
+    assert len(got_events) == len(expected_event_names)
+    for i, expected_name in enumerate(expected_event_names):
+        assert got_events[i][0] == expected_name
 
-        assert got_events[1][1]["multiplexed"] is True
+    assert got_events[1][1]["multiplexed"] is True
+    assert got_events[3][1]["multiplexed"] is True
 
-        assert got_events[3][1]["multiplexed"] is True
-
-        for i in [4, 5]:
-            assert (
-                got_events[i][1]["exception.type"]
-                == "google.api_core.exceptions.InvalidArgument"
-            )
-            assert (
-                "Table not found: NonExistent" in got_events[i][1]["exception.message"]
-            )
-    else:
-        expected_event_names = [
-            "Acquiring session",
-            "Waiting for a session to become available",
-            "No sessions available in pool. Creating session",
-            "Creating Session",
-            "Using session",
-            "Starting BeginTransaction",
-            "Returning session",
-            "exception",
-            "exception",
-        ]
-
-        assert len(got_events) == len(expected_event_names)
-        for i, expected_name in enumerate(expected_event_names):
-            assert got_events[i][0] == expected_name
-
-        assert got_events[0][1]["kind"] == "BurstyPool"
-        assert got_events[1][1]["kind"] == "BurstyPool"
-        assert got_events[2][1]["kind"] == "BurstyPool"
-
-        assert got_events[4][1]["multiplexed"] is False
-
-        assert got_events[6][1]["multiplexed"] is False
-
-        for i in [7, 8]:
-            assert (
-                got_events[i][1]["exception.type"]
-                == "google.api_core.exceptions.InvalidArgument"
-            )
-            assert (
-                "Table not found: NonExistent" in got_events[i][1]["exception.message"]
-            )
+    for i in [4, 5]:
+        assert (
+            got_events[i][1]["exception.type"]
+            == "google.api_core.exceptions.InvalidArgument"
+        )
+        assert "Table not found: NonExistent" in got_events[i][1]["exception.message"]
 
     codes = StatusCode
-
-    expected_session_span_name = (
-        "CloudSpanner.CreateMultiplexedSession"
-        if multiplexed_enabled
-        else "CloudSpanner.CreateSession"
-    )
     want_statuses = [
         (
             "CloudSpanner.Database.execute_partitioned_pdml",
             codes.ERROR,
             "InvalidArgument: 400 Table not found: NonExistent [at 1:8]\nUPDATE NonExistent SET name = 'foo' WHERE id > 1\n       ^",
         ),
-        (expected_session_span_name, codes.OK, None),
+        ("CloudSpanner.CreateMultiplexedSession", codes.OK, None),
         (
             "CloudSpanner.ExecuteStreamingSql",
             codes.ERROR,

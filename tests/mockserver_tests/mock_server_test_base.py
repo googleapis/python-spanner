@@ -33,7 +33,7 @@ from grpc_status.rpc_status import _Status
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.type as spanner_type
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_v1 import Client, FixedSizePool, ResultSetMetadata, TypeCode
+from google.cloud.spanner_v1 import Client, ResultSetMetadata, TypeCode
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
@@ -41,7 +41,6 @@ from google.cloud.spanner_v1.testing.mock_spanner import (
     SpannerServicer,
     start_mock_server,
 )
-from tests._helpers import is_multiplexed_enabled
 
 
 # Creates an aborted status with the smallest possible retry delay.
@@ -228,7 +227,6 @@ class MockServerTestBase(unittest.TestCase):
         if self._database is None:
             self._database = self.instance.database(
                 "test-database",
-                pool=FixedSizePool(size=10),
                 enable_interceptors_in_tests=True,
                 logger=self.logger,
             )
@@ -241,52 +239,30 @@ class MockServerTestBase(unittest.TestCase):
         transaction_type,
         allow_multiple_batch_create=True,
     ):
-        """Assert that the requests sequence matches the expected types, accounting for multiplexed sessions and retries.
+        """Assert that the requests sequence matches the expected types, accounting for multiplexed sessions.
 
         Args:
             requests: List of requests from spanner_service.requests
             expected_types: List of expected request types (excluding session creation requests)
-            transaction_type: TransactionType enum value to check multiplexed session status
-            allow_multiple_batch_create: If True, skip all leading BatchCreateSessionsRequest and one optional CreateSessionRequest
+            transaction_type: TransactionType enum value (unused, kept for backward compatibility)
+            allow_multiple_batch_create: If True, skip leading CreateSessionRequest (kept for backward compatibility)
         """
-        from google.cloud.spanner_v1 import (
-            BatchCreateSessionsRequest,
-            CreateSessionRequest,
-        )
+        from google.cloud.spanner_v1 import CreateSessionRequest
 
-        mux_enabled = is_multiplexed_enabled(transaction_type)
         idx = 0
-        # Skip all leading BatchCreateSessionsRequest (for retries)
+        # Skip CreateSessionRequest for multiplexed session
         if allow_multiple_batch_create:
             while idx < len(requests) and isinstance(
-                requests[idx], BatchCreateSessionsRequest
-            ):
-                idx += 1
-            # For multiplexed, optionally skip a CreateSessionRequest
-            if (
-                mux_enabled
-                and idx < len(requests)
-                and isinstance(requests[idx], CreateSessionRequest)
+                requests[idx], CreateSessionRequest
             ):
                 idx += 1
         else:
-            if mux_enabled:
-                self.assertTrue(
-                    isinstance(requests[idx], BatchCreateSessionsRequest),
-                    f"Expected BatchCreateSessionsRequest at index {idx}, got {type(requests[idx])}",
-                )
-                idx += 1
-                self.assertTrue(
-                    isinstance(requests[idx], CreateSessionRequest),
-                    f"Expected CreateSessionRequest at index {idx}, got {type(requests[idx])}",
-                )
-                idx += 1
-            else:
-                self.assertTrue(
-                    isinstance(requests[idx], BatchCreateSessionsRequest),
-                    f"Expected BatchCreateSessionsRequest at index {idx}, got {type(requests[idx])}",
-                )
-                idx += 1
+            # Expect exactly one CreateSessionRequest for multiplexed session
+            self.assertTrue(
+                isinstance(requests[idx], CreateSessionRequest),
+                f"Expected CreateSessionRequest at index {idx}, got {type(requests[idx])}",
+            )
+            idx += 1
         # Check the rest of the expected request types
         for expected_type in expected_types:
             self.assertTrue(
@@ -304,13 +280,12 @@ class MockServerTestBase(unittest.TestCase):
         Args:
             expected_segments: List of expected (method, (sequence_numbers)) tuples
             requests: List of actual requests from spanner_service.requests
-            transaction_type: TransactionType enum value to check multiplexed session status
+            transaction_type: TransactionType enum value (unused, kept for backward compatibility)
 
         Returns:
             List of adjusted expected segments with corrected sequence numbers
         """
         from google.cloud.spanner_v1 import (
-            BatchCreateSessionsRequest,
             CreateSessionRequest,
             ExecuteSqlRequest,
             BeginTransactionRequest,
@@ -319,15 +294,13 @@ class MockServerTestBase(unittest.TestCase):
         # Count session creation requests that come before the first non-session request
         session_requests_before = 0
         for req in requests:
-            if isinstance(req, (BatchCreateSessionsRequest, CreateSessionRequest)):
+            if isinstance(req, CreateSessionRequest):
                 session_requests_before += 1
             elif isinstance(req, (ExecuteSqlRequest, BeginTransactionRequest)):
                 break
 
-        # For multiplexed sessions, we expect 2 session requests (BatchCreateSessions + CreateSession)
-        # For non-multiplexed, we expect 1 session request (BatchCreateSessions)
-        mux_enabled = is_multiplexed_enabled(transaction_type)
-        expected_session_requests = 2 if mux_enabled else 1
+        # With multiplexed sessions, we expect 1 session request (CreateSession)
+        expected_session_requests = 1
         extra_session_requests = session_requests_before - expected_session_requests
 
         # Adjust sequence numbers based on extra session requests

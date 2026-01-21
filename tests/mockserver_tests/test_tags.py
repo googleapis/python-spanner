@@ -23,7 +23,6 @@ from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
     add_single_result,
 )
-from tests._helpers import is_multiplexed_enabled
 from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 
 
@@ -100,8 +99,9 @@ class TestTags(MockServerTestBase):
             TransactionType.READ_ONLY,
         )
         # Transaction tags are not supported for read-only transactions.
-        mux_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
-        tag_idx = 3 if mux_enabled else 2
+        # With multiplexed sessions: CreateSession, BeginTransaction, ExecuteSql, ExecuteSql
+        # ExecuteSql requests start at index 2
+        tag_idx = 2
         self.assertEqual("", requests[tag_idx].request_options.transaction_tag)
         self.assertEqual("", requests[tag_idx + 1].request_options.transaction_tag)
 
@@ -155,8 +155,9 @@ class TestTags(MockServerTestBase):
             ],
             TransactionType.READ_WRITE,
         )
-        mux_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
-        tag_idx = 3 if mux_enabled else 2
+        # With multiplexed sessions: CreateSession, BeginTransaction, ExecuteSql, ExecuteSql, Commit
+        # ExecuteSql requests start at index 2, Commit at index 4
+        tag_idx = 2
         self.assertEqual(
             "my_transaction_tag", requests[tag_idx].request_options.transaction_tag
         )
@@ -187,8 +188,9 @@ class TestTags(MockServerTestBase):
             ],
             TransactionType.READ_WRITE,
         )
-        mux_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
-        tag_idx = 3 if mux_enabled else 2
+        # With multiplexed sessions: CreateSession, BeginTransaction, ExecuteSql, ExecuteSql, Commit
+        # ExecuteSql requests start at index 2, Commit at index 4
+        tag_idx = 2
         self.assertEqual(
             "my_transaction_tag", requests[tag_idx].request_options.transaction_tag
         )
