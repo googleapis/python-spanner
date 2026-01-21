@@ -152,31 +152,12 @@ def _restart_on_unavailable(
 
         except ServiceUnavailable:
             del item_buffer[:]
-            with trace_call(
-                trace_name,
-                session,
-                attributes,
-                observability_options=observability_options,
-                metadata=metadata,
-            ) as span, MetricsCapture():
-                request.resume_token = resume_token
-                if transaction is not None:
-                    transaction_selector = transaction._build_transaction_selector_pb()
-                request.transaction = transaction_selector
-                attempt += 1
-                (
-                    call_metadata,
-                    current_request_id,
-                ) = request_id_manager.metadata_and_request_id(
-                    nth_request,
-                    attempt,
-                    metadata,
-                    span,
-                )
-                iterator = method(
-                    request=request,
-                    metadata=call_metadata,
-                )
+            request.resume_token = resume_token
+            if transaction is not None:
+                transaction_selector = transaction._build_transaction_selector_pb()
+            request.transaction = transaction_selector
+            attempt += 1
+            iterator = None
             continue
 
         except InternalServerError as exc:
@@ -187,31 +168,12 @@ def _restart_on_unavailable(
             if not resumable_error:
                 raise _augment_error_with_request_id(exc, current_request_id)
             del item_buffer[:]
-            with trace_call(
-                trace_name,
-                session,
-                attributes,
-                observability_options=observability_options,
-                metadata=metadata,
-            ) as span, MetricsCapture():
-                request.resume_token = resume_token
-                if transaction is not None:
-                    transaction_selector = transaction._build_transaction_selector_pb()
-                attempt += 1
-                request.transaction = transaction_selector
-                (
-                    call_metadata,
-                    current_request_id,
-                ) = request_id_manager.metadata_and_request_id(
-                    nth_request,
-                    attempt,
-                    metadata,
-                    span,
-                )
-                iterator = method(
-                    request=request,
-                    metadata=call_metadata,
-                )
+            request.resume_token = resume_token
+            if transaction is not None:
+                transaction_selector = transaction._build_transaction_selector_pb()
+            attempt += 1
+            request.transaction = transaction_selector
+            iterator = None
             continue
 
         except Exception as exc:

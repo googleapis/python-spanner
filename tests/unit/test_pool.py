@@ -19,6 +19,7 @@ import unittest
 from datetime import datetime, timedelta
 
 import mock
+from google.cloud.spanner_v1 import _opentelemetry_tracing
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
@@ -157,6 +158,7 @@ class TestFixedSizePool(OpenTelemetryBase):
         "gcp.client.service": "spanner",
         "gcp.client.version": LIB_VERSION,
         "gcp.client.repo": "googleapis/python-spanner",
+        "gcp.resource.name": _opentelemetry_tracing.GCP_RESOURCE_NAME_PREFIX + "name",
         "cloud.region": "global",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
@@ -551,6 +553,7 @@ class TestBurstyPool(OpenTelemetryBase):
         "gcp.client.service": "spanner",
         "gcp.client.version": LIB_VERSION,
         "gcp.client.repo": "googleapis/python-spanner",
+        "gcp.resource.name": _opentelemetry_tracing.GCP_RESOURCE_NAME_PREFIX + "name",
         "cloud.region": "global",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
@@ -841,6 +844,7 @@ class TestPingingPool(OpenTelemetryBase):
         "gcp.client.service": "spanner",
         "gcp.client.version": LIB_VERSION,
         "gcp.client.repo": "googleapis/python-spanner",
+        "gcp.resource.name": _opentelemetry_tracing.GCP_RESOURCE_NAME_PREFIX + "name",
         "cloud.region": "global",
     }
     enrich_with_otel_scope(BASE_ATTRIBUTES)
