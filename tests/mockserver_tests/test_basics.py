@@ -36,7 +36,6 @@ from tests.mockserver_tests.mock_server_test_base import (
     unavailable_status,
     add_execute_streaming_sql_results,
 )
-from tests._helpers import is_multiplexed_enabled
 
 
 class TestBasics(MockServerTestBase):
@@ -105,11 +104,8 @@ class TestBasics(MockServerTestBase):
             requests[idx], BatchCreateSessionsRequest
         ):
             idx += 1
-        if (
-            is_multiplexed_enabled(TransactionType.PARTITIONED)
-            and idx < len(requests)
-            and isinstance(requests[idx], CreateSessionRequest)
-        ):
+        # Multiplexed sessions are always enabled - skip CreateSessionRequest
+        if idx < len(requests) and isinstance(requests[idx], CreateSessionRequest):
             idx += 1
         begin_request: BeginTransactionRequest = requests[idx]
         self.assertEqual(

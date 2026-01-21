@@ -32,9 +32,7 @@ from google.cloud.spanner_v1 import JsonObject
 from google.cloud.spanner_v1 import gapic_version as package_version
 from google.api_core.datetime_helpers import DatetimeWithNanoseconds
 
-from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from . import _helpers
-from tests._helpers import is_multiplexed_enabled
 
 DATABASE_NAME = "dbapi-txn"
 SPANNER_RPC_PREFIX = "/google.spanner.v1.Spanner/"
@@ -161,19 +159,13 @@ class TestDbApi:
 
         assert got_rows == [updated_row]
 
-    @pytest.mark.skipif(
-        _helpers.USE_EMULATOR,
-        reason="Emulator does not support multiple parallel transactions.",
+    @pytest.mark.skip(
+        reason="Multiplexed sessions can't be deleted and this test relies on session deletion."
     )
     def test_commit_exception(self):
         """Test that if exception during commit method is caught, then
         subsequent operations on same Cursor and Connection object works
         properly."""
-
-        if is_multiplexed_enabled(transaction_type=TransactionType.READ_WRITE):
-            pytest.skip(
-                "Mutiplexed session can't be deleted and this test relies on session deletion."
-            )
 
         self._execute_common_statements(self._cursor)
         # deleting the session to fail the commit

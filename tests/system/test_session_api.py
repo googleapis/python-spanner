@@ -421,10 +421,8 @@ class _ReadAbortTrigger(object):
         self.handler_done.set()
 
 
+@pytest.mark.skip(reason="Multiplexed sessions do not support CRUD operations.")
 def test_session_crud(sessions_database):
-    if is_multiplexed_enabled(transaction_type=TransactionType.READ_ONLY):
-        pytest.skip("Multiplexed sessions do not support CRUD operations.")
-
     session = sessions_database.session()
     assert not session.exists()
 
@@ -457,33 +455,21 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
         nth_req0 = sampling_req_id[-2]
 
         db = sessions_database
-        multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
 
         # [A] Verify batch checkout spans
         # -------------------------------
 
         request_id_1 = f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 0}.1"
 
-        if multiplexed_enabled:
-            assert_span_attributes(
-                ot_exporter,
-                "CloudSpanner.CreateMultiplexedSession",
-                attributes=_make_attributes(
-                    db_name, x_goog_spanner_request_id=request_id_1
-                ),
-                span=span_list[0],
-            )
-        else:
-            assert_span_attributes(
-                ot_exporter,
-                "CloudSpanner.GetSession",
-                attributes=_make_attributes(
-                    db_name,
-                    session_found=True,
-                    x_goog_spanner_request_id=request_id_1,
-                ),
-                span=span_list[0],
-            )
+        # Multiplexed sessions are always enabled
+        assert_span_attributes(
+            ot_exporter,
+            "CloudSpanner.CreateMultiplexedSession",
+            attributes=_make_attributes(
+                db_name, x_goog_spanner_request_id=request_id_1
+            ),
+            span=span_list[0],
+        )
 
         assert_span_attributes(
             ot_exporter,
@@ -500,24 +486,14 @@ def test_batch_insert_then_read(sessions_database, ot_exporter):
         # ----------------------------------
 
         if len(span_list) == 4:
-            if multiplexed_enabled:
-                expected_snapshot_span_name = "CloudSpanner.CreateMultiplexedSession"
-                snapshot_session_attributes = _make_attributes(
-                    db_name,
-                    x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 2}.1",
-                )
-            else:
-                expected_snapshot_span_name = "CloudSpanner.GetSession"
-                snapshot_session_attributes = _make_attributes(
-                    db_name,
-                    session_found=True,
-                    x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 2}.1",
-                )
-
+            # Multiplexed sessions are always enabled
             assert_span_attributes(
                 ot_exporter,
-                expected_snapshot_span_name,
-                attributes=snapshot_session_attributes,
+                "CloudSpanner.CreateMultiplexedSession",
+                attributes=_make_attributes(
+                    db_name,
+                    x_goog_spanner_request_id=f"1.{REQ_RAND_PROCESS_ID}.{db._nth_client_id}.{db._channel_id}.{nth_req0 + 2}.1",
+                ),
                 span=span_list[2],
             )
 
