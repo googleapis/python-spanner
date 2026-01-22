@@ -42,6 +42,8 @@ class TestInstance(unittest.TestCase):
     DATABASE_NAME = "%s/databases/%s" % (INSTANCE_NAME, DATABASE_ID)
     LABELS = {"test": "true"}
     FIELD_MASK = ["config", "display_name", "processing_units", "labels"]
+    BACKUP_ID = "backup_id"
+    DST_BACKUP_ID = "dst_backup_id"
 
     def _getTargetClass(self):
         from google.cloud.spanner_v1.instance import Instance
@@ -699,6 +701,91 @@ class TestInstance(unittest.TestCase):
         self.assertEqual(backup._database, DATABASE_NAME)
         self.assertIs(backup._expire_time, timestamp)
         self.assertEqual(backup._encryption_config, encryption_config)
+
+    def test_backup_factory_without_expiration_time(self):
+        from google.cloud.spanner_v1.backup import Backup
+
+        client = _Client(self.PROJECT)
+        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
+        BACKUP_ID = self.BACKUP_ID
+        DATABASE_NAME = self.DATABASE_NAME
+        backup = instance.backup(
+            BACKUP_ID,
+            database=DATABASE_NAME,
+        )
+
+        self.assertIsInstance(backup, Backup)
+        self.assertEqual(backup.backup_id, BACKUP_ID)
+        self.assertIs(backup._instance, instance)
+        self.assertEqual(backup._database, DATABASE_NAME)
+
+    def test_copy_backup(self):
+        import datetime
+        from google.cloud._helpers import UTC
+        from google.cloud.spanner_v1.backup import Backup
+
+        client = _Client(self.PROJECT)
+        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
+        BACKUP_ID = self.DST_BACKUP_ID
+        SOURCE_BACKUP = self.BACKUP_ID
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        backup = instance.copy_backup(
+            BACKUP_ID,
+            source_backup=SOURCE_BACKUP,
+            expire_time=timestamp,
+        )
+
+        self.assertIsInstance(backup, Backup)
+        self.assertEqual(backup.backup_id, self.DST_BACKUP_ID)
+        self.assertIs(backup._instance, instance)
+        self.assertEqual(backup._source_backup, self.BACKUP_ID)
+        self.assertEqual(backup.expire_time, timestamp)
+
+    def test_copy_backup_with_encryption_params(self):
+        import datetime
+        from google.cloud._helpers import UTC
+        from google.cloud.spanner_v1.backup import Backup
+        from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
+
+        client = _Client(self.PROJECT)
+        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
+        BACKUP_ID = self.DST_BACKUP_ID
+        SOURCE_BACKUP = self.BACKUP_ID
+        timestamp = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        encryption_config = CreateBackupEncryptionConfig(
+            encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
+            kms_key_name="kms_key_name",
+        )
+        backup = instance.copy_backup(
+            BACKUP_ID,
+            source_backup=SOURCE_BACKUP,
+            expire_time=timestamp,
+            encryption_config=encryption_config,
+        )
+
+        self.assertIsInstance(backup, Backup)
+        self.assertEqual(backup.backup_id, self.DST_BACKUP_ID)
+        self.assertIs(backup._instance, instance)
+        self.assertEqual(backup._source_backup, self.BACKUP_ID)
+        self.assertEqual(backup.expire_time, timestamp)
+        self.assertEqual(backup._encryption_config, encryption_config)
+
+    def test_copy_backup_without_expiration_time(self):
+        from google.cloud.spanner_v1.backup import Backup
+
+        client = _Client(self.PROJECT)
+        instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
+        BACKUP_ID = self.DST_BACKUP_ID
+        SOURCE_BACKUP = self.BACKUP_ID
+        backup = instance.copy_backup(
+            BACKUP_ID,
+            source_backup=SOURCE_BACKUP,
+        )
+
+        self.assertIsInstance(backup, Backup)
+        self.assertEqual(backup.backup_id, self.DST_BACKUP_ID)
+        self.assertIs(backup._instance, instance)
+        self.assertEqual(backup._source_backup, self.BACKUP_ID)
 
     def test_list_backups_defaults(self):
         from google.cloud.spanner_admin_database_v1 import Backup as BackupPB
