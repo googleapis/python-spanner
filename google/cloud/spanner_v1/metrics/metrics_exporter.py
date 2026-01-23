@@ -143,6 +143,15 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         :param series: ProtoBuf TimeSeries
         :return:
         """
+        # DEBUG: Log TimeSeries labels before sending to Cloud Monitoring
+        logger.warning("=== DEBUG: TimeSeries labels ===")
+        for ts in series:
+            logger.warning(f"  metric.type: {ts.metric.type}")
+            logger.warning(f"  metric.labels: {dict(ts.metric.labels)}")
+            logger.warning(f"  resource.type: {ts.resource.type}")
+            logger.warning(f"  resource.labels: {dict(ts.resource.labels)}")
+        logger.warning("=== END DEBUG ===")
+
         write_ind = 0
         timeout = timeout_millis / MILLIS_PER_SECOND
         while write_ind < len(series):
