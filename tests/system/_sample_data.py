@@ -72,11 +72,15 @@ def _assert_timestamp(value, nano_value):
     assert value.tzinfo is None
     assert nano_value.tzinfo is UTC
 
-    assert value.year == nano_value.year
-    assert value.month == nano_value.month
-    assert value.day == nano_value.day
-    assert value.hour == nano_value.hour
-    assert value.minute == nano_value.minute
+    # In round-trip, timestamps acquire a timezone value.
+    # Setting the timezone on the expected value so the assertions don't fail when run outside of UTC.
+    utc_value = value.astimezone(UTC)
+
+    assert utc_value.year == nano_value.year
+    assert utc_value.month == nano_value.month
+    assert utc_value.day == nano_value.day
+    assert utc_value.hour == nano_value.hour
+    assert utc_value.minute == nano_value.minute
     assert value.second == nano_value.second
     assert value.microsecond == nano_value.microsecond
 

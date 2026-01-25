@@ -2663,17 +2663,12 @@ def test_execute_sql_w_timestamp_bindings(sessions_database, database_dialect):
 
     timestamps = [timestamp_1, timestamp_2]
 
-    # In round-trip, timestamps acquire a timezone value.
-    expected_timestamps = [timestamp.replace(tzinfo=UTC) for timestamp in timestamps]
-
     _bind_test_helper(
         sessions_database,
         database_dialect,
         spanner_v1.param_types.TIMESTAMP,
         timestamp_1,
         timestamps,
-        expected_timestamps,
-        recurse_into_lists=False,
     )
 
 
