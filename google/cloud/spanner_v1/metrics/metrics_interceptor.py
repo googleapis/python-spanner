@@ -126,10 +126,8 @@ class MetricsInterceptor(ClientInterceptor):
             The RPC response
         """
         factory = SpannerMetricsTracerFactory()
-        if (
-            SpannerMetricsTracerFactory.current_metrics_tracer is None
-            or not factory.enabled
-        ):
+        tracer = SpannerMetricsTracerFactory.current_metrics_tracer
+        if tracer is None or not factory.enabled:
             return invoked_method(request_or_iterator, call_details)
 
         # Setup Metric Tracer attributes from call details
@@ -142,15 +140,13 @@ class MetricsInterceptor(ClientInterceptor):
             call_details.method, SPANNER_METHOD_PREFIX
         ).replace("/", ".")
 
-        SpannerMetricsTracerFactory.current_metrics_tracer.set_method(method_name)
-        SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start()
+        tracer.set_method(method_name)
+        tracer.record_attempt_start()
         response = invoked_method(request_or_iterator, call_details)
-        SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion()
+        tracer.record_attempt_completion()
 
         # Process and send GFE metrics if enabled
-        if SpannerMetricsTracerFactory.current_metrics_tracer.gfe_enabled:
+        if tracer.gfe_enabled:
             metadata = response.initial_metadata()
-            SpannerMetricsTracerFactory.current_metrics_trace.record_gfe_metrics(
-                metadata
-            )
+            tracer.record_gfe_metrics(metadata)
         return response

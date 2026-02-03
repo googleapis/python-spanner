@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import pytest
+import threading
+import time
 from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
@@ -100,6 +102,51 @@ def test_intercept_with_tracer(interceptor):
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start.assert_called_once()
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_completion.assert_called_once()
     mock_invoked_method.assert_called_once_with("request", call_details)
+
+
+def test_intercept_thread_safety(interceptor):
+    # Regression test for race condition where current_metrics_tracer changes mid-call
+
+    # Mock tracers
+    tracer_a = MagicMock()
+    tracer_a.gfe_enabled = False
+    tracer_b = MagicMock()
+    tracer_b.gfe_enabled = False
+
+    call_details = MagicMock(
+        method="spanner.Commit",
+        metadata=[],
+    )
+
+    def mock_invoked_method(*args, **kwargs):
+        # Simulate network delay to allow thread switch
+        time.sleep(0.1)
+        return MagicMock()
+
+    def thread_a_func():
+        # Set Tracer A
+        SpannerMetricsTracerFactory.current_metrics_tracer = tracer_a
+        # Call intercept
+        interceptor.intercept(mock_invoked_method, None, call_details)
+
+    def thread_b_func():
+        time.sleep(0.05)  # Wait for A to start
+        # Overwrite with Tracer B
+        SpannerMetricsTracerFactory.current_metrics_tracer = tracer_b
+
+    t1 = threading.Thread(target=thread_a_func)
+    t2 = threading.Thread(target=thread_b_func)
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+
+    # Verify that Tracer A was used for completion, NOT Tracer B
+    # Because Thread A started with Tracer A, it should finish with Tracer A
+    tracer_a.record_attempt_completion.assert_called_once()
+    tracer_b.record_attempt_completion.assert_not_called()
 
 
 class MockMetricTracer:
