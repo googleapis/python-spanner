@@ -27,6 +27,7 @@ import grpc
 import os
 import logging
 import warnings
+import threading
 
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
@@ -98,6 +99,9 @@ def _get_spanner_optimizer_statistics_package():
 
 
 log = logging.getLogger(__name__)
+
+_metrics_monitor_initialized = False
+_metrics_monitor_lock = threading.Lock()
 
 
 def _get_spanner_enable_builtin_metrics_env():
@@ -252,30 +256,37 @@ class Client(ClientWithProject):
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
         # Check flag to enable Spanner builtin metrics
+        global _metrics_monitor_initialized
         if (
             _get_spanner_enable_builtin_metrics_env()
             and not disable_builtin_metrics
             and HAS_GOOGLE_CLOUD_MONITORING_INSTALLED
         ):
-            meter_provider = metrics.NoOpMeterProvider()
-            try:
-                if not _get_spanner_emulator_host():
-                    meter_provider = MeterProvider(
-                        metric_readers=[
-                            PeriodicExportingMetricReader(
-                                CloudMonitoringMetricsExporter(
-                                    project_id=project, credentials=credentials
-                                ),
-                                export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
-                            ),
-                        ]
-                    )
-                metrics.set_meter_provider(meter_provider)
-                SpannerMetricsTracerFactory()
-            except Exception as e:
-                log.warning(
-                    "Failed to initialize Spanner built-in metrics. Error: %s", e
-                )
+            if not _metrics_monitor_initialized:
+                with _metrics_monitor_lock:
+                    if not _metrics_monitor_initialized:
+                        meter_provider = metrics.NoOpMeterProvider()
+                        try:
+                            if not _get_spanner_emulator_host():
+                                meter_provider = MeterProvider(
+                                    metric_readers=[
+                                        PeriodicExportingMetricReader(
+                                            CloudMonitoringMetricsExporter(
+                                                project_id=project,
+                                                credentials=credentials,
+                                            ),
+                                            export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
+                                        ),
+                                    ]
+                                )
+                            metrics.set_meter_provider(meter_provider)
+                            SpannerMetricsTracerFactory()
+                            _metrics_monitor_initialized = True
+                        except Exception as e:
+                            log.warning(
+                                "Failed to initialize Spanner built-in metrics. Error: %s",
+                                e,
+                            )
         else:
             SpannerMetricsTracerFactory(enabled=False)
 

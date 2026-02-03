@@ -60,17 +60,24 @@ def patched_client(monkeypatch):
     if SpannerMetricsTracerFactory._metrics_tracer_factory is not None:
         SpannerMetricsTracerFactory._metrics_tracer_factory = None
 
-    client = Client(
-        project="test",
-        credentials=TestCredentials(),
-        # client_options={"api_endpoint": "none"}
-    )
-    yield client
+    # Reset the global flag to ensure metrics initialization runs
+    from google.cloud.spanner_v1 import client as client_module
+
+    client_module._metrics_monitor_initialized = False
+
+    with patch("google.cloud.spanner_v1.client.CloudMonitoringMetricsExporter"):
+        client = Client(
+            project="test",
+            credentials=TestCredentials(),
+            # client_options={"api_endpoint": "none"}
+        )
+        yield client
 
     # Resetting
     metrics.set_meter_provider(metrics.NoOpMeterProvider())
     SpannerMetricsTracerFactory._metrics_tracer_factory = None
     SpannerMetricsTracerFactory.current_metrics_tracer = None
+    client_module._metrics_monitor_initialized = False
 
 
 def test_metrics_emission_with_failure_attempt(patched_client):
