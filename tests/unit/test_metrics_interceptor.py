@@ -71,6 +71,144 @@ def test_set_metrics_tracer_attributes(interceptor):
     assert SpannerMetricsTracerFactory.current_metrics_tracer.database == "my_database"
 
 
+def test_set_metrics_tracer_attributes_updates_factory(interceptor):
+    """Verify that factory's _client_attributes are also updated."""
+    SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    resources = {
+        "project": "test_project",
+        "instance": "test_instance",
+        "database": "test_database",
+    }
+
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    # Verify factory attributes are updated
+    assert factory.client_attributes.get("instance_id") == "test_instance"
+    assert factory.client_attributes.get("project_id") == "test_project"
+    # Database should NOT be set in factory (it may vary per operation)
+    assert "database_id" not in factory.client_attributes
+
+
+def test_set_metrics_tracer_attributes_no_tracer(interceptor):
+    """Verify that nothing happens when current_metrics_tracer is None."""
+    SpannerMetricsTracerFactory.current_metrics_tracer = None
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    resources = {
+        "project": "test_project",
+        "instance": "test_instance",
+    }
+
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    # Factory should NOT be updated when current_metrics_tracer is None
+    assert "instance_id" not in factory.client_attributes
+    assert "project_id" not in factory.client_attributes
+
+
+def test_set_metrics_tracer_attributes_empty_resources(interceptor):
+    """Verify that nothing happens when resources is empty."""
+    SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    interceptor._set_metrics_tracer_attributes({})
+
+    # Factory should NOT be updated when resources is empty
+    assert "instance_id" not in factory.client_attributes
+    assert "project_id" not in factory.client_attributes
+
+
+def test_set_metrics_tracer_attributes_partial_resources_project_only(interceptor):
+    """Verify that only project is set when instance is missing."""
+    SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    resources = {"project": "test_project"}
+
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    # Only project should be set
+    assert factory.client_attributes.get("project_id") == "test_project"
+    assert "instance_id" not in factory.client_attributes
+    assert SpannerMetricsTracerFactory.current_metrics_tracer.project == "test_project"
+    assert SpannerMetricsTracerFactory.current_metrics_tracer.instance is None
+
+
+def test_set_metrics_tracer_attributes_partial_resources_instance_only(interceptor):
+    """Verify that only instance is set when project is missing."""
+    SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    resources = {"instance": "test_instance"}
+
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    # Only instance should be set
+    assert factory.client_attributes.get("instance_id") == "test_instance"
+    assert "project_id" not in factory.client_attributes
+    assert (
+        SpannerMetricsTracerFactory.current_metrics_tracer.instance == "test_instance"
+    )
+    assert SpannerMetricsTracerFactory.current_metrics_tracer.project is None
+
+
+def test_new_tracer_inherits_factory_attributes(interceptor):
+    """
+    Integration test: Verify that a new tracer created after
+    _set_metrics_tracer_attributes inherits project and instance from factory.
+
+    This is the core test for the bug fix - ensuring that subsequent operations
+    get tracers with the correct attributes.
+    """
+    factory = SpannerMetricsTracerFactory()
+
+    # Reset factory attributes for test isolation
+    factory._client_attributes.pop("instance_id", None)
+    factory._client_attributes.pop("project_id", None)
+
+    # Simulate first operation: set up current tracer and call interceptor
+    SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
+    resources = {
+        "project": "inherited_project",
+        "instance": "inherited_instance",
+        "database": "db1",
+    }
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    # Simulate second operation: create a new tracer from factory
+    new_tracer = factory.create_metrics_tracer()
+
+    # The new tracer should have project and instance from factory
+    # (This is the bug fix: before, these would be missing)
+    if new_tracer is not None:  # None if OpenTelemetry not installed
+        assert new_tracer.client_attributes.get("project_id") == "inherited_project"
+        assert new_tracer.client_attributes.get("instance_id") == "inherited_instance"
+        # Database should NOT be inherited (it's per-operation)
+        assert "database" not in new_tracer.client_attributes
+
+
 def test_intercept_with_tracer(interceptor):
     SpannerMetricsTracerFactory.current_metrics_tracer = MockMetricTracer()
     SpannerMetricsTracerFactory.current_metrics_tracer.record_attempt_start = (

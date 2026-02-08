@@ -94,6 +94,8 @@ class MetricsInterceptor(ClientInterceptor):
 
         This method updates the current metric tracer's attributes with the project, instance, and database information extracted from the resources dictionary. If the current metric tracer is not set, the method does nothing.
 
+        Additionally, this method updates the factory's client attributes for project and instance to ensure these values are available for subsequent operations.
+
         Args:
             resources (Dict[str, str]): A dictionary containing project, instance, and database information.
         """
@@ -113,6 +115,15 @@ class MetricsInterceptor(ClientInterceptor):
                 SpannerMetricsTracerFactory.current_metrics_tracer.set_database(
                     resources["database"]
                 )
+
+            # Also update factory's client attributes for project and instance
+            # to ensure these values are available for subsequent operations.
+            # Database is not set here as it may vary per operation.
+            factory = SpannerMetricsTracerFactory()
+            if "project" in resources:
+                factory.set_project(resources["project"])
+            if "instance" in resources:
+                factory.set_instance(resources["instance"])
 
     def intercept(self, invoked_method, request_or_iterator, call_details):
         """Intercept gRPC calls to collect metrics.
