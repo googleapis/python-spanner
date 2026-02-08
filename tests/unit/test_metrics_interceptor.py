@@ -92,7 +92,7 @@ def test_set_metrics_tracer_attributes_updates_factory(interceptor):
     assert factory.client_attributes.get("instance_id") == "test_instance"
     assert factory.client_attributes.get("project_id") == "test_project"
     # Database should NOT be set in factory (it may vary per operation)
-    assert "database_id" not in factory.client_attributes
+    assert "database" not in factory.client_attributes
 
 
 def test_set_metrics_tracer_attributes_no_tracer(interceptor):
@@ -174,6 +174,30 @@ def test_set_metrics_tracer_attributes_partial_resources_instance_only(intercept
     assert SpannerMetricsTracerFactory.current_metrics_tracer.project is None
 
 
+def test_set_metrics_tracer_attributes_overwrites_stale_tracer_values(interceptor):
+    """Verify request resource values replace stale tracer labels."""
+    stale_tracer = MockMetricTracer()
+    stale_tracer.set_project("stale_project")
+    stale_tracer.set_instance("stale_instance")
+    stale_tracer.set_database("stale_database")
+
+    SpannerMetricsTracerFactory.current_metrics_tracer = stale_tracer
+    resources = {
+        "project": "fresh_project",
+        "instance": "fresh_instance",
+        "database": "fresh_database",
+    }
+
+    interceptor._set_metrics_tracer_attributes(resources)
+
+    assert stale_tracer.project == "fresh_project"
+    assert stale_tracer.instance == "fresh_instance"
+    assert stale_tracer.database == "fresh_database"
+    assert stale_tracer.client_attributes.get("project_id") == "fresh_project"
+    assert stale_tracer.client_attributes.get("instance_id") == "fresh_instance"
+    assert stale_tracer.client_attributes.get("database") == "fresh_database"
+
+
 def test_new_tracer_inherits_factory_attributes(interceptor):
     """
     Integration test: Verify that a new tracer created after
@@ -246,15 +270,22 @@ class MockMetricTracer:
         self.instance = None
         self.database = None
         self.method = None
+        self.client_attributes = {}
 
     def set_project(self, project):
-        self.project = project
+        if "project_id" not in self.client_attributes:
+            self.project = project
+            self.client_attributes["project_id"] = project
 
     def set_instance(self, instance):
-        self.instance = instance
+        if "instance_id" not in self.client_attributes:
+            self.instance = instance
+            self.client_attributes["instance_id"] = instance
 
     def set_database(self, database):
-        self.database = database
+        if "database" not in self.client_attributes:
+            self.database = database
+            self.client_attributes["database"] = database
 
     def set_method(self, method):
         self.method = method

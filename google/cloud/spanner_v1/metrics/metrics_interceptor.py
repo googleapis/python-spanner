@@ -17,6 +17,9 @@
 from grpc_interceptor import ClientInterceptor
 from .constants import (
     GOOGLE_CLOUD_RESOURCE_KEY,
+    METRIC_LABEL_KEY_DATABASE,
+    MONITORED_RES_LABEL_KEY_INSTANCE,
+    MONITORED_RES_LABEL_KEY_PROJECT,
     SPANNER_METHOD_PREFIX,
 )
 
@@ -104,14 +107,25 @@ class MetricsInterceptor(ClientInterceptor):
 
         if resources:
             if "project" in resources:
+                # Allow request-scoped resource data to replace stale values
+                # inherited from the singleton factory.
+                SpannerMetricsTracerFactory.current_metrics_tracer.client_attributes.pop(
+                    MONITORED_RES_LABEL_KEY_PROJECT, None
+                )
                 SpannerMetricsTracerFactory.current_metrics_tracer.set_project(
                     resources["project"]
                 )
             if "instance" in resources:
+                SpannerMetricsTracerFactory.current_metrics_tracer.client_attributes.pop(
+                    MONITORED_RES_LABEL_KEY_INSTANCE, None
+                )
                 SpannerMetricsTracerFactory.current_metrics_tracer.set_instance(
                     resources["instance"]
                 )
             if "database" in resources:
+                SpannerMetricsTracerFactory.current_metrics_tracer.client_attributes.pop(
+                    METRIC_LABEL_KEY_DATABASE, None
+                )
                 SpannerMetricsTracerFactory.current_metrics_tracer.set_database(
                     resources["database"]
                 )
