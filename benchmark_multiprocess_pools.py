@@ -86,6 +86,7 @@ logging.basicConfig(
     datefmt='%H:%M:%S'
 )
 logger = logging.getLogger(__name__)
+logging.getLogger('alembic').setLevel(logging.WARNING)
 
 # Configuration
 QUERIES_PER_PROCESS = 50
@@ -396,6 +397,9 @@ def _analyze_results(all_results, total_time, pool_type, pool_size, session_pool
         'session_pool_size': session_pool_size,
         'success_rate': success_rate,
         'total_time': total_time,
+        'median_latency': median_qt,
+        'min_latency': min_qt,
+        'max_latency': max_qt,
         'total_sessions': len(all_sessions),
         'total_dbapi_conns': len(all_dbapi_conns),
     }
@@ -479,40 +483,48 @@ Examples:
             result['scenario_name'] = scenario['name']
             all_run_results[scenario['name']].append(result)
 
-    # Aggregated results
-    logger.info(f"\n{'='*80}")
-    logger.info(f"AGGREGATED RESULTS ({args.runs} run{'s' if args.runs > 1 else ''})")
-    logger.info(f"{'='*80}")
-
+    # Build summary table sorted by median total time
+    summary_rows = []
     for scenario in scenarios:
         results = all_run_results[scenario['name']]
         if not results:
             continue
         total_times = [r['total_time'] for r in results]
-        median_time = statistics.median(total_times)
-        logger.info(f"\n{scenario['name']}:")
-        logger.info(f"  Success: {statistics.mean(r['success_rate'] for r in results):.1f}%")
-        if len(total_times) > 1:
-            logger.info(f"  Total time: median={median_time:.0f}ms, range={min(total_times):.0f}-{max(total_times):.0f}ms")
-        else:
-            logger.info(f"  Total time: {median_time:.0f}ms")
-        logger.info(f"  Sessions: ~{results[0]['total_sessions']}")
+        median_latencies = [r['median_latency'] for r in results]
+        min_latencies = [r['min_latency'] for r in results]
+        max_latencies = [r['max_latency'] for r in results]
+        summary_rows.append({
+            'name': scenario['name'],
+            'success': f"{statistics.mean(r['success_rate'] for r in results):.0f}%",
+            'total_time': statistics.median(total_times),
+            'total_range': f"{min(total_times):.0f}-{max(total_times):.0f}" if len(total_times) > 1 else "",
+            'med_latency': statistics.median(median_latencies),
+            'min_latency': statistics.median(min_latencies),
+            'max_latency': statistics.median(max_latencies),
+            'sessions': results[0]['total_sessions'],
+            'dbapi_conns': results[0]['total_dbapi_conns'],
+        })
+    summary_rows.sort(key=lambda r: r['total_time'])
 
-    # Ranking
-    logger.info(f"\n{'='*80}")
-    logger.info("RANKING (by median total time)")
-    logger.info(f"{'='*80}")
-    ranking = sorted(
-        [(s['name'], statistics.median([r['total_time'] for r in all_run_results[s['name']]]))
-         for s in scenarios if all_run_results[s['name']]],
-        key=lambda x: x[1]
-    )
-    for rank, (name, med) in enumerate(ranking, 1):
-        logger.info(f"  {rank}. {name}: {med:.0f}ms")
-
-    logger.info(f"\n{'='*80}")
+    # Print summary table
+    col_w = 110
+    logger.info(f"\n{'='*col_w}")
+    logger.info(f"RESULTS SUMMARY ({args.runs} run{'s' if args.runs > 1 else ''}, ranked by total time)")
+    logger.info(f"{'='*col_w}")
+    logger.info(f"{'#':>2}  {'Scenario':<22}  {'Success':>7}  {'Total (ms)':>14}  {'Med':>6}  {'Min':>6}  {'Max':>6}  {'Sessions':>8}  {'DBAPI':>5}")
+    logger.info(f"{'-'*col_w}")
+    for rank, row in enumerate(summary_rows, 1):
+        dbapi_str = str(row['dbapi_conns']) if row['dbapi_conns'] else "-"
+        total_str = f"{row['total_time']:.0f}"
+        if row['total_range']:
+            total_str += f" ({row['total_range']})"
+        logger.info(
+            f"{rank:>2}. {row['name']:<22}  {row['success']:>7}  {total_str:>14}  "
+            f"{row['med_latency']:>5.0f}  {row['min_latency']:>5.0f}  {row['max_latency']:>5.0f}  "
+            f"{row['sessions']:>8}  {dbapi_str:>5}"
+        )
+    logger.info(f"{'='*col_w}")
     logger.info("DONE")
-    logger.info(f"{'='*80}")
 
 
 if __name__ == '__main__':
