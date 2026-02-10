@@ -199,13 +199,13 @@ class Database(object):
         )
         self._proto_descriptors = proto_descriptors
         self._channel_id = 0  # It'll be created when _spanner_api is created.
+        self._experimental_host = self._instance._client._experimental_host
 
         if pool is None:
             pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
         pool.bind(self)
-        self._experimental_host = self._instance._client._experimental_host
 
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
