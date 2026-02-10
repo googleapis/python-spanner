@@ -736,6 +736,7 @@ def connect(
     route_to_leader_enabled=True,
     database_role=None,
     experimental_host=None,
+    database=None,
     **kwargs,
 ):
     """Creates a connection to a Google Cloud Spanner database.
@@ -783,6 +784,14 @@ def connect(
     :param database_role: (Optional) The database role to connect as when using
         fine-grained access controls.
 
+    :type database: :class:`~google.cloud.spanner_v1.database.Database`
+    :param database: (Optional) Pre-existing Database object to share across
+        connections. When provided, the connection will use this database's
+        session pool instead of creating a new one. This enables multiple
+        DBAPI connections to share a single PingingPool, matching the raw
+        Spanner client's architecture. The connection will NOT own the pool,
+        so closing the connection won't destroy the shared pool.
+
     **kwargs: Initial value for connection variables.
 
 
@@ -790,6 +799,15 @@ def connect(
     :returns: Connection object associated with the given Google Cloud Spanner
               resource.
     """
+    # If a pre-existing database is provided, create a lightweight connection
+    # wrapper that shares the database's session pool. This avoids creating
+    # a new PingingPool (and BatchCreateSessions RPC) for each connection.
+    if database is not None:
+        instance = database._instance
+        conn = Connection(instance, database, **kwargs)
+        conn._own_pool = False  # Don't destroy the shared pool on close
+        return conn
+
     if client is None:
         client_info = ClientInfo(
             user_agent=user_agent or DEFAULT_USER_AGENT,
