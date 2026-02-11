@@ -34,6 +34,8 @@ from google.api_core.exceptions import Aborted
 from google.cloud._helpers import _date_from_iso8601_date
 from google.cloud.spanner_v1.types import ExecuteSqlRequest
 from google.cloud.spanner_v1.types import TransactionOptions
+from google.cloud.spanner_v1.types import ClientContext
+from google.cloud.spanner_v1.types import RequestOptions
 from google.cloud.spanner_v1.data_types import JsonObject, Interval
 from google.cloud.spanner_v1.request_id_header import (
     with_request_id,
@@ -189,6 +191,74 @@ def _merge_query_options(base, merge):
     if not combined.optimizer_version and not combined.optimizer_statistics_package:
         return None
     return combined
+
+
+def _merge_client_context(base, merge):
+    """Merge higher precedence ClientContext with current ClientContext.
+
+    :type base: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict` or None
+    :param base: The current ClientContext that is intended for use.
+
+    :type merge: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict` or None
+    :param merge:
+        The ClientContext that has a higher priority than base. These options
+        should overwrite the fields in base.
+
+    :rtype: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or None
+    :returns:
+        ClientContext object formed by merging the two given ClientContexts.
+    """
+    if base is None and merge is None:
+        return None
+
+    combined = base or ClientContext()
+    if type(combined) is dict:
+        combined = ClientContext(combined)
+
+    merge = merge or ClientContext()
+    if type(merge) is dict:
+        merge = ClientContext(merge)
+
+    type(combined).pb(combined).MergeFrom(type(merge).pb(merge))
+    if not combined.secure_context:
+        return None
+    return combined
+
+
+def _merge_request_options(request_options, client_context):
+    """Merge RequestOptions and ClientContext.
+
+    :type request_options: :class:`~google.cloud.spanner_v1.types.RequestOptions`
+        or :class:`dict` or None
+    :param request_options: The current RequestOptions that is intended for use.
+
+    :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict` or None
+    :param client_context:
+        The ClientContext to merge into request_options.
+
+    :rtype: :class:`~google.cloud.spanner_v1.types.RequestOptions`
+        or None
+    :returns:
+        RequestOptions object formed by merging the given ClientContext.
+    """
+    if request_options is None and client_context is None:
+        return None
+
+    if request_options is None:
+        request_options = RequestOptions()
+    elif type(request_options) is dict:
+        request_options = RequestOptions(request_options)
+
+    if client_context:
+        request_options.client_context = _merge_client_context(
+            client_context, request_options.client_context
+        )
+
+    return request_options
 
 
 def _assert_numeric_precision_and_scale(value):
