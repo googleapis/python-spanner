@@ -638,6 +638,10 @@ class _SnapshotBase(_SessionWrapper):
         if self._transaction_id is None:
             is_inline_begin = True
             self._lock.acquire()
+            if self._transaction_id is not None:
+                is_inline_begin = False
+                self._lock.release()
+                request.transaction = TransactionSelector(id=self._transaction_id)
 
         iterator = _restart_on_unavailable(
             method=method,
