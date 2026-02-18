@@ -1100,8 +1100,8 @@ class Database(object):
                    the DDL option `allow_txn_exclusion` being false or unset.
                    "isolation_level" sets the isolation level for the transaction.
                    "read_lock_mode" sets the read lock mode for the transaction.
-                   "client_context" (Optional) Client context to use for all requests made
-                                    by this transaction.
+                   "client_context" (Optional) Client context to use for all requests
+                   made by this transaction.
 
         :rtype: Any
         :returns: The return value of ``func``.
@@ -1526,7 +1526,9 @@ class MutationGroupsCheckout(object):
         transaction_type = TransactionType.READ_WRITE
         self._session = self._database.sessions_manager.get_session(transaction_type)
 
-        return MutationGroups(session=self._session, client_context=self._client_context)
+        return MutationGroups(
+            session=self._session, client_context=self._client_context
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
