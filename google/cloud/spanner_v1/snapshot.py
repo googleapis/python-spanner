@@ -213,7 +213,7 @@ class _SnapshotBase(_SessionWrapper):
         super().__init__(session)
 
         if client_context is not None:
-            if type(client_context) is dict:
+            if isinstance(client_context, dict):
                 client_context = ClientContext(client_context)
             elif not isinstance(client_context, ClientContext):
                 raise TypeError("client_context must be a ClientContext or a dict")
@@ -949,20 +949,18 @@ class _SnapshotBase(_SessionWrapper):
             "mutation_key": mutation,
         }
 
+        request_options = begin_request_kwargs.get("request_options")
         client_context = _merge_client_context(
             database._instance._client._client_context, self._client_context
         )
-        if client_context:
-            begin_request_kwargs["request_options"] = _merge_request_options(
-                begin_request_kwargs.get("request_options"), client_context
-            )
+        request_options = _merge_request_options(request_options, client_context)
 
         if transaction_tag:
-            request_options = begin_request_kwargs.get("request_options")
             if request_options is None:
-                request_options = RequestOptions(transaction_tag=transaction_tag)
-            else:
-                request_options.transaction_tag = transaction_tag
+                request_options = RequestOptions()
+            request_options.transaction_tag = transaction_tag
+
+        if request_options:
             begin_request_kwargs["request_options"] = request_options
 
         with trace_call(

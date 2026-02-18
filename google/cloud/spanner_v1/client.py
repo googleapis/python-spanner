@@ -295,7 +295,7 @@ class Client(ClientWithProject):
         self._query_options = _merge_query_options(query_options, env_query_options)
 
         if client_context is not None:
-            if type(client_context) is dict:
+            if isinstance(client_context, dict):
                 client_context = ClientContext(client_context)
             elif not isinstance(client_context, ClientContext):
                 raise TypeError("client_context must be a ClientContext or a dict")

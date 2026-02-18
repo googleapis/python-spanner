@@ -174,7 +174,7 @@ def _merge_query_options(base, merge):
         If the resultant object only has empty fields, returns None.
     """
     combined = base or ExecuteSqlRequest.QueryOptions()
-    if type(combined) is dict:
+    if isinstance(combined, dict):
         combined = ExecuteSqlRequest.QueryOptions(
             optimizer_version=combined.get("optimizer_version", ""),
             optimizer_statistics_package=combined.get(
@@ -182,7 +182,7 @@ def _merge_query_options(base, merge):
             ),
         )
     merge = merge or ExecuteSqlRequest.QueryOptions()
-    if type(merge) is dict:
+    if isinstance(merge, dict):
         merge = ExecuteSqlRequest.QueryOptions(
             optimizer_version=merge.get("optimizer_version", ""),
             optimizer_statistics_package=merge.get("optimizer_statistics_package", ""),
@@ -215,14 +215,24 @@ def _merge_client_context(base, merge):
         return None
 
     combined = base or ClientContext()
-    if type(combined) is dict:
+    if isinstance(combined, dict):
         combined = ClientContext(combined)
 
     merge = merge or ClientContext()
-    if type(merge) is dict:
+    if isinstance(merge, dict):
         merge = ClientContext(merge)
 
-    type(combined).pb(combined).MergeFrom(type(merge).pb(merge))
+    # Avoid in-place modification of base
+    combined_pb = ClientContext()._pb
+    if base:
+        base_pb = ClientContext(base)._pb if isinstance(base, dict) else base._pb
+        combined_pb.MergeFrom(base_pb)
+    if merge:
+        merge_pb = ClientContext(merge)._pb if isinstance(merge, dict) else merge._pb
+        combined_pb.MergeFrom(merge_pb)
+
+    combined = ClientContext(combined_pb)
+
     if not combined.secure_context:
         return None
     return combined
@@ -250,7 +260,7 @@ def _merge_request_options(request_options, client_context):
 
     if request_options is None:
         request_options = RequestOptions()
-    elif type(request_options) is dict:
+    elif isinstance(request_options, dict):
         request_options = RequestOptions(request_options)
 
     if client_context:

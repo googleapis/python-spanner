@@ -68,7 +68,7 @@ class _BatchBase(_SessionWrapper):
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
 
         if client_context is not None:
-            if type(client_context) is dict:
+            if isinstance(client_context, dict):
                 client_context = ClientContext(client_context)
             elif not isinstance(client_context, ClientContext):
                 raise TypeError("client_context must be a ClientContext or a dict")
@@ -349,7 +349,7 @@ class MutationGroups(_SessionWrapper):
         self.committed: bool = False
 
         if client_context is not None:
-            if type(client_context) is dict:
+            if isinstance(client_context, dict):
                 client_context = ClientContext(client_context)
             elif not isinstance(client_context, ClientContext):
                 raise TypeError("client_context must be a ClientContext or a dict")
