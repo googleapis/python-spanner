@@ -214,14 +214,6 @@ def _merge_client_context(base, merge):
     if base is None and merge is None:
         return None
 
-    combined = base or ClientContext()
-    if isinstance(combined, dict):
-        combined = ClientContext(combined)
-
-    merge = merge or ClientContext()
-    if isinstance(merge, dict):
-        merge = ClientContext(merge)
-
     # Avoid in-place modification of base
     combined_pb = ClientContext()._pb
     if base:
