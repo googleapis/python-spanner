@@ -512,9 +512,6 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self._transaction_id is None:
             is_inline_begin = True
             self._lock.acquire()
-            if self._transaction_id is not None:
-                is_inline_begin = False
-                self._lock.release()
 
         execute_sql_request = ExecuteSqlRequest(
             session=session.name,
@@ -673,9 +670,6 @@ class Transaction(_SnapshotBase, _BatchBase):
         if self._transaction_id is None:
             is_inline_begin = True
             self._lock.acquire()
-            if self._transaction_id is not None:
-                is_inline_begin = False
-                self._lock.release()
 
         execute_batch_dml_request = ExecuteBatchDmlRequest(
             session=session.name,
