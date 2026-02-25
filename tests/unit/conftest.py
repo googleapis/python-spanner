@@ -25,3 +25,29 @@ def mock_periodic_exporting_metric_reader():
         "opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader"
     ):
         yield mock_client_reader
+
+
+@pytest.fixture(autouse=True)
+def clear_otel_exporter():
+    """Clear the OpenTelemetry span exporter before and after each test to prevent leakage."""
+    try:
+        from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
+
+        if HAS_OPENTELEMETRY_INSTALLED:
+            exporter = get_test_ot_exporter()
+            if exporter:
+                exporter.clear()
+    except ImportError:
+        pass
+
+    yield
+
+    try:
+        from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
+
+        if HAS_OPENTELEMETRY_INSTALLED:
+            exporter = get_test_ot_exporter()
+            if exporter:
+                exporter.clear()
+    except ImportError:
+        pass
