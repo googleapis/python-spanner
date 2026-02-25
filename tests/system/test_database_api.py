@@ -304,7 +304,7 @@ def test_iam_policy(
     assert new_policy.bindings[0] == new_binding
 
 
-def test_table_not_found(shared_instance):
+def test_table_not_found(shared_instance, not_postgres):
     temp_db_id = _helpers.unique_id("tbl_not_found", separator="_")
 
     correct_table = "MyTable"
