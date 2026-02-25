@@ -342,7 +342,7 @@ class TestClientContext(unittest.TestCase):
         api = database.spanner_api = mock.Mock()
 
         with mock.patch(
-            "google.cloud.spanner_v1.batch._retry", side_effect=lambda f, **kw: f()
+            "google.cloud.spanner_v1._helpers._retry", side_effect=lambda f, **kw: f()
         ):
             mg.batch_write()
 
