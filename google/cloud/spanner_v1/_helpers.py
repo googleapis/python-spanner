@@ -230,6 +230,25 @@ def _merge_client_context(base, merge):
     return combined
 
 
+def _validate_client_context(client_context):
+    """Validate and convert client_context.
+
+    :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict`
+    :param client_context: (Optional) Client context to use.
+
+    :rtype: :class:`~google.cloud.spanner_v1.types.ClientContext`
+    :returns: Validated ClientContext object or None.
+    :raises TypeError: if client_context is not a ClientContext or a dict.
+    """
+    if client_context is not None:
+        if isinstance(client_context, dict):
+            client_context = ClientContext(client_context)
+        elif not isinstance(client_context, ClientContext):
+            raise TypeError("client_context must be a ClientContext or a dict")
+    return client_context
+
+
 def _merge_request_options(request_options, client_context):
     """Merge RequestOptions and ClientContext.
 

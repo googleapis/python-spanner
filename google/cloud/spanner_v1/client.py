@@ -53,6 +53,7 @@ from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1.types import ClientContext
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import _validate_client_context
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.metrics.constants import (
     METRIC_EXPORT_INTERVAL_MS,
@@ -293,13 +294,7 @@ class Client(ClientWithProject):
 
         # Environment flag config has higher precedence than application config.
         self._query_options = _merge_query_options(query_options, env_query_options)
-
-        if client_context is not None:
-            if isinstance(client_context, dict):
-                client_context = ClientContext(client_context)
-            elif not isinstance(client_context, ClientContext):
-                raise TypeError("client_context must be a ClientContext or a dict")
-        self._client_context = client_context
+        self._client_context = _validate_client_context(client_context)
 
         if self._emulator_host is not None and (
             "http://" in self._emulator_host or "https://" in self._emulator_host

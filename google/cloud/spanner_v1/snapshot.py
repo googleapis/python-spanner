@@ -50,6 +50,7 @@ from google.cloud.spanner_v1._helpers import (
     _SessionWrapper,
     AtomicCounter,
     _augment_error_with_request_id,
+    _validate_client_context,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
 from google.cloud.spanner_v1.streamed import StreamedResultSet
@@ -212,13 +213,7 @@ class _SnapshotBase(_SessionWrapper):
     def __init__(self, session, client_context=None):
         super().__init__(session)
 
-        if client_context is not None:
-            if isinstance(client_context, dict):
-                client_context = ClientContext(client_context)
-            elif not isinstance(client_context, ClientContext):
-                raise TypeError("client_context must be a ClientContext or a dict")
-        self._client_context = client_context
-
+        self._client_context = _validate_client_context(client_context)
         # Counts for execute SQL requests and total read requests (including
         # execute SQL requests). Used to provide sequence numbers for
         # :class:`google.cloud.spanner_v1.types.ExecuteSqlRequest` and to

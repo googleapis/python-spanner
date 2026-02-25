@@ -30,6 +30,7 @@ from google.cloud.spanner_v1._helpers import (
     _merge_Transaction_Options,
     _merge_client_context,
     _merge_request_options,
+    _validate_client_context,
     AtomicCounter,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
@@ -66,13 +67,7 @@ class _BatchBase(_SessionWrapper):
         self.committed = None
         """Timestamp at which the batch was successfully committed."""
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
-
-        if client_context is not None:
-            if isinstance(client_context, dict):
-                client_context = ClientContext(client_context)
-            elif not isinstance(client_context, ClientContext):
-                raise TypeError("client_context must be a ClientContext or a dict")
-        self._client_context = client_context
+        self._client_context = _validate_client_context(client_context)
 
     def insert(self, table, columns, values):
         """Insert one or more new table rows.
