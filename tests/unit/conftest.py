@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-__version__ = "3.63.0"  # {x-release-please-version}
+
+import pytest
+from unittest.mock import patch
+
+
+@pytest.fixture(autouse=True)
+def mock_periodic_exporting_metric_reader():
+    """Globally mock PeriodicExportingMetricReader to prevent real network calls."""
+    with patch(
+        "google.cloud.spanner_v1.client.PeriodicExportingMetricReader"
+    ) as mock_client_reader, patch(
+        "opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader"
+    ):
+        yield mock_client_reader
