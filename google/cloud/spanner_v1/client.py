@@ -334,25 +334,6 @@ class Client(ClientWithProject):
             and not disable_builtin_metrics
             and HAS_GOOGLE_CLOUD_MONITORING_INSTALLED
         ):
-            meter_provider = metrics.NoOpMeterProvider()
-            try:
-                if not _get_spanner_emulator_host() and not self._experimental_host:
-                    meter_provider = MeterProvider(
-                        metric_readers=[
-                            PeriodicExportingMetricReader(
-                                CloudMonitoringMetricsExporter(
-                                    project_id=project, credentials=credentials
-                                ),
-                                export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
-                            ),
-                        ]
-                    )
-                metrics.set_meter_provider(meter_provider)
-                SpannerMetricsTracerFactory()
-            except Exception as e:
-                log.warning(
-                    "Failed to initialize Spanner built-in metrics. Error: %s", e
-                )
             _initialize_metrics(project, credentials)
         else:
             SpannerMetricsTracerFactory(enabled=False)
