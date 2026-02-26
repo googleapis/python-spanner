@@ -22,6 +22,8 @@ import functools
 from typing import Optional
 
 import grpc
+import asyncio
+import inspect
 import logging
 import re
 import threading
@@ -64,7 +66,7 @@ from google.cloud.spanner_v1._async.batch import Batch
 from google.cloud.spanner_v1._async.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
-from google.cloud.spanner_v1.pool import BurstyPool
+from google.cloud.spanner_v1._async.pool import BurstyPool
 from google.cloud.spanner_v1._async.session import Session
 from google.cloud.spanner_v1._async.database_sessions_manager import (
     DatabaseSessionsManager,
@@ -73,9 +75,14 @@ from google.cloud.spanner_v1._async.database_sessions_manager import (
 from google.cloud.spanner_v1._async.snapshot import _restart_on_unavailable
 from google.cloud.spanner_v1._async.snapshot import Snapshot
 from google.cloud.spanner_v1._async.streamed import StreamedResultSet
-from google.cloud.spanner_v1.services.spanner.transports.grpc import (
-    SpannerGrpcTransport,
-)
+if CrossSync.is_async:
+    from google.cloud.spanner_v1.services.spanner.transports.grpc_asyncio import (
+        SpannerGrpcAsyncIOTransport as SpannerGrpcTransport,
+    )
+else:
+    from google.cloud.spanner_v1.services.spanner.transports.grpc import (
+        SpannerGrpcTransport,
+    )
 from google.cloud.spanner_v1.table import Table
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
@@ -205,8 +212,16 @@ class Database(object):
             pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
-        pool.bind(self)
+        res = pool.bind(self)
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running() and inspect.isawaitable(res):
+                loop.create_task(res)
+        except RuntimeError:
+            # No running loop, bind should have been sync or will be failed later
+            pass
         self._experimental_host = self._instance._client._experimental_host
+        is_experimental_host = self._experimental_host is not None
 
         self._sessions_manager = DatabaseSessionsManager(
             self, pool 
@@ -448,17 +463,21 @@ class Database(object):
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
             if self._instance.emulator_host is not None:
-                transport = SpannerGrpcTransport(
-                    channel=grpc.insecure_channel(self._instance.emulator_host)
-                )
+                if CrossSync.is_async:
+                    channel = grpc.aio.insecure_channel(self._instance.emulator_host)
+                else:
+                    channel = grpc.insecure_channel(self._instance.emulator_host)
+                transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
                     client_info=client_info, transport=transport
                 )
                 return self._spanner_api
-            if self._instance._client._experimental_host is not None:
-                transport = SpannerGrpcTransport(
-                    channel=grpc.insecure_channel(self._instance._client._experimental_host)
-                )
+            if self._experimental_host is not None:
+                if CrossSync.is_async:
+                    channel = grpc.aio.insecure_channel(self._experimental_host)
+                else:
+                    channel = grpc.insecure_channel(self._experimental_host)
+                transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
                     client_info=client_info,
                     transport=transport,

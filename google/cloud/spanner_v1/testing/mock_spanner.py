@@ -40,6 +40,11 @@ class MockSpanner:
         self.execute_streaming_sql_results = {}
         self.errors = {}
 
+    def clear_results(self):
+        self.results = {}
+        self.execute_streaming_sql_results = {}
+        self.errors = {}
+
     def add_result(self, sql: str, result: result_set.ResultSet):
         self.results[sql.lower().strip()] = result
 
@@ -145,6 +150,9 @@ class SpannerServicer(spanner_grpc.SpannerServicer):
                 status=status, include_transaction_id=include_transaction_id
             )
         )
+
+    def clear_results(self):
+        self.mock_spanner.clear_results()
 
     def CreateSession(self, request, context):
         self._requests.append(request)

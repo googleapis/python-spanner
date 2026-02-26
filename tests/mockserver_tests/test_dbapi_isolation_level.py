@@ -30,9 +30,8 @@ def _get_first_execute_sql_request(requests):
 
 
 class TestDbapiIsolationLevel(MockServerTestBase):
-    @classmethod
-    def setup_class(cls):
-        super().setup_class()
+    def setUp(self):
+        super().setUp()
         add_update_count("insert into singers (id, name) values (1, 'Some Singer')", 1)
 
     def test_isolation_level_default(self):

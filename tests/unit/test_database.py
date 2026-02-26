@@ -2485,6 +2485,8 @@ class TestBatchSnapshot(_BaseTest):
     def _make_snapshot(transaction_id=None, **kwargs):
         from google.cloud.spanner_v1.snapshot import Snapshot
 
+        # Explicitly set _read_timestamp for to_dict() test
+        kwargs.setdefault("_read_timestamp", None)
         snapshot = mock.create_autospec(Snapshot, instance=True, **kwargs)
         snapshot._read_timestamp = None
         if transaction_id is not None:

@@ -91,6 +91,8 @@ class CrossSync(metaclass=MappingMeta):
     Task: TypeAlias = asyncio.Task
     Event: TypeAlias = asyncio.Event
     Semaphore: TypeAlias = asyncio.Semaphore
+    LifoQueue: TypeAlias = asyncio.LifoQueue
+    PriorityQueue: TypeAlias = asyncio.PriorityQueue
     StopIteration: TypeAlias = StopAsyncIteration
     # provide aliases for common async type annotations
     Awaitable: TypeAlias = typing.Awaitable
@@ -159,6 +161,23 @@ class CrossSync(metaclass=MappingMeta):
         if asyncio.iscoroutine(res) or inspect.isawaitable(res):
             return await res
         return res
+
+    @staticmethod
+    async def queue_get(queue, block=True, timeout=None):
+        if not block:
+            return queue.get_nowait()
+        if timeout is not None:
+            return await asyncio.wait_for(queue.get(), timeout=timeout)
+        return await queue.get()
+
+    @staticmethod
+    async def queue_put(queue, item, block=True, timeout=None):
+        if not block:
+            return queue.put_nowait(item)
+        if timeout is not None:
+             await asyncio.wait_for(queue.put(item), timeout=timeout)
+        else:
+             await queue.put(item)
 
     @staticmethod
     async def gather_partials(
@@ -288,6 +307,8 @@ class CrossSync(metaclass=MappingMeta):
         Task: TypeAlias = concurrent.futures.Future
         Event: TypeAlias = threading.Event
         Semaphore: TypeAlias = threading.Semaphore
+        LifoQueue: TypeAlias = queue.LifoQueue
+        PriorityQueue: TypeAlias = queue.PriorityQueue
         StopIteration: TypeAlias = StopIteration
         # type annotations
         Awaitable: TypeAlias = Union[T]
@@ -303,6 +324,14 @@ class CrossSync(metaclass=MappingMeta):
             Runs a function
             """
             return func(*args, **kwargs)
+
+        @staticmethod
+        def queue_get(queue, block=True, timeout=None):
+            return queue.get(block=block, timeout=timeout)
+
+        @staticmethod
+        def queue_put(queue, item, block=True, timeout=None):
+             queue.put(item, block=block, timeout=timeout)
 
         @classmethod
         def Mock(cls, *args, **kwargs):
