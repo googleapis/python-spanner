@@ -86,7 +86,7 @@ class _LoggingClientAIOInterceptor(
                     "metadata": grpc_request["metadata"],
                 },
             )
-        response = await continuation(client_call_details, request)
+        response = continuation(client_call_details, request)
         if logging_enabled:  # pragma: NO COVER
             response_metadata = await response.trailing_metadata()
             # Convert gRPC metadata `<class 'grpc.aio._metadata.Metadata'>` to list of tuples
@@ -322,7 +322,7 @@ class SpannerGrpcAsyncIOTransport(SpannerTransport):
             )
 
         self._interceptor = _LoggingClientAIOInterceptor()
-        self._grpc_channel._unary_unary_interceptors.append(self._interceptor)
+        # self._grpc_channel._unary_unary_interceptors.append(self._interceptor)
         self._logged_channel = self._grpc_channel
         self._wrap_with_kind = (
             "kind" in inspect.signature(gapic_v1.method_async.wrap_method).parameters

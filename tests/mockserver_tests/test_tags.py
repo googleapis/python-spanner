@@ -28,9 +28,8 @@ from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 
 
 class TestTags(MockServerTestBase):
-    @classmethod
-    def setup_class(cls):
-        super().setup_class()
+    def setUp(self):
+        super().setUp()
         add_single_result(
             "select name from singers", "name", TypeCode.STRING, [("Some Singer",)]
         )

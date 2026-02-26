@@ -33,7 +33,6 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import _check_rst_stream_error
 from google.api_core.exceptions import InternalServerError
@@ -351,6 +350,8 @@ class MutationGroups(_SessionWrapper):
                     ),
                 )
                 return batch_write_method()
+
+            from google.cloud.spanner_v1._helpers import _retry
 
             response = _retry(
                 wrapped_method,

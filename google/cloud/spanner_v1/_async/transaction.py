@@ -108,6 +108,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             mergeTransactionOptions=merge_transaction_options,
         )
 
+    @CrossSync.convert
     async def _execute_request(
         self,
         method,
@@ -265,7 +266,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 raise ValueError("Transaction already committed.")
             if self.rolled_back:
                 raise ValueError("Transaction already rolled back.")
-
+            if self._transaction_id is None:
                 if num_mutations > 0:
                     await self._begin_mutations_only_transaction()
                 else:
@@ -553,6 +554,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return result_set_pb.stats.row_count_exact
 
+    @CrossSync.convert
     async def batch_update(
         self,
         statements,
@@ -712,6 +714,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         return response_pb.status, row_counts
 
+    @CrossSync.convert
     async def _begin_transaction(self, mutation: Mutation = None) -> bytes:
         """Begins a transaction on the database.
 
@@ -734,6 +737,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             mutation=mutation, transaction_tag=self.transaction_tag
         )
 
+    @CrossSync.convert
     async def _begin_mutations_only_transaction(self) -> None:
         """Begins a mutations-only transaction on the database."""
 

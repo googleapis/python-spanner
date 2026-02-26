@@ -25,10 +25,10 @@ from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
-    _retry,
     _check_rst_stream_error,
     _merge_Transaction_Options,
 )
+from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1 import (
     CommitRequest,
     CommitResponse,

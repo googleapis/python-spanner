@@ -22,6 +22,8 @@ import copy
 import functools
 from typing import Optional
 import grpc
+import asyncio
+import inspect
 import logging
 import re
 import threading
@@ -64,6 +66,7 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.batch import MutationGroups
 from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.database_sessions_manager import (
@@ -193,7 +196,13 @@ class Database(object):
         if pool is None:
             pool = BurstyPool(database_role=database_role)
         self._pool = pool
-        pool.bind(self)
+        res = pool.bind(self)
+        try:
+            loop = asyncio.get_running_loop()
+            if loop.is_running() and inspect.isawaitable(res):
+                loop.create_task(res)
+        except RuntimeError:
+            pass
 
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
@@ -411,9 +420,8 @@ class Database(object):
             client_info = self._instance._client._client_info
             client_options = self._instance._client._client_options
             if self._instance.emulator_host is not None:
-                transport = SpannerGrpcTransport(
-                    channel=grpc.insecure_channel(self._instance.emulator_host)
-                )
+                channel = grpc.insecure_channel(self._instance.emulator_host)
+                transport = SpannerGrpcTransport(channel=channel)
                 self._spanner_api = SpannerClient(
                     client_info=client_info, transport=transport
                 )
@@ -1027,9 +1035,6 @@ class Database(object):
             transaction_type = TransactionType.READ_WRITE
             session = self._sessions_manager.get_session(transaction_type)
             try:
-                print(
-                    f"DEBUG: session type: {type(session)}, is_multiplexed: {session.is_multiplexed}"
-                )
                 return session.run_in_transaction(func, *args, **kw)
             finally:
                 self._local.transaction_running = False
@@ -1484,6 +1489,7 @@ class BatchSnapshot(object):
         return {
             "session_id": session._session_id,
             "transaction_id": snapshot._transaction_id,
+            "read_timestamp": snapshot._read_timestamp,
         }
 
     def __enter__(self):
@@ -1546,14 +1552,14 @@ class BatchSnapshot(object):
 
         See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.read`."""
         snapshot = self._get_snapshot()
-        return snapshot.read(*args, **kw)
+        return CrossSync._Sync_Impl.run_if_async(snapshot.read, *args, **kw)
 
     def execute_sql(self, *args, **kw):
         """Convenience method:  perform query operation via snapshot.
 
         See :meth:`~google.cloud.spanner_v1.snapshot.Snapshot.execute_sql`."""
         snapshot = self._get_snapshot()
-        return snapshot.execute_sql(*args, **kw)
+        return CrossSync._Sync_Impl.run_if_async(snapshot.execute_sql, *args, **kw)
 
     def generate_read_batches(
         self,
@@ -1569,60 +1575,14 @@ class BatchSnapshot(object):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
-        """mappings of information used perform actual partitioned reads via
-        :meth:`process_read_batch`.
-
-        :type table: str
-        :param table: Name of the table from which to fetch data.
-
-        :type columns: list of str
-        :param columns: names of columns to be retrieved
-
-        :type keyset: :class:`~google.cloud.spanner_v1.keyset.KeySet`
-        :param keyset: keys / ranges identifying rows to be retrieved
-
-        :type index: str
-        :param index: (Optional) name of index to use, rather than the
-                      table's primary key
-
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
-        :type max_partitions: int
-        :param max_partitions:
-            (Optional) desired maximum number of partitions generated. The
-            service uses this as a hint, the actual number of partitions may
-            differ.
-
-        :type data_boost_enabled:
-        :param data_boost_enabled:
-                (Optional) If this is for a partitioned read and this field is
-                set ``true``, the request will be executed via offline access.
-
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
-            or :class:`dict`
-        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
-            for ReadRequests that indicates which replicas
-            or regions should be used for non-transactional reads.
-
-        :type retry: :class:`~google.api_core.retry.Retry`
-        :param retry: (Optional) The retry settings for this request.
-
-        :type timeout: float
-        :param timeout: (Optional) The timeout for this request.
-
-        :rtype: iterable of dict
-        :returns:
-            mappings of information used perform actual partitioned reads via
-            :meth:`process_read_batch`."""
+        """Start a partitioned batch read operation."""
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.generate_read_batches",
             extra_attributes=dict(table=table, columns=columns),
             observability_options=self.observability_options,
         ), MetricsCapture():
-            partitions = self._get_snapshot().partition_read(
+            snapshot = self._get_snapshot()
+            partitions = snapshot.partition_read(
                 table=table,
                 columns=columns,
                 keyset=keyset,
@@ -1651,30 +1611,7 @@ class BatchSnapshot(object):
         timeout=gapic_v1.method.DEFAULT,
         lazy_decode=False,
     ):
-        """Process a single, partitioned read.
-
-        :type batch: mapping
-        :param batch:
-            one of the mappings returned from an earlier call to
-            :meth:`generate_read_batches`.
-
-        :type retry: :class:`~google.api_core.retry.Retry`
-        :param retry: (Optional) The retry settings for this request.
-
-        :type timeout: float
-        :param timeout: (Optional) The timeout for this request.
-
-        :type lazy_decode: bool
-        :param lazy_decode:
-            (Optional) If this argument is set to ``true``, the iterator
-            returns the underlying protobuf values instead of decoded Python
-            objects. This reduces the time that is needed to iterate through
-            large result sets. The application is responsible for decoding
-            the data that is needed.
-
-
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
-        :returns: a result set instance which can be used to consume rows."""
+        """Process a single, partitioned read."""
         observability_options = self.observability_options
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_read_batch",
@@ -1683,8 +1620,13 @@ class BatchSnapshot(object):
             kwargs = copy.deepcopy(batch["read"])
             keyset_dict = kwargs.pop("keyset")
             kwargs["keyset"] = KeySet._from_dict(keyset_dict)
-            return self._get_snapshot().read(
-                partition=batch["partition"], **kwargs, retry=retry, timeout=timeout
+            snapshot = self._get_snapshot()
+            return CrossSync._Sync_Impl.run_if_async(
+                snapshot.read,
+                partition=batch["partition"],
+                **kwargs,
+                retry=retry,
+                timeout=timeout,
             )
 
     def generate_query_batches(
@@ -1701,67 +1643,14 @@ class BatchSnapshot(object):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
-        """mappings of information used perform actual partitioned reads via
-        :meth:`process_query_batch`.
-
-        :type sql: str
-        :param sql: SQL query statement
-
-        :type params: dict, {str -> column value}
-        :param params: values for parameter replacement.  Keys must match
-                       the names used in ``sql``.
-
-        :type param_types: dict[str -> Union[dict, .types.Type]]
-        :param param_types:
-            (Optional) maps explicit types for one or more param values;
-            required if parameters are passed.
-
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
-        :type max_partitions: int
-        :param max_partitions:
-            (Optional) desired maximum number of partitions generated. The
-            service uses this as a hint, the actual number of partitions may
-            differ.
-
-        :type query_options:
-            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
-            or :class:`dict`
-        :param query_options:
-                (Optional) Query optimizer configuration to use for the given query.
-                If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
-
-        :type data_boost_enabled:
-        :param data_boost_enabled:
-                (Optional) If this is for a partitioned query and this field is
-                set ``true``, the request will be executed via offline access.
-
-        :type directed_read_options: :class:`~google.cloud.spanner_v1.DirectedReadOptions`
-            or :class:`dict`
-        :param directed_read_options: (Optional) Request level option used to set the directed_read_options
-            for ExecuteSqlRequests that indicates which replicas
-            or regions should be used for non-transactional queries.
-
-        :type retry: :class:`~google.api_core.retry.Retry`
-        :param retry: (Optional) The retry settings for this request.
-
-        :type timeout: float
-        :param timeout: (Optional) The timeout for this request.
-
-        :rtype: iterable of dict
-        :returns:
-            mappings of information used perform actual partitioned reads via
-            :meth:`process_query_batch`."""
+        """Start a partitioned query operation."""
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.generate_query_batches",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
         ), MetricsCapture():
-            partitions = self._get_snapshot().partition_query(
+            snapshot = self._get_snapshot()
+            partitions = snapshot.partition_query(
                 sql=sql,
                 params=params,
                 param_types=param_types,
@@ -1793,33 +1682,14 @@ class BatchSnapshot(object):
         retry=gapic_v1.method.DEFAULT,
         timeout=gapic_v1.method.DEFAULT,
     ):
-        """Process a single, partitioned query.
-
-        :type batch: mapping
-        :param batch:
-            one of the mappings returned from an earlier call to
-            :meth:`generate_query_batches`.
-
-        :type lazy_decode: bool
-        :param lazy_decode:
-            (Optional) If this argument is set to ``true``, the iterator
-            returns the underlying protobuf values instead of decoded Python
-            objects. This reduces the time that is needed to iterate through
-            large result sets.
-
-        :type retry: :class:`~google.api_core.retry.Retry`
-        :param retry: (Optional) The retry settings for this request.
-
-        :type timeout: float
-        :param timeout: (Optional) The timeout for this request.
-
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
-        :returns: a result set instance which can be used to consume rows."""
+        """Process a single, partitioned query."""
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_query_batch",
             observability_options=self.observability_options,
         ), MetricsCapture():
-            return self._get_snapshot().execute_sql(
+            snapshot = self._get_snapshot()
+            return CrossSync._Sync_Impl.run_if_async(
+                snapshot.execute_sql,
                 partition=batch["partition"],
                 **batch["query"],
                 lazy_decode=lazy_decode,
@@ -1835,82 +1705,31 @@ class BatchSnapshot(object):
         partition_size_bytes=None,
         max_partitions=None,
         query_options=None,
-        data_boost_enabled=None,
-        *,
-        lazy_decode: bool = False,
+        data_boost_enabled=False,
+        lazy_decode=False,
     ):
-        """Perform a partitioned query.
-
-        :type sql: str
-        :param sql: SQL query statement
-
-        :type params: dict, {str -> column value}
-        :param params: values for parameter replacement.  Keys must match
-                       the names used in ``sql``.
-
-        :type param_types: dict[str -> Union[dict, .types.Type]]
-        :param param_types:
-            (Optional) maps explicit types for one or more param values;
-            required if parameters are passed.
-
-        :type partition_size_bytes: int
-        :param partition_size_bytes:
-            (Optional) desired size for each partition generated.  The service
-            uses this as a hint, the actual partition size may differ.
-
-        :type max_partitions: int
-        :param max_partitions:
-            (Optional) desired maximum number of partitions generated. The
-            service uses this as a hint, the actual number of partitions may
-            differ.
-
-        :type query_options:
-            :class:`~google.cloud.spanner_v1.types.ExecuteSqlRequest.QueryOptions`
-            or :class:`dict`
-        :param query_options:
-                (Optional) Query optimizer configuration to use for the given query.
-                If a dict is provided, it must be of the same form as the protobuf
-                message :class:`~google.cloud.spanner_v1.types.QueryOptions`
-
-        :type data_boost_enabled:
-        :param data_boost_enabled:
-                (Optional) If this is for a partitioned query and this field is
-                set ``true``, the request will be executed via offline access.
-
-        :rtype: :class:`MergedResultSet`
-        :returns: Results of the partitioned query."""
-        from google.cloud.spanner_v1.streamed import MergedResultSet
-
+        """Start a partitioned query operation to get list of partitions and
+        then executes each partition on a separate thread"""
         with trace_call(
             f"CloudSpanner.${type(self).__name__}.run_partitioned_query",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
         ), MetricsCapture():
-            partitions = [
-                partition
-                for partition in self.generate_query_batches(
-                    sql,
-                    params,
-                    param_types,
-                    partition_size_bytes,
-                    max_partitions,
-                    query_options,
-                    data_boost_enabled,
-                )
-            ]
+            partitions = []
+            for partition in self.generate_query_batches(
+                sql,
+                params,
+                param_types,
+                partition_size_bytes,
+                max_partitions,
+                query_options,
+                data_boost_enabled,
+            ):
+                partitions.append(partition)
             return MergedResultSet(self, partitions, 0, lazy_decode=lazy_decode)
 
     def process(self, batch):
-        """Process a single, partitioned query or read.
-
-        :type batch: mapping
-        :param batch:
-            one of the mappings returned from an earlier call to
-            :meth:`generate_query_batches`.
-
-        :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
-        :returns: a result set instance which can be used to consume rows.
-        :raises ValueError: if batch does not contain either 'read' or 'query'"""
+        """Process a single, partitioned query or read."""
         if "query" in batch:
             return self.process_query_batch(batch)
         if "read" in batch:

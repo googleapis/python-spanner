@@ -145,7 +145,7 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
 
     async def test_ctor_defaults(self):
-        from google.cloud.spanner_v1.pool import BurstyPool
+        from google.cloud.spanner_v1._async.pool import BurstyPool
 
         instance = _Instance(self.INSTANCE_NAME)
 
@@ -340,7 +340,7 @@ class TestDatabase(_BaseTest):
 
     async def test_from_pb_success_w_hyphen_w_default_pool(self):
         from google.cloud.spanner_admin_database_v1 import Database
-        from google.cloud.spanner_v1.pool import BurstyPool
+        from google.cloud.spanner_v1._async.pool import BurstyPool
 
         DATABASE_ID_HYPHEN = "database-id"
         DATABASE_NAME_HYPHEN = self.INSTANCE_NAME + "/databases/" + DATABASE_ID_HYPHEN

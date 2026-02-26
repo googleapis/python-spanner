@@ -44,12 +44,12 @@ from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
     _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
-    _retry,
     _check_rst_stream_error,
     _SessionWrapper,
     AtomicCounter,
     _augment_error_with_request_id,
 )
+from google.cloud.spanner_v1._helpers import _retry
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
@@ -77,7 +77,18 @@ def _restart_on_unavailable(
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
     :type method: callable
-    :param method: function returning iterator"""
+    :param method: function returning iterator
+
+    :type request: proto
+    :param request: request proto to call the method with
+
+    :type transaction: :class:`google.cloud.spanner_v1.snapshot._SnapshotBase`
+    :param transaction: Snapshot or Transaction class object based on the type of transaction
+
+    :type transaction_selector: :class:`transaction_pb2.TransactionSelector`
+    :param transaction_selector: Transaction selector object to be used in request if transaction is not passed,
+    if both transaction_selector and transaction are passed, then transaction is given priority.
+    """
     resume_token: bytes = b""
     item_buffer: List[PartialResultSet] = []
     if transaction is not None:
@@ -106,7 +117,9 @@ def _restart_on_unavailable(
                             nth_request, attempt, metadata, span
                         )
                     )
-                    iterator = method(request=request, metadata=call_metadata)
+                    iterator = CrossSync._Sync_Impl.run_if_async(
+                        method, request=request, metadata=call_metadata
+                    )
             item: PartialResultSet
             for item in iterator:
                 item_buffer.append(item)

@@ -41,13 +41,23 @@ from typing import Optional
 
 
 from google.cloud.spanner_admin_database_v1 import DatabaseAdminAsyncClient as DatabaseAdminClient
-from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
-    DatabaseAdminGrpcTransport,
-)
+if CrossSync.is_async:
+    from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc_asyncio import (
+        DatabaseAdminGrpcAsyncIOTransport as DatabaseAdminGrpcTransport,
+    )
+else:
+    from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
+        DatabaseAdminGrpcTransport,
+    )
 from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient as InstanceAdminClient
-from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
-    InstanceAdminGrpcTransport,
-)
+if CrossSync.is_async:
+    from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc_asyncio import (
+        InstanceAdminGrpcAsyncIOTransport as InstanceAdminGrpcTransport,
+    )
+else:
+    from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
+        InstanceAdminGrpcTransport,
+    )
 from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
 from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
@@ -55,7 +65,7 @@ from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import DefaultTransactionOptions
 from google.cloud.spanner_v1._helpers import _merge_query_options
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1.instance import Instance
+from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1.metrics.constants import (
     METRIC_EXPORT_INTERVAL_MS,
 )

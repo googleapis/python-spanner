@@ -2484,6 +2484,8 @@ class TestBatchSnapshot(_BaseTest):
     def _make_snapshot(transaction_id=None, **kwargs):
         from google.cloud.spanner_v1.snapshot import Snapshot
 
+        # Explicitly set _read_timestamp for to_dict() test
+        kwargs.setdefault("_read_timestamp", None)
         snapshot = mock.create_autospec(Snapshot, instance=True, **kwargs)
         if transaction_id is not None:
             snapshot._transaction_id = transaction_id
@@ -2560,6 +2562,7 @@ class TestBatchSnapshot(_BaseTest):
         expected = {
             "session_id": self.SESSION_ID,
             "transaction_id": self.TRANSACTION_ID,
+            "read_timestamp": None,
         }
         self.assertEqual(batch_txn.to_dict(), expected)
 

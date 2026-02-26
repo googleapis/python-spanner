@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """Model a set of read-only queries to a database as a snapshot."""
-__CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.snapshot_helpers"
+__CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.snapshot"
 from google.cloud.aio._cross_sync import CrossSync
 
 
@@ -53,7 +53,7 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1._async._helpers import _retry
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
-from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner_v1._async.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
 
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
@@ -130,7 +130,8 @@ async def _restart_on_unavailable(
                         metadata,
                         span,
                     )
-                    iterator = method(
+                    iterator = await CrossSync.run_if_async(
+                        method,
                         request=request,
                         metadata=call_metadata,
                     )
@@ -400,6 +401,7 @@ class _SnapshotBase(_SessionWrapper):
             lazy_decode=lazy_decode,
         )
 
+    @CrossSync.convert
     async def _get_streamed_result_set(
         self, method, request, metadata, trace_attributes, column_info, lazy_decode
     ):
@@ -607,6 +609,7 @@ class _SnapshotBase(_SessionWrapper):
 
         return [partition.partition_token for partition in response.partitions]
 
+    @CrossSync.convert
     async def _begin_transaction(
         self, mutation: Mutation = None, transaction_tag: str = None
     ) -> bytes:
