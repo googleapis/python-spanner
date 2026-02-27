@@ -23,10 +23,12 @@ In the hierarchy of API concepts
 * a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
   :class:`~google.cloud.spanner_v1.database.Database`
 """
+
 import grpc
 import os
 import logging
 import warnings
+import threading
 
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
@@ -48,7 +50,10 @@ from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1._helpers import _merge_query_options
+from google.cloud.spanner_v1._helpers import (
+    _create_experimental_host_transport,
+    _merge_query_options,
+)
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.metrics.constants import (
@@ -99,9 +104,48 @@ def _get_spanner_optimizer_statistics_package():
 
 log = logging.getLogger(__name__)
 
+_metrics_monitor_initialized = False
+_metrics_monitor_lock = threading.Lock()
+
 
 def _get_spanner_enable_builtin_metrics_env():
     return os.getenv(SPANNER_DISABLE_BUILTIN_METRICS_ENV_VAR) != "true"
+
+
+def _initialize_metrics(project, credentials):
+    """
+    Initializes the Spanner built-in metrics.
+
+    This function sets up the OpenTelemetry MeterProvider and the SpannerMetricsTracerFactory.
+    It uses a lock to ensure that initialization happens only once.
+    """
+    global _metrics_monitor_initialized
+    if not _metrics_monitor_initialized:
+        with _metrics_monitor_lock:
+            if not _metrics_monitor_initialized:
+                meter_provider = metrics.NoOpMeterProvider()
+                try:
+                    if not _get_spanner_emulator_host():
+                        meter_provider = MeterProvider(
+                            metric_readers=[
+                                PeriodicExportingMetricReader(
+                                    CloudMonitoringMetricsExporter(
+                                        project_id=project,
+                                        credentials=credentials,
+                                    ),
+                                    export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
+                                ),
+                            ]
+                        )
+                    metrics.set_meter_provider(meter_provider)
+                    SpannerMetricsTracerFactory()
+                    _metrics_monitor_initialized = True
+                except Exception as e:
+                    # log is already defined at module level
+                    log.warning(
+                        "Failed to initialize Spanner built-in metrics. Error: %s",
+                        e,
+                    )
 
 
 class Client(ClientWithProject):
@@ -186,6 +230,30 @@ class Client(ClientWithProject):
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
+
+    :type use_plain_text: bool
+    :param use_plain_text: (Optional) Whether to use plain text for the connection.
+        This is intended only for experimental host spanner endpoints.
+        If set, this will override the `api_endpoint` in `client_options`.
+        If not set, the default behavior is to use TLS.
+
+    :type ca_certificate: str
+    :param ca_certificate: (Optional) The path to the CA certificate file used for TLS connection.
+        This is intended only for experimental host spanner endpoints.
+        If set, this will override the `api_endpoint` in `client_options`.
+        This is mandatory if the experimental_host requires a TLS connection.
+
+    :type client_certificate: str
+    :param client_certificate: (Optional) The path to the client certificate file used for mTLS connection.
+        This is intended only for experimental host spanner endpoints.
+        If set, this will override the `api_endpoint` in `client_options`.
+        This is mandatory if the experimental_host requires a mTLS connection.
+
+    :type client_key: str
+    :param client_key: (Optional) The path to the client key file used for mTLS connection.
+        This is intended only for experimental host spanner endpoints.
+        If set, this will override the `api_endpoint` in `client_options`.
+        This is mandatory if the experimental_host requires a mTLS connection.
     """
 
     _instance_admin_api = None
@@ -210,6 +278,10 @@ class Client(ClientWithProject):
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
         experimental_host=None,
         disable_builtin_metrics=False,
+        use_plain_text=False,
+        ca_certificate=None,
+        client_certificate=None,
+        client_key=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
         self._experimental_host = experimental_host
@@ -224,6 +296,12 @@ class Client(ClientWithProject):
         if self._emulator_host:
             credentials = AnonymousCredentials()
         elif self._experimental_host:
+            # For all experimental host endpoints project is default
+            project = "default"
+            self._use_plain_text = use_plain_text
+            self._ca_certificate = ca_certificate
+            self._client_certificate = client_certificate
+            self._client_key = client_key
             credentials = AnonymousCredentials()
         elif isinstance(credentials, AnonymousCredentials):
             self._emulator_host = self._client_options.api_endpoint
@@ -251,31 +329,12 @@ class Client(ClientWithProject):
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
             warnings.warn(_EMULATOR_HOST_HTTP_SCHEME)
-        # Check flag to enable Spanner builtin metrics
         if (
             _get_spanner_enable_builtin_metrics_env()
             and not disable_builtin_metrics
             and HAS_GOOGLE_CLOUD_MONITORING_INSTALLED
         ):
-            meter_provider = metrics.NoOpMeterProvider()
-            try:
-                if not _get_spanner_emulator_host():
-                    meter_provider = MeterProvider(
-                        metric_readers=[
-                            PeriodicExportingMetricReader(
-                                CloudMonitoringMetricsExporter(
-                                    project_id=project, credentials=credentials
-                                ),
-                                export_interval_millis=METRIC_EXPORT_INTERVAL_MS,
-                            ),
-                        ]
-                    )
-                metrics.set_meter_provider(meter_provider)
-                SpannerMetricsTracerFactory()
-            except Exception as e:
-                log.warning(
-                    "Failed to initialize Spanner built-in metrics. Error: %s", e
-                )
+            _initialize_metrics(project, credentials)
         else:
             SpannerMetricsTracerFactory(enabled=False)
 
@@ -339,8 +398,13 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = InstanceAdminGrpcTransport(
-                    channel=grpc.insecure_channel(target=self._experimental_host)
+                transport = _create_experimental_host_transport(
+                    InstanceAdminGrpcTransport,
+                    self._experimental_host,
+                    self._use_plain_text,
+                    self._ca_certificate,
+                    self._client_certificate,
+                    self._client_key,
                 )
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
@@ -369,8 +433,13 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = DatabaseAdminGrpcTransport(
-                    channel=grpc.insecure_channel(target=self._experimental_host)
+                transport = _create_experimental_host_transport(
+                    DatabaseAdminGrpcTransport,
+                    self._experimental_host,
+                    self._use_plain_text,
+                    self._ca_certificate,
+                    self._client_certificate,
+                    self._client_key,
                 )
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
@@ -517,7 +586,6 @@ class Client(ClientWithProject):
             self._emulator_host,
             labels,
             processing_units,
-            self._experimental_host,
         )
 
     def list_instances(self, filter_="", page_size=None):
