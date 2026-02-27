@@ -513,7 +513,7 @@ class Cursor(object):
                 self.transaction_helper.add_fetch_statement_for_retry(
                     self, rows, exception, is_fetch_all
                 )
-            return rows
+        return rows
 
     def _handle_DQL_with_snapshot(self, snapshot, sql, params):
         self._result_set = snapshot.execute_sql(
