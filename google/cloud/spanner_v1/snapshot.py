@@ -55,7 +55,6 @@ from google.cloud.spanner_v1._helpers import (
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1.types import ClientContext
 
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.types import MultiplexedSessionPrecommitToken

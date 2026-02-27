@@ -50,7 +50,6 @@ from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
 from google.cloud.spanner_v1 import __version__
 from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1.types import ClientContext
 from google.cloud.spanner_v1._helpers import (
     _create_experimental_host_transport,
     _merge_query_options,
