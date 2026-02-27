@@ -1024,6 +1024,7 @@ class _Client(object):
         self.directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
         self._client_context = None
+        self._experimental_host = None
 
     def copy(self):
         from copy import deepcopy
