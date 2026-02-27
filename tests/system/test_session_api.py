@@ -1749,7 +1749,7 @@ def test_snapshot_read_w_various_staleness(sessions_database):
     committed = _set_up_table(sessions_database, row_count)
     all_data_rows = list(_row_data(row_count))
 
-    before_reads = datetime.datetime.utcnow().replace(tzinfo=UTC)
+    before_reads = datetime.datetime.now(UTC)
 
     # Test w/ read timestamp
     with sessions_database.snapshot(read_timestamp=committed) as read_tx:
@@ -1761,7 +1761,7 @@ def test_snapshot_read_w_various_staleness(sessions_database):
         rows = list(min_read_ts.read(sd.TABLE, sd.COLUMNS, sd.ALL))
         sd._check_row_data(rows, all_data_rows)
 
-    staleness = datetime.datetime.utcnow().replace(tzinfo=UTC) - before_reads
+    staleness = datetime.datetime.now(UTC) - before_reads
 
     # Test w/ max staleness
     with sessions_database.snapshot(max_staleness=staleness) as max_staleness:

@@ -1257,7 +1257,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1385,7 +1385,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_abort_no_retry_metadata(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         aborted = _make_rpc_error(Aborted, trailing_metadata=[])
         response = CommitResponse(commit_timestamp=now_pb)
@@ -1497,7 +1497,7 @@ class TestSession(OpenTelemetryBase):
         ]
         aborted = _make_rpc_error(Aborted, trailing_metadata=trailing_metadata)
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1604,7 +1604,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1681,7 +1681,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1899,7 +1899,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_commit_stats_success(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2029,7 +2029,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_transaction_tag(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2097,7 +2097,7 @@ class TestSession(OpenTelemetryBase):
 
     def test_run_in_transaction_w_exclude_txn_from_change_streams(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2174,7 +2174,7 @@ class TestSession(OpenTelemetryBase):
         ]
         aborted = _make_rpc_error(Aborted, trailing_metadata=trailing_metadata)
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()

@@ -1482,7 +1482,7 @@ class TestDbApi:
     def test_staleness(self):
         """Check the DB API `staleness` option."""
 
-        before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        before_insert = datetime.datetime.now(UTC)
         time.sleep(0.25)
 
         self._cursor.execute(

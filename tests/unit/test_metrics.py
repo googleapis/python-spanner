@@ -1,4 +1,4 @@
-﻿# Copyright 2025 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ pytest.importorskip("opentelemetry")
 # pytest.importorskip("opentelemetry.semconv.attributes.otel_attributes")
 
 
-class TestCredentials(Credentials):
+class MockCredentials(Credentials):
     @property
     def expired(self):
         return False
@@ -60,12 +60,23 @@ def patched_client(monkeypatch):
     if SpannerMetricsTracerFactory._metrics_tracer_factory is not None:
         SpannerMetricsTracerFactory._metrics_tracer_factory = None
 
-    client = Client(
-        project="test",
-        credentials=TestCredentials(),
-        # client_options={"api_endpoint": "none"}
-    )
-    yield client
+    # Reset the global flag to ensure metrics initialization runs
+    from google.cloud.spanner_v1 import client as client_module
+
+    client_module._metrics_monitor_initialized = False
+
+    with patch(
+        "google.cloud.spanner_v1.metrics.metrics_exporter.MetricServiceClient"
+    ), patch(
+        "google.cloud.spanner_v1.metrics.metrics_exporter.CloudMonitoringMetricsExporter"
+    ), patch(
+        "opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader"
+    ):
+        client = Client(
+            project="test",
+            credentials=MockCredentials(),
+        )
+        yield client
 
     # Resetting
     metrics.set_meter_provider(metrics.NoOpMeterProvider())

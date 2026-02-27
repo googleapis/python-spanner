@@ -35,7 +35,8 @@ from warnings import warn
 
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
-_NOW = datetime.datetime.utcnow  # unit tests may replace
+def _NOW():
+    return datetime.datetime.now(datetime.timezone.utc)  # unit tests may replace
 
 
 class AbstractSessionPool(object):
