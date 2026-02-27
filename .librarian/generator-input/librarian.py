@@ -210,7 +210,7 @@ templated_files = common.py_library(
     split_system_tests=True,
     system_test_extras=["tracing"],
     system_test_python_versions=["3.12"],
-    unit_test_python_versions=["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.14"]
+    unit_test_python_versions=["3.10", "3.11", "3.12", "3.13", "3.14"]
 )
 s.move(
     templated_files,

@@ -38,8 +38,7 @@ libraries:
       - ^scripts/fixup_
       - ^setup.py
       - ^testing/constraints-3.8
-      - ^testing/constraints-3.9
-      - ^testing/constraints-3.1
+      - ^testing/constraints-3.10
       - ^docs/conf.py
       - ^docs/_static
       - ^docs/spanner_v1/types_.rst
