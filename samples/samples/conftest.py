@@ -274,6 +274,11 @@ def create_sample_database(
 
         yield sample_database
 
+        for backup_pb in sample_instance.list_backups():
+            backup_obj = backup.Backup.from_pb(backup_pb, sample_instance)
+            if backup_obj.database == sample_database.name:
+                backup_obj.delete()
+
         sample_database.drop()
         return
 
@@ -287,6 +292,11 @@ def create_sample_database(
         operation.result(OPERATION_TIMEOUT_SECONDS)
 
     yield sample_database
+
+    for backup_pb in sample_instance.list_backups():
+        backup_obj = backup.Backup.from_pb(backup_pb, sample_instance)
+        if backup_obj.database == sample_database.name:
+            backup_obj.delete()
 
     sample_database.drop()
 

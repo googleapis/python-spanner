@@ -85,6 +85,7 @@ def test_copy_backup(capsys, instance_id, spanner_client):
     assert COPY_BACKUP_ID in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test project")
 @pytest.mark.dependency(name="create_backup_with_encryption_key")
 def test_create_backup_with_encryption_key(
     capsys,
@@ -154,8 +155,8 @@ def test_restore_database(capsys, instance_id, sample_database):
     assert BACKUP_ID in out
 
 
+@pytest.mark.skip(reason="skipped since the KMS keys are not added on test project")
 @pytest.mark.dependency(depends=["create_backup_with_encryption_key"])
-@RetryErrors(exception=DeadlineExceeded, max_tries=2)
 def test_restore_database_with_encryption_key(
     capsys,
     instance_id,

@@ -547,7 +547,8 @@ def delete_backup(instance_id, backup_id):
     )
 
     # Wait for databases that reference this backup to finish optimizing.
-    while backup.referencing_databases:
+    timeout_at = time.time() + 600  # 10 minutes
+    while backup.referencing_databases and time.time() < timeout_at:
         time.sleep(30)
         backup = database_admin_api.get_backup(
             backup_pb.GetBackupRequest(
