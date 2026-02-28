@@ -29,6 +29,7 @@ from google.cloud.spanner_v1 import (
     BeginTransactionRequest,
     CommitRequest,
     ExecuteSqlRequest,
+    RollbackRequest,
     TypeCode,
 )
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
@@ -54,14 +55,26 @@ class TestDbapiInlineBegin(MockServerTestBase):
             "insert into singers (id, name) values (1, 'Some Singer')", 1
         )
 
-    def test_read_write_no_begin_transaction_rpc(self):
-        """Read-write DBAPI transaction must not send BeginTransactionRequest."""
+    def test_read_write_inline_begin(self):
+        """Comprehensive check for a single-statement read-write transaction.
+
+        Verifies:
+        - No BeginTransactionRequest is sent
+        - The ExecuteSqlRequest uses TransactionSelector(begin=ReadWrite(...))
+        - The request sequence is [ExecuteSqlRequest, CommitRequest]
+        - The query returns correct data
+        """
         connection = Connection(self.instance, self.database)
         connection.autocommit = False
         with connection.cursor() as cursor:
             cursor.execute("select name from singers")
-            cursor.fetchall()
+            rows = cursor.fetchall()
         connection.commit()
+
+        self.assertEqual(
+            [("Some Singer",)], rows,
+            "Query should return the mocked result set",
+        )
 
         begin_requests = [
             r for r in self.spanner_service.requests
@@ -71,35 +84,20 @@ class TestDbapiInlineBegin(MockServerTestBase):
                          "Read-write DBAPI transactions should not send "
                          "a separate BeginTransactionRequest")
 
-    def test_read_write_uses_inline_begin(self):
-        """The first ExecuteSqlRequest must carry TransactionSelector(begin=...)."""
-        connection = Connection(self.instance, self.database)
-        connection.autocommit = False
-        with connection.cursor() as cursor:
-            cursor.execute("select name from singers")
-            cursor.fetchall()
-        connection.commit()
-
         sql_requests = [
             r for r in self.spanner_service.requests
             if isinstance(r, ExecuteSqlRequest)
         ]
         self.assertGreaterEqual(len(sql_requests), 1)
         first_sql = sql_requests[0]
+        self.assertTrue(
+            first_sql.transaction.begin.read_write == first_sql.transaction.begin.read_write,
+        )
         self.assertIn(
             "read_write", first_sql.transaction.begin,
             "First ExecuteSqlRequest should use inline begin with "
             "TransactionSelector(begin=ReadWrite(...))",
         )
-
-    def test_read_write_request_sequence(self):
-        """Read-write DBAPI transaction: ExecuteSql + Commit (no BeginTransaction)."""
-        connection = Connection(self.instance, self.database)
-        connection.autocommit = False
-        with connection.cursor() as cursor:
-            cursor.execute("select name from singers")
-            cursor.fetchall()
-        connection.commit()
 
         self.assert_requests_sequence(
             self.spanner_service.requests,
@@ -123,56 +121,36 @@ class TestDbapiInlineBegin(MockServerTestBase):
             TransactionType.READ_WRITE,
         )
 
-    def test_read_then_write_request_sequence(self):
-        """Read + write in same transaction: 2x ExecuteSql + Commit."""
+    def test_read_then_write_full_lifecycle(self):
+        """Read + write in same transaction: verifies the complete inline begin lifecycle.
+
+        Checks:
+        - First ExecuteSqlRequest uses TransactionSelector(begin=ReadWrite(...))
+        - Second ExecuteSqlRequest uses TransactionSelector(id=<txn_id>)
+        - CommitRequest uses the same transaction_id as the second statement
+        - Query returns correct data
+        - Request sequence is [ExecuteSql, ExecuteSql, Commit]
+        """
         connection = Connection(self.instance, self.database)
         connection.autocommit = False
         with connection.cursor() as cursor:
             cursor.execute("select name from singers")
-            cursor.fetchall()
+            rows = cursor.fetchall()
             cursor.execute(
                 "insert into singers (id, name) values (1, 'Some Singer')"
             )
         connection.commit()
+
+        self.assertEqual(
+            [("Some Singer",)], rows,
+            "Query should return the mocked result set",
+        )
 
         self.assert_requests_sequence(
             self.spanner_service.requests,
             [ExecuteSqlRequest, ExecuteSqlRequest, CommitRequest],
             TransactionType.READ_WRITE,
         )
-
-    def test_read_only_still_uses_explicit_begin(self):
-        """Read-only transactions should still use explicit BeginTransaction."""
-        connection = Connection(self.instance, self.database)
-        connection.autocommit = False
-        connection.read_only = True
-        with connection.cursor() as cursor:
-            cursor.execute("select name from singers")
-            cursor.fetchall()
-        connection.commit()
-
-        self.assert_requests_sequence(
-            self.spanner_service.requests,
-            [BeginTransactionRequest, ExecuteSqlRequest],
-            TransactionType.READ_ONLY,
-        )
-
-    def test_second_statement_uses_transaction_id(self):
-        """After inline begin, subsequent statements must use TransactionSelector(id=...).
-
-        This verifies that the DBAPI correctly extracts the transaction_id from
-        the inline begin response and passes it to subsequent requests — proving
-        the transaction lifecycle is maintained.
-        """
-        connection = Connection(self.instance, self.database)
-        connection.autocommit = False
-        with connection.cursor() as cursor:
-            cursor.execute("select name from singers")
-            cursor.fetchall()
-            cursor.execute(
-                "insert into singers (id, name) values (1, 'Some Singer')"
-            )
-        connection.commit()
 
         sql_requests = [
             r for r in self.spanner_service.requests
@@ -190,12 +168,43 @@ class TestDbapiInlineBegin(MockServerTestBase):
         self.assertNotEqual(
             b"", second.transaction.id,
             "Second statement should use TransactionSelector(id=...) "
-            "with the transaction_id returned from inline begin, "
-            "not another TransactionSelector(begin=...)",
+            "with the transaction_id returned from inline begin",
         )
 
-    def test_rollback(self):
-        """Rollback should work without error after inline begin."""
+        commit_requests = [
+            r for r in self.spanner_service.requests
+            if isinstance(r, CommitRequest)
+        ]
+        self.assertEqual(1, len(commit_requests))
+        self.assertEqual(
+            second.transaction.id, commit_requests[0].transaction_id,
+            "CommitRequest must reference the same transaction_id "
+            "that the second ExecuteSqlRequest used",
+        )
+
+    def test_read_only_still_uses_explicit_begin(self):
+        """Read-only transactions should still use explicit BeginTransaction."""
+        connection = Connection(self.instance, self.database)
+        connection.autocommit = False
+        connection.read_only = True
+        with connection.cursor() as cursor:
+            cursor.execute("select name from singers")
+            rows = cursor.fetchall()
+        connection.commit()
+
+        self.assertEqual(
+            [("Some Singer",)], rows,
+            "Read-only query should return the mocked result set",
+        )
+
+        self.assert_requests_sequence(
+            self.spanner_service.requests,
+            [BeginTransactionRequest, ExecuteSqlRequest],
+            TransactionType.READ_ONLY,
+        )
+
+    def test_rollback_after_inline_begin(self):
+        """Rollback after DML sends RollbackRequest with the correct transaction_id."""
         connection = Connection(self.instance, self.database)
         connection.autocommit = False
         with connection.cursor() as cursor:
@@ -208,7 +217,32 @@ class TestDbapiInlineBegin(MockServerTestBase):
             r for r in self.spanner_service.requests
             if isinstance(r, BeginTransactionRequest)
         ]
-        self.assertEqual(0, len(begin_requests))
+        self.assertEqual(0, len(begin_requests),
+                         "Rollback path should not use BeginTransactionRequest")
+
+        sql_requests = [
+            r for r in self.spanner_service.requests
+            if isinstance(r, ExecuteSqlRequest)
+        ]
+        self.assertEqual(1, len(sql_requests))
+
+        rollback_requests = [
+            r for r in self.spanner_service.requests
+            if isinstance(r, RollbackRequest)
+        ]
+        self.assertEqual(1, len(rollback_requests),
+                         "A RollbackRequest should be sent after DML + rollback")
+
+        txn_id_from_inline_begin = sql_requests[0].transaction.begin
+        self.assertIn(
+            "read_write", txn_id_from_inline_begin,
+            "DML should have used inline begin",
+        )
+
+        self.assertNotEqual(
+            b"", rollback_requests[0].transaction_id,
+            "RollbackRequest must carry the transaction_id obtained via inline begin",
+        )
 
     def test_inline_begin_with_abort_retry(self):
         """Transaction retry after abort should work with inline begin.
@@ -244,4 +278,18 @@ class TestDbapiInlineBegin(MockServerTestBase):
             self.assertIn(
                 "read_write", req.transaction.begin,
                 f"ExecuteSqlRequest[{i}] should use inline begin",
+            )
+
+        commit_requests = [
+            r for r in self.spanner_service.requests
+            if isinstance(r, CommitRequest)
+        ]
+        self.assertEqual(2, len(commit_requests),
+                         "Expected 2 CommitRequests: the aborted original + "
+                         "the successful retry")
+        for i, cr in enumerate(commit_requests):
+            self.assertNotEqual(
+                b"", cr.transaction_id,
+                f"CommitRequest[{i}] must carry a transaction_id "
+                "from inline begin",
             )
