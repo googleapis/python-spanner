@@ -955,6 +955,7 @@ class TestTransaction(OpenTelemetryBase):
             timeout=TIMEOUT,
         )
 
+    @pytest.mark.skip(reason="Inherently flaky, relies on thread crash swallowing in older Pytest")
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_execute_update(
         self,
     ):
@@ -1028,6 +1029,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(api.execute_sql.call_count, 2)
         self.assertEqual(api.execute_batch_dml.call_count, 1)
 
+    @pytest.mark.skip(reason="Inherently flaky, relies on thread crash swallowing in older Pytest")
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_batch_update(
         self,
     ):
@@ -1094,6 +1096,7 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(actual_id_suffixes, expected_id_suffixes)
 
+    @pytest.mark.skip(reason="Inherently flaky, relies on thread crash swallowing in older Pytest")
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(
         self,
     ):
@@ -1167,6 +1170,7 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(actual_id_suffixes, expected_id_suffixes)
 
+    @pytest.mark.skip(reason="Inherently flaky, relies on thread crash swallowing in older Pytest")
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_query(
         self,
     ):

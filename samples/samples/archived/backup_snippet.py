@@ -20,7 +20,6 @@ For more information, see the README.rst under /spanner.
 
 import time
 from datetime import datetime, timedelta, timezone
-import time
 
 from google.cloud import spanner
 
