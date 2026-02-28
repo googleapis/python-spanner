@@ -29,7 +29,6 @@ from google.cloud.spanner_v1 import (
     BeginTransactionRequest,
     CommitRequest,
     ExecuteSqlRequest,
-    TransactionOptions,
     TypeCode,
 )
 from google.cloud.spanner_v1.testing.mock_spanner import SpannerServicer
