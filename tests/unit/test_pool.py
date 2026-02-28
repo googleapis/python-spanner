@@ -945,7 +945,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_get_hit_w_ping(self, mock_region):
-
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -973,7 +972,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_get_hit_w_ping_expired(self, mock_region):
-
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1096,7 +1094,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_put_non_full(self, mock_region):
-
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1171,7 +1168,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_ping_oldest_stale_but_exists(self, mock_region):
-
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1192,7 +1188,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_ping_oldest_stale_and_not_exists(self, mock_region):
-
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1327,7 +1322,11 @@ class _Session(object):
     _transaction = None
 
     def __init__(
-        self, database, exists=True, transaction=None, last_use_time=datetime.now(timezone.utc)
+        self,
+        database,
+        exists=True,
+        transaction=None,
+        last_use_time=datetime.now(timezone.utc),
     ):
         self._database = database
         self._exists = exists

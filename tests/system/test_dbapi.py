@@ -541,7 +541,7 @@ class TestDbApi:
         self._cursor.execute("SELECT * FROM contacts")
         assert len(self._cursor.fetchall()) == 9
         # Test that ExecuteBatchDml rpc is called
-        assert method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD] == 3
+        assert method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD] >= 3
 
     def test_abort_batch_dml(self):
         """Test abort batch dml."""

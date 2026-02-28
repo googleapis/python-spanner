@@ -509,12 +509,12 @@ class Cursor(object):
             exception = e
         except Exception as e:
             exception = e
-            
+
         if not self._in_retry_mode:
             self.transaction_helper.add_fetch_statement_for_retry(
                 self, rows, exception, is_fetch_all
             )
-        
+
         return rows
 
     def _handle_DQL_with_snapshot(self, snapshot, sql, params):

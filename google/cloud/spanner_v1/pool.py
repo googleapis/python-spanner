@@ -35,6 +35,7 @@ from warnings import warn
 
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
+
 def _NOW():
     return datetime.datetime.now(datetime.timezone.utc)  # unit tests may replace
 
