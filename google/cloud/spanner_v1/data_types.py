@@ -80,22 +80,41 @@ class JsonObject(dict):
 
         return cls(json.loads(str_repr))
 
-    def serialize(self):
+    def serialize(self, default=None):
         """Return the object text representation.
 
+        Args:
+            default (callable, optional): A function that is called for
+                objects that are not JSON serializable. It should return a
+                JSON-encodable version of the object or raise a
+                :class:`TypeError`. This is passed directly to
+                :func:`json.dumps` as the ``default`` parameter.
+                For example, to support ``datetime`` objects::
+
+                    obj.serialize(default=lambda o: o.isoformat()
+                                  if hasattr(o, 'isoformat') else str(o))
+
         Returns:
-            str: JSON object text representation.
+            str: JSON object text representation, or None if the object
+            is null.
         """
         if self._is_null:
             return None
 
         if self._is_scalar_value:
-            return json.dumps(self._simple_value)
+            return json.dumps(self._simple_value, default=default)
 
         if self._is_array:
-            return json.dumps(self._array_value, sort_keys=True, separators=(",", ":"))
+            return json.dumps(
+                self._array_value,
+                sort_keys=True,
+                separators=(",", ":"),
+                default=default,
+            )
 
-        return json.dumps(self, sort_keys=True, separators=(",", ":"))
+        return json.dumps(
+            self, sort_keys=True, separators=(",", ":"), default=default
+        )
 
 
 @dataclass

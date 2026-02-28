@@ -96,3 +96,51 @@ class Test_JsonObject_serde(unittest.TestCase):
         expected = json.dumps(data, sort_keys=True, separators=(",", ":"))
         data_jsonobject = JsonObject(JsonObject(data))
         self.assertEqual(data_jsonobject.serialize(), expected)
+
+
+class Test_JsonObject_serialize_default(unittest.TestCase):
+    """Tests for the ``default`` parameter of ``JsonObject.serialize()``."""
+
+    def test_dict_with_custom_type_and_default(self):
+        from datetime import datetime
+
+        dt = datetime(2023, 6, 15, 9, 30, 0)
+        data = {"ts": dt, "name": "test"}
+        obj = JsonObject(data)
+        result = obj.serialize(default=lambda o: o.isoformat() if isinstance(o, datetime) else str(o))
+        parsed = json.loads(result)
+        self.assertEqual(parsed["ts"], "2023-06-15T09:30:00")
+        self.assertEqual(parsed["name"], "test")
+
+    def test_array_with_custom_type_and_default(self):
+        from datetime import datetime
+
+        dt = datetime(2023, 1, 1)
+        data = [dt, "hello"]
+        obj = JsonObject(data)
+        result = obj.serialize(default=lambda o: o.isoformat() if isinstance(o, datetime) else str(o))
+        parsed = json.loads(result)
+        self.assertEqual(parsed[0], "2023-01-01T00:00:00")
+        self.assertEqual(parsed[1], "hello")
+
+    def test_without_default_raises_on_custom_type(self):
+        from datetime import datetime
+
+        data = {"ts": datetime(2023, 1, 1)}
+        obj = JsonObject(data)
+        with self.assertRaises(TypeError):
+            obj.serialize()
+
+    def test_default_none_preserves_existing_behavior(self):
+        data = {"foo": "bar"}
+        expected = json.dumps(data, sort_keys=True, separators=(",", ":"))
+        obj = JsonObject(data)
+        self.assertEqual(obj.serialize(default=None), expected)
+
+    def test_scalar_with_default(self):
+        from datetime import datetime
+
+        dt = datetime(2023, 6, 15)
+        obj = JsonObject(dt)
+        result = obj.serialize(default=lambda o: o.isoformat() if isinstance(o, datetime) else str(o))
+        self.assertEqual(json.loads(result), "2023-06-15T00:00:00")
