@@ -41,7 +41,8 @@ def cancel_backup(instance_id, database_id, backup_id):
 
     # Cancel operations are best effort so either it will complete or
     # be cancelled.
-    while not operation.done():
+    timeout_at = time.time() + 600  # 10 minutes max wait
+    while not operation.done() and time.time() < timeout_at:
         time.sleep(300)  # 5 mins
 
     # Deal with resource if the operation succeeded.
