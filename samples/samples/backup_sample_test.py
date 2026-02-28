@@ -42,6 +42,16 @@ CMEK_BACKUP_ID = unique_backup_id()
 RETENTION_DATABASE_ID = unique_database_id()
 RETENTION_PERIOD = "7d"
 COPY_BACKUP_ID = unique_backup_id()
+CMEK_DATABASE_ID = unique_database_id()
+
+
+@pytest.fixture(scope="module")
+def cmek_database(spanner_client, sample_instance, database_dialect):
+    from conftest import create_sample_database
+
+    yield from create_sample_database(
+        spanner_client, sample_instance, CMEK_DATABASE_ID, [], database_dialect
+    )
 
 
 @pytest.mark.dependency(name="create_backup")
@@ -79,12 +89,12 @@ def test_copy_backup(capsys, instance_id, spanner_client):
 def test_create_backup_with_encryption_key(
     capsys,
     instance_id,
-    sample_database,
+    cmek_database,
     kms_key_name,
 ):
     backup_sample.create_backup_with_encryption_key(
         instance_id,
-        sample_database.database_id,
+        cmek_database.database_id,
         CMEK_BACKUP_ID,
         kms_key_name,
     )
@@ -149,14 +159,14 @@ def test_restore_database(capsys, instance_id, sample_database):
 def test_restore_database_with_encryption_key(
     capsys,
     instance_id,
-    sample_database,
+    cmek_database,
     kms_key_name,
 ):
     backup_sample.restore_database_with_encryption_key(
         instance_id, CMEK_RESTORE_DB_ID, CMEK_BACKUP_ID, kms_key_name
     )
     out, _ = capsys.readouterr()
-    assert (sample_database.database_id + " restored to ") in out
+    assert (cmek_database.database_id + " restored to ") in out
     assert (CMEK_RESTORE_DB_ID + " from backup ") in out
     assert CMEK_BACKUP_ID in out
     assert kms_key_name in out
