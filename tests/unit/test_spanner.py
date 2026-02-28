@@ -14,7 +14,6 @@
 
 
 import threading
-import unittest
 
 import pytest
 from google.protobuf.struct_pb2 import Struct
