@@ -1360,10 +1360,11 @@ def test_transaction_batch_update_wo_statements(sessions_database, sessions_to_d
     session.create()
     sessions_to_delete.append(session)
 
-    with session.transaction() as transaction:
-        transaction.begin()
+    def unit_of_work(transaction):
         with pytest.raises(exceptions.InvalidArgument):
             transaction.batch_update([])
+
+    session.run_in_transaction(unit_of_work)
 
 
 @pytest.mark.skipif(
