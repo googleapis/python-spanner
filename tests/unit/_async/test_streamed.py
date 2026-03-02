@@ -1,8 +1,7 @@
 import asyncio
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
+import mock
 import pytest
+from unittest import IsolatedAsyncioTestCase
 
 from google.cloud.aio._cross_sync import CrossSync
 
@@ -36,10 +35,6 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
 
             setattr(self, self._testMethodName, wrapper)
         super().run(result)
-
-
-import mock
-import pytest
 
 
 @CrossSync.convert_class(

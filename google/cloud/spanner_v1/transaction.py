@@ -132,7 +132,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 session._database, "observability_options", None
             ),
             metadata=metadata,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             method = functools.partial(method, request=request)
             response = _retry(
                 method,
@@ -165,7 +165,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 session,
                 observability_options=observability_options,
                 metadata=metadata,
-            ) as span, MetricsCapture():
+            ) as span, MetricsCapture(self._resource_info):
                 attempt = AtomicCounter(0)
                 nth_request = database._next_nth_request
 
@@ -237,7 +237,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             extra_attributes={"num_mutations": num_mutations},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             if self.committed is not None:
                 raise ValueError("Transaction already committed.")
             if self.rolled_back:

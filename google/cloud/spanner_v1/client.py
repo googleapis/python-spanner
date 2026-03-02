@@ -57,10 +57,7 @@ from google.cloud.spanner_v1 import (
     ExecuteSqlRequest,
     __version__,
 )
-from google.cloud.spanner_v1._helpers import (
-    _create_experimental_host_transport,
-    _validate_client_context,
-)
+from google.cloud.spanner_v1._helpers import _validate_client_context
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
 from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
@@ -270,6 +267,11 @@ class Client(ClientWithProject):
         if self._emulator_host:
             credentials = AnonymousCredentials()
         elif self._experimental_host:
+            project = "default"
+            self._use_plain_text = use_plain_text
+            self._ca_certificate = ca_certificate
+            self._client_certificate = client_certificate
+            self._client_key = client_key
             credentials = AnonymousCredentials()
         elif isinstance(credentials, AnonymousCredentials):
             self._emulator_host = self._client_options.api_endpoint
@@ -355,7 +357,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = _create_experimental_host_transport(
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
                     InstanceAdminGrpcTransport,
                     self._experimental_host,
                     self._use_plain_text,
@@ -389,7 +395,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = _create_experimental_host_transport(
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
                     DatabaseAdminGrpcTransport,
                     self._experimental_host,
                     self._use_plain_text,

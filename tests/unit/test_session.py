@@ -191,12 +191,15 @@ class TestSession(OpenTelemetryBase):
     ):
         database = mock.create_autospec(Database, instance=True)
         database.name = name
+        database.database_id = name.split("/")[-1]
         database.log_commit_stats = False
         database.database_role = database_role
         database._route_to_leader_enabled = True
         database.default_transaction_options = default_transaction_options
         database._instance = mock.Mock()
+        database._instance.instance_id = name.split("/")[3]
         database._instance._client = mock.Mock()
+        database._instance._client.project = name.split("/")[1]
         database._instance._client._client_context = None
         inject_into_mock_database(database)
 

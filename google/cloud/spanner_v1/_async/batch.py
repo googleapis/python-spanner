@@ -29,7 +29,7 @@ from google.cloud.spanner_v1 import (
     RequestOptions,
     TransactionOptions,
 )
-from google.cloud.spanner_v1._async._helpers import _retry, _retry_on_aborted_exception
+from google.cloud.spanner_v1._async._helpers import _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _merge_client_context,
@@ -65,6 +65,16 @@ class _BatchBase(_SessionWrapper):
         """Timestamp at which the batch was successfully committed."""
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
         self._client_context = _validate_client_context(client_context)
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     def insert(self, table, columns, values):
         """Insert one or more new table rows.
@@ -253,7 +263,7 @@ class Batch(_BatchBase):
             extra_attributes={"num_mutations": len(mutations)},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
 
             async def wrapped_method():
                 commit_request = CommitRequest(
@@ -338,6 +348,16 @@ class MutationGroups(_SessionWrapper):
         self.committed: bool = False
         self._client_context = _validate_client_context(client_context)
 
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
+
     def group(self):
         """Returns a new `MutationGroup` to which mutations can be added."""
         mutation_group = BatchWriteRequest.MutationGroup()
@@ -396,7 +416,7 @@ class MutationGroups(_SessionWrapper):
             extra_attributes={"num_mutation_groups": len(mutation_groups)},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             attempt = AtomicCounter(0)
             nth_request = getattr(database, "_next_nth_request", 0)
 

@@ -16,6 +16,14 @@
 import logging
 from typing import Dict, List, NoReturn, Optional, Tuple, Union
 
+from google.api_core.retry import Retry
+from google.api_core.exceptions import (
+    InvalidArgument,
+    ResourceExhausted,
+    ServiceUnavailable,
+    DeadlineExceeded,
+)
+
 from google.api.distribution_pb2 import (
     Distribution,
 )  # pylint: disable=no-name-in-module
@@ -145,16 +153,35 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         """
         write_ind = 0
         timeout = timeout_millis / MILLIS_PER_SECOND
+
+        retry = Retry(
+            predicate=lambda e: (
+                isinstance(e, (ResourceExhausted, ServiceUnavailable, DeadlineExceeded))
+                or (
+                    isinstance(e, InvalidArgument)
+                    and "written more frequently" in str(e)
+                )
+            ),
+            initial=1.0,
+            maximum=16.0,
+            multiplier=2.0,
+            deadline=timeout,
+        )
+
         while write_ind < len(series):
             request = CreateTimeSeriesRequest(
                 name=self.project_name,
                 time_series=series[write_ind : write_ind + MAX_BATCH_WRITE],
             )
 
-            self.client.create_service_time_series(
-                request=request,
-                timeout=timeout,
-            )
+            try:
+                retry(self.client.create_service_time_series)(
+                    request=request,
+                    timeout=timeout,
+                )
+            except Exception as e:
+                logger.error("Failed to export metrics to Cloud Monitoring: %s", e)
+
             write_ind += MAX_BATCH_WRITE
 
     @staticmethod

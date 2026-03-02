@@ -3597,11 +3597,14 @@ class _Client(object):
 
 
 class _Instance(object):
-    def __init__(self, name, client=_Client(), emulator_host=None):
+    def __init__(
+        self, name, client=_Client(), emulator_host=None, experimental_host=None
+    ):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
         self.emulator_host = emulator_host
+        self.experimental_host = experimental_host
 
 
 class _Backup(object):
@@ -3619,17 +3622,30 @@ class _Database(object):
         self.database_id = name.rsplit("/", 1)[1]
         if instance is None:
             instance = mock.Mock()
+            instance.instance_id = name.split("/")[3]
             instance._client = mock.Mock()
+            instance._client.project = name.split("/")[1]
             instance._client._client_context = None
             instance._client._query_options = ExecuteSqlRequest.QueryOptions(
                 optimizer_version="1"
             )
         self._instance = instance
+
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+        self._nth_request = AtomicCounter()
+        self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
+
+    @property
+    def _resource_info(self):
+        return {
+            "database": self.database_id,
+            "instance": self._instance.instance_id,
+            "project": self._instance._client.project,
+        }
         self._nth_request = AtomicCounter()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
 
@@ -3649,11 +3665,22 @@ class _Database(object):
 
     @property
     def sessions_manager(self):
-        """Returns the database sessions manager.
-
-        :rtype: Mock
-        :returns: The mock sessions manager for this database.
-        """
+        if not hasattr(self, "_sessions_manager"):
+            self._sessions_manager = mock.Mock()
+            
+            def get_sess(*args, **kwargs):
+                if hasattr(self, "_pool"):
+                    return self._pool.get()
+                return _Session(self)
+                
+            self._sessions_manager.get_session.side_effect = get_sess
+            
+            def put_sess(sess):
+                if hasattr(self, "_pool"):
+                    self._pool.put(sess)
+                    
+            self._sessions_manager.put_session.side_effect = put_sess
+            
         return self._sessions_manager
 
     @property

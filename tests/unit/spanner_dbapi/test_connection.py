@@ -899,9 +899,10 @@ class _Client(object):
 
 
 class _Instance(object):
-    def __init__(self, name="instance_id", client=None):
+    def __init__(self, name="instance_id", client=None, experimental_host=None):
         self.name = name
         self._client = client
+        self.experimental_host = experimental_host
 
     def database(
         self,

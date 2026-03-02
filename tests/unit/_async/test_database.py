@@ -1,8 +1,31 @@
 import asyncio
-import unittest
+import mock
+import pytest
 from unittest import IsolatedAsyncioTestCase
 
-import pytest
+from google.api_core import gapic_v1
+from google.api_core.retry import Retry
+from google.protobuf.field_mask_pb2 import FieldMask
+
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    DirectedReadOptions,
+    RequestOptions,
+)
+from google.cloud.spanner_v1._async.database_sessions_manager import TransactionType
+from google.cloud.spanner_v1._async.session import Session
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _augment_errors_with_request_id,
+    _metadata_with_request_id,
+    _metadata_with_request_id_and_req_id,
+)
+from google.cloud.spanner_v1.param_types import INT64
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from tests._builders import build_spanner_api
+from tests._helpers import is_multiplexed_enabled
 
 from google.cloud.aio._cross_sync import CrossSync
 
@@ -38,31 +61,7 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
         super().run(result)
 
 
-from google.api_core import gapic_v1
-from google.api_core.retry import Retry
-from google.protobuf.field_mask_pb2 import FieldMask
-import mock
-import pytest
-
-from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
-from google.cloud.spanner_admin_database_v1 import DatabaseDialect
-from google.cloud.spanner_v1 import (
-    DefaultTransactionOptions,
-    DirectedReadOptions,
-    RequestOptions,
-)
-from google.cloud.spanner_v1._async.database_sessions_manager import TransactionType
-from google.cloud.spanner_v1._async.session import Session
-from google.cloud.spanner_v1._helpers import (
-    AtomicCounter,
-    _augment_errors_with_request_id,
-    _metadata_with_request_id,
-    _metadata_with_request_id_and_req_id,
-)
-from google.cloud.spanner_v1.param_types import INT64
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from tests._builders import build_spanner_api
-from tests._helpers import is_multiplexed_enabled
+# Copyright
 
 DML_WO_PARAM = """
 DELETE FROM citizens
@@ -2747,7 +2746,7 @@ class TestBatchSnapshot(_BaseTest):
         database = self._make_database()
         session = self._make_session()
         # Configure sessions_manager to return the session for partition operations
-        database.sessions_manager.get_session.side_effect = lambda tx_type: session
+        database.sessions_manager.get_session = mock.AsyncMock(return_value=session)
         batch_txn = self._make_one(database)
         self.assertIs(await batch_txn._get_session(), session)
         # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
@@ -3816,6 +3815,8 @@ class _Instance(object):
         self._client = client
         self.emulator_host = emulator_host
         self.experimental_host = experimental_host
+        self.project = "project-id"
+        self._instance_id = self.instance_id
 
 
 class _Backup(object):
@@ -3832,21 +3833,24 @@ class _Database(object):
         self.name = name
         self.database_id = name.rsplit("/", 1)[1]
         if instance is None:
-            from google.cloud.spanner_v1 import ExecuteSqlRequest
-            instance = CrossSync.Mock()
-            instance._client = CrossSync.Mock()
-            instance._client._client_context = None
-            instance._client._query_options = ExecuteSqlRequest.QueryOptions(
-                optimizer_version="1"
-            )
+            instance = _Instance(name.rsplit("/", 1)[0])
         self._instance = instance
         from logging import Logger
 
         self.logger = mock.create_autospec(Logger, instance=True)
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+
         self._nth_request = AtomicCounter()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
+
+    @property
+    def _resource_info(self):
+        return {
+            "database": self.database_id,
+            "instance": self._instance.instance_id,
+            "project": self._instance._client.project,
+        }
 
         # Mock sessions manager for multiplexed sessions support
         self._sessions_manager = mock.Mock()
@@ -3863,12 +3867,32 @@ class _Database(object):
         )
 
     @property
-    def sessions_manager(self):
-        """Returns the database sessions manager.
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": "project-id",
+            "instance": "instance-id",
+            "database": self.database_id,
+        }
 
-        :rtype: Mock
-        :returns: The mock sessions manager for this database.
-        """
+    @property
+    def sessions_manager(self):
+        if not hasattr(self, "_sessions_manager"):
+            self._sessions_manager = mock.Mock()
+            
+            async def get_sess(*args, **kwargs):
+                if hasattr(self, "_pool"):
+                    return self._pool.get()
+                return _Session(self)
+                
+            self._sessions_manager.get_session.side_effect = get_sess
+            
+            async def put_sess(sess):
+                if hasattr(self, "_pool"):
+                    self._pool.put(sess)
+                    
+            self._sessions_manager.put_session.side_effect = put_sess
+            
         return self._sessions_manager
 
     @property

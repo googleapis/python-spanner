@@ -77,6 +77,15 @@ class Session(object):
         self._is_multiplexed: bool = is_multiplexed
         self._last_use_time: datetime = datetime.utcnow()
 
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._database._instance._client.project,
+            "instance": self._database._instance.instance_id,
+            "database": self._database.database_id,
+        }
+
     def __lt__(self, other):
         return self._session_id < other._session_id
 
@@ -175,7 +184,7 @@ class Session(object):
             self._labels,
             observability_options=observability_options,
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             (call_metadata, error_augmenter) = database.with_error_augmentation(
                 nth_request, 1, metadata, span
             )
@@ -219,7 +228,7 @@ class Session(object):
             self,
             observability_options=observability_options,
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             (call_metadata, error_augmenter) = database.with_error_augmentation(
                 nth_request, 1, metadata, span
             )
@@ -270,7 +279,7 @@ class Session(object):
             },
             observability_options=observability_options,
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             (call_metadata, error_augmenter) = database.with_error_augmentation(
                 nth_request, 1, metadata, span
             )
@@ -494,7 +503,7 @@ class Session(object):
             self,
             extra_attributes=extra_attributes,
             observability_options=getattr(database, "observability_options", None),
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             attempts: int = 0
             previous_transaction_id: Optional[bytes] = None
             while True:

@@ -78,6 +78,7 @@ def _restart_on_unavailable(
     transaction_selector=None,
     observability_options=None,
     request_id_manager=None,
+    resource_info=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -116,7 +117,7 @@ def _restart_on_unavailable(
                     attributes,
                     observability_options=observability_options,
                     metadata=metadata,
-                ) as span, MetricsCapture():
+                ) as span, MetricsCapture(resource_info):
                     (call_metadata, current_request_id) = (
                         request_id_manager.metadata_and_request_id(
                             nth_request, attempt, metadata, span
@@ -194,6 +195,16 @@ class _SnapshotBase(_SessionWrapper):
         self._transaction_id: Optional[bytes] = None
         self._precommit_token: Optional[MultiplexedSessionPrecommitToken] = None
         self._lock: CrossSync._Sync_Impl.Lock = CrossSync._Sync_Impl.Lock()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     def begin(self) -> bytes:
         """Begins a transaction on the database.
@@ -394,6 +405,7 @@ class _SnapshotBase(_SessionWrapper):
                 transaction=self,
                 observability_options=getattr(database, "observability_options", None),
                 request_id_manager=database,
+                resource_info=self._resource_info,
             )
             if is_execute_sql_request:
                 self._execute_sql_request_count += 1
@@ -458,7 +470,7 @@ class _SnapshotBase(_SessionWrapper):
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -530,7 +542,7 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -592,7 +604,7 @@ class _SnapshotBase(_SessionWrapper):
             session=session,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 

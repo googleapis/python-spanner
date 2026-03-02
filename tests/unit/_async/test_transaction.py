@@ -1,4 +1,5 @@
 from datetime import timedelta
+import pytest
 
 # Copyright 2016 Google LLC All rights reserved.
 #
@@ -15,9 +16,6 @@ from datetime import timedelta
 # limitations under the License.
 from threading import Lock
 from typing import Mapping
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
 from google.api_core import gapic_v1
 from google.api_core.retry import Retry
 import mock
@@ -1461,6 +1459,7 @@ class _Client(object):
         self.directed_read_options = None
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
+        self.log_commit_stats = False
 
     @property
     def _next_nth_request(self):
@@ -1470,6 +1469,9 @@ class _Client(object):
 class _Instance(object):
     def __init__(self):
         self._client = _Client()
+        self.experimental_host = None
+        self.project = "project-id"
+        self._instance_id = "instance-id"
 
 
 class _Database(object):
@@ -1479,6 +1481,15 @@ class _Database(object):
         self._route_to_leader_enabled = True
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": "project-id",
+            "instance": "instance-id",
+            "database": self.name,
+        }
 
     @property
     def _next_nth_request(self):
@@ -1524,6 +1535,11 @@ class _Session(object):
     def __init__(self, database=None, name=TestTransaction.SESSION_NAME):
         self._database = database
         self.name = name
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info if self._database else None
 
     @property
     def session_id(self):

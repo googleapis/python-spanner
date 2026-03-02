@@ -205,6 +205,15 @@ class Database(object):
         is_experimental_host = self._experimental_host is not None
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._instance._client.project,
+            "instance": self._instance.instance_id,
+            "database": self.database_id,
+        }
+
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
         """Creates an instance of this class from a protobuf.
@@ -424,8 +433,18 @@ class Database(object):
                 )
                 return self._spanner_api
             if self._experimental_host is not None:
-                channel = grpc.insecure_channel(self._experimental_host)
-                transport = SpannerGrpcTransport(channel=channel)
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
+                    SpannerGrpcTransport,
+                    self._experimental_host,
+                    self._instance._client._use_plain_text,
+                    self._instance._client._ca_certificate,
+                    self._instance._client._client_certificate,
+                    self._instance._client._client_key,
+                )
                 self._spanner_api = SpannerClient(
                     client_info=client_info,
                     transport=transport,
@@ -441,7 +460,7 @@ class Database(object):
                 client_options=client_options,
             )
             with self.__transport_lock:
-                transport = self._spanner_api._transport
+                transport = self._spanner_api.transport
                 channel_id = self.__transports_to_channel_id.get(transport, None)
                 if channel_id is None:
                     channel_id = len(self.__transports_to_channel_id) + 1
@@ -780,7 +799,7 @@ class Database(object):
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
-            ) as span, MetricsCapture():
+            ) as span, MetricsCapture(self._resource_info):
                 transaction_type = TransactionType.PARTITIONED
                 session = self._sessions_manager.get_session(transaction_type)
                 try:
@@ -1023,7 +1042,7 @@ class Database(object):
             "CloudSpanner.Database.run_in_transaction",
             extra_attributes=extra_attributes,
             observability_options=observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             if getattr(self._local, "transaction_running", False):
                 raise RuntimeError("Spanner does not support nested transactions.")
             self._local.transaction_running = True
@@ -1376,6 +1395,11 @@ class MutationGroupsCheckout(object):
         self._session: Optional[Session] = None
         self._client_context = client_context
 
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
+
     def __enter__(self):
         """Begin ``with`` block."""
         transaction_type = TransactionType.READ_WRITE
@@ -1415,6 +1439,11 @@ class SnapshotCheckout(object):
         self._database: Database = database
         self._session: Optional[Session] = None
         self._kw: dict = kw
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1462,6 +1491,11 @@ class BatchSnapshot(object):
         self._read_timestamp = read_timestamp
         self._exact_staleness = exact_staleness
         self._client_context = client_context
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
 
     @classmethod
     def from_dict(cls, database, mapping):
@@ -1589,7 +1623,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.{type(self).__name__}.generate_read_batches",
             extra_attributes=dict(table=table, columns=columns),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             partitions = snapshot.partition_read(
                 table=table,
@@ -1625,7 +1659,7 @@ class BatchSnapshot(object):
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_read_batch",
             observability_options=observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             kwargs = copy.deepcopy(batch["read"])
             keyset_dict = kwargs.pop("keyset")
             kwargs["keyset"] = KeySet._from_dict(keyset_dict)
@@ -1657,7 +1691,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.{type(self).__name__}.generate_query_batches",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             partitions = snapshot.partition_query(
                 sql=sql,
@@ -1695,7 +1729,7 @@ class BatchSnapshot(object):
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_query_batch",
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             return CrossSync._Sync_Impl.run_if_async(
                 snapshot.execute_sql,
@@ -1723,7 +1757,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.${type(self).__name__}.run_partitioned_query",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             partitions = []
             for partition in self.generate_query_batches(
                 sql,

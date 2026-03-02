@@ -2182,6 +2182,7 @@ class _Client(object):
     def __init__(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
+        self.project = "project-id"
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self._client_context = None
         self._nth_client_id = _Client.NTH_CLIENT.increment()
@@ -2195,11 +2196,14 @@ class _Client(object):
 class _Instance(object):
     def __init__(self):
         self._client = _Client()
+        self.instance_id = "instance-id"
+        self.experimental_host = None
 
 
 class _Database(object):
     def __init__(self, directed_read_options=None):
         self.name = "testing"
+        self.database_id = "testing"
         self._nth_request = 0
         self._instance = _Instance()
         self._route_to_leader_enabled = True
