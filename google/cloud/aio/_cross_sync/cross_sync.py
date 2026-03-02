@@ -38,35 +38,30 @@ Usage Example:
 
 from __future__ import annotations
 
+import asyncio
+import concurrent.futures
+import inspect
+import queue
+import sys
+import threading
+import time
+import typing
 from typing import (
-    TypeVar,
+    TYPE_CHECKING,
     Any,
+    AsyncGenerator,
+    AsyncIterable,
+    AsyncIterator,
     Callable,
     Coroutine,
     Sequence,
+    TypeVar,
     Union,
-    AsyncIterable,
-    AsyncIterator,
-    AsyncGenerator,
-    TYPE_CHECKING,
 )
-import typing
 
-import asyncio
-import inspect
-import sys
-import concurrent.futures
 import google.api_core.retry as retries
-import queue
-import threading
-import time
-from ._decorators import (
-    ConvertClass,
-    Convert,
-    Drop,
-    Pytest,
-    PytestFixture,
-)
+
+from ._decorators import Convert, ConvertClass, Drop, Pytest, PytestFixture
 from ._mapping_meta import MappingMeta
 
 if TYPE_CHECKING:
@@ -175,9 +170,9 @@ class CrossSync(metaclass=MappingMeta):
         if not block:
             return queue.put_nowait(item)
         if timeout is not None:
-             await asyncio.wait_for(queue.put(item), timeout=timeout)
+            await asyncio.wait_for(queue.put(item), timeout=timeout)
         else:
-             await queue.put(item)
+            await queue.put(item)
 
     @staticmethod
     async def gather_partials(
@@ -331,7 +326,7 @@ class CrossSync(metaclass=MappingMeta):
 
         @staticmethod
         def queue_put(queue, item, block=True, timeout=None):
-             queue.put(item, block=block, timeout=timeout)
+            queue.put(item, block=block, timeout=timeout)
 
         @classmethod
         def Mock(cls, *args, **kwargs):

@@ -11,10 +11,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import grpc
-
 from google.api_core import grpc_helpers
 import google.auth.credentials
+import grpc
+
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1._helpers import _create_experimental_host_transport
@@ -24,8 +24,8 @@ from google.cloud.spanner_v1.services.spanner.transports import (
     SpannerTransport,
 )
 from google.cloud.spanner_v1.testing.interceptors import (
-    MethodCountInterceptor,
     MethodAbortInterceptor,
+    MethodCountInterceptor,
     XGoogRequestIDHeaderInterceptor,
 )
 

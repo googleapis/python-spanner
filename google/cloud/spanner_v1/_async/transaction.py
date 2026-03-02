@@ -14,12 +14,9 @@
 
 """Spanner read-write transaction support."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.transaction"
-from google.cloud.aio._cross_sync import CrossSync
-
-
+from dataclasses import dataclass, field
 import functools
-from google.protobuf.struct_pb2 import Struct
-from typing import Optional
+from typing import Any, Optional
 
 from google.cloud.spanner_v1._helpers import (
     _make_value_pb,
@@ -32,26 +29,36 @@ from google.cloud.spanner_v1._helpers import (
     _merge_request_options,
 )
 from google.cloud.spanner_v1._async._helpers import _retry
+from google.api_core import gapic_v1
+from google.api_core.exceptions import InternalServerError
+from google.protobuf.struct_pb2 import Struct
+
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1 import (
     CommitRequest,
     CommitResponse,
-    ResultSet,
+    ExecuteBatchDmlRequest,
     ExecuteBatchDmlResponse,
+    ExecuteSqlRequest,
     Mutation,
+    RequestOptions,
+    ResultSet,
+    TransactionOptions,
 )
-from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1._helpers import AtomicCounter
-from google.cloud.spanner_v1._async.snapshot import _SnapshotBase
+from google.cloud.spanner_v1._async._helpers import _retry
 from google.cloud.spanner_v1._async.batch import _BatchBase
+from google.cloud.spanner_v1._async.snapshot import _SnapshotBase
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _check_rst_stream_error,
+    _make_value_pb,
+    _merge_query_options,
+    _merge_Transaction_Options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+)
 from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
-from google.cloud.spanner_v1 import RequestOptions
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-from google.api_core import gapic_v1
-from google.api_core.exceptions import InternalServerError
-from dataclasses import dataclass, field
-from typing import Any
 
 
 class Transaction(_SnapshotBase, _BatchBase):
@@ -573,7 +580,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             self._lock.release()
 
         if result_set_pb._pb.HasField("precommit_token"):
-            self._update_for_precommit_token_pb(result_set_pb.precommit_token)
+            await self._update_for_precommit_token_pb(result_set_pb.precommit_token)
 
         return result_set_pb.stats.row_count_exact
 
@@ -732,7 +739,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             len(response_pb.result_sets) > 0
             and response_pb.result_sets[0].precommit_token
         ):
-            self._update_for_precommit_token_pb(
+            await self._update_for_precommit_token_pb(
                 response_pb.result_sets[0].precommit_token
             )
 
@@ -769,7 +776,7 @@ class Transaction(_SnapshotBase, _BatchBase):
     async def _begin_mutations_only_transaction(self) -> None:
         """Begins a mutations-only transaction on the database."""
 
-        mutation = await self._get_mutation_for_begin_mutations_only_transaction()
+        mutation = self._get_mutation_for_begin_mutations_only_transaction()
         await self._begin_transaction(mutation=mutation)
 
     def _get_mutation_for_begin_mutations_only_transaction(self) -> Optional[Mutation]:

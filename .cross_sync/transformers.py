@@ -64,8 +64,9 @@ class SymbolReplacer(ast.NodeTransformer):
 
 
     def visit_ImportFrom(self, node):
-        if node.module and "_async" in node.module:
-            node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+        if node.module:
+            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
         # Also replace AsyncClient with Client in the names!
         for alias in node.names:
             if "AsyncClient" in alias.name:
@@ -143,8 +144,9 @@ class AsyncToSync(ast.NodeTransformer):
 
 
     def visit_ImportFrom(self, node):
-        if node.module and "_async" in node.module:
-            node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+        if node.module:
+            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
         # Also replace AsyncClient with Client in the names!
         for alias in node.names:
             if "AsyncClient" in alias.name:
@@ -359,8 +361,9 @@ class CrossSyncFileProcessor(ast.NodeTransformer):
 
 
     def visit_ImportFrom(self, node):
-        if node.module and "_async" in node.module:
-            node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+        if node.module:
+            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
+            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
         # Also replace AsyncClient with Client in the names!
         for alias in node.names:
             if "AsyncClient" in alias.name:

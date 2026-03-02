@@ -14,20 +14,19 @@
 
 """Manage sessions for a database."""
 
+from datetime import timedelta
 from enum import Enum
 from os import getenv
-from datetime import timedelta
-from threading import Thread
 import threading
-
-from google.cloud.aio._cross_sync import CrossSync
+from threading import Thread
 from typing import Optional
 from weakref import ref
 
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1._async.session import Session
 from google.cloud.spanner_v1._opentelemetry_tracing import (
-    get_current_span,
     add_span_event,
+    get_current_span,
 )
 
 
@@ -194,7 +193,9 @@ class DatabaseSessionsManager(object):
                 continue
             with manager._multiplexed_session_lock:
                 await CrossSync.run_if_async(manager._multiplexed_session.delete)
-                manager._multiplexed_session = await manager._build_multiplexed_session()
+                manager._multiplexed_session = (
+                    await manager._build_multiplexed_session()
+                )
             session_created_time = time()
 
     @classmethod

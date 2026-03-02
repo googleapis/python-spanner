@@ -1,4 +1,11 @@
+import asyncio
+import unittest
+from unittest import IsolatedAsyncioTestCase
+
+import pytest
+
 from google.cloud.aio._cross_sync import CrossSync
+
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +21,11 @@ from google.cloud.aio._cross_sync import CrossSync
 # limitations under the License.
 
 
-
-import asyncio
-import pytest
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
-
 class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
     def run(self, result=None):
         if asyncio.iscoroutinefunction(getattr(self, self._testMethodName)):
             testMethod = getattr(self, self._testMethodName)
+
             def wrapper(*args, **kwargs):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -32,36 +33,34 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
                     return loop.run_until_complete(testMethod(*args, **kwargs))
                 finally:
                     loop.close()
+
             setattr(self, self._testMethodName, wrapper)
         super().run(result)
 
-import pytest
 
-import mock
 from google.api_core import gapic_v1
-from google.cloud.spanner_admin_database_v1 import (
-    Database as DatabasePB,
-    DatabaseDialect,
-)
-
-from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
+import mock
+import pytest
 
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import (
-    RequestOptions,
-    DirectedReadOptions,
     DefaultTransactionOptions,
+    DirectedReadOptions,
+    RequestOptions,
 )
+from google.cloud.spanner_v1._async.database_sessions_manager import TransactionType
+from google.cloud.spanner_v1._async.session import Session
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
+    _augment_errors_with_request_id,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
-    _augment_errors_with_request_id,
 )
+from google.cloud.spanner_v1.param_types import INT64
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from google.cloud.spanner_v1._async.session import Session
-from google.cloud.spanner_v1._async.database_sessions_manager import TransactionType
 from tests._builders import build_spanner_api
 from tests._helpers import is_multiplexed_enabled
 
@@ -111,6 +110,7 @@ class _BaseTest(IsolatedAsyncioTestCase):
     @staticmethod
     def _make_timestamp():
         import datetime
+
         from google.cloud._helpers import UTC
 
         return datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -130,20 +130,23 @@ class TestDatabase(_BaseTest):
 
     @staticmethod
     def _make_database_admin_api():
-        from google.cloud.spanner_admin_database_v1.services.database_admin.async_client import DatabaseAdminAsyncClient as DatabaseAdminClient
+        from google.cloud.spanner_admin_database_v1.services.database_admin.async_client import (
+            DatabaseAdminAsyncClient as DatabaseAdminClient,
+        )
 
         return mock.create_autospec(DatabaseAdminClient, instance=True)
 
     @staticmethod
     def _make_spanner_api():
-        from google.cloud.spanner_v1.services.spanner.async_client import SpannerAsyncClient as SpannerClient
+        from google.cloud.spanner_v1.services.spanner.async_client import (
+            SpannerAsyncClient as SpannerClient,
+        )
 
         api = mock.create_autospec(SpannerClient, instance=True)
         api._transport = "transport"
         return api
 
     @CrossSync.pytest
-
     async def test_ctor_defaults(self):
         from google.cloud.spanner_v1._async.pool import BurstyPool
 
@@ -163,7 +166,6 @@ class TestDatabase(_BaseTest):
         self.assertTrue(database._route_to_leader_enabled, True)
 
     @CrossSync.pytest
-
     async def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -175,7 +177,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(pool._bound, database)
 
     @CrossSync.pytest
-
     async def test_ctor_w_database_role(self):
         instance = _Instance(self.INSTANCE_NAME)
         database = self._make_one(
@@ -186,7 +187,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(database.database_role, self.DATABASE_ROLE)
 
     @CrossSync.pytest
-
     async def test_ctor_w_route_to_leader_disbled(self):
         client = _Client(route_to_leader_enabled=False)
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -198,7 +198,6 @@ class TestDatabase(_BaseTest):
         self.assertFalse(database._route_to_leader_enabled)
 
     @CrossSync.pytest
-
     async def test_ctor_w_ddl_statements_non_string(self):
         with pytest.raises(ValueError):
             self._make_one(
@@ -206,7 +205,6 @@ class TestDatabase(_BaseTest):
             )
 
     @CrossSync.pytest
-
     async def test_ctor_w_ddl_statements_w_create_database(self):
         with pytest.raises(ValueError):
             self._make_one(
@@ -216,7 +214,6 @@ class TestDatabase(_BaseTest):
             )
 
     @CrossSync.pytest
-
     async def test_ctor_w_ddl_statements_ok(self):
         from tests._fixtures import DDL_STATEMENTS
 
@@ -230,7 +227,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(list(database.ddl_statements), DDL_STATEMENTS)
 
     @CrossSync.pytest
-
     async def test_ctor_w_explicit_logger(self):
         from logging import Logger
 
@@ -244,7 +240,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._logger, logger)
 
     @CrossSync.pytest
-
     async def test_ctor_w_encryption_config(self):
         from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
@@ -258,7 +253,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._encryption_config, encryption_config)
 
     @CrossSync.pytest
-
     async def test_ctor_w_directed_read_options(self):
         client = _Client(directed_read_options=DIRECTED_READ_OPTIONS)
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -270,7 +264,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._directed_read_options, DIRECTED_READ_OPTIONS)
 
     @CrossSync.pytest
-
     async def test_ctor_w_proto_descriptors(self):
         instance = _Instance(self.INSTANCE_NAME)
         database = self._make_one(self.DATABASE_ID, instance, proto_descriptors=b"")
@@ -279,7 +272,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database._proto_descriptors, b"")
 
     @CrossSync.pytest
-
     async def test_from_pb_bad_database_name(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -291,7 +283,6 @@ class TestDatabase(_BaseTest):
             klass.from_pb(database_pb, None)
 
     @CrossSync.pytest
-
     async def test_from_pb_project_mistmatch(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -305,7 +296,6 @@ class TestDatabase(_BaseTest):
             klass.from_pb(database_pb, instance)
 
     @CrossSync.pytest
-
     async def test_from_pb_instance_mistmatch(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -319,7 +309,6 @@ class TestDatabase(_BaseTest):
             klass.from_pb(database_pb, instance)
 
     @CrossSync.pytest
-
     async def test_from_pb_success_w_explicit_pool(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -337,7 +326,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(database._pool, pool)
 
     @CrossSync.pytest
-
     async def test_from_pb_success_w_hyphen_w_default_pool(self):
         from google.cloud.spanner_admin_database_v1 import Database
         from google.cloud.spanner_v1._async.pool import BurstyPool
@@ -359,7 +347,6 @@ class TestDatabase(_BaseTest):
         self.assertTrue(database._pool._sessions.empty())
 
     @CrossSync.pytest
-
     async def test_name_property(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -368,7 +355,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.name, expected_name)
 
     @CrossSync.pytest
-
     async def test_create_time_property(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -377,7 +363,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.create_time, expected_create_time)
 
     @CrossSync.pytest
-
     async def test_state_property(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -388,7 +373,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.state, expected_state)
 
     @CrossSync.pytest
-
     async def test_restore_info(self):
         from google.cloud.spanner_admin_database_v1 import RestoreInfo
 
@@ -401,7 +385,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.restore_info, restore_info)
 
     @CrossSync.pytest
-
     async def test_version_retention_period(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -410,7 +393,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.version_retention_period, version_retention_period)
 
     @CrossSync.pytest
-
     async def test_earliest_version_time(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -419,7 +401,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.earliest_version_time, earliest_version_time)
 
     @CrossSync.pytest
-
     async def test_logger_property_default(self):
         import logging
 
@@ -430,7 +411,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.logger, logger)
 
     @CrossSync.pytest
-
     async def test_logger_property_custom(self):
         import logging
 
@@ -441,7 +421,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.logger, logger)
 
     @CrossSync.pytest
-
     async def test_encryption_config(self):
         from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
@@ -454,7 +433,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.encryption_config, encryption_config)
 
     @CrossSync.pytest
-
     async def test_encryption_info(self):
         from google.cloud.spanner_admin_database_v1 import EncryptionInfo
 
@@ -467,7 +445,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.encryption_info, encryption_info)
 
     @CrossSync.pytest
-
     async def test_default_leader(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -476,7 +453,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.default_leader, default_leader)
 
     @CrossSync.pytest
-
     async def test_proto_descriptors(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -486,7 +462,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database.proto_descriptors, b"")
 
     @CrossSync.pytest
-
     async def test_spanner_api_property_w_scopeless_creds(self):
         client = _Client()
         client_info = client._client_info = mock.Mock()
@@ -514,9 +489,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_spanner_api_w_scoped_creds(self):
         import google.auth.credentials
+
         from google.cloud.spanner_v1._async.database import SPANNER_DATA_SCOPE
 
         class _CredentialsWithScopes(google.auth.credentials.Scoped):
@@ -558,7 +533,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(scoped._source, credentials)
 
     @CrossSync.pytest
-
     async def test_spanner_api_w_emulator_host(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client, emulator_host="host")
@@ -581,7 +555,6 @@ class TestDatabase(_BaseTest):
         self.assertIsNotNone(called_kw["transport"])
 
     @CrossSync.pytest
-
     async def test___eq__(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool1, pool2 = _Pool(), _Pool()
@@ -590,7 +563,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(database1, database2)
 
     @CrossSync.pytest
-
     async def test___eq__type_differ(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
@@ -599,7 +571,6 @@ class TestDatabase(_BaseTest):
         self.assertNotEqual(database1, database2)
 
     @CrossSync.pytest
-
     async def test___ne__same_value(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool1, pool2 = _Pool(), _Pool()
@@ -609,7 +580,6 @@ class TestDatabase(_BaseTest):
         self.assertFalse(comparison_val)
 
     @CrossSync.pytest
-
     async def test___ne__(self):
         instance1, instance2 = _Instance(self.INSTANCE_NAME + "1"), _Instance(
             self.INSTANCE_NAME + "2"
@@ -620,10 +590,9 @@ class TestDatabase(_BaseTest):
         self.assertNotEqual(database1, database2)
 
     @CrossSync.pytest
-
     async def test_create_grpc_error(self):
-        from google.api_core.exceptions import GoogleAPICallError
-        from google.api_core.exceptions import Unknown
+        from google.api_core.exceptions import GoogleAPICallError, Unknown
+
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         client = _Client()
@@ -656,7 +625,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_create_already_exists(self):
         from google.cloud.exceptions import Conflict
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
@@ -691,7 +659,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_create_instance_not_found(self):
         from google.cloud.exceptions import NotFound
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
@@ -725,11 +692,12 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_create_success(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            CreateDatabaseRequest,
+            EncryptionConfig,
+        )
         from tests._fixtures import DDL_STATEMENTS
-        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
         op_future = object()
         client = _Client()
@@ -769,11 +737,12 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_create_success_w_encryption_config_dict(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            CreateDatabaseRequest,
+            EncryptionConfig,
+        )
         from tests._fixtures import DDL_STATEMENTS
-        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
         op_future = object()
         client = _Client()
@@ -814,10 +783,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_create_success_w_proto_descriptors(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -857,7 +825,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_exists_grpc_error(self):
         from google.api_core.exceptions import Unknown
 
@@ -883,7 +850,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_exists_not_found(self):
         from google.cloud.exceptions import NotFound
 
@@ -908,7 +874,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_exists_success(self):
         from google.cloud.spanner_admin_database_v1 import GetDatabaseDdlResponse
         from tests._fixtures import DDL_STATEMENTS
@@ -935,7 +900,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_reload_grpc_error(self):
         from google.api_core.exceptions import Unknown
 
@@ -961,7 +925,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_reload_not_found(self):
         from google.cloud.exceptions import NotFound
 
@@ -987,14 +950,15 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_reload_success(self):
-        from google.cloud.spanner_admin_database_v1 import Database
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
-        from google.cloud.spanner_admin_database_v1 import GetDatabaseDdlResponse
-        from google.cloud.spanner_admin_database_v1 import RestoreInfo
         from google.cloud._helpers import _datetime_to_pb_timestamp
+        from google.cloud.spanner_admin_database_v1 import (
+            Database,
+            EncryptionConfig,
+            EncryptionInfo,
+            GetDatabaseDdlResponse,
+            RestoreInfo,
+        )
         from tests._fixtures import DDL_STATEMENTS
 
         timestamp = self._make_timestamp()
@@ -1064,11 +1028,11 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_ddl_grpc_error(self):
         from google.api_core.exceptions import Unknown
-        from tests._fixtures import DDL_STATEMENTS
+
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -1098,11 +1062,10 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_ddl_not_found(self):
         from google.cloud.exceptions import NotFound
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -1132,10 +1095,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_ddl(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1167,10 +1129,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_ddl_w_operation_id(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1180,7 +1141,9 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
 
-        future = await database.update_ddl(DDL_STATEMENTS, operation_id="someOperationId")
+        future = await database.update_ddl(
+            DDL_STATEMENTS, operation_id="someOperationId"
+        )
 
         self.assertIs(future, op_future)
 
@@ -1202,7 +1165,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_success(self):
         op_future = object()
         client = _Client()
@@ -1236,10 +1198,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_update_ddl_w_proto_descriptors(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1272,7 +1233,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_drop_grpc_error(self):
         from google.api_core.exceptions import Unknown
 
@@ -1298,7 +1258,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_drop_not_found(self):
         from google.cloud.exceptions import NotFound
 
@@ -1324,7 +1283,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_drop_success(self):
         from google.protobuf.empty_pb2 import Empty
 
@@ -1358,26 +1316,24 @@ class TestDatabase(_BaseTest):
         retried=False,
         exclude_txn_from_change_streams=False,
     ):
+        import collections
         import os
+
         from google.api_core.exceptions import Aborted
         from google.api_core.retry import Retry
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1 import (
+            ExecuteSqlRequest,
             PartialResultSet,
             ResultSetStats,
         )
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionSelector,
-            TransactionOptions,
-        )
+        from google.cloud.spanner_v1 import TransactionOptions, TransactionSelector
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
         from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
-        from google.cloud.spanner_v1 import ExecuteSqlRequest
-
-        import collections
 
         MethodConfig = collections.namedtuple("MethodConfig", ["retry"])
 
@@ -1592,19 +1548,16 @@ class TestDatabase(_BaseTest):
         # If multiplexed sessions are not enabled, the regular pool session should be used
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_wo_params(self):
         await self._execute_partitioned_dml_helper(dml=DML_WO_PARAM)
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_params_and_param_types(self):
         await self._execute_partitioned_dml_helper(
             dml=DML_W_PARAM, params=PARAMS, param_types=PARAM_TYPES
         )
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_query_options(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
 
@@ -1614,7 +1567,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_request_options(self):
         await self._execute_partitioned_dml_helper(
             dml=DML_W_PARAM,
@@ -1624,7 +1576,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_trx_tag_ignored(self):
         await self._execute_partitioned_dml_helper(
             dml=DML_W_PARAM,
@@ -1632,7 +1583,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_req_tag_used(self):
         await self._execute_partitioned_dml_helper(
             dml=DML_W_PARAM,
@@ -1640,19 +1590,16 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_wo_params_retry_aborted(self):
         await self._execute_partitioned_dml_helper(dml=DML_WO_PARAM, retried=True)
 
     @CrossSync.pytest
-
     async def test_execute_partitioned_dml_w_exclude_txn_from_change_streams(self):
         await self._execute_partitioned_dml_helper(
             dml=DML_WO_PARAM, exclude_txn_from_change_streams=True
         )
 
     @CrossSync.pytest
-
     async def test_session_factory_defaults(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1667,7 +1614,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, {})
 
     @CrossSync.pytest
-
     async def test_session_factory_w_labels(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1683,7 +1629,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(session.labels, labels)
 
     @CrossSync.pytest
-
     async def test_snapshot_defaults(self):
         from google.cloud.spanner_v1._async.database import SnapshotCheckout
         from google.cloud.spanner_v1._async.snapshot import Snapshot
@@ -1731,9 +1676,9 @@ class TestDatabase(_BaseTest):
             self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
+
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1._async.database import SnapshotCheckout
         from google.cloud.spanner_v1._async.snapshot import Snapshot
@@ -1781,7 +1726,6 @@ class TestDatabase(_BaseTest):
             self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_batch(self):
         from google.cloud.spanner_v1._async.database import BatchCheckout
 
@@ -1797,7 +1741,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(checkout._database, database)
 
     @CrossSync.pytest
-
     async def test_mutation_groups(self):
         from google.cloud.spanner_v1._async.database import MutationGroupsCheckout
 
@@ -1813,7 +1756,6 @@ class TestDatabase(_BaseTest):
         self.assertIs(checkout._database, database)
 
     @CrossSync.pytest
-
     async def test_batch_snapshot(self):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
@@ -1827,7 +1769,6 @@ class TestDatabase(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     @CrossSync.pytest
-
     async def test_batch_snapshot_w_read_timestamp(self):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
@@ -1842,7 +1783,6 @@ class TestDatabase(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     @CrossSync.pytest
-
     async def test_batch_snapshot_w_exact_staleness(self):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
@@ -1857,7 +1797,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(batch_txn._exact_staleness, duration)
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_wo_args(self):
         import datetime
 
@@ -1877,14 +1816,15 @@ class TestDatabase(_BaseTest):
 
         # Mock the transaction commit method to return NOW
         with mock.patch(
-            "google.cloud.spanner_v1._async.transaction.Transaction.commit", new_callable=mock.AsyncMock, return_value=NOW
+            "google.cloud.spanner_v1._async.transaction.Transaction.commit",
+            new_callable=mock.AsyncMock,
+            return_value=NOW,
         ):
             committed = await database.run_in_transaction(_unit_of_work)
 
             self.assertEqual(committed, NOW)
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_args(self):
         import datetime
 
@@ -1906,14 +1846,17 @@ class TestDatabase(_BaseTest):
 
         # Mock the transaction commit method to return NOW
         with mock.patch(
-            "google.cloud.spanner_v1._async.transaction.Transaction.commit", new_callable=mock.AsyncMock, return_value=NOW
+            "google.cloud.spanner_v1._async.transaction.Transaction.commit",
+            new_callable=mock.AsyncMock,
+            return_value=NOW,
         ):
-            committed = await database.run_in_transaction(_unit_of_work, SINCE, until=UNTIL)
+            committed = await database.run_in_transaction(
+                _unit_of_work, SINCE, until=UNTIL
+            )
 
             self.assertEqual(committed, NOW)
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_nested(self):
         from datetime import datetime
 
@@ -1940,7 +1883,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(inner.call_count, 0)
 
     @CrossSync.pytest
-
     async def test_restore_backup_unspecified(self):
         instance = _Instance(self.INSTANCE_NAME, client=_Client())
         database = self._make_one(self.DATABASE_ID, instance)
@@ -1949,9 +1891,9 @@ class TestDatabase(_BaseTest):
             await database.restore(None)
 
     @CrossSync.pytest
-
     async def test_restore_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
@@ -1983,9 +1925,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_restore_not_found(self):
         from google.api_core.exceptions import NotFound
+
         from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
@@ -2017,12 +1959,11 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_restore_success(self):
         from google.cloud.spanner_admin_database_v1 import (
             RestoreDatabaseEncryptionConfig,
+            RestoreDatabaseRequest,
         )
-        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         op_future = object()
         client = _Client()
@@ -2062,12 +2003,11 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_restore_success_w_encryption_config_dict(self):
         from google.cloud.spanner_admin_database_v1 import (
             RestoreDatabaseEncryptionConfig,
+            RestoreDatabaseRequest,
         )
-        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         op_future = object()
         client = _Client()
@@ -2111,7 +2051,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_restore_w_invalid_encryption_config_dict(self):
         from google.cloud.spanner_admin_database_v1 import (
             RestoreDatabaseEncryptionConfig,
@@ -2133,7 +2072,6 @@ class TestDatabase(_BaseTest):
             await database.restore(backup)
 
     @CrossSync.pytest
-
     async def test_is_ready(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -2149,7 +2087,6 @@ class TestDatabase(_BaseTest):
         self.assertFalse(database.is_ready())
 
     @CrossSync.pytest
-
     async def test_is_optimized(self):
         from google.cloud.spanner_admin_database_v1 import Database
 
@@ -2165,9 +2102,9 @@ class TestDatabase(_BaseTest):
         self.assertFalse(database.is_optimized())
 
     @CrossSync.pytest
-
     async def test_list_database_operations_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_v1._async.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
@@ -2186,9 +2123,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_list_database_operations_not_found(self):
         from google.api_core.exceptions import NotFound
+
         from google.cloud.spanner_v1._async.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
@@ -2207,7 +2144,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_list_database_operations_defaults(self):
         from google.cloud.spanner_v1._async.database import _DATABASE_METADATA_FILTER
 
@@ -2224,7 +2160,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_list_database_operations_explicit_filter(self):
         from google.cloud.spanner_v1._async.database import _DATABASE_METADATA_FILTER
 
@@ -2249,9 +2184,9 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_list_database_roles_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 
         client = _Client()
@@ -2280,7 +2215,6 @@ class TestDatabase(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_list_database_roles_defaults(self):
         from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 
@@ -2310,7 +2244,6 @@ class TestDatabase(_BaseTest):
         self.assertIsNotNone(resp)
 
     @CrossSync.pytest
-
     async def test_table_factory_defaults(self):
         from google.cloud.spanner_v1.table import Table
 
@@ -2325,7 +2258,6 @@ class TestDatabase(_BaseTest):
         self.assertEqual(my_table.table_id, "my_table")
 
     @CrossSync.pytest
-
     async def test_list_tables(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -2343,28 +2275,30 @@ class TestBatchCheckout(_BaseTest):
 
     @staticmethod
     def _make_spanner_client():
-        from google.cloud.spanner_v1.services.spanner.async_client import SpannerAsyncClient as SpannerClient
+        from google.cloud.spanner_v1.services.spanner.async_client import (
+            SpannerAsyncClient as SpannerClient,
+        )
 
         client = mock.create_autospec(SpannerClient)
         client.commit = mock.AsyncMock()
         return client
 
     @CrossSync.pytest
-
     async def test_ctor(self):
         database = _Database(self.DATABASE_NAME)
         checkout = self._make_one(database)
         self.assertIs(checkout._database, database)
 
     @CrossSync.pytest
-
     async def test_context_mgr_success(self):
         import datetime
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            CommitRequest,
+            CommitResponse,
+            TransactionOptions,
+        )
         from google.cloud.spanner_v1._async.batch import Batch
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2410,14 +2344,15 @@ class TestBatchCheckout(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_context_mgr_w_commit_stats_success(self):
         import datetime
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            CommitRequest,
+            CommitResponse,
+            TransactionOptions,
+        )
         from google.cloud.spanner_v1._async.batch import Batch
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2467,11 +2402,10 @@ class TestBatchCheckout(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_context_mgr_w_aborted_commit_status(self):
         from google.api_core.exceptions import Aborted
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import TransactionOptions
+
+        from google.cloud.spanner_v1 import CommitRequest, TransactionOptions
         from google.cloud.spanner_v1._async.batch import Batch
 
         database = _Database(self.DATABASE_NAME)
@@ -2520,7 +2454,6 @@ class TestBatchCheckout(_BaseTest):
         database.logger.info.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_context_mgr_failure(self):
         from google.cloud.spanner_v1._async.batch import Batch
 
@@ -2551,7 +2484,6 @@ class TestSnapshotCheckout(_BaseTest):
         return SnapshotCheckout
 
     @CrossSync.pytest
-
     async def test_ctor_defaults(self):
         from google.cloud.spanner_v1._async.snapshot import Snapshot
 
@@ -2574,9 +2506,9 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
+
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1._async.snapshot import Snapshot
 
@@ -2600,7 +2532,6 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_failure(self):
         from google.cloud.spanner_v1._async.snapshot import Snapshot
 
@@ -2623,7 +2554,6 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_session_not_found_error(self):
         from google.cloud.exceptions import NotFound
 
@@ -2646,7 +2576,6 @@ class TestSnapshotCheckout(_BaseTest):
         self.assertEqual(pool._session, new_session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_table_not_found_error(self):
         from google.cloud.exceptions import NotFound
 
@@ -2668,7 +2597,6 @@ class TestSnapshotCheckout(_BaseTest):
         pool._new_session.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_context_mgr_unknown_error(self):
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
@@ -2734,7 +2662,6 @@ class TestBatchSnapshot(_BaseTest):
         return KeySet(all_=True)
 
     @CrossSync.pytest
-
     async def test_ctor_no_staleness(self):
         database = self._make_database()
 
@@ -2747,7 +2674,6 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     @CrossSync.pytest
-
     async def test_ctor_w_read_timestamp(self):
         database = self._make_database()
         timestamp = self._make_timestamp()
@@ -2761,7 +2687,6 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIsNone(batch_txn._exact_staleness)
 
     @CrossSync.pytest
-
     async def test_ctor_w_exact_staleness(self):
         database = self._make_database()
         duration = self._make_duration()
@@ -2775,7 +2700,6 @@ class TestBatchSnapshot(_BaseTest):
         self.assertEqual(batch_txn._exact_staleness, duration)
 
     @CrossSync.pytest
-
     async def test_from_dict(self):
         klass = self._get_target_class()
         database = self._make_database()
@@ -2797,7 +2721,6 @@ class TestBatchSnapshot(_BaseTest):
         api.begin_transaction.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_to_dict(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -2813,7 +2736,6 @@ class TestBatchSnapshot(_BaseTest):
         self.assertEqual(await batch_txn.to_dict(), expected)
 
     @CrossSync.pytest
-
     async def test__get_session_already(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -2821,7 +2743,6 @@ class TestBatchSnapshot(_BaseTest):
         self.assertIs(await batch_txn._get_session(), already)
 
     @CrossSync.pytest
-
     async def test__get_session_new(self):
         database = self._make_database()
         session = self._make_session()
@@ -2835,7 +2756,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test__get_snapshot_already(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -2844,7 +2764,6 @@ class TestBatchSnapshot(_BaseTest):
         already.begin.assert_not_called()
 
     @CrossSync.pytest
-
     async def test__get_snapshot_new_wo_staleness(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -2861,7 +2780,6 @@ class TestBatchSnapshot(_BaseTest):
         snapshot.begin.assert_called_once_with()
 
     @CrossSync.pytest
-
     async def test__get_snapshot_w_read_timestamp(self):
         database = self._make_database()
         timestamp = self._make_timestamp()
@@ -2879,7 +2797,6 @@ class TestBatchSnapshot(_BaseTest):
         snapshot.begin.assert_called_once_with()
 
     @CrossSync.pytest
-
     async def test__get_snapshot_w_exact_staleness(self):
         database = self._make_database()
         duration = self._make_duration()
@@ -2897,7 +2814,6 @@ class TestBatchSnapshot(_BaseTest):
         snapshot.begin.assert_called_once_with()
 
     @CrossSync.pytest
-
     async def test_read(self):
         keyset = self._make_keyset()
         database = self._make_database()
@@ -2912,7 +2828,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_execute_sql(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -2929,7 +2844,6 @@ class TestBatchSnapshot(_BaseTest):
         snapshot.execute_sql.assert_called_once_with(sql, params, param_types)
 
     @CrossSync.pytest
-
     async def test_generate_read_batches_w_max_partitions(self):
         max_partitions = len(self.TOKENS)
         keyset = self._make_keyset()
@@ -2938,9 +2852,12 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_read_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_read_batches(
                 self.TABLE, self.COLUMNS, keyset, max_partitions=max_partitions
-            )]
+            )
+        ]
 
         expected_read = {
             "table": self.TABLE,
@@ -2967,7 +2884,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_read_batches_w_retry_and_timeout_params(self):
         max_partitions = len(self.TOKENS)
         keyset = self._make_keyset()
@@ -2976,14 +2892,17 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
         retry = Retry(deadline=60)
-        batches = [b async for b in batch_txn.generate_read_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_read_batches(
                 self.TABLE,
                 self.COLUMNS,
                 keyset,
                 max_partitions=max_partitions,
                 retry=retry,
                 timeout=2.0,
-            )]
+            )
+        ]
 
         expected_read = {
             "table": self.TABLE,
@@ -3010,7 +2929,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_read_batches_w_index_w_partition_size_bytes(self):
         size = 1 << 20
         keyset = self._make_keyset()
@@ -3019,13 +2937,16 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_read_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_read_batches(
                 self.TABLE,
                 self.COLUMNS,
                 keyset,
                 index=self.INDEX,
                 partition_size_bytes=size,
-            )]
+            )
+        ]
 
         expected_read = {
             "table": self.TABLE,
@@ -3052,7 +2973,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_read_batches_w_data_boost_enabled(self):
         data_boost_enabled = True
         keyset = self._make_keyset()
@@ -3061,13 +2981,16 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_read_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_read_batches(
                 self.TABLE,
                 self.COLUMNS,
                 keyset,
                 index=self.INDEX,
                 data_boost_enabled=data_boost_enabled,
-            )]
+            )
+        ]
 
         expected_read = {
             "table": self.TABLE,
@@ -3094,7 +3017,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_read_batches_w_directed_read_options(self):
         keyset = self._make_keyset()
         database = self._make_database()
@@ -3102,13 +3024,16 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_read_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_read_batches(
                 self.TABLE,
                 self.COLUMNS,
                 keyset,
                 index=self.INDEX,
                 directed_read_options=DIRECTED_READ_OPTIONS,
-            )]
+            )
+        ]
 
         expected_read = {
             "table": self.TABLE,
@@ -3135,7 +3060,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_read_batch(self):
         keyset = self._make_keyset()
         token = b"TOKEN"
@@ -3168,7 +3092,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_read_batch_w_retry_timeout(self):
         keyset = self._make_keyset()
         token = b"TOKEN"
@@ -3201,7 +3124,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_query_batches_w_max_partitions(self):
         sql = "SELECT COUNT(*) FROM table_name"
         max_partitions = len(self.TOKENS)
@@ -3212,7 +3134,12 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_query_batches(sql, max_partitions=max_partitions)]
+        batches = [
+            b
+            async for b in batch_txn.generate_query_batches(
+                sql, max_partitions=max_partitions
+            )
+        ]
 
         expected_query = {
             "sql": sql,
@@ -3236,7 +3163,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_query_batches_w_params_w_partition_size_bytes(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -3251,9 +3177,12 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_query_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_query_batches(
                 sql, params=params, param_types=param_types, partition_size_bytes=size
-            )]
+            )
+        ]
 
         expected_query = {
             "sql": sql,
@@ -3279,7 +3208,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_query_batches_w_retry_and_timeout_params(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -3294,14 +3222,17 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
         retry = Retry(deadline=60)
-        batches = [b async for b in batch_txn.generate_query_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_query_batches(
                 sql,
                 params=params,
                 param_types=param_types,
                 partition_size_bytes=size,
                 retry=retry,
                 timeout=2.0,
-            )]
+            )
+        ]
 
         expected_query = {
             "sql": sql,
@@ -3327,7 +3258,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_query_batches_w_data_boost_enabled(self):
         sql = "SELECT COUNT(*) FROM table_name"
         client = _Client(self.PROJECT_ID)
@@ -3337,7 +3267,12 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_query_batches(sql, data_boost_enabled=True)]
+        batches = [
+            b
+            async for b in batch_txn.generate_query_batches(
+                sql, data_boost_enabled=True
+            )
+        ]
 
         expected_query = {
             "sql": sql,
@@ -3361,7 +3296,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_generate_query_batches_w_directed_read_options(self):
         sql = "SELECT COUNT(*) FROM table_name"
         client = _Client(self.PROJECT_ID)
@@ -3371,9 +3305,12 @@ class TestBatchSnapshot(_BaseTest):
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
-        batches = [b async for b in batch_txn.generate_query_batches(
+        batches = [
+            b
+            async for b in batch_txn.generate_query_batches(
                 sql, directed_read_options=DIRECTED_READ_OPTIONS
-            )]
+            )
+        ]
 
         expected_query = {
             "sql": sql,
@@ -3397,7 +3334,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_query_batch(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -3429,7 +3365,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_query_batch_w_retry_timeout(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -3461,7 +3396,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_query_batch_w_directed_read_options(self):
         sql = "SELECT first_name, last_name, email FROM citizens"
         token = b"TOKEN"
@@ -3488,7 +3422,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_context_manager(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -3501,7 +3434,6 @@ class TestBatchSnapshot(_BaseTest):
         session.delete.assert_called_once_with()
 
     @CrossSync.pytest
-
     async def test_close_wo_session(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -3509,7 +3441,6 @@ class TestBatchSnapshot(_BaseTest):
         await batch_txn.close()  # no raise
 
     @CrossSync.pytest
-
     async def test_close_w_session(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -3522,7 +3453,6 @@ class TestBatchSnapshot(_BaseTest):
         session.delete.assert_called_once_with()
 
     @CrossSync.pytest
-
     async def test_close_w_multiplexed_session(self):
         database = self._make_database()
         batch_txn = self._make_one(database)
@@ -3536,7 +3466,6 @@ class TestBatchSnapshot(_BaseTest):
         session.delete.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_process_w_invalid_batch(self):
         token = b"TOKEN"
         batch = {"partition": token, "bogus": b"BOGUS"}
@@ -3547,7 +3476,6 @@ class TestBatchSnapshot(_BaseTest):
             await batch_txn.process(batch)
 
     @CrossSync.pytest
-
     async def test_process_w_read_batch(self):
         keyset = self._make_keyset()
         token = b"TOKEN"
@@ -3580,7 +3508,6 @@ class TestBatchSnapshot(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_process_w_query_batch(self):
         sql = (
             "SELECT first_name, last_name, email FROM citizens " "WHERE age <= @max_age"
@@ -3620,14 +3547,15 @@ class TestMutationGroupsCheckout(_BaseTest):
 
     @staticmethod
     def _make_spanner_client():
-        from google.cloud.spanner_v1.services.spanner.async_client import SpannerAsyncClient as SpannerClient
+        from google.cloud.spanner_v1.services.spanner.async_client import (
+            SpannerAsyncClient as SpannerClient,
+        )
 
         client = mock.create_autospec(SpannerClient)
         client.batch_write = mock.AsyncMock()
         return client
 
     @CrossSync.pytest
-
     async def test_ctor(self):
         from google.cloud.spanner_v1._async.batch import MutationGroups
 
@@ -3646,17 +3574,19 @@ class TestMutationGroupsCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_success(self):
         import datetime
-        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
-        from google.cloud.spanner_v1 import BatchWriteRequest
-        from google.cloud.spanner_v1 import BatchWriteResponse
-        from google.cloud.spanner_v1 import Mutation
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1._async.batch import MutationGroups
+
         from google.rpc.status_pb2 import Status
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            BatchWriteRequest,
+            BatchWriteResponse,
+            Mutation,
+        )
+        from google.cloud.spanner_v1._async.batch import MutationGroups
+        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
@@ -3714,7 +3644,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         )
 
     @CrossSync.pytest
-
     async def test_context_mgr_failure(self):
         from google.cloud.spanner_v1._async.batch import MutationGroups
 
@@ -3737,7 +3666,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         self.assertIs(pool._session, session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_session_not_found_error(self):
         from google.cloud.exceptions import NotFound
 
@@ -3760,7 +3688,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         self.assertEqual(pool._session, new_session)
 
     @CrossSync.pytest
-
     async def test_context_mgr_table_not_found_error(self):
         from google.cloud.exceptions import NotFound
 
@@ -3782,7 +3709,6 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool._new_session.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_context_mgr_unknown_error(self):
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
@@ -3804,13 +3730,17 @@ class TestMutationGroupsCheckout(_BaseTest):
 
 
 def _make_instance_api():
-    from google.cloud.spanner_admin_instance_v1.services.instance_admin.async_client import InstanceAdminAsyncClient as InstanceAdminClient
+    from google.cloud.spanner_admin_instance_v1.services.instance_admin.async_client import (
+        InstanceAdminAsyncClient as InstanceAdminClient,
+    )
 
     return mock.create_autospec(InstanceAdminClient)
 
 
 def _make_database_admin_api():
-    from google.cloud.spanner_admin_database_v1.services.database_admin.async_client import DatabaseAdminAsyncClient as DatabaseAdminClient
+    from google.cloud.spanner_admin_database_v1.services.database_admin.async_client import (
+        DatabaseAdminAsyncClient as DatabaseAdminClient,
+    )
 
     return mock.create_autospec(DatabaseAdminClient)
 
@@ -3868,7 +3798,9 @@ class _Client(object):
             session_response.name = f"projects/{self.project}/instances/instance-id/databases/database-id/sessions/session-{self._nth_request.increment()}"
             return session_response
 
-        self._spanner_api.create_session = mock.AsyncMock(side_effect=mock_create_session)
+        self._spanner_api.create_session = mock.AsyncMock(
+            side_effect=mock_create_session
+        )
 
     @property
     def _next_nth_request(self):
@@ -4007,6 +3939,7 @@ class _Session(object):
             mock_txn._transaction_id = b"mock_transaction_id"
             res = func(mock_txn, *args, **kw)
             import inspect
+
             if inspect.isawaitable(res):
                 await res
         self._retried = (func, args, kw)
@@ -4015,7 +3948,6 @@ class _Session(object):
     @property
     def session_id(self):
         return self.name
-
 
 
 class _MockIterator(object):
@@ -4038,7 +3970,6 @@ class _MockIterator(object):
             raise StopAsyncIteration
 
     # Don't add 'next = __next__' because native async iterations rely on __anext__
-
 
     def __iter__(self):
         return self

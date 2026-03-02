@@ -24,23 +24,23 @@ In the hierarchy of API concepts
   :class:`~google.cloud.spanner_v1.database.Database`
 """
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.client"
-from google.cloud.aio._cross_sync import CrossSync  # noqa: F401
-
-
-import grpc
-import os
 import logging
-import warnings
+import os
 import threading
+from typing import Optional
+import warnings
 
+import google.api_core.client_options
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
-import google.api_core.client_options
+import grpc
+
+from google.cloud.aio._cross_sync import CrossSync  # noqa: F401
 from google.cloud.client import ClientWithProject
-from typing import Optional
+from google.cloud.spanner_admin_database_v1 import (
+    DatabaseAdminAsyncClient as DatabaseAdminClient,
+)
 
-
-from google.cloud.spanner_admin_database_v1 import DatabaseAdminAsyncClient as DatabaseAdminClient
 if CrossSync.is_async:
     from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc_asyncio import (
         DatabaseAdminGrpcAsyncIOTransport as DatabaseAdminGrpcTransport,
@@ -49,7 +49,11 @@ else:
     from google.cloud.spanner_admin_database_v1.services.database_admin.transports.grpc import (
         DatabaseAdminGrpcTransport,
     )
-from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient as InstanceAdminClient
+
+from google.cloud.spanner_admin_instance_v1 import (
+    InstanceAdminAsyncClient as InstanceAdminClient,
+)
+
 if CrossSync.is_async:
     from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc_asyncio import (
         InstanceAdminGrpcAsyncIOTransport as InstanceAdminGrpcTransport,
@@ -58,24 +62,27 @@ else:
     from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
         InstanceAdminGrpcTransport,
     )
-from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
-from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
-from google.cloud.spanner_v1 import __version__
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1._helpers import _create_experimental_host_transport
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1._helpers import _validate_client_context
+from google.cloud.spanner_admin_instance_v1 import (
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
+)
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    __version__,
+)
+from google.cloud.spanner_v1._helpers import (
+    _create_experimental_host_transport,
+    _validate_client_context,
+)
 from google.cloud.spanner_v1._async.instance import Instance
-from google.cloud.spanner_v1.metrics.constants import (
-    METRIC_EXPORT_INTERVAL_MS,
+from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
+from google.cloud.spanner_v1.metrics.metrics_exporter import (
+    CloudMonitoringMetricsExporter,
 )
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
-)
-from google.cloud.spanner_v1.metrics.metrics_exporter import (
-    CloudMonitoringMetricsExporter,
 )
 
 try:
@@ -378,9 +385,11 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._instance_admin_api is None:
             if self._emulator_host is not None:
-                transport = InstanceAdminGrpcTransport(
-                    host=self._emulator_host
-                )
+                if CrossSync.is_async:
+                    channel = grpc.aio.insecure_channel(self._emulator_host)
+                else:
+                    channel = grpc.insecure_channel(self._emulator_host)
+                transport = InstanceAdminGrpcTransport(channel=channel)
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
@@ -413,9 +422,11 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._database_admin_api is None:
             if self._emulator_host is not None:
-                transport = DatabaseAdminGrpcTransport(
-                    host=self._emulator_host
-                )
+                if CrossSync.is_async:
+                    channel = grpc.aio.insecure_channel(self._emulator_host)
+                else:
+                    channel = grpc.insecure_channel(self._emulator_host)
+                transport = DatabaseAdminGrpcTransport(channel=channel)
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
@@ -494,7 +505,8 @@ class Client(ClientWithProject):
         """
         return self.__class__(project=self.project, credentials=self._credentials)
 
-    def list_instance_configs(self, page_size=None):
+    @CrossSync.convert
+    async def list_instance_configs(self, page_size=None):
         """List available instance configurations for the client's project.
 
         .. _RPC docs: https://cloud.google.com/spanner/docs/reference/rpc/\
@@ -519,7 +531,7 @@ class Client(ClientWithProject):
         request = ListInstanceConfigsRequest(
             parent=self.project_name, page_size=page_size
         )
-        page_iter = self.instance_admin_api.list_instance_configs(
+        page_iter = await self.instance_admin_api.list_instance_configs(
             request=request, metadata=metadata
         )
         return page_iter
@@ -577,7 +589,8 @@ class Client(ClientWithProject):
             processing_units,
         )
 
-    def list_instances(self, filter_="", page_size=None):
+    @CrossSync.convert
+    async def list_instances(self, filter_="", page_size=None):
         """List instances for the client's project.
 
         See
@@ -602,7 +615,7 @@ class Client(ClientWithProject):
         request = ListInstancesRequest(
             parent=self.project_name, filter=filter_, page_size=page_size
         )
-        page_iter = self.instance_admin_api.list_instances(
+        page_iter = await self.instance_admin_api.list_instances(
             request=request, metadata=metadata
         )
         return page_iter

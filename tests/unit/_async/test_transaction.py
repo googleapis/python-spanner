@@ -1,6 +1,5 @@
-import unittest
-from unittest import IsolatedAsyncioTestCase
-from google.cloud.aio._cross_sync import CrossSync
+from datetime import timedelta
+
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,47 +15,48 @@ from google.cloud.aio._cross_sync import CrossSync
 # limitations under the License.
 from threading import Lock
 from typing import Mapping
-from datetime import timedelta
+import unittest
+from unittest import IsolatedAsyncioTestCase
 
+from google.api_core import gapic_v1
+from google.api_core.retry import Retry
 import mock
 
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1 import (
-    RequestOptions,
-    CommitRequest,
-    Mutation,
-    KeySet,
     BeginTransactionRequest,
-    TransactionOptions,
+    CommitRequest,
+    DefaultTransactionOptions,
+    KeySet,
+    Mutation,
+    RequestOptions,
     ResultSetMetadata,
+    TransactionOptions,
+    Type,
+    TypeCode,
     _opentelemetry_tracing,
 )
-from google.cloud.spanner_v1._helpers import GOOGLE_CLOUD_REGION_GLOBAL
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1 import Type
-from google.cloud.spanner_v1 import TypeCode
-from google.api_core.retry import Retry
-from google.api_core import gapic_v1
 from google.cloud.spanner_v1._helpers import (
+    GOOGLE_CLOUD_REGION_GLOBAL,
     AtomicCounter,
+    _augment_errors_with_request_id,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
-    _augment_errors_with_request_id,
 )
 from google.cloud.spanner_v1.batch import _make_write_pb
 from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.transaction import Transaction
 from google.cloud.spanner_v1.request_id_header import (
     REQ_RAND_PROCESS_ID,
     build_request_id,
 )
+from google.cloud.spanner_v1.transaction import Transaction
 from tests._builders import (
-    build_transaction,
+    build_commit_response_pb,
     build_precommit_token_pb,
     build_session,
-    build_commit_response_pb,
+    build_transaction,
     build_transaction_pb,
 )
-
 from tests._helpers import (
     HAS_OPENTELEMETRY_INSTALLED,
     LIB_VERSION,
@@ -123,7 +123,6 @@ class TestTransaction(OpenTelemetryBase):
         return mock.create_autospec(SpannerClient, instance=True)
 
     @CrossSync.pytest
-
     async def test_ctor_defaults(self):
         session = build_session()
         transaction = Transaction(session=session)
@@ -149,7 +148,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertFalse(transaction.rolled_back)
 
     @CrossSync.pytest
-
     async def test_begin_already_rolled_back(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -160,7 +158,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     @CrossSync.pytest
-
     async def test_begin_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -171,7 +168,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     @CrossSync.pytest
-
     async def test_rollback_not_begun(self):
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
@@ -187,7 +183,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     @CrossSync.pytest
-
     async def test_rollback_already_committed(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -199,7 +194,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertNoSpans()
 
     @CrossSync.pytest
-
     async def test_rollback_already_rolled_back(self):
         session = _Session()
         transaction = self._make_one(session)
@@ -282,7 +276,6 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_commit_not_begun(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -314,7 +307,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
     @CrossSync.pytest
-
     async def test_commit_already_committed(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -348,7 +340,6 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(got_span_events_statuses, want_span_events_statuses)
 
     @CrossSync.pytest
-
     async def test_commit_already_rolled_back(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -612,7 +603,9 @@ class TestTransaction(OpenTelemetryBase):
         return_value="global",
     )
     @CrossSync.pytest
-    async def test_commit_mutations_only_multiplexed_w_non_insert_mutation(self, mock_region):
+    async def test_commit_mutations_only_multiplexed_w_non_insert_mutation(
+        self, mock_region
+    ):
         await self._commit_helper(
             mutations=[DELETE_MUTATION],
             is_multiplexed=True,
@@ -624,7 +617,9 @@ class TestTransaction(OpenTelemetryBase):
         return_value="global",
     )
     @CrossSync.pytest
-    async def test_commit_mutations_only_multiplexed_w_insert_mutation(self, mock_region):
+    async def test_commit_mutations_only_multiplexed_w_insert_mutation(
+        self, mock_region
+    ):
         await self._commit_helper(
             mutations=[INSERT_MUTATION],
             is_multiplexed=True,
@@ -688,36 +683,30 @@ class TestTransaction(OpenTelemetryBase):
         await self._commit_helper(return_commit_stats=True)
 
     @CrossSync.pytest
-
     async def test_commit_w_max_commit_delay(self):
         await self._commit_helper(max_commit_delay_in=timedelta(milliseconds=100))
 
     @CrossSync.pytest
-
     async def test_commit_w_request_tag_success(self):
         request_options = RequestOptions(request_tag="tag-1")
         await self._commit_helper(request_options=request_options)
 
     @CrossSync.pytest
-
     async def test_commit_w_transaction_tag_ignored_success(self):
         request_options = RequestOptions(transaction_tag="tag-1-1")
         await self._commit_helper(request_options=request_options)
 
     @CrossSync.pytest
-
     async def test_commit_w_request_and_transaction_tag_success(self):
         request_options = RequestOptions(request_tag="tag-1", transaction_tag="tag-1-1")
         await self._commit_helper(request_options=request_options)
 
     @CrossSync.pytest
-
     async def test_commit_w_request_and_transaction_tag_dictionary_success(self):
         request_options = {"request_tag": "tag-1", "transaction_tag": "tag-1-1"}
         await self._commit_helper(request_options=request_options)
 
     @CrossSync.pytest
-
     async def test_commit_w_incorrect_tag_dictionary_error(self):
         request_options = {"incorrect_tag": "tag-1-1"}
         with pytest.raises(ValueError):
@@ -732,7 +721,6 @@ class TestTransaction(OpenTelemetryBase):
         await self._commit_helper(retry_for_precommit_token=True)
 
     @CrossSync.pytest
-
     async def test_commit_w_retry_for_precommit_token_then_error(self):
         transaction = build_transaction()
 
@@ -747,9 +735,9 @@ class TestTransaction(OpenTelemetryBase):
             await transaction.commit()
 
     @CrossSync.pytest
-
     async def test__make_params_pb_w_params_w_param_types(self):
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         session = _Session()
@@ -789,16 +777,17 @@ class TestTransaction(OpenTelemetryBase):
         use_multiplexed=False,
     ):
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1 import (
+            ExecuteSqlRequest,
             ResultSet,
             ResultSetStats,
+            TransactionSelector,
         )
-        from google.cloud.spanner_v1 import TransactionSelector
         from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
-        from google.cloud.spanner_v1 import ExecuteSqlRequest
 
         MODE = 2  # PROFILE
         database = _Database()
@@ -939,7 +928,9 @@ class TestTransaction(OpenTelemetryBase):
         return_value="global",
     )
     @CrossSync.pytest
-    async def test_execute_update_w_request_and_transaction_tag_success(self, mock_region):
+    async def test_execute_update_w_request_and_transaction_tag_success(
+        self, mock_region
+    ):
         request_options = RequestOptions(
             request_tag="tag-1",
             transaction_tag="tag-1-1",
@@ -958,7 +949,6 @@ class TestTransaction(OpenTelemetryBase):
         await self._execute_update_helper(request_options=request_options)
 
     @CrossSync.pytest
-
     async def test_execute_update_w_incorrect_tag_dictionary_error(self):
         request_options = {"incorrect_tag": "tag-1-1"}
         with pytest.raises(ValueError):
@@ -997,7 +987,6 @@ class TestTransaction(OpenTelemetryBase):
         await self._execute_update_helper(retry=Retry(deadline=60), timeout=2.0)
 
     @CrossSync.pytest
-
     async def test_execute_update_error(self):
         database = _Database()
         database.spanner_api = self._make_spanner_api()
@@ -1077,13 +1066,16 @@ class TestTransaction(OpenTelemetryBase):
         begin=True,
         use_multiplexed=False,
     ):
-        from google.rpc.status_pb2 import Status
         from google.protobuf.struct_pb2 import Struct
-        from google.cloud.spanner_v1 import param_types
-        from google.cloud.spanner_v1 import ResultSet
-        from google.cloud.spanner_v1 import ExecuteBatchDmlRequest
-        from google.cloud.spanner_v1 import ExecuteBatchDmlResponse
-        from google.cloud.spanner_v1 import TransactionSelector
+        from google.rpc.status_pb2 import Status
+
+        from google.cloud.spanner_v1 import (
+            ExecuteBatchDmlRequest,
+            ExecuteBatchDmlResponse,
+            ResultSet,
+            TransactionSelector,
+            param_types,
+        )
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         insert_dml = "INSERT INTO table(pkey, desc) VALUES (%pkey, %desc)"
@@ -1259,7 +1251,9 @@ class TestTransaction(OpenTelemetryBase):
         return_value="global",
     )
     @CrossSync.pytest
-    async def test_batch_update_w_request_and_transaction_tag_success(self, mock_region):
+    async def test_batch_update_w_request_and_transaction_tag_success(
+        self, mock_region
+    ):
         request_options = RequestOptions(
             request_tag="tag-1",
             transaction_tag="tag-1-1",
@@ -1296,10 +1290,8 @@ class TestTransaction(OpenTelemetryBase):
         await self._batch_update_helper(error_after=2, count=1)
 
     @CrossSync.pytest
-
     async def test_batch_update_error(self):
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import Type, TypeCode
 
         database = _Database()
         api = database.spanner_api = self._make_spanner_api()
@@ -1391,7 +1383,6 @@ class TestTransaction(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_context_mgr_failure(self):
         from google.protobuf.empty_pb2 import Empty
 

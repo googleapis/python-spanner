@@ -1,13 +1,17 @@
-import time
 import asyncio
+import time
+
 from google.api_core.exceptions import Aborted
+
 
 async def _delay_until_retry(exc, deadline, attempts, default_retry_delay=None):
     from google.cloud.spanner_v1._helpers import _get_retry_delay
+
     delay = _get_retry_delay(exc, attempts, default_retry_delay)
     if time.time() + delay > deadline:
         raise exc
     await asyncio.sleep(delay)
+
 
 async def _retry_on_aborted_exception(func, deadline, default_retry_delay=None):
     attempts = 0
@@ -23,6 +27,7 @@ async def _retry_on_aborted_exception(func, deadline, default_retry_delay=None):
                 default_retry_delay=default_retry_delay,
             )
             continue
+
 
 async def _retry(
     func,

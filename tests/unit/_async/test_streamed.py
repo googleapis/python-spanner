@@ -1,4 +1,11 @@
+import asyncio
+import unittest
+from unittest import IsolatedAsyncioTestCase
+
+import pytest
+
 from google.cloud.aio._cross_sync import CrossSync
+
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +21,11 @@ from google.cloud.aio._cross_sync import CrossSync
 # limitations under the License.
 
 
-
-import asyncio
-import pytest
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
-
 class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
     def run(self, result=None):
         if asyncio.iscoroutinefunction(getattr(self, self._testMethodName)):
             testMethod = getattr(self, self._testMethodName)
+
             def wrapper(*args, **kwargs):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -32,15 +33,23 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
                     return loop.run_until_complete(testMethod(*args, **kwargs))
                 finally:
                     loop.close()
+
             setattr(self, self._testMethodName, wrapper)
         super().run(result)
 
-import pytest
 
 import mock
+import pytest
 
 
-@CrossSync.convert_class(replace_symbols={"google.cloud.spanner_v1._async": "google.cloud.spanner_v1", "tests.unit._async": "tests.unit", "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase", "CrossSync.Mock": "mock.Mock"})
+@CrossSync.convert_class(
+    replace_symbols={
+        "google.cloud.spanner_v1._async": "google.cloud.spanner_v1",
+        "tests.unit._async": "tests.unit",
+        "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase",
+        "CrossSync.Mock": "mock.Mock",
+    }
+)
 class TestStreamedResultSet(IsolatedAsyncioTestCase):
     def _getTargetClass(self):
         from google.cloud.spanner_v1._async.streamed import StreamedResultSet
@@ -51,7 +60,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         return self._getTargetClass()(*args, **kwargs)
 
     @CrossSync.pytest
-
     async def test_ctor_defaults(self):
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -61,7 +69,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed.stats)
 
     @CrossSync.pytest
-
     async def test_ctor_w_source(self):
         iterator = _MockCancellableIterator()
         source = object()
@@ -72,7 +79,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed.stats)
 
     @CrossSync.pytest
-
     async def test_fields_unset(self):
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -81,16 +87,13 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_scalar_field(name, type_):
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import Type
+        from google.cloud.spanner_v1 import StructType, Type
 
         return StructType.Field(name=name, type_=Type(code=type_))
 
     @staticmethod
     def _make_array_field(name, element_type_code=None, element_type=None):
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
 
         if element_type is None:
             element_type = Type(code=element_type_code)
@@ -99,9 +102,7 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_struct_type(struct_type_fields):
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
 
         fields = [
             StructType.Field(name=key, type_=Type(code=value))
@@ -118,8 +119,8 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_list_value(values=(), value_pbs=None):
-        from google.protobuf.struct_pb2 import ListValue
-        from google.protobuf.struct_pb2 import Value
+        from google.protobuf.struct_pb2 import ListValue, Value
+
         from google.cloud.spanner_v1._helpers import _make_list_value_pb
 
         if value_pbs is not None:
@@ -128,8 +129,7 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_result_set_metadata(fields=(), transaction_id=None):
-        from google.cloud.spanner_v1 import ResultSetMetadata
-        from google.cloud.spanner_v1 import StructType
+        from google.cloud.spanner_v1 import ResultSetMetadata, StructType
 
         metadata = ResultSetMetadata(row_type=StructType(fields=[]))
         for field in fields:
@@ -140,8 +140,9 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_result_set_stats(query_plan=None, **kw):
-        from google.cloud.spanner_v1 import ResultSetStats
         from google.protobuf.struct_pb2 import Struct
+
+        from google.cloud.spanner_v1 import ResultSetStats
         from google.cloud.spanner_v1._helpers import _make_value_pb
 
         query_stats = Struct(
@@ -163,7 +164,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         return results
 
     @CrossSync.pytest
-
     async def test_properties_set(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -180,10 +180,9 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIs(streamed.stats, stats)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_bool(self):
-        from google.cloud.spanner_v1._async.streamed import Unmergeable
         from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1._async.streamed import Unmergeable
 
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -196,7 +195,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             streamed._merge_chunk(chunk)
 
     @CrossSync.pytest
-
     async def test__PartialResultSetWithLastFlag(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -232,7 +230,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             self.assertEqual(count, length)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_numeric(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -247,7 +244,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(merged.string_value, "1234.5678")
 
     @CrossSync.pytest
-
     async def test__merge_chunk_int64(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -263,7 +259,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_float64_nan_string(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -278,7 +273,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(merged.string_value, "NaN")
 
     @CrossSync.pytest
-
     async def test__merge_chunk_float64_w_empty(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -293,10 +287,9 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(merged.number_value, 3.14159)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_float64_w_float64(self):
-        from google.cloud.spanner_v1._async.streamed import Unmergeable
         from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1._async.streamed import Unmergeable
 
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -309,7 +302,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             streamed._merge_chunk(chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_string(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -326,7 +318,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_string_w_bytes(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -354,7 +345,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_proto(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -382,7 +372,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_enum(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -398,7 +387,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_bool(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -416,7 +404,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_int(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -434,10 +421,10 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_float(self):
-        from google.cloud.spanner_v1 import TypeCode
         import math
+
+        from google.cloud.spanner_v1 import TypeCode
 
         PI = math.pi
         EULER = math.e
@@ -457,7 +444,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_string_with_empty(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -475,7 +461,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_string(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -493,7 +478,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_string_with_null(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -511,7 +495,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_string_with_null_pending(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -527,11 +510,8 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_array_of_int(self):
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
 
         subarray_type = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.INT64)
@@ -561,11 +541,8 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_array_of_string(self):
-        from google.cloud.spanner_v1 import StructType
-        from google.cloud.spanner_v1 import Type
-        from google.cloud.spanner_v1 import TypeCode
+        from google.cloud.spanner_v1 import StructType, Type, TypeCode
 
         subarray_type = Type(
             code=TypeCode.ARRAY, array_element_type=Type(code=TypeCode.STRING)
@@ -601,7 +578,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_struct(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -625,7 +601,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_struct_with_empty(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -648,7 +623,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_struct_unmergeable(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -676,7 +650,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test__merge_chunk_array_of_struct_unmergeable_split(self):
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -698,7 +671,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test_merge_values_empty_and_empty(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -716,7 +688,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, [])
 
     @CrossSync.pytest
-
     async def test_merge_values_empty_and_partial(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -736,7 +707,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, BARE)
 
     @CrossSync.pytest
-
     async def test_merge_values_empty_and_filled(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -756,7 +726,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, [])
 
     @CrossSync.pytest
-
     async def test_merge_values_empty_and_filled_plus(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -784,7 +753,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, BARE[6:])
 
     @CrossSync.pytest
-
     async def test_merge_values_partial_and_empty(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -803,7 +771,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, BEFORE)
 
     @CrossSync.pytest
-
     async def test_merge_values_partial_and_partial(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -824,7 +791,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, BEFORE + MERGED)
 
     @CrossSync.pytest
-
     async def test_merge_values_partial_and_filled(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -845,7 +811,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, [])
 
     @CrossSync.pytest
-
     async def test_merge_values_partial_and_filled_plus(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -867,7 +832,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._current_row, VALUES[6:])
 
     @CrossSync.pytest
-
     async def test_one_or_none_no_value(self):
         streamed = self._make_one(_MockCancellableIterator())
         with mock.patch.object(streamed, "_consume_next") as consume_next:
@@ -875,7 +839,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             self.assertIsNone(await streamed.one_or_none())
 
     @CrossSync.pytest
-
     async def test_one_or_none_single_value(self):
         streamed = self._make_one(_MockCancellableIterator())
         streamed._rows = ["foo"]
@@ -884,23 +847,20 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             self.assertEqual(await streamed.one_or_none(), "foo")
 
     @CrossSync.pytest
-
     async def test_one_or_none_multiple_values(self):
         streamed = self._make_one(_MockCancellableIterator())
         streamed._rows = ["foo", "bar"]
         with pytest.raises(ValueError):
-                await streamed.one_or_none()
+            await streamed.one_or_none()
 
     @CrossSync.pytest
-
     async def test_one_or_none_consumed_stream(self):
         streamed = self._make_one(_MockCancellableIterator())
         streamed._metadata = object()
         with pytest.raises(RuntimeError):
-                await streamed.one_or_none()
+            await streamed.one_or_none()
 
     @CrossSync.pytest
-
     async def test_one_single_value(self):
         streamed = self._make_one(_MockCancellableIterator())
         streamed._rows = ["foo"]
@@ -909,7 +869,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             self.assertEqual(await streamed.one(), "foo")
 
     @CrossSync.pytest
-
     async def test_one_no_value(self):
         from google.cloud import exceptions
 
@@ -921,7 +880,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
                 await streamed.one()
 
     @CrossSync.pytest
-
     async def test_consume_next_empty(self):
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -929,7 +887,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
             await streamed._consume_next()
 
     @CrossSync.pytest
-
     async def test_consume_next_first_set_partial(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -952,7 +909,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed.metadata, metadata)
 
     @CrossSync.pytest
-
     async def test_consume_next_first_set_partial_existing_txn_id(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -976,7 +932,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(source._transaction_id, TXN_ID)
 
     @CrossSync.pytest
-
     async def test_consume_next_w_partial_result(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -996,7 +951,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._pending_chunk, VALUES[0])
 
     @CrossSync.pytest
-
     async def test_consume_next_w_pending_chunk(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -1029,7 +983,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test_consume_next_last_set(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -1054,7 +1007,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed._stats, stats)
 
     @CrossSync.pytest
-
     async def test___iter___empty(self):
         iterator = _MockCancellableIterator()
         streamed = self._make_one(iterator)
@@ -1062,10 +1014,10 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(found, [])
 
     @CrossSync.pytest
-
     async def test___iter___one_result_set_partial(self):
-        from google.cloud.spanner_v1 import TypeCode
         from google.protobuf.struct_pb2 import Value
+
+        from google.cloud.spanner_v1 import TypeCode
 
         FIELDS = [
             self._make_scalar_field("full_name", TypeCode.STRING),
@@ -1087,7 +1039,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertEqual(streamed.metadata, metadata)
 
     @CrossSync.pytest
-
     async def test___iter___multiple_result_sets_filled(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -1127,7 +1078,6 @@ class TestStreamedResultSet(IsolatedAsyncioTestCase):
         self.assertIsNone(streamed._pending_chunk)
 
     @CrossSync.pytest
-
     async def test___iter___w_existing_rows_read(self):
         from google.cloud.spanner_v1 import TypeCode
 
@@ -1186,7 +1136,14 @@ class _MockCancellableIterator(object):
             raise StopAsyncIteration
 
 
-@CrossSync.convert_class(replace_symbols={"google.cloud.spanner_v1._async": "google.cloud.spanner_v1", "tests.unit._async": "tests.unit", "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase", "CrossSync.Mock": "mock.Mock"})
+@CrossSync.convert_class(
+    replace_symbols={
+        "google.cloud.spanner_v1._async": "google.cloud.spanner_v1",
+        "tests.unit._async": "tests.unit",
+        "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase",
+        "CrossSync.Mock": "mock.Mock",
+    }
+)
 class TestStreamedResultSet_JSON_acceptance_tests(IsolatedAsyncioTestCase):
     _json_tests = None
 
@@ -1202,7 +1159,6 @@ class TestStreamedResultSet_JSON_acceptance_tests(IsolatedAsyncioTestCase):
         import os
 
         if self.__class__._json_tests is None:
-
             dirname = os.path.dirname(__file__)
             if os.path.basename(dirname) == "_async":
                 dirname = os.path.dirname(dirname)
@@ -1225,42 +1181,34 @@ class TestStreamedResultSet_JSON_acceptance_tests(IsolatedAsyncioTestCase):
             self.assertEqual([i async for i in partial], expected)
 
     @CrossSync.pytest
-
     async def test_basic(self):
         await self._match_results("Basic Test")
 
     @CrossSync.pytest
-
     async def test_string_chunking(self):
         await self._match_results("String Chunking Test")
 
     @CrossSync.pytest
-
     async def test_string_array_chunking(self):
         await self._match_results("String Array Chunking Test")
 
     @CrossSync.pytest
-
     async def test_string_array_chunking_with_nulls(self):
         await self._match_results("String Array Chunking Test With Nulls")
 
     @CrossSync.pytest
-
     async def test_string_array_chunking_with_empty_strings(self):
         await self._match_results("String Array Chunking Test With Empty Strings")
 
     @CrossSync.pytest
-
     async def test_string_array_chunking_with_one_large_string(self):
         await self._match_results("String Array Chunking Test With One Large String")
 
     @CrossSync.pytest
-
     async def test_int64_array_chunking(self):
         await self._match_results("INT64 Array Chunking Test")
 
     @CrossSync.pytest
-
     async def test_float64_array_chunking(self):
         import math
 
@@ -1289,37 +1237,30 @@ class TestStreamedResultSet_JSON_acceptance_tests(IsolatedAsyncioTestCase):
         await self._match_results("FLOAT64 Array Chunking Test", assert_rows_equality)
 
     @CrossSync.pytest
-
     async def test_struct_array_chunking(self):
         await self._match_results("Struct Array Chunking Test")
 
     @CrossSync.pytest
-
     async def test_nested_struct_array(self):
         await self._match_results("Nested Struct Array Test")
 
     @CrossSync.pytest
-
     async def test_nested_struct_array_chunking(self):
         await self._match_results("Nested Struct Array Chunking Test")
 
     @CrossSync.pytest
-
     async def test_struct_array_and_string_chunking(self):
         await self._match_results("Struct Array And String Chunking Test")
 
     @CrossSync.pytest
-
     async def test_multiple_row_single_chunk(self):
         await self._match_results("Multiple Row Single Chunk")
 
     @CrossSync.pytest
-
     async def test_multiple_row_multiple_chunks(self):
         await self._match_results("Multiple Row Multiple Chunks")
 
     @CrossSync.pytest
-
     async def test_multiple_row_chunks_non_chunks_interleaved(self):
         await self._match_results("Multiple Row Chunks/Non Chunks Interleaved")
 

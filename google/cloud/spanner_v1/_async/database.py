@@ -14,67 +14,68 @@
 
 """User-friendly container for Cloud Spanner Database."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.database"
-from google.cloud.aio._cross_sync import CrossSync
-
-
+import asyncio
 import copy
 import functools
-from typing import Optional
-
-import grpc
-import asyncio
 import inspect
 import logging
 import re
 import threading
+from typing import Optional
 
-import google.auth.credentials
-from google.api_core.retry_async import AsyncRetry
-from google.cloud.exceptions import NotFound
-from google.api_core.exceptions import Aborted
 from google.api_core import gapic_v1
-from google.iam.v1 import iam_policy_pb2
-from google.iam.v1 import options_pb2
+from google.api_core.exceptions import Aborted
+from google.api_core.retry_async import AsyncRetry
+import google.auth.credentials
+from google.iam.v1 import iam_policy_pb2, options_pb2
 from google.protobuf.field_mask_pb2 import FieldMask
+import grpc
 
+from google.cloud.aio._cross_sync import CrossSync
+from google.cloud.exceptions import NotFound
+from google.cloud.spanner_admin_database_v1 import (
+    EncryptionConfig,
+    ListDatabaseRolesRequest,
+    RestoreDatabaseEncryptionConfig,
+    RestoreDatabaseRequest,
+    UpdateDatabaseDdlRequest,
+)
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
-from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
-from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
-from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
-from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1.transaction import BatchTransactionId
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import Type
-from google.cloud.spanner_v1 import TypeCode
-from google.cloud.spanner_v1 import TransactionSelector
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1.services.spanner.async_client import SpannerAsyncClient as SpannerClient
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _metadata_with_request_id,
-    _augment_errors_with_request_id,
-    _metadata_with_request_id_and_req_id,
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    RequestOptions,
+    TransactionOptions,
+    TransactionSelector,
+    Type,
+    TypeCode,
 )
-from google.cloud.spanner_v1._async.batch import Batch
-from google.cloud.spanner_v1._async.batch import MutationGroups
-from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.merged_result_set import MergedResultSet
-from google.cloud.spanner_v1._async.pool import BurstyPool
-from google.cloud.spanner_v1._async.session import Session
+from google.cloud.spanner_v1._async.batch import Batch, MutationGroups
 from google.cloud.spanner_v1._async.database_sessions_manager import (
     DatabaseSessionsManager,
     TransactionType,
 )
-from google.cloud.spanner_v1._async.snapshot import _restart_on_unavailable
-from google.cloud.spanner_v1._async.snapshot import Snapshot
+from google.cloud.spanner_v1._async.pool import BurstyPool
+from google.cloud.spanner_v1._async.session import Session
+from google.cloud.spanner_v1._async.snapshot import Snapshot, _restart_on_unavailable
 from google.cloud.spanner_v1._async.streamed import StreamedResultSet
+from google.cloud.spanner_v1._helpers import (
+    _augment_errors_with_request_id,
+    _merge_query_options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+    _metadata_with_request_id,
+    _metadata_with_request_id_and_req_id,
+)
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.merged_result_set import MergedResultSet
+from google.cloud.spanner_v1.services.spanner.async_client import (
+    SpannerAsyncClient as SpannerClient,
+)
+from google.cloud.spanner_v1.transaction import BatchTransactionId
+
 if CrossSync.is_async:
     from google.cloud.spanner_v1.services.spanner.transports.grpc_asyncio import (
         SpannerGrpcAsyncIOTransport as SpannerGrpcTransport,
@@ -83,13 +84,14 @@ else:
     from google.cloud.spanner_v1.services.spanner.transports.grpc import (
         SpannerGrpcTransport,
     )
-from google.cloud.spanner_v1.table import Table
+
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.table import Table
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 
@@ -383,8 +385,6 @@ class Database(object):
         :rtype: :class:`google.cloud.spanner_admin_database_v1.types.DatabaseDialect`
         :returns: the dialect of the database
         """
-        if self._database_dialect == DatabaseDialect.DATABASE_DIALECT_UNSPECIFIED:
-            self.reload()
         return self._database_dialect
 
     @property
@@ -1286,7 +1286,8 @@ class Database(object):
         """
         return Table(table_id, self)
 
-    def list_tables(self, schema="_default"):
+    @CrossSync.convert
+    async def list_tables(self, schema="_default"):
         """List tables within the database.
 
         :type schema: str
@@ -1301,9 +1302,9 @@ class Database(object):
         if "_default" == schema:
             schema = self.default_schema_name
 
-        with self.snapshot() as snapshot:
+        async with self.snapshot() as snapshot:
             if schema is None:
-                results = snapshot.execute_sql(
+                results = await snapshot.execute_sql(
                     sql=_LIST_TABLES_QUERY.format(""),
                 )
             else:
@@ -1315,12 +1316,12 @@ class Database(object):
                         "WHERE TABLE_SCHEMA = @schema AND SPANNER_STATE = 'COMMITTED'"
                     )
                     param_name = "schema"
-                results = snapshot.execute_sql(
+                results = await snapshot.execute_sql(
                     sql=_LIST_TABLES_QUERY.format(where_clause),
                     params={param_name: schema},
                     param_types={param_name: Type(code=TypeCode.STRING)},
                 )
-            for row in results:
+            async for row in results:
                 yield self.table(row[0])
 
     def get_iam_policy(self, policy_version=None):
@@ -1804,7 +1805,6 @@ class BatchSnapshot(object):
             for partition in partitions:
                 yield {"partition": partition, "read": read_info.copy()}
 
-
     @CrossSync.convert
     async def process_read_batch(
         self,
@@ -1882,7 +1882,6 @@ class BatchSnapshot(object):
 
             for partition in partitions:
                 yield {"partition": partition, "query": query_info}
-
 
     @CrossSync.convert
     async def process_query_batch(

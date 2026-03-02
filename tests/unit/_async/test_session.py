@@ -1,6 +1,59 @@
+import datetime
 import unittest
 from unittest import IsolatedAsyncioTestCase
+
+from google.api_core.exceptions import Aborted, Cancelled, NotFound, Unknown
+import google.api_core.gapic_v1.method
+from google.protobuf.duration_pb2 import Duration
+from google.protobuf.struct_pb2 import Struct, Value
+from google.rpc.error_details_pb2 import RetryInfo
+import grpc
+import mock
+
+from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.aio._cross_sync import CrossSync
+from google.cloud.spanner_v1 import (
+    BeginTransactionRequest,
+    CommitRequest,
+    CommitResponse,
+    CreateSessionRequest,
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    RequestOptions,
+)
+from google.cloud.spanner_v1 import Session as SessionRequestProto
+from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1 import Transaction as TransactionPB
+from google.cloud.spanner_v1 import TransactionOptions, TypeCode
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _delay_until_retry,
+    _metadata_with_request_id,
+)
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    GCP_RESOURCE_NAME_PREFIX,
+    trace_call,
+)
+from google.cloud.spanner_v1.batch import Batch
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.keyset import KeySet
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
+from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.transaction import Transaction
+from tests._builders import (
+    build_commit_response_pb,
+    build_session,
+    build_spanner_api,
+    build_transaction_pb,
+)
+from tests._helpers import (
+    LIB_VERSION,
+    OpenTelemetryBase,
+    StatusCode,
+    enrich_with_otel_scope,
+)
+
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,58 +68,6 @@ from google.cloud.aio._cross_sync import CrossSync
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import google.api_core.gapic_v1.method
-from google.cloud.spanner_v1._opentelemetry_tracing import (
-    trace_call,
-    GCP_RESOURCE_NAME_PREFIX,
-)
-import mock
-import datetime
-from google.cloud.spanner_v1 import (
-    Transaction as TransactionPB,
-    TransactionOptions,
-    CommitResponse,
-    CommitRequest,
-    RequestOptions,
-    SpannerClient,
-    CreateSessionRequest,
-    Session as SessionRequestProto,
-    ExecuteSqlRequest,
-    TypeCode,
-    BeginTransactionRequest,
-)
-from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
-from google.cloud.spanner_v1._helpers import _delay_until_retry
-from google.cloud.spanner_v1.transaction import Transaction
-from tests._builders import (
-    build_spanner_api,
-    build_session,
-    build_transaction_pb,
-    build_commit_response_pb,
-)
-from tests._helpers import (
-    OpenTelemetryBase,
-    LIB_VERSION,
-    StatusCode,
-    enrich_with_otel_scope,
-)
-import grpc
-from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.keyset import KeySet
-from google.protobuf.duration_pb2 import Duration
-from google.rpc.error_details_pb2 import RetryInfo
-from google.api_core.exceptions import Unknown, Aborted, NotFound, Cancelled
-from google.protobuf.struct_pb2 import Struct, Value
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from google.cloud.spanner_v1._helpers import (
-    AtomicCounter,
-    _metadata_with_request_id,
-)
 
 TABLE_NAME = "citizens"
 COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -126,8 +127,8 @@ def inject_into_mock_database(mockdb):
         ):
             """Context manager for gRPC calls with error augmentation."""
             from google.cloud.spanner_v1._helpers import (
-                _metadata_with_request_id_and_req_id,
                 _augment_errors_with_request_id,
+                _metadata_with_request_id_and_req_id,
             )
 
             if span is None:
@@ -209,7 +210,6 @@ class TestSession(OpenTelemetryBase):
         return CrossSync.Mock(autospec=SpannerClient, instance=True)
 
     @CrossSync.pytest
-
     async def test_constructor_wo_labels(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -218,7 +218,6 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(session.labels, {})
 
     @CrossSync.pytest
-
     async def test_constructor_w_database_role(self):
         database = self._make_database(database_role=self.DATABASE_ROLE)
         session = self._make_one(database, database_role=self.DATABASE_ROLE)
@@ -227,7 +226,6 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(session.database_role, self.DATABASE_ROLE)
 
     @CrossSync.pytest
-
     async def test_constructor_wo_database_role(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -236,7 +234,6 @@ class TestSession(OpenTelemetryBase):
         self.assertIs(session.database_role, None)
 
     @CrossSync.pytest
-
     async def test_constructor_w_labels(self):
         database = self._make_database()
         labels = {"foo": "bar"}
@@ -246,7 +243,6 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(session.labels, labels)
 
     @CrossSync.pytest
-
     async def test___lt___(self):
         database = self._make_database()
         lhs = self._make_one(database)
@@ -256,7 +252,6 @@ class TestSession(OpenTelemetryBase):
         self.assertTrue(lhs < rhs)
 
     @CrossSync.pytest
-
     async def test_name_property_wo_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -265,7 +260,6 @@ class TestSession(OpenTelemetryBase):
             (session.name)
 
     @CrossSync.pytest
-
     async def test_name_property_w_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -273,7 +267,6 @@ class TestSession(OpenTelemetryBase):
         self.assertEqual(session.name, self.SESSION_NAME)
 
     @CrossSync.pytest
-
     async def test_create_w_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -526,7 +519,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_exists_wo_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -650,7 +642,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_ping_wo_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -773,7 +764,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_delete_wo_session_id(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -900,7 +890,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_snapshot_not_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -909,7 +898,6 @@ class TestSession(OpenTelemetryBase):
             session.snapshot()
 
     @CrossSync.pytest
-
     async def test_snapshot_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -923,7 +911,6 @@ class TestSession(OpenTelemetryBase):
         self.assertFalse(snapshot._multi_use)
 
     @CrossSync.pytest
-
     async def test_snapshot_created_w_multi_use(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -937,7 +924,6 @@ class TestSession(OpenTelemetryBase):
         self.assertTrue(snapshot._multi_use)
 
     @CrossSync.pytest
-
     async def test_read_not_created(self):
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -950,7 +936,6 @@ class TestSession(OpenTelemetryBase):
             await session.read(TABLE_NAME, COLUMNS, KEYSET)
 
     @CrossSync.pytest
-
     async def test_read(self):
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -963,7 +948,9 @@ class TestSession(OpenTelemetryBase):
         session._session_id = "DEADBEEF"
 
         with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
-            found = await session.read(TABLE_NAME, COLUMNS, KEYSET, index=INDEX, limit=LIMIT)
+            found = await session.read(
+                TABLE_NAME, COLUMNS, KEYSET, index=INDEX, limit=LIMIT
+            )
 
         self.assertIs(found, snapshot().read.return_value)
 
@@ -977,7 +964,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_execute_sql_not_created(self):
         SQL = "SELECT first_name, age FROM citizens"
         database = self._make_database()
@@ -987,7 +973,6 @@ class TestSession(OpenTelemetryBase):
             await session.execute_sql(SQL)
 
     @CrossSync.pytest
-
     async def test_execute_sql_defaults(self):
         SQL = "SELECT first_name, age FROM citizens"
         database = self._make_database()
@@ -1012,7 +997,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_execute_sql_non_default_retry(self):
         SQL = "SELECT first_name, age FROM citizens"
         database = self._make_database()
@@ -1042,7 +1026,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_execute_sql_explicit(self):
         SQL = "SELECT first_name, age FROM citizens"
         database = self._make_database()
@@ -1070,7 +1053,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_batch_not_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -1079,7 +1061,6 @@ class TestSession(OpenTelemetryBase):
             session.batch()
 
     @CrossSync.pytest
-
     async def test_batch_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -1091,7 +1072,6 @@ class TestSession(OpenTelemetryBase):
         self.assertIs(batch._session, session)
 
     @CrossSync.pytest
-
     async def test_transaction_not_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -1100,7 +1080,6 @@ class TestSession(OpenTelemetryBase):
             session.transaction()
 
     @CrossSync.pytest
-
     async def test_transaction_created(self):
         database = self._make_database()
         session = self._make_one(database)
@@ -1112,7 +1091,6 @@ class TestSession(OpenTelemetryBase):
         self.assertIs(transaction._session, session)
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_callback_raises_non_gax_error(self):
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1157,7 +1135,6 @@ class TestSession(OpenTelemetryBase):
         gax_api.begin_transaction.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_callback_raises_non_abort_rpc_error(self):
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1196,7 +1173,6 @@ class TestSession(OpenTelemetryBase):
         gax_api.rollback.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_retry_callback_raises_abort(self):
         session = build_session()
         database = session._database
@@ -1233,7 +1209,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_retry_callback_raises_abort_multiplexed(self):
         session = build_session(is_multiplexed=True)
         database = session._database
@@ -1280,7 +1255,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_retry_commit_raises_abort_multiplexed(self):
         session = build_session(is_multiplexed=True)
         database = session._database
@@ -1327,7 +1301,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_args_w_kwargs_wo_abort(self):
         VALUES = [
             ["phred@exammple.com", "Phred", "Phlyntstone", 32],
@@ -1353,7 +1326,9 @@ class TestSession(OpenTelemetryBase):
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
             return 42
 
-        return_value = await session.run_in_transaction(unit_of_work, "abc", some_arg="def")
+        return_value = await session.run_in_transaction(
+            unit_of_work, "abc", some_arg="def"
+        )
 
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
@@ -1395,7 +1370,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_commit_error(self):
         TABLE_NAME = "citizens"
         COLUMNS = ["email", "first_name", "last_name", "age"]
@@ -1464,7 +1438,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_abort_no_retry_metadata(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -1569,7 +1542,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_abort_w_retry_metadata(self):
         RETRY_SECONDS = 12
         RETRY_NANOS = 3456
@@ -1685,7 +1657,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_callback_raises_abort_wo_metadata(self):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
@@ -1764,7 +1735,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_abort_w_retry_metadata_deadline(self):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
@@ -1801,7 +1771,9 @@ class TestSession(OpenTelemetryBase):
             with mock.patch("time.sleep") as sleep_mock:
                 # Exception has request_id attribute added
                 with pytest.raises(Aborted) as context:
-                    await session.run_in_transaction(unit_of_work, "abc", timeout_secs=1)
+                    await session.run_in_transaction(
+                        unit_of_work, "abc", timeout_secs=1
+                    )
                 self.assertTrue(hasattr(context.exception, "request_id"))
 
         sleep_mock.assert_not_called()
@@ -1846,7 +1818,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_timeout(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         aborted = _make_rpc_error(Aborted, trailing_metadata=[])
@@ -1988,7 +1959,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_commit_stats_success(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2011,7 +1981,9 @@ class TestSession(OpenTelemetryBase):
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
             return 42
 
-        return_value = await session.run_in_transaction(unit_of_work, "abc", some_arg="def")
+        return_value = await session.run_in_transaction(
+            unit_of_work, "abc", some_arg="def"
+        )
 
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
@@ -2057,7 +2029,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_commit_stats_error(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         gax_api = self._make_spanner_api()
@@ -2122,7 +2093,6 @@ class TestSession(OpenTelemetryBase):
         database.logger.info.assert_not_called()
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_transaction_tag(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2192,7 +2162,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_exclude_txn_from_change_streams(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2384,7 +2353,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_isolation_level_at_request(self):
         database = self._make_database()
         api = database.spanner_api = build_spanner_api()
@@ -2420,7 +2388,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_isolation_level_at_client(self):
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
@@ -2458,8 +2425,9 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
-    async def test_run_in_transaction_w_isolation_level_at_request_overrides_client(self):
+    async def test_run_in_transaction_w_isolation_level_at_request_overrides_client(
+        self,
+    ):
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
                 isolation_level="SERIALIZABLE"
@@ -2500,7 +2468,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_read_lock_mode_at_request(self):
         database = self._make_database()
         api = database.spanner_api = build_spanner_api()
@@ -2537,7 +2504,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_run_in_transaction_w_read_lock_mode_at_client(self):
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
@@ -2576,8 +2542,9 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
-    async def test_run_in_transaction_w_read_lock_mode_at_request_overrides_client(self):
+    async def test_run_in_transaction_w_read_lock_mode_at_request_overrides_client(
+        self,
+    ):
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
                 read_lock_mode="PESSIMISTIC"
@@ -2619,8 +2586,9 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
-    async def test_run_in_transaction_w_isolation_level_and_read_lock_mode_at_request(self):
+    async def test_run_in_transaction_w_isolation_level_and_read_lock_mode_at_request(
+        self,
+    ):
         database = self._make_database()
         api = database.spanner_api = build_spanner_api()
         session = self._make_one(database)
@@ -2660,8 +2628,9 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
-    async def test_run_in_transaction_w_isolation_level_and_read_lock_mode_at_client(self):
+    async def test_run_in_transaction_w_isolation_level_and_read_lock_mode_at_client(
+        self,
+    ):
         database = self._make_database(
             default_transaction_options=DefaultTransactionOptions(
                 read_lock_mode="PESSIMISTIC",
@@ -2748,7 +2717,6 @@ class TestSession(OpenTelemetryBase):
         )
 
     @CrossSync.pytest
-
     async def test_delay_helper_w_no_delay(self):
         metadata_mock = CrossSync.Mock()
         metadata_mock.trailing_metadata.return_value = {}
