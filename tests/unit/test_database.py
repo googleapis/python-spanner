@@ -15,31 +15,28 @@
 
 import unittest
 
-import mock
 from google.api_core import gapic_v1
-from google.cloud.spanner_admin_database_v1 import (
-    Database as DatabasePB,
-    DatabaseDialect,
-)
-
-from google.cloud.spanner_v1.param_types import INT64
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
+import mock
 
+from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
+from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import (
-    RequestOptions,
-    DirectedReadOptions,
     DefaultTransactionOptions,
+    DirectedReadOptions,
+    RequestOptions,
 )
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
+    _augment_errors_with_request_id,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
-    _augment_errors_with_request_id,
 )
+from google.cloud.spanner_v1.database_sessions_manager import TransactionType
+from google.cloud.spanner_v1.param_types import INT64
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.database_sessions_manager import TransactionType
 from tests._builders import build_spanner_api
 from tests._helpers import is_multiplexed_enabled
 
@@ -89,6 +86,7 @@ class _BaseTest(unittest.TestCase):
     @staticmethod
     def _make_timestamp():
         import datetime
+
         from google.cloud._helpers import UTC
 
         return datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -435,6 +433,7 @@ class TestDatabase(_BaseTest):
 
     def test_spanner_api_w_scoped_creds(self):
         import google.auth.credentials
+
         from google.cloud.spanner_v1.database import SPANNER_DATA_SCOPE
 
         class _CredentialsWithScopes(google.auth.credentials.Scoped):
@@ -528,8 +527,8 @@ class TestDatabase(_BaseTest):
         self.assertNotEqual(database1, database2)
 
     def test_create_grpc_error(self):
-        from google.api_core.exceptions import GoogleAPICallError
-        from google.api_core.exceptions import Unknown
+        from google.api_core.exceptions import GoogleAPICallError, Unknown
+
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 
         client = _Client()
@@ -627,9 +626,11 @@ class TestDatabase(_BaseTest):
         )
 
     def test_create_success(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            CreateDatabaseRequest,
+            EncryptionConfig,
+        )
         from tests._fixtures import DDL_STATEMENTS
-        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
         op_future = object()
         client = _Client()
@@ -669,9 +670,11 @@ class TestDatabase(_BaseTest):
         )
 
     def test_create_success_w_encryption_config_dict(self):
+        from google.cloud.spanner_admin_database_v1 import (
+            CreateDatabaseRequest,
+            EncryptionConfig,
+        )
         from tests._fixtures import DDL_STATEMENTS
-        from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
 
         op_future = object()
         client = _Client()
@@ -712,8 +715,8 @@ class TestDatabase(_BaseTest):
         )
 
     def test_create_success_w_proto_descriptors(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -873,12 +876,14 @@ class TestDatabase(_BaseTest):
         )
 
     def test_reload_success(self):
-        from google.cloud.spanner_admin_database_v1 import Database
-        from google.cloud.spanner_admin_database_v1 import EncryptionConfig
-        from google.cloud.spanner_admin_database_v1 import EncryptionInfo
-        from google.cloud.spanner_admin_database_v1 import GetDatabaseDdlResponse
-        from google.cloud.spanner_admin_database_v1 import RestoreInfo
         from google.cloud._helpers import _datetime_to_pb_timestamp
+        from google.cloud.spanner_admin_database_v1 import (
+            Database,
+            EncryptionConfig,
+            EncryptionInfo,
+            GetDatabaseDdlResponse,
+            RestoreInfo,
+        )
         from tests._fixtures import DDL_STATEMENTS
 
         timestamp = self._make_timestamp()
@@ -949,8 +954,9 @@ class TestDatabase(_BaseTest):
 
     def test_update_ddl_grpc_error(self):
         from google.api_core.exceptions import Unknown
-        from tests._fixtures import DDL_STATEMENTS
+
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -981,8 +987,8 @@ class TestDatabase(_BaseTest):
 
     def test_update_ddl_not_found(self):
         from google.cloud.exceptions import NotFound
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         client = _Client()
         api = client.database_admin_api = self._make_database_admin_api()
@@ -1012,8 +1018,8 @@ class TestDatabase(_BaseTest):
         )
 
     def test_update_ddl(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1045,8 +1051,8 @@ class TestDatabase(_BaseTest):
         )
 
     def test_update_ddl_w_operation_id(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1110,8 +1116,8 @@ class TestDatabase(_BaseTest):
         )
 
     def test_update_ddl_w_proto_descriptors(self):
-        from tests._fixtures import DDL_STATEMENTS
         from google.cloud.spanner_admin_database_v1 import UpdateDatabaseDdlRequest
+        from tests._fixtures import DDL_STATEMENTS
 
         op_future = object()
         client = _Client()
@@ -1224,26 +1230,24 @@ class TestDatabase(_BaseTest):
         retried=False,
         exclude_txn_from_change_streams=False,
     ):
+        import collections
         import os
+
         from google.api_core.exceptions import Aborted
         from google.api_core.retry import Retry
         from google.protobuf.struct_pb2 import Struct
+
         from google.cloud.spanner_v1 import (
+            ExecuteSqlRequest,
             PartialResultSet,
             ResultSetStats,
         )
-        from google.cloud.spanner_v1 import (
-            Transaction as TransactionPB,
-            TransactionSelector,
-            TransactionOptions,
-        )
+        from google.cloud.spanner_v1 import TransactionOptions, TransactionSelector
+        from google.cloud.spanner_v1 import Transaction as TransactionPB
         from google.cloud.spanner_v1._helpers import (
             _make_value_pb,
             _merge_query_options,
         )
-        from google.cloud.spanner_v1 import ExecuteSqlRequest
-
-        import collections
 
         MethodConfig = collections.namedtuple("MethodConfig", ["retry"])
 
@@ -1576,6 +1580,7 @@ class TestDatabase(_BaseTest):
 
     def test_snapshot_w_read_timestamp_and_multi_use(self):
         import datetime
+
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.database import SnapshotCheckout
         from google.cloud.spanner_v1.snapshot import Snapshot
@@ -1774,6 +1779,7 @@ class TestDatabase(_BaseTest):
 
     def test_restore_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
@@ -1806,6 +1812,7 @@ class TestDatabase(_BaseTest):
 
     def test_restore_not_found(self):
         from google.api_core.exceptions import NotFound
+
         from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         client = _Client()
@@ -1839,8 +1846,8 @@ class TestDatabase(_BaseTest):
     def test_restore_success(self):
         from google.cloud.spanner_admin_database_v1 import (
             RestoreDatabaseEncryptionConfig,
+            RestoreDatabaseRequest,
         )
-        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         op_future = object()
         client = _Client()
@@ -1882,8 +1889,8 @@ class TestDatabase(_BaseTest):
     def test_restore_success_w_encryption_config_dict(self):
         from google.cloud.spanner_admin_database_v1 import (
             RestoreDatabaseEncryptionConfig,
+            RestoreDatabaseRequest,
         )
-        from google.cloud.spanner_admin_database_v1 import RestoreDatabaseRequest
 
         op_future = object()
         client = _Client()
@@ -1976,6 +1983,7 @@ class TestDatabase(_BaseTest):
 
     def test_list_database_operations_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
@@ -1995,6 +2003,7 @@ class TestDatabase(_BaseTest):
 
     def test_list_database_operations_not_found(self):
         from google.api_core.exceptions import NotFound
+
         from google.cloud.spanner_v1.database import _DATABASE_METADATA_FILTER
 
         client = _Client()
@@ -2052,6 +2061,7 @@ class TestDatabase(_BaseTest):
 
     def test_list_database_roles_grpc_error(self):
         from google.api_core.exceptions import Unknown
+
         from google.cloud.spanner_admin_database_v1 import ListDatabaseRolesRequest
 
         client = _Client()
@@ -2148,11 +2158,13 @@ class TestBatchCheckout(_BaseTest):
 
     def test_context_mgr_success(self):
         import datetime
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            CommitRequest,
+            CommitResponse,
+            TransactionOptions,
+        )
         from google.cloud.spanner_v1.batch import Batch
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2199,11 +2211,13 @@ class TestBatchCheckout(_BaseTest):
 
     def test_context_mgr_w_commit_stats_success(self):
         import datetime
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import CommitResponse
-        from google.cloud.spanner_v1 import TransactionOptions
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            CommitRequest,
+            CommitResponse,
+            TransactionOptions,
+        )
         from google.cloud.spanner_v1.batch import Batch
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
@@ -2254,8 +2268,8 @@ class TestBatchCheckout(_BaseTest):
 
     def test_context_mgr_w_aborted_commit_status(self):
         from google.api_core.exceptions import Aborted
-        from google.cloud.spanner_v1 import CommitRequest
-        from google.cloud.spanner_v1 import TransactionOptions
+
+        from google.cloud.spanner_v1 import CommitRequest, TransactionOptions
         from google.cloud.spanner_v1.batch import Batch
 
         database = _Database(self.DATABASE_NAME)
@@ -2355,6 +2369,7 @@ class TestSnapshotCheckout(_BaseTest):
 
     def test_ctor_w_read_timestamp_and_multi_use(self):
         import datetime
+
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.snapshot import Snapshot
 
@@ -3352,14 +3367,17 @@ class TestMutationGroupsCheckout(_BaseTest):
 
     def test_context_mgr_success(self):
         import datetime
-        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
-        from google.cloud.spanner_v1 import BatchWriteRequest
-        from google.cloud.spanner_v1 import BatchWriteResponse
-        from google.cloud.spanner_v1 import Mutation
-        from google.cloud._helpers import UTC
-        from google.cloud._helpers import _datetime_to_pb_timestamp
-        from google.cloud.spanner_v1.batch import MutationGroups
+
         from google.rpc.status_pb2 import Status
+
+        from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
+        from google.cloud.spanner_v1 import (
+            BatchWriteRequest,
+            BatchWriteResponse,
+            Mutation,
+        )
+        from google.cloud.spanner_v1._helpers import _make_list_value_pbs
+        from google.cloud.spanner_v1.batch import MutationGroups
 
         now = datetime.datetime.utcnow().replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)

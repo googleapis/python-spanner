@@ -13,29 +13,29 @@
 # limitations under the License.
 
 
+from datetime import datetime, timedelta
 from functools import total_ordering
 import time
 import unittest
-from datetime import datetime, timedelta
 
 import mock
+
 from google.cloud.spanner_v1 import _opentelemetry_tracing
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _augment_errors_with_request_id,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
-    _augment_errors_with_request_id,
-    AtomicCounter,
 )
-from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
+from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from tests._builders import build_database
 from tests._helpers import (
-    OpenTelemetryBase,
+    HAS_OPENTELEMETRY_INSTALLED,
     LIB_VERSION,
+    OpenTelemetryBase,
     StatusCode,
     enrich_with_otel_scope,
-    HAS_OPENTELEMETRY_INSTALLED,
 )
 
 
@@ -946,6 +946,7 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_get_hit_w_ping(self, mock_region):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -974,6 +975,7 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_get_hit_w_ping_expired(self, mock_region):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1097,6 +1099,7 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_put_non_full(self, mock_region):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1172,6 +1175,7 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_ping_oldest_stale_but_exists(self, mock_region):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1193,6 +1197,7 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_ping_oldest_stale_and_not_exists(self, mock_region):
         import datetime
+
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1391,8 +1396,7 @@ class _Database(object):
             metadata=[],
             labels={},
         ):
-            from google.cloud.spanner_v1 import BatchCreateSessionsResponse
-            from google.cloud.spanner_v1 import Session
+            from google.cloud.spanner_v1 import BatchCreateSessionsResponse, Session
 
             database_role = request.session_template.creator_role if request else None
             if request.session_count < 2:

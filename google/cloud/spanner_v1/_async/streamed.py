@@ -14,16 +14,11 @@
 
 """Wrapper for streaming results."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.streamed"
-from google.cloud.aio._cross_sync import CrossSync
-
+from google.protobuf.struct_pb2 import ListValue, Value
 
 from google.cloud import exceptions
-from google.protobuf.struct_pb2 import ListValue
-from google.protobuf.struct_pb2 import Value
-
-from google.cloud.spanner_v1 import PartialResultSet
-from google.cloud.spanner_v1 import ResultSetMetadata
-from google.cloud.spanner_v1 import TypeCode
+from google.cloud.aio._cross_sync import CrossSync
+from google.cloud.spanner_v1 import PartialResultSet, ResultSetMetadata, TypeCode
 from google.cloud.spanner_v1._helpers import _get_type_decoder, _parse_nullable
 
 

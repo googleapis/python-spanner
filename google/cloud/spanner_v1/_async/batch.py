@@ -14,32 +14,33 @@
 
 """Context manager for Cloud Spanner batched writes."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.batch"
-from google.cloud.aio._cross_sync import CrossSync
-
 import functools
+import time
 from typing import List, Optional
 
-from google.cloud.spanner_v1 import CommitRequest, CommitResponse
-from google.cloud.spanner_v1 import Mutation
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import BatchWriteRequest
+from google.api_core.exceptions import InternalServerError
 
-from google.cloud.spanner_v1._helpers import _SessionWrapper
-from google.cloud.spanner_v1._helpers import _make_list_value_pbs
+from google.cloud.aio._cross_sync import CrossSync
+from google.cloud.spanner_v1 import (
+    BatchWriteRequest,
+    CommitRequest,
+    CommitResponse,
+    Mutation,
+    RequestOptions,
+    TransactionOptions,
+)
+from google.cloud.spanner_v1._async._helpers import _retry, _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _merge_Transaction_Options,
     AtomicCounter,
+    _check_rst_stream_error,
+    _make_list_value_pbs,
+    _merge_Transaction_Options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+    _SessionWrapper,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
-from google.cloud.spanner_v1 import RequestOptions
-from google.cloud.spanner_v1._async._helpers import _retry
-from google.cloud.spanner_v1._async._helpers import _retry_on_aborted_exception
-from google.cloud.spanner_v1._helpers import _check_rst_stream_error
-from google.api_core.exceptions import InternalServerError
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-import time
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 
@@ -336,7 +337,9 @@ class MutationGroups(_SessionWrapper):
         return MutationGroup(self._session, mutation_group.mutations)
 
     @CrossSync.convert
-    async def batch_write(self, request_options=None, exclude_txn_from_change_streams=False):
+    async def batch_write(
+        self, request_options=None, exclude_txn_from_change_streams=False
+    ):
         """Executes batch_write.
 
         :type request_options:
@@ -406,6 +409,7 @@ class MutationGroups(_SessionWrapper):
                 return batch_write_method()
 
             from google.cloud.spanner_v1._async._helpers import _retry
+
             response = await _retry(
                 wrapped_method,
                 allowed_exceptions={

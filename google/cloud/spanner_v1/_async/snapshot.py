@@ -14,48 +14,48 @@
 
 """Model a set of read-only queries to a database as a snapshot."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.snapshot"
-from google.cloud.aio._cross_sync import CrossSync
-
-
 import functools
 import threading
-from typing import List, Union, Optional
+from typing import List, Optional, Union
 
+from google.api_core import gapic_v1
+from google.api_core.exceptions import (
+    Aborted,
+    InternalServerError,
+    InvalidArgument,
+    ServiceUnavailable,
+)
 from google.protobuf.struct_pb2 import Struct
+
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1 import (
+    BeginTransactionRequest,
     ExecuteSqlRequest,
+    Mutation,
     PartialResultSet,
+    PartitionOptions,
+    PartitionQueryRequest,
+    PartitionReadRequest,
+    ReadRequest,
+    RequestOptions,
     ResultSet,
     Transaction,
-    Mutation,
-    BeginTransactionRequest,
-)
-from google.cloud.spanner_v1 import ReadRequest
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import TransactionSelector
-from google.cloud.spanner_v1 import PartitionOptions
-from google.cloud.spanner_v1 import PartitionQueryRequest
-from google.cloud.spanner_v1 import PartitionReadRequest
-
-from google.api_core.exceptions import InternalServerError, Aborted
-from google.api_core.exceptions import ServiceUnavailable
-from google.api_core.exceptions import InvalidArgument
-from google.api_core import gapic_v1
-from google.cloud.spanner_v1._helpers import (
-    _make_value_pb,
-    _merge_query_options,
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _check_rst_stream_error,
-    _SessionWrapper,
-    AtomicCounter,
-    _augment_error_with_request_id,
+    TransactionOptions,
+    TransactionSelector,
 )
 from google.cloud.spanner_v1._async._helpers import _retry
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
 from google.cloud.spanner_v1._async.streamed import StreamedResultSet
-from google.cloud.spanner_v1 import RequestOptions
-
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _augment_error_with_request_id,
+    _check_rst_stream_error,
+    _make_value_pb,
+    _merge_query_options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+    _SessionWrapper,
+)
+from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.types import MultiplexedSessionPrecommitToken
 
@@ -149,7 +149,9 @@ async def _restart_on_unavailable(
                     and item._pb.HasField("precommit_token")
                     and transaction is not None
                 ):
-                    transaction._update_for_precommit_token_pb(item.precommit_token)
+                    await transaction._update_for_precommit_token_pb(
+                        item.precommit_token
+                    )
 
                 if item.resume_token:
                     resume_token = item.resume_token
@@ -717,11 +719,12 @@ class _SnapshotBase(_SessionWrapper):
         if transaction_pb._pb.HasField("precommit_token"):
             self._update_for_precommit_token_pb_unsafe(transaction_pb.precommit_token)
 
-    def _update_for_precommit_token_pb(
+    @CrossSync.convert
+    async def _update_for_precommit_token_pb(
         self, precommit_token_pb: MultiplexedSessionPrecommitToken
     ) -> None:
         """Updates the snapshot for the given multiplexed session precommit token."""
-        with self._lock:
+        async with self._lock:
             self._update_for_precommit_token_pb_unsafe(precommit_token_pb)
 
     def _update_for_precommit_token_pb_unsafe(

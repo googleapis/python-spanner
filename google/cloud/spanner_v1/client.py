@@ -27,15 +27,16 @@ In the hierarchy of API concepts
   :class:`~google.cloud.spanner_v1.database.Database`
 """
 
-import os
 import logging
-import warnings
+import os
 import threading
+from typing import Optional
+import warnings
+import google.api_core.client_options
 from google.api_core.gapic_v1 import client_info
 from google.auth.credentials import AnonymousCredentials
-import google.api_core.client_options
+import grpc
 from google.cloud.client import ClientWithProject
-from typing import Optional
 from google.cloud.spanner_admin_database_v1 import (
     DatabaseAdminClient as DatabaseAdminClient,
 )
@@ -63,8 +64,19 @@ from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
+from google.cloud.spanner_v1 import (
+    DefaultTransactionOptions,
+    ExecuteSqlRequest,
+    __version__,
+)
+from google.cloud.spanner_v1.instance import Instance
+from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
+)
+from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
+    SpannerMetricsTracerFactory,
 )
 
 try:
@@ -367,7 +379,8 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._instance_admin_api is None:
             if self._emulator_host is not None:
-                transport = InstanceAdminGrpcTransport(host=self._emulator_host)
+                channel = grpc.insecure_channel(self._emulator_host)
+                transport = InstanceAdminGrpcTransport(channel=channel)
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
@@ -400,7 +413,8 @@ class Client(ClientWithProject):
         """Helper for session-related API calls."""
         if self._database_admin_api is None:
             if self._emulator_host is not None:
-                transport = DatabaseAdminGrpcTransport(host=self._emulator_host)
+                channel = grpc.insecure_channel(self._emulator_host)
+                transport = DatabaseAdminGrpcTransport(channel=channel)
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,

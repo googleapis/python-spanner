@@ -1,4 +1,11 @@
+import asyncio
+import unittest
+from unittest import IsolatedAsyncioTestCase
+
+import pytest
+
 from google.cloud.aio._cross_sync import CrossSync
+
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,16 +21,11 @@ from google.cloud.aio._cross_sync import CrossSync
 # limitations under the License.
 
 
-import asyncio
-import pytest
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
-
 class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
     def run(self, result=None):
         if asyncio.iscoroutinefunction(getattr(self, self._testMethodName)):
             testMethod = getattr(self, self._testMethodName)
+
             def wrapper(*args, **kwargs):
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
@@ -31,23 +33,31 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
                     return loop.run_until_complete(testMethod(*args, **kwargs))
                 finally:
                     loop.close()
+
             setattr(self, self._testMethodName, wrapper)
         super().run(result)
 
-import pytest
 
 import os
-import mock
-from google.auth.credentials import AnonymousCredentials
+from unittest.mock import AsyncMock
 
-from google.cloud.spanner_v1 import DirectedReadOptions, DefaultTransactionOptions
+from google.auth.credentials import AnonymousCredentials
+import mock
+import pytest
+
+from google.cloud.spanner_v1 import DefaultTransactionOptions, DirectedReadOptions
 from tests._builders import build_scoped_credentials
-from unittest.mock import AsyncMock
-from unittest.mock import AsyncMock
 
 
 @mock.patch.dict(os.environ, {"SPANNER_DISABLE_BUILTIN_METRICS": "true"})
-@CrossSync.convert_class(replace_symbols={"google.cloud.spanner_v1._async": "google.cloud.spanner_v1", "tests.unit._async": "tests.unit", "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase", "CrossSync.Mock": "mock.Mock"})
+@CrossSync.convert_class(
+    replace_symbols={
+        "google.cloud.spanner_v1._async": "google.cloud.spanner_v1",
+        "tests.unit._async": "tests.unit",
+        "IsolatedAsyncioTestCase": "IsolatedAsyncioTestCase",
+        "CrossSync.Mock": "mock.Mock",
+    }
+)
 class TestClient(IsolatedAsyncioTestCase):
     PROJECT = "PROJECT"
     PATH = "projects/%s" % (PROJECT,)
@@ -98,6 +108,7 @@ class TestClient(IsolatedAsyncioTestCase):
         default_transaction_options=None,
     ):
         import google.api_core.client_options
+
         from google.cloud.spanner_v1._async import client as MUT
 
         kwargs = {}
@@ -162,19 +173,21 @@ class TestClient(IsolatedAsyncioTestCase):
     @mock.patch("warnings.warn")
     @CrossSync.pytest
     async def test_constructor_emulator_host_warning(self, mock_warn, mock_em):
-        from google.cloud.spanner_v1._async import client as MUT
         from google.auth.credentials import AnonymousCredentials
+
+        from google.cloud.spanner_v1._async import client as MUT
 
         expected_scopes = None
         creds = build_scoped_credentials()
         mock_em.return_value = "http://emulator.host.com"
-        with mock.patch("google.cloud.spanner_v1._async.client.AnonymousCredentials") as patch:
+        with mock.patch(
+            "google.cloud.spanner_v1._async.client.AnonymousCredentials"
+        ) as patch:
             expected_creds = patch.return_value = AnonymousCredentials()
             self._constructor_test_helper(expected_scopes, creds, expected_creds)
         mock_warn.assert_called_once_with(MUT._EMULATOR_HOST_HTTP_SCHEME)
 
     @CrossSync.pytest
-
     async def test_constructor_default_scopes(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -183,7 +196,6 @@ class TestClient(IsolatedAsyncioTestCase):
         self._constructor_test_helper(expected_scopes, creds)
 
     @CrossSync.pytest
-
     async def test_constructor_custom_client_info(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -208,16 +220,15 @@ class TestClient(IsolatedAsyncioTestCase):
         default.assert_called_once_with(scopes=(MUT.SPANNER_ADMIN_SCOPE,))
 
     @CrossSync.pytest
-
     async def test_constructor_credentials_wo_create_scoped(self):
         creds = build_scoped_credentials()
         expected_scopes = None
         self._constructor_test_helper(expected_scopes, creds)
 
     @CrossSync.pytest
-
     async def test_constructor_custom_client_options_obj(self):
         from google.api_core.client_options import ClientOptions
+
         from google.cloud.spanner_v1._async import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
@@ -229,7 +240,6 @@ class TestClient(IsolatedAsyncioTestCase):
         )
 
     @CrossSync.pytest
-
     async def test_constructor_custom_client_options_dict(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -240,7 +250,6 @@ class TestClient(IsolatedAsyncioTestCase):
         )
 
     @CrossSync.pytest
-
     async def test_constructor_custom_query_options_client_config(self):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
         from google.cloud.spanner_v1._async import client as MUT
@@ -263,7 +272,9 @@ class TestClient(IsolatedAsyncioTestCase):
     )
     @mock.patch("google.cloud.spanner_v1._async.client._get_spanner_optimizer_version")
     @CrossSync.pytest
-    async def test_constructor_custom_query_options_env_config(self, mock_ver, mock_stats):
+    async def test_constructor_custom_query_options_env_config(
+        self, mock_ver, mock_stats
+    ):
         from google.cloud.spanner_v1 import ExecuteSqlRequest
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -287,7 +298,6 @@ class TestClient(IsolatedAsyncioTestCase):
         )
 
     @CrossSync.pytest
-
     async def test_constructor_w_directed_read_options(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -316,8 +326,8 @@ class TestClient(IsolatedAsyncioTestCase):
         Test that Client constructor handles exceptions during metrics
         initialization and logs a warning.
         """
-        from google.cloud.spanner_v1._async.client import Client
         from google.cloud.spanner_v1._async import client as MUT
+        from google.cloud.spanner_v1._async.client import Client
 
         MUT._metrics_monitor_initialized = False
         mock_spanner_metrics_factory.side_effect = Exception("Metrics init failed")
@@ -424,7 +434,6 @@ class TestClient(IsolatedAsyncioTestCase):
         mock_spanner_metrics_factory.assert_called_once_with(enabled=False)
 
     @CrossSync.pytest
-
     async def test_constructor_route_to_leader_disbled(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -435,7 +444,6 @@ class TestClient(IsolatedAsyncioTestCase):
         )
 
     @CrossSync.pytest
-
     async def test_constructor_w_default_transaction_options(self):
         from google.cloud.spanner_v1._async import client as MUT
 
@@ -450,8 +458,9 @@ class TestClient(IsolatedAsyncioTestCase):
     @mock.patch("google.cloud.spanner_v1._async.client._get_spanner_emulator_host")
     @CrossSync.pytest
     async def test_instance_admin_api(self, mock_em):
-        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
         from google.api_core.client_options import ClientOptions
+
+        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
 
         mock_em.return_value = None
 
@@ -519,10 +528,9 @@ class TestClient(IsolatedAsyncioTestCase):
         self.assertNotIn("credentials", called_kw)
 
     @CrossSync.pytest
-
     async def test_instance_admin_api_emulator_code(self):
-        from google.auth.credentials import AnonymousCredentials
         from google.api_core.client_options import ClientOptions
+        from google.auth.credentials import AnonymousCredentials
 
         credentials = AnonymousCredentials()
         client_info = AsyncMock()
@@ -555,8 +563,9 @@ class TestClient(IsolatedAsyncioTestCase):
     @mock.patch("google.cloud.spanner_v1._async.client._get_spanner_emulator_host")
     @CrossSync.pytest
     async def test_database_admin_api(self, mock_em):
-        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
         from google.api_core.client_options import ClientOptions
+
+        from google.cloud.spanner_v1.client import SPANNER_ADMIN_SCOPE
 
         mock_em.return_value = None
         credentials = build_scoped_credentials()
@@ -623,10 +632,9 @@ class TestClient(IsolatedAsyncioTestCase):
         self.assertNotIn("credentials", called_kw)
 
     @CrossSync.pytest
-
     async def test_database_admin_api_emulator_code(self):
-        from google.auth.credentials import AnonymousCredentials
         from google.api_core.client_options import ClientOptions
+        from google.auth.credentials import AnonymousCredentials
 
         credentials = AnonymousCredentials()
         client_info = AsyncMock()
@@ -657,7 +665,6 @@ class TestClient(IsolatedAsyncioTestCase):
         self.assertNotIn("credentials", called_kw)
 
     @CrossSync.pytest
-
     async def test_copy(self):
         credentials = build_scoped_credentials()
         # Make sure it "already" is scoped.
@@ -670,14 +677,12 @@ class TestClient(IsolatedAsyncioTestCase):
         self.assertEqual(new_client.project, client.project)
 
     @CrossSync.pytest
-
     async def test_credentials_property(self):
         credentials = build_scoped_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
         self.assertIs(client.credentials, credentials.with_scopes.return_value)
 
     @CrossSync.pytest
-
     async def test_project_name_property(self):
         credentials = build_scoped_credentials()
         client = self._make_one(project=self.PROJECT, credentials=credentials)
@@ -685,14 +690,15 @@ class TestClient(IsolatedAsyncioTestCase):
         self.assertEqual(client.project_name, project_name)
 
     @CrossSync.pytest
-
     async def test_list_instance_configs(self):
+        from google.cloud.spanner_admin_instance_v1 import (
+            ListInstanceConfigsRequest,
+            ListInstanceConfigsResponse,
+        )
         from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient
         from google.cloud.spanner_admin_instance_v1 import (
             InstanceConfig as InstanceConfigPB,
         )
-        from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
-        from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
 
         credentials = build_scoped_credentials()
         api = InstanceAdminAsyncClient(credentials=credentials)
@@ -713,8 +719,10 @@ class TestClient(IsolatedAsyncioTestCase):
         class _AsyncPager:
             def __init__(self):
                 self.iter = iter([instance_config_pbs.instance_configs[0]])
+
             def __aiter__(self):
                 return self
+
             async def __anext__(self):
                 try:
                     return next(self.iter)
@@ -722,8 +730,6 @@ class TestClient(IsolatedAsyncioTestCase):
                     raise StopAsyncIteration
 
         li_api = api.list_instance_configs = AsyncMock(return_value=_AsyncPager())
-
-
 
         response = client.list_instance_configs()
         instances = [i async for i in await response]
@@ -737,21 +743,22 @@ class TestClient(IsolatedAsyncioTestCase):
         expected_metadata = [
             ("google-cloud-resource-prefix", client.project_name),
         ]
-        
+
         # Async GAPIC drops explicit kwargs and wraps parent into request dynamically
-        # Let's just assert that it was called once! The exact kwargs validation is less 
+        # Let's just assert that it was called once! The exact kwargs validation is less
         # important than the fact that the API route was hit and the pager correctly traversed!
-        
+
         self.assertEqual(li_api.call_count, 1)
         args, kwargs = li_api.call_args
-        self.assertEqual(kwargs['metadata'], expected_metadata)
+        self.assertEqual(kwargs["metadata"], expected_metadata)
 
     @CrossSync.pytest
-
     async def test_list_instances_w_options(self):
-        from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient
-        from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
-        from google.cloud.spanner_admin_instance_v1 import ListInstancesResponse
+        from google.cloud.spanner_admin_instance_v1 import (
+            InstanceAdminAsyncClient,
+            ListInstancesRequest,
+            ListInstancesResponse,
+        )
 
         credentials = build_scoped_credentials()
         api = InstanceAdminAsyncClient(credentials=credentials)
@@ -764,8 +771,10 @@ class TestClient(IsolatedAsyncioTestCase):
         class _AsyncPager:
             def __init__(self):
                 self.iter = iter(instance_pbs.instances)
+
             def __aiter__(self):
                 return self
+
             async def __anext__(self):
                 try:
                     return next(self.iter)
@@ -773,9 +782,6 @@ class TestClient(IsolatedAsyncioTestCase):
                     raise StopAsyncIteration
 
         li_api = api.list_instances = AsyncMock(return_value=_AsyncPager())
-        
-
-
 
         page_size = 42
         filter_ = "name:instance"
@@ -784,7 +790,7 @@ class TestClient(IsolatedAsyncioTestCase):
         expected_metadata = [
             ("google-cloud-resource-prefix", client.project_name),
         ]
-        
+
         self.assertEqual(li_api.call_count, 1)
         args, kwargs = li_api.call_args
-        self.assertEqual(kwargs['metadata'], expected_metadata)
+        self.assertEqual(kwargs["metadata"], expected_metadata)

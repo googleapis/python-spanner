@@ -14,30 +14,29 @@
 
 """Pools managing shared Session objects."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.pool"
-from google.cloud.aio._cross_sync import CrossSync
-
 import datetime
 import queue
 import time
+from warnings import warn
 
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1 import BatchCreateSessionsRequest
 from google.cloud.spanner_v1 import Session as SessionProto
 from google.cloud.spanner_v1._async.session import Session
 from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
     _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
     trace_call,
 )
-from warnings import warn
-
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
 _NOW = datetime.datetime.utcnow  # unit tests may replace
+
 
 @CrossSync.convert_class
 class SessionCheckout(object):
@@ -275,9 +274,7 @@ class FixedSizePool(AbstractSessionPool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
-            metadata.append(
-                _metadata_with_leader_aware_routing(True)
-            )
+            metadata.append(_metadata_with_leader_aware_routing(True))
         self._database_role = self._database_role or self._database.database_role
         if requested_session_count > 0:
             add_span_event(
@@ -355,9 +352,7 @@ class FixedSizePool(AbstractSessionPool):
                 sessions_to_ping.append(await CrossSync.queue_get(self._sessions))
 
             for session in sessions_to_ping:
-                if (
-                    _NOW() - session.last_use_time
-                ) > self._inactive_servicing_period:
+                if (_NOW() - session.last_use_time) > self._inactive_servicing_period:
                     try:
                         await session.ping()
                     except NotFound:
@@ -402,7 +397,9 @@ class FixedSizePool(AbstractSessionPool):
                 span_event_attributes,
             )
 
-            session = await CrossSync.queue_get(self._sessions, block=True, timeout=timeout)
+            session = await CrossSync.queue_get(
+                self._sessions, block=True, timeout=timeout
+            )
             age = _NOW() - session.last_use_time
 
             if age >= self._max_age and not await session.exists():
@@ -636,9 +633,7 @@ class PingingPool(FixedSizePool):
         api = database.spanner_api
         metadata = _metadata_with_prefix(database.name)
         if database._route_to_leader_enabled:
-            metadata.append(
-                _metadata_with_leader_aware_routing(True)
-            )
+            metadata.append(_metadata_with_leader_aware_routing(True))
         self._database_role = self._database_role or self._database.database_role
 
         request = BatchCreateSessionsRequest(
@@ -728,7 +723,9 @@ class PingingPool(FixedSizePool):
         ping_after = None
         session = None
         try:
-            ping_after, session = await CrossSync.queue_get(self._sessions, block=True, timeout=timeout)
+            ping_after, session = await CrossSync.queue_get(
+                self._sessions, block=True, timeout=timeout
+            )
         except CrossSync.rm_aio(queue.Empty) as e:
             add_span_event(
                 current_span,
@@ -791,7 +788,9 @@ class PingingPool(FixedSizePool):
         """
         while True:
             try:
-                ping_after, session = await CrossSync.queue_get(self._sessions, block=False)
+                ping_after, session = await CrossSync.queue_get(
+                    self._sessions, block=False
+                )
             except CrossSync.rm_aio(queue.Empty):  # all sessions in use
                 break
             if ping_after > _NOW():  # oldest session is fresh
@@ -902,5 +901,3 @@ class TransactionPingingPool(PingingPool):
         while not self._pending_sessions.empty():
             session = await CrossSync.queue_get(self._pending_sessions)
             await super(TransactionPingingPool, self).put(session)
-
-

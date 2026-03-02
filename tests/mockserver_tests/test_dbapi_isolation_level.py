@@ -13,11 +13,9 @@
 # limitations under the License.
 
 from google.api_core.exceptions import Unknown
+
 from google.cloud.spanner_dbapi import Connection
-from google.cloud.spanner_v1 import (
-    BeginTransactionRequest,
-    TransactionOptions,
-)
+from google.cloud.spanner_v1 import BeginTransactionRequest, TransactionOptions
 from tests.mockserver_tests.mock_server_test_base import (
     MockServerTestBase,
     add_update_count,

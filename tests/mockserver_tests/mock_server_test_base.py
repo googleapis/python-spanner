@@ -11,32 +11,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from contextvars import ContextVar
 import logging
 import unittest
-from contextvars import ContextVar
 
 current_service = ContextVar("current_service", default=None)
 
-import grpc
 from google.api_core.client_options import ClientOptions
 from google.auth.credentials import AnonymousCredentials
-from google.cloud.spanner_v1 import Type
-
-from google.cloud.spanner_v1 import StructType
-from google.cloud.spanner_v1._helpers import _make_value_pb
-
-from google.cloud.spanner_v1 import PartialResultSet
 from google.protobuf.duration_pb2 import Duration
 from google.rpc import code_pb2, status_pb2
-
 from google.rpc.error_details_pb2 import RetryInfo
+import grpc
 from grpc_status._common import code_to_grpc_status_code
 from grpc_status.rpc_status import _Status
 
-import google.cloud.spanner_v1.types.result_set as result_set
-import google.cloud.spanner_v1.types.type as spanner_type
 from google.cloud.spanner_dbapi.parsed_statement import AutocommitDmlMode
-from google.cloud.spanner_v1 import Client, FixedSizePool, ResultSetMetadata, TypeCode
+from google.cloud.spanner_v1 import (
+    Client,
+    FixedSizePool,
+    PartialResultSet,
+    ResultSetMetadata,
+    StructType,
+    Type,
+    TypeCode,
+)
+from google.cloud.spanner_v1._helpers import _make_value_pb
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1.testing.mock_database_admin import DatabaseAdminServicer
@@ -44,6 +44,8 @@ from google.cloud.spanner_v1.testing.mock_spanner import (
     SpannerServicer,
     start_mock_server,
 )
+import google.cloud.spanner_v1.types.result_set as result_set
+import google.cloud.spanner_v1.types.type as spanner_type
 from tests._helpers import is_multiplexed_enabled
 
 
@@ -268,7 +270,10 @@ class MockServerTestBase(unittest.TestCase):
         idx = 0
         # Skip all leading BatchCreateSessionsRequest (for retries)
         if allow_multiple_batch_create:
-            while idx < len(requests) and type(requests[idx]).__name__ == "BatchCreateSessionsRequest":
+            while (
+                idx < len(requests)
+                and type(requests[idx]).__name__ == "BatchCreateSessionsRequest"
+            ):
                 idx += 1
             # For multiplexed, optionally skip a CreateSessionRequest
             if (
@@ -298,7 +303,8 @@ class MockServerTestBase(unittest.TestCase):
         # Check the rest of the expected request types
         for expected_type in expected_types:
             self.assertTrue(
-                isinstance(requests[idx], expected_type) or type(requests[idx]).__name__ == expected_type.__name__,
+                isinstance(requests[idx], expected_type)
+                or type(requests[idx]).__name__ == expected_type.__name__,
                 f"Expected {expected_type} at index {idx}, got {type(requests[idx])}",
             )
             idx += 1
@@ -320,7 +326,10 @@ class MockServerTestBase(unittest.TestCase):
         # Count session creation requests that come before the first non-session request
         session_requests_before = 0
         for req in requests:
-            if type(req).__name__ in ("BatchCreateSessionsRequest", "CreateSessionRequest"):
+            if type(req).__name__ in (
+                "BatchCreateSessionsRequest",
+                "CreateSessionRequest",
+            ):
                 session_requests_before += 1
             elif type(req).__name__ in ("ExecuteSqlRequest", "BeginTransactionRequest"):
                 break
@@ -339,7 +348,6 @@ class MockServerTestBase(unittest.TestCase):
             adjusted_seq_nums[4] += extra_session_requests
             adjusted_segments.append((method, tuple(adjusted_seq_nums)))
 
-    
         return adjusted_segments
 
 
@@ -439,7 +447,10 @@ class AsyncMockServerTestBase(unittest.IsolatedAsyncioTestCase):
         idx = 0
         # Skip all leading BatchCreateSessionsRequest (for retries)
         if allow_multiple_batch_create:
-            while idx < len(requests) and type(requests[idx]).__name__ == "BatchCreateSessionsRequest":
+            while (
+                idx < len(requests)
+                and type(requests[idx]).__name__ == "BatchCreateSessionsRequest"
+            ):
                 idx += 1
             # For multiplexed, optionally skip a CreateSessionRequest
             if (
@@ -469,7 +480,8 @@ class AsyncMockServerTestBase(unittest.IsolatedAsyncioTestCase):
         # Check the rest of the expected request types
         for expected_type in expected_types:
             self.assertTrue(
-                isinstance(requests[idx], expected_type) or type(requests[idx]).__name__ == expected_type.__name__,
+                isinstance(requests[idx], expected_type)
+                or type(requests[idx]).__name__ == expected_type.__name__,
                 f"Expected {expected_type} at index {idx}, got {type(requests[idx])}",
             )
             idx += 1

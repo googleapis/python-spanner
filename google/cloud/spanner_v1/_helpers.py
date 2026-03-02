@@ -14,44 +14,44 @@
 
 """Helper functions for Cloud Spanner."""
 
+import base64
+from contextlib import contextmanager
 import datetime
 import decimal
-import math
-import time
-import base64
-import threading
 import logging
+import math
+import threading
+import time
 import uuid
-from contextlib import contextmanager
-
-from google.protobuf.struct_pb2 import ListValue
-from google.protobuf.struct_pb2 import Value
-from google.protobuf.message import Message
-from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
 
 from google.api_core import datetime_helpers
 from google.api_core.exceptions import Aborted
+from google.protobuf.internal.enum_type_wrapper import EnumTypeWrapper
+from google.protobuf.message import Message
+from google.protobuf.struct_pb2 import ListValue, Value
+from google.rpc.error_details_pb2 import RetryInfo
+
 from google.cloud._helpers import _date_from_iso8601_date
-from google.cloud.spanner_v1.types import ExecuteSqlRequest
-from google.cloud.spanner_v1.types import TransactionOptions
-from google.cloud.spanner_v1.data_types import JsonObject, Interval
+from google.cloud.spanner_v1.data_types import Interval, JsonObject
+from google.cloud.spanner_v1.exceptions import wrap_with_request_id
 from google.cloud.spanner_v1.request_id_header import (
     with_request_id,
     with_request_id_metadata_only,
 )
-from google.cloud.spanner_v1.types import TypeCode
-from google.cloud.spanner_v1.exceptions import wrap_with_request_id
-
-from google.rpc.error_details_pb2 import RetryInfo
+from google.cloud.spanner_v1.types import (
+    ExecuteSqlRequest,
+    TransactionOptions,
+    TypeCode,
+)
 
 try:
     from opentelemetry.propagate import inject
     from opentelemetry.propagators.textmap import Setter
-    from opentelemetry.semconv.resource import ResourceAttributes
     from opentelemetry.resourcedetector import gcp_resource_detector
     from opentelemetry.resourcedetector.gcp_resource_detector import (
         GoogleCloudResourceDetector,
     )
+    from opentelemetry.semconv.resource import ResourceAttributes
 
     # Overwrite the requests timeout for the detector.
     # This is necessary as the client will wait the full timeout if the
@@ -61,8 +61,8 @@ try:
     HAS_OPENTELEMETRY_INSTALLED = True
 except ImportError:
     HAS_OPENTELEMETRY_INSTALLED = False
-from typing import List, Tuple
 import random
+from typing import List, Tuple
 
 # Validation error messages
 NUMERIC_MAX_SCALE_ERR_MSG = (
@@ -224,6 +224,8 @@ def _datetime_to_rfc3339(value):
     """
     # Convert to UTC and then drop the timezone so we can append "Z" in lieu of
     # allowing isoformat to append the "+00:00" zone offset.
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=datetime.timezone.utc)
     value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return value.isoformat(sep="T", timespec="microseconds") + "Z"
 
@@ -243,6 +245,8 @@ def _datetime_to_rfc3339_nanoseconds(value):
     nanos = str(value.nanosecond).rjust(9, "0").rstrip("0")
     # Convert to UTC and then drop the timezone so we can append "Z" in lieu of
     # allowing isoformat to append the "+00:00" zone offset.
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=datetime.timezone.utc)
     value = value.astimezone(datetime.timezone.utc).replace(tzinfo=None)
     return "{}.{}Z".format(value.isoformat(sep="T", timespec="seconds"), nanos)
 

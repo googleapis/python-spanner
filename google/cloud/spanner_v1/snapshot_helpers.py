@@ -17,43 +17,48 @@
 
 """Model a set of read-only queries to a database as a snapshot."""
 
-from google.cloud.aio._cross_sync import CrossSync
 import functools
-from typing import List, Union, Optional
+from typing import List, Optional, Union
+
+from google.api_core import gapic_v1
+from google.api_core.exceptions import (
+    Aborted,
+    InternalServerError,
+    InvalidArgument,
+    ServiceUnavailable,
+)
 from google.protobuf.struct_pb2 import Struct
+
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1 import (
+    BeginTransactionRequest,
     ExecuteSqlRequest,
+    Mutation,
     PartialResultSet,
+    PartitionOptions,
+    PartitionQueryRequest,
+    PartitionReadRequest,
+    ReadRequest,
+    RequestOptions,
     ResultSet,
     Transaction,
-    Mutation,
-    BeginTransactionRequest,
+    TransactionOptions,
+    TransactionSelector,
 )
-from google.cloud.spanner_v1 import ReadRequest
-from google.cloud.spanner_v1 import TransactionOptions
-from google.cloud.spanner_v1 import TransactionSelector
-from google.cloud.spanner_v1 import PartitionOptions
-from google.cloud.spanner_v1 import PartitionQueryRequest
-from google.cloud.spanner_v1 import PartitionReadRequest
-from google.api_core.exceptions import InternalServerError, Aborted
-from google.api_core.exceptions import ServiceUnavailable
-from google.api_core.exceptions import InvalidArgument
-from google.api_core import gapic_v1
 from google.cloud.spanner_v1._helpers import (
-    _make_value_pb,
-    _merge_query_options,
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _check_rst_stream_error,
-    _SessionWrapper,
     AtomicCounter,
     _augment_error_with_request_id,
+    _check_rst_stream_error,
+    _make_value_pb,
+    _merge_query_options,
+    _metadata_with_leader_aware_routing,
+    _metadata_with_prefix,
+    _retry,
+    _SessionWrapper,
 )
-from google.cloud.spanner_v1._helpers import _retry
-from google.cloud.spanner_v1._opentelemetry_tracing import trace_call, add_span_event
-from google.cloud.spanner_v1.streamed import StreamedResultSet
-from google.cloud.spanner_v1 import RequestOptions
+from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1.types import MultiplexedSessionPrecommitToken
 
 _STREAM_RESUMPTION_INTERNAL_ERROR_MESSAGES = (
@@ -112,10 +117,11 @@ def _restart_on_unavailable(
                     observability_options=observability_options,
                     metadata=metadata,
                 ) as span, MetricsCapture():
-                    call_metadata, current_request_id = (
-                        request_id_manager.metadata_and_request_id(
-                            nth_request, attempt, metadata, span
-                        )
+                    (
+                        call_metadata,
+                        current_request_id,
+                    ) = request_id_manager.metadata_and_request_id(
+                        nth_request, attempt, metadata, span
                     )
                     iterator = CrossSync._Sync_Impl.run_if_async(
                         method, request=request, metadata=call_metadata
