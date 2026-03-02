@@ -270,6 +270,10 @@ class Client(ClientWithProject):
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
         experimental_host=None,
         disable_builtin_metrics=False,
+        use_plain_text=False,
+        ca_certificate=None,
+        client_certificate=None,
+        client_key=None,
     ):
         self._emulator_host = _get_spanner_emulator_host()
         self._experimental_host = experimental_host
@@ -284,6 +288,12 @@ class Client(ClientWithProject):
         if self._emulator_host:
             credentials = AnonymousCredentials()
         elif self._experimental_host:
+            # For all experimental host endpoints project is default
+            project = "default"
+            self._use_plain_text = use_plain_text
+            self._ca_certificate = ca_certificate
+            self._client_certificate = client_certificate
+            self._client_key = client_key
             credentials = AnonymousCredentials()
         elif isinstance(credentials, AnonymousCredentials):
             self._emulator_host = self._client_options.api_endpoint
@@ -382,11 +392,31 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+                from google.cloud.spanner_v1._async._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+
                 if CrossSync.is_async:
-                    channel = grpc.aio.insecure_channel(self._experimental_host)
+                    transport = _create_experimental_host_transport_async(
+                        InstanceAdminGrpcTransport,
+                        self._experimental_host,
+                        self._use_plain_text,
+                        self._ca_certificate,
+                        self._client_certificate,
+                        self._client_key,
+                    )
                 else:
-                    channel = grpc.insecure_channel(self._experimental_host)
-                transport = InstanceAdminGrpcTransport(channel=channel)
+                    transport = _create_experimental_host_transport_sync(
+                        InstanceAdminGrpcTransport,
+                        self._experimental_host,
+                        self._use_plain_text,
+                        self._ca_certificate,
+                        self._client_certificate,
+                        self._client_key,
+                    )
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
@@ -416,11 +446,31 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+                from google.cloud.spanner_v1._async._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+
                 if CrossSync.is_async:
-                    channel = grpc.aio.insecure_channel(self._experimental_host)
+                    transport = _create_experimental_host_transport_async(
+                        DatabaseAdminGrpcTransport,
+                        self._experimental_host,
+                        self._use_plain_text,
+                        self._ca_certificate,
+                        self._client_certificate,
+                        self._client_key,
+                    )
                 else:
-                    channel = grpc.insecure_channel(self._experimental_host)
-                transport = DatabaseAdminGrpcTransport(channel=channel)
+                    transport = _create_experimental_host_transport_sync(
+                        DatabaseAdminGrpcTransport,
+                        self._experimental_host,
+                        self._use_plain_text,
+                        self._ca_certificate,
+                        self._client_certificate,
+                        self._client_key,
+                    )
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,

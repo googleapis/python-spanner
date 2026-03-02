@@ -15,7 +15,6 @@
 """Model a set of read-only queries to a database as a snapshot."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.snapshot"
 import functools
-import threading
 from typing import List, Optional, Union
 
 from google.api_core import gapic_v1
@@ -77,6 +76,7 @@ async def _restart_on_unavailable(
     transaction_selector=None,
     observability_options=None,
     request_id_manager=None,
+    resource_info=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -120,7 +120,7 @@ async def _restart_on_unavailable(
                     attributes,
                     observability_options=observability_options,
                     metadata=metadata,
-                ) as span, MetricsCapture():
+                ) as span, MetricsCapture(resource_info):
                     (
                         call_metadata,
                         current_request_id,
@@ -215,6 +215,16 @@ class _SnapshotBase(_SessionWrapper):
         self._transaction_id: Optional[bytes] = None
         self._precommit_token: Optional[MultiplexedSessionPrecommitToken] = None
         self._lock: CrossSync.Lock = CrossSync.Lock()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     @CrossSync.convert
     async def begin(self) -> bytes:
@@ -431,6 +441,7 @@ class _SnapshotBase(_SessionWrapper):
                 transaction=self,
                 observability_options=getattr(database, "observability_options", None),
                 request_id_manager=database,
+                resource_info=self._resource_info,
             )
 
             if is_execute_sql_request:
@@ -507,7 +518,7 @@ class _SnapshotBase(_SessionWrapper):
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -587,7 +598,7 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -648,7 +659,7 @@ class _SnapshotBase(_SessionWrapper):
             session=session,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 

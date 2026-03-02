@@ -2194,6 +2194,7 @@ class _Client(object):
 class _Instance(object):
     def __init__(self):
         self._client = _Client()
+        self.experimental_host = None
 
 
 class _Database(object):

@@ -18,6 +18,18 @@ import pytest
 
 
 @pytest.fixture(autouse=True)
+def mock_emulator_host():
+    """Globally mock _get_spanner_emulator_host to isolate unit tests from the environment."""
+    with patch(
+        "google.cloud.spanner_v1.client._get_spanner_emulator_host", return_value=None
+    ), patch(
+        "google.cloud.spanner_v1._async.client._get_spanner_emulator_host",
+        return_value=None,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_periodic_exporting_metric_reader():
     """Globally mock PeriodicExportingMetricReader to prevent real network calls."""
     with patch(

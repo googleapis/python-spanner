@@ -12,13 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import collections
 import datetime
+import decimal
 import math
 
 from google.api_core import datetime_helpers
-
 from google.cloud import spanner_v1
 from google.cloud._helpers import UTC
+from google.cloud.spanner_v1.data_types import JsonObject
 
 from .testdata import singer_pb2
 
@@ -123,10 +125,6 @@ def _check_cell_data(found_cell, expected_cell, recurse_into_lists=True):
     else:
         assert found_cell == expected_cell
 
-import collections
-import decimal
-import struct
-from google.cloud.spanner_v1.data_types import JsonObject
 
 SOME_DATE = datetime.date(2011, 1, 17)
 SOME_TIME = datetime.datetime(1989, 1, 17, 17, 59, 12, 345612)

@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Manage sessions for a database."""
+__CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.database_sessions_manager"
 
 from datetime import timedelta
 from enum import Enum

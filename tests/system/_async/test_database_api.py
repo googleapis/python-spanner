@@ -12,12 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
 import pytest
 
 from google.cloud import exceptions
 from google.cloud import spanner_v1
-from tests.system import _helpers, _sample_data
+from .. import _helpers, _sample_data
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds
 
@@ -150,9 +149,7 @@ async def test_db_batch_insert_then_read_all_datatypes(shared_database):
         )
 
     async with shared_database.snapshot(read_timestamp=batch.committed) as snapshot:
-        results = await snapshot.read(
-            sd.ALL_TYPES_TABLE, sd.ALL_TYPES_COLUMNS, sd.ALL
-        )
+        results = await snapshot.read(sd.ALL_TYPES_TABLE, sd.ALL_TYPES_COLUMNS, sd.ALL)
         rows = []
         async for row in results:
             rows.append(row)

@@ -12,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import asyncio
-import datetime
-import time
-
 import pytest
 
 from google.cloud import spanner_v1
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
-from tests.system import _helpers
+from .. import _helpers
 
 
 @pytest.fixture(scope="session")
@@ -60,7 +56,7 @@ def database_operation_timeout():
 @pytest.fixture(scope="session")
 def shared_instance_id():
     if _helpers.CREATE_INSTANCE:
-        return f"{_helpers.unique_id('google-cloud-async')}"
+        return f"{_helpers.unique_id('g-c-async')}"
     if _helpers.USE_EXPERIMENTAL_HOST:
         return _helpers.EXPERIMENTAL_HOST_INSTANCE
     return _helpers.INSTANCE_ID

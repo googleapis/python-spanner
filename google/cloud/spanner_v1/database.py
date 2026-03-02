@@ -53,21 +53,7 @@ from google.cloud.spanner_v1 import (
     Type,
     TypeCode,
 )
-from google.cloud.spanner_v1._helpers import _merge_query_options
-from google.cloud.spanner_v1._helpers import (
-    _metadata_with_prefix,
-    _metadata_with_leader_aware_routing,
-    _metadata_with_request_id,
-    _augment_errors_with_request_id,
-    _metadata_with_request_id_and_req_id,
-    _create_experimental_host_transport,
-)
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1.batch import MutationGroups
-from google.cloud.spanner_v1.keyset import KeySet
-from google.cloud.spanner_v1.merged_result_set import MergedResultSet
-from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.batch import Batch, MutationGroups
 from google.cloud.spanner_v1.database_sessions_manager import (
     DatabaseSessionsManager,
     TransactionType,
@@ -205,8 +191,7 @@ class Database(object):
             self._instance._client.default_transaction_options
         )
         self._proto_descriptors = proto_descriptors
-        self._channel_id = 0  # It'll be created when _spanner_api is created.
-        self._experimental_host = self._instance._client._experimental_host
+        self._channel_id = 0
         if pool is None:
             pool = BurstyPool(database_role=database_role)
         self._pool = pool
@@ -217,8 +202,10 @@ class Database(object):
                 loop.create_task(res)
         except RuntimeError:
             pass
-
-        self._sessions_manager = DatabaseSessionsManager(self, pool)
+        is_experimental_host = self._instance.experimental_host is not None
+        self._sessions_manager = DatabaseSessionsManager(
+            self, pool, is_experimental_host
+        )
 
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
@@ -438,10 +425,14 @@ class Database(object):
                     client_info=client_info, transport=transport
                 )
                 return self._spanner_api
-            if self._experimental_host is not None:
-                transport = _create_experimental_host_transport(
+            if self._instance.experimental_host is not None:
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
                     SpannerGrpcTransport,
-                    self._experimental_host,
+                    self._instance.experimental_host,
                     self._instance._client._use_plain_text,
                     self._instance._client._ca_certificate,
                     self._instance._client._client_certificate,

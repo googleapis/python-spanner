@@ -49,20 +49,9 @@ from google.cloud.spanner_admin_instance_v1 import (
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsRequest
-from google.cloud.spanner_admin_instance_v1 import ListInstancesRequest
-from google.cloud.spanner_v1 import __version__
-from google.cloud.spanner_v1 import ExecuteSqlRequest
-from google.cloud.spanner_v1 import DefaultTransactionOptions
-from google.cloud.spanner_v1._helpers import (
-    _create_experimental_host_transport,
-    _merge_query_options,
-)
-from google.cloud.spanner_v1._helpers import _metadata_with_prefix
-from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
-from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
-    SpannerMetricsTracerFactory,
+from google.cloud.spanner_admin_instance_v1 import (
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
 )
 from google.cloud.spanner_v1 import (
     DefaultTransactionOptions,
@@ -235,30 +224,6 @@ class Client(ClientWithProject):
 
     :raises: :class:`ValueError <exceptions.ValueError>` if both ``read_only``
              and ``admin`` are :data:`True`
-
-    :type use_plain_text: bool
-    :param use_plain_text: (Optional) Whether to use plain text for the connection.
-        This is intended only for experimental host spanner endpoints.
-        If set, this will override the `api_endpoint` in `client_options`.
-        If not set, the default behavior is to use TLS.
-
-    :type ca_certificate: str
-    :param ca_certificate: (Optional) The path to the CA certificate file used for TLS connection.
-        This is intended only for experimental host spanner endpoints.
-        If set, this will override the `api_endpoint` in `client_options`.
-        This is mandatory if the experimental_host requires a TLS connection.
-
-    :type client_certificate: str
-    :param client_certificate: (Optional) The path to the client certificate file used for mTLS connection.
-        This is intended only for experimental host spanner endpoints.
-        If set, this will override the `api_endpoint` in `client_options`.
-        This is mandatory if the experimental_host requires a mTLS connection.
-
-    :type client_key: str
-    :param client_key: (Optional) The path to the client key file used for mTLS connection.
-        This is intended only for experimental host spanner endpoints.
-        If set, this will override the `api_endpoint` in `client_options`.
-        This is mandatory if the experimental_host requires a mTLS connection.
     """
 
     _instance_admin_api = None
@@ -297,7 +262,6 @@ class Client(ClientWithProject):
         if self._emulator_host:
             credentials = AnonymousCredentials()
         elif self._experimental_host:
-            # For all experimental host endpoints project is default
             project = "default"
             self._use_plain_text = use_plain_text
             self._ca_certificate = ca_certificate
@@ -387,7 +351,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = _create_experimental_host_transport(
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
                     InstanceAdminGrpcTransport,
                     self._experimental_host,
                     self._use_plain_text,
@@ -421,7 +389,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                transport = _create_experimental_host_transport(
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
+                )
+
+                transport = _create_experimental_host_transport_sync(
                     DatabaseAdminGrpcTransport,
                     self._experimental_host,
                     self._use_plain_text,
@@ -566,6 +538,7 @@ class Client(ClientWithProject):
             self._emulator_host,
             labels,
             processing_units,
+            self._experimental_host,
         )
 
     def list_instances(self, filter_="", page_size=None):

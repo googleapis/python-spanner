@@ -682,7 +682,8 @@ class _Client(object):
 
 
 class _Instance(object):
-    def __init__(self, name, client=None):
+    def __init__(self, name, client=None, experimental_host=None):
         self.name = name
         self.instance_id = name.rsplit("/", 1)[1]
         self._client = client
+        self.experimental_host = experimental_host

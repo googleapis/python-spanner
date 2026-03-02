@@ -115,10 +115,11 @@ def _restart_on_unavailable(
                     observability_options=observability_options,
                     metadata=metadata,
                 ) as span, MetricsCapture():
-                    call_metadata, current_request_id = (
-                        request_id_manager.metadata_and_request_id(
-                            nth_request, attempt, metadata, span
-                        )
+                    (
+                        call_metadata,
+                        current_request_id,
+                    ) = request_id_manager.metadata_and_request_id(
+                        nth_request, attempt, metadata, span
                     )
                     iterator = CrossSync._Sync_Impl.run_if_async(
                         method, request=request, metadata=call_metadata

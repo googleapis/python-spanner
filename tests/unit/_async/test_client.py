@@ -1,11 +1,3 @@
-import asyncio
-import unittest
-from unittest import IsolatedAsyncioTestCase
-
-import pytest
-
-from google.cloud.aio._cross_sync import CrossSync
-
 # Copyright 2016 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +11,18 @@ from google.cloud.aio._cross_sync import CrossSync
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+import asyncio
+import os
+import mock
+from unittest.mock import AsyncMock
+from unittest import IsolatedAsyncioTestCase
+
+from google.auth.credentials import AnonymousCredentials
+from google.cloud.spanner_v1 import DefaultTransactionOptions, DirectedReadOptions
+from tests._builders import build_scoped_credentials
+
+from google.cloud.aio._cross_sync import CrossSync
 
 
 class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
@@ -36,17 +40,6 @@ class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
 
             setattr(self, self._testMethodName, wrapper)
         super().run(result)
-
-
-import os
-from unittest.mock import AsyncMock
-
-from google.auth.credentials import AnonymousCredentials
-import mock
-import pytest
-
-from google.cloud.spanner_v1 import DefaultTransactionOptions, DirectedReadOptions
-from tests._builders import build_scoped_credentials
 
 
 @mock.patch.dict(os.environ, {"SPANNER_DISABLE_BUILTIN_METRICS": "true"})
@@ -173,8 +166,6 @@ class TestClient(IsolatedAsyncioTestCase):
     @mock.patch("warnings.warn")
     @CrossSync.pytest
     async def test_constructor_emulator_host_warning(self, mock_warn, mock_em):
-        from google.auth.credentials import AnonymousCredentials
-
         from google.cloud.spanner_v1._async import client as MUT
 
         expected_scopes = None
@@ -227,8 +218,6 @@ class TestClient(IsolatedAsyncioTestCase):
 
     @CrossSync.pytest
     async def test_constructor_custom_client_options_obj(self):
-        from google.api_core.client_options import ClientOptions
-
         from google.cloud.spanner_v1._async import client as MUT
 
         expected_scopes = (MUT.SPANNER_ADMIN_SCOPE,)
@@ -236,7 +225,7 @@ class TestClient(IsolatedAsyncioTestCase):
         self._constructor_test_helper(
             expected_scopes,
             creds,
-            client_options=ClientOptions(api_endpoint="endpoint"),
+            client_options={"api_endpoint": "endpoint"},
         )
 
     @CrossSync.pytest
@@ -530,7 +519,6 @@ class TestClient(IsolatedAsyncioTestCase):
     @CrossSync.pytest
     async def test_instance_admin_api_emulator_code(self):
         from google.api_core.client_options import ClientOptions
-        from google.auth.credentials import AnonymousCredentials
 
         credentials = AnonymousCredentials()
         client_info = AsyncMock()
@@ -634,7 +622,6 @@ class TestClient(IsolatedAsyncioTestCase):
     @CrossSync.pytest
     async def test_database_admin_api_emulator_code(self):
         from google.api_core.client_options import ClientOptions
-        from google.auth.credentials import AnonymousCredentials
 
         credentials = AnonymousCredentials()
         client_info = AsyncMock()
@@ -692,7 +679,6 @@ class TestClient(IsolatedAsyncioTestCase):
     @CrossSync.pytest
     async def test_list_instance_configs(self):
         from google.cloud.spanner_admin_instance_v1 import (
-            ListInstanceConfigsRequest,
             ListInstanceConfigsResponse,
         )
         from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient
@@ -756,7 +742,6 @@ class TestClient(IsolatedAsyncioTestCase):
     async def test_list_instances_w_options(self):
         from google.cloud.spanner_admin_instance_v1 import (
             InstanceAdminAsyncClient,
-            ListInstancesRequest,
             ListInstancesResponse,
         )
 
@@ -783,7 +768,6 @@ class TestClient(IsolatedAsyncioTestCase):
 
         li_api = api.list_instances = AsyncMock(return_value=_AsyncPager())
 
-        page_size = 42
         filter_ = "name:instance"
         [i async for i in await client.list_instances(filter_=filter_, page_size=42)]
 
