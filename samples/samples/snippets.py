@@ -2401,13 +2401,13 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    example_timestamp = datetime.datetime.now(datetime.timezone.utc).isoformat() + "Z"
+    example_timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     # [END spanner_query_with_timestamp_parameter]
     # Avoid time drift on the local machine.
     # https://github.com/GoogleCloudPlatform/python-docs-samples/issues/4197.
     example_timestamp = (
         datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
-    ).isoformat() + "Z"
+    ).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     # [START spanner_query_with_timestamp_parameter]
     param = {"last_update_time": example_timestamp}
     param_type = {"last_update_time": param_types.TIMESTAMP}
