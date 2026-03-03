@@ -23,9 +23,7 @@ from google.cloud.spanner_v1 import instance as instance_mod
 from tests import _fixtures
 
 CREATE_INSTANCE_ENVVAR = "GOOGLE_CLOUD_TESTS_CREATE_SPANNER_INSTANCE"
-CREATE_INSTANCE = (
-    os.getenv(CREATE_INSTANCE_ENVVAR, "false").lower() == "true"
-)
+CREATE_INSTANCE = os.getenv(CREATE_INSTANCE_ENVVAR, "false").lower() == "true"
 
 INSTANCE_ID_ENVVAR = "GOOGLE_CLOUD_TESTS_SPANNER_INSTANCE"
 INSTANCE_ID_DEFAULT = "google-cloud-python-systest"

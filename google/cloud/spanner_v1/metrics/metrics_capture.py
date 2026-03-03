@@ -63,6 +63,7 @@ class MetricsCapture:
 
         if tracer and self._resource_info:
             import logging
+
             logger = logging.getLogger("google.cloud.spanner_v1.metrics")
             logger.info(f"DEBUG: MetricsCapture setting labels: {self._resource_info}")
             if "project" in self._resource_info:

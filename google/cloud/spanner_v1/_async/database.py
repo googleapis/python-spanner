@@ -68,7 +68,6 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
-    _validate_client_context,
 )
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
