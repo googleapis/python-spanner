@@ -612,12 +612,10 @@ class _SnapshotBase(_SessionWrapper):
         # If this request begins the transaction, we need to lock
         # the transaction until the transaction ID is updated.
         is_inline_begin = False
-
         if self._transaction_id is None:
             is_inline_begin = True
             self._lock.acquire()
-
-        iterator = _restart_on_unavailable(
+        base_iterator = _restart_on_unavailable(
             method=method,
             request=request,
             session=session,
@@ -630,14 +628,33 @@ class _SnapshotBase(_SessionWrapper):
         )
 
         if is_inline_begin:
-            self._lock.release()
+            # We must evaluate the first element while holding the lock
+            # so the transaction ID gets populated before we release the lock.
+            first_element = None
+            has_first_element = False
+            try:
+                first_element = next(base_iterator)
+                has_first_element = True
+            except StopIteration:
+                pass
+            finally:
+                self._lock.release()
+
+            def _reconstructed_iterator():
+                if has_first_element:
+                    yield first_element
+                yield from base_iterator
+
+            safe_iterator = _reconstructed_iterator()
+        else:
+            safe_iterator = base_iterator
 
         if is_execute_sql_request:
             self._execute_sql_request_count += 1
         self._read_request_count += 1
 
         streamed_result_set_args = {
-            "response_iterator": iterator,
+            "response_iterator": safe_iterator,
             "column_info": column_info,
             "lazy_decode": lazy_decode,
         }
