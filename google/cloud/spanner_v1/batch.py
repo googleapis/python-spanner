@@ -29,15 +29,18 @@ from google.cloud.spanner_v1 import (
     RequestOptions,
     TransactionOptions,
 )
-from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
+from google.cloud.spanner_v1._helpers import _retry, _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
     _make_list_value_pbs,
     _merge_Transaction_Options,
+    _merge_client_context,
+    _merge_request_options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
     _SessionWrapper,
+    _validate_client_context,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
@@ -52,13 +55,24 @@ class _BatchBase(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    def __init__(self, session):
+    def __init__(self, session, client_context=None):
         super(_BatchBase, self).__init__(session)
+        self._client_context = _validate_client_context(client_context)
         self._mutations: List[Mutation] = []
         self.transaction_tag: Optional[str] = None
         self.committed = None
         "Timestamp at which the batch was successfully committed."
         self.commit_stats: Optional[CommitResponse.CommitStats] = None
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     def insert(self, table, columns, values):
         """Insert one or more new table rows.
@@ -205,6 +219,10 @@ class Batch(_BatchBase):
             database.default_transaction_options.default_read_write_transaction_options,
             txn_options,
         )
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -217,7 +235,7 @@ class Batch(_BatchBase):
             extra_attributes={"num_mutations": len(mutations)},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
 
             def wrapped_method():
                 commit_request = CommitRequest(
@@ -283,10 +301,21 @@ class MutationGroups(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    def __init__(self, session):
+    def __init__(self, session, client_context=None):
         super(MutationGroups, self).__init__(session)
         self._mutation_groups: List[MutationGroup] = []
         self.committed: bool = False
+        self._client_context = _validate_client_context(client_context)
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     def group(self):
         """Returns a new `MutationGroup` to which mutations can be added."""
@@ -324,6 +353,10 @@ class MutationGroups(_SessionWrapper):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -334,7 +367,7 @@ class MutationGroups(_SessionWrapper):
             extra_attributes={"num_mutation_groups": len(mutation_groups)},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             attempt = AtomicCounter(0)
             nth_request = getattr(database, "_next_nth_request", 0)
 
@@ -353,8 +386,6 @@ class MutationGroups(_SessionWrapper):
                     ),
                 )
                 return batch_write_method()
-
-            from google.cloud.spanner_v1._helpers import _retry
 
             response = _retry(
                 wrapped_method,

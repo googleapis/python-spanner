@@ -872,6 +872,7 @@ class _Client(object):
     def __init__(self, project="project_id"):
         self.project = project
         self.project_name = "projects/" + self.project
+        self._client_context = None
 
     def instance(self, instance_id="instance_id"):
         return _Instance(name=instance_id, client=self)
@@ -880,6 +881,7 @@ class _Client(object):
 class _Instance(object):
     def __init__(self, name="instance_id", client=None, experimental_host=None):
         self.name = name
+        self.instance_id = name
         self._client = client
         self.experimental_host = experimental_host
 
@@ -904,6 +906,7 @@ class _Database(object):
         logger=None,
     ):
         self.name = database_id
+        self.database_id = database_id
         self.pool = pool
         self.database_dialect = database_dialect
         self.database_role = database_role

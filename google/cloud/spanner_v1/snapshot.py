@@ -50,10 +50,13 @@ from google.cloud.spanner_v1._helpers import (
     _augment_error_with_request_id,
     _check_rst_stream_error,
     _make_value_pb,
+    _merge_client_context,
     _merge_query_options,
+    _merge_request_options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
     _SessionWrapper,
+    _validate_client_context,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
@@ -76,6 +79,7 @@ def _restart_on_unavailable(
     transaction_selector=None,
     observability_options=None,
     request_id_manager=None,
+    resource_info=None,
 ):
     """Restart iteration after :exc:`.ServiceUnavailable`.
 
@@ -114,12 +118,11 @@ def _restart_on_unavailable(
                     attributes,
                     observability_options=observability_options,
                     metadata=metadata,
-                ) as span, MetricsCapture():
-                    (
-                        call_metadata,
-                        current_request_id,
-                    ) = request_id_manager.metadata_and_request_id(
-                        nth_request, attempt, metadata, span
+                ) as span, MetricsCapture(resource_info):
+                    call_metadata, current_request_id = (
+                        request_id_manager.metadata_and_request_id(
+                            nth_request, attempt, metadata, span
+                        )
                     )
                     iterator = CrossSync._Sync_Impl.run_if_async(
                         method, request=request, metadata=call_metadata
@@ -185,13 +188,24 @@ class _SnapshotBase(_SessionWrapper):
     _read_only: bool = True
     _multi_use: bool = False
 
-    def __init__(self, session):
+    def __init__(self, session, client_context=None):
         super().__init__(session)
+        self._client_context = _validate_client_context(client_context)
         self._execute_sql_request_count: int = 0
         self._read_request_count: int = 0
         self._transaction_id: Optional[bytes] = None
         self._precommit_token: Optional[MultiplexedSessionPrecommitToken] = None
         self._lock: CrossSync._Sync_Impl.Lock = CrossSync._Sync_Impl.Lock()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        database = self._session._database
+        return {
+            "project": database._instance._client.project,
+            "instance": database._instance.instance_id,
+            "database": database.database_id,
+        }
 
     def begin(self) -> bytes:
         """Begins a transaction on the database.
@@ -233,6 +247,10 @@ class _SnapshotBase(_SessionWrapper):
             metadata.append(
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -317,6 +335,10 @@ class _SnapshotBase(_SessionWrapper):
             )
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -384,6 +406,7 @@ class _SnapshotBase(_SessionWrapper):
                 transaction=self,
                 observability_options=getattr(database, "observability_options", None),
                 request_id_manager=database,
+                resource_info=self._resource_info,
             )
             if is_execute_sql_request:
                 self._execute_sql_request_count += 1
@@ -448,7 +471,7 @@ class _SnapshotBase(_SessionWrapper):
             extra_attributes=trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -520,7 +543,7 @@ class _SnapshotBase(_SessionWrapper):
             trace_attributes,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -566,16 +589,23 @@ class _SnapshotBase(_SessionWrapper):
             "options": self._build_transaction_selector_pb().begin,
             "mutation_key": mutation,
         }
+        request_options = begin_request_kwargs.get("request_options")
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if transaction_tag:
-            begin_request_kwargs["request_options"] = RequestOptions(
-                transaction_tag=transaction_tag
-            )
+            if request_options is None:
+                request_options = RequestOptions()
+            request_options.transaction_tag = transaction_tag
+        if request_options:
+            begin_request_kwargs["request_options"] = request_options
         with trace_call(
             name=f"CloudSpanner.{type(self).__name__}.begin",
             session=session,
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             nth_request = getattr(database, "_next_nth_request", 0)
             attempt = AtomicCounter()
 
@@ -672,8 +702,9 @@ class Snapshot(_SnapshotBase):
         exact_staleness=None,
         multi_use=False,
         transaction_id=None,
+        client_context=None,
     ):
-        super(Snapshot, self).__init__(session)
+        super(Snapshot, self).__init__(session, client_context=client_context)
         opts = [read_timestamp, min_read_timestamp, max_staleness, exact_staleness]
         flagged = [opt for opt in opts if opt is not None]
         if len(flagged) > 1:

@@ -1389,6 +1389,11 @@ class _Database(object):
         self._database_role = None
         self.database_id = name
         self._route_to_leader_enabled = True
+        self._instance = mock.Mock()
+        self._instance.instance_id = "instance-id"
+        self._instance._client = mock.Mock()
+        self._instance._client.project = "project-id"
+        self._instance._client._client_context = None
 
         def mock_batch_create_sessions(
             request=None,
@@ -1439,6 +1444,15 @@ class _Database(object):
     @property
     def _next_nth_request(self):
         return self.NTH_REQUEST.increment()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._instance._client.project,
+            "instance": self._instance.instance_id,
+            "database": self.database_id,
+        }
 
     @property
     def _nth_client_id(self):

@@ -332,6 +332,7 @@ class TestTransaction(OpenTelemetryBase):
         count=0,
         partition=None,
         directed_read_options=None,
+        concurrent=False,
     ):
         VALUES = [["bharney", 31], ["phred", 32]]
         VALUE_PBS = [[_make_value_pb(item) for item in row] for row in VALUES]
@@ -358,7 +359,8 @@ class TestTransaction(OpenTelemetryBase):
             result_sets[i].values.extend(VALUE_PBS[i])
 
         api.streaming_read.return_value = _MockIterator(*result_sets)
-        transaction._read_request_count = count
+        if not concurrent:
+            transaction._read_request_count = count
 
         if partition is not None:  # 'limit' and 'partition' incompatible
             result_set = transaction.read(
@@ -385,7 +387,8 @@ class TestTransaction(OpenTelemetryBase):
                 directed_read_options=directed_read_options,
             )
 
-        self.assertEqual(transaction._read_request_count, count + 1)
+        if not concurrent:
+            self.assertEqual(transaction._read_request_count, count + 1)
 
         self.assertEqual(list(result_set), VALUES)
         self.assertEqual(result_set.metadata, metadata_pb)
@@ -1104,13 +1107,13 @@ class TestTransaction(OpenTelemetryBase):
         threads.append(
             threading.Thread(
                 target=self._read_helper,
-                kwargs={"transaction": transaction, "api": api},
+                kwargs={"transaction": transaction, "api": api, "concurrent": True},
             )
         )
         threads.append(
             threading.Thread(
                 target=self._read_helper,
-                kwargs={"transaction": transaction, "api": api},
+                kwargs={"transaction": transaction, "api": api, "concurrent": True},
             )
         )
         for thread in threads:
@@ -1279,6 +1282,8 @@ class _Client(object):
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+        self._client_context = None
+        self.project = "project-id"
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
 
@@ -1290,16 +1295,27 @@ class _Client(object):
 class _Instance(object):
     def __init__(self):
         self._client = _Client()
+        self.instance_id = "instance-id"
         self.experimental_host = None
 
 
 class _Database(object):
     def __init__(self):
         self.name = "testing"
+        self.database_id = "database-id"
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._instance._client.project,
+            "instance": self._instance.instance_id,
+            "database": self.database_id,
+        }
 
     @property
     def _next_nth_request(self):

@@ -29,15 +29,21 @@ from google.cloud.spanner_v1 import (
     RequestOptions,
     TransactionOptions,
 )
-from google.cloud.spanner_v1._async._helpers import _retry_on_aborted_exception
+from google.cloud.spanner_v1._async._helpers import (
+    _retry,
+    _retry_on_aborted_exception,
+)
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
     _make_list_value_pbs,
     _merge_Transaction_Options,
+    _merge_client_context,
+    _merge_request_options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
     _SessionWrapper,
+    _validate_client_context,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
@@ -52,8 +58,9 @@ class _BatchBase(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    def __init__(self, session):
+    def __init__(self, session, client_context=None):
         super(_BatchBase, self).__init__(session)
+        self._client_context = _validate_client_context(client_context)
 
         self._mutations: List[Mutation] = []
         self.transaction_tag: Optional[str] = None
@@ -241,6 +248,11 @@ class Batch(_BatchBase):
             txn_options,
         )
 
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
+
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -335,10 +347,11 @@ class MutationGroups(_SessionWrapper):
     :param session: the session used to perform the commit
     """
 
-    def __init__(self, session):
+    def __init__(self, session, client_context=None):
         super(MutationGroups, self).__init__(session)
         self._mutation_groups: List[MutationGroup] = []
         self.committed: bool = False
+        self._client_context = _validate_client_context(client_context)
 
     @property
     def _resource_info(self):
@@ -394,6 +407,11 @@ class MutationGroups(_SessionWrapper):
                 _metadata_with_leader_aware_routing(database._route_to_leader_enabled)
             )
 
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
+
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -427,8 +445,6 @@ class MutationGroups(_SessionWrapper):
                     ),
                 )
                 return batch_write_method()
-
-            from google.cloud.spanner_v1._async._helpers import _retry
 
             response = await _retry(
                 wrapped_method,

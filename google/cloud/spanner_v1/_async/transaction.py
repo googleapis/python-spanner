@@ -41,7 +41,9 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
     _make_value_pb,
+    _merge_client_context,
     _merge_query_options,
+    _merge_request_options,
     _merge_Transaction_Options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -71,8 +73,8 @@ class Transaction(_SnapshotBase, _BatchBase):
     _multi_use: bool = True
     _read_only: bool = False
 
-    def __init__(self, session):
-        super(Transaction, self).__init__(session)
+    def __init__(self, session, client_context=None):
+        super(Transaction, self).__init__(session, client_context=client_context)
         self.rolled_back: bool = False
 
         # If this transaction is used to retry a previous aborted transaction with a
@@ -274,6 +276,11 @@ class Transaction(_SnapshotBase, _BatchBase):
                 request_options = RequestOptions()
             elif type(request_options) is dict:
                 request_options = RequestOptions(request_options)
+
+            client_context = _merge_client_context(
+                database._instance._client._client_context, self._client_context
+            )
+            request_options = _merge_request_options(request_options, client_context)
             if self.transaction_tag is not None:
                 request_options.transaction_tag = self.transaction_tag
 
@@ -484,6 +491,11 @@ class Transaction(_SnapshotBase, _BatchBase):
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
 
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
+
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -642,6 +654,11 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions()
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
+
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         request_options.transaction_tag = self.transaction_tag
 
         trace_attributes = {

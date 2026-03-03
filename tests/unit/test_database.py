@@ -2617,6 +2617,7 @@ class TestBatchSnapshot(_BaseTest):
             exact_staleness=None,
             multi_use=True,
             transaction_id=None,
+            client_context=None,
         )
         snapshot.begin.assert_called_once_with()
 
@@ -2632,6 +2633,7 @@ class TestBatchSnapshot(_BaseTest):
             exact_staleness=None,
             multi_use=True,
             transaction_id=None,
+            client_context=None,
         )
         snapshot.begin.assert_called_once_with()
 
@@ -2647,6 +2649,7 @@ class TestBatchSnapshot(_BaseTest):
             exact_staleness=duration,
             multi_use=True,
             transaction_id=None,
+            client_context=None,
         )
         snapshot.begin.assert_called_once_with()
 
@@ -3561,6 +3564,7 @@ class _Client(object):
         self.directed_read_options = directed_read_options
         self.default_transaction_options = default_transaction_options
         self.observability_options = observability_options
+        self._client_context = None
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
 
@@ -3612,6 +3616,8 @@ class _Database(object):
     def __init__(self, name, instance=None):
         self.name = name
         self.database_id = name.rsplit("/", 1)[1]
+        if instance is None:
+            instance = _Instance(name.rsplit("/", 2)[0])
         self._instance = instance
         from logging import Logger
 
@@ -3647,6 +3653,15 @@ class _Database(object):
     @property
     def _next_nth_request(self):
         return self._nth_request.increment()
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._instance._client.project,
+            "instance": self._instance.instance_id,
+            "database": self.database_id,
+        }
 
     def metadata_with_request_id(
         self, nth_request, nth_attempt, prior_metadata=[], span=None

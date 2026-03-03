@@ -89,6 +89,17 @@ class AbstractSessionPool(object):
         self._database_role = database_role
 
     @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        if self._database is None:
+            return None
+        return {
+            "project": self._database._instance._client.project,
+            "instance": self._database._instance.instance_id,
+            "database": self._database.database_id,
+        }
+
+    @property
     def labels(self):
         """User-assigned labels for sessions created by the pool.
 
@@ -276,7 +287,7 @@ class FixedSizePool(AbstractSessionPool):
             "CloudSpanner.FixedPool.BatchCreateSessions",
             observability_options=observability_options,
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             returned_session_count = 0
             while not self._sessions.full():
                 request.session_count = requested_session_count - self._sessions.qsize()
@@ -590,7 +601,7 @@ class PingingPool(FixedSizePool):
             "CloudSpanner.PingingPool.BatchCreateSessions",
             observability_options=observability_options,
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             returned_session_count = 0
             while returned_session_count < self.size:
                 call_metadata, error_augmenter = database.with_error_augmentation(

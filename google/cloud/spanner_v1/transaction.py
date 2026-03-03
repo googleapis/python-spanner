@@ -41,7 +41,9 @@ from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
     _make_value_pb,
+    _merge_client_context,
     _merge_query_options,
+    _merge_request_options,
     _merge_Transaction_Options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -69,8 +71,8 @@ class Transaction(_SnapshotBase, _BatchBase):
     _multi_use: bool = True
     _read_only: bool = False
 
-    def __init__(self, session):
-        super(Transaction, self).__init__(session)
+    def __init__(self, session, client_context=None):
+        super(Transaction, self).__init__(session, client_context=client_context)
         self.rolled_back: bool = False
         self._multiplexed_session_previous_transaction_id: Optional[bytes] = None
 
@@ -122,7 +124,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 session._database, "observability_options", None
             ),
             metadata=metadata,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             method = functools.partial(method, request=request)
             response = _retry(
                 method,
@@ -155,7 +157,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 session,
                 observability_options=observability_options,
                 metadata=metadata,
-            ) as span, MetricsCapture():
+            ) as span, MetricsCapture(self._resource_info):
                 attempt = AtomicCounter(0)
                 nth_request = database._next_nth_request
 
@@ -221,7 +223,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             extra_attributes={"num_mutations": num_mutations},
             observability_options=getattr(database, "observability_options", None),
             metadata=metadata,
-        ) as span, MetricsCapture():
+        ) as span, MetricsCapture(self._resource_info):
             if self.committed is not None:
                 raise ValueError("Transaction already committed.")
             if self.rolled_back:
@@ -235,6 +237,10 @@ class Transaction(_SnapshotBase, _BatchBase):
                 request_options = RequestOptions()
             elif type(request_options) is dict:
                 request_options = RequestOptions(request_options)
+            client_context = _merge_client_context(
+                database._instance._client._client_context, self._client_context
+            )
+            request_options = _merge_request_options(request_options, client_context)
             if self.transaction_tag is not None:
                 request_options.transaction_tag = self.transaction_tag
             request_options.request_tag = None
@@ -412,6 +418,10 @@ class Transaction(_SnapshotBase, _BatchBase):
         )
         default_query_options = database._instance._client._query_options
         query_options = _merge_query_options(default_query_options, query_options)
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         if request_options is None:
             request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -549,6 +559,10 @@ class Transaction(_SnapshotBase, _BatchBase):
             request_options = RequestOptions()
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
+        client_context = _merge_client_context(
+            database._instance._client._client_context, self._client_context
+        )
+        request_options = _merge_request_options(request_options, client_context)
         request_options.transaction_tag = self.transaction_tag
         trace_attributes = {
             "db.statement": ";".join([statement.sql for statement in parsed]),

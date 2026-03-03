@@ -207,6 +207,15 @@ class Database(object):
             self, pool, is_experimental_host
         )
 
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return {
+            "project": self._instance._client.project,
+            "instance": self._instance.instance_id,
+            "database": self.database_id,
+        }
+
     @classmethod
     def from_pb(cls, database_pb, instance, pool=None):
         """Creates an instance of this class from a protobuf.
@@ -453,7 +462,7 @@ class Database(object):
                 client_options=client_options,
             )
             with self.__transport_lock:
-                transport = self._spanner_api._transport
+                transport = self._spanner_api.transport
                 channel_id = self.__transports_to_channel_id.get(transport, None)
                 if channel_id is None:
                     channel_id = len(self.__transports_to_channel_id) + 1
@@ -792,7 +801,7 @@ class Database(object):
             with trace_call(
                 "CloudSpanner.Database.execute_partitioned_pdml",
                 observability_options=self.observability_options,
-            ) as span, MetricsCapture():
+            ) as span, MetricsCapture(self._resource_info):
                 transaction_type = TransactionType.PARTITIONED
                 session = self._sessions_manager.get_session(transaction_type)
                 try:
@@ -899,6 +908,7 @@ class Database(object):
         exclude_txn_from_change_streams=False,
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         read_lock_mode=TransactionOptions.ReadWrite.ReadLockMode.READ_LOCK_MODE_UNSPECIFIED,
+        client_context=None,
         **kw,
     ):
         """Return an object which wraps a batch.
@@ -918,6 +928,11 @@ class Database(object):
                 (Optional) The amount of latency this request is willing to incur
                 in order to improve throughput. Value must be between 0ms and
                 500ms.
+
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this batch.
 
         :type exclude_txn_from_change_streams: bool
         :param exclude_txn_from_change_streams:
@@ -945,18 +960,24 @@ class Database(object):
             exclude_txn_from_change_streams,
             isolation_level,
             read_lock_mode,
+            client_context=client_context,
             **kw,
         )
 
-    def mutation_groups(self):
+    def mutation_groups(self, client_context=None):
         """Return an object which wraps a mutation_group.
 
         The wrapper *must* be used as a context manager, with the mutation group
         as the value returned by the wrapper.
 
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this mutation group.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.MutationGroupsCheckout`
         :returns: new wrapper"""
-        return MutationGroupsCheckout(self)
+        return MutationGroupsCheckout(self, client_context=client_context)
 
     def batch_snapshot(
         self,
@@ -964,6 +985,7 @@ class Database(object):
         exact_staleness=None,
         session_id=None,
         transaction_id=None,
+        client_context=None,
     ):
         """Return an object which wraps a batch read / query.
 
@@ -979,6 +1001,11 @@ class Database(object):
 
         :type transaction_id: str
         :param transaction_id: id of the transaction
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this batch.
+        :param transaction_id: id of the transaction
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchSnapshot`
         :returns: new wrapper"""
@@ -988,6 +1015,7 @@ class Database(object):
             exact_staleness=exact_staleness,
             session_id=session_id,
             transaction_id=transaction_id,
+            client_context=client_context,
         )
 
     def run_in_transaction(self, func, *args, **kw):
@@ -1031,7 +1059,7 @@ class Database(object):
             "CloudSpanner.Database.run_in_transaction",
             extra_attributes=extra_attributes,
             observability_options=observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             if getattr(self._local, "transaction_running", False):
                 raise RuntimeError("Spanner does not support nested transactions.")
             self._local.transaction_running = True
@@ -1303,11 +1331,13 @@ class BatchCheckout(object):
         exclude_txn_from_change_streams=False,
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         read_lock_mode=TransactionOptions.ReadWrite.ReadLockMode.READ_LOCK_MODE_UNSPECIFIED,
+        client_context=None,
         **kw,
     ):
         self._database: Database = database
         self._session: Optional[Session] = None
         self._batch: Optional[Batch] = None
+        self._client_context = client_context
         if request_options is None:
             self._request_options = RequestOptions()
         elif type(request_options) is dict:
@@ -1329,7 +1359,9 @@ class BatchCheckout(object):
             event_name="Using session",
             event_attributes={"id": self._session.session_id},
         )
-        batch = self._batch = Batch(session=self._session)
+        batch = self._batch = Batch(
+            session=self._session, client_context=self._client_context
+        )
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
         return batch
@@ -1373,17 +1405,30 @@ class MutationGroupsCheckout(object):
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
+
+    :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict`
+    :param client_context: (Optional) Client context to use for all requests made
+                           by this mutation group.
     """
 
-    def __init__(self, database):
+    def __init__(self, database, client_context=None):
         self._database: Database = database
         self._session: Optional[Session] = None
+        self._client_context = client_context
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
 
     def __enter__(self):
         """Begin ``with`` block."""
         transaction_type = TransactionType.READ_WRITE
         self._session = self._database.sessions_manager.get_session(transaction_type)
-        return MutationGroups(session=self._session)
+        return MutationGroups(
+            session=self._session, client_context=self._client_context
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """End ``with`` block."""
@@ -1416,6 +1461,11 @@ class SnapshotCheckout(object):
         self._database: Database = database
         self._session: Optional[Session] = None
         self._kw: dict = kw
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
 
     def __enter__(self):
         """Begin ``with`` block."""
@@ -1453,14 +1503,21 @@ class BatchSnapshot(object):
         exact_staleness=None,
         session_id=None,
         transaction_id=None,
+        client_context=None,
     ):
         self._database: Database = database
         self._session_id: Optional[str] = session_id
         self._transaction_id: Optional[bytes] = transaction_id
+        self._client_context = client_context
         self._session: Optional[Session] = None
         self._snapshot: Optional[Snapshot] = None
         self._read_timestamp = read_timestamp
         self._exact_staleness = exact_staleness
+
+    @property
+    def _resource_info(self):
+        """Resource information for metrics labels."""
+        return self._database._resource_info
 
     @classmethod
     def from_dict(cls, database, mapping):
@@ -1535,6 +1592,7 @@ class BatchSnapshot(object):
                 exact_staleness=self._exact_staleness,
                 multi_use=True,
                 transaction_id=self._transaction_id,
+                client_context=self._client_context,
             )
             if self._transaction_id is None:
                 self._snapshot.begin()
@@ -1583,7 +1641,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.{type(self).__name__}.generate_read_batches",
             extra_attributes=dict(table=table, columns=columns),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             partitions = snapshot.partition_read(
                 table=table,
@@ -1619,7 +1677,7 @@ class BatchSnapshot(object):
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_read_batch",
             observability_options=observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             kwargs = copy.deepcopy(batch["read"])
             keyset_dict = kwargs.pop("keyset")
             kwargs["keyset"] = KeySet._from_dict(keyset_dict)
@@ -1651,7 +1709,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.{type(self).__name__}.generate_query_batches",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             partitions = snapshot.partition_query(
                 sql=sql,
@@ -1689,7 +1747,7 @@ class BatchSnapshot(object):
         with trace_call(
             f"CloudSpanner.{type(self).__name__}.process_query_batch",
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             snapshot = self._get_snapshot()
             return CrossSync._Sync_Impl.run_if_async(
                 snapshot.execute_sql,
@@ -1717,7 +1775,7 @@ class BatchSnapshot(object):
             f"CloudSpanner.${type(self).__name__}.run_partitioned_query",
             extra_attributes=dict(sql=sql),
             observability_options=self.observability_options,
-        ), MetricsCapture():
+        ), MetricsCapture(self._resource_info):
             partitions = []
             for partition in self.generate_query_batches(
                 sql,

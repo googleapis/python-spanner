@@ -68,6 +68,7 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_prefix,
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
+    _validate_client_context,
 )
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
@@ -1016,6 +1017,7 @@ class Database(object):
         exclude_txn_from_change_streams=False,
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         read_lock_mode=TransactionOptions.ReadWrite.ReadLockMode.READ_LOCK_MODE_UNSPECIFIED,
+        client_context=None,
         **kw,
     ):
         """Return an object which wraps a batch.
@@ -1035,6 +1037,11 @@ class Database(object):
                 (Optional) The amount of latency this request is willing to incur
                 in order to improve throughput. Value must be between 0ms and
                 500ms.
+
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this batch.
 
         :type exclude_txn_from_change_streams: bool
         :param exclude_txn_from_change_streams:
@@ -1064,19 +1071,25 @@ class Database(object):
             exclude_txn_from_change_streams,
             isolation_level,
             read_lock_mode,
+            client_context=client_context,
             **kw,
         )
 
-    def mutation_groups(self):
+    def mutation_groups(self, client_context=None):
         """Return an object which wraps a mutation_group.
 
         The wrapper *must* be used as a context manager, with the mutation group
         as the value returned by the wrapper.
 
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this mutation group.
+
         :rtype: :class:`~google.cloud.spanner_v1.database.MutationGroupsCheckout`
         :returns: new wrapper
         """
-        return MutationGroupsCheckout(self)
+        return MutationGroupsCheckout(self, client_context=client_context)
 
     def batch_snapshot(
         self,
@@ -1084,6 +1097,7 @@ class Database(object):
         exact_staleness=None,
         session_id=None,
         transaction_id=None,
+        client_context=None,
     ):
         """Return an object which wraps a batch read / query.
 
@@ -1099,6 +1113,11 @@ class Database(object):
 
         :type transaction_id: str
         :param transaction_id: id of the transaction
+        :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+            or :class:`dict`
+        :param client_context: (Optional) Client context to use for all requests made
+                               by this batch.
+        :param transaction_id: id of the transaction
 
         :rtype: :class:`~google.cloud.spanner_v1.database.BatchSnapshot`
         :returns: new wrapper
@@ -1109,6 +1128,7 @@ class Database(object):
             exact_staleness=exact_staleness,
             session_id=session_id,
             transaction_id=transaction_id,
+            client_context=client_context,
         )
 
     @CrossSync.convert
@@ -1461,11 +1481,13 @@ class BatchCheckout(object):
         exclude_txn_from_change_streams=False,
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         read_lock_mode=TransactionOptions.ReadWrite.ReadLockMode.READ_LOCK_MODE_UNSPECIFIED,
+        client_context=None,
         **kw,
     ):
         self._database: Database = database
         self._session: Optional[Session] = None
         self._batch: Optional[Batch] = None
+        self._client_context = client_context
 
         if request_options is None:
             self._request_options = RequestOptions()
@@ -1496,7 +1518,9 @@ class BatchCheckout(object):
             event_attributes={"id": self._session.session_id},
         )
 
-        batch = self._batch = Batch(session=self._session)
+        batch = self._batch = Batch(
+            session=self._session, client_context=self._client_context
+        )
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
 
@@ -1542,11 +1566,17 @@ class MutationGroupsCheckout(object):
 
     :type database: :class:`~google.cloud.spanner_v1.database.Database`
     :param database: database to use
+
+    :type client_context: :class:`~google.cloud.spanner_v1.types.ClientContext`
+        or :class:`dict`
+    :param client_context: (Optional) Client context to use for all requests made
+                           by this mutation group.
     """
 
-    def __init__(self, database):
+    def __init__(self, database, client_context=None):
         self._database: Database = database
         self._session: Optional[Session] = None
+        self._client_context = client_context
 
     @property
     def _resource_info(self):
@@ -1561,7 +1591,9 @@ class MutationGroupsCheckout(object):
             transaction_type
         )
 
-        return MutationGroups(session=self._session)
+        return MutationGroups(
+            session=self._session, client_context=self._client_context
+        )
 
     @CrossSync.convert(sync_name="__exit__")
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -1646,11 +1678,13 @@ class BatchSnapshot(object):
         exact_staleness=None,
         session_id=None,
         transaction_id=None,
+        client_context=None,
     ):
         self._database: Database = database
 
         self._session_id: Optional[str] = session_id
         self._transaction_id: Optional[bytes] = transaction_id
+        self._client_context = client_context
 
         self._session: Optional[Session] = None
         self._snapshot: Optional[Snapshot] = None
@@ -1757,6 +1791,7 @@ class BatchSnapshot(object):
                 exact_staleness=self._exact_staleness,
                 multi_use=True,
                 transaction_id=self._transaction_id,
+                client_context=self._client_context,
             )
 
             if self._transaction_id is None:

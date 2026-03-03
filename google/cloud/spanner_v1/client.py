@@ -59,7 +59,11 @@ from google.cloud.spanner_v1 import (
     __version__,
 )
 from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    _merge_query_options,
+    _metadata_with_prefix,
+    _validate_client_context,
+)
 from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
@@ -246,6 +250,7 @@ class Client(ClientWithProject):
         default_transaction_options: Optional[DefaultTransactionOptions] = None,
         experimental_host=None,
         disable_builtin_metrics=False,
+        client_context=None,
         use_plain_text=False,
         ca_certificate=None,
         client_certificate=None,
@@ -282,6 +287,7 @@ class Client(ClientWithProject):
             optimizer_statistics_package=_get_spanner_optimizer_statistics_package(),
         )
         self._query_options = _merge_query_options(query_options, env_query_options)
+        self._client_context = _validate_client_context(client_context)
         if self._emulator_host is not None and (
             "http://" in self._emulator_host or "https://" in self._emulator_host
         ):
