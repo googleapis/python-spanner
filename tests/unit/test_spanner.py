@@ -14,6 +14,8 @@
 
 
 import threading
+
+import pytest
 from google.protobuf.struct_pb2 import Struct
 from google.cloud.spanner_v1 import (
     PartialResultSet,
@@ -251,8 +253,13 @@ class TestTransaction(OpenTelemetryBase):
         ]
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
-        iterator = _MockIterator(*result_sets)
-        api.execute_streaming_sql.return_value = iterator
+
+        def _make_iterator(*args, **kwargs):
+            from copy import deepcopy
+
+            return _MockIterator(*deepcopy(result_sets))
+
+        api.execute_streaming_sql.side_effect = _make_iterator
         transaction._execute_sql_request_count = sql_count
         transaction._read_request_count = count
 
@@ -358,7 +365,12 @@ class TestTransaction(OpenTelemetryBase):
         for i in range(len(result_sets)):
             result_sets[i].values.extend(VALUE_PBS[i])
 
-        api.streaming_read.return_value = _MockIterator(*result_sets)
+        def _make_iterator(*args, **kwargs):
+            from copy import deepcopy
+
+            return _MockIterator(*deepcopy(result_sets))
+
+        api.streaming_read.side_effect = _make_iterator
         transaction._read_request_count = count
 
         if partition is not None:  # 'limit' and 'partition' incompatible

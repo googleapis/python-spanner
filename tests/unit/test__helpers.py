@@ -868,7 +868,7 @@ class Test_metadata_with_prefix(unittest.TestCase):
 
 
 class Test_retry(unittest.TestCase):
-    class test_class:
+    class MockClass:
         def test_fxn(self):
             return True
 
@@ -877,7 +877,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             InternalServerError("testing"),
             NotFound("testing"),
@@ -893,7 +893,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             NotFound("testing"),
             InternalServerError("testing"),
@@ -914,7 +914,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             InternalServerError("testing"),
             InternalServerError("testing"),
@@ -930,7 +930,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry, _check_rst_stream_error
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             InternalServerError("Received unexpected EOS on DATA frame from server"),
             InternalServerError("RST_STREAM"),
@@ -951,7 +951,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             Aborted("aborted exception", errors=("Aborted error")),
             "true",
@@ -970,7 +970,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         # Case where aborted exception is thrown after other generic exceptions
         aborted = Aborted("aborted exception", errors=["Aborted error"])
         test_api.test_fxn.side_effect = [
@@ -994,7 +994,7 @@ class Test_retry(unittest.TestCase):
         from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
         import functools
 
-        test_api = mock.create_autospec(self.test_class)
+        test_api = mock.create_autospec(self.MockClass)
         test_api.test_fxn.side_effect = [
             Aborted("aborted exception", errors=("Aborted error")),
             "true",

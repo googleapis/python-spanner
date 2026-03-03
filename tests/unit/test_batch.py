@@ -238,7 +238,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         return_value="global",
     )
     def test_commit_ok(self, mock_region):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -321,7 +321,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         isolation_level=TransactionOptions.IsolationLevel.ISOLATION_LEVEL_UNSPECIFIED,
         read_lock_mode=TransactionOptions.ReadWrite.ReadLockMode.READ_LOCK_MODE_UNSPECIFIED,
     ):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -513,7 +513,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         return_value="global",
     )
     def test_context_mgr_already_committed(self, mock_region):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         database = _Database()
         api = database.spanner_api = _FauxSpannerAPI()
         session = _Session(database)
@@ -531,7 +531,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         return_value="global",
     )
     def test_context_mgr_success(self, mock_region):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -582,7 +582,7 @@ class TestBatch(_BaseTest, OpenTelemetryBase):
         return_value="global",
     )
     def test_context_mgr_failure(self, mock_region):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database()
@@ -671,7 +671,7 @@ class TestMutationGroups(_BaseTest, OpenTelemetryBase):
         exclude_txn_from_change_streams=False,
         enable_end_to_end_tracing=False,
     ):
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         status_pb = Status(code=200)
         response = BatchWriteResponse(

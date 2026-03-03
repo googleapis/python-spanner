@@ -505,15 +505,17 @@ class Cursor(object):
                             raise
                         else:
                             self.transaction_helper.retry_transaction()
+        except Aborted as e:
+            exception = e
         except Exception as e:
             exception = e
-            raise
-        finally:
-            if not self._in_retry_mode:
-                self.transaction_helper.add_fetch_statement_for_retry(
-                    self, rows, exception, is_fetch_all
-                )
-            return rows
+
+        if not self._in_retry_mode:
+            self.transaction_helper.add_fetch_statement_for_retry(
+                self, rows, exception, is_fetch_all
+            )
+
+        return rows
 
     def _handle_DQL_with_snapshot(self, snapshot, sql, params):
         self._result_set = snapshot.execute_sql(

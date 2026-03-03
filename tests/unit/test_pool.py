@@ -16,7 +16,7 @@
 from functools import total_ordering
 import time
 import unittest
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import mock
 from google.cloud.spanner_v1 import _opentelemetry_tracing
@@ -247,7 +247,7 @@ class TestFixedSizePool(OpenTelemetryBase):
     def test_get_non_expired(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
-        last_use_time = datetime.utcnow() - timedelta(minutes=56)
+        last_use_time = datetime.now(timezone.utc) - timedelta(minutes=56)
         SESSIONS = sorted(
             [_Session(database, last_use_time=last_use_time) for i in range(0, 4)]
         )
@@ -443,7 +443,7 @@ class TestFixedSizePool(OpenTelemetryBase):
     def test_get_expired(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
-        last_use_time = datetime.utcnow() - timedelta(minutes=65)
+        last_use_time = datetime.now(timezone.utc) - timedelta(minutes=65)
         SESSIONS = [_Session(database, last_use_time=last_use_time)] * 5
         SESSIONS[0]._exists = False
         pool._new_session = mock.Mock(side_effect=SESSIONS)
@@ -945,7 +945,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_get_hit_w_ping(self, mock_region):
-        import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -954,7 +953,7 @@ class TestPingingPool(OpenTelemetryBase):
         SESSIONS = [_Session(database)] * 4
         pool._new_session = mock.Mock(side_effect=SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.now(timezone.utc) - timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -973,7 +972,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_get_hit_w_ping_expired(self, mock_region):
-        import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -983,7 +981,7 @@ class TestPingingPool(OpenTelemetryBase):
         SESSIONS[0]._exists = False
         pool._new_session = mock.Mock(side_effect=SESSIONS)
 
-        sessions_created = datetime.datetime.utcnow() - datetime.timedelta(seconds=4000)
+        sessions_created = datetime.now(timezone.utc) - timedelta(seconds=4000)
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -1096,14 +1094,13 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_put_non_full(self, mock_region):
-        import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
 
-        now = datetime.datetime.utcnow()
+        now = datetime.now(timezone.utc)
         database = _Database("name")
         session = _Session(database)
 
@@ -1112,7 +1109,7 @@ class TestPingingPool(OpenTelemetryBase):
 
         self.assertEqual(len(session_queue._items), 1)
         ping_after, queued = session_queue._items[0]
-        self.assertEqual(ping_after, now + datetime.timedelta(seconds=3000))
+        self.assertEqual(ping_after, now + timedelta(seconds=3000))
         self.assertIs(queued, session)
         self.assertNoSpans()
 
@@ -1171,7 +1168,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_ping_oldest_stale_but_exists(self, mock_region):
-        import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1181,7 +1177,7 @@ class TestPingingPool(OpenTelemetryBase):
         pool._new_session = mock.Mock(side_effect=SESSIONS)
         pool.bind(database)
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
+        later = datetime.now(timezone.utc) + timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -1192,7 +1188,6 @@ class TestPingingPool(OpenTelemetryBase):
         return_value="global",
     )
     def test_ping_oldest_stale_and_not_exists(self, mock_region):
-        import datetime
         from google.cloud._testing import _Monkey
         from google.cloud.spanner_v1 import pool as MUT
 
@@ -1204,7 +1199,7 @@ class TestPingingPool(OpenTelemetryBase):
         pool.bind(database)
         self.reset()
 
-        later = datetime.datetime.utcnow() + datetime.timedelta(seconds=4000)
+        later = datetime.now(timezone.utc) + timedelta(seconds=4000)
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
@@ -1327,7 +1322,11 @@ class _Session(object):
     _transaction = None
 
     def __init__(
-        self, database, exists=True, transaction=None, last_use_time=datetime.utcnow()
+        self,
+        database,
+        exists=True,
+        transaction=None,
+        last_use_time=datetime.now(timezone.utc),
     ):
         self._database = database
         self._exists = exists

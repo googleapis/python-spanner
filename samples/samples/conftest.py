@@ -65,6 +65,9 @@ def scrub_instance_ignore_not_found(to_scrub):
         for backup_pb in to_scrub.list_backups():
             backup.Backup.from_pb(backup_pb, to_scrub).delete()
 
+        for database_pb in to_scrub.list_databases():
+            database.Database.from_pb(database_pb, to_scrub).drop()
+
         retry_429(to_scrub.delete)()
     except exceptions.NotFound:
         pass
@@ -154,11 +157,11 @@ def sample_instance(
 
     yield sample_instance
 
-    for database_pb in sample_instance.list_databases():
-        database.Database.from_pb(database_pb, sample_instance).drop()
-
     for backup_pb in sample_instance.list_backups():
         backup.Backup.from_pb(backup_pb, sample_instance).delete()
+
+    for database_pb in sample_instance.list_databases():
+        database.Database.from_pb(database_pb, sample_instance).drop()
 
     sample_instance.delete()
 
@@ -189,11 +192,11 @@ def multi_region_instance(
 
     yield multi_region_instance
 
-    for database_pb in multi_region_instance.list_databases():
-        database.Database.from_pb(database_pb, multi_region_instance).drop()
-
     for backup_pb in multi_region_instance.list_backups():
         backup.Backup.from_pb(backup_pb, multi_region_instance).delete()
+
+    for database_pb in multi_region_instance.list_databases():
+        database.Database.from_pb(database_pb, multi_region_instance).drop()
 
     multi_region_instance.delete()
 
@@ -271,6 +274,11 @@ def create_sample_database(
 
         yield sample_database
 
+        for backup_pb in sample_instance.list_backups():
+            backup_obj = backup.Backup.from_pb(backup_pb, sample_instance)
+            if backup_obj.database == sample_database.name:
+                backup_obj.delete()
+
         sample_database.drop()
         return
 
@@ -284,6 +292,11 @@ def create_sample_database(
         operation.result(OPERATION_TIMEOUT_SECONDS)
 
     yield sample_database
+
+    for backup_pb in sample_instance.list_backups():
+        backup_obj = backup.Backup.from_pb(backup_pb, sample_instance)
+        if backup_obj.database == sample_database.name:
+            backup_obj.delete()
 
     sample_database.drop()
 

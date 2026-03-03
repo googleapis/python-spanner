@@ -16,7 +16,7 @@
 
 from functools import total_ordering
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import MutableMapping, Optional
 
 from google.api_core.exceptions import Aborted
@@ -80,7 +80,7 @@ class Session(object):
         self._labels: MutableMapping[str, str] = labels
         self._database_role: Optional[str] = database_role
         self._is_multiplexed: bool = is_multiplexed
-        self._last_use_time: datetime = datetime.utcnow()
+        self._last_use_time: datetime = datetime.now(timezone.utc)
 
     def __lt__(self, other):
         return self._session_id < other._session_id

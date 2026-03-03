@@ -20,6 +20,8 @@ from .constants import (
     MONITORED_RESOURCE_LABELS,
     METRIC_LABELS,
     METRIC_NAMES,
+    MONITORED_RES_LABEL_KEY_PROJECT,
+    MONITORED_RES_LABEL_KEY_INSTANCE,
 )
 
 import logging
@@ -299,8 +301,8 @@ class CloudMonitoringMetricsExporter(MetricExporter):
         )
         return series
 
-    @staticmethod
     def _resource_metrics_to_timeseries_pb(
+        self,
         metrics_data: "MetricsData",
     ) -> List["TimeSeries"]:
         """
@@ -324,6 +326,28 @@ class CloudMonitoringMetricsExporter(MetricExporter):
                         ) = CloudMonitoringMetricsExporter._extract_metric_labels(
                             data_point
                         )
+
+                        # Ensure project_id is present in monitored resource labels
+                        if (
+                            MONITORED_RES_LABEL_KEY_PROJECT
+                            not in monitored_resource_labels
+                        ):
+                            monitored_resource_labels[
+                                MONITORED_RES_LABEL_KEY_PROJECT
+                            ] = self.project_id
+
+                        # The OpenTelemetry exporter uses the 'spanner_instance_client' resource type,
+                        # which strictly requires both project_id and instance_id. However, some
+                        # Spanner API calls (like creating or listing instances) operate at the
+                        # project level and naturally lack an instance_id. We silently drop these
+                        # metrics here to prevent Cloud Monitoring from rejecting the entire batch
+                        # with a 400 InvalidArgument error.
+                        if (
+                            MONITORED_RES_LABEL_KEY_INSTANCE
+                            not in monitored_resource_labels
+                        ):
+                            continue
+
                         monitored_resource = CloudMonitoringMetricsExporter._resource_to_monitored_resource_pb(
                             resource_metric.resource, monitored_resource_labels
                         )

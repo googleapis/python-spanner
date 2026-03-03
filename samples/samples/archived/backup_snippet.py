@@ -19,7 +19,7 @@ For more information, see the README.rst under /spanner.
 """
 
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from google.cloud import spanner
 
@@ -30,7 +30,7 @@ def cancel_backup(instance_id, database_id, backup_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    expire_time = datetime.utcnow() + timedelta(days=30)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=30)
 
     # Create a backup.
     backup = instance.backup(backup_id, database=database, expire_time=expire_time)
@@ -41,7 +41,8 @@ def cancel_backup(instance_id, database_id, backup_id):
 
     # Cancel operations are best effort so either it will complete or
     # be cancelled.
-    while not operation.done():
+    timeout_at = time.time() + 600  # 10 minutes max wait
+    while not operation.done() and time.time() < timeout_at:
         time.sleep(300)  # 5 mins
 
     # Deal with resource if the operation succeeded.
@@ -63,14 +64,14 @@ def copy_backup(instance_id, backup_id, source_backup_path):
     instance = spanner_client.instance(instance_id)
 
     # Create a backup object and wait for copy backup operation to complete.
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     copy_backup = instance.copy_backup(
         backup_id=backup_id, source_backup=source_backup_path, expire_time=expire_time
     )
     operation = copy_backup.create()
 
     # Wait for copy backup operation to complete.
-    operation.result(2100)
+    operation.result(3600)
 
     # Verify that the copy backup is ready.
     copy_backup.reload()
@@ -97,14 +98,14 @@ def create_backup(instance_id, database_id, backup_id, version_time):
     database = instance.database(database_id)
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     backup = instance.backup(
         backup_id, database=database, expire_time=expire_time, version_time=version_time
     )
     operation = backup.create()
 
     # Wait for backup operation to complete.
-    operation.result(2100)
+    operation.result(3600)
 
     # Verify that the backup is ready.
     backup.reload()
@@ -127,15 +128,14 @@ def create_backup_with_encryption_key(
     instance_id, database_id, backup_id, kms_key_name
 ):
     """Creates a backup for a database using a Customer Managed Encryption Key (CMEK)."""
-    from google.cloud.spanner_admin_database_v1 import \
-        CreateBackupEncryptionConfig
+    from google.cloud.spanner_admin_database_v1 import CreateBackupEncryptionConfig
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     encryption_config = {
         "encryption_type": CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
         "kms_key_name": kms_key_name,
@@ -149,7 +149,7 @@ def create_backup_with_encryption_key(
     operation = backup.create()
 
     # Wait for backup operation to complete.
-    operation.result(2100)
+    operation.result(3600)
 
     # Verify that the backup is ready.
     backup.reload()
@@ -219,7 +219,8 @@ def delete_backup(instance_id, backup_id):
     backup.reload()
 
     # Wait for databases that reference this backup to finish optimizing.
-    while backup.referencing_databases:
+    timeout_at = time.time() + 600  # 10 minutes
+    while backup.referencing_databases and time.time() < timeout_at:
         time.sleep(30)
         backup.reload()
 
@@ -295,7 +296,7 @@ def list_backups(instance_id, database_id, backup_id):
         print(backup.name)
 
     # List all backups that expire before a timestamp.
-    expire_time = datetime.utcnow().replace(microsecond=0) + timedelta(days=30)
+    expire_time = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=30)
     print(
         'All backups with expire_time before "{}-{}-{}T{}:{}:{}Z":'.format(
             *expire_time.timetuple()
@@ -312,7 +313,7 @@ def list_backups(instance_id, database_id, backup_id):
         print(backup.name)
 
     # List backups that were created after a timestamp that are also ready.
-    create_time = datetime.utcnow().replace(microsecond=0) - timedelta(days=1)
+    create_time = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=1)
     print(
         'All backups created after "{}-{}-{}T{}:{}:{}Z" and are READY:'.format(
             *create_time.timetuple()
@@ -396,8 +397,7 @@ def restore_database_with_encryption_key(
     instance_id, new_database_id, backup_id, kms_key_name
 ):
     """Restores a database from a backup using a Customer Managed Encryption Key (CMEK)."""
-    from google.cloud.spanner_admin_database_v1 import \
-        RestoreDatabaseEncryptionConfig
+    from google.cloud.spanner_admin_database_v1 import RestoreDatabaseEncryptionConfig
 
     spanner_client = spanner.Client()
     instance = spanner_client.instance(instance_id)

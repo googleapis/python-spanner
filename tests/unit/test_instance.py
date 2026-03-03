@@ -680,7 +680,7 @@ class TestInstance(unittest.TestCase):
         instance = self._make_one(self.INSTANCE_ID, client, self.CONFIG_NAME)
         BACKUP_ID = "backup-id"
         DATABASE_NAME = "database-name"
-        timestamp = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        timestamp = datetime.datetime.now(UTC)
         encryption_config = CreateBackupEncryptionConfig(
             encryption_type=CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
             kms_key_name="kms_key_name",

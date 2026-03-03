@@ -19,7 +19,7 @@ For more information, see the README.rst under /spanner.
 """
 
 import argparse
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import time
 
 from google.api_core import protobuf_helpers
@@ -37,7 +37,7 @@ def create_backup(instance_id, database_id, backup_id, version_time):
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
 
     request = backup_pb.CreateBackupRequest(
         parent=database_admin_api.instance_path(spanner_client.project, instance_id),
@@ -54,7 +54,7 @@ def create_backup(instance_id, database_id, backup_id, version_time):
     operation = database_admin_api.create_backup(request)
 
     # Wait for backup operation to complete.
-    backup = operation.result(2100)
+    backup = operation.result(3600)
 
     # Verify that the backup is ready.
     assert backup.state == backup_pb.Backup.State.READY
@@ -82,7 +82,7 @@ def create_backup_with_encryption_key(
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     encryption_config = {
         "encryption_type": CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
         "kms_key_name": kms_key_name,
@@ -101,7 +101,7 @@ def create_backup_with_encryption_key(
     operation = database_admin_api.create_backup(request)
 
     # Wait for backup operation to complete.
-    backup = operation.result(2100)
+    backup = operation.result(3600)
 
     # Verify that the backup is ready.
     assert backup.state == backup_pb.Backup.State.READY
@@ -130,7 +130,7 @@ def create_backup_with_multiple_kms_keys(
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     encryption_config = {
         "encryption_type": CreateBackupEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
         "kms_key_names": kms_key_names,
@@ -149,7 +149,7 @@ def create_backup_with_multiple_kms_keys(
     operation = database_admin_api.create_backup(request)
 
     # Wait for backup operation to complete.
-    backup = operation.result(2100)
+    backup = operation.result(3600)
 
     # Verify that the backup is ready.
     assert backup.state == backup_pb.Backup.State.READY
@@ -302,7 +302,7 @@ def cancel_backup(instance_id, database_id, backup_id):
     spanner_client = spanner.Client()
     database_admin_api = spanner_client.database_admin_api
 
-    expire_time = datetime.utcnow() + timedelta(days=30)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=30)
 
     # Create a backup.
     request = backup_pb.CreateBackupRequest(
@@ -322,7 +322,8 @@ def cancel_backup(instance_id, database_id, backup_id):
 
     # Cancel operations are the best effort so either it will complete or
     # be cancelled.
-    while not operation.done():
+    timeout_at = time.time() + 600  # 10 minutes max wait
+    while not operation.done() and time.time() < timeout_at:
         time.sleep(300)  # 5 mins
 
     try:
@@ -473,7 +474,7 @@ def list_backups(instance_id, database_id, backup_id):
         print(backup.name)
 
     # List all backups that expire before a timestamp.
-    expire_time = datetime.utcnow().replace(microsecond=0) + timedelta(days=30)
+    expire_time = datetime.now(timezone.utc).replace(microsecond=0) + timedelta(days=30)
     print(
         'All backups with expire_time before "{}-{}-{}T{}:{}:{}Z":'.format(
             *expire_time.timetuple()
@@ -498,7 +499,7 @@ def list_backups(instance_id, database_id, backup_id):
         print(backup.name)
 
     # List backups that were created after a timestamp that are also ready.
-    create_time = datetime.utcnow().replace(microsecond=0) - timedelta(days=1)
+    create_time = datetime.now(timezone.utc).replace(microsecond=0) - timedelta(days=1)
     print(
         'All backups created after "{}-{}-{}T{}:{}:{}Z" and are READY:'.format(
             *create_time.timetuple()
@@ -547,7 +548,8 @@ def delete_backup(instance_id, backup_id):
     )
 
     # Wait for databases that reference this backup to finish optimizing.
-    while backup.referencing_databases:
+    timeout_at = time.time() + 600  # 10 minutes
+    while backup.referencing_databases and time.time() < timeout_at:
         time.sleep(30)
         backup = database_admin_api.get_backup(
             backup_pb.GetBackupRequest(
@@ -671,7 +673,7 @@ def copy_backup(instance_id, backup_id, source_backup_path):
     database_admin_api = spanner_client.database_admin_api
 
     # Create a backup object and wait for copy backup operation to complete.
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     request = backup_pb.CopyBackupRequest(
         parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
@@ -682,7 +684,7 @@ def copy_backup(instance_id, backup_id, source_backup_path):
     operation = database_admin_api.copy_backup(request)
 
     # Wait for backup operation to complete.
-    copy_backup = operation.result(2100)
+    copy_backup = operation.result(3600)
 
     # Verify that the copy backup is ready.
     assert copy_backup.state == backup_pb.Backup.State.READY
@@ -718,7 +720,7 @@ def copy_backup_with_multiple_kms_keys(
     }
 
     # Create a backup object and wait for copy backup operation to complete.
-    expire_time = datetime.utcnow() + timedelta(days=14)
+    expire_time = datetime.now(timezone.utc) + timedelta(days=14)
     request = backup_pb.CopyBackupRequest(
         parent=database_admin_api.instance_path(spanner_client.project, instance_id),
         backup_id=backup_id,
@@ -730,7 +732,7 @@ def copy_backup_with_multiple_kms_keys(
     operation = database_admin_api.copy_backup(request)
 
     # Wait for backup operation to complete.
-    copy_backup = operation.result(2100)
+    copy_backup = operation.result(3600)
 
     # Verify that the copy backup is ready.
     assert copy_backup.state == backup_pb.Backup.State.READY

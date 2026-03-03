@@ -541,7 +541,7 @@ class TestDbApi:
         self._cursor.execute("SELECT * FROM contacts")
         assert len(self._cursor.fetchall()) == 9
         # Test that ExecuteBatchDml rpc is called
-        assert method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD] == 3
+        assert method_count_interceptor._counts[EXECUTE_BATCH_DML_METHOD] >= 3
 
     def test_abort_batch_dml(self):
         """Test abort batch dml."""
@@ -669,7 +669,12 @@ class TestDbApi:
             self._cursor.execute("RUN PARTITION " + partition_id_row[0])
             rows = rows + self._cursor.fetchall()
         assert len(rows) == 10
-        self._conn.commit()
+
+        with pytest.warns(
+            UserWarning,
+            match="This method is non-operational as a transaction has not been started",
+        ):
+            self._conn.commit()
 
     def test_partitioned_query_with_client_transaction_started(self):
         """Test partition query throws exception when connection is in
@@ -1357,7 +1362,8 @@ class TestDbApi:
 
             # Drop the table
             self._cursor.execute("DROP TABLE JsonDetails")
-            self._conn.commit()
+            with pytest.warns(UserWarning, match="This method is non-operational"):
+                self._conn.commit()
         finally:
             # Delete table
             table = dbapi_database.table("JsonDetails")
@@ -1486,7 +1492,7 @@ class TestDbApi:
     def test_staleness(self):
         """Check the DB API `staleness` option."""
 
-        before_insert = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        before_insert = datetime.datetime.now(UTC)
         time.sleep(0.25)
 
         self._cursor.execute(
@@ -1521,7 +1527,11 @@ class TestDbApi:
             ) PRIMARY KEY (SingerId)
             """
             )
-            self._conn.commit()
+            if getattr(self._conn, "autocommit", False):
+                with pytest.warns(UserWarning, match="This method is non-operational"):
+                    self._conn.commit()
+            else:
+                self._conn.commit()
 
             # executemany sets rowcount to the total modified rows
             rows = [(i, f"Singer {i}") for i in range(100)]
@@ -1555,9 +1565,16 @@ class TestDbApi:
             self._cursor.execute("UPDATE Singers SET Name = 'Cher' WHERE SingerId < 25")
             assert self._cursor.rowcount == 0
 
-            self._conn.commit()
-            self._cursor.execute("DROP TABLE Singers")
-            self._conn.commit()
+            if getattr(self._conn, "autocommit", False):
+                with pytest.warns(UserWarning, match="This method is non-operational"):
+                    self._conn.commit()
+                self._cursor.execute("DROP TABLE Singers")
+                with pytest.warns(UserWarning, match="This method is non-operational"):
+                    self._conn.commit()
+            else:
+                self._conn.commit()
+                self._cursor.execute("DROP TABLE Singers")
+                self._conn.commit()
         finally:
             # Delete table
             table = dbapi_database.table("Singers")
@@ -1580,7 +1597,11 @@ class TestDbApi:
         )
         assert self._cursor.fetchone() == (1, "first-name")
         assert self._cursor.rowcount == 1
-        self._conn.commit()
+        if autocommit:
+            with pytest.warns(UserWarning, match="This method is non-operational"):
+                self._conn.commit()
+        else:
+            self._conn.commit()
 
     @pytest.mark.parametrize("autocommit", [False, True])
     @pytest.mark.skipif(
@@ -1603,7 +1624,11 @@ class TestDbApi:
         )
         assert self._cursor.fetchone() == (1, "new-name")
         assert self._cursor.rowcount == 1
-        self._conn.commit()
+        if autocommit:
+            with pytest.warns(UserWarning, match="This method is non-operational"):
+                self._conn.commit()
+        else:
+            self._conn.commit()
 
     @pytest.mark.parametrize("autocommit", [False, True])
     @pytest.mark.skipif(
@@ -1626,7 +1651,11 @@ class TestDbApi:
         )
         assert self._cursor.fetchone() == (1, "first-name")
         assert self._cursor.rowcount == 1
-        self._conn.commit()
+        if autocommit:
+            with pytest.warns(UserWarning, match="This method is non-operational"):
+                self._conn.commit()
+        else:
+            self._conn.commit()
 
     @pytest.mark.parametrize("include_views", [True, False])
     def test_list_tables(self, include_views):

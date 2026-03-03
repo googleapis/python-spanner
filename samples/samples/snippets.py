@@ -2401,13 +2401,13 @@ def query_data_with_timestamp_parameter(instance_id, database_id):
     instance = spanner_client.instance(instance_id)
     database = instance.database(database_id)
 
-    example_timestamp = datetime.datetime.utcnow().isoformat() + "Z"
+    example_timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     # [END spanner_query_with_timestamp_parameter]
     # Avoid time drift on the local machine.
     # https://github.com/GoogleCloudPlatform/python-docs-samples/issues/4197.
     example_timestamp = (
-        datetime.datetime.utcnow() + datetime.timedelta(days=1)
-    ).isoformat() + "Z"
+        datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=1)
+    ).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     # [START spanner_query_with_timestamp_parameter]
     param = {"last_update_time": example_timestamp}
     param_type = {"last_update_time": param_types.TIMESTAMP}
@@ -3245,7 +3245,9 @@ def read_lock_mode_options(
 
     # The read lock mode specified at the client-level will be applied to all
     # RW transactions.
-    read_lock_mode_options_for_client = TransactionOptions.ReadWrite.ReadLockMode.OPTIMISTIC
+    read_lock_mode_options_for_client = (
+        TransactionOptions.ReadWrite.ReadLockMode.OPTIMISTIC
+    )
 
     # Create a client that uses Serializable isolation (default) with
     # optimistic locking for read-write transactions.
@@ -3280,7 +3282,7 @@ def read_lock_mode_options(
 
     database.run_in_transaction(
         update_albums_with_read_lock_mode,
-        read_lock_mode=read_lock_mode_options_for_transaction
+        read_lock_mode=read_lock_mode_options_for_transaction,
     )
     # [END spanner_read_lock_mode]
 
@@ -3909,9 +3911,7 @@ if __name__ == "__main__":  # noqa: C901
     subparsers.add_parser(
         "isolation_level_options", help=isolation_level_options.__doc__
     )
-    subparsers.add_parser(
-        "read_lock_mode_options", help=read_lock_mode_options.__doc__
-    )
+    subparsers.add_parser("read_lock_mode_options", help=read_lock_mode_options.__doc__)
     subparsers.add_parser(
         "set_custom_timeout_and_retry", help=set_custom_timeout_and_retry.__doc__
     )
