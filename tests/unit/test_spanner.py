@@ -1106,9 +1106,6 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(actual_id_suffixes, expected_id_suffixes)
 
-    @pytest.mark.skip(
-        reason="Inherently flaky: concurrent StreamedResultSet requests race inline begins due to lazy evaluation"
-    )
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_read(
         self,
     ):
@@ -1182,9 +1179,6 @@ class TestTransaction(OpenTelemetryBase):
         )
         self.assertEqual(actual_id_suffixes, expected_id_suffixes)
 
-    @pytest.mark.skip(
-        reason="Inherently flaky: concurrent StreamedResultSet requests race inline begins due to lazy evaluation"
-    )
     def test_transaction_for_concurrent_statement_should_begin_one_transaction_with_query(
         self,
     ):
