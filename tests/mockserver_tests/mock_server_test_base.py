@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from contextvars import ContextVar
-import grpc
 import logging
 import unittest
 
@@ -21,6 +20,7 @@ from google.auth.credentials import AnonymousCredentials
 from google.protobuf.duration_pb2 import Duration
 from google.rpc import code_pb2, status_pb2
 from google.rpc.error_details_pb2 import RetryInfo
+import grpc
 from grpc_status._common import code_to_grpc_status_code
 from grpc_status.rpc_status import _Status
 
@@ -45,7 +45,6 @@ from google.cloud.spanner_v1.testing.mock_spanner import (
 import google.cloud.spanner_v1.types.result_set as result_set
 import google.cloud.spanner_v1.types.type as spanner_type
 from tests._helpers import is_multiplexed_enabled
-
 
 current_service = ContextVar("current_service", default=None)
 

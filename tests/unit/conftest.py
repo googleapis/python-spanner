@@ -1,4 +1,4 @@
-# Copyright 2025 Google LLC
+# Copyright 2025 Google LLC All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,55 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import patch
+import os
 
-import pytest
-
-
-@pytest.fixture(autouse=True)
-def mock_emulator_host():
-    """Globally mock _get_spanner_emulator_host to isolate unit tests from the environment."""
-    with patch(
-        "google.cloud.spanner_v1.client._get_spanner_emulator_host", return_value=None
-    ), patch(
-        "google.cloud.spanner_v1._async.client._get_spanner_emulator_host",
-        return_value=None,
-    ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_periodic_exporting_metric_reader():
-    """Globally mock PeriodicExportingMetricReader to prevent real network calls."""
-    with patch(
-        "google.cloud.spanner_v1.client.PeriodicExportingMetricReader"
-    ) as mock_client_reader, patch(
-        "opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader"
-    ):
-        yield mock_client_reader
-
-
-@pytest.fixture(autouse=True)
-def clear_otel_exporter():
-    """Clear the OpenTelemetry span exporter before and after each test to prevent leakage."""
-    try:
-        from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
-
-        if HAS_OPENTELEMETRY_INSTALLED:
-            exporter = get_test_ot_exporter()
-            if exporter:
-                exporter.clear()
-    except ImportError:
-        pass
-
-    yield
-
-    try:
-        from tests._helpers import HAS_OPENTELEMETRY_INSTALLED, get_test_ot_exporter
-
-        if HAS_OPENTELEMETRY_INSTALLED:
-            exporter = get_test_ot_exporter()
-            if exporter:
-                exporter.clear()
-    except ImportError:
-        pass
+# Disable builtin metrics to avoid background thread noise and 401 errors in unit tests
+os.environ["SPANNER_DISABLE_BUILTIN_METRICS"] = "true"

@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 from datetime import datetime
+import inspect
 from logging import Logger
 from typing import Mapping
 
@@ -19,8 +20,13 @@ from google.auth.credentials import Credentials, Scoped
 from mock import create_autospec
 
 from google.cloud._helpers import _datetime_to_pb_timestamp
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_dbapi import Connection
-from google.cloud.spanner_v1 import SpannerClient
+from google.cloud.spanner_v1 import SpannerAsyncClient, SpannerClient
+from google.cloud.spanner_v1._async.client import Client as AsyncClient
+from google.cloud.spanner_v1._async.database import Database as AsyncDatabase
+from google.cloud.spanner_v1._async.instance import Instance as AsyncInstance
+from google.cloud.spanner_v1._async.session import Session as AsyncSession
 from google.cloud.spanner_v1.client import Client
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.instance import Instance
@@ -103,6 +109,19 @@ def build_transaction_pb(**kwargs) -> TransactionPB:
 # --------------
 
 
+def _is_async_test_caller():
+    # Check if the caller is in an async test directory
+    for frame in inspect.stack():
+        module = inspect.getmodule(frame[0])
+        if module:
+            filename = getattr(module, "__file__", "")
+            if filename and "tests/unit/_async" in filename:
+                return True
+            if "_async" in module.__name__:
+                return True
+    return False
+
+
 def build_client(**kwargs: Mapping) -> Client:
     """Builds and returns a client for testing using the given arguments.
     If a required argument is not provided, a default value will be used."""
@@ -113,7 +132,12 @@ def build_client(**kwargs: Mapping) -> Client:
     if "credentials" not in kwargs:
         kwargs["credentials"] = build_scoped_credentials()
 
-    return Client(**kwargs)
+    is_async = CrossSync.is_async
+    if is_async and not _is_async_test_caller():
+        is_async = False
+
+    cls = AsyncClient if is_async else Client
+    return cls(**kwargs)
 
 
 def build_connection(**kwargs: Mapping) -> Connection:
@@ -142,7 +166,12 @@ def build_database(**kwargs: Mapping) -> Database:
     if "instance" not in kwargs:
         kwargs["instance"] = build_instance()
 
-    database = Database(**kwargs)
+    is_async = CrossSync.is_async
+    if is_async and not _is_async_test_caller():
+        is_async = False
+
+    cls = AsyncDatabase if is_async else Database
+    database = cls(**kwargs)
     database._spanner_api = build_spanner_api()
 
     return database
@@ -158,7 +187,12 @@ def build_instance(**kwargs: Mapping) -> Instance:
     if "client" not in kwargs:
         kwargs["client"] = build_client()
 
-    return Instance(**kwargs)
+    is_async = CrossSync.is_async
+    if is_async and not _is_async_test_caller():
+        is_async = False
+
+    cls = AsyncInstance if is_async else Instance
+    return cls(**kwargs)
 
 
 def build_session(**kwargs: Mapping) -> Session:
@@ -168,7 +202,12 @@ def build_session(**kwargs: Mapping) -> Session:
     if "database" not in kwargs:
         kwargs["database"] = build_database()
 
-    return Session(**kwargs)
+    is_async = CrossSync.is_async
+    if is_async and not _is_async_test_caller():
+        is_async = False
+
+    cls = AsyncSession if is_async else Session
+    return cls(**kwargs)
 
 
 def build_snapshot(**kwargs):
@@ -220,7 +259,12 @@ def build_spanner_api() -> SpannerClient:
     """Builds and returns a mock Spanner Client API for testing using the given arguments.
     Commonly used methods are mocked to return default values."""
 
-    api = create_autospec(SpannerClient, instance=True)
+    is_async = CrossSync.is_async
+    if is_async and not _is_async_test_caller():
+        is_async = False
+
+    cls = SpannerAsyncClient if is_async else SpannerClient
+    api = create_autospec(cls, instance=True)
 
     # Mock API calls with default return values.
     api.begin_transaction.return_value = build_transaction_pb()

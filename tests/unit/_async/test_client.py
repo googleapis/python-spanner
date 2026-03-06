@@ -14,15 +14,15 @@
 
 import asyncio
 import os
-import mock
-from unittest.mock import AsyncMock
 from unittest import IsolatedAsyncioTestCase
+from unittest.mock import AsyncMock
 
 from google.auth.credentials import AnonymousCredentials
-from google.cloud.spanner_v1 import DefaultTransactionOptions, DirectedReadOptions
-from tests._builders import build_scoped_credentials
+import mock
 
 from google.cloud.aio._cross_sync import CrossSync
+from google.cloud.spanner_v1 import DefaultTransactionOptions, DirectedReadOptions
+from tests._builders import build_scoped_credentials
 
 
 class IsolatedAsyncioTestCase(IsolatedAsyncioTestCase):
@@ -678,13 +678,11 @@ class TestClient(IsolatedAsyncioTestCase):
 
     @CrossSync.pytest
     async def test_list_instance_configs(self):
-        from google.cloud.spanner_admin_instance_v1 import (
-            ListInstanceConfigsResponse,
-        )
         from google.cloud.spanner_admin_instance_v1 import InstanceAdminAsyncClient
         from google.cloud.spanner_admin_instance_v1 import (
             InstanceConfig as InstanceConfigPB,
         )
+        from google.cloud.spanner_admin_instance_v1 import ListInstanceConfigsResponse
 
         credentials = build_scoped_credentials()
         api = InstanceAdminAsyncClient(credentials=credentials)

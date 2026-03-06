@@ -53,7 +53,7 @@ class TestCredentials(Credentials):
 
 @pytest.fixture(autouse=True)
 def patched_client(monkeypatch):
-    monkeypatch.setenv("SPANNER_ENABLE_BUILTIN_METRICS", "true")
+    monkeypatch.setenv("SPANNER_DISABLE_BUILTIN_METRICS", "false")
     metrics.set_meter_provider(metrics.NoOpMeterProvider())
 
     # Remove the Tracer factory to avoid previously disabled factory polluting from other tests

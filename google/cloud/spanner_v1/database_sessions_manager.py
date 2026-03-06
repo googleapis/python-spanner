@@ -24,12 +24,13 @@ import threading
 from threading import Thread
 from typing import Optional
 from weakref import ref
+
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
 )
+from google.cloud.spanner_v1.session import Session
 
 
 class TransactionType(Enum):

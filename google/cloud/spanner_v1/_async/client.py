@@ -67,11 +67,9 @@ from google.cloud.spanner_admin_instance_v1 import (
     ListInstanceConfigsRequest,
     ListInstancesRequest,
 )
-from google.cloud.spanner_v1 import (
-    DefaultTransactionOptions,
-    ExecuteSqlRequest,
-    __version__,
-)
+from google.cloud.spanner_v1.gapic_version import __version__
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
@@ -399,11 +397,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                from google.cloud.spanner_v1._helpers import (
-                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
-                )
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
                 )
 
                 if CrossSync.is_async:
@@ -453,11 +451,11 @@ class Client(ClientWithProject):
                     transport=transport,
                 )
             elif self._experimental_host:
-                from google.cloud.spanner_v1._helpers import (
-                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
-                )
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
                 )
 
                 if CrossSync.is_async:

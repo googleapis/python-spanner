@@ -14,7 +14,7 @@
 
 """Wrapper for Cloud Spanner Session objects."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.session"
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import total_ordering
 import time
 from typing import MutableMapping, Optional
@@ -23,12 +23,13 @@ from google.api_core.exceptions import Aborted, GoogleAPICallError, NotFound
 from google.api_core.gapic_v1 import method
 
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1 import CreateSessionRequest, ExecuteSqlRequest
+from google.cloud.spanner_v1.types.spanner import CreateSessionRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1._async._helpers import _delay_until_retry
 from google.cloud.spanner_v1._async.batch import Batch
 from google.cloud.spanner_v1._async.snapshot import Snapshot
 from google.cloud.spanner_v1._async.transaction import Transaction
 from google.cloud.spanner_v1._helpers import (
-    _delay_until_retry,
     _get_retry_delay,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -77,7 +78,7 @@ class Session(object):
         self._labels: MutableMapping[str, str] = labels
         self._database_role: Optional[str] = database_role
         self._is_multiplexed: bool = is_multiplexed
-        self._last_use_time: datetime = datetime.utcnow()
+        self._last_use_time: datetime = datetime.now(timezone.utc)
 
     @property
     def _resource_info(self):
@@ -393,7 +394,7 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        return self.snapshot().read(
+        return await self.snapshot().read(
             table, columns, keyset, index, limit, column_info=column_info
         )
 
@@ -460,7 +461,7 @@ class Session(object):
         :rtype: :class:`~google.cloud.spanner_v1.streamed.StreamedResultSet`
         :returns: a result set instance which can be used to consume rows.
         """
-        return self.snapshot().execute_sql(
+        return await self.snapshot().execute_sql(
             sql,
             params,
             param_types,
@@ -598,7 +599,7 @@ class Session(object):
                         "Transaction was aborted in user operation, retrying",
                         attributes,
                     )
-                    _delay_until_retry(
+                    await _delay_until_retry(
                         exc,
                         deadline,
                         attempts,
@@ -644,7 +645,7 @@ class Session(object):
                         "Transaction was aborted during commit, retrying",
                         attributes,
                     )
-                    _delay_until_retry(
+                    await _delay_until_retry(
                         exc,
                         deadline,
                         attempts,

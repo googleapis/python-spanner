@@ -27,21 +27,19 @@ from google.api_core.exceptions import (
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1 import (
-    BeginTransactionRequest,
-    ExecuteSqlRequest,
-    Mutation,
-    PartialResultSet,
-    PartitionOptions,
-    PartitionQueryRequest,
-    PartitionReadRequest,
-    ReadRequest,
-    RequestOptions,
-    ResultSet,
-    Transaction,
-    TransactionOptions,
-    TransactionSelector,
-)
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.result_set import PartialResultSet
+from google.cloud.spanner_v1.types.result_set import ResultSet
+from google.cloud.spanner_v1.types.spanner import BeginTransactionRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.types.spanner import PartitionOptions
+from google.cloud.spanner_v1.types.spanner import PartitionQueryRequest
+from google.cloud.spanner_v1.types.spanner import PartitionReadRequest
+from google.cloud.spanner_v1.types.spanner import ReadRequest
+from google.cloud.spanner_v1.types.spanner import RequestOptions
+from google.cloud.spanner_v1.types.transaction import Transaction
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1.types.transaction import TransactionSelector
 from google.cloud.spanner_v1._async._helpers import _retry
 from google.cloud.spanner_v1._async.streamed import StreamedResultSet
 from google.cloud.spanner_v1._helpers import (

@@ -66,6 +66,7 @@ class TestTracing(OpenTelemetryBase):
 
         span_list = self.ot_exporter.get_finished_spans()
         self.assertEqual(len(span_list), 1)
+
         span = span_list[0]
         self.assertEqual(span.kind, trace_api.SpanKind.CLIENT)
         self.assertEqual(span.attributes, expected_attributes)

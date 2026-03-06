@@ -21,25 +21,20 @@ from typing import List, Optional
 from google.api_core.exceptions import InternalServerError
 
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1 import (
-    BatchWriteRequest,
-    CommitRequest,
-    CommitResponse,
-    Mutation,
-    RequestOptions,
-    TransactionOptions,
-)
-from google.cloud.spanner_v1._async._helpers import (
-    _retry,
-    _retry_on_aborted_exception,
-)
+from google.cloud.spanner_v1.types.commit_response import CommitResponse
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.spanner import BatchWriteRequest
+from google.cloud.spanner_v1.types.spanner import CommitRequest
+from google.cloud.spanner_v1.types.spanner import RequestOptions
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1._async._helpers import _retry, _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
     _make_list_value_pbs,
-    _merge_Transaction_Options,
     _merge_client_context,
     _merge_request_options,
+    _merge_Transaction_Options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
     _SessionWrapper,

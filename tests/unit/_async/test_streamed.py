@@ -1,7 +1,8 @@
 import asyncio
+from unittest import IsolatedAsyncioTestCase
+
 import mock
 import pytest
-from unittest import IsolatedAsyncioTestCase
 
 from google.cloud.aio._cross_sync import CrossSync
 

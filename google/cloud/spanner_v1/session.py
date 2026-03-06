@@ -17,17 +17,17 @@
 
 """Wrapper for Cloud Spanner Session objects."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import total_ordering
 import time
 from typing import MutableMapping, Optional
+
 from google.api_core.exceptions import Aborted, GoogleAPICallError, NotFound
 from google.api_core.gapic_v1 import method
+
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1 import CreateSessionRequest, ExecuteSqlRequest
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.transaction import Transaction
+from google.cloud.spanner_v1.types.spanner import CreateSessionRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import (
     _delay_until_retry,
     _get_retry_delay,
@@ -39,7 +39,10 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     get_current_span,
     trace_call,
 )
+from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.snapshot import Snapshot
+from google.cloud.spanner_v1.transaction import Transaction
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 "Default timeout used by :meth:`Session.run_in_transaction`."
@@ -76,7 +79,7 @@ class Session(object):
         self._labels: MutableMapping[str, str] = labels
         self._database_role: Optional[str] = database_role
         self._is_multiplexed: bool = is_multiplexed
-        self._last_use_time: datetime = datetime.utcnow()
+        self._last_use_time: datetime = datetime.now(timezone.utc)
 
     @property
     def _resource_info(self):

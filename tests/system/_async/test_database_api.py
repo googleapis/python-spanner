@@ -14,8 +14,8 @@
 
 import pytest
 
-from google.cloud import exceptions
-from google.cloud import spanner_v1
+from google.cloud import exceptions, spanner_v1
+
 from .. import _helpers, _sample_data
 
 DBAPI_OPERATION_TIMEOUT = 240  # seconds

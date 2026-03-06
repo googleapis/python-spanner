@@ -1,13 +1,14 @@
 import datetime
-import google.api_core.gapic_v1.method
-import mock
-import pytest
+from datetime import timezone
 
 from google.api_core.exceptions import Aborted, Cancelled, NotFound, Unknown
+import google.api_core.gapic_v1.method
 from google.protobuf.duration_pb2 import Duration
 from google.protobuf.struct_pb2 import Struct, Value
 from google.rpc.error_details_pb2 import RetryInfo
 import grpc
+import mock
+import pytest
 
 from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
 from google.cloud.aio._cross_sync import CrossSync
@@ -24,6 +25,10 @@ from google.cloud.spanner_v1 import Session as SessionRequestProto
 from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1 import Transaction as TransactionPB
 from google.cloud.spanner_v1 import TransactionOptions, TypeCode
+from google.cloud.spanner_v1._async.batch import Batch
+from google.cloud.spanner_v1._async.database import Database
+from google.cloud.spanner_v1._async.snapshot import Snapshot
+from google.cloud.spanner_v1._async.transaction import Transaction
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _delay_until_retry,
@@ -33,13 +38,8 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     GCP_RESOURCE_NAME_PREFIX,
     trace_call,
 )
-from google.cloud.spanner_v1.batch import Batch
-from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
-from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.snapshot import Snapshot
-from google.cloud.spanner_v1.transaction import Transaction
 from tests._builders import (
     build_commit_response_pb,
     build_session,
@@ -157,6 +157,15 @@ def inject_into_mock_database(mockdb):
     return mockdb
 
 
+class AsyncIter:
+    def __init__(self, items):
+        self.items = items
+
+    async def __aiter__(self):
+        for item in self.items:
+            yield item
+
+
 class TestSession(OpenTelemetryBase):
     PROJECT_ID = "project-id"
     INSTANCE_ID = "instance-id"
@@ -180,6 +189,8 @@ class TestSession(OpenTelemetryBase):
     enrich_with_otel_scope(BASE_ATTRIBUTES)
 
     def _getTargetClass(self):
+        from google.cloud.spanner_v1._async.session import Session
+
         return Session
 
     def _make_one(self, *args, **kwargs):
@@ -193,10 +204,19 @@ class TestSession(OpenTelemetryBase):
     ):
         database = mock.create_autospec(Database, instance=True)
         database.name = name
+        database.database_id = name.split("/")[-1]
         database.log_commit_stats = False
         database.database_role = database_role
         database._route_to_leader_enabled = True
         database.default_transaction_options = default_transaction_options
+        database._instance = mock.Mock()
+        database._instance.instance_id = name.split("/")[3]
+        database._instance._client = mock.Mock()
+        database._instance._client.project = name.split("/")[1]
+        database._instance._client._query_options = ExecuteSqlRequest.QueryOptions(
+            optimizer_version="1"
+        )
+        database._instance._client._client_context = None
         inject_into_mock_database(database)
 
         return database
@@ -506,7 +526,7 @@ class TestSession(OpenTelemetryBase):
         with pytest.raises(Unknown) as cm:
             await session.create()
         # Verify the exception has request_id attribute
-        self.assertTrue(hasattr(cm.exception, "request_id"))
+        self.assertTrue(hasattr(cm.value, "request_id"))
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         self.assertSpanAttributes(
@@ -617,7 +637,7 @@ class TestSession(OpenTelemetryBase):
         with pytest.raises(Unknown) as cm:
             await session.exists()
         # Verify the exception has request_id attribute
-        self.assertTrue(hasattr(cm.exception, "request_id"))
+        self.assertTrue(hasattr(cm.value, "request_id"))
 
         req_id = f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.1.1"
         gax_api.get_session.assert_called_once_with(
@@ -946,14 +966,16 @@ class TestSession(OpenTelemetryBase):
         session = self._make_one(database)
         session._session_id = "DEADBEEF"
 
-        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
+        with mock.patch(
+            "google.cloud.spanner_v1._async.session.Snapshot", autospec=True
+        ) as snapshot:
             found = await session.read(
                 TABLE_NAME, COLUMNS, KEYSET, index=INDEX, limit=LIMIT
             )
 
-        self.assertIs(found, snapshot().read.return_value)
+        self.assertIs(found, snapshot.return_value.read.return_value)
 
-        snapshot().read.assert_called_once_with(
+        snapshot.return_value.read.assert_called_once_with(
             TABLE_NAME,
             COLUMNS,
             KEYSET,
@@ -978,12 +1000,14 @@ class TestSession(OpenTelemetryBase):
         session = self._make_one(database)
         session._session_id = "DEADBEEF"
 
-        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
+        with mock.patch(
+            "google.cloud.spanner_v1._async.session.Snapshot", autospec=True
+        ) as snapshot:
             found = await session.execute_sql(SQL)
 
-        self.assertIs(found, snapshot().execute_sql.return_value)
+        self.assertIs(found, snapshot.return_value.execute_sql.return_value)
 
-        snapshot().execute_sql.assert_called_once_with(
+        snapshot.return_value.execute_sql.assert_called_once_with(
             SQL,
             None,
             None,
@@ -1005,14 +1029,16 @@ class TestSession(OpenTelemetryBase):
         params = Struct(fields={"foo": Value(string_value="bar")})
         param_types = {"foo": TypeCode.STRING}
 
-        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
+        with mock.patch(
+            "google.cloud.spanner_v1._async.session.Snapshot", autospec=True
+        ) as snapshot:
             found = await session.execute_sql(
                 SQL, params, param_types, "PLAN", retry=None, timeout=None
             )
 
-        self.assertIs(found, snapshot().execute_sql.return_value)
+        self.assertIs(found, snapshot.return_value.execute_sql.return_value)
 
-        snapshot().execute_sql.assert_called_once_with(
+        snapshot.return_value.execute_sql.assert_called_once_with(
             SQL,
             params,
             param_types,
@@ -1034,12 +1060,14 @@ class TestSession(OpenTelemetryBase):
         params = Struct(fields={"foo": Value(string_value="bar")})
         param_types = {"foo": TypeCode.STRING}
 
-        with mock.patch("google.cloud.spanner_v1.session.Snapshot") as snapshot:
+        with mock.patch(
+            "google.cloud.spanner_v1._async.session.Snapshot", autospec=True
+        ) as snapshot:
             found = await session.execute_sql(SQL, params, param_types, "PLAN")
 
-        self.assertIs(found, snapshot().execute_sql.return_value)
+        self.assertIs(found, snapshot.return_value.execute_sql.return_value)
 
-        snapshot().execute_sql.assert_called_once_with(
+        snapshot.return_value.execute_sql.assert_called_once_with(
             SQL,
             params,
             param_types,
@@ -1180,12 +1208,13 @@ class TestSession(OpenTelemetryBase):
         api = database.spanner_api
         begin_transaction = api.begin_transaction
         streaming_read = api.streaming_read
-        streaming_read.side_effect = [_make_rpc_error(Aborted), []]
+        streaming_read.side_effect = [_make_rpc_error(Aborted), AsyncIter([])]
 
         # Run in transaction.
         async def unit_of_work(transaction):
             await transaction.begin()
-            list(await transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+            async for _ in await transaction.read(TABLE_NAME, COLUMNS, KEYSET):
+                pass
 
         await session.create()
         await session.run_in_transaction(unit_of_work)
@@ -1221,12 +1250,13 @@ class TestSession(OpenTelemetryBase):
         )
 
         streaming_read = api.streaming_read
-        streaming_read.side_effect = [_make_rpc_error(Aborted), []]
+        streaming_read.side_effect = [_make_rpc_error(Aborted), AsyncIter([])]
 
         # Run in transaction.
         async def unit_of_work(transaction):
             await transaction.begin()
-            list(await transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+            async for _ in await transaction.read(TABLE_NAME, COLUMNS, KEYSET):
+                pass
 
         await session.create()
         await session.run_in_transaction(unit_of_work)
@@ -1272,7 +1302,8 @@ class TestSession(OpenTelemetryBase):
         # Run in transaction.
         async def unit_of_work(transaction):
             await transaction.begin()
-            list(await transaction.read(TABLE_NAME, COLUMNS, KEYSET))
+            async for _ in await transaction.read(TABLE_NAME, COLUMNS, KEYSET):
+                pass
 
         await session.create()
         await session.run_in_transaction(unit_of_work)
@@ -1307,7 +1338,7 @@ class TestSession(OpenTelemetryBase):
         ]
         TRANSACTION_ID = b"FACEDACE"
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1396,7 +1427,7 @@ class TestSession(OpenTelemetryBase):
         # Exception has request_id attribute added
         with pytest.raises(Unknown) as context:
             await session.run_in_transaction(unit_of_work)
-        self.assertTrue(hasattr(context.exception, "request_id"))
+        self.assertTrue(hasattr(context.value, "request_id"))
 
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
@@ -1439,7 +1470,7 @@ class TestSession(OpenTelemetryBase):
     @CrossSync.pytest
     async def test_run_in_transaction_w_abort_no_retry_metadata(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         aborted = _make_rpc_error(Aborted, trailing_metadata=[])
         response = CommitResponse(commit_timestamp=now_pb)
@@ -1552,7 +1583,7 @@ class TestSession(OpenTelemetryBase):
         ]
         aborted = _make_rpc_error(Aborted, trailing_metadata=trailing_metadata)
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -1569,7 +1600,10 @@ class TestSession(OpenTelemetryBase):
             called_with.append((txn, args, kw))
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
 
-        with mock.patch("time.sleep") as sleep_mock:
+        with mock.patch(
+            "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+            new_callable=mock.AsyncMock,
+        ) as sleep_mock:
             await session.run_in_transaction(unit_of_work, "abc", some_arg="def")
 
         sleep_mock.assert_called_once_with(RETRY_SECONDS + RETRY_NANOS / 1.0e9)
@@ -1660,7 +1694,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1685,7 +1719,10 @@ class TestSession(OpenTelemetryBase):
                 raise _make_rpc_error(Aborted, trailing_metadata)
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
 
-        with mock.patch("time.sleep") as sleep_mock:
+        with mock.patch(
+            "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+            new_callable=mock.AsyncMock,
+        ) as sleep_mock:
             await session.run_in_transaction(unit_of_work)
 
         sleep_mock.assert_called_once_with(RETRY_SECONDS + RETRY_NANOS / 1.0e9)
@@ -1738,7 +1775,7 @@ class TestSession(OpenTelemetryBase):
         RETRY_SECONDS = 1
         RETRY_NANOS = 3456
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         retry_info = RetryInfo(
@@ -1767,13 +1804,16 @@ class TestSession(OpenTelemetryBase):
             return _results.pop(0)
 
         with mock.patch("time.time", _time):
-            with mock.patch("time.sleep") as sleep_mock:
+            with mock.patch(
+                "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+                new_callable=mock.AsyncMock,
+            ) as sleep_mock:
                 # Exception has request_id attribute added
                 with pytest.raises(Aborted) as context:
                     await session.run_in_transaction(
                         unit_of_work, "abc", timeout_secs=1
                     )
-                self.assertTrue(hasattr(context.exception, "request_id"))
+                self.assertTrue(hasattr(context.value, "request_id"))
 
         sleep_mock.assert_not_called()
 
@@ -1835,24 +1875,27 @@ class TestSession(OpenTelemetryBase):
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
 
         # retry several times to check backoff
-        def _time(_results=[1, 2, 4, 8]):
+        def _time(_results=[1] * 100):
             return _results.pop(0)
 
         with mock.patch("time.time", _time), mock.patch(
             "google.cloud.spanner_v1._helpers.random.random", return_value=0
-        ), mock.patch("time.sleep") as sleep_mock:
+        ), mock.patch(
+            "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+            new_callable=mock.AsyncMock,
+        ) as sleep_mock:
             # Exception has request_id attribute added
             with pytest.raises(Aborted) as context:
                 await session.run_in_transaction(unit_of_work, timeout_secs=8)
-            self.assertTrue(hasattr(context.exception, "request_id"))
+            self.assertTrue(hasattr(context.value, "request_id"))
 
         # unpacking call args into list
         call_args = [call_[0][0] for call_ in sleep_mock.call_args_list]
         call_args = list(map(int, call_args))
-        assert call_args == [2, 4]
-        assert sleep_mock.call_count == 2
+        assert call_args == [2, 4, 8]
+        assert sleep_mock.call_count == 3
 
-        self.assertEqual(len(called_with), 3)
+        self.assertEqual(len(called_with), 4)
         for txn, args, kw in called_with:
             self.assertIsInstance(txn, Transaction)
             self.assertIsNone(txn.committed)
@@ -1910,6 +1953,22 @@ class TestSession(OpenTelemetryBase):
                         ),
                     ],
                 ),
+                mock.call(
+                    request=BeginTransactionRequest(
+                        session=session.name,
+                        options=TransactionOptions(
+                            read_write=TransactionOptions.ReadWrite()
+                        ),
+                    ),
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.7.1",
+                        ),
+                    ],
+                ),
             ],
         )
         request = CommitRequest(
@@ -1954,13 +2013,24 @@ class TestSession(OpenTelemetryBase):
                         ),
                     ],
                 ),
+                mock.call(
+                    request=request,
+                    metadata=[
+                        ("google-cloud-resource-prefix", database.name),
+                        ("x-goog-spanner-route-to-leader", "true"),
+                        (
+                            "x-goog-spanner-request-id",
+                            f"1.{REQ_RAND_PROCESS_ID}.{database._nth_client_id}.{database._channel_id}.8.1",
+                        ),
+                    ],
+                ),
             ],
         )
 
     @CrossSync.pytest
     async def test_run_in_transaction_w_commit_stats_success(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2049,7 +2119,7 @@ class TestSession(OpenTelemetryBase):
         # Exception has request_id attribute added
         with pytest.raises(Unknown) as context:
             await session.run_in_transaction(unit_of_work, "abc", some_arg="def")
-        self.assertTrue(hasattr(context.exception, "request_id"))
+        self.assertTrue(hasattr(context.value, "request_id"))
 
         self.assertEqual(len(called_with), 1)
         txn, args, kw = called_with[0]
@@ -2094,7 +2164,7 @@ class TestSession(OpenTelemetryBase):
     @CrossSync.pytest
     async def test_run_in_transaction_w_transaction_tag(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2163,7 +2233,7 @@ class TestSession(OpenTelemetryBase):
     @CrossSync.pytest
     async def test_run_in_transaction_w_exclude_txn_from_change_streams(self):
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2241,7 +2311,7 @@ class TestSession(OpenTelemetryBase):
         ]
         aborted = _make_rpc_error(Aborted, trailing_metadata=trailing_metadata)
         transaction_pb = TransactionPB(id=TRANSACTION_ID)
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         gax_api = self._make_spanner_api()
@@ -2258,7 +2328,10 @@ class TestSession(OpenTelemetryBase):
             called_with.append((txn, args, kw))
             txn.insert(TABLE_NAME, COLUMNS, VALUES)
 
-        with mock.patch("time.sleep") as sleep_mock:
+        with mock.patch(
+            "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+            new_callable=mock.AsyncMock,
+        ) as sleep_mock:
             await session.run_in_transaction(
                 unit_of_work,
                 "abc",
@@ -2734,7 +2807,10 @@ class TestSession(OpenTelemetryBase):
             with mock.patch(
                 "google.cloud.spanner_v1._helpers._get_retry_delay"
             ) as get_retry_delay_mock:
-                with mock.patch("time.sleep") as sleep_mock:
+                with mock.patch(
+                    "google.cloud.spanner_v1._async._helpers.asyncio.sleep",
+                    new_callable=mock.AsyncMock,
+                ) as sleep_mock:
                     get_retry_delay_mock.return_value = None
 
                     _delay_until_retry(exc_mock, 6, 1)
