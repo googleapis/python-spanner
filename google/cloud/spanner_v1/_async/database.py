@@ -43,15 +43,13 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1 import (
-    DefaultTransactionOptions,
-    ExecuteSqlRequest,
-    RequestOptions,
-    TransactionOptions,
-    TransactionSelector,
-    Type,
-    TypeCode,
-)
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.types.spanner import RequestOptions
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
+from google.cloud.spanner_v1.types.transaction import TransactionSelector
+from google.cloud.spanner_v1.types.type import Type
+from google.cloud.spanner_v1.types.type import TypeCode
 from google.cloud.spanner_v1._async.batch import Batch, MutationGroups
 from google.cloud.spanner_v1._async.database_sessions_manager import (
     DatabaseSessionsManager,
@@ -482,11 +480,11 @@ class Database(object):
                 )
                 return self._spanner_api
             if self._experimental_host is not None:
-                from google.cloud.spanner_v1._helpers import (
-                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
-                )
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
                 )
 
                 if CrossSync.is_async:

@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 import time
 
 from google.api_core.exceptions import Aborted
@@ -7,9 +8,15 @@ from google.api_core.exceptions import Aborted
 async def _delay_until_retry(exc, deadline, attempts, default_retry_delay=None):
     from google.cloud.spanner_v1._helpers import _get_retry_delay
 
-    delay = _get_retry_delay(exc, attempts, default_retry_delay)
-    if time.time() + delay > deadline:
+    cause = exc.errors[0] if hasattr(exc, "errors") and exc.errors else exc
+    now = time.time()
+    if now >= deadline:
         raise exc
+
+    delay = _get_retry_delay(cause, attempts, default_retry_delay)
+    if now + delay > deadline:
+        raise exc
+
     await asyncio.sleep(delay)
 
 
@@ -39,9 +46,14 @@ async def _retry(
     retries = 0
     while True:
         try:
-            return await func()
+            res = func()
+            if asyncio.iscoroutine(res) or inspect.isawaitable(res):
+                return await res
+            return res
         except Exception as e:
-            if allowed_exceptions and type(e) in allowed_exceptions:
+            if allowed_exceptions is not None:
+                if type(e) not in allowed_exceptions:
+                    raise e
                 _check_err = allowed_exceptions.get(type(e))
                 if callable(_check_err) and not _check_err(e):
                     raise e
@@ -80,8 +92,8 @@ def _create_experimental_host_transport(
     Raises:
         ValueError: If TLS/mTLS configuration is invalid.
     """
-    import grpc.aio
     from google.auth.credentials import AnonymousCredentials
+    import grpc.aio
 
     channel = None
     if use_plain_text:

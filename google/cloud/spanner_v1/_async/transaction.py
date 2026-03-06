@@ -14,6 +14,7 @@
 
 """Spanner read-write transaction support."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.transaction"
+
 from dataclasses import dataclass, field
 import functools
 from typing import Any, Optional
@@ -34,17 +35,15 @@ from google.api_core.exceptions import InternalServerError
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1 import (
-    CommitRequest,
-    CommitResponse,
-    ExecuteBatchDmlRequest,
-    ExecuteBatchDmlResponse,
-    ExecuteSqlRequest,
-    Mutation,
-    RequestOptions,
-    ResultSet,
-    TransactionOptions,
-)
+from google.cloud.spanner_v1.types.commit_response import CommitResponse
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.result_set import ResultSet
+from google.cloud.spanner_v1.types.spanner import CommitRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlRequest
+from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlResponse
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1.types.spanner import RequestOptions
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
 from google.cloud.spanner_v1._async._helpers import _retry
 from google.cloud.spanner_v1._async.batch import _BatchBase
 from google.cloud.spanner_v1._async.snapshot import _SnapshotBase
@@ -319,7 +318,7 @@ class Transaction(_SnapshotBase, _BatchBase):
             attempt = AtomicCounter(0)
             nth_request = database._next_nth_request
 
-            def wrapped_method(*args, **kwargs):
+            async def wrapped_method(*args, **kwargs):
                 attempt.increment()
                 commit_request_args = {
                     "mutations": mutations,
@@ -342,7 +341,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                     metadata=call_metadata,
                 )
                 with error_augmenter:
-                    return commit_method(*args, **kwargs)
+                    return await commit_method(*args, **kwargs)
 
             commit_retry_event_name = "Transaction Commit Attempt Failed. Retrying"
 
@@ -533,7 +532,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if self._transaction_id is None:
             is_inline_begin = True
-            self._lock.acquire()
+            await self._lock.acquire()
 
         execute_sql_request = ExecuteSqlRequest(
             session=session.name,
@@ -551,7 +550,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         nth_request = database._next_nth_request
         attempt = AtomicCounter(0)
 
-        def wrapped_method(*args, **kwargs):
+        async def wrapped_method(*args, **kwargs):
             attempt.increment()
             call_metadata, error_augmenter = database.with_error_augmentation(
                 nth_request, attempt.value, metadata
@@ -564,7 +563,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 timeout=timeout,
             )
             with error_augmenter:
-                return execute_sql_method(*args, **kwargs)
+                return await execute_sql_method(*args, **kwargs)
 
         result_set_pb: ResultSet = await self._execute_request(
             wrapped_method,
@@ -693,7 +692,7 @@ class Transaction(_SnapshotBase, _BatchBase):
 
         if self._transaction_id is None:
             is_inline_begin = True
-            self._lock.acquire()
+            await self._lock.acquire()
 
         execute_batch_dml_request = ExecuteBatchDmlRequest(
             session=session.name,
@@ -707,7 +706,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         nth_request = database._next_nth_request
         attempt = AtomicCounter(0)
 
-        def wrapped_method(*args, **kwargs):
+        async def wrapped_method(*args, **kwargs):
             attempt.increment()
             call_metadata, error_augmenter = database.with_error_augmentation(
                 nth_request, attempt.value, metadata
@@ -720,7 +719,7 @@ class Transaction(_SnapshotBase, _BatchBase):
                 timeout=timeout,
             )
             with error_augmenter:
-                return execute_batch_dml_method(*args, **kwargs)
+                return await execute_batch_dml_method(*args, **kwargs)
 
         response_pb: ExecuteBatchDmlResponse = await self._execute_request(
             wrapped_method,
@@ -733,7 +732,7 @@ class Transaction(_SnapshotBase, _BatchBase):
         self._update_for_execute_batch_dml_response_pb(response_pb)
 
         if is_inline_begin:
-            await self._lock.release()
+            self._lock.release()
 
         if (
             len(response_pb.result_sets) > 0

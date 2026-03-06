@@ -43,7 +43,7 @@ try:
 except ImportError:  # pragma: NO COVER
     HAS_OPENTELEMETRY_INSTALLED = False
 
-from google.cloud.spanner_v1 import __version__
+from google.cloud.spanner_v1.gapic_version import __version__
 
 
 class MetricsTracerFactory:

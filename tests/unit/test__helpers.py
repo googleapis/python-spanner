@@ -13,6 +13,8 @@
 # limitations under the License.
 
 
+import datetime
+from datetime import timezone
 import unittest
 import uuid
 
@@ -228,8 +230,6 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, "Infinity")
 
     def test_w_date(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
         today = datetime.date.today()
@@ -238,8 +238,6 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, today.isoformat())
 
     def test_w_date_pre1000ad(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
         when = datetime.date(800, 2, 25)
@@ -248,26 +246,22 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, "0800-02-25")
 
     def test_w_timestamp_w_nanos(self):
-        import datetime
-
         from google.api_core import datetime_helpers
         from google.protobuf.struct_pb2 import Value
 
         when = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
+            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=timezone.utc
         )
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "2016-12-20T21:13:47.123456789Z")
 
     def test_w_timestamp_w_nanos_pre1000ad(self):
-        import datetime
-
         from google.api_core import datetime_helpers
         from google.protobuf.struct_pb2 import Value
 
         when = datetime_helpers.DatetimeWithNanoseconds(
-            850, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
+            850, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=timezone.utc
         )
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
@@ -284,28 +278,22 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.list_value, list_value)
 
     def test_w_datetime(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
-        when = datetime.datetime(2021, 2, 8, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        when = datetime.datetime(2021, 2, 8, 0, 0, 0, tzinfo=timezone.utc)
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "2021-02-08T00:00:00.000000Z")
 
     def test_w_datetime_pre1000ad(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
-        when = datetime.datetime(916, 2, 8, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        when = datetime.datetime(916, 2, 8, 0, 0, 0, tzinfo=timezone.utc)
         value_pb = self._callFUT(when)
         self.assertIsInstance(value_pb, Value)
         self.assertEqual(value_pb.string_value, "0916-02-08T00:00:00.000000Z")
 
     def test_w_timestamp_w_tz(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
         zone = datetime.timezone(datetime.timedelta(hours=+1), name="CET")
@@ -315,8 +303,6 @@ class Test_make_value_pb(unittest.TestCase):
         self.assertEqual(value_pb.string_value, "2021-02-07T23:00:00.000000Z")
 
     def test_w_timestamp_w_tz_pre1000ad(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
         zone = datetime.timezone(datetime.timedelta(hours=+1), name="CET")
@@ -622,8 +608,6 @@ class Test_parse_value_pb(unittest.TestCase):
         )
 
     def test_w_date(self):
-        import datetime
-
         from google.protobuf.struct_pb2 import Value
 
         from google.cloud.spanner_v1 import Type, TypeCode
@@ -636,15 +620,13 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(self._callFUT(value_pb, field_type, field_name), VALUE)
 
     def test_w_timestamp_wo_nanos(self):
-        import datetime
-
         from google.api_core import datetime_helpers
         from google.protobuf.struct_pb2 import Value
 
         from google.cloud.spanner_v1 import Type, TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=datetime.timezone.utc
+            2016, 12, 20, 21, 13, 47, microsecond=123456, tzinfo=timezone.utc
         )
         field_type = Type(code=TypeCode.TIMESTAMP)
         field_name = "nanos_column"
@@ -655,15 +637,13 @@ class Test_parse_value_pb(unittest.TestCase):
         self.assertEqual(parsed, value)
 
     def test_w_timestamp_w_nanos(self):
-        import datetime
-
         from google.api_core import datetime_helpers
         from google.protobuf.struct_pb2 import Value
 
         from google.cloud.spanner_v1 import Type, TypeCode
 
         value = datetime_helpers.DatetimeWithNanoseconds(
-            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=datetime.timezone.utc
+            2016, 12, 20, 21, 13, 47, nanosecond=123456789, tzinfo=timezone.utc
         )
         field_type = Type(code=TypeCode.TIMESTAMP)
         field_name = "timestamp_column"

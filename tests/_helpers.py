@@ -1,5 +1,5 @@
 from os import getenv
-import unittest
+from unittest import IsolatedAsyncioTestCase
 
 import mock
 
@@ -85,12 +85,17 @@ def use_test_ot_exporter():
     _TEST_OT_PROVIDER_INITIALIZED = True
 
 
-class OpenTelemetryBase(unittest.TestCase):
+class OpenTelemetryBase(IsolatedAsyncioTestCase):
     @classmethod
     def setUpClass(cls):
         if HAS_OPENTELEMETRY_INSTALLED:
             use_test_ot_exporter()
             cls.ot_exporter = get_test_ot_exporter()
+
+    def setUp(self):
+        super().setUp()
+        if HAS_OPENTELEMETRY_INSTALLED:
+            self.ot_exporter.clear()
 
     def tearDown(self):
         if HAS_OPENTELEMETRY_INSTALLED:

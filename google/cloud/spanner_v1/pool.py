@@ -22,8 +22,8 @@ import time
 from warnings import warn
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1 import BatchCreateSessionsRequest
-from google.cloud.spanner_v1 import Session as SessionProto
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
@@ -36,7 +36,9 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 
-_NOW = datetime.datetime.utcnow
+
+def _NOW():
+    return datetime.datetime.now(datetime.timezone.utc)
 
 
 class SessionCheckout(object):

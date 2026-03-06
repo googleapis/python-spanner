@@ -1,5 +1,4 @@
 from datetime import timedelta
-import pytest
 
 # Copyright 2016 Google LLC All rights reserved.
 #
@@ -14,11 +13,12 @@ import pytest
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-from threading import Lock
 from typing import Mapping
+
 from google.api_core import gapic_v1
 from google.api_core.retry import Retry
 import mock
+import pytest
 
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_v1 import (
@@ -34,6 +34,8 @@ from google.cloud.spanner_v1 import (
     TypeCode,
     _opentelemetry_tracing,
 )
+from google.cloud.spanner_v1._async.database import Database
+from google.cloud.spanner_v1._async.transaction import Transaction
 from google.cloud.spanner_v1._helpers import (
     GOOGLE_CLOUD_REGION_GLOBAL,
     AtomicCounter,
@@ -42,12 +44,10 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id_and_req_id,
 )
 from google.cloud.spanner_v1.batch import _make_write_pb
-from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.request_id_header import (
     REQ_RAND_PROCESS_ID,
     build_request_id,
 )
-from google.cloud.spanner_v1.transaction import Transaction
 from tests._builders import (
     build_commit_response_pb,
     build_precommit_token_pb,
@@ -96,6 +96,12 @@ INSERT_MUTATION = Mutation(insert=_make_write_pb(TABLE_NAME, COLUMNS, VALUES))
 UPDATE_MUTATION = Mutation(update=_make_write_pb(TABLE_NAME, COLUMNS, VALUES))
 
 
+@CrossSync.convert_class(
+    replace_symbols={
+        "google.cloud.spanner_v1._async": "google.cloud.spanner_v1",
+        "tests.unit._async": "tests.unit",
+    }
+)
 class TestTransaction(OpenTelemetryBase):
     PROJECT_ID = "project-id"
     INSTANCE_ID = "instance-id"
@@ -106,19 +112,20 @@ class TestTransaction(OpenTelemetryBase):
     SESSION_NAME = DATABASE_NAME + "/sessions/" + SESSION_ID
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.transaction import Transaction
+        from google.cloud.spanner_v1._async.transaction import Transaction
 
         return Transaction
 
     def _make_one(self, session, *args, **kwargs):
-        transaction = self._getTargetClass()(session, *args, **kwargs)
+        TransactionClass = self._getTargetClass()
+        transaction = TransactionClass(session, *args, **kwargs)
         session._transaction = transaction
         return transaction
 
     def _make_spanner_api(self):
-        from google.cloud.spanner_v1 import SpannerClient
+        from google.cloud.spanner_v1 import SpannerAsyncClient
 
-        return mock.create_autospec(SpannerClient, instance=True)
+        return mock.create_autospec(SpannerAsyncClient, instance=True)
 
     @CrossSync.pytest
     async def test_ctor_defaults(self):
@@ -135,7 +142,7 @@ class TestTransaction(OpenTelemetryBase):
         self.assertEqual(transaction._read_request_count, 0)
         self.assertIsNone(transaction._transaction_id)
         self.assertIsNone(transaction._precommit_token)
-        self.assertIsInstance(transaction._lock, type(Lock()))
+        self.assertIsInstance(transaction._lock, CrossSync.Lock)
 
         # Attributes from _BatchBase
         self.assertEqual(transaction._mutations, [])
@@ -762,7 +769,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction._transaction_id = TRANSACTION_ID
 
         with pytest.raises(RuntimeError):
-            transaction.execute_update(DML_QUERY)
+            await transaction.execute_update(DML_QUERY)
 
     async def _execute_update_helper(
         self,
@@ -817,7 +824,7 @@ class TestTransaction(OpenTelemetryBase):
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
-        row_count = transaction.execute_update(
+        row_count = await transaction.execute_update(
             DML_QUERY_WITH_PARAM,
             PARAMS,
             PARAM_TYPES,
@@ -994,7 +1001,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction._transaction_id = TRANSACTION_ID
 
         with pytest.raises(RuntimeError):
-            transaction.execute_update(DML_QUERY)
+            await transaction.execute_update(DML_QUERY)
 
         self.assertEqual(transaction._execute_sql_request_count, 1)
 
@@ -1052,7 +1059,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction._transaction_id = TRANSACTION_ID
 
         with pytest.raises(RuntimeError):
-            transaction.batch_update(statements=[DML_QUERY])
+            await transaction.batch_update(statements=[DML_QUERY])
 
     async def _batch_update_helper(
         self,
@@ -1138,7 +1145,7 @@ class TestTransaction(OpenTelemetryBase):
         elif type(request_options) is dict:
             request_options = RequestOptions(request_options)
 
-        status, row_counts = transaction.batch_update(
+        status, row_counts = await transaction.batch_update(
             dml_statements,
             request_options=request_options,
             retry=retry,
@@ -1314,7 +1321,7 @@ class TestTransaction(OpenTelemetryBase):
         ]
 
         with pytest.raises(RuntimeError):
-            transaction.batch_update(dml_statements)
+            await transaction.batch_update(dml_statements)
 
         self.assertEqual(transaction._execute_sql_request_count, 1)
 
@@ -1361,7 +1368,7 @@ class TestTransaction(OpenTelemetryBase):
         database = session._database
         commit = database.spanner_api.commit
 
-        with transaction:
+        async with transaction:
             transaction.insert(TABLE_NAME, COLUMNS, VALUES)
 
         self.assertEqual(transaction.committed, commit.return_value.commit_timestamp)
@@ -1396,7 +1403,7 @@ class TestTransaction(OpenTelemetryBase):
         transaction = self._make_one(session)
 
         with pytest.raises(Exception):
-            with transaction:
+            async with transaction:
                 transaction.insert(TABLE_NAME, COLUMNS, VALUES)
                 raise Exception("bail out")
 
@@ -1460,6 +1467,8 @@ class _Client(object):
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
         self.log_commit_stats = False
+        self.project = "project-id"
+        self._client_context = None
 
     @property
     def _next_nth_request(self):
@@ -1473,10 +1482,15 @@ class _Instance(object):
         self.project = "project-id"
         self._instance_id = "instance-id"
 
+    @property
+    def instance_id(self):
+        return self._instance_id
+
 
 class _Database(object):
     def __init__(self):
         self.name = "testing"
+        self.database_id = "database-id"
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None

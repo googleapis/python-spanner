@@ -1,12 +1,15 @@
 import asyncio
-import mock
-import pytest
+import datetime
+from datetime import timezone
 from unittest import IsolatedAsyncioTestCase
 
 from google.api_core import gapic_v1
 from google.api_core.retry import Retry
 from google.protobuf.field_mask_pb2 import FieldMask
+import mock
+import pytest
 
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import (
@@ -26,8 +29,6 @@ from google.cloud.spanner_v1.param_types import INT64
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
 from tests._builders import build_spanner_api
 from tests._helpers import is_multiplexed_enabled
-
-from google.cloud.aio._cross_sync import CrossSync
 
 # Copyright 2016 Google LLC All rights reserved.
 #
@@ -108,16 +109,12 @@ class _BaseTest(IsolatedAsyncioTestCase):
 
     @staticmethod
     def _make_timestamp():
-        import datetime
-
         from google.cloud._helpers import UTC
 
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        return datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
 
     @staticmethod
     def _make_duration(seconds=1, microseconds=0):
-        import datetime
-
         return datetime.timedelta(seconds=seconds, microseconds=microseconds)
 
 
@@ -1676,13 +1673,11 @@ class TestDatabase(_BaseTest):
 
     @CrossSync.pytest
     async def test_snapshot_w_read_timestamp_and_multi_use(self):
-        import datetime
-
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1._async.database import SnapshotCheckout
         from google.cloud.spanner_v1._async.snapshot import Snapshot
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
@@ -1797,8 +1792,6 @@ class TestDatabase(_BaseTest):
 
     @CrossSync.pytest
     async def test_run_in_transaction_wo_args(self):
-        import datetime
-
         NOW = datetime.datetime.now()
         client = _Client(observability_options=dict(enable_end_to_end_tracing=True))
         instance = _Instance(self.INSTANCE_NAME, client=client)
@@ -1825,8 +1818,6 @@ class TestDatabase(_BaseTest):
 
     @CrossSync.pytest
     async def test_run_in_transaction_w_args(self):
-        import datetime
-
         SINCE = datetime.datetime(2017, 1, 1)
         UNTIL = datetime.datetime(2018, 1, 1)
         NOW = datetime.datetime.now()
@@ -2290,8 +2281,6 @@ class TestBatchCheckout(_BaseTest):
 
     @CrossSync.pytest
     async def test_context_mgr_success(self):
-        import datetime
-
         from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
         from google.cloud.spanner_v1 import (
             CommitRequest,
@@ -2300,7 +2289,7 @@ class TestBatchCheckout(_BaseTest):
         )
         from google.cloud.spanner_v1._async.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database(self.DATABASE_NAME)
@@ -2344,8 +2333,6 @@ class TestBatchCheckout(_BaseTest):
 
     @CrossSync.pytest
     async def test_context_mgr_w_commit_stats_success(self):
-        import datetime
-
         from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
         from google.cloud.spanner_v1 import (
             CommitRequest,
@@ -2354,7 +2341,7 @@ class TestBatchCheckout(_BaseTest):
         )
         from google.cloud.spanner_v1._async.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2506,12 +2493,10 @@ class TestSnapshotCheckout(_BaseTest):
 
     @CrossSync.pytest
     async def test_ctor_w_read_timestamp_and_multi_use(self):
-        import datetime
-
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1._async.snapshot import Snapshot
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
         pool = database._pool = _Pool()
@@ -3574,8 +3559,6 @@ class TestMutationGroupsCheckout(_BaseTest):
 
     @CrossSync.pytest
     async def test_context_mgr_success(self):
-        import datetime
-
         from google.rpc.status_pb2 import Status
 
         from google.cloud._helpers import UTC, _datetime_to_pb_timestamp
@@ -3587,7 +3570,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         from google.cloud.spanner_v1._async.batch import MutationGroups
         from google.cloud.spanner_v1._helpers import _make_list_value_pbs
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         status_pb = Status(code=200)
         response = BatchWriteResponse(

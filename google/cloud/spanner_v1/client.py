@@ -52,11 +52,9 @@ from google.cloud.spanner_admin_instance_v1 import (
     ListInstanceConfigsRequest,
     ListInstancesRequest,
 )
-from google.cloud.spanner_v1 import (
-    DefaultTransactionOptions,
-    ExecuteSqlRequest,
-    __version__,
-)
+from google.cloud.spanner_v1.gapic_version import __version__
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _validate_client_context
 from google.cloud.spanner_v1.instance import Instance
 from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix

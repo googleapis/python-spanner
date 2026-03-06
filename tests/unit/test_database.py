@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from datetime import timezone
 import unittest
 
 from google.api_core import gapic_v1
@@ -90,7 +91,7 @@ class _BaseTest(unittest.TestCase):
 
         from google.cloud._helpers import UTC
 
-        return datetime.datetime.utcnow().replace(tzinfo=UTC)
+        return datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
 
     @staticmethod
     def _make_duration(seconds=1, microseconds=0):
@@ -1586,7 +1587,7 @@ class TestDatabase(_BaseTest):
         from google.cloud.spanner_v1.database import SnapshotCheckout
         from google.cloud.spanner_v1.snapshot import Snapshot
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
@@ -2168,7 +2169,7 @@ class TestBatchCheckout(_BaseTest):
         )
         from google.cloud.spanner_v1.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         response = CommitResponse(commit_timestamp=now_pb)
         database = _Database(self.DATABASE_NAME)
@@ -2221,7 +2222,7 @@ class TestBatchCheckout(_BaseTest):
         )
         from google.cloud.spanner_v1.batch import Batch
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         commit_stats = CommitResponse.CommitStats(mutation_count=4)
         response = CommitResponse(commit_timestamp=now_pb, commit_stats=commit_stats)
@@ -2374,7 +2375,7 @@ class TestSnapshotCheckout(_BaseTest):
         from google.cloud._helpers import UTC
         from google.cloud.spanner_v1.snapshot import Snapshot
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         database = _Database(self.DATABASE_NAME)
         session = _Session(database)
         pool = database._pool = _Pool()
@@ -3385,7 +3386,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         from google.cloud.spanner_v1._helpers import _make_list_value_pbs
         from google.cloud.spanner_v1.batch import MutationGroups
 
-        now = datetime.datetime.utcnow().replace(tzinfo=UTC)
+        now = datetime.datetime.now(timezone.utc).replace(tzinfo=UTC)
         now_pb = _datetime_to_pb_timestamp(now)
         status_pb = Status(code=200)
         response = BatchWriteResponse(

@@ -16,14 +16,6 @@
 import logging
 from typing import Dict, List, NoReturn, Optional, Tuple, Union
 
-from google.api_core.retry import Retry
-from google.api_core.exceptions import (
-    InvalidArgument,
-    ResourceExhausted,
-    ServiceUnavailable,
-    DeadlineExceeded,
-)
-
 from google.api.distribution_pb2 import (
     Distribution,
 )  # pylint: disable=no-name-in-module
@@ -34,6 +26,13 @@ from google.api.metric_pb2 import Metric as GMetric  # pylint: disable=no-name-i
 from google.api.monitored_resource_pb2 import (
     MonitoredResource,
 )  # pylint: disable=no-name-in-module
+from google.api_core.exceptions import (
+    DeadlineExceeded,
+    InvalidArgument,
+    ResourceExhausted,
+    ServiceUnavailable,
+)
+from google.api_core.retry import Retry
 import google.auth
 from google.auth import credentials as ga_credentials
 

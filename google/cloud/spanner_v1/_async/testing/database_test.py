@@ -12,8 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from google.api_core import grpc_helpers
-from google.api_core import grpc_helpers_async
+from google.api_core import grpc_helpers, grpc_helpers_async
 import google.auth.credentials
 import grpc
 
@@ -27,16 +26,20 @@ from google.cloud.spanner_v1.services.spanner.transports import (
 )
 
 if CrossSync.is_async:
+    from google.cloud.spanner_v1._async.testing.interceptors import (
+        MethodAbortAsyncInterceptor as MethodAbortInterceptor,
+    )
+    from google.cloud.spanner_v1._async.testing.interceptors import (
+        MethodCountAsyncInterceptor as MethodCountInterceptor,
+    )
+    from google.cloud.spanner_v1._async.testing.interceptors import (
+        XGoogRequestIDHeaderAsyncInterceptor as XGoogRequestIDHeaderInterceptor,
+    )
     from google.cloud.spanner_v1.services.spanner.async_client import (
         SpannerAsyncClient as SpannerClient,
     )
-    from google.cloud.spanner_v1._async.testing.interceptors import (
-        MethodAbortAsyncInterceptor as MethodAbortInterceptor,
-        MethodCountAsyncInterceptor as MethodCountInterceptor,
-        XGoogRequestIDHeaderAsyncInterceptor as XGoogRequestIDHeaderInterceptor,
-    )
 else:
-    from google.cloud.spanner_v1 import SpannerClient
+    from google.cloud.spanner_v1.services.spanner.client import SpannerClient
     from google.cloud.spanner_v1.testing.interceptors import (
         MethodAbortInterceptor,
         MethodCountInterceptor,
@@ -119,11 +122,11 @@ class TestDatabase(Database):
                 self._x_goog_request_id_interceptor = XGoogRequestIDHeaderInterceptor()
                 self._interceptors.append(self._x_goog_request_id_interceptor)
 
-                from google.cloud.spanner_v1._helpers import (
-                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
-                )
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
+                )
+                from google.cloud.spanner_v1._helpers import (
+                    _create_experimental_host_transport as _create_experimental_host_transport_sync,
                 )
 
                 if CrossSync.is_async:
