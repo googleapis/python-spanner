@@ -17,13 +17,13 @@
 
 """Pools managing shared Session objects."""
 
+import asyncio
 import datetime
-import queue
 import time
 from warnings import warn
-
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
+from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -34,7 +34,6 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
 from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 
@@ -188,9 +187,7 @@ class AbstractSessionPool(object):
         import warnings
 
         warnings.warn(
-            "Sessions should be checked out indirectly using context "
-            "managers or Database.run_in_transaction, rather than "
-            "checked out directly from the pool.",
+            "Sessions should be checked out indirectly using context managers or Database.run_in_transaction, rather than checked out directly from the pool.",
             DeprecationWarning,
             stacklevel=2,
         )
@@ -359,7 +356,7 @@ class FixedSizePool(AbstractSessionPool):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: an existing session from the pool, or a newly-created
                   session.
-        :raises: :exc:`queue.Empty` if the queue is empty."""
+        :raises: :exc:`CrossSync._Sync_Impl.QueueEmpty` if the queue is empty."""
         if timeout is None:
             timeout = self.default_timeout
         start_time = time.time()
@@ -390,7 +387,7 @@ class FixedSizePool(AbstractSessionPool):
             span_event_attributes["session.id"] = session._session_id
             span_event_attributes["time.elapsed"] = time.time() - start_time
             add_span_event(current_span, "Acquired session", span_event_attributes)
-        except queue.Empty as e:
+        except CrossSync._Sync_Impl.QueueEmpty as e:
             add_span_event(
                 current_span, "No sessions available in the pool", span_event_attributes
             )
@@ -412,8 +409,8 @@ class FixedSizePool(AbstractSessionPool):
         """Delete all sessions in the pool."""
         while True:
             try:
-                session = self._sessions.get(block=False)
-            except queue.Empty:
+                session = CrossSync._Sync_Impl.queue_get(self._sessions, block=False)
+            except CrossSync._Sync_Impl.QueueEmpty:
                 break
             else:
                 session.delete()
@@ -473,7 +470,7 @@ class BurstyPool(AbstractSessionPool):
                 span_event_attributes,
             )
             session = CrossSync._Sync_Impl.queue_get(self._sessions, block=False)
-        except CrossSync._Sync_Impl.QueueEmpty:
+        except (CrossSync._Sync_Impl.QueueEmpty, asyncio.QueueEmpty):
             add_span_event(
                 current_span,
                 "No sessions available in pool. Creating session",
@@ -502,7 +499,7 @@ class BurstyPool(AbstractSessionPool):
         :param session: the session being returned."""
         try:
             CrossSync._Sync_Impl.queue_put(self._sessions, session, block=False)
-        except queue.Full:
+        except CrossSync._Sync_Impl.QueueFull:
             try:
                 session.delete()
             except NotFound:
@@ -512,8 +509,8 @@ class BurstyPool(AbstractSessionPool):
         """Delete all sessions in the pool."""
         while True:
             try:
-                session = self._sessions.get(block=False)
-            except queue.Empty:
+                session = CrossSync._Sync_Impl.queue_get(self._sessions, block=False)
+            except CrossSync._Sync_Impl.QueueEmpty:
                 break
             else:
                 session.delete()
@@ -661,7 +658,7 @@ class PingingPool(FixedSizePool):
             ping_after, session = CrossSync._Sync_Impl.queue_get(
                 self._sessions, block=True, timeout=timeout
             )
-        except queue.Empty as e:
+        except CrossSync._Sync_Impl.QueueEmpty as e:
             add_span_event(
                 current_span,
                 "No sessions available in the pool within the specified timeout",
@@ -691,16 +688,19 @@ class PingingPool(FixedSizePool):
         :param session: the session being returned.
 
         :raises: :exc:`queue.Full` if the queue is full."""
-        CrossSync._Sync_Impl.queue_put(
-            self._sessions, (_NOW() + self._delta, session), block=False
-        )
+        try:
+            CrossSync._Sync_Impl.queue_put(
+                self._sessions, (_NOW() + self._delta, session), block=False
+            )
+        except CrossSync._Sync_Impl.QueueFull:
+            raise CrossSync._Sync_Impl.QueueFull()
 
     def clear(self):
         """Delete all sessions in the pool."""
         while True:
             try:
                 _, session = CrossSync._Sync_Impl.queue_get(self._sessions, block=False)
-            except queue.Empty:
+            except CrossSync._Sync_Impl.QueueEmpty:
                 break
             else:
                 session.delete()
@@ -715,7 +715,7 @@ class PingingPool(FixedSizePool):
                 ping_after, session = CrossSync._Sync_Impl.queue_get(
                     self._sessions, block=False
                 )
-            except queue.Empty:
+            except CrossSync._Sync_Impl.QueueEmpty:
                 break
             if ping_after > _NOW():
                 CrossSync._Sync_Impl.queue_put(self._sessions, (ping_after, session))

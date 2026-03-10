@@ -20,9 +20,8 @@
 import functools
 import time
 from typing import List, Optional
-
 from google.api_core.exceptions import InternalServerError
-
+from google.cloud.spanner_v1._helpers import _retry, _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _check_rst_stream_error,
@@ -32,8 +31,6 @@ from google.cloud.spanner_v1._helpers import (
     _merge_Transaction_Options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
-    _retry,
-    _retry_on_aborted_exception,
     _SessionWrapper,
     _validate_client_context,
 )

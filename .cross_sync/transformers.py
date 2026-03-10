@@ -38,7 +38,35 @@ sys.path.append(os.path.join(repo_root, "google", "cloud", "aio", "_cross_sync")
 from _decorators import AstDecorator
 
 
-class SymbolReplacer(ast.NodeTransformer):
+from _decorators import AstDecorator
+
+
+class CrossSyncTransformer(ast.NodeTransformer):
+    """
+    Base class for CrossSync AST transformers that provides shared logic
+    for rewriting imports and symbol names.
+    """
+
+    def visit_ImportFrom(self, node):
+        if node.module:
+            if "_async" in node.module:
+                node.module = (
+                    node.module.replace("._async", "")
+                    .replace("_async.", "")
+                    .replace("_async", "")
+                )
+            if "async_client" in node.module:
+                node.module = node.module.replace("async_client", "client")
+        # Also replace AsyncClient with Client in the names!
+        for alias in node.names:
+            if "AsyncClient" in alias.name:
+                alias.name = alias.name.replace("AsyncClient", "Client")
+            if alias.name == "AsyncRetry":
+                alias.name = "Retry"
+        return self.generic_visit(node)
+
+
+class SymbolReplacer(CrossSyncTransformer):
     """
     Replaces all instances of a symbol in an AST with a replacement
 
@@ -63,17 +91,6 @@ class SymbolReplacer(ast.NodeTransformer):
         )
 
 
-    def visit_ImportFrom(self, node):
-        if node.module:
-            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
-            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
-        # Also replace AsyncClient with Client in the names!
-        for alias in node.names:
-            if "AsyncClient" in alias.name:
-                alias.name = alias.name.replace("AsyncClient", "Client")
-            if alias.name == "AsyncRetry":
-                alias.name = "Retry"
-        return self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node):
         """
@@ -106,7 +123,7 @@ class SymbolReplacer(ast.NodeTransformer):
         return node
 
 
-class AsyncToSync(ast.NodeTransformer):
+class AsyncToSync(CrossSyncTransformer):
     """
     Replaces or strips all async keywords from a given AST
     """
@@ -143,17 +160,6 @@ class AsyncToSync(ast.NodeTransformer):
         )
 
 
-    def visit_ImportFrom(self, node):
-        if node.module:
-            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
-            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
-        # Also replace AsyncClient with Client in the names!
-        for alias in node.names:
-            if "AsyncClient" in alias.name:
-                alias.name = alias.name.replace("AsyncClient", "Client")
-            if alias.name == "AsyncRetry":
-                alias.name = "Retry"
-        return self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node):
         """
@@ -278,7 +284,7 @@ class StripAsyncConditionalBranches(ast.NodeTransformer):
         return False
 
 
-class CrossSyncFileProcessor(ast.NodeTransformer):
+class CrossSyncFileProcessor(CrossSyncTransformer):
     """
     Visits a file, looking for __CROSS_SYNC_OUTPUT__ annotations
 
@@ -360,17 +366,6 @@ class CrossSyncFileProcessor(ast.NodeTransformer):
         return self.visit_AsyncFunctionDef(node)
 
 
-    def visit_ImportFrom(self, node):
-        if node.module:
-            if "_async" in node.module: node.module = node.module.replace("._async", "").replace("_async.", "").replace("_async", "")
-            if "async_client" in node.module: node.module = node.module.replace("async_client", "client")
-        # Also replace AsyncClient with Client in the names!
-        for alias in node.names:
-            if "AsyncClient" in alias.name:
-                alias.name = alias.name.replace("AsyncClient", "Client")
-            if alias.name == "AsyncRetry":
-                alias.name = "Retry"
-        return self.generic_visit(node)
 
     def visit_AsyncFunctionDef(self, node):
         """
