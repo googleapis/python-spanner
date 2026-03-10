@@ -701,9 +701,6 @@ def test_transaction_read_and_insert_then_rollback(
         multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_WRITE)
 
         span_list = ot_exporter.get_finished_spans()
-        print("DEBUG: Actual span names:")
-        for i, span in enumerate(span_list):
-            print(f"{i}: {span.name}")
 
         # Determine the first request ID from the spans,
         # and use an atomic counter to track it.

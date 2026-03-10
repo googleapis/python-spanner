@@ -60,7 +60,9 @@ async def _retry(
             if retries >= retry_count:
                 raise e
             if before_next_retry:
-                before_next_retry(retries, delay)
+                res = before_next_retry(retries, delay)
+                if asyncio.iscoroutine(res) or inspect.isawaitable(res):
+                    await res
             await asyncio.sleep(delay)
             retries += 1
 

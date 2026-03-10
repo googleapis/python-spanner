@@ -66,15 +66,13 @@ from google.cloud.spanner_admin_instance_v1 import (
     ListInstanceConfigsRequest,
     ListInstancesRequest,
 )
-from google.cloud.spanner_v1.gapic_version import __version__
-from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
-from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
+from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import (
     _create_experimental_host_transport,
     _validate_client_context,
 )
-from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1.gapic_version import __version__
 from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
     CloudMonitoringMetricsExporter,
@@ -82,6 +80,8 @@ from google.cloud.spanner_v1.metrics.metrics_exporter import (
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
+from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 
 try:
     from opentelemetry import metrics

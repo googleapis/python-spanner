@@ -20,14 +20,6 @@ import functools
 import time
 from typing import List, Optional
 from google.api_core.exceptions import InternalServerError
-from google.cloud.spanner_v1 import (
-    BatchWriteRequest,
-    CommitRequest,
-    CommitResponse,
-    Mutation,
-    RequestOptions,
-    TransactionOptions,
-)
 from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
@@ -43,6 +35,14 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.types.commit_response import CommitResponse
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.spanner import (
+    BatchWriteRequest,
+    CommitRequest,
+    RequestOptions,
+)
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 

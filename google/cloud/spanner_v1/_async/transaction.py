@@ -35,15 +35,6 @@ from google.api_core.exceptions import InternalServerError
 from google.protobuf.struct_pb2 import Struct
 
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1.types.commit_response import CommitResponse
-from google.cloud.spanner_v1.types.mutation import Mutation
-from google.cloud.spanner_v1.types.result_set import ResultSet
-from google.cloud.spanner_v1.types.spanner import CommitRequest
-from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlRequest
-from google.cloud.spanner_v1.types.spanner import ExecuteBatchDmlResponse
-from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
-from google.cloud.spanner_v1.types.spanner import RequestOptions
-from google.cloud.spanner_v1.types.transaction import TransactionOptions
 from google.cloud.spanner_v1._async._helpers import _retry
 from google.cloud.spanner_v1._async.batch import _BatchBase
 from google.cloud.spanner_v1._async.snapshot import _SnapshotBase
@@ -58,6 +49,17 @@ from google.cloud.spanner_v1._helpers import (
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import add_span_event, trace_call
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.types.commit_response import CommitResponse
+from google.cloud.spanner_v1.types.mutation import Mutation
+from google.cloud.spanner_v1.types.result_set import ResultSet
+from google.cloud.spanner_v1.types.spanner import (
+    CommitRequest,
+    ExecuteBatchDmlRequest,
+    ExecuteBatchDmlResponse,
+    ExecuteSqlRequest,
+    RequestOptions,
+)
+from google.cloud.spanner_v1.types.transaction import TransactionOptions
 
 
 class Transaction(_SnapshotBase, _BatchBase):

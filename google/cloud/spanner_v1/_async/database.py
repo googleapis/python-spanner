@@ -43,13 +43,6 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
-from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
-from google.cloud.spanner_v1.types.spanner import RequestOptions
-from google.cloud.spanner_v1.types.transaction import TransactionOptions
-from google.cloud.spanner_v1.types.transaction import TransactionSelector
-from google.cloud.spanner_v1.types.type import Type
-from google.cloud.spanner_v1.types.type import TypeCode
 from google.cloud.spanner_v1._async.batch import Batch, MutationGroups
 from google.cloud.spanner_v1._async.database_sessions_manager import (
     DatabaseSessionsManager,
@@ -72,7 +65,16 @@ from google.cloud.spanner_v1.merged_result_set import MergedResultSet
 from google.cloud.spanner_v1.services.spanner.async_client import (
     SpannerAsyncClient as SpannerClient,
 )
-from google.cloud.spanner_v1.transaction import BatchTransactionId
+from google.cloud.spanner_v1.transaction import (
+    BatchTransactionId,
+    DefaultTransactionOptions,
+)
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest, RequestOptions
+from google.cloud.spanner_v1.types.transaction import (
+    TransactionOptions,
+    TransactionSelector,
+)
+from google.cloud.spanner_v1.types.type import Type, TypeCode
 
 if CrossSync.is_async:
     from google.cloud.spanner_v1.services.spanner.transports.grpc_asyncio import (
@@ -198,13 +200,22 @@ class Database(object):
         self._encryption_config = encryption_config
         self._database_dialect = database_dialect
         self._database_role = database_role
-        self._route_to_leader_enabled = self._instance._client.route_to_leader_enabled
+        if self._instance and self._instance._client:
+            self._route_to_leader_enabled = (
+                self._instance._client.route_to_leader_enabled
+            )
+        else:
+            self._route_to_leader_enabled = False
         self._enable_drop_protection = enable_drop_protection
         self._reconciling = False
-        self._directed_read_options = self._instance._client.directed_read_options
-        self.default_transaction_options: DefaultTransactionOptions = (
-            self._instance._client.default_transaction_options
-        )
+        if self._instance and self._instance._client:
+            self._directed_read_options = self._instance._client.directed_read_options
+            self.default_transaction_options: DefaultTransactionOptions = (
+                self._instance._client.default_transaction_options
+            )
+        else:
+            self._directed_read_options = None
+            self.default_transaction_options = None
         self._proto_descriptors = proto_descriptors
         self._channel_id = 0  # It'll be created when _spanner_api is created.
 
@@ -220,7 +231,9 @@ class Database(object):
         except RuntimeError:
             # No running loop, bind should have been sync or will be failed later
             pass
-        self._experimental_host = self._instance._client._experimental_host
+        self._experimental_host = (
+            self._instance.experimental_host if self._instance else None
+        )
         is_experimental_host = self._experimental_host is not None
 
         self._sessions_manager = DatabaseSessionsManager(
@@ -231,8 +244,12 @@ class Database(object):
     def _resource_info(self):
         """Resource information for metrics labels."""
         return {
-            "project": self._instance._client.project,
-            "instance": self._instance.instance_id,
+            "project": (
+                self._instance._client.project
+                if self._instance and self._instance._client
+                else None
+            ),
+            "instance": self._instance.instance_id if self._instance else None,
             "database": self.database_id,
         }
 
@@ -1351,7 +1368,8 @@ class Database(object):
             async for row in results:
                 yield self.table(row[0])
 
-    def get_iam_policy(self, policy_version=None):
+    @CrossSync.convert
+    async def get_iam_policy(self, policy_version=None):
         """Gets the access control policy for a database resource.
 
         :type policy_version: int
@@ -1374,13 +1392,14 @@ class Database(object):
                 requested_policy_version=policy_version
             ),
         )
-        response = api.get_iam_policy(
+        response = await api.get_iam_policy(
             request=request,
             metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
         return response
 
-    def set_iam_policy(self, policy):
+    @CrossSync.convert
+    async def set_iam_policy(self, policy):
         """Sets the access control policy on a database resource.
         Replaces any existing policy.
 
@@ -1399,7 +1418,7 @@ class Database(object):
             resource=self.name,
             policy=policy,
         )
-        response = api.set_iam_policy(
+        response = await api.set_iam_policy(
             request=request,
             metadata=self.metadata_with_request_id(self._next_nth_request, 1, metadata),
         )
@@ -1429,6 +1448,11 @@ class Database(object):
         :returns: The sessions manager for this database.
         """
         return self._sessions_manager
+
+    @CrossSync.convert
+    async def close(self):
+        """Clean up underlying session manager and background tasks."""
+        await self._sessions_manager.close()
 
 
 class BatchCheckout(object):

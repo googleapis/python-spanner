@@ -732,17 +732,16 @@ def _retry(
 
 
 def _check_rst_stream_error(exc):
-    resumable_error = (
-        any(
-            resumable_message in exc.message
-            for resumable_message in (
-                "RST_STREAM",
-                "Received unexpected EOS on DATA frame from server",
-            )
-        ),
+    resumable_error = any(
+        resumable_message in exc.message
+        for resumable_message in (
+            "RST_STREAM",
+            "Received unexpected EOS on DATA frame from server",
+        )
     )
     if not resumable_error:
         raise
+    return True
 
 
 def _metadata_with_leader_aware_routing(value, **kw):

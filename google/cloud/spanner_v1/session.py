@@ -23,8 +23,6 @@ from typing import MutableMapping, Optional
 from google.api_core.exceptions import Aborted, GoogleAPICallError, NotFound
 from google.api_core.gapic_v1 import method
 from google.cloud.aio._cross_sync import CrossSync
-from google.cloud.spanner_v1.types.spanner import CreateSessionRequest
-from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
 from google.cloud.spanner_v1._helpers import _delay_until_retry
 from google.cloud.spanner_v1.batch import Batch
 from google.cloud.spanner_v1.snapshot import Snapshot
@@ -40,6 +38,10 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.types.spanner import (
+    CreateSessionRequest,
+    ExecuteSqlRequest,
+)
 
 DEFAULT_RETRY_TIMEOUT_SECS = 30
 "Default timeout used by :meth:`Session.run_in_transaction`."
