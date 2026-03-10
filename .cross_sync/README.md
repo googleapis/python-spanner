@@ -37,7 +37,7 @@ Additionally, CrossSync provides method implementations that work equivalently i
 - `CrossSync.gather_partials()`
 - `CrossSync.wait()`
 - `CrossSync.condition_wait()`
-- `CrossSync,event_wait()`
+- `CrossSync.event_wait()`
 - `CrossSync.create_task()`
 - `CrossSync.retry_target()`
 - `CrossSync.retry_target_stream()`
@@ -63,7 +63,7 @@ CrossSync provides a set of annotations to mark up async classes, to guide the g
 ### Code Generation
 
 Generation can be initiated using `nox -s generate_sync`
-from the root of the project. This will find all classes with the `__CROSS_SYNC_OUTPUT__ = "path/to/output"` 
+from the root of the project. This will find all classes with the `__CROSS_SYNC_OUTPUT__ = "path/to/output"`
 annotation, and generate a sync version of classes marked with `@CrossSync.convert_sync` at the output path.
 
 There is a unit test at `tests/unit/data/test_sync_up_to_date.py` that verifies that the generated code is up to date
@@ -71,5 +71,5 @@ There is a unit test at `tests/unit/data/test_sync_up_to_date.py` that verifies 
 ## Architecture
 
 CrossSync is made up of two parts:
-- the runtime shims and annotations live in `/google/cloud/bigtable/_cross_sync`
+- the runtime shims and annotations live in `/google/cloud/aio/_cross_sync`
 - the code generation logic lives in `/.cross_sync/` in the repo root

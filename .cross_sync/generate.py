@@ -82,7 +82,8 @@ def convert_files_in_dir(directory: str) -> set[CrossSyncOutputFile]:
     file_transformer = CrossSyncFileProcessor()
     # run each file through ast transformation to find all annotated classes
     for file_path in files:
-        ast_tree = ast.parse(open(file_path, encoding="utf-8-sig").read())
+        with open(file_path, encoding="utf-8-sig") as f:
+            ast_tree = ast.parse(f.read())
         output_path = file_transformer.get_output_path(ast_tree)
         if output_path is not None:
             # contains __CROSS_SYNC_OUTPUT__ annotation

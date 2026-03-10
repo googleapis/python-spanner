@@ -127,7 +127,7 @@ class AstDecorator:
         if not isinstance(root_attr, ast.Attribute):
             raise ValueError("Unexpected decorator format")
         # extract the module and decorator names
-        if "CrossSync" in ast.dump(root_attr):
+        if cls._is_cross_sync_node(root_attr):
             decorator_name = root_attr.attr
             got_kwargs: dict[str, Any] = (
                 {str(kw.arg): cls._convert_ast_to_py(kw.value) for kw in node.keywords}
@@ -182,6 +182,21 @@ class AstDecorator:
             }
         # unsupported node type
         return ast_node
+
+    @staticmethod
+    def _is_cross_sync_node(node: ast.AST) -> bool:
+        """
+        Check if an AST node refers to a CrossSync attribute.
+        """
+        import ast
+
+        if isinstance(node, ast.Attribute):
+            if isinstance(node.value, ast.Name) and node.value.id == "CrossSync":
+                return True
+            return AstDecorator._is_cross_sync_node(node.value)
+        if isinstance(node, ast.Call):
+            return AstDecorator._is_cross_sync_node(node.func)
+        return False
 
 
 class ConvertClass(AstDecorator):
@@ -255,7 +270,9 @@ class ConvertClass(AstDecorator):
         # strip CrossSync decorators
         if hasattr(wrapped_node, "decorator_list"):
             wrapped_node.decorator_list = [
-                d for d in wrapped_node.decorator_list if "CrossSync" not in ast.dump(d)
+                d
+                for d in wrapped_node.decorator_list
+                if not self._is_cross_sync_node(d)
             ]
         else:
             wrapped_node.decorator_list = []
