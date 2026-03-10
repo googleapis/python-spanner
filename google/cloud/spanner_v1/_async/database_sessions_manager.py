@@ -15,6 +15,7 @@
 """Manage sessions for a database."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.database_sessions_manager"
 
+import asyncio
 from datetime import timedelta
 from enum import Enum
 from os import getenv
@@ -216,3 +217,20 @@ class DatabaseSessionsManager(object):
         """Returns the value of the given environment variable as a boolean."""
         env_var_value = getenv(env_var_name, "true").lower().strip()
         return env_var_value != "false"
+
+    @CrossSync.convert
+    async def close(self) -> None:
+        """Closes the database session manager and stops all background tasks."""
+        self._multiplexed_session_terminate_event.set()
+        if self._multiplexed_session_thread is not None:
+            if CrossSync.is_async:
+                self._multiplexed_session_thread.cancel()
+                try:
+                    await self._multiplexed_session_thread
+                except CrossSync.rm_aio(asyncio.CancelledError):
+                    pass
+            else:
+                self._multiplexed_session_thread.join()
+        if self._multiplexed_session is not None:
+            await self._multiplexed_session.delete()
+            self._multiplexed_session = None

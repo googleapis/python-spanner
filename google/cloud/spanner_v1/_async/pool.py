@@ -14,15 +14,13 @@
 
 """Pools managing shared Session objects."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.pool"
+import asyncio
 import datetime
-import queue
 import time
 from warnings import warn
 
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
-from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 from google.cloud.spanner_v1._async.session import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
@@ -34,6 +32,8 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 
 
 def _NOW():
@@ -62,13 +62,13 @@ class SessionCheckout(object):
         self._kwargs = kwargs
         self._timeout = kwargs.get("timeout")
 
-    @CrossSync.convert
-    async def __enter__(self):
+    @CrossSync.convert(sync_name="__enter__")
+    async def __aenter__(self):
         self._session = await self._pool.get(**self._kwargs)
         return self._session
 
-    @CrossSync.convert
-    async def __exit__(self, exc_type, exc_value, traceback):
+    @CrossSync.convert(sync_name="__exit__")
+    async def __aexit__(self, exc_type, exc_value, traceback):
         await self._pool.put(self._session)
 
 
@@ -196,6 +196,15 @@ class AbstractSessionPool(object):
         :returns: a checkout instance, to be used as a context manager for
                   accessing the session and returning it to the pool.
         """
+        import warnings
+
+        warnings.warn(
+            "Sessions should be checked out indirectly using context "
+            "managers or Database.run_in_transaction, rather than "
+            "checked out directly from the pool.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return SessionCheckout(self, **kwargs)
 
 
@@ -365,7 +374,7 @@ class FixedSizePool(AbstractSessionPool):
                 sessions_to_ping.append(await CrossSync.queue_get(self._sessions))
 
             for session in sessions_to_ping:
-                if (_NOW() - session.last_use_time) > self._inactive_servicing_period:
+                if (_NOW() - session.last_use_time) > self._max_age:
                     try:
                         await session.ping()
                     except NotFound:
@@ -392,7 +401,7 @@ class FixedSizePool(AbstractSessionPool):
         :rtype: :class:`~google.cloud.spanner_v1.session.Session`
         :returns: an existing session from the pool, or a newly-created
                   session.
-        :raises: :exc:`queue.Empty` if the queue is empty.
+        :raises: :exc:`CrossSync.QueueEmpty` if the queue is empty.
         """
         if timeout is None:
             timeout = self.default_timeout
@@ -431,7 +440,7 @@ class FixedSizePool(AbstractSessionPool):
             span_event_attributes["time.elapsed"] = time.time() - start_time
             add_span_event(current_span, "Acquired session", span_event_attributes)
 
-        except queue.Empty as e:
+        except CrossSync.QueueEmpty as e:
             add_span_event(
                 current_span, "No sessions available in the pool", span_event_attributes
             )
@@ -458,8 +467,8 @@ class FixedSizePool(AbstractSessionPool):
 
         while True:
             try:
-                session = self._sessions.get(block=False)
-            except queue.Empty:
+                session = await CrossSync.queue_get(self._sessions, block=False)
+            except CrossSync.QueueEmpty:
                 break
             else:
                 await session.delete()
@@ -525,7 +534,7 @@ class BurstyPool(AbstractSessionPool):
                 span_event_attributes,
             )
             session = await CrossSync.queue_get(self._sessions, block=False)
-        except CrossSync.rm_aio(queue.Empty):
+        except (CrossSync.QueueEmpty, asyncio.QueueEmpty):
             add_span_event(
                 current_span,
                 "No sessions available in pool. Creating session",
@@ -556,7 +565,7 @@ class BurstyPool(AbstractSessionPool):
         """
         try:
             await CrossSync.queue_put(self._sessions, session, block=False)
-        except CrossSync.rm_aio(queue.Full):
+        except CrossSync.QueueFull:
             try:
                 # Sessions from pools are never multiplexed, so we can always delete them
                 await session.delete()
@@ -569,8 +578,8 @@ class BurstyPool(AbstractSessionPool):
 
         while True:
             try:
-                session = self._sessions.get(block=False)
-            except queue.Empty:
+                session = await CrossSync.queue_get(self._sessions, block=False)
+            except CrossSync.QueueEmpty:
                 break
             else:
                 await session.delete()
@@ -739,13 +748,13 @@ class PingingPool(FixedSizePool):
             ping_after, session = await CrossSync.queue_get(
                 self._sessions, block=True, timeout=timeout
             )
-        except CrossSync.rm_aio(queue.Empty) as e:
+        except CrossSync.QueueEmpty as e:
             add_span_event(
                 current_span,
                 "No sessions available in the pool within the specified timeout",
                 span_event_attributes,
             )
-            # Re-raising queue.Empty is correct as it's the expected interface
+            # Re-raising CrossSync.QueueEmpty is correct as it's the expected interface
             raise e
 
         if _NOW() > ping_after:
@@ -777,9 +786,15 @@ class PingingPool(FixedSizePool):
 
         :raises: :exc:`queue.Full` if the queue is full.
         """
-        await CrossSync.queue_put(
-            self._sessions, (_NOW() + self._delta, session), block=False
-        )
+        try:
+            await CrossSync.queue_put(
+                self._sessions, (_NOW() + self._delta, session), block=False
+            )
+        except CrossSync.QueueFull:
+            # PingingPool.put doesn't catch queue.Full in sync version either,
+            # but it's better to be safe or follow sync version exactly.
+            # Sync version doesn't have try/except queue.Full in PingingPool.put.
+            raise CrossSync.QueueFull()
 
     @CrossSync.convert
     async def clear(self):
@@ -787,7 +802,7 @@ class PingingPool(FixedSizePool):
         while True:
             try:
                 _, session = await CrossSync.queue_get(self._sessions, block=False)
-            except CrossSync.rm_aio(queue.Empty):
+            except CrossSync.QueueEmpty:
                 break
             else:
                 await session.delete()
@@ -804,7 +819,7 @@ class PingingPool(FixedSizePool):
                 ping_after, session = await CrossSync.queue_get(
                     self._sessions, block=False
                 )
-            except CrossSync.rm_aio(queue.Empty):  # all sessions in use
+            except CrossSync.QueueEmpty:  # all sessions in use
                 break
             if ping_after > _NOW():  # oldest session is fresh
                 # Re-add to queue with existing expiration

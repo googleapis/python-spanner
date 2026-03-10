@@ -89,6 +89,8 @@ class CrossSync(metaclass=MappingMeta):
     LifoQueue: TypeAlias = asyncio.LifoQueue
     PriorityQueue: TypeAlias = asyncio.PriorityQueue
     StopIteration: TypeAlias = StopAsyncIteration
+    QueueEmpty: TypeAlias = asyncio.QueueEmpty
+    QueueFull: TypeAlias = asyncio.QueueFull
     # provide aliases for common async type annotations
     Awaitable: TypeAlias = typing.Awaitable
     Iterable: TypeAlias = AsyncIterable
@@ -160,17 +162,29 @@ class CrossSync(metaclass=MappingMeta):
     @staticmethod
     async def queue_get(queue, block=True, timeout=None):
         if not block:
-            return queue.get_nowait()
+            try:
+                return queue.get_nowait()
+            except asyncio.QueueEmpty:
+                raise CrossSync.QueueEmpty()
         if timeout is not None:
-            return await asyncio.wait_for(queue.get(), timeout=timeout)
+            try:
+                return await asyncio.wait_for(queue.get(), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise CrossSync.QueueEmpty()
         return await queue.get()
 
     @staticmethod
     async def queue_put(queue, item, block=True, timeout=None):
         if not block:
-            return queue.put_nowait(item)
+            try:
+                return queue.put_nowait(item)
+            except asyncio.QueueFull:
+                raise CrossSync.QueueFull()
         if timeout is not None:
-            await asyncio.wait_for(queue.put(item), timeout=timeout)
+            try:
+                await asyncio.wait_for(queue.put(item), timeout=timeout)
+            except asyncio.TimeoutError:
+                raise CrossSync.QueueFull()
         else:
             await queue.put(item)
 
@@ -304,6 +318,8 @@ class CrossSync(metaclass=MappingMeta):
         Semaphore: TypeAlias = threading.Semaphore
         LifoQueue: TypeAlias = queue.LifoQueue
         PriorityQueue: TypeAlias = queue.PriorityQueue
+        QueueEmpty: TypeAlias = queue.Empty
+        QueueFull: TypeAlias = queue.Full
         StopIteration: TypeAlias = StopIteration
         # type annotations
         Awaitable: TypeAlias = Union[T]

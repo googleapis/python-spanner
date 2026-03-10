@@ -14,9 +14,9 @@
 
 """Wrap representation of Spanner keys / ranges."""
 
+from google.cloud.spanner_v1._helpers import _make_list_value_pb, _make_list_value_pbs
 from google.cloud.spanner_v1.types.keys import KeyRange as KeyRangePB
 from google.cloud.spanner_v1.types.keys import KeySet as KeySetPB
-from google.cloud.spanner_v1._helpers import _make_list_value_pb, _make_list_value_pbs
 
 
 class KeyRange(object):

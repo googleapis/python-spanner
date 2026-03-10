@@ -46,13 +46,6 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1.transaction import DefaultTransactionOptions
-from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest
-from google.cloud.spanner_v1.types.spanner import RequestOptions
-from google.cloud.spanner_v1.types.transaction import TransactionOptions
-from google.cloud.spanner_v1.types.transaction import TransactionSelector
-from google.cloud.spanner_v1.types.type import Type
-from google.cloud.spanner_v1.types.type import TypeCode
 from google.cloud.spanner_v1._helpers import (
     _augment_errors_with_request_id,
     _merge_query_options,
@@ -85,7 +78,16 @@ from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.snapshot import Snapshot, _restart_on_unavailable
 from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1.table import Table
-from google.cloud.spanner_v1.transaction import BatchTransactionId
+from google.cloud.spanner_v1.transaction import (
+    BatchTransactionId,
+    DefaultTransactionOptions,
+)
+from google.cloud.spanner_v1.types.spanner import ExecuteSqlRequest, RequestOptions
+from google.cloud.spanner_v1.types.transaction import (
+    TransactionOptions,
+    TransactionSelector,
+)
+from google.cloud.spanner_v1.types.type import Type, TypeCode
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 _DATABASE_NAME_RE = re.compile(
@@ -1296,6 +1298,10 @@ class Database(object):
         :rtype: :class:`~google.cloud.spanner_v1.database_sessions_manager.DatabaseSessionsManager`
         :returns: The sessions manager for this database."""
         return self._sessions_manager
+
+    def close(self):
+        """Clean up underlying session manager and background tasks."""
+        self._sessions_manager.close()
 
 
 class BatchCheckout(object):

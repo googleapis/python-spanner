@@ -15,6 +15,7 @@ from google.cloud.spanner_admin_database_v1 import DatabaseDialect
 from google.cloud.spanner_v1 import (
     DefaultTransactionOptions,
     DirectedReadOptions,
+    PartialResultSet,
     RequestOptions,
 )
 from google.cloud.spanner_v1._async.database_sessions_manager import TransactionType
@@ -141,6 +142,48 @@ class TestDatabase(_BaseTest):
         api = mock.create_autospec(SpannerClient, instance=True)
         api._transport = "transport"
         return api
+
+    @CrossSync.pytest
+    async def test_close(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._sessions_manager = mock.Mock()
+        database._sessions_manager.close = mock.AsyncMock()
+
+        await database.close()
+
+        database._sessions_manager.close.assert_called_once()
+
+    @CrossSync.pytest
+    async def test_sessions_manager_close(self):
+        from google.cloud.spanner_v1._async.database_sessions_manager import (
+            DatabaseSessionsManager,
+        )
+
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        pool = mock.Mock()
+        manager = DatabaseSessionsManager(database, pool)
+        manager._multiplexed_session_terminate_event = mock.Mock()
+
+        class MockTask:
+            def __init__(self):
+                self.cancel = mock.Mock()
+
+            def __await__(self):
+                if False:
+                    yield
+                return
+
+        manager._multiplexed_session_thread = MockTask()
+        mock_session = mock.AsyncMock()
+        manager._multiplexed_session = mock_session
+        await manager.close()
+
+        manager._multiplexed_session_terminate_event.set.assert_called_once()
+        manager._multiplexed_session_thread.cancel.assert_called_once()
+        mock_session.delete.assert_called_once()
+        self.assertIsNone(manager._multiplexed_session)
 
     @CrossSync.pytest
     async def test_ctor_defaults(self):
@@ -2253,8 +2296,332 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         database = self._make_one(self.DATABASE_ID, instance, pool=pool)
-        tables = database.list_tables()
-        self.assertIsNotNone(tables)
+
+        # Mock snapshot and execute_sql
+        from google.cloud.spanner_v1._async.snapshot import Snapshot
+
+        snapshot_mock = mock.create_autospec(Snapshot, instance=True)
+        # Mock database.snapshot() to return an async context manager
+        database.snapshot = mock.Mock()
+        database.snapshot.return_value.__aenter__ = mock.AsyncMock(
+            return_value=snapshot_mock
+        )
+        database.snapshot.return_value.__aexit__ = mock.AsyncMock(return_value=None)
+
+        snapshot_mock.execute_sql = mock.AsyncMock(
+            return_value=_MockIterator(["table1"], ["table2"])
+        )
+
+        tables = []
+        async for table in database.list_tables():
+            tables.append(table)
+
+        self.assertEqual(len(tables), 2)
+        self.assertEqual(tables[0].table_id, "table1")
+        self.assertEqual(tables[1].table_id, "table2")
+
+    @CrossSync.pytest
+    async def test_get_iam_policy(self):
+        from google.iam.v1 import policy_pb2
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(self.DATABASE_ID, instance)
+
+        api = database._instance._client.database_admin_api = mock.AsyncMock()
+        expected_policy = policy_pb2.Policy(version=1)
+        api.get_iam_policy.return_value = expected_policy
+
+        policy = await database.get_iam_policy(policy_version=1)
+
+        self.assertEqual(policy, expected_policy)
+        api.get_iam_policy.assert_called_once()
+
+    @CrossSync.pytest
+    async def test_set_iam_policy(self):
+        from google.iam.v1 import policy_pb2
+
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(self.DATABASE_ID, instance)
+
+        api = database._instance._client.database_admin_api = mock.AsyncMock()
+        new_policy = policy_pb2.Policy(version=1)
+        api.set_iam_policy.return_value = new_policy
+
+        policy = await database.set_iam_policy(new_policy)
+
+        self.assertEqual(policy, new_policy)
+        api.set_iam_policy.assert_called_once()
+
+    @CrossSync.pytest
+    async def test_execute_partitioned_dml_w_request_options_dict(self):
+        # No ResultSet import needed anymore
+
+        api = build_spanner_api()
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._spanner_api = api
+        session = Session(database)
+        session._session_id = "session-id"
+        database._sessions_manager.get_session = mock.AsyncMock(return_value=session)
+
+        # Mock begin_transaction to return a txn_id
+        from google.cloud.spanner_v1.types import Transaction as TransactionPB
+
+        api.begin_transaction = mock.AsyncMock(
+            return_value=TransactionPB(id=self.TRANSACTION_ID)
+        )
+
+        # Mock execute_streaming_sql
+        # No PartialResultSet import needed anymore
+
+        iterator = _MockIterator(PartialResultSet(stats={"row_count_lower_bound": 42}))
+        api.execute_streaming_sql = mock.Mock(return_value=iterator)
+
+        count = await database.execute_partitioned_dml(
+            DML_WO_PARAM, request_options={"priority": 1}
+        )
+        self.assertEqual(count, 42)
+
+    @CrossSync.pytest
+    async def test_close_w_sessions_manager(self):
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._sessions_manager = mock.AsyncMock()
+        await database.close()
+        database._sessions_manager.close.assert_called_once()
+
+    @CrossSync.pytest
+    @mock.patch("google.cloud.spanner_v1._async.database.MergedResultSet")
+    async def test_run_partitioned_query(self, mock_merged_result_set):
+        from google.cloud.spanner_v1.types import Partition, PartitionResponse
+
+        api = build_spanner_api()
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._spanner_api = api
+
+        from google.cloud.spanner_v1._async.database import BatchSnapshot
+
+        batch_snapshot = BatchSnapshot(database)
+
+        # Mock begin_transaction
+        from google.cloud.spanner_v1.types import Transaction as TransactionPB
+
+        api.begin_transaction = mock.AsyncMock(
+            return_value=TransactionPB(id=self.TRANSACTION_ID)
+        )
+
+        # Mock partition_query
+        token = b"token"
+        response = PartitionResponse(partitions=[Partition(partition_token=token)])
+        api.partition_query = mock.AsyncMock(return_value=response)
+
+        # Mock execute_streaming_sql for each partition
+        # No PartialResultSet import needed anymore
+
+        iterator = _MockIterator(PartialResultSet())
+        api.execute_streaming_sql = mock.Mock(return_value=iterator)
+
+        # Mock MergedResultSet to be an async iterable for the test
+        mock_merged_result_set.return_value = _MockIterator("result")
+
+        # Use batch_snapshot to avoid possible collision with fixtures or locals
+        merged_result = await batch_snapshot.run_partitioned_query("SELECT 1")
+        self.assertIsNotNone(merged_result)
+        async for item in merged_result:
+            self.assertEqual(item, "result")
+
+    @CrossSync.pytest
+    async def test_spanner_api_experimental_host(self):
+        from google.cloud.spanner_v1.services.spanner.async_client import (
+            SpannerAsyncClient as SpannerClient,
+        )
+
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._instance.experimental_host = "localhost:1234"
+        database._instance._client._use_plain_text = True
+        database._instance._client._ca_certificate = None
+        database._instance._client._client_certificate = None
+        database._instance._client._client_key = None
+
+        # This will trigger spanner_api property to create a new one
+        database._spanner_api = None
+        new_api = database.spanner_api
+        self.assertIsInstance(new_api, SpannerClient)
+
+    @CrossSync.pytest
+    async def test_execute_partitioned_dml_internal_error(self):
+        from google.api_core.exceptions import InternalServerError
+
+        api = build_spanner_api()
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._spanner_api = api
+        session = Session(database)
+        session._session_id = "session-id"
+        database._sessions_manager.get_session = mock.AsyncMock(return_value=session)
+
+        # Mock begin_transaction
+        from google.cloud.spanner_v1.types import Transaction as TransactionPB
+
+        api.begin_transaction = mock.AsyncMock(
+            return_value=TransactionPB(id=self.TRANSACTION_ID)
+        )
+
+        # Mock execute_streaming_sql to raise InternalServerError that is NOT 'RST_STREAM'
+        api.execute_streaming_sql = mock.Mock(
+            side_effect=InternalServerError("testing")
+        )
+
+        with self.assertRaises(InternalServerError):
+            await database.execute_partitioned_dml(DML_WO_PARAM)
+
+    @CrossSync.pytest
+    async def test_database_dialect_postgresql(self):
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._database_dialect = DatabaseDialect.POSTGRESQL
+        self.assertEqual(database.default_schema_name, "public")
+
+    @CrossSync.pytest
+    async def test_reconciling_property(self):
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._reconciling = True
+        self.assertTrue(database.reconciling)
+
+    @CrossSync.pytest
+    async def test_enable_drop_protection_property(self):
+        client = _Client()
+        instance = _Instance(self.INSTANCE_NAME, client=client)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database.enable_drop_protection = True
+        self.assertTrue(database.enable_drop_protection)
+
+    @CrossSync.pytest
+    async def test_execute_partitioned_dml_w_route_to_leader_enabled(self):
+        # Already tested by default since it's enabled in _Database mock
+        # But let's be explicit
+        api = build_spanner_api()
+        instance = _Instance(self.INSTANCE_NAME)
+        database = self._make_one(self.DATABASE_ID, instance)
+        database._spanner_api = api
+        database._route_to_leader_enabled = True
+
+        session = Session(database)
+        session._session_id = "session-id"
+        database._sessions_manager.get_session = mock.AsyncMock(return_value=session)
+
+        from google.cloud.spanner_v1.types import Transaction as TransactionPB
+
+        api.begin_transaction = mock.AsyncMock(
+            return_value=TransactionPB(id=self.TRANSACTION_ID)
+        )
+        # No PartialResultSet import needed anymore
+
+        api.execute_streaming_sql = mock.Mock(
+            return_value=_MockIterator(
+                PartialResultSet(stats={"row_count_lower_bound": 42})
+            )
+        )
+
+        await database.execute_partitioned_dml(DML_WO_PARAM)
+
+        # Check if metadata includes leader aware routing
+        call_args = api.begin_transaction.call_args
+        metadata = dict(call_args.kwargs["metadata"])
+        self.assertIn("x-goog-spanner-route-to-leader", metadata)
+
+
+class TestBatchSnapshot(_BaseTest):
+    def _get_target_class(self):
+        from google.cloud.spanner_v1._async.database import BatchSnapshot
+
+        return BatchSnapshot
+
+    def _make_one(self, *args, **kw):
+        return self._get_target_class()(*args, **kw)
+
+    @CrossSync.pytest
+    async def test_get_batch_transaction_id_not_begun(self):
+        database = mock.Mock()
+        database.name = self.DATABASE_NAME
+        batch = self._make_one(database)
+        batch._snapshot = None
+        with self.assertRaises(ValueError):
+            batch.get_batch_transaction_id()
+
+    @CrossSync.pytest
+    async def test_get_batch_transaction_id_success(self):
+        from google.cloud.spanner_v1.transaction import BatchTransactionId
+
+        database = mock.Mock()
+        database.name = self.DATABASE_NAME
+        batch = self._make_one(database)
+        snapshot = mock.Mock()
+        snapshot._transaction_id = b"tid"
+        snapshot._read_timestamp = "ts"
+        snapshot._session = mock.Mock(session_id="sid")
+        batch._snapshot = snapshot
+
+        btid = batch.get_batch_transaction_id()
+        self.assertIsInstance(btid, BatchTransactionId)
+        self.assertEqual(btid.transaction_id, b"tid")
+
+    @CrossSync.pytest
+    async def test__get_snapshot_w_inline_begin(self):
+        database = mock.Mock()
+        database.name = self.DATABASE_NAME
+        batch = self._make_one(database)
+
+        session = mock.Mock()
+        snapshot = mock.AsyncMock()
+        snapshot.begin = mock.AsyncMock()
+        session.snapshot.return_value = snapshot
+        database.sessions_manager.get_session = mock.AsyncMock(return_value=session)
+
+        returned_snapshot = await batch._get_snapshot()
+        self.assertEqual(returned_snapshot, snapshot)
+        snapshot.begin.assert_awaited_once()
+
+    @CrossSync.pytest
+    async def test_batch_snapshot_read_inline_begin(self):
+        from google.cloud.spanner_v1.keyset import KeySet
+
+        database = mock.Mock()
+        database.name = self.DATABASE_NAME
+        batch = self._make_one(database)
+
+        session = mock.Mock()
+        snapshot = mock.AsyncMock()
+        snapshot.begin = mock.AsyncMock()
+        snapshot.read = mock.AsyncMock(return_value=_MockIterator(PartialResultSet()))
+        session.snapshot.return_value = snapshot
+        database.sessions_manager.get_session = mock.AsyncMock(return_value=session)
+
+        keyset = KeySet(all_=True)
+        results = await batch.read("table", ["col"], keyset)
+        async for _ in results:
+            pass
+
+        snapshot.begin.assert_awaited_once()
+        snapshot.read.assert_called_once()
+
+    @CrossSync.pytest
+    async def test__get_snapshot_already_exists(self):
+        database = mock.Mock()
+        database.name = self.DATABASE_NAME
+        batch = self._make_one(database)
+        snapshot = mock.Mock()
+        batch._snapshot = snapshot
+
+        returned_snapshot = await batch._get_snapshot()
+        self.assertEqual(returned_snapshot, snapshot)
 
 
 class TestBatchCheckout(_BaseTest):
@@ -2601,7 +2968,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool._new_session.assert_not_called()
 
 
-class TestBatchSnapshot(_BaseTest):
+class TestBatchSnapshotPart2(_BaseTest):
     TABLE = "table_name"
     COLUMNS = ["column_one", "column_two"]
     TOKENS = [b"TOKEN1", b"TOKEN2"]
@@ -3821,6 +4188,7 @@ class _Database(object):
         self._directed_read_options = None
         self.default_transaction_options = DefaultTransactionOptions()
         self._nth_request = AtomicCounter()
+        self._sessions_manager = mock.Mock()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
 
         # Mock sessions manager for multiplexed sessions support

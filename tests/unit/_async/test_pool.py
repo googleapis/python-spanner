@@ -12,18 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import asyncio
 import datetime
-import queue
 import unittest
 from unittest import mock
 
+from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsResponse
 from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 
 
-class TestCase(unittest.TestCase):
-    pass
+class IsolatedAsyncioTestCase(unittest.TestCase):
+    def run(self, result=None):
+        if asyncio.iscoroutinefunction(getattr(self, self._testMethodName)):
+            testMethod = getattr(self, self._testMethodName)
+
+            def wrapper(*args, **kwargs):
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(testMethod(*args, **kwargs))
+                finally:
+                    loop.close()
+
+            setattr(self, self._testMethodName, wrapper)
+
+        return super().run(result)
 
 
 class _Session(object):
@@ -33,10 +48,10 @@ class _Session(object):
         self.last_use_time = last_use_time or datetime.datetime.now(
             datetime.timezone.utc
         )
-        self.delete = mock.Mock()
-        self.ping = mock.Mock()
-        self.exists = mock.Mock(return_value=True)
-        self.create = mock.Mock()
+        self.delete = mock.AsyncMock()
+        self.ping = mock.AsyncMock()
+        self.exists = mock.AsyncMock(return_value=True)
+        self.create = mock.AsyncMock()
         self._transaction = None
 
         def get_transaction(*args, **kwargs):
@@ -72,7 +87,7 @@ class _Database(object):
         self.name = name
         self.database_id = name.split("/")[-1]
         self.database_role = database_role
-        self.spanner_api = mock.Mock()
+        self.spanner_api = mock.AsyncMock()
         self._route_to_leader_enabled = False
         self._instance = _Instance()
 
@@ -89,9 +104,9 @@ class _Database(object):
         return "request-id-" + str(n)
 
 
-class TestAbstractSessionPool(TestCase):
+class TestAbstractSessionPool(IsolatedAsyncioTestCase):
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import AbstractSessionPool
+        from google.cloud.spanner_v1._async.pool import AbstractSessionPool
 
         return AbstractSessionPool
 
@@ -110,26 +125,26 @@ class TestAbstractSessionPool(TestCase):
         self.assertEqual(pool.labels, labels)
         self.assertEqual(pool.database_role, "role")
 
-    def test_bind_raises_NotImplementedError(self):
+    async def test_bind_raises_NotImplementedError(self):
         pool = self._make_one()
         db = _Database("database-name")
         with self.assertRaises(NotImplementedError):
-            pool.bind(db)
+            await pool.bind(db)
 
-    def test_get_virtual(self):
+    async def test_get_virtual(self):
         pool = self._make_one()
         with self.assertRaises(NotImplementedError):
-            pool.get()
+            await pool.get()
 
-    def test_put_virtual(self):
+    async def test_put_virtual(self):
         pool = self._make_one()
         with self.assertRaises(NotImplementedError):
-            pool.put(None)
+            await pool.put(None)
 
-    def test_clear_virtual(self):
+    async def test_clear_virtual(self):
         pool = self._make_one()
         with self.assertRaises(NotImplementedError):
-            pool.clear()
+            await pool.clear()
 
     def test_resource_info_unbound(self):
         pool = self._make_one()
@@ -147,35 +162,35 @@ class TestAbstractSessionPool(TestCase):
         self.assertIs(checkout._pool, pool)
 
 
-class TestSessionCheckout(TestCase):
+class TestSessionCheckout(IsolatedAsyncioTestCase):
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import SessionCheckout
+        from google.cloud.spanner_v1._async.pool import SessionCheckout
 
         return SessionCheckout
 
     def _make_one(self, *args, **kwargs):
         return self._getTargetClass()(*args, **kwargs)
 
-    def test_context_manager(self):
-        pool = mock.Mock()
+    async def test_context_manager(self):
+        pool = mock.AsyncMock()
         session = mock.Mock()
         # Mock get to be a coro returning session
-        pool.get = mock.Mock(return_value=session)
+        pool.get = mock.AsyncMock(return_value=session)
 
         checkout = self._make_one(pool)
-        with checkout as got:
+        async with checkout as got:
             self.assertIs(got, session)
 
         pool.get.assert_called_once()
         pool.put.assert_called_once_with(session)
 
 
-class TestFixedSizePool(TestCase):
+class TestFixedSizePool(IsolatedAsyncioTestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import FixedSizePool
+        from google.cloud.spanner_v1._async.pool import FixedSizePool
 
         return FixedSizePool
 
@@ -190,13 +205,13 @@ class TestFixedSizePool(TestCase):
         pool = self._make_one(labels={"foo": "bar"})
         self.assertEqual(pool.labels, {"foo": "bar"})
 
-    def test__new_session_role(self):
+    async def test__new_session_role(self):
         db = _Database(self.DATABASE_NAME)
         db.database_role = "db-role"
         pool = self._make_one(database_role="pool-role")
         pool._database = db
         # We need to bypass the mock _new_session to test the real logic
-        from google.cloud.spanner_v1.pool import FixedSizePool
+        from google.cloud.spanner_v1._async.pool import FixedSizePool
 
         session = FixedSizePool._new_session(pool)
         self.assertEqual(session.database_role, "pool-role")
@@ -205,10 +220,10 @@ class TestFixedSizePool(TestCase):
         session = FixedSizePool._new_session(pool)
         self.assertEqual(session.database_role, "db-role")
 
-    def test_resource_info(self):
+    async def test_resource_info(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one()
-        pool.bind(db)
+        await pool.bind(db)
         resource_info = pool._resource_info
         self.assertEqual(resource_info["project"], "project-id")
         self.assertEqual(resource_info["instance"], "instance-id")
@@ -230,38 +245,38 @@ class TestFixedSizePool(TestCase):
         self.assertEqual(pool.size, 4)
         self.assertEqual(pool.default_timeout, 30)
 
-    def test_get_put(self):
+    async def test_get_put(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
         # bind fills the pool with 1 sessions by default mock
-        got = pool.get()
+        got = await pool.get()
         self.assertEqual(got.name, self.SESSION_NAME)
-        pool.put(got)
+        await pool.put(got)
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_get_empty_timeout(self):
+    async def test_get_empty_timeout(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, default_timeout=0.01)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Empty the pool so we can test timeout
-        pool.get()
+        await pool.get()
 
-        with self.assertRaises(queue.Empty):
-            pool.get()
+        with self.assertRaises(CrossSync.QueueEmpty):
+            await pool.get()
 
-    def test_clear(self):
+    async def test_clear(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=2)
-        pool.bind(db)
+        await pool.bind(db)
         # bind will fill BOTH slots because requested_session_count is 2 and mock returns 1 per call
         self.assertTrue(pool._sessions.full())
         self.assertEqual(pool._sessions.qsize(), 2)
-        pool.clear()
+        await pool.clear()
         self.assertEqual(pool._sessions.qsize(), 0)
 
-    def test_fill_pool(self):
+    async def test_fill_pool(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=2)
 
@@ -271,255 +286,255 @@ class TestFixedSizePool(TestCase):
             session=[session_pb1, session_pb2]
         )
 
-        pool.bind(db)
+        await pool.bind(db)
 
         self.assertEqual(pool._sessions.qsize(), 2)
         db.spanner_api.batch_create_sessions.assert_called_once()
 
-    def test_fill_pool_requested_count_le_0(self):
+    async def test_fill_pool_requested_count_le_0(self):
         # Coverage for line 288+
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=0)
-        pool.bind(db)
+        await pool.bind(db)
         self.assertEqual(pool._sessions.qsize(), 0)
         db.spanner_api.batch_create_sessions.assert_not_called()
 
-    def test_fill_pool_already_full(self):
+    async def test_fill_pool_already_full(self):
         # Coverage for line 308+
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
         # Inject context to skip bind as we want to test _fill_pool directly on a full pool
         pool._database = db
-        pool._sessions.put(mock.Mock())
-        pool._fill_pool()
+        pool._sessions.put_nowait(mock.Mock())
+        await pool._fill_pool()
         db.spanner_api.batch_create_sessions.assert_not_called()
 
-    def test_ping(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_ping(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Clear sessions created by bind
         while not pool._sessions.empty():
-            pool._sessions.get()
+            await pool._sessions.get()
 
         session = _Session(self.SESSION_NAME)
         # Make the session old so it will be pinged
         session.last_use_time = _NOW() - datetime.timedelta(minutes=60)
-        session.ping = mock.Mock()
-        pool.put(session)
+        session.ping = mock.AsyncMock()
+        await pool.put(session)
 
-        pool.ping()
+        await pool.ping()
         session.ping.assert_called_once()
 
-    def test_ping_not_found_recreates(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_ping_not_found_recreates(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         # Ensure it's the mock
         self.assertIsInstance(session, _Session)
         session.last_use_time = _NOW() - datetime.timedelta(minutes=61)
-        session.ping = mock.Mock(side_effect=NotFound("not found"))
+        session.ping = mock.AsyncMock(side_effect=NotFound("not found"))
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        pool.put(session)
-        pool.ping()
+        await pool.put(session)
+        await pool.ping()
 
-    def test_get_recreates_if_not_found(self):
+    async def test_get_recreates_if_not_found(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        session = pool.get()
+        await pool.bind(db)
+        session = await pool.get()
         session.last_use_time = datetime.datetime.now(
             datetime.timezone.utc
         ) - datetime.timedelta(hours=2)
         # exists returns False, so it recreates
         session.exists.return_value = False
-        pool._sessions.put(session)
+        pool._sessions.put_nowait(session)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertEqual(got.name, self.SESSION_NAME)
         self.assertTrue(got.create.called)
 
-    def test_ping_exception_warns(self):
+    async def test_ping_exception_warns(self):
         import warnings
 
-        from google.cloud.spanner_v1.pool import _NOW
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         session.last_use_time = _NOW() - datetime.timedelta(minutes=61)
-        session.ping = mock.Mock(side_effect=Exception("error"))
+        session.ping = mock.AsyncMock(side_effect=Exception("error"))
 
-        pool.put(session)
+        await pool.put(session)
         with warnings.catch_warnings(record=True) as warned:
             warnings.simplefilter("always")
-            pool.ping()
+            await pool.ping()
             self.assertEqual(len(warned), 1)
 
-    def test_get_pings_old_session(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_pings_old_session(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        session = pool.get()
+        await pool.bind(db)
+        session = await pool.get()
         # session is too old (55m + 1s)
         session.last_use_time = _NOW() - datetime.timedelta(minutes=56)
-        pool.put(session)
+        await pool.put(session)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertEqual(got.name, self.SESSION_NAME)
         self.assertGreaterEqual(session.exists.call_count, 1)
 
-    def test_get_timeout_none(self):
+    async def test_get_timeout_none(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        session = pool.get(timeout=None)
+        await pool.bind(db)
+        session = await pool.get(timeout=None)
         self.assertIsInstance(session, _Session)
 
-    def test_get_old_session_not_exists_recreates(self):
+    async def test_get_old_session_not_exists_recreates(self):
         from google.cloud.spanner_v1.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         session.last_use_time = _NOW() - datetime.timedelta(minutes=61)
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        pool.put(session)
-        got = pool.get()
+        await pool.put(session)
+        got = await pool.get()
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
-    def test_fill_pool_edge_cases(self):
+    async def test_fill_pool_edge_cases(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
         # size <= 0
         pool._database = db
         pool.size = 0
-        pool._fill_pool()
+        await pool._fill_pool()
         self.assertEqual(pool._sessions.qsize(), 0)
 
         # count <= 0
         pool.size = 1
-        pool._sessions.put(_Session(self.SESSION_NAME))
-        pool._fill_pool()  # pool already full, count will be 0
+        pool._sessions.put_nowait(_Session(self.SESSION_NAME))
+        await pool._fill_pool()  # pool already full, count will be 0
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_fill_pool_leader_aware(self):
+    async def test_fill_pool_leader_aware(self):
         db = _Database(self.DATABASE_NAME)
         db._route_to_leader_enabled = True
         pool = self._make_one(size=1)
         # bind calls _fill_pool
-        pool.bind(db)
+        await pool.bind(db)
         self.assertEqual(pool._sessions.qsize(), 1)
 
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_fill_pool_mock_full(self):
+    async def test_fill_pool_mock_full(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
         pool._database = db
         # Mock full() to return True even if space exists (or just fill it)
         with mock.patch.object(pool._sessions, "full", return_value=True):
-            pool._fill_pool()
+            await pool._fill_pool()
         # Should return early at line 310
 
-    def test_clear_no_database(self):
+    async def test_clear_no_database(self):
         pool = self._make_one(size=1)
         session = _Session(self.SESSION_NAME)
-        pool._sessions.put(session)
+        pool._sessions.put_nowait(session)
         # pool._database is None
-        pool.clear()
+        await pool.clear()
         # Should hit if self._database is None: pass in clear() logic
 
-    def test_fill_pool_full(self):
+    async def test_fill_pool_full(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
         pool._database = db
-        pool._sessions.put(_Session(self.SESSION_NAME))
-        pool._fill_pool()  # Should hit "already full" event
+        pool._sessions.put_nowait(_Session(self.SESSION_NAME))
+        await pool._fill_pool()  # Should hit "already full" event
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_get_expired_session_recreated(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_expired_session_recreated(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, max_age_minutes=0)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Clear sessions created by bind
         while not pool._sessions.empty():
-            pool._sessions.get()
+            await pool._sessions.get()
 
         session = _Session(self.SESSION_NAME)
         session.last_use_time = _NOW() - datetime.timedelta(minutes=1)
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
 
-        pool.put(session)
+        await pool.put(session)
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
 
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
-    def test_get_invalid_session_recreated(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_invalid_session_recreated(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Clear sessions created by bind
         while not pool._sessions.empty():
-            pool._sessions.get()
+            await pool._sessions.get()
 
         session = _Session(self.SESSION_NAME)
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
         session.last_use_time = _NOW() - datetime.timedelta(minutes=60)
 
-        pool.put(session)
+        await pool.put(session)
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
 
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
 
-class TestBurstyPool(TestCase):
+class TestBurstyPool(IsolatedAsyncioTestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import BurstyPool
+        from google.cloud.spanner_v1._async.pool import BurstyPool
 
         return BurstyPool
 
@@ -536,101 +551,101 @@ class TestBurstyPool(TestCase):
         self.assertEqual(pool._labels, {})
         self.assertIsNone(pool._database_role)
 
-    def test_get_put(self):
+    async def test_get_put(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one()
-        pool.bind(db)
+        await pool.bind(db)
         session = _Session(self.SESSION_NAME)
-        pool.put(session)
-        got = pool.get()
+        await pool.put(session)
+        got = await pool.get()
         self.assertIs(got, session)
 
-    def test_get_empty_creates_new(self):
+    async def test_get_empty_creates_new(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one()
-        pool.bind(db)
+        await pool.bind(db)
 
         session = _Session(self.SESSION_NAME)
-        session.create = mock.Mock()
+        session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=session)
 
-        got = pool.get()
+        got = await pool.get()
 
         self.assertIs(got, session)
         session.create.assert_called_once()
 
-    def test_get_timeout_none(self):
+    async def test_get_timeout_none(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(target_size=1)
         pool._database = db
         # Hit timeout is None branch (indirectly)
-        session = pool.get()
+        session = await pool.get()
         self.assertIsInstance(session, _Session)
 
-    def test_clear(self):
+    async def test_clear(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one()
-        pool.bind(db)
+        await pool.bind(db)
         session = _Session(self.SESSION_NAME)
-        session.delete = mock.Mock()
-        pool.put(session)
+        session.delete = mock.AsyncMock()
+        await pool.put(session)
         self.assertEqual(pool._sessions.qsize(), 1)
-        pool.clear()
+        await pool.clear()
         self.assertEqual(pool._sessions.qsize(), 0)
         session.delete.assert_called_once()
 
-    def test_get_invalid_session_recreated(self):
+    async def test_get_invalid_session_recreated(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one()
-        pool.bind(db)
+        await pool.bind(db)
 
         session = _Session(self.SESSION_NAME)
         # Mock it to be invalid
-        session.exists = mock.Mock(return_value=False)
-        pool.put(session)
+        session.exists = mock.AsyncMock(return_value=False)
+        await pool.put(session)
 
         # Mock _new_session
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
 
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
-    def test_put_full_pool_deletes_session(self):
+    async def test_put_full_pool_deletes_session(self):
         pool = self._make_one()
         # Mock queue to be full
         pool._sessions = mock.Mock()
-        pool._sessions.put.side_effect = queue.Full()
+        pool._sessions.put_nowait.side_effect = asyncio.QueueFull()
 
         session = _Session(self.SESSION_NAME)
-        session.delete = mock.Mock()
+        session.delete = mock.AsyncMock()
 
-        pool.put(session)
+        await pool.put(session)
         session.delete.assert_called_once()
 
-    def test_put_full_pool_delete_not_found(self):
+    async def test_put_full_pool_delete_not_found(self):
         pool = self._make_one()
         pool._sessions = mock.Mock()
-        pool._sessions.put.side_effect = queue.Full()
+        pool._sessions.put_nowait.side_effect = asyncio.QueueFull()
 
         session = _Session(self.SESSION_NAME)
-        session.delete = mock.Mock(side_effect=NotFound("not found"))
+        session.delete = mock.AsyncMock(side_effect=NotFound("not found"))
 
-        pool.put(session)
+        await pool.put(session)
         session.delete.assert_called_once()
 
         session.delete.assert_called_once()
 
 
-class TestPingingPool(TestCase):
+class TestPingingPool(IsolatedAsyncioTestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import PingingPool
+        from google.cloud.spanner_v1._async.pool import PingingPool
 
         return PingingPool
 
@@ -647,207 +662,206 @@ class TestPingingPool(TestCase):
         self.assertEqual(pool.default_timeout, 10)
         self.assertEqual(pool._delta, datetime.timedelta(seconds=3000))
 
-    def test_bind_and_get_put(self):
+    async def test_bind_and_get_put(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertEqual(got.name, self.SESSION_NAME)
 
-        pool.put(got)
+        await pool.put(got)
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_get_empty_timeout(self):
+    async def test_get_empty_timeout(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, default_timeout=0.01)
-        pool.bind(db)
-        pool.get()  # Empty it
+        await pool.bind(db)
+        await pool.get()  # Empty it
 
-        with self.assertRaises(queue.Empty):
-            pool.get()
+        with self.assertRaises(CrossSync.QueueEmpty):
+            await pool.get()
 
-    def test_get_pings_if_old(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_pings_if_old(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, ping_interval=3600)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         # Force it to be old
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), session))
+        pool._sessions.put_nowait((_NOW() - datetime.timedelta(hours=1), session))
 
-        session.exists = mock.Mock(return_value=True)
+        session.exists = mock.AsyncMock(return_value=True)
         # pool.put(session) removed here
 
-        got = pool.get()
+        got = await pool.get()
         self.assertIs(got, session)
         session.exists.assert_called_once()
 
-    def test_get_recreates_if_defunct(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_recreates_if_defunct(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, ping_interval=3600)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         # Force it to be old
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), session))
+        pool._sessions.put_nowait((_NOW() - datetime.timedelta(hours=1), session))
 
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
         # pool.put(session) removed here
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
-    def test_clear(self):
+    async def test_clear(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
         self.assertEqual(pool._sessions.qsize(), 1)
-        pool.clear()
+        await pool.clear()
         self.assertEqual(pool._sessions.qsize(), 0)
 
-    def test_ping(self):
-        from google.cloud.exceptions import NotFound
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_ping(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=2, ping_interval=3600)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Get sessions and mock them
-        s1 = pool.get()
-        s2 = pool.get()
-        s1.ping = mock.Mock()
-        s2.ping = mock.Mock(side_effect=NotFound("not found"))
+        s1 = await pool.get()
+        s2 = await pool.get()
+        s1.ping = mock.AsyncMock()
+        s2.ping = mock.AsyncMock(side_effect=NotFound("not found"))
 
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
         # Put back with old timestamp to force ping
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), s1))
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), s2))
+        pool._sessions.put_nowait((_NOW() - datetime.timedelta(hours=1), s1))
+        pool._sessions.put_nowait((_NOW() - datetime.timedelta(hours=1), s2))
 
-        pool.ping()
+        await pool.ping()
 
         s1.ping.assert_called_once()
         s2.ping.assert_called_once()
         new_session.create.assert_called_once()
 
-    def test_ping_exception_fallback(self):
+    async def test_ping_exception_fallback(self):
         import warnings
 
         db = _Database(self.DATABASE_NAME)
         # We'll use FixedSizePool for this since it has the catch
-        from google.cloud.spanner_v1.pool import FixedSizePool
+        from google.cloud.spanner_v1._async.pool import FixedSizePool
 
         pool = FixedSizePool(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
         # Clear sessions created by bind
         while not pool._sessions.empty():
-            pool._sessions.get()
+            pool._sessions.get_nowait()
 
         session = _Session(self.SESSION_NAME)
         # Force it to be old
-        from google.cloud.spanner_v1.pool import _NOW
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         session.last_use_time = _NOW() - datetime.timedelta(minutes=60)
-        session.ping = mock.Mock(side_effect=Exception("ping failed"))
+        session.ping = mock.AsyncMock(side_effect=Exception("ping failed"))
 
-        pool.put(session)
+        await pool.put(session)
 
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            pool.ping()
+            await pool.ping()
             self.assertEqual(len(w), 1)
             self.assertIn("Failed to ping session", str(w[-1].message))
 
-    def test_ping_empty_pool(self):
+    async def test_ping_empty_pool(self):
         pool = self._make_one(size=1)
-        pool.ping()  # Should not raise
+        await pool.ping()  # Should not raise
 
-    def test_get_timeout_none_pinging(self):
+    async def test_get_timeout_none_pinging(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        pool.get()  # Empty it
+        await pool.bind(db)
+        await pool.get()  # Empty it
 
         # We need something in the pool for timeout=None to give it back
         session = _Session(self.SESSION_NAME)
         # Put it back as tuple (ping_after, session)
-        from google.cloud.spanner_v1.pool import _NOW
+        from google.cloud.spanner_v1._async.pool import _NOW
 
-        pool._sessions.put((_NOW() + datetime.timedelta(hours=1), session))
+        pool._sessions.put_nowait((_NOW() + datetime.timedelta(hours=1), session))
 
-        got = pool.get(timeout=None)
+        got = await pool.get(timeout=None)
         self.assertIs(got, session)
 
-    def test_pinging_pool_get_old_session_not_exists_recreates(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_pinging_pool_get_old_session_not_exists_recreates(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
+        session = await pool.get()
         # Set ping_after to past
         ping_after = _NOW() - datetime.timedelta(seconds=1)
         # We need to manually put it back with a past ping_after
-        pool._sessions.put((ping_after, session))
+        pool._sessions.put_nowait((ping_after, session))
 
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()
 
-    def test_ping_skipped_if_fresh(self):
+    async def test_ping_skipped_if_fresh(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1, ping_interval=3600)
-        pool.bind(db)
+        await pool.bind(db)
 
-        session = pool.get()
-        session.ping = mock.Mock()
-        pool.put(session)
+        session = await pool.get()
+        session.ping = mock.AsyncMock()
+        await pool.put(session)
 
-        pool.ping()
+        await pool.ping()
         session.ping.assert_not_called()
 
-    def test_bind_leader_routing(self):
+    async def test_bind_leader_routing(self):
         db = _Database(self.DATABASE_NAME)
         db._route_to_leader_enabled = True
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
         # Verify metadata included leader routing - this requires checking call_args
         # but our mock DB captures it.
         # Line 658 hit.
 
-    def test_bind_invalid_size(self):
+    async def test_bind_invalid_size(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=0)
-        pool.bind(db)
+        await pool.bind(db)
         # Line 671-676 hit.
 
 
-class TestTransactionPingingPool(TestCase):
+class TestTransactionPingingPool(IsolatedAsyncioTestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
     def _getTargetClass(self):
-        from google.cloud.spanner_v1.pool import TransactionPingingPool
+        from google.cloud.spanner_v1._async.pool import TransactionPingingPool
 
         return TransactionPingingPool
 
@@ -862,77 +876,78 @@ class TestTransactionPingingPool(TestCase):
         pool = self._make_one(size=5)
         self.assertEqual(pool.size, 5)
 
-    def test_get_put(self):
+    async def test_get_put(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        await pool.bind(db)
 
         # After bind, sessions are in _pending_sessions because transaction() is None
-        pool.begin_pending_transactions()
+        await pool.begin_pending_transactions()
 
-        session = pool.get()
+        session = await pool.get()
         self.assertEqual(session.name, self.SESSION_NAME)
 
-        pool.put(session)
+        await pool.put(session)
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_put_no_transaction_to_pending(self):
+    async def test_put_no_transaction_to_pending(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        pool.begin_pending_transactions()
+        await pool.bind(db)
+        await pool.begin_pending_transactions()
 
-        session = pool.get()
+        session = await pool.get()
         self.assertIsInstance(session, _Session)
         session._transaction = None  # Force None for test
 
-        pool.put(session)
+        await pool.put(session)
         self.assertEqual(pool._pending_sessions.qsize(), 1)
         self.assertEqual(pool._sessions.qsize(), 0)
         # Ensure it was initialized
         self.assertIsNotNone(session._transaction)
 
-    def test_begin_pending_transactions(self):
+    async def test_begin_pending_transactions(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        pool.begin_pending_transactions()
+        await pool.bind(db)
+        await pool.begin_pending_transactions()
 
-        session = pool.get()
+        session = await pool.get()
         session._transaction = None
-        pool.put(session)
+        await pool.put(session)
 
         self.assertEqual(pool._pending_sessions.qsize(), 1)
-        pool.begin_pending_transactions()
+        await pool.begin_pending_transactions()
         self.assertEqual(pool._pending_sessions.qsize(), 0)
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_bind(self):
+    async def test_bind(self):
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
+        # Hits TransactionPingingPool.bind
+        await pool.bind(db)
         self.assertEqual(pool._pending_sessions.qsize(), 1)
-        pool.begin_pending_transactions()
+        await pool.begin_pending_transactions()
         self.assertEqual(pool._sessions.qsize(), 1)
 
-    def test_get_old_session_not_exists_recreates(self):
-        from google.cloud.spanner_v1.pool import _NOW
+    async def test_get_old_session_not_exists_recreates(self):
+        from google.cloud.spanner_v1._async.pool import _NOW
 
         db = _Database(self.DATABASE_NAME)
         pool = self._make_one(size=1)
-        pool.bind(db)
-        pool.begin_pending_transactions()
+        await pool.bind(db)
+        await pool.begin_pending_transactions()
 
-        session = pool.get()
+        session = await pool.get()
         # Manually put it back with a past ping_after
         ping_after = _NOW() - datetime.timedelta(seconds=1)
-        pool._sessions.put((ping_after, session))
+        pool._sessions.put_nowait((ping_after, session))
 
-        session.exists = mock.Mock(return_value=False)
+        session.exists = mock.AsyncMock(return_value=False)
         new_session = _Session(self.SESSION_NAME + "/new")
-        new_session.create = mock.Mock()
+        new_session.create = mock.AsyncMock()
         pool._new_session = mock.Mock(return_value=new_session)
 
-        got = pool.get()
+        got = await pool.get()
         self.assertIs(got, new_session)
         new_session.create.assert_called_once()

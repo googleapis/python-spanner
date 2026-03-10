@@ -205,3 +205,12 @@ class DatabaseSessionsManager(object):
         """Returns the value of the given environment variable as a boolean."""
         env_var_value = getenv(env_var_name, "true").lower().strip()
         return env_var_value != "false"
+
+    def close(self) -> None:
+        """Closes the database session manager and stops all background tasks."""
+        self._multiplexed_session_terminate_event.set()
+        if self._multiplexed_session_thread is not None:
+            self._multiplexed_session_thread.join()
+        if self._multiplexed_session is not None:
+            self._multiplexed_session.delete()
+            self._multiplexed_session = None

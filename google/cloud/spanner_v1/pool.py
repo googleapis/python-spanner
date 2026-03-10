@@ -24,8 +24,6 @@ from warnings import warn
 
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
-from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -37,6 +35,8 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
+from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 
 
 def _NOW():
@@ -185,6 +185,15 @@ class AbstractSessionPool(object):
         :rtype: :class:`~google.cloud.spanner_v1.session.SessionCheckout`
         :returns: a checkout instance, to be used as a context manager for
                   accessing the session and returning it to the pool."""
+        import warnings
+
+        warnings.warn(
+            "Sessions should be checked out indirectly using context "
+            "managers or Database.run_in_transaction, rather than "
+            "checked out directly from the pool.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         return SessionCheckout(self, **kwargs)
 
 
@@ -328,7 +337,7 @@ class FixedSizePool(AbstractSessionPool):
             while not self._sessions.empty():
                 sessions_to_ping.append(CrossSync._Sync_Impl.queue_get(self._sessions))
             for session in sessions_to_ping:
-                if _NOW() - session.last_use_time > self._inactive_servicing_period:
+                if _NOW() - session.last_use_time > self._max_age:
                     try:
                         session.ping()
                     except NotFound:
@@ -464,7 +473,7 @@ class BurstyPool(AbstractSessionPool):
                 span_event_attributes,
             )
             session = CrossSync._Sync_Impl.queue_get(self._sessions, block=False)
-        except queue.Empty:
+        except CrossSync._Sync_Impl.QueueEmpty:
             add_span_event(
                 current_span,
                 "No sessions available in pool. Creating session",

@@ -169,6 +169,7 @@ async def shared_database(
     yield database
 
     await database.drop()
+    await database.close()
 
 
 @pytest.fixture(scope="function")
@@ -177,6 +178,7 @@ async def databases_to_delete():
     yield to_delete
     for db in to_delete:
         await db.drop()
+        await db.close()
 
 
 @pytest.fixture(scope="session")

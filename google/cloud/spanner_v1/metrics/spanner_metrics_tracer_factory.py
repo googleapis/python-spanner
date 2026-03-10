@@ -35,8 +35,8 @@ except ImportError:  # pragma: NO COVER
 
 from uuid import uuid4
 
-from google.cloud.spanner_v1.gapic_version import __version__
 from google.cloud.spanner_v1._helpers import _get_cloud_region
+from google.cloud.spanner_v1.gapic_version import __version__
 
 from .metrics_tracer import MetricsTracer
 
