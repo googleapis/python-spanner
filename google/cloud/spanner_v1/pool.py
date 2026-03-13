@@ -21,9 +21,9 @@ import asyncio
 import datetime
 import time
 from warnings import warn
+
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
-from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1._helpers import (
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -34,6 +34,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.session import Session
 from google.cloud.spanner_v1.types.spanner import BatchCreateSessionsRequest
 from google.cloud.spanner_v1.types.spanner import Session as SessionProto
 

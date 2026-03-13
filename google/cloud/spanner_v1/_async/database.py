@@ -14,10 +14,8 @@
 
 """User-friendly container for Cloud Spanner Database."""
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.database"
-import asyncio
 import copy
 import functools
-import inspect
 import logging
 import re
 import threading
@@ -223,14 +221,8 @@ class Database(object):
             pool = BurstyPool(database_role=database_role)
 
         self._pool = pool
-        res = pool.bind(self)
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running() and inspect.isawaitable(res):
-                loop.create_task(res)
-        except RuntimeError:
-            # No running loop, bind should have been sync or will be failed later
-            pass
+        # Note: self._pool.bind(self) should be called via Instance.database()
+        # factory method to ensure proper async initialization.
         is_experimental_host = (
             self._instance.experimental_host is not None if self._instance else False
         )

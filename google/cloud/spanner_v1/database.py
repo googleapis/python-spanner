@@ -17,14 +17,13 @@
 
 """User-friendly container for Cloud Spanner Database."""
 
-import asyncio
 import copy
 import functools
-import inspect
 import logging
 import re
 import threading
 from typing import Optional
+
 from google.api_core import gapic_v1
 from google.api_core.exceptions import Aborted
 from google.api_core.retry import Retry
@@ -32,6 +31,7 @@ import google.auth.credentials
 from google.iam.v1 import iam_policy_pb2, options_pb2
 from google.protobuf.field_mask_pb2 import FieldMask
 import grpc
+
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_admin_database_v1 import (
@@ -44,15 +44,6 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
 from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
-from google.cloud.spanner_v1.batch import Batch, MutationGroups
-from google.cloud.spanner_v1.database_sessions_manager import (
-    DatabaseSessionsManager,
-    TransactionType,
-)
-from google.cloud.spanner_v1.pool import BurstyPool
-from google.cloud.spanner_v1.session import Session
-from google.cloud.spanner_v1.snapshot import Snapshot, _restart_on_unavailable
-from google.cloud.spanner_v1.streamed import StreamedResultSet
 from google.cloud.spanner_v1._helpers import (
     _augment_errors_with_request_id,
     _merge_query_options,
@@ -61,11 +52,30 @@ from google.cloud.spanner_v1._helpers import (
     _metadata_with_request_id,
     _metadata_with_request_id_and_req_id,
 )
+from google.cloud.spanner_v1._opentelemetry_tracing import (
+    add_span_event,
+    get_current_span,
+    trace_call,
+)
+from google.cloud.spanner_v1.batch import Batch, MutationGroups
+from google.cloud.spanner_v1.database_sessions_manager import (
+    DatabaseSessionsManager,
+    TransactionType,
+)
 from google.cloud.spanner_v1.keyset import KeySet
 from google.cloud.spanner_v1.merged_result_set import MergedResultSet
+from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+from google.cloud.spanner_v1.pool import BurstyPool
 from google.cloud.spanner_v1.services.spanner.client import (
     SpannerClient as SpannerClient,
 )
+from google.cloud.spanner_v1.services.spanner.transports.grpc import (
+    SpannerGrpcTransport,
+)
+from google.cloud.spanner_v1.session import Session
+from google.cloud.spanner_v1.snapshot import Snapshot, _restart_on_unavailable
+from google.cloud.spanner_v1.streamed import StreamedResultSet
+from google.cloud.spanner_v1.table import Table
 from google.cloud.spanner_v1.transaction import (
     BatchTransactionId,
     DefaultTransactionOptions,
@@ -76,16 +86,6 @@ from google.cloud.spanner_v1.types.transaction import (
     TransactionSelector,
 )
 from google.cloud.spanner_v1.types.type import Type, TypeCode
-from google.cloud.spanner_v1.services.spanner.transports.grpc import (
-    SpannerGrpcTransport,
-)
-from google.cloud.spanner_v1._opentelemetry_tracing import (
-    add_span_event,
-    get_current_span,
-    trace_call,
-)
-from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
-from google.cloud.spanner_v1.table import Table
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
 _DATABASE_NAME_RE = re.compile(
@@ -204,13 +204,6 @@ class Database(object):
         if pool is None:
             pool = BurstyPool(database_role=database_role)
         self._pool = pool
-        res = pool.bind(self)
-        try:
-            loop = asyncio.get_running_loop()
-            if loop.is_running() and inspect.isawaitable(res):
-                loop.create_task(res)
-        except RuntimeError:
-            pass
         is_experimental_host = (
             self._instance.experimental_host is not None if self._instance else False
         )

@@ -433,7 +433,8 @@ class Instance(object):
 
         await api.delete_instance(name=self.name, metadata=metadata)
 
-    def database(
+    @CrossSync.convert
+    async def database(
         self,
         database_id,
         ddl_statements=(),
@@ -498,7 +499,7 @@ class Instance(object):
         """
 
         if not enable_interceptors_in_tests:
-            return Database(
+            db = Database(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -511,7 +512,7 @@ class Instance(object):
                 proto_descriptors=proto_descriptors,
             )
         else:
-            return TestDatabase(
+            db = TestDatabase(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -522,6 +523,9 @@ class Instance(object):
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
             )
+
+        await db._pool.bind(db)
+        return db
 
     @CrossSync.convert
     async def list_databases(self, page_size=None):

@@ -19,10 +19,12 @@
 
 import re
 import typing
+
 from google.api_core.exceptions import InvalidArgument
 import google.api_core.operation
 from google.protobuf.empty_pb2 import Empty
 from google.protobuf.field_mask_pb2 import FieldMask
+
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_admin_database_v1 import (
@@ -34,10 +36,10 @@ from google.cloud.spanner_admin_database_v1 import (
 )
 from google.cloud.spanner_admin_database_v1.types import backup, spanner_database_admin
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
-from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.testing.database_test import TestDatabase
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.backup import Backup
+from google.cloud.spanner_v1.database import Database
+from google.cloud.spanner_v1.testing.database_test import TestDatabase
 
 _INSTANCE_NAME_RE = re.compile(
     "^projects/(?P<project>[^/]+)/instances/(?P<instance_id>[a-z][-a-z0-9]*)$"
@@ -456,7 +458,7 @@ class Instance(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance."""
         if not enable_interceptors_in_tests:
-            return Database(
+            db = Database(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -469,7 +471,7 @@ class Instance(object):
                 proto_descriptors=proto_descriptors,
             )
         else:
-            return TestDatabase(
+            db = TestDatabase(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -480,6 +482,8 @@ class Instance(object):
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
             )
+        db._pool.bind(db)
+        return db
 
     def list_databases(self, page_size=None):
         """List databases for the instance.

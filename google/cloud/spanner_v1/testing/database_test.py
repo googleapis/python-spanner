@@ -18,14 +18,14 @@
 from google.api_core import grpc_helpers
 import google.auth.credentials
 import grpc
+
 from google.cloud.spanner_admin_database_v1 import DatabaseDialect
-from google.cloud.spanner_v1.database import Database
-from google.cloud.spanner_v1.database import SPANNER_DATA_SCOPE
+from google.cloud.spanner_v1.database import SPANNER_DATA_SCOPE, Database
+from google.cloud.spanner_v1.services.spanner.client import SpannerClient
 from google.cloud.spanner_v1.services.spanner.transports import (
     SpannerGrpcTransport,
     SpannerTransport,
 )
-from google.cloud.spanner_v1.services.spanner.client import SpannerClient
 from google.cloud.spanner_v1.testing.interceptors import (
     MethodAbortInterceptor,
     MethodCountInterceptor,

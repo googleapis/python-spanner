@@ -65,15 +65,15 @@ class TestInstanceExtra(unittest.IsolatedAsyncioTestCase):
         await self.instance.list_backups()
         self.assertTrue(self.client.database_admin_api.list_backups.called)
 
-    def test_database(self):
+    async def test_database(self):
         # coverage for lines 436-512
-        db = self.instance.database("db-id")
+        db = await self.instance.database("db-id")
         self.assertEqual(db.database_id, "db-id")
 
         # test with interceptors
         from google.cloud.spanner_v1._async.testing.database_test import TestDatabase
 
-        db2 = self.instance.database("db-id-2", enable_interceptors_in_tests=True)
+        db2 = await self.instance.database("db-id-2", enable_interceptors_in_tests=True)
         self.assertIsInstance(db2, TestDatabase)
 
     def test_backup(self):

@@ -105,8 +105,15 @@ class _BaseTest(IsolatedAsyncioTestCase):
     TRANSACTION_TAG = "transaction-tag"
     DATABASE_ROLE = "dummy-role"
 
-    def _make_one(self, *args, **kwargs):
-        return self._get_target_class()(*args, **kwargs)
+    async def _make_one(self, *args, **kwargs):
+        import inspect
+
+        db = self._get_target_class()(*args, **kwargs)
+        if hasattr(db, "_pool") and db._pool is not None:
+            res = db._pool.bind(db)
+            if inspect.isawaitable(res):
+                await res
+        return db
 
     @staticmethod
     def _make_timestamp():
@@ -146,7 +153,7 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_close(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._sessions_manager = mock.Mock()
         database._sessions_manager.close = mock.AsyncMock()
 
@@ -161,7 +168,7 @@ class TestDatabase(_BaseTest):
         )
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         pool = mock.Mock()
         manager = DatabaseSessionsManager(database, pool)
         manager._multiplexed_session_terminate_event = mock.Mock()
@@ -191,7 +198,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
 
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
 
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
@@ -208,7 +215,7 @@ class TestDatabase(_BaseTest):
     async def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
@@ -218,7 +225,7 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_ctor_w_database_role(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
@@ -229,7 +236,7 @@ class TestDatabase(_BaseTest):
     async def test_ctor_w_route_to_leader_disbled(self):
         client = _Client(route_to_leader_enabled=False)
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
@@ -239,14 +246,14 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_ctor_w_ddl_statements_non_string(self):
         with pytest.raises(ValueError):
-            self._make_one(
+            await self._make_one(
                 self.DATABASE_ID, instance=object(), ddl_statements=[object()]
             )
 
     @CrossSync.pytest
     async def test_ctor_w_ddl_statements_w_create_database(self):
         with pytest.raises(ValueError):
-            self._make_one(
+            await self._make_one(
                 self.DATABASE_ID,
                 instance=object(),
                 ddl_statements=["CREATE DATABASE foo"],
@@ -258,7 +265,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, ddl_statements=DDL_STATEMENTS, pool=pool
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
@@ -271,7 +278,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         logger = mock.create_autospec(Logger, instance=True)
-        database = self._make_one(self.DATABASE_ID, instance, logger=logger)
+        database = await self._make_one(self.DATABASE_ID, instance, logger=logger)
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])
@@ -284,7 +291,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         encryption_config = EncryptionConfig(kms_key_name="kms_key")
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, encryption_config=encryption_config
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
@@ -295,7 +302,7 @@ class TestDatabase(_BaseTest):
     async def test_ctor_w_directed_read_options(self):
         client = _Client(directed_read_options=DIRECTED_READ_OPTIONS)
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, database_role=self.DATABASE_ROLE
         )
         self.assertEqual(database.database_id, self.DATABASE_ID)
@@ -305,7 +312,9 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_ctor_w_proto_descriptors(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance, proto_descriptors=b"")
+        database = await self._make_one(
+            self.DATABASE_ID, instance, proto_descriptors=b""
+        )
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(database._proto_descriptors, b"")
@@ -389,7 +398,7 @@ class TestDatabase(_BaseTest):
     async def test_name_property(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         expected_name = self.DATABASE_NAME
         self.assertEqual(database.name, expected_name)
 
@@ -397,7 +406,7 @@ class TestDatabase(_BaseTest):
     async def test_create_time_property(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         expected_create_time = database._create_time = self._make_timestamp()
         self.assertEqual(database.create_time, expected_create_time)
 
@@ -407,7 +416,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         expected_state = database._state = Database.State.READY
         self.assertEqual(database.state, expected_state)
 
@@ -417,7 +426,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         restore_info = database._restore_info = mock.create_autospec(
             RestoreInfo, instance=True
         )
@@ -427,7 +436,7 @@ class TestDatabase(_BaseTest):
     async def test_version_retention_period(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         version_retention_period = database._version_retention_period = "1d"
         self.assertEqual(database.version_retention_period, version_retention_period)
 
@@ -435,7 +444,7 @@ class TestDatabase(_BaseTest):
     async def test_earliest_version_time(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         earliest_version_time = database._earliest_version_time = self._make_timestamp()
         self.assertEqual(database.earliest_version_time, earliest_version_time)
 
@@ -445,7 +454,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         logger = logging.getLogger(database.name)
         self.assertEqual(database.logger, logger)
 
@@ -455,7 +464,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         logger = database._logger = mock.create_autospec(logging.Logger, instance=True)
         self.assertEqual(database.logger, logger)
 
@@ -465,7 +474,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         encryption_config = database._encryption_config = mock.create_autospec(
             EncryptionConfig, instance=True
         )
@@ -477,7 +486,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         encryption_info = database._encryption_info = [
             mock.create_autospec(EncryptionInfo, instance=True)
         ]
@@ -487,7 +496,7 @@ class TestDatabase(_BaseTest):
     async def test_default_leader(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         default_leader = database._default_leader = "us-east4"
         self.assertEqual(database.default_leader, default_leader)
 
@@ -495,7 +504,7 @@ class TestDatabase(_BaseTest):
     async def test_proto_descriptors(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, pool=pool, proto_descriptors=b""
         )
         self.assertEqual(database.proto_descriptors, b"")
@@ -508,7 +517,7 @@ class TestDatabase(_BaseTest):
         credentials = client.credentials = object()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         patch = mock.patch("google.cloud.spanner_v1._async.database.SpannerClient")
 
@@ -551,7 +560,7 @@ class TestDatabase(_BaseTest):
         credentials = client.credentials = _CredentialsWithScopes()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         patch = mock.patch("google.cloud.spanner_v1._async.database.SpannerClient")
 
@@ -576,7 +585,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client, emulator_host="host")
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         patch = mock.patch("google.cloud.spanner_v1._async.database.SpannerClient")
         with patch as spanner_client:
@@ -597,15 +606,15 @@ class TestDatabase(_BaseTest):
     async def test___eq__(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool1)
-        database2 = self._make_one(self.DATABASE_ID, instance, pool=pool2)
+        database1 = await self._make_one(self.DATABASE_ID, instance, pool=pool1)
+        database2 = await self._make_one(self.DATABASE_ID, instance, pool=pool2)
         self.assertEqual(database1, database2)
 
     @CrossSync.pytest
     async def test___eq__type_differ(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database1 = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         database2 = object()
         self.assertNotEqual(database1, database2)
 
@@ -613,8 +622,8 @@ class TestDatabase(_BaseTest):
     async def test___ne__same_value(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one(self.DATABASE_ID, instance, pool=pool1)
-        database2 = self._make_one(self.DATABASE_ID, instance, pool=pool2)
+        database1 = await self._make_one(self.DATABASE_ID, instance, pool=pool1)
+        database2 = await self._make_one(self.DATABASE_ID, instance, pool=pool2)
         comparison_val = database1 != database2
         self.assertFalse(comparison_val)
 
@@ -624,8 +633,8 @@ class TestDatabase(_BaseTest):
             self.INSTANCE_NAME + "2"
         )
         pool1, pool2 = _Pool(), _Pool()
-        database1 = self._make_one("database_id1", instance1, pool=pool1)
-        database2 = self._make_one("database_id2", instance2, pool=pool2)
+        database1 = await self._make_one("database_id1", instance1, pool=pool1)
+        database2 = await self._make_one("database_id2", instance2, pool=pool2)
         self.assertNotEqual(database1, database2)
 
     @CrossSync.pytest
@@ -640,7 +649,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(GoogleAPICallError):
             await database.create()
@@ -674,7 +683,7 @@ class TestDatabase(_BaseTest):
         api.create_database.side_effect = Conflict("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(DATABASE_ID_HYPHEN, instance, pool=pool)
+        database = await self._make_one(DATABASE_ID_HYPHEN, instance, pool=pool)
 
         with pytest.raises(Conflict):
             await database.create()
@@ -707,7 +716,7 @@ class TestDatabase(_BaseTest):
         api.create_database.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(NotFound):
             await database.create()
@@ -745,7 +754,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         encryption_config = EncryptionConfig(kms_key_name="kms_key_name")
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID,
             instance,
             ddl_statements=DDL_STATEMENTS,
@@ -790,7 +799,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         encryption_config = {"kms_key_name": "kms_key_name"}
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID,
             instance,
             ddl_statements=DDL_STATEMENTS,
@@ -833,7 +842,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         proto_descriptors = b""
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID,
             instance,
             ddl_statements=DDL_STATEMENTS,
@@ -872,7 +881,7 @@ class TestDatabase(_BaseTest):
         api.get_database_ddl.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             await database.exists()
@@ -897,7 +906,7 @@ class TestDatabase(_BaseTest):
         api.get_database_ddl.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         self.assertFalse(await database.exists())
 
@@ -923,7 +932,7 @@ class TestDatabase(_BaseTest):
         api.get_database_ddl.return_value = ddl_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         self.assertTrue(await database.exists())
 
@@ -947,7 +956,7 @@ class TestDatabase(_BaseTest):
         api.get_database_ddl.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             await database.reload()
@@ -972,7 +981,7 @@ class TestDatabase(_BaseTest):
         api.get_database_ddl.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(NotFound):
             await database.reload()
@@ -1030,7 +1039,7 @@ class TestDatabase(_BaseTest):
         api.get_database.return_value = db_pb
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         await database.reload()
         self.assertEqual(database._state, Database.State.READY)
@@ -1078,7 +1087,7 @@ class TestDatabase(_BaseTest):
         api.update_database_ddl.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             await database.update_ddl(DDL_STATEMENTS)
@@ -1111,7 +1120,7 @@ class TestDatabase(_BaseTest):
         api.update_database_ddl.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(NotFound):
             await database.update_ddl(DDL_STATEMENTS)
@@ -1144,7 +1153,7 @@ class TestDatabase(_BaseTest):
         api.update_database_ddl.return_value = op_future
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         future = await database.update_ddl(DDL_STATEMENTS)
 
@@ -1178,7 +1187,7 @@ class TestDatabase(_BaseTest):
         api.update_database_ddl.return_value = op_future
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         future = await database.update_ddl(
             DDL_STATEMENTS, operation_id="someOperationId"
@@ -1212,7 +1221,7 @@ class TestDatabase(_BaseTest):
 
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, enable_drop_protection=True, pool=pool
         )
 
@@ -1247,7 +1256,7 @@ class TestDatabase(_BaseTest):
         api.update_database_ddl.return_value = op_future
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         future = await database.update_ddl(DDL_STATEMENTS, proto_descriptors=b"")
 
@@ -1280,7 +1289,7 @@ class TestDatabase(_BaseTest):
         api.drop_database.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             await database.drop()
@@ -1305,7 +1314,7 @@ class TestDatabase(_BaseTest):
         api.drop_database.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(NotFound):
             await database.drop()
@@ -1330,7 +1339,7 @@ class TestDatabase(_BaseTest):
         api.drop_database.return_value = Empty()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         await database.drop()
 
@@ -1387,7 +1396,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         session = _Session()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         multiplexed_partitioned_enabled = (
             os.environ.get(
@@ -1643,7 +1652,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         session = database.session()
 
@@ -1658,7 +1667,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
         labels = {"foo": "bar"}
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         session = database.session(labels=labels)
 
@@ -1677,7 +1686,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         session = _Session()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
 
@@ -1726,7 +1735,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         session = _Session()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Check if multiplexed sessions are enabled for read operations
         multiplexed_enabled = is_multiplexed_enabled(TransactionType.READ_ONLY)
@@ -1771,7 +1780,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         session = _Session()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         checkout = database.batch()
         self.assertIsInstance(checkout, BatchCheckout)
@@ -1786,7 +1795,7 @@ class TestDatabase(_BaseTest):
         pool = _Pool()
         session = _Session()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         checkout = database.mutation_groups()
         self.assertIsInstance(checkout, MutationGroupsCheckout)
@@ -1797,7 +1806,9 @@ class TestDatabase(_BaseTest):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
+        database = await self._make_one(
+            self.DATABASE_ID, instance=instance, pool=_Pool()
+        )
 
         batch_txn = database.batch_snapshot()
         self.assertIsInstance(batch_txn, BatchSnapshot)
@@ -1810,7 +1821,9 @@ class TestDatabase(_BaseTest):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
+        database = await self._make_one(
+            self.DATABASE_ID, instance=instance, pool=_Pool()
+        )
         timestamp = self._make_timestamp()
 
         batch_txn = database.batch_snapshot(read_timestamp=timestamp)
@@ -1824,7 +1837,9 @@ class TestDatabase(_BaseTest):
         from google.cloud.spanner_v1._async.database import BatchSnapshot
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance=instance, pool=_Pool())
+        database = await self._make_one(
+            self.DATABASE_ID, instance=instance, pool=_Pool()
+        )
         duration = self._make_duration()
 
         batch_txn = database.batch_snapshot(exact_staleness=duration)
@@ -1842,7 +1857,7 @@ class TestDatabase(_BaseTest):
         session = _Session()
         pool.put(session)
         session._committed = NOW
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
 
@@ -1870,7 +1885,7 @@ class TestDatabase(_BaseTest):
         session = _Session()
         pool.put(session)
         session._committed = NOW
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
 
@@ -1899,7 +1914,7 @@ class TestDatabase(_BaseTest):
         session = _Session(run_transaction_function=True)
         session._committed = datetime.now()
         pool.put(session)
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         # Mock the spanner_api to avoid creating a real SpannerClient
         database._spanner_api = instance._client._spanner_api
 
@@ -1918,7 +1933,7 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_restore_backup_unspecified(self):
         instance = _Instance(self.INSTANCE_NAME, client=_Client())
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
 
         with pytest.raises(ValueError):
             await database.restore(None)
@@ -1934,7 +1949,7 @@ class TestDatabase(_BaseTest):
         api.restore_database.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         backup = _Backup(self.BACKUP_NAME)
 
         with pytest.raises(Unknown):
@@ -1968,7 +1983,7 @@ class TestDatabase(_BaseTest):
         api.restore_database.side_effect = NotFound("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         backup = _Backup(self.BACKUP_NAME)
 
         with pytest.raises(NotFound):
@@ -2008,7 +2023,7 @@ class TestDatabase(_BaseTest):
             encryption_type=RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
             kms_key_name="kms_key_name",
         )
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
         )
         backup = _Backup(self.BACKUP_NAME)
@@ -2052,7 +2067,7 @@ class TestDatabase(_BaseTest):
             "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.CUSTOMER_MANAGED_ENCRYPTION,
             "kms_key_name": "kms_key_name",
         }
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
         )
         backup = _Backup(self.BACKUP_NAME)
@@ -2096,7 +2111,7 @@ class TestDatabase(_BaseTest):
             "encryption_type": RestoreDatabaseEncryptionConfig.EncryptionType.GOOGLE_DEFAULT_ENCRYPTION,
             "kms_key_name": "kms_key_name",
         }
-        database = self._make_one(
+        database = await self._make_one(
             self.DATABASE_ID, instance, pool=pool, encryption_config=encryption_config
         )
         backup = _Backup(self.BACKUP_NAME)
@@ -2111,7 +2126,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         database._state = Database.State.READY
         self.assertTrue(database.is_ready())
         database._state = Database.State.READY_OPTIMIZING
@@ -2126,7 +2141,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         database._state = Database.State.READY
         self.assertTrue(database.is_optimized())
         database._state = Database.State.READY_OPTIMIZING
@@ -2146,7 +2161,7 @@ class TestDatabase(_BaseTest):
             side_effect=Unknown("testing")
         )
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             database.list_database_operations()
@@ -2167,7 +2182,7 @@ class TestDatabase(_BaseTest):
             side_effect=NotFound("testing")
         )
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(NotFound):
             database.list_database_operations()
@@ -2184,7 +2199,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         instance.list_database_operations = mock.MagicMock(return_value=[])
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         database.list_database_operations()
 
@@ -2200,7 +2215,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         instance.list_database_operations = mock.MagicMock(return_value=[])
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         expected_filter_ = "({0}) AND ({1})".format(
             "metadata.@type:type.googleapis.com/google.spanner.admin.database.v1.RestoreDatabaseMetadata",
@@ -2227,7 +2242,7 @@ class TestDatabase(_BaseTest):
         api.list_database_roles.side_effect = Unknown("testing")
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         with pytest.raises(Unknown):
             await database.list_database_roles()
@@ -2256,7 +2271,7 @@ class TestDatabase(_BaseTest):
         instance = _Instance(self.INSTANCE_NAME, client=client)
         instance.list_database_roles = mock.MagicMock(return_value=[])
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         resp = await database.list_database_roles()
 
@@ -2283,7 +2298,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
         database._database_dialect = DatabaseDialect.GOOGLE_STANDARD_SQL
         my_table = database.table("my_table")
         self.assertIsInstance(my_table, Table)
@@ -2295,7 +2310,7 @@ class TestDatabase(_BaseTest):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        database = await self._make_one(self.DATABASE_ID, instance, pool=pool)
 
         # Mock snapshot and execute_sql
         from google.cloud.spanner_v1._async.snapshot import Snapshot
@@ -2326,7 +2341,7 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
 
         api = database._instance._client.database_admin_api = mock.AsyncMock()
         expected_policy = policy_pb2.Policy(version=1)
@@ -2343,7 +2358,7 @@ class TestDatabase(_BaseTest):
 
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
 
         api = database._instance._client.database_admin_api = mock.AsyncMock()
         new_policy = policy_pb2.Policy(version=1)
@@ -2360,7 +2375,7 @@ class TestDatabase(_BaseTest):
 
         api = build_spanner_api()
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._spanner_api = api
         session = Session(database)
         session._session_id = "session-id"
@@ -2387,7 +2402,7 @@ class TestDatabase(_BaseTest):
     @CrossSync.pytest
     async def test_close_w_sessions_manager(self):
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._sessions_manager = mock.AsyncMock()
         await database.close()
         database._sessions_manager.close.assert_called_once()
@@ -2399,7 +2414,7 @@ class TestDatabase(_BaseTest):
 
         api = build_spanner_api()
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._spanner_api = api
 
         from google.cloud.spanner_v1._async.database import BatchSnapshot
@@ -2440,7 +2455,7 @@ class TestDatabase(_BaseTest):
         )
 
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._instance.experimental_host = "localhost:1234"
         database._instance._client._use_plain_text = True
         database._instance._client._ca_certificate = None
@@ -2458,7 +2473,7 @@ class TestDatabase(_BaseTest):
 
         api = build_spanner_api()
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._spanner_api = api
         session = Session(database)
         session._session_id = "session-id"
@@ -2483,7 +2498,7 @@ class TestDatabase(_BaseTest):
     async def test_database_dialect_postgresql(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._database_dialect = DatabaseDialect.POSTGRESQL
         self.assertEqual(database.default_schema_name, "public")
 
@@ -2491,7 +2506,7 @@ class TestDatabase(_BaseTest):
     async def test_reconciling_property(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._reconciling = True
         self.assertTrue(database.reconciling)
 
@@ -2499,7 +2514,7 @@ class TestDatabase(_BaseTest):
     async def test_enable_drop_protection_property(self):
         client = _Client()
         instance = _Instance(self.INSTANCE_NAME, client=client)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database.enable_drop_protection = True
         self.assertTrue(database.enable_drop_protection)
 
@@ -2509,7 +2524,7 @@ class TestDatabase(_BaseTest):
         # But let's be explicit
         api = build_spanner_api()
         instance = _Instance(self.INSTANCE_NAME)
-        database = self._make_one(self.DATABASE_ID, instance)
+        database = await self._make_one(self.DATABASE_ID, instance)
         database._spanner_api = api
         database._route_to_leader_enabled = True
 
@@ -2544,14 +2559,11 @@ class TestBatchSnapshot(_BaseTest):
 
         return BatchSnapshot
 
-    def _make_one(self, *args, **kw):
-        return self._get_target_class()(*args, **kw)
-
     @CrossSync.pytest
     async def test_get_batch_transaction_id_not_begun(self):
         database = mock.Mock()
         database.name = self.DATABASE_NAME
-        batch = self._make_one(database)
+        batch = await self._make_one(database)
         batch._snapshot = None
         with self.assertRaises(ValueError):
             batch.get_batch_transaction_id()
@@ -2562,7 +2574,7 @@ class TestBatchSnapshot(_BaseTest):
 
         database = mock.Mock()
         database.name = self.DATABASE_NAME
-        batch = self._make_one(database)
+        batch = await self._make_one(database)
         snapshot = mock.Mock()
         snapshot._transaction_id = b"tid"
         snapshot._read_timestamp = "ts"
@@ -2577,7 +2589,7 @@ class TestBatchSnapshot(_BaseTest):
     async def test__get_snapshot_w_inline_begin(self):
         database = mock.Mock()
         database.name = self.DATABASE_NAME
-        batch = self._make_one(database)
+        batch = await self._make_one(database)
 
         session = mock.Mock()
         snapshot = mock.AsyncMock()
@@ -2595,7 +2607,7 @@ class TestBatchSnapshot(_BaseTest):
 
         database = mock.Mock()
         database.name = self.DATABASE_NAME
-        batch = self._make_one(database)
+        batch = await self._make_one(database)
 
         session = mock.Mock()
         snapshot = mock.AsyncMock()
@@ -2616,7 +2628,7 @@ class TestBatchSnapshot(_BaseTest):
     async def test__get_snapshot_already_exists(self):
         database = mock.Mock()
         database.name = self.DATABASE_NAME
-        batch = self._make_one(database)
+        batch = await self._make_one(database)
         snapshot = mock.Mock()
         batch._snapshot = snapshot
 
@@ -2643,7 +2655,7 @@ class TestBatchCheckout(_BaseTest):
     @CrossSync.pytest
     async def test_ctor(self):
         database = _Database(self.DATABASE_NAME)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
         self.assertIs(checkout._database, database)
 
     @CrossSync.pytest
@@ -2665,7 +2677,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(
+        checkout = await self._make_one(
             database, request_options={"transaction_tag": self.TRANSACTION_TAG}
         )
 
@@ -2719,7 +2731,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         async with checkout as batch:
             self.assertIsNone(pool._session)
@@ -2768,7 +2780,9 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database, timeout_secs=0.1, default_retry_delay=0)
+        checkout = await self._make_one(
+            database, timeout_secs=0.1, default_retry_delay=0
+        )
 
         # Exception has request_id attribute added
         with pytest.raises(Aborted) as context:
@@ -2814,7 +2828,7 @@ class TestBatchCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         class Testing(Exception):
             pass
@@ -2845,7 +2859,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool = database._pool = _Pool()
         pool.put(session)
 
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
         self.assertIs(checkout._database, database)
         self.assertEqual(checkout._kw, {})
 
@@ -2869,7 +2883,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool = database._pool = _Pool()
         pool.put(session)
 
-        checkout = self._make_one(database, read_timestamp=now, multi_use=True)
+        checkout = await self._make_one(database, read_timestamp=now, multi_use=True)
         self.assertIs(checkout._database, database)
         self.assertEqual(checkout._kw, {"read_timestamp": now, "multi_use": True})
 
@@ -2890,7 +2904,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         class Testing(Exception):
             pass
@@ -2917,7 +2931,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool._new_session = mock.MagicMock(return_value=new_session)
 
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         self.assertEqual(pool._session, session)
         with pytest.raises(NotFound):
@@ -2937,7 +2951,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool._new_session = mock.MagicMock(return_value=[])
 
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         self.assertEqual(pool._session, session)
         with pytest.raises(NotFound):
@@ -2954,7 +2968,7 @@ class TestSnapshotCheckout(_BaseTest):
         pool = database._pool = _Pool()
         pool._new_session = mock.MagicMock(return_value=[])
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         class Testing(Exception):
             pass
@@ -3015,7 +3029,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     async def test_ctor_no_staleness(self):
         database = self._make_database()
 
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
 
         self.assertIs(batch_txn._database, database)
         self.assertIsNone(batch_txn._session)
@@ -3028,7 +3042,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         database = self._make_database()
         timestamp = self._make_timestamp()
 
-        batch_txn = self._make_one(database, read_timestamp=timestamp)
+        batch_txn = await self._make_one(database, read_timestamp=timestamp)
 
         self.assertIs(batch_txn._database, database)
         self.assertIsNone(batch_txn._session)
@@ -3041,7 +3055,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         database = self._make_database()
         duration = self._make_duration()
 
-        batch_txn = self._make_one(database, exact_staleness=duration)
+        batch_txn = await self._make_one(database, exact_staleness=duration)
 
         self.assertIs(batch_txn._database, database)
         self.assertIsNone(batch_txn._session)
@@ -3073,7 +3087,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test_to_dict(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         batch_txn._session = self._make_session(_session_id=self.SESSION_ID)
         batch_txn._snapshot = self._make_snapshot(transaction_id=self.TRANSACTION_ID)
 
@@ -3087,7 +3101,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test__get_session_already(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         already = batch_txn._session = object()
         self.assertIs(await batch_txn._get_session(), already)
 
@@ -3097,7 +3111,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         session = self._make_session()
         # Configure sessions_manager to return the session for partition operations
         database.sessions_manager.get_session.side_effect = lambda tx_type: session
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         self.assertIs(await batch_txn._get_session(), session)
         # Verify that sessions_manager.get_session was called with PARTITIONED transaction type
         database.sessions_manager.get_session.assert_called_once_with(
@@ -3107,7 +3121,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test__get_snapshot_already(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         already = batch_txn._snapshot = self._make_snapshot()
         self.assertIs(await batch_txn._get_snapshot(), already)
         already.begin.assert_not_called()
@@ -3115,7 +3129,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test__get_snapshot_new_wo_staleness(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         session = batch_txn._session = self._make_session()
         snapshot = session.snapshot.return_value = self._make_snapshot()
         self.assertIs(await batch_txn._get_snapshot(), snapshot)
@@ -3132,7 +3146,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     async def test__get_snapshot_w_read_timestamp(self):
         database = self._make_database()
         timestamp = self._make_timestamp()
-        batch_txn = self._make_one(database, read_timestamp=timestamp)
+        batch_txn = await self._make_one(database, read_timestamp=timestamp)
         session = batch_txn._session = self._make_session()
         snapshot = session.snapshot.return_value = self._make_snapshot()
         self.assertIs(await batch_txn._get_snapshot(), snapshot)
@@ -3149,7 +3163,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     async def test__get_snapshot_w_exact_staleness(self):
         database = self._make_database()
         duration = self._make_duration()
-        batch_txn = self._make_one(database, exact_staleness=duration)
+        batch_txn = await self._make_one(database, exact_staleness=duration)
         session = batch_txn._session = self._make_session()
         snapshot = session.snapshot.return_value = self._make_snapshot()
         self.assertIs(await batch_txn._get_snapshot(), snapshot)
@@ -3166,7 +3180,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     async def test_read(self):
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
 
         rows = await batch_txn.read(self.TABLE, self.COLUMNS, keyset, self.INDEX)
@@ -3184,7 +3198,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         params = {"max_age": 30}
         param_types = {"max_age": "INT64"}
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
 
         rows = await batch_txn.execute_sql(sql, params, param_types)
@@ -3197,7 +3211,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         max_partitions = len(self.TOKENS)
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
@@ -3237,7 +3251,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         max_partitions = len(self.TOKENS)
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
         retry = Retry(deadline=60)
@@ -3282,7 +3296,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         size = 1 << 20
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
@@ -3326,7 +3340,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         data_boost_enabled = True
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
@@ -3369,7 +3383,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     async def test_generate_read_batches_w_directed_read_options(self):
         keyset = self._make_keyset()
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_read.return_value = self.TOKENS
 
@@ -3422,7 +3436,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             },
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.read.return_value = object()
 
@@ -3454,7 +3468,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             },
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.read.return_value = object()
         retry = Retry(deadline=60)
@@ -3479,7 +3493,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = _Database(self.DATABASE_NAME, instance=instance)
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
@@ -3522,7 +3536,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = _Database(self.DATABASE_NAME, instance=instance)
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
@@ -3567,7 +3581,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = _Database(self.DATABASE_NAME, instance=instance)
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
         retry = Retry(deadline=60)
@@ -3612,7 +3626,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = _Database(self.DATABASE_NAME, instance=instance)
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
@@ -3650,7 +3664,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         client = _Client(self.PROJECT_ID)
         instance = _Instance(self.INSTANCE_NAME, client=client)
         database = _Database(self.DATABASE_NAME, instance=instance)
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         snapshot.partition_query.return_value = self.TOKENS
 
@@ -3695,7 +3709,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             "query": {"sql": sql, "params": params, "param_types": param_types},
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.execute_sql.return_value = object()
 
@@ -3726,7 +3740,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             "query": {"sql": sql, "params": params, "param_types": param_types},
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.execute_sql.return_value = object()
         retry = Retry(deadline=60)
@@ -3753,7 +3767,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             "query": {"sql": sql, "directed_read_options": DIRECTED_READ_OPTIONS},
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.execute_sql.return_value = object()
 
@@ -3773,7 +3787,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test_context_manager(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         session = batch_txn._session = self._make_session()
         session.is_multiplexed = False
 
@@ -3785,14 +3799,14 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test_close_wo_session(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
 
         await batch_txn.close()  # no raise
 
     @CrossSync.pytest
     async def test_close_w_session(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         session = batch_txn._session = self._make_session()
         # Configure session as non-multiplexed (default behavior)
         session.is_multiplexed = False
@@ -3804,7 +3818,7 @@ class TestBatchSnapshotPart2(_BaseTest):
     @CrossSync.pytest
     async def test_close_w_multiplexed_session(self):
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         session = batch_txn._session = self._make_session()
         # Configure session as multiplexed
         session.is_multiplexed = True
@@ -3819,7 +3833,7 @@ class TestBatchSnapshotPart2(_BaseTest):
         token = b"TOKEN"
         batch = {"partition": token, "bogus": b"BOGUS"}
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
 
         with pytest.raises(ValueError):
             await batch_txn.process(batch)
@@ -3838,7 +3852,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             },
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.read.return_value = object()
 
@@ -3869,7 +3883,7 @@ class TestBatchSnapshotPart2(_BaseTest):
             "query": {"sql": sql, "params": params, "param_types": param_types},
         }
         database = self._make_database()
-        batch_txn = self._make_one(database)
+        batch_txn = await self._make_one(database)
         snapshot = batch_txn._snapshot = self._make_snapshot()
         expected = snapshot.execute_sql.return_value = object()
 
@@ -3912,7 +3926,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
         self.assertIs(checkout._database, database)
 
         async with checkout as groups:
@@ -3947,7 +3961,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         request_options = RequestOptions(transaction_tag=self.TRANSACTION_TAG)
         request = BatchWriteRequest(
@@ -3998,7 +4012,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool = database._pool = _Pool()
         session = _Session(database)
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         class Testing(Exception):
             pass
@@ -4025,7 +4039,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool._new_session = mock.MagicMock(return_value=new_session)
 
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         self.assertEqual(pool._session, session)
         with pytest.raises(NotFound):
@@ -4045,7 +4059,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool._new_session = mock.MagicMock(return_value=[])
 
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         self.assertEqual(pool._session, session)
         with pytest.raises(NotFound):
@@ -4062,7 +4076,7 @@ class TestMutationGroupsCheckout(_BaseTest):
         pool = database._pool = _Pool()
         pool._new_session = mock.MagicMock(return_value=[])
         pool.put(session)
-        checkout = self._make_one(database)
+        checkout = await self._make_one(database)
 
         class Testing(Exception):
             pass
@@ -4260,7 +4274,7 @@ class _Database(object):
 class _Pool(object):
     _bound = None
 
-    def bind(self, database):
+    async def bind(self, database):
         self._bound = database
 
     def get(self):

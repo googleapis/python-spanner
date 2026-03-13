@@ -74,6 +74,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_execute_partitioned_dml_coverage(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         db._route_to_leader_enabled = True
 
         mock_session = mock.MagicMock()
@@ -101,6 +102,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_execute_partitioned_dml_branch(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         db._route_to_leader_enabled = False
 
         mock_session = mock.MagicMock()
@@ -126,6 +128,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_execute_partitioned_dml_aborted(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         call_count = 0
 
@@ -187,6 +190,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_list_tables_extra(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         # Dialect POSTGRESQL
         db._database_dialect = DatabaseDialect.POSTGRESQL
@@ -216,6 +220,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_database_options_coverage(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         # Test observability_options when instance/client are None
         db._instance = None
@@ -240,6 +245,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_batch_snapshot_coverage(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         # session_id provided
         bs = BatchSnapshot(db, session_id="session-id")
@@ -258,6 +264,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_batch_checkout_extra(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         # request_options as object
         ro = RequestOptions(transaction_tag="tag")
@@ -268,6 +275,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_reload_dialect_coverage(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         mock_api = self.instance._client.database_admin_api
         mock_api.get_database_ddl.return_value = mock.Mock(
@@ -295,12 +303,14 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_run_in_transaction_nested_error(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         db._local.transaction_running = True
         with self.assertRaises(RuntimeError):
             await db.run_in_transaction(lambda txn: None)
 
     async def test_snapshot_options_coverage(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         # observability_options read-only property (already handled in Database)
         # We just want to make sure it exists on Snapshot as well if we added it.
@@ -310,6 +320,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_spanner_api_channel_id(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         # First call sets channel_id
         api1 = db.spanner_api
         # Second call reuses it
@@ -318,6 +329,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_snapshot_checkout_not_found(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         from google.cloud.spanner_v1._async.database import SnapshotCheckout
 
         sc = SnapshotCheckout(db)
@@ -344,6 +356,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_mutation_groups_checkout_not_found(self):
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         from google.cloud.spanner_v1._async.database import MutationGroupsCheckout
 
         mgc = MutationGroupsCheckout(db)
@@ -371,6 +384,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
     async def test_database_init_no_client(self):
         # Coverage for lines 206, 215-216
         db = Database("db", None)
+        await db._pool.bind(db)
         self.assertFalse(db._route_to_leader_enabled)
         self.assertIsNone(db._directed_read_options)
         self.assertIsNone(db.default_transaction_options)
@@ -378,6 +392,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
     async def test_update_ddl_proto_descriptors(self):
         # Coverage for lines 540-543
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         mock_api = self.instance._client.database_admin_api
         mock_api.update_database_ddl = mock.AsyncMock()
         await db.update_ddl(["CREATE TABLE foo"], proto_descriptors=b"descriptors")
@@ -390,6 +405,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
     async def test_execute_partitioned_dml_with_params(self):
         # Coverage for line 958
         db = Database("db", self.instance)
+        await db._pool.bind(db)
 
         mock_session = mock.MagicMock()
         mock_session.name = "projects/p/instances/i/databases/db/sessions/s"
@@ -420,6 +436,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
     async def test_batch_snapshot_read_execute_coverage(self):
         # coverage for line 1825 in database.py (actually in BatchSnapshot)
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         mock_session = mock.MagicMock()
         mock_session.name = "projects/p/instances/i/databases/db/sessions/s"
         mock_session.session_id = "s"
@@ -452,6 +469,7 @@ class TestDatabaseExtra(unittest.IsolatedAsyncioTestCase):
     async def test_batch_commit_options_coverage(self):
         # coverage for line 1603, 1655
         db = Database("db", self.instance)
+        await db._pool.bind(db)
         batch = db.batch()
 
         mock_session = mock.MagicMock()
