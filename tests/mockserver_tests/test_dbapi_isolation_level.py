@@ -26,9 +26,7 @@ from tests.mockserver_tests.mock_server_test_base import (
 
 def _get_first_execute_sql_request(requests):
     """Return the first ExecuteSqlRequest from the captured requests."""
-    return next(
-        req for req in requests if isinstance(req, ExecuteSqlRequest)
-    )
+    return next(req for req in requests if isinstance(req, ExecuteSqlRequest))
 
 
 class TestDbapiIsolationLevel(MockServerTestBase):
@@ -63,12 +61,8 @@ class TestDbapiIsolationLevel(MockServerTestBase):
                 )
                 self.assertEqual(1, cursor.rowcount)
             connection.commit()
-            sql_request = _get_first_execute_sql_request(
-                self.spanner_service.requests
-            )
-            self.assertEqual(
-                sql_request.transaction.begin.isolation_level, level
-            )
+            sql_request = _get_first_execute_sql_request(self.spanner_service.requests)
+            self.assertEqual(sql_request.transaction.begin.isolation_level, level)
             MockServerTestBase.spanner_service.clear_requests()
 
     def test_isolation_level_in_connection_kwargs(self):
@@ -84,12 +78,8 @@ class TestDbapiIsolationLevel(MockServerTestBase):
                 )
                 self.assertEqual(1, cursor.rowcount)
             connection.commit()
-            sql_request = _get_first_execute_sql_request(
-                self.spanner_service.requests
-            )
-            self.assertEqual(
-                sql_request.transaction.begin.isolation_level, level
-            )
+            sql_request = _get_first_execute_sql_request(self.spanner_service.requests)
+            self.assertEqual(sql_request.transaction.begin.isolation_level, level)
             MockServerTestBase.spanner_service.clear_requests()
 
     def test_transaction_isolation_level(self):
@@ -106,12 +96,8 @@ class TestDbapiIsolationLevel(MockServerTestBase):
                 )
                 self.assertEqual(1, cursor.rowcount)
             connection.commit()
-            sql_request = _get_first_execute_sql_request(
-                self.spanner_service.requests
-            )
-            self.assertEqual(
-                sql_request.transaction.begin.isolation_level, level
-            )
+            sql_request = _get_first_execute_sql_request(self.spanner_service.requests)
+            self.assertEqual(sql_request.transaction.begin.isolation_level, level)
             MockServerTestBase.spanner_service.clear_requests()
 
     def test_begin_isolation_level(self):
@@ -128,12 +114,8 @@ class TestDbapiIsolationLevel(MockServerTestBase):
                 )
                 self.assertEqual(1, cursor.rowcount)
             connection.commit()
-            sql_request = _get_first_execute_sql_request(
-                self.spanner_service.requests
-            )
-            self.assertEqual(
-                sql_request.transaction.begin.isolation_level, level
-            )
+            sql_request = _get_first_execute_sql_request(self.spanner_service.requests)
+            self.assertEqual(sql_request.transaction.begin.isolation_level, level)
             MockServerTestBase.spanner_service.clear_requests()
 
     def test_begin_invalid_isolation_level(self):
