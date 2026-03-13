@@ -52,6 +52,8 @@ else:
 
 from google.cloud.spanner_admin_instance_v1 import (
     InstanceAdminAsyncClient as InstanceAdminClient,
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
 )
 
 if CrossSync.is_async:
@@ -63,18 +65,15 @@ else:
         InstanceAdminGrpcTransport,
     )
 
-from google.cloud.spanner_admin_instance_v1 import (
-    ListInstanceConfigsRequest,
-    ListInstancesRequest,
-)
-
 
 from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
     _create_experimental_host_transport,
+    _merge_query_options,
+    _metadata_with_prefix,
     _validate_client_context,
 )
-from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
 from google.cloud.spanner_v1.gapic_version import __version__
 from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
@@ -95,9 +94,9 @@ try:
 except ImportError:  # pragma: NO COVER
     HAS_GOOGLE_CLOUD_MONITORING_INSTALLED = False
 
-from google.cloud.spanner_v1._helpers import AtomicCounter
 
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
+
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
 SPANNER_DISABLE_BUILTIN_METRICS_ENV_VAR = "SPANNER_DISABLE_BUILTIN_METRICS"
 _EMULATOR_HOST_HTTP_SCHEME = (

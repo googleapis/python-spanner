@@ -32,15 +32,16 @@ import grpc
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_admin_database_v1 import (
+    CreateDatabaseRequest,
+    Database as DatabasePB,
     EncryptionConfig,
     ListDatabaseRolesRequest,
     RestoreDatabaseEncryptionConfig,
     RestoreDatabaseRequest,
     UpdateDatabaseDdlRequest,
 )
-from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
+
 from google.cloud.spanner_v1._async.batch import Batch, MutationGroups
 from google.cloud.spanner_v1._async.database_sessions_manager import (
     DatabaseSessionsManager,
@@ -89,6 +90,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     get_current_span,
     trace_call,
 )
+
 
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.table import Table
@@ -489,7 +491,6 @@ class Database(object):
                 self._spanner_api = SpannerClient(
                     client_info=client_info, transport=transport
                 )
-
 
                 return self._spanner_api
             if self._experimental_host is not None:

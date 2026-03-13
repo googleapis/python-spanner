@@ -44,17 +44,19 @@ from google.cloud.spanner_admin_database_v1.services.database_admin.transports.g
 )
 from google.cloud.spanner_admin_instance_v1 import (
     InstanceAdminClient as InstanceAdminClient,
+    ListInstanceConfigsRequest,
+    ListInstancesRequest,
 )
 from google.cloud.spanner_admin_instance_v1.services.instance_admin.transports.grpc import (
     InstanceAdminGrpcTransport,
 )
-from google.cloud.spanner_admin_instance_v1 import (
-    ListInstanceConfigsRequest,
-    ListInstancesRequest,
-)
 from google.cloud.spanner_v1.instance import Instance
-from google.cloud.spanner_v1._helpers import _validate_client_context
-from google.cloud.spanner_v1._helpers import _merge_query_options, _metadata_with_prefix
+from google.cloud.spanner_v1._helpers import (
+    AtomicCounter,
+    _merge_query_options,
+    _metadata_with_prefix,
+    _validate_client_context,
+)
 from google.cloud.spanner_v1.gapic_version import __version__
 from google.cloud.spanner_v1.metrics.constants import METRIC_EXPORT_INTERVAL_MS
 from google.cloud.spanner_v1.metrics.metrics_exporter import (
@@ -74,8 +76,6 @@ try:
     HAS_GOOGLE_CLOUD_MONITORING_INSTALLED = True
 except ImportError:
     HAS_GOOGLE_CLOUD_MONITORING_INSTALLED = False
-from google.cloud.spanner_v1._helpers import AtomicCounter
-
 _CLIENT_INFO = client_info.ClientInfo(client_library_version=__version__)
 EMULATOR_ENV_VAR = "SPANNER_EMULATOR_HOST"
 SPANNER_DISABLE_BUILTIN_METRICS_ENV_VAR = "SPANNER_DISABLE_BUILTIN_METRICS"

@@ -32,14 +32,14 @@ import grpc
 from google.cloud.aio._cross_sync import CrossSync
 from google.cloud.exceptions import NotFound
 from google.cloud.spanner_admin_database_v1 import (
+    CreateDatabaseRequest,
+    Database as DatabasePB,
     EncryptionConfig,
     ListDatabaseRolesRequest,
     RestoreDatabaseEncryptionConfig,
     RestoreDatabaseRequest,
     UpdateDatabaseDdlRequest,
 )
-from google.cloud.spanner_admin_database_v1 import CreateDatabaseRequest
-from google.cloud.spanner_admin_database_v1 import Database as DatabasePB
 from google.cloud.spanner_admin_database_v1.types import DatabaseDialect
 from google.cloud.spanner_v1.batch import Batch, MutationGroups
 from google.cloud.spanner_v1.database_sessions_manager import (
