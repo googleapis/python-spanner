@@ -63,10 +63,13 @@ else:
         InstanceAdminGrpcTransport,
     )
 
+
 from google.cloud.spanner_admin_instance_v1 import (
     ListInstanceConfigsRequest,
     ListInstancesRequest,
 )
+
+
 from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import (
     _merge_query_options,
@@ -396,6 +399,7 @@ class Client(ClientWithProject):
                     client_options=self._client_options,
                     transport=transport,
                 )
+
             elif self._experimental_host:
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
@@ -413,6 +417,7 @@ class Client(ClientWithProject):
                         self._client_certificate,
                         self._client_key,
                     )
+
                 else:
                     transport = _create_experimental_host_transport_sync(
                         InstanceAdminGrpcTransport,
@@ -422,6 +427,7 @@ class Client(ClientWithProject):
                         self._client_certificate,
                         self._client_key,
                     )
+
                 self._instance_admin_api = InstanceAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
@@ -433,6 +439,7 @@ class Client(ClientWithProject):
                     client_info=self._client_info,
                     client_options=self._client_options,
                 )
+
         return self._instance_admin_api
 
     @property
@@ -450,6 +457,7 @@ class Client(ClientWithProject):
                     client_options=self._client_options,
                     transport=transport,
                 )
+
             elif self._experimental_host:
                 from google.cloud.spanner_v1._async._helpers import (
                     _create_experimental_host_transport as _create_experimental_host_transport_async,
@@ -467,6 +475,7 @@ class Client(ClientWithProject):
                         self._client_certificate,
                         self._client_key,
                     )
+
                 else:
                     transport = _create_experimental_host_transport_sync(
                         DatabaseAdminGrpcTransport,
@@ -476,11 +485,13 @@ class Client(ClientWithProject):
                         self._client_certificate,
                         self._client_key,
                     )
+
                 self._database_admin_api = DatabaseAdminClient(
                     client_info=self._client_info,
                     client_options=self._client_options,
                     transport=transport,
                 )
+
             else:
                 self._database_admin_api = DatabaseAdminClient(
                     credentials=self.credentials,
