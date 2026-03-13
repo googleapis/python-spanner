@@ -12,19 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import pytest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
 from google.api_core.exceptions import ServiceUnavailable
 from google.auth import exceptions
 from google.auth.credentials import Credentials
+from grpc._interceptor import _UnaryOutcome
+from opentelemetry import metrics
+import pytest
 
 from google.cloud.spanner_v1.client import Client
-from unittest.mock import patch
-from grpc._interceptor import _UnaryOutcome
 from google.cloud.spanner_v1.metrics.spanner_metrics_tracer_factory import (
     SpannerMetricsTracerFactory,
 )
-from opentelemetry import metrics
 
 pytest.importorskip("opentelemetry")
 # Skip if semconv attributes are not present, as tracing won't be enabled either
@@ -53,7 +53,7 @@ class TestCredentials(Credentials):
 
 @pytest.fixture(autouse=True)
 def patched_client(monkeypatch):
-    monkeypatch.setenv("SPANNER_ENABLE_BUILTIN_METRICS", "true")
+    monkeypatch.setenv("SPANNER_DISABLE_BUILTIN_METRICS", "false")
     metrics.set_meter_provider(metrics.NoOpMeterProvider())
 
     # Remove the Tracer factory to avoid previously disabled factory polluting from other tests
