@@ -145,7 +145,7 @@ async def shared_database(
     pool = spanner_v1.AsyncBurstyPool(labels={"testcase": "database_api_async"})
 
     if database_dialect == DatabaseDialect.POSTGRESQL:
-        database = shared_instance.database(
+        database = await shared_instance.database(
             database_name,
             pool=pool,
             database_dialect=database_dialect,
@@ -156,7 +156,7 @@ async def shared_database(
         op = await database.update_ddl(ddl_statements=_helpers.DDL_STATEMENTS)
         await op.result(database_operation_timeout)
     else:
-        database = shared_instance.database(
+        database = await shared_instance.database(
             database_name,
             ddl_statements=_helpers.DDL_STATEMENTS,
             pool=pool,

@@ -83,7 +83,10 @@ class _BaseTest(unittest.TestCase):
     DATABASE_ROLE = "dummy-role"
 
     def _make_one(self, *args, **kwargs):
-        return self._get_target_class()(*args, **kwargs)
+        db = self._get_target_class()(*args, **kwargs)
+        if hasattr(db, "_pool"):
+            db._pool.bind(db)
+        return db
 
     @staticmethod
     def _make_timestamp():
@@ -141,7 +144,10 @@ class TestDatabase(_BaseTest):
     def test_ctor_w_explicit_pool(self):
         instance = _Instance(self.INSTANCE_NAME)
         pool = _Pool()
-        database = self._make_one(self.DATABASE_ID, instance, pool=pool)
+        # Not using _make_one as we want to test ctor specifically,
+        # but now we must call bind() manually.
+        database = self._get_target_class()(self.DATABASE_ID, instance, pool=pool)
+        database._pool.bind(database)
         self.assertEqual(database.database_id, self.DATABASE_ID)
         self.assertIs(database._instance, instance)
         self.assertEqual(list(database.ddl_statements), [])

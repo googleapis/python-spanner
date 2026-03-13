@@ -455,7 +455,7 @@ class Instance(object):
         :rtype: :class:`~google.cloud.spanner_v1.database.Database`
         :returns: a database owned by this instance."""
         if not enable_interceptors_in_tests:
-            return Database(
+            db = Database(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -468,7 +468,7 @@ class Instance(object):
                 proto_descriptors=proto_descriptors,
             )
         else:
-            return TestDatabase(
+            db = TestDatabase(
                 database_id,
                 self,
                 ddl_statements=ddl_statements,
@@ -479,6 +479,8 @@ class Instance(object):
                 database_role=database_role,
                 enable_drop_protection=enable_drop_protection,
             )
+        db._pool.bind(db)
+        return db
 
     def list_databases(self, page_size=None):
         """List databases for the instance.

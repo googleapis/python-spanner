@@ -36,7 +36,7 @@ async def test_table_not_found(shared_instance):
     )
     create_index = f"CREATE INDEX IDX ON {incorrect_table} (Field1)"
 
-    temp_db = shared_instance.database(
+    temp_db = await shared_instance.database(
         temp_db_id, ddl_statements=[create_table, create_index]
     )
     with pytest.raises(exceptions.NotFound):
@@ -55,7 +55,7 @@ async def test_list_databases(shared_instance, shared_database):
 async def test_create_database(shared_instance, databases_to_delete, database_dialect):
     pool = spanner_v1.AsyncBurstyPool(labels={"testcase": "create_database_async"})
     temp_db_id = _helpers.unique_id("temp_db_async")
-    temp_db = shared_instance.database(
+    temp_db = await shared_instance.database(
         temp_db_id, pool=pool, database_dialect=database_dialect
     )
     operation = await temp_db.create()

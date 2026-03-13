@@ -174,6 +174,9 @@ def build_database(**kwargs: Mapping) -> Database:
     database = cls(**kwargs)
     database._spanner_api = build_spanner_api()
 
+    if not is_async:
+        database._pool.bind(database)
+
     return database
 
 
