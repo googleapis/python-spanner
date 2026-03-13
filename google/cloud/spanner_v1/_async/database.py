@@ -83,11 +83,13 @@ else:
         SpannerGrpcTransport,
     )
 
+
 from google.cloud.spanner_v1._opentelemetry_tracing import (
     add_span_event,
     get_current_span,
     trace_call,
 )
+
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
 from google.cloud.spanner_v1.table import Table
 
@@ -487,6 +489,8 @@ class Database(object):
                 self._spanner_api = SpannerClient(
                     client_info=client_info, transport=transport
                 )
+
+
                 return self._spanner_api
             if self._experimental_host is not None:
                 from google.cloud.spanner_v1._async._helpers import (

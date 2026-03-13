@@ -327,17 +327,21 @@ class Cursor(object):
                 self._execute_in_rw_transaction()
 
         except (AlreadyExists, FailedPrecondition, OutOfRange) as e:
-            exception = e
-            raise IntegrityError(getattr(e, "details", e)) from e
+            exception = IntegrityError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
         except InvalidArgument as e:
-            exception = e
-            raise ProgrammingError(getattr(e, "details", e)) from e
+            exception = ProgrammingError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
         except InternalServerError as e:
-            exception = e
-            raise OperationalError(getattr(e, "details", e)) from e
+            exception = OperationalError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
         except Exception as e:
             exception = e
             raise
+
         finally:
             if not self._in_retry_mode and not call_from_execute_many:
                 self.transaction_helper.add_execute_statement_for_retry(
