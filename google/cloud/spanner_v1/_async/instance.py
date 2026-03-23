@@ -34,7 +34,12 @@ from google.cloud.spanner_admin_database_v1 import (
 from google.cloud.spanner_admin_database_v1.types import backup, spanner_database_admin
 from google.cloud.spanner_admin_instance_v1 import Instance as InstancePB
 from google.cloud.spanner_v1._async.database import Database
-from google.cloud.spanner_v1.testing.database_test import TestDatabase
+
+if CrossSync.is_async:
+    from google.cloud.spanner_v1._async.testing.database_test import TestDatabase
+else:
+    from google.cloud.spanner_v1.testing.database_test import TestDatabase
+
 from google.cloud.spanner_v1._helpers import _metadata_with_prefix
 from google.cloud.spanner_v1.backup import Backup
 
@@ -524,7 +529,9 @@ class Instance(object):
                 enable_drop_protection=enable_drop_protection,
             )
 
-        await db._pool.bind(db)
+        res = db._pool.bind(db)
+        if res is not None:
+            await res
         return db
 
     @CrossSync.convert

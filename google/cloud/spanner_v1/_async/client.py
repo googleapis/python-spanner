@@ -23,6 +23,7 @@ In the hierarchy of API concepts
 * a :class:`~google.cloud.spanner_v1.instance.Instance` owns a
   :class:`~google.cloud.spanner_v1.database.Database`
 """
+
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.client"
 import logging
 import os
@@ -69,7 +70,6 @@ else:
 from google.cloud.spanner_v1._async.instance import Instance
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
-    _create_experimental_host_transport,
     _merge_query_options,
     _metadata_with_prefix,
     _validate_client_context,

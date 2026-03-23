@@ -35,9 +35,8 @@ class TestSessionsManagerExtra(unittest.IsolatedAsyncioTestCase):
 
     async def test_get_session_experimental_host(self):
         # coverage for line 87 (experimental host branch)
-        manager = DatabaseSessionsManager(
-            self.database, self.pool, is_experimental_host=True
-        )
+        self.database._experimental_host = "experimental"
+        manager = DatabaseSessionsManager(self.database, self.pool)
         session = mock.Mock()
         session.is_multiplexed = True
         session.session_id = "sid"

@@ -204,7 +204,6 @@ class Database(object):
         self._experimental_host = (
             self._instance.experimental_host if self._instance else None
         )
-        is_experimental_host = self._experimental_host is not None
         self._sessions_manager = DatabaseSessionsManager(self, pool)
 
     @property

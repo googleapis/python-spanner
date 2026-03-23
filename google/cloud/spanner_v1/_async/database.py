@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """User-friendly container for Cloud Spanner Database."""
+
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.database"
 import copy
 import functools
@@ -230,11 +231,7 @@ class Database(object):
         self._experimental_host = (
             self._instance.experimental_host if self._instance else None
         )
-        is_experimental_host = self._experimental_host is not None
-
-        self._sessions_manager = DatabaseSessionsManager(
-            self, pool 
-        )
+        self._sessions_manager = DatabaseSessionsManager(self, pool)
 
     @property
     def _resource_info(self):
@@ -1522,7 +1519,9 @@ class BatchCheckout(object):
             event_attributes={"id": self._session.session_id},
         )
 
-        batch = self._batch = Batch(session=self._session, client_context=self._client_context)
+        batch = self._batch = Batch(
+            session=self._session, client_context=self._client_context
+        )
         if self._request_options.transaction_tag:
             batch.transaction_tag = self._request_options.transaction_tag
 
@@ -1588,7 +1587,9 @@ class MutationGroupsCheckout(object):
             transaction_type
         )
 
-        return MutationGroups(session=self._session, client_context=self._client_context)
+        return MutationGroups(
+            session=self._session, client_context=self._client_context
+        )
 
     @CrossSync.convert(sync_name="__exit__")
     async def __aexit__(self, exc_type, exc_val, exc_tb):
@@ -1711,7 +1712,9 @@ class BatchSnapshot(object):
         instance._session_id = session._session_id = mapping["session_id"]
         instance._client_context = mapping.get("client_context")
 
-        snapshot = instance._snapshot = session.snapshot(client_context=instance._client_context)
+        snapshot = instance._snapshot = session.snapshot(
+            client_context=instance._client_context
+        )
         instance._transaction_id = snapshot._transaction_id = mapping["transaction_id"]
 
         return instance

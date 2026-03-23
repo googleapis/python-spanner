@@ -3674,20 +3674,20 @@ class _Database(object):
     def sessions_manager(self):
         if not hasattr(self, "_sessions_manager"):
             self._sessions_manager = mock.Mock()
-            
+
             def get_sess(*args, **kwargs):
                 if hasattr(self, "_pool"):
                     return self._pool.get()
                 return _Session(self)
-                
+
             self._sessions_manager.get_session.side_effect = get_sess
-            
+
             def put_sess(sess):
                 if hasattr(self, "_pool"):
                     self._pool.put(sess)
-                    
+
             self._sessions_manager.put_session.side_effect = put_sess
-            
+
         return self._sessions_manager
 
     @property

@@ -439,6 +439,18 @@ class Cursor(object):
 
             self._result_set = many_result_set
             self._itr = many_result_set
+        except (AlreadyExists, FailedPrecondition, OutOfRange) as e:
+            exception = IntegrityError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
+        except InvalidArgument as e:
+            exception = ProgrammingError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
+        except InternalServerError as e:
+            exception = OperationalError(getattr(e, "details", e))
+            exception.__cause__ = e
+            raise exception
         except Exception as e:
             exception = e
             raise

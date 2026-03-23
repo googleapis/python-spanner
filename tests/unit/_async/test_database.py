@@ -4209,14 +4209,6 @@ class _Database(object):
         self._sessions_manager = mock.Mock()
         self._nth_client_id = _Database.NTH_CLIENT_ID.increment()
 
-    @property
-    def _resource_info(self):
-        return {
-            "database": self.database_id,
-            "instance": self._instance.instance_id,
-            "project": self._instance._client.project,
-        }
-
         # Mock sessions manager for multiplexed sessions support
         self._sessions_manager = mock.Mock()
         # Configure get_session to return sessions from the pool
@@ -4233,31 +4225,30 @@ class _Database(object):
 
     @property
     def _resource_info(self):
-        """Resource information for metrics labels."""
         return {
-            "project": "project-id",
-            "instance": "instance-id",
             "database": self.database_id,
+            "instance": self._instance.instance_id,
+            "project": self._instance._client.project,
         }
 
     @property
     def sessions_manager(self):
         if not hasattr(self, "_sessions_manager"):
             self._sessions_manager = mock.Mock()
-            
+
             async def get_sess(*args, **kwargs):
                 if hasattr(self, "_pool"):
                     return self._pool.get()
                 return _Session(self)
-                
+
             self._sessions_manager.get_session.side_effect = get_sess
-            
+
             async def put_sess(sess):
                 if hasattr(self, "_pool"):
                     self._pool.put(sess)
-                    
+
             self._sessions_manager.put_session.side_effect = put_sess
-            
+
         return self._sessions_manager
 
     @property

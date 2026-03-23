@@ -13,6 +13,7 @@
 # limitations under the License.
 
 """Context manager for Cloud Spanner batched writes."""
+
 __CROSS_SYNC_OUTPUT__ = "google.cloud.spanner_v1.batch"
 import functools
 import time
@@ -30,7 +31,6 @@ from google.cloud.spanner_v1._helpers import (
     _validate_client_context,
     _check_rst_stream_error,
     _make_list_value_pbs,
-
     _merge_Transaction_Options,
     _metadata_with_leader_aware_routing,
     _metadata_with_prefix,
@@ -440,8 +440,6 @@ class MutationGroups(_SessionWrapper):
                     ),
                 )
                 return batch_write_method()
-
-            from google.cloud.spanner_v1._async._helpers import _retry
 
             response = await _retry(
                 wrapped_method,

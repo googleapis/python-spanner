@@ -20,7 +20,7 @@ import functools
 import time
 from typing import List, Optional
 from google.api_core.exceptions import InternalServerError
-from google.cloud.spanner_v1._helpers import _retry_on_aborted_exception
+from google.cloud.spanner_v1._helpers import _retry, _retry_on_aborted_exception
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
     _merge_client_context,
@@ -381,8 +381,6 @@ class MutationGroups(_SessionWrapper):
                     ),
                 )
                 return batch_write_method()
-
-            from google.cloud.spanner_v1._helpers import _retry
 
             response = _retry(
                 wrapped_method,

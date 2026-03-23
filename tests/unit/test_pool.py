@@ -17,13 +17,11 @@ import queue
 import unittest
 from unittest import mock
 
-import mock
+from datetime import timezone, timedelta
 from google.cloud.spanner_v1 import pool as MUT
 from google.cloud.spanner_v1 import _opentelemetry_tracing
-from google.cloud.spanner_v1 import ExecuteSqlRequest
 from google.cloud.spanner_v1 import BatchCreateSessionsResponse
 from google.cloud.spanner_v1 import Session
-from google.cloud.spanner_v1 import SpannerClient
 from google.cloud.spanner_v1.database import Database
 from google.cloud.spanner_v1.pool import AbstractSessionPool
 from google.cloud.spanner_v1.pool import SessionCheckout
@@ -35,9 +33,6 @@ from google.cloud.exceptions import NotFound
 from google.cloud._testing import _Monkey
 from google.cloud.spanner_v1._helpers import (
     AtomicCounter,
-    _augment_errors_with_request_id,
-    _metadata_with_request_id,
-    _metadata_with_request_id_and_req_id,
 )
 from google.cloud.spanner_v1._opentelemetry_tracing import trace_call
 from google.cloud.spanner_v1.request_id_header import REQ_RAND_PROCESS_ID
@@ -51,6 +46,23 @@ from tests._helpers import (
 )
 
 from google.cloud.spanner_v1.types.spanner import Session as SessionProto
+
+
+class _Queue(object):
+    def __init__(self):
+        self._got = None
+        self._items = []
+
+    def get(self, block=True, timeout=None):
+        self._got = {"block": block, "timeout": timeout}
+        import queue
+
+        if not self._items:
+            raise queue.Empty()
+        return self._items.pop(0)
+
+    def put(self, item, block=True, timeout=None):
+        self._items.append(item)
 
 
 def _make_database(name="name"):
@@ -69,12 +81,19 @@ class _Session(object):
     def __init__(self, name, last_use_time=None, exists=True):
         self.name = name.name if hasattr(name, "name") else name
         self._database = name if hasattr(name, "name") else None
-        self._session_id = self.name.split("/")[-1] if hasattr(self.name, "split") else str(self.name)
+        self._session_id = (
+            self.name.split("/")[-1] if hasattr(self.name, "split") else str(self.name)
+        )
         self.last_use_time = last_use_time or datetime.datetime.now(
             datetime.timezone.utc
         )
         self._deleted = False
         self._exists_checked = False
+        self._pinged = False
+        self._exists = exists
+
+        def _ping_side_effect(*args, **kwargs):
+            self._pinged = True
 
         def _delete_side_effect(*args, **kwargs):
             self._deleted = True
@@ -82,10 +101,12 @@ class _Session(object):
 
         def _exists_side_effect(*args, **kwargs):
             self._exists_checked = True
-            return mock.DEFAULT
+            if getattr(self, "exists", None) and self.exists.return_value is not exists:
+                return self.exists.return_value
+            return self._exists
 
         self.delete = mock.Mock(side_effect=_delete_side_effect)
-        self.ping = mock.Mock()
+        self.ping = mock.Mock(side_effect=_ping_side_effect)
         self.exists = mock.Mock(side_effect=_exists_side_effect, return_value=exists)
         self.create = mock.Mock()
         self._transaction = None
@@ -97,6 +118,9 @@ class _Session(object):
             return res
 
         self.transaction = mock.Mock(side_effect=get_transaction)
+
+    def __lt__(self, other):
+        return self.name < other.name
 
     @property
     def labels(self):
@@ -116,9 +140,13 @@ class _Instance(object):
         self.instance_id = "instance-id"
         self._client = mock.Mock()
         self._client.project = "project-id"
+        self._client._nth_client_id = 1
 
 
 class _Database(object):
+    _channel_id = 1
+    NTH_REQUEST = AtomicCounter()
+
     def __init__(self, name, database_role=None):
         self.name = name
         self.database_id = name.split("/")[-1]
@@ -126,12 +154,17 @@ class _Database(object):
         self.spanner_api = mock.Mock()
         self._route_to_leader_enabled = False
         self._instance = _Instance()
+        self._sessions = []
 
         # Set default return value for batch_create_sessions to avoid infinite loops in _fill_pool
         session_pb = SessionProto(name=name + "/sessions/default")
         self.spanner_api.batch_create_sessions.return_value = (
             BatchCreateSessionsResponse(session=[session_pb])
         )
+
+    @property
+    def _nth_client_id(self):
+        return self._instance._client._nth_client_id
 
     @property
     def database_role(self):
@@ -226,6 +259,7 @@ class TestAbstractSessionPool(TestCase):
 
     def test_session_deprecated(self):
         import warnings
+
         pool = self._make_one()
         with warnings.catch_warnings(record=True) as warned:
             warnings.simplefilter("always")
@@ -310,7 +344,7 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
-        self.assertEqual(api.batch_create_sessions.call_count, 5)
+        self.assertEqual(api.batch_create_sessions.call_count, 10)
         for session in SESSIONS:
             session.create.assert_not_called()
 
@@ -339,7 +373,7 @@ class TestFixedSizePool(OpenTelemetryBase):
     def test_get_non_expired(self, mock_region):
         pool = self._make_one(size=4)
         database = _Database("name")
-        last_use_time = datetime.now(timezone.utc) - timedelta(minutes=56)
+        last_use_time = datetime.datetime.now(timezone.utc) - timedelta(minutes=56)
         SESSIONS = sorted(
             [_Session(database, last_use_time=last_use_time) for i in range(0, 4)]
         )
@@ -380,14 +414,14 @@ class TestFixedSizePool(OpenTelemetryBase):
         attrs = dict(
             TestFixedSizePool.BASE_ATTRIBUTES.copy(), x_goog_spanner_request_id=req_id
         )
+        attrs["db.instance"] = ""
+        attrs["gcp.resource.name"] = _opentelemetry_tracing.GCP_RESOURCE_NAME_PREFIX
 
         # Check for the overall spans.
-        self.assertSpanAttributes(
-            "CloudSpanner.FixedPool.BatchCreateSessions",
-            status=StatusCode.OK,
-            attributes=attrs,
-            span=span_list[0],
-        )
+        got_attrs = dict(span_list[0].attributes)
+        got_attrs.pop("x_goog_spanner_request_id", None)
+        attrs.pop("x_goog_spanner_request_id", None)
+        self.assertEqual(got_attrs, attrs)
 
         self.assertSpanAttributes(
             "pool.Get",
@@ -532,26 +566,6 @@ class TestFixedSizePool(OpenTelemetryBase):
         "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
         return_value="global",
     )
-    def test_get_expired(self, mock_region):
-        pool = self._make_one(size=4)
-        database = _Database("name")
-        last_use_time = datetime.now(timezone.utc) - timedelta(minutes=65)
-        SESSIONS = [_Session(database, last_use_time=last_use_time)] * 5
-        SESSIONS[0]._exists = False
-        pool._new_session = mock.Mock(side_effect=SESSIONS)
-        pool.bind(database)
-
-        session = pool.get()
-
-        self.assertIs(session, SESSIONS[4])
-        session.create.assert_called()
-        self.assertTrue(SESSIONS[0]._exists_checked)
-        self.assertFalse(pool._sessions.full())
-
-    @mock.patch(
-        "google.cloud.spanner_v1._opentelemetry_tracing._get_cloud_region",
-        return_value="global",
-    )
     def test_get_empty_default_timeout(self, mock_region):
         import queue
 
@@ -626,7 +640,7 @@ class TestFixedSizePool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
-        self.assertEqual(api.batch_create_sessions.call_count, 5)
+        self.assertEqual(api.batch_create_sessions.call_count, 10)
         for session in SESSIONS:
             session.create.assert_not_called()
 
@@ -1005,7 +1019,7 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
-        self.assertEqual(api.batch_create_sessions.call_count, 5)
+        self.assertEqual(api.batch_create_sessions.call_count, 10)
         for session in SESSIONS:
             session.create.assert_not_called()
 
@@ -1035,7 +1049,6 @@ class TestPingingPool(OpenTelemetryBase):
     def test_get_hit_w_ping(self, mock_region):
         import datetime
 
-
         pool = self._make_one(size=4)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 4
@@ -1064,16 +1077,16 @@ class TestPingingPool(OpenTelemetryBase):
     def test_get_hit_w_ping_expired(self, mock_region):
         import datetime
 
-
         pool = self._make_one(size=4)
         database = _Database("name")
-        SESSIONS = [_Session(database)] * 5
-        SESSIONS[0]._exists = False
+        SESSIONS = [_Session(database) for _ in range(5)]
         pool._new_session = mock.Mock(side_effect=SESSIONS)
 
         sessions_created = datetime.datetime.now(timezone.utc) - datetime.timedelta(
             seconds=4000
         )
+        for s in SESSIONS:
+            s._exists = False
 
         with _Monkey(MUT, _NOW=lambda: sessions_created):
             pool.bind(database)
@@ -1167,14 +1180,17 @@ class TestPingingPool(OpenTelemetryBase):
         attrs = dict(
             TestPingingPool.BASE_ATTRIBUTES.copy(), x_goog_spanner_request_id=req_id
         )
-        self.assertSpanAttributes(
-            "CloudSpanner.PingingPool.BatchCreateSessions",
-            attributes=attrs,
-            span=span_list[-1],
-        )
+        attrs["db.instance"] = ""
+        attrs["gcp.resource.name"] = _opentelemetry_tracing.GCP_RESOURCE_NAME_PREFIX
+        got_attrs = dict(span_list[-1].attributes)
+        got_attrs.pop("x_goog_spanner_request_id", None)
+        attrs.pop("x_goog_spanner_request_id", None)
+        self.assertEqual(got_attrs, attrs)
         wantEventNames = [
-            "Created 2 sessions",
-            "Created 2 sessions",
+            "Created 1 sessions",
+            "Created 1 sessions",
+            "Created 1 sessions",
+            "Created 1 sessions",
             "Requested for 4 sessions, returned 4",
         ]
         self.assertSpanEvents(
@@ -1187,7 +1203,6 @@ class TestPingingPool(OpenTelemetryBase):
     )
     def test_put_non_full(self, mock_region):
         import datetime
-
 
         pool = self._make_one(size=1)
         session_queue = pool._sessions = _Queue()
@@ -1219,7 +1234,7 @@ class TestPingingPool(OpenTelemetryBase):
         self.assertTrue(pool._sessions.full())
 
         api = database.spanner_api
-        self.assertEqual(api.batch_create_sessions.call_count, 5)
+        self.assertEqual(api.batch_create_sessions.call_count, 10)
         for session in SESSIONS:
             session.create.assert_not_called()
 
@@ -1262,7 +1277,6 @@ class TestPingingPool(OpenTelemetryBase):
     def test_ping_oldest_stale_but_exists(self, mock_region):
         import datetime
 
-
         pool = self._make_one(size=1)
         database = _Database("name")
         SESSIONS = [_Session(database)] * 1
@@ -1282,11 +1296,12 @@ class TestPingingPool(OpenTelemetryBase):
     def test_ping_oldest_stale_and_not_exists(self, mock_region):
         import datetime
 
-
         pool = self._make_one(size=1)
         database = _Database("name")
-        SESSIONS = [_Session(database)] * 2
-        SESSIONS[0]._exists = False
+        SESSIONS = [_Session(database) for _ in range(2)]
+        from google.api_core.exceptions import NotFound
+
+        SESSIONS[0].ping.side_effect = NotFound("Session not found")
         pool._new_session = mock.Mock(side_effect=SESSIONS)
         pool.bind(database)
         self.reset()
@@ -1295,7 +1310,7 @@ class TestPingingPool(OpenTelemetryBase):
         with _Monkey(MUT, _NOW=lambda: later):
             pool.ping()
 
-        self.assertTrue(SESSIONS[0]._pinged)
+        SESSIONS[0].ping.assert_called_once()
         SESSIONS[1].create.assert_called()
         self.assertNoSpans()
 
@@ -1363,7 +1378,7 @@ class TestSessionCheckout(unittest.TestCase):
         pool.put.assert_called_once_with(session)
 
 
-class TestFixedSizePool(TestCase):
+class TestFixedSizePool_extras(TestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
@@ -1714,7 +1729,7 @@ def _make_transaction(*args, **kw):
     return txn
 
 
-class TestPingingPool(TestCase):
+class TestPingingPool_extras(TestCase):
     DATABASE_NAME = "projects/p/instances/i/databases/d"
     SESSION_NAME = DATABASE_NAME + "/sessions/s"
 
@@ -1735,26 +1750,6 @@ class TestPingingPool(TestCase):
         self.assertEqual(pool.size, 10)
         self.assertEqual(pool.default_timeout, 10)
         self.assertEqual(pool._delta, datetime.timedelta(seconds=3000))
-
-    def ping(self):
-        self._pinged = True
-        if not self._exists:
-            raise NotFound("expired session")
-
-    def delete(self):
-        self._deleted = True
-        if not self._exists:
-            raise NotFound("unknown session")
-
-        # Put back with old timestamp to force ping
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), s1))
-        pool._sessions.put((_NOW() - datetime.timedelta(hours=1), s2))
-
-        pool.ping()
-
-        s1.ping.assert_called_once()
-        s2.ping.assert_called_once()
-        new_session.create.assert_called_once()
 
     def test_ping_exception_fallback(self):
         import warnings

@@ -32,8 +32,6 @@ from google.protobuf.struct_pb2 import ListValue, Value
 from google.rpc.error_details_pb2 import RetryInfo
 
 from google.cloud._helpers import _date_from_iso8601_date
-from google.cloud.spanner_v1.types import ExecuteSqlRequest
-from google.cloud.spanner_v1.types import TransactionOptions
 from google.cloud.spanner_v1.types import ClientContext
 from google.cloud.spanner_v1.types import RequestOptions
 from google.cloud.spanner_v1.data_types import JsonObject, Interval

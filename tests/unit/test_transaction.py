@@ -1388,6 +1388,7 @@ class _Client(object):
         self._query_options = ExecuteSqlRequest.QueryOptions(optimizer_version="1")
         self.directed_read_options = None
         self._client_context = None
+        self.project = "project-id"
         self._nth_client_id = _Client.NTH_CLIENT.increment()
         self._nth_request = AtomicCounter()
 
@@ -1400,11 +1401,13 @@ class _Instance(object):
     def __init__(self):
         self._client = _Client()
         self.experimental_host = None
+        self.instance_id = "instance-id"
 
 
 class _Database(object):
     def __init__(self):
         self.name = "testing"
+        self.database_id = "testing"
         self._instance = _Instance()
         self._route_to_leader_enabled = True
         self._directed_read_options = None
