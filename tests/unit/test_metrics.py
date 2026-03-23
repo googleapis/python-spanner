@@ -1,4 +1,4 @@
-﻿# Copyright 2025 Google LLC
+# Copyright 2025 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,6 +92,28 @@ def test_metrics_emission_with_failure_attempt(patched_client):
     factory = SpannerMetricsTracerFactory()
 
     assert factory.enabled
+
+    from google.cloud.spanner_v1.services.spanner.client import SpannerClient
+    from google.cloud.spanner_v1.services.spanner.transports.grpc import (
+        SpannerGrpcTransport,
+    )
+    from google.cloud.spanner_v1.metrics.metrics_interceptor import MetricsInterceptor
+
+    import google.auth.credentials
+
+    # Recreate the SpannerClient and transport with MetricsInterceptor properly bound
+    credentials = database._instance._client.credentials
+    if isinstance(credentials, google.auth.credentials.Scoped):
+        from google.cloud.spanner_v1.database import SPANNER_DATA_SCOPE
+
+        credentials = credentials.with_scopes((SPANNER_DATA_SCOPE,))
+
+    transport = SpannerGrpcTransport(
+        credentials=credentials,
+        client_info=database._instance._client._client_info,
+        metrics_interceptor=MetricsInterceptor(),
+    )
+    database._spanner_api = SpannerClient(transport=transport)
 
     transport = database.spanner_api._transport
     metrics_interceptor = transport._metrics_interceptor

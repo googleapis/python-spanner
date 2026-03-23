@@ -44,6 +44,20 @@ def spanner_client():
         return spanner_v1.AsyncClient(client_options=client_options)
 
 
+@pytest.fixture(autouse=True)
+def reset_cached_apis(request, spanner_client):
+    """Reset cached API clients to prevent Event Loop is closed errors between tests."""
+    spanner_client._database_admin_api = None
+    spanner_client._instance_admin_api = None
+    if "shared_database" in request.fixturenames:
+        try:
+            db = request.getfixturevalue("shared_database")
+            if hasattr(db, "_spanner_api"):
+                db._spanner_api = None
+        except Exception:
+            pass
+
+
 @pytest.fixture(scope="session")
 def instance_operation_timeout():
     return _helpers.INSTANCE_OPERATION_TIMEOUT_IN_SECONDS
@@ -123,6 +137,7 @@ async def shared_instance(
     shared_instance_id,
     instance_config,
 ):
+    spanner_client._instance_admin_api = None
     instance = spanner_client.instance(shared_instance_id, instance_config.name)
 
     if _helpers.CREATE_INSTANCE:
@@ -141,6 +156,8 @@ async def shared_instance(
 async def shared_database(
     shared_instance, database_operation_timeout, database_dialect, proto_descriptor_file
 ):
+    spanner_client = shared_instance._client
+    spanner_client._database_admin_api = None
     database_name = _helpers.unique_id("test_db_async")
     pool = spanner_v1.AsyncBurstyPool(labels={"testcase": "database_api_async"})
 
@@ -168,8 +185,11 @@ async def shared_database(
 
     yield database
 
-    await database.drop()
-    await database.close()
+    try:
+        await database.drop()
+        await database.close()
+    except RuntimeError:
+        pass
 
 
 @pytest.fixture(scope="function")

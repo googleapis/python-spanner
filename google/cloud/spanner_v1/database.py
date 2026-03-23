@@ -82,6 +82,7 @@ from google.cloud.spanner_v1._opentelemetry_tracing import (
     trace_call,
 )
 from google.cloud.spanner_v1.metrics.metrics_capture import MetricsCapture
+
 from google.cloud.spanner_v1.table import Table
 
 SPANNER_DATA_SCOPE = "https://www.googleapis.com/auth/spanner.data"
