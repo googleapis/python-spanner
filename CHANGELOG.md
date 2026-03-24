@@ -4,6 +4,16 @@
 
 [1]: https://pypi.org/project/google-cloud-spanner/#history
 
+## [3.64.0](https://github.com/googleapis/python-spanner/compare/v3.63.0...v3.64.0) (2026-03-24)
+
+
+### Features
+
+* implement native asyncio support via Cross-Sync (#1509) ([0aa1eda564a9463e776eacdff920fa5dc6c46cac](https://github.com/googleapis/python-spanner/commit/0aa1eda564a9463e776eacdff920fa5dc6c46cac))
+* use inline begin to eliminate BeginTransaction RPC (#1502) ([15eebdfb24f13ada111c50f14f5aab2529f839ca](https://github.com/googleapis/python-spanner/commit/15eebdfb24f13ada111c50f14f5aab2529f839ca))
+* add Client Context support to options (#1499) ([9fcb64703d7e77a1864c864b9cda5d4ea310e13e](https://github.com/googleapis/python-spanner/commit/9fcb64703d7e77a1864c864b9cda5d4ea310e13e))
+* add TLS/mTLS support for experimental host (#1479) ([12773d77a9664b1042a319fbef71008cb6a0d462](https://github.com/googleapis/python-spanner/commit/12773d77a9664b1042a319fbef71008cb6a0d462))
+
 ## [3.63.0](https://github.com/googleapis/python-spanner/compare/v3.62.0...v3.63.0) (2026-02-13)
 
 
