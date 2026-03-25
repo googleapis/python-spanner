@@ -2,7 +2,7 @@ image: us-central1-docker.pkg.dev/cloud-sdk-librarian-prod/images-prod/python-li
 libraries:
   - id: google-cloud-spanner
     version: 3.63.0
-    last_generated_commit: a17b84add8318f780fcc8a027815d5fee644b9f7
+    last_generated_commit: 8b491c86c6c25e413c7f3e4b76675e5db535b0cc
     apis:
       - path: google/spanner/admin/instance/v1
         service_config: spanner.yaml
