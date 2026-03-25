@@ -21,7 +21,8 @@ libraries:
       - ^google/cloud/spanner_v1/types
       - ^google/cloud/spanner_admin_database_v1
       - ^google/cloud/spanner_admin_instance_v1
-      - ^tests/unit/gapic
+      - ^tests/unit/gapic/spanner
+      - ^tests/unit/gapic/__init__.py
       - ^tests/__init__.py
       - ^tests/unit/__init__.py
       - ^.pre-commit-config.yaml
