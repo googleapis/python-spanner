@@ -17,7 +17,7 @@ from __future__ import annotations
 
 from typing import MutableMapping, MutableSequence
 
-from google.protobuf import struct_pb2  # type: ignore
+import google.protobuf.struct_pb2 as struct_pb2  # type: ignore
 import proto  # type: ignore
 
 from google.cloud.spanner_v1.types import location
@@ -68,6 +68,14 @@ class ResultSet(proto.Message):
             token with the highest sequence number from this transaction
             attempt to the [Commit][google.spanner.v1.Spanner.Commit]
             request for this transaction.
+        cache_update (google.cloud.spanner_v1.types.CacheUpdate):
+            Optional. A cache update expresses a set of changes the
+            client should incorporate into its location cache. The
+            client should discard the changes if they are older than the
+            data it already has. This data can be obtained in response
+            to requests that included a ``RoutingHint`` field, but may
+            also be obtained by explicit location-fetching RPCs which
+            may be added in the future.
     """
 
     metadata: "ResultSetMetadata" = proto.Field(
@@ -89,6 +97,11 @@ class ResultSet(proto.Message):
         proto.MESSAGE,
         number=5,
         message=gs_transaction.MultiplexedSessionPrecommitToken,
+    )
+    cache_update: location.CacheUpdate = proto.Field(
+        proto.MESSAGE,
+        number=6,
+        message=location.CacheUpdate,
     )
 
 
